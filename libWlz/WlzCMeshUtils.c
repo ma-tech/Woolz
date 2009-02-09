@@ -442,6 +442,80 @@ void		WlzCMeshClearNodFlags3D(WlzCMesh3D *mesh, unsigned int flags)
 }
 
 /*!
+* \ingroup	WlzMesh
+* \brief	Clears the element flags for all valid elements of the mesh.
+* \param	mesh			Given mesh.
+* \param	flags			Flags to clear.
+*/
+void		WlzCMeshClearElmFlags(WlzCMeshP mesh, unsigned int flags)
+{
+  if(mesh.v)
+  {
+    switch(mesh.m2->type)
+    {
+      case WLZ_CMESH_TRI2D:
+        WlzCMeshClearElmFlags2D(mesh.m2, flags);
+	break;
+      case WLZ_CMESH_TET3D:
+        WlzCMeshClearElmFlags3D(mesh.m3, flags);
+	break;
+      default:
+        break;
+    }
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Clears element flags for all valid elements of the 2D mesh.
+* \param	mesh			Given mesh.
+* \param	flags			Flags to clear.
+*/
+void		WlzCMeshClearElmFlags2D(WlzCMesh2D *mesh, unsigned int flags)
+{
+  int		idN;
+  WlzCMeshElm2D *elm;
+
+  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  {
+    flags = ~flags;
+    for(idN = 0; idN < mesh->res.elm.maxEnt; ++idN)
+    {
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idN);
+      if(elm->idx >= 0)
+      {
+	elm->flags &= flags;
+      }
+    }
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Clears element flags for all valid elements of the 3D mesh.
+* \param	mesh			Given mesh.
+* \param	flags			Flags to clear.
+*/
+void		WlzCMeshClearElmFlags3D(WlzCMesh3D *mesh, unsigned int flags)
+{
+  int		idN;
+  WlzCMeshElm3D *elm;
+
+  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  {
+    flags = ~flags;
+    for(idN = 0; idN < mesh->res.elm.maxEnt; ++idN)
+    {
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idN);
+      if(elm->idx >= 0)
+      {
+	elm->flags &= flags;
+      }
+    }
+  }
+}
+
+/*!
 * \return	Number of boundary nodes.
 * \ingroup	WlzMesh
 * \brief	Sets or clears the boundary node flag bit for all nodes
@@ -525,6 +599,97 @@ int		WlzCMeshSetBoundNodFlags3D(WlzCMesh3D *mesh)
 	{
 	  ++nBnd;
 	  nod->flags |= WLZ_CMESH_NOD_FLAG_BOUNDARY;
+	}
+      }
+    }
+  }
+  return(nBnd);
+}
+
+/*!
+* \return	Number of boundary elements.
+* \ingroup	WlzMesh
+* \brief	Sets or clears the boundary element flag bit for all elements
+*		of the mesh.
+* \param	mesh			Given mesh.
+*/
+int		WlzCMeshSetBoundElmFlags(WlzCMeshP mesh)
+{
+  int		nBnd = 0;
+  if(mesh.v)
+  {
+    switch(mesh.m2->type)
+    {
+      case WLZ_CMESH_TRI2D:
+        nBnd = WlzCMeshSetBoundElmFlags2D(mesh.m2);
+	break;
+      case WLZ_CMESH_TET3D:
+        nBnd = WlzCMeshSetBoundElmFlags3D(mesh.m3);
+	break;
+      default:
+        break;
+    }
+  }
+  return(nBnd);
+}
+
+/*!
+* \return	Number of boundary elements.
+* \ingroup	WlzMesh
+* \brief	Sets or clears the boundary element flag bit for all elements
+*		of the 2D mesh.
+* \param	mesh			Given mesh.
+*/
+int		WlzCMeshSetBoundElmFlags2D(WlzCMesh2D *mesh)
+{
+  int		idN,
+  		nBnd = 0;
+  WlzCMeshElm2D *elm;
+
+  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  {
+    for(idN = 0; idN < mesh->res.elm.maxEnt; ++idN)
+    {
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idN);
+      if(elm->idx >= 0)
+      {
+	elm->flags &= ~(WLZ_CMESH_ELM_FLAG_BOUNDARY);
+	if(WlzCMeshElmIsBoundary2D(elm))
+	{
+	  ++nBnd;
+	  elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+	}
+      }
+    }
+  }
+  return(nBnd);
+}
+
+/*!
+* \return	Number of boundary elements.
+* \ingroup	WlzMesh
+* \brief	Sets or clears the boundary element flag bit for all elements
+*		of the 3D mesh.
+* \param	mesh			Given mesh.
+*/
+int		WlzCMeshSetBoundElmFlags3D(WlzCMesh3D *mesh)
+{
+  int		idN,
+  		nBnd = 0;
+  WlzCMeshElm3D *elm;
+
+  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  {
+    for(idN = 0; idN < mesh->res.elm.maxEnt; ++idN)
+    {
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idN);
+      if(elm->idx >= 0)
+      {
+	elm->flags &= ~(WLZ_CMESH_ELM_FLAG_BOUNDARY);
+	if(WlzCMeshElmIsBoundary3D(elm))
+	{
+	  ++nBnd;
+	  elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
 	}
       }
     }
@@ -691,6 +856,43 @@ int		WlzCMeshNodIsBoundary3D(WlzCMeshNod3D *nod)
       edu1 = edu1->nnxt;
     } while(edu1 != edu0);
   }
+  return(isBnd);
+}
+
+/*!
+* \return				Non-zero if the element is a boundary
+* 					element.
+* \ingroup	WlzMesh
+* \brief	Checks whether the element is a boundary node by examining
+* 		the edges for opposite edges.
+* \param	elm			Given element of mesh.
+*/
+int		WlzCMeshElmIsBoundary2D(WlzCMeshElm2D *elm)
+{
+  int		isBnd = 0;
+
+  isBnd = (elm->edu[0].opp == NULL) || (elm->edu[0].opp == &(elm->edu[0])) ||
+          (elm->edu[1].opp == NULL) || (elm->edu[1].opp == &(elm->edu[1])) ||
+          (elm->edu[2].opp == NULL) || (elm->edu[2].opp == &(elm->edu[2]));
+  return(isBnd);
+}
+
+/*!
+* \return				Non-zero if the element is a boundary
+* 					element.
+* \ingroup	WlzMesh
+* \brief	Checks whether the element is a boundary node by examining
+* 		the faces for opposite faces.
+* \param	elm			Given element of mesh.
+*/
+int		WlzCMeshElmIsBoundary3D(WlzCMeshElm3D *elm)
+{
+  int		isBnd = 0;
+
+  isBnd = (elm->face[0].opp == NULL) || (elm->face[0].opp == &(elm->face[0])) ||
+          (elm->face[1].opp == NULL) || (elm->face[1].opp == &(elm->face[1])) ||
+          (elm->face[2].opp == NULL) || (elm->face[2].opp == &(elm->face[2])) ||
+          (elm->face[3].opp == NULL) || (elm->face[3].opp == &(elm->face[3]));
   return(isBnd);
 }
 
