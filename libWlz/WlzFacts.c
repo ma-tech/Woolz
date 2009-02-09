@@ -1719,9 +1719,12 @@ static WlzErrorNum WlzObjFactsCMesh2D(WlzObjFactsData *fData,
 				      WlzObject *obj,
 				      WlzCMesh2D *mesh)
 {
-  int		nElm,
+  int		idx,
+  		nElm,
   		nNod;
   const char	*tStr;
+  WlzCMeshNod2D	*nod;
+  WlzCMeshElm2D *elm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   ++(fData->indent);
@@ -1753,6 +1756,50 @@ static WlzErrorNum WlzObjFactsCMesh2D(WlzObjFactsData *fData,
       {
         errNum = WlzObjFactsAppend(fData, "Number of Nodes: %d.\n", nNod);
       }
+    }
+    if((errNum == WLZ_ERR_NONE) && (fData->verbose != 0))
+    {
+      errNum = WlzObjFactsAppend(fData, "Nodes:\n");
+      if(errNum == WLZ_ERR_NONE)
+      {
+	idx = 0;
+        ++(fData->indent);
+	while((errNum == WLZ_ERR_NONE) && (idx < mesh->res.nod.maxEnt))
+	{
+	  nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idx);
+	  if(nod->idx >= 0)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "% 8d % 8g % 8g\n",
+				       nod->idx, nod->pos.vtX, nod->pos.vtY);
+	  }
+	  ++idx;
+	}
+        --(fData->indent);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzObjFactsAppend(fData, "Elements:\n");
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	idx = 0;
+        ++(fData->indent);
+	while((errNum == WLZ_ERR_NONE) && (idx < mesh->res.elm.maxEnt))
+	{
+	  elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idx);
+	  if(elm->idx >= 0)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "% 8d % 8d % 8d % 8d\n",
+				       elm->idx,
+				       elm->edu[0].nod->idx,
+				       elm->edu[1].nod->idx,
+				       elm->edu[2].nod->idx);
+	  }
+	  ++idx;
+	}
+        --(fData->indent);
+      }
+
     }
   }
   --(fData->indent);
