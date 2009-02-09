@@ -45,41 +45,127 @@ static char _WlzDrawDomainObj_c[] = "MRC HGU $Id$";
 */
 
 /*!
- * TODO
-\ingroup BinWlz
-\defgroup wlzrmsdiff WlzRMSDiff
+\ingroup BinWlzApp
+\defgroup wlzdrawdomainobj WlzDrawDomainObj
 \par Name
-WlzRMSDiff - computes the RMS difference between the grey values of objects.
+WlzDrawDomainObj - reads drawing commands from either a string given on
+the command line, a file given on the command line or the standard input
+(in this order of precidence).
+The drawing commands are used to create a drawn section which is placed
+into 3D using the view transform.
 \par Synopsis
 \verbatim
-WlzRMSDiff [-o<out>] [<in obj 0>] [<in obj 1>]
+WlzDrawDomainObj [-2] [-a<pitch,yaw,roll>] [-f <fx,fy,fz>]
+                 [-d <dist> [-b <view bib file>]
+                 [-m <mode>] [-u<ux,uy,uz>]
+                 [-g <ox,oy,oz>] [-h] [-o<out>]
+                 [-s <cmd str>] [<cmd str file>>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
+    <td><b>-2</b></td>
+    <td>Ignore the view struct and keep as a 2D object.</td>
+  </tr>
+  <tr>
+    <td><b>-a</b></td>
+    <td>Viewing angles: pitch (phi), yaw (theta) and roll (beta),
+        default 0.0,0.0,0.0.</td>
+  </tr>
+  <tr>
+    <td><b>-f</b></td>
+    <td>Fixed point position, default 0.0,0.0,0.0.</td>
+  </tr>
+  <tr>
+    <td><b>-d</b></td>
+    <td>Distance parameter, default 0.0.</td>
+  </tr>
+  <tr>
+    <td><b>-b</b></td>
+    <td>Bib file with view parameters, e.g. saved from MAPaint.</td>
+  </tr>
+  <tr>
+    <td><b>-m</b></td>
+    <td>Viewing mode, one of: up-is-up, statue or absolute, default
+        is up-is-up.</td>
+  </tr>
+  <tr>
+    <td><b>-u</b></td>
+    <td>Up vector, default 0.0,0.0,1.0.</td>
+  </tr>
+  <tr>
+    <td><b>-g</b></td>
+    <td>Origin of the drawing with respect to the 2D Woolz object
+        cut using the view transform, default 0.0,0.0.</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>Drawing command string.</td>
+  </tr>
+  <tr>
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
   </tr>
-  <tr> 
+  <tr>
     <td><b>-o</b></td>
     <td>Output file name.</td>
   </tr>
 </table>
 \par Description
-Computes the RMS difference in grey values within the intersection
-of the two given domain objects.
-The input objects are read from stdin and values are written to stdout
-unless the filenames are given.
+Reads drawing commands from either a string given on
+the command line, a file given on the command line or the standard input
+(in this order of precidence).
+The drawing commands are used to create a drawn section which is placed
+into 3D using the view transform.
+
+The command string must have the following syntax:
+\verbatim
+  <command string> = <init command>[<command>]+<end command>
+  <init command> = <ident>:<version>;
+  <end command> = END:;
+  <ident> = WLZ_DRAW_DOMAIN
+  <version> = 1
+  <command> = <command name>:[<parameter>[,<parameter>]*];
+  <command name> = PEN | LINE | CIRCLE
+\endverbatim
+In addition to the init and end commands, the following
+drawing commands are recognised:
+\verbatim
+  CIRCLE:<action>:<radius>,<x>,<y>;
+  LINE:<action>:<width>,<x>,<y>,<x>,<y>;
+  PEN:<action>,<width>,<x>,<y>[,<x>,<y>]*;
+\endverbatim
+Where:
+\verbatim
+ <action> = DRAW | ERASE
+\endverbatim
+The circle command draws or erases a filled circle which is specified
+by it's radius and centre parameters.
+The line command draws a rectangle using the given width and end
+coordinates of the mid-line.
+The pen command draws a polyline which is composed of a series of
+rectangular segments, with each segment ending in a semi-circular cap.
+The parameters of the pen command are the width and line segment end
+point coordinates.
+All widths, radii and coordinates may be in any floating point format
+recognised by scanf(3).
+Other commands may be present provided they have the same syntax
+described above, but they will be ignored.
+All white space characters are ignored.
 \par Examples
 \verbatim
-WlzRMSDiff -o out.num  in0.wlz in1.wlz
+WlzDrawDomainObj -o out.wlz \\
+                 -s 'WLZ_DRAW_DOMAIN:1; CIRCLE:DRAW,100,200,300; END:;'
 \endverbatim
-An RMS difference in grey values between in0.wlz and in1.wlz is written
+This creates a 3D domain object with a single plane at z = 0
+which has a domain that is  a single circle (radius = 100,
+centre = 200,300).
 to the file out.num.
 \par File
-\ref WlzRMSDiff.c "WlzRMSDiff.c"
+\ref WlzDrawDomainObj.c "WlzDrawDomainObj.c"
 \par See Also
-\ref BinWlz "WlzIntro(1)"
+\ref WlzDomainOps WlzDrawDomainObj().
+\ref BinWlzApp "WlzIntro(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -304,9 +390,11 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-2] [-a<pitch,yaw,roll>] [-f <fx,fy,fz>] [-d <dist>>>]\n"
-    "[-b <view bib file>] [-m <mode>] [-u<ux,uy,uz>] [-g <ox,oy,oz>]\n"
-    "[-h] [-o<out>] [-s <cmd str>] [<cmd str file>>]\n"
+    " [-2] [-a<pitch,yaw,roll>] [-f <fx,fy,fz>]\n"
+    "                 [-d <dist> [-b <view bib file>]\n"
+    "                 [-m <mode>] [-u<ux,uy,uz>]\n"
+    "                 [-g <ox,oy,oz>] [-h] [-o<out>]\n"
+    "                 [-s <cmd str>] [<cmd str file>>]\n"
     "Options:\n"
     "  -2  Ignore the view struct and keep as a 2D object.\n"
     "  -a  Viewing angles: pitch (phi), yaw (theta) and roll (beta),\n"
@@ -324,7 +412,7 @@ int             main(int argc, char **argv)
     "  -o  Output file name.\n"
     "Reads drawing commands from either a string given on the command line,\n"
     "a file given on the command line or the standard input (in this order\n"
-    "of precidence). The drawing commands are used to create a drawns\n"
+    "of precidence). The drawing commands are used to create a drawn\n"
     "section which is placed into 3D using the view transform.\n"
     "\n"
     "The command string must have the following syntax:\n"
