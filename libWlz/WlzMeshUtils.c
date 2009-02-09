@@ -1886,7 +1886,7 @@ static void	 WlzMeshElemFindVxForce(WlzMeshTransform *mesh,
       eVx0 = (mesh->nodes + *(eNdP + 0))->position;
       eVx1 = (mesh->nodes + *(eNdP + 1))->position;
       eVx2 = (mesh->nodes + *(eNdP + 2))->position;
-      if(WlzGeomVxInTriangle(eVx0, eVx1, eVx2, gVx) >= 0)
+      if(WlzGeomVxInTriangle2D(eVx0, eVx1, eVx2, gVx) >= 0)
       {
 	fndId = tstId;
 	if(((((tD0 = (eVx0.vtX - gVx.vtX)) * tD0) < WLZ_MESH_TOLERANCE_SQ) &&
