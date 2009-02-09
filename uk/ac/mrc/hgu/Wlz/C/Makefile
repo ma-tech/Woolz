@@ -52,13 +52,21 @@ MANPAGES		=
 DEPENDDIRS		= \
 			  . \
 			  ../../../../../../../libAlc \
+			  ../../../../../../../libAlc/.libs \
 			  ../../../../../../../libAlg \
+			  ../../../../../../../libAlg/.libs \
 			  ../../../../../../../libWlz \
+			  ../../../../../../../libWlz/.libs \
 			  ../../../../../../../libbibfile \
+			  ../../../../../../../libbibfile/.libs \
 			  ../../../../../../../libWlzExtFF \
+			  ../../../../../../../libWlzExtFF/.libs \
 			  ../../../../../../../libWlzBnd \
+			  ../../../../../../../libWlzBnd/.libs \
 			  ../../../../../../../../External/Tiff/tiff-v3.5.7/libtiff \
-			  ../../../../../../../../External/Jpeg/jpeg-6b
+			  ../../../../../../../../External/Tiff/tiff-v3.5.7/libtiff/.libs \
+			  ../../../../../../../../External/Jpeg/jpeg-6b \
+			  ../../../../../../../../External/Jpeg/jpeg-6b/.libs
 
 # List of all header file directories to be searched (modify as required).
 INCDIRS                 = \
