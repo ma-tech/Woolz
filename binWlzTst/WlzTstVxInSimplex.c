@@ -120,7 +120,7 @@ int		main(int argc, char *argv[])
       v2[1].vtX = v[1].vtX; v2[1].vtY = v[1].vtY;
       v2[2].vtX = v[2].vtX; v2[2].vtY = v[2].vtY;
       vP2.vtX = vP.vtX; vP2.vtY = vP.vtY;
-      inside = WlzGeomVxInTriangle(v2[0], v2[1], v2[2], vP2);
+      inside = WlzGeomVxInTriangle2D(v2[0], v2[1], v2[2], vP2);
       if(verbose)
       {
 	(void )printf("(%g,%g) is %s triangle (%g,%g), "

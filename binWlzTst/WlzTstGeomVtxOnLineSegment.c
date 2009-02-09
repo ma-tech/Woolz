@@ -35,7 +35,7 @@ static char _WlzTstGeomVtxOnLineSegment_c[] = "MRC HGU $Id$";
 * License along with this program; if not, write to the Free
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
-* \brief	Test for WlzGeomVtxOnLineSegment().
+* \brief	Test for WlzGeomVtxOnLineSegment[23]D().
 * \ingroup	binWlzTst
 * \todo         -
 * \bug          None known.
@@ -55,36 +55,66 @@ extern int      optind,
 int		main(int argc, char *argv[])
 {
   int		option,
+		dim = 2,
 		onSeg = 0,
   		ok = 1,
   		usage = 0,
 		verbose = 0;
   double	tol = WLZ_MESH_TOLERANCE;
-  WlzDVertex2	seg0,
+  WlzVertex	seg0,
   		seg1,
+		tmp,
 		tst;
-  static char   optList[] = "he:f:l:t:v";
+  static char   optList[] = "3he:f:l:t:v";
 
-  seg0.vtX = 0.0,
-  seg0.vtY = 0.0;
-  seg1.vtX = 1.0;
-  seg1.vtY = 1.0;
-  tst.vtX = 0.5;
-  tst.vtY = 0.5;
+  seg0.d3.vtX = 0.0,
+  seg0.d3.vtY = 0.0;
+  seg0.d3.vtZ = 0.0;
+  seg1.d3.vtX = 1.0;
+  seg1.d3.vtY = 1.0;
+  seg1.d3.vtZ = 1.0;
+  tst.d3.vtX = 0.5;
+  tst.d3.vtY = 0.5;
+  tst.d3.vtZ = 0.5;
   while((usage == 0) && ((option = getopt(argc, argv, optList)) != EOF))
   {
     switch(option)
     {
+      case '3':
+        dim = 3;
+	break;
       case 'e':
-	if(sscanf(optarg, "%lg,%lg", &(seg0.vtX), &(seg0.vtY)) != 2)
+	if(dim == 2)
 	{
-	  usage = 1;
+	  if(sscanf(optarg, "%lg,%lg", &(seg0.d3.vtX), &(seg0.d3.vtY)) != 2)
+	  {
+	    usage = 1;
+	  }
+	}
+	else /* dim == 3 */
+	{
+	  if(sscanf(optarg, "%lg,%lg,%lg", &(seg0.d3.vtX), &(seg0.d3.vtY),
+	            &(seg0.d3.vtZ)) != 3)
+	  {
+	    usage = 1;
+	  }
 	}
         break;
       case 'f':
-	if(sscanf(optarg, "%lg,%lg", &(seg1.vtX), &(seg1.vtY)) != 2)
+	if(dim == 2)
 	{
-	  usage = 1;
+	  if(sscanf(optarg, "%lg,%lg", &(seg1.d3.vtX), &(seg1.d3.vtY)) != 2)
+	  {
+	    usage = 1;
+	  }
+	}
+	else /* dim == 3 */
+	{
+	  if(sscanf(optarg, "%lg,%lg,%lg", &(seg1.d3.vtX), &(seg1.d3.vtY),
+	            &(seg1.d3.vtZ)) != 3)
+	  {
+	    usage = 1;
+	  }
 	}
         break;
       case 'l':
@@ -94,9 +124,20 @@ int		main(int argc, char *argv[])
 	}
         break;
       case 't':
-	if(sscanf(optarg, "%lg,%lg", &(tst.vtX), &(tst.vtY)) != 2)
+	if(dim == 2)
 	{
-	  usage = 1;
+	  if(sscanf(optarg, "%lg,%lg", &(tst.d3.vtX), &(tst.d3.vtY)) != 2)
+	  {
+	    usage = 1;
+	  }
+	}
+	else /* dim == 3 */
+	{
+	  if(sscanf(optarg, "%lg,%lg,%lg", &(tst.d3.vtX), &(tst.d3.vtY),
+	            &(tst.d3.vtZ)) != 3)
+	  {
+	    usage = 1;
+	  }
 	}
         break;
       case 'v':
@@ -115,14 +156,33 @@ int		main(int argc, char *argv[])
   ok = usage == 0;
   if(ok)
   {
-    if(verbose)
+    if(dim == 2)
     {
-      (void )printf("Test using tollerance (%g) that vertex (%g, %g) lies\n"
-                    "on line segment (%g, %g), (%g, %g):",
-      		    tol, tst.vtX, tst.vtY,
-		    seg0.vtX, seg0.vtY, seg1.vtX, seg1.vtY);
+      tmp.d2.vtX = tst.d3.vtX; tmp.d2.vtY = tst.d3.vtY; tst.d2 = tmp.d2;
+      tmp.d2.vtX = seg0.d3.vtX; tmp.d2.vtY = seg0.d3.vtY; seg0.d2 = tmp.d2;
+      tmp.d2.vtX = seg1.d3.vtX; tmp.d2.vtY = seg1.d3.vtY; seg1.d2 = tmp.d2;
+      if(verbose)
+      {
+	(void )printf("Test using tollerance (%g) that vertex (%g, %g)\n"
+	              "lies on line segment (%g, %g), (%g, %g):",
+		      tol, tst.d2.vtX, tst.d2.vtY,
+		      seg0.d2.vtX, seg0.d2.vtY,
+		      seg1.d2.vtX, seg1.d2.vtY);
+      }
+      onSeg = WlzGeomVtxOnLineSegment2D(tst.d2, seg0.d2, seg1.d2, tol);
     }
-    onSeg = WlzGeomVtxOnLineSegment(tst, seg0, seg1, tol);
+    else /* dim == 3 */
+    {
+      if(verbose)
+      {
+	(void )printf("Test using tollerance (%g) that vertex (%g, %g, %g)\n"
+	              "lies on line segment (%g, %g, %g), (%g, %g, %g):",
+		      tol, tst.d3.vtX, tst.d3.vtY, tst.d3.vtZ,
+		      seg0.d3.vtX, seg0.d3.vtY, seg0.d3.vtZ,
+		      seg1.d3.vtX, seg1.d3.vtY, seg1.d3.vtZ);
+      }
+      onSeg = WlzGeomVtxOnLineSegment3D(tst.d3, seg0.d3, seg1.d3, tol);
+    }
     printf("%d\n", onSeg);
   }
   if(usage)

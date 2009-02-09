@@ -82,6 +82,7 @@ int		main(int argc, char *argv[])
   		inCol = 0;
   WlzVertexP	seeds;
   WlzCMeshNod2D	*nod2;
+  WlzCMeshNod3D	*nod3;
   FILE		*fP = NULL;
   char		*inObjFileStr,
   		*outFileStr;
@@ -297,6 +298,7 @@ int		main(int argc, char *argv[])
 	}
         break;
       default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
 	break;
     }
     if(errNum != WLZ_ERR_NONE)
@@ -314,7 +316,14 @@ int		main(int argc, char *argv[])
   {
     for(idN = 0; idN < repeats; ++idN)
     {
-      errNum = WlzCMeshFMarNodes2D(mesh.m2, dist, NULL, nSeeds, seeds.d2);
+      if(inObj->type == WLZ_CMESH_2D)
+      {
+        errNum = WlzCMeshFMarNodes2D(mesh.m2, dist, nSeeds, seeds.d2);
+      }
+      else /* inObj->type == WLZ_CMESH_3D */
+      {
+        errNum = WlzCMeshFMarNodes3D(mesh.m3, dist, nSeeds, seeds.d3);
+      }
       if(errNum != WLZ_ERR_NONE)
       {
 	ok = 0;
@@ -365,7 +374,25 @@ int		main(int argc, char *argv[])
 	      }
 	      break;
 	    case WLZ_CMESH_TET3D:
-	      errNum = WLZ_ERR_UNIMPLEMENTED;
+	      for(idN = 0; idN < maxNod; ++idN)
+	      {
+		nod3 = (WlzCMeshNod3D *)
+		       AlcVectorItemGet(mesh.m3->res.nod.vec, idN);
+		if(nod3->idx >= 0)
+		{
+		  if(fprintf(fP, "% 8d % 8lg % 8lg % 8lg % 8lg % 8g\n",
+			     nod3->idx,
+			     nod3->pos.vtX,
+			     nod3->pos.vtY,
+			     nod3->pos.vtZ,
+			     0.0,
+			     dist[nod3->idx]) <= 0)
+		  {
+		    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+		    break;
+		  }
+		}
+	      }
 	      break;
 	    default:
 	      break;
