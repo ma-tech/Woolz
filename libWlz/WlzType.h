@@ -2938,140 +2938,6 @@ typedef struct _WlzRsvFilter
 } WlzRsvFilter;
  
 /************************************************************************
-* Functions
-************************************************************************/
-
-/*!
-* \enum         _WlzFnType
-* \ingroup	WlzFunction
-* \brief	The types of function.
-* 		Typedef: ::WlzFnType.
-*/
-typedef enum _WlzFnType
-{
-  WLZ_FN_BASIS_2DGAUSS,        		/*!< Gaussian basis function */
-  WLZ_FN_BASIS_3DGAUSS,
-  WLZ_FN_BASIS_2DPOLY,                   /*!< Polynomial basis function */
-  WLZ_FN_BASIS_3DPOLY,
-  WLZ_FN_BASIS_2DMQ,			/*!< Multiquadric basis function */
-  WLZ_FN_BASIS_3DMQ,
-  WLZ_FN_BASIS_2DTPS,              	/*!< Thin plate spline basis function */
-  WLZ_FN_BASIS_3DTPS,
-  WLZ_FN_BASIS_2DCONF_POLY,		/*!< 2D Conformal polynomial basis
-  					     function */
-  WLZ_FN_BASIS_3DCONF_POLY,
-  WLZ_FN_BASIS_3DMOS,			/*!< 3D Multi-order spline. */
-  WLZ_FN_BASIS_SCALAR_3DMOS,		/*!< 3D Multi-order spline with scalar
-                                             values. */
-  WLZ_FN_SCALAR_MOD,			/*!< Modulus (abs() or fabs()). */
-  WLZ_FN_SCALAR_EXP,                    /*!< Exponential (exp()). */
-  WLZ_FN_SCALAR_LOG,                    /*!< Logarithm (log()). */
-  WLZ_FN_COUNT				/*!< Not a function but the number
-  					     of functions. Keep this the
-					     last of the enums! */
-} WlzFnType;
-
-/*!
-* \typedef	WlzBasisEvalFn
-* \ingroup	WlzFunction
-* \brief	An alternative basis function evaluation function that may
-*		may be called.
-*/
-typedef double (*WlzBasisEvalFn)(void *, double);
-
-/*!
-* \typedef	WlzBasisDistFn
-* \ingroup	WlzFunction
-* \brief	An alternative basis function distance function that may
-*		may be called.
-*/
-typedef double (*WlzBasisDistFn)(void *, int, WlzVertex);
-
-/*!
-* \struct	_WlzBasisFn
-* \ingroup	WlzFunction
-* \brief	A basis function.
-*		Typedef: ::WlzBasisFn.
-*/
-typedef struct _WlzBasisFn
-{
-  WlzFnType     type;       		/*!< The transform basis function. */
-  int           nPoly;          	/*!< Polynomial order + 1. */
-  int           nBasis;             	/*!< Number of basis function
-  					     coefficients. */
-  int           nVtx;                   /*!< Number of control point
-  					     vertices. */
-  WlzVertexP    poly;          		/*!< Polynomial coefficients. */
-  WlzVertexP    basis;         		/*!< Basis function coefficients. */
-  WlzVertexP    vertices;     		/*!< Control point vertices, these are
-  					     the destination vertices of the
-					     control points used to define the
-					     basis function transform. */
-  WlzVertexP	sVertices;		/*!< Source vertices used to compute
-  					     the transform. Not always used
-					     and may be NULL. */
-  void		*param;			/*!< Other parameters used by the
-  					     basis function, e.g. delta in
-					     the MQ and Gauss basis
-					     functions. Must be allocated
-					     in a single block to allow
-					     the parameters to be freed
-					     by AlcFree(). */
-#ifdef WLZ_EXT_BIND
-  void		*evalFn;
-#else
-  WlzBasisEvalFn evalFn;		/*!< An alternative basis function
-  					     evaluation function that may
-					     be called if non NULL. */
-#endif
-  WlzHistogramDomain *evalData;		/*!< Data passed to the alternative
-  					     basis function evaluation
-					     function if the function pointer
-					     is non NULL. AlcFree() will be
-					     called to free the data when the
-					     basis function is free'd. */
-#ifdef WLZ_EXT_BIND
-  void		*distFn;
-#else
-  WlzBasisDistFn distFn;		/*!< An alternative basis function
-  					     distance function that may
-					     be called if non NULL. */
-#endif
-  WlzObject 	**distMap;		/*!< Array of distance map objects
-  					     used by the alternative
-  					     basis function distance
-					     function if the function pointer
-					     is non NULL. WlzFreeObj() will be
-					     called to free an map object for
-					     each of the control points
-					     when the basis function is free'd
-					     Each distance map object is a
-					     coresponds to the control point
-					     withthe same index. */
-  struct _WlzGreyValueWSpace **distWSp;	/*!< Work spaces coresponding to the
-  					     distance map objects. */
-} WlzBasisFn;
-
-/*!
-* \struct	_WlzThreshCbStr
-* \ingroup	WlzType
-* \brief	Callback structure from WlzCbThreshold()
-*		Typedef: ::WlzThreshCbStr.
-*/
-typedef struct _WlzThreshCbStr
-{
-  WlzPixelP	pix;
-  WlzIVertex3	pos;
-} WlzThreshCbStr;
-
-/*!
-* \typedef	WlzThreshCbFn
-* \ingroup	WlzFunction
-* \brief	Callback function for the WlzCbThreshold()
-*/
-typedef int (*WlzThreshCbFn)(WlzObject *, void *, WlzThreshCbStr *);
-
-/************************************************************************
 * Conforming mesh data structures.
 ************************************************************************/
 
@@ -3091,7 +2957,13 @@ typedef enum _WlzCMeshElmFlags
   WLZ_CMESH_ELM_FLAG_OUTSIDE 	= (2),	/*!< Element is outside the domain to
   					     which the mesh should
 					     conform. */
+  WLZ_CMESH_ELM_FLAG_KNOWN	= (4),	/*!< A property of the element is
+  					     known. */
+#ifndef WLZ_EXT_BIND
   WLZ_CMESH_ELM_FLAG_ALL	= (0xffffffff) /*!< All possible flags. */
+#else
+  WLZ_CMESH_ELM_FLAG_ALL	= (-1)  /*!< All possible flags. */
+#endif
 } WlzCMeshElmFlags;
 
 /*!
@@ -3114,7 +2986,11 @@ typedef enum _WlzCMeshNodFlags
   						and is being processed. */
   WLZ_CMESH_NOD_FLAG_KNOWN	= (1<<4),  /*!< Property associated with
                                                 node is known. */
+#ifndef WLZ_EXT_BIND
   WLZ_CMESH_NOD_FLAG_ALL	= (0xffffffff) /*!< All possible flags. */
+#else
+  WLZ_CMESH_NOD_FLAG_ALL	= (-1)  /*!< All possible flags. */
+#endif
 } WlzCMeshNodFlags;
 
 /*!
@@ -3153,6 +3029,18 @@ typedef struct _WlzCMeshNod3D
   void		*prop;      		/*!< Node properties. */
 } WlzCMeshNod3D;
 
+/*!
+* \union       _WlzCMeshNodP
+* \ingroup      WlzMesh
+* \brief        A node pointer for a 2 or 3D mesh.
+*               Typedef: ::WlzCMeshNodP.
+*/
+typedef union _WlzCMeshNodP
+{
+  void			*v;		/*! Generic pointer. */
+  struct _WlzCMeshNod2D *n2;		/*!< 2D node pointer. */
+  struct _WlzCMeshNod3D *n3;		/*!< 3D node pointer. */
+} WlzCMeshNodP;
 
 /*!
 * \struct       _WlzCMeshEdgU2D
@@ -3187,6 +3075,19 @@ typedef struct _WlzCMeshEdgU3D
                                              same node (un-ordered). */
   struct _WlzCMeshFace *face;           /*!< Parent face. */
 } WlzCMeshEdgU3D;
+
+/*!
+* \union       _WlzCMeshEdgUP
+* \ingroup      WlzMesh
+* \brief        An edge use pointer for a 2 or 3D mesh.
+*               Typedef: ::WlzCMeshEdgUP.
+*/
+typedef union _WlzCMeshEdgUP
+{
+  void			 *v;		/*! Generic pointer. */
+  struct _WlzCMeshEdgU2D *e2;		/*!< 2D node pointer. */
+  struct _WlzCMeshEdgU3D *e3;		/*!< 3D node pointer. */
+} WlzCMeshEdgUP;
 
 /*!
 * \struct       _WlzCMeshFace
@@ -3305,6 +3206,19 @@ typedef struct _WlzCMeshElm3D
   struct _WlzCMeshFace face[4];         /*!< Faces of the mesh element. */
   void		*prop;      		/*!< Element properties. */
 } WlzCMeshElm3D;
+
+/*!
+* \union       _WlzCMeshElmP
+* \ingroup      WlzMesh
+* \brief        A element pointer for a 2 or 3D mesh.
+*               Typedef: ::WlzCMeshElmP.
+*/
+typedef union _WlzCMeshElmP
+{
+  void			*v;		/*! Generic pointer. */
+  struct _WlzCMeshElm2D *e2;		/*!< 2D element pointer. */
+  struct _WlzCMeshElm3D *e3;		/*!< 3D element pointer. */
+} WlzCMeshElmP;
 
 /*!
 * \struct       _WlzCMeshBucketGrid2D
@@ -3466,6 +3380,149 @@ typedef union _WlzCMeshP
   WlzCMesh2D	*m2;
   WlzCMesh3D	*m3;
 } WlzCMeshP;
+
+/************************************************************************
+* Functions
+************************************************************************/
+
+/*!
+* \enum         _WlzFnType
+* \ingroup	WlzFunction
+* \brief	The types of function.
+* 		Typedef: ::WlzFnType.
+*/
+typedef enum _WlzFnType
+{
+  WLZ_FN_BASIS_2DGAUSS,        		/*!< Gaussian basis function */
+  WLZ_FN_BASIS_3DGAUSS,
+  WLZ_FN_BASIS_2DPOLY,                   /*!< Polynomial basis function */
+  WLZ_FN_BASIS_3DPOLY,
+  WLZ_FN_BASIS_2DMQ,			/*!< Multiquadric basis function */
+  WLZ_FN_BASIS_3DMQ,
+  WLZ_FN_BASIS_2DTPS,              	/*!< Thin plate spline basis function */
+  WLZ_FN_BASIS_3DTPS,
+  WLZ_FN_BASIS_2DCONF_POLY,		/*!< 2D Conformal polynomial basis
+  					     function */
+  WLZ_FN_BASIS_3DCONF_POLY,
+  WLZ_FN_BASIS_3DMOS,			/*!< 3D Multi-order spline. */
+  WLZ_FN_BASIS_SCALAR_3DMOS,		/*!< 3D Multi-order spline with scalar
+                                             values. */
+  WLZ_FN_SCALAR_MOD,			/*!< Modulus (abs() or fabs()). */
+  WLZ_FN_SCALAR_EXP,                    /*!< Exponential (exp()). */
+  WLZ_FN_SCALAR_LOG,                    /*!< Logarithm (log()). */
+  WLZ_FN_COUNT				/*!< Not a function but the number
+  					     of functions. Keep this the
+					     last of the enums! */
+} WlzFnType;
+
+/*!
+* \typedef	WlzBasisEvalFn
+* \ingroup	WlzFunction
+* \brief	An alternative basis function evaluation function that may
+*		may be called.
+*/
+typedef double (*WlzBasisEvalFn)(void *, double);
+
+/*!
+* \typedef	WlzBasisDistFn
+* \ingroup	WlzFunction
+* \brief	An alternative basis function distance function that may
+*		may be called.
+*/
+typedef double (*WlzBasisDistFn)(void *, int, WlzVertex);
+
+/*!
+* \struct	_WlzBasisFn
+* \ingroup	WlzFunction
+* \brief	A basis function.
+*		Typedef: ::WlzBasisFn.
+*/
+typedef struct _WlzBasisFn
+{
+  WlzFnType     type;       		/*!< The transform basis function. */
+  int           nPoly;          	/*!< Polynomial order + 1. */
+  int           nBasis;             	/*!< Number of basis function
+  					     coefficients. */
+  int           nVtx;                   /*!< Number of control point
+  					     vertices. */
+  int		maxVx;			/*!< Maximum number of vertices space
+  					     has been allocated for. */
+  WlzVertexP    poly;          		/*!< Polynomial coefficients. */
+  WlzVertexP    basis;         		/*!< Basis function coefficients. */
+  WlzVertexP    vertices;     		/*!< Control point vertices, these are
+  					     the destination vertices of the
+					     control points used to define the
+					     basis function transform. */
+  WlzVertexP	sVertices;		/*!< Source vertices used to compute
+  					     the transform. Not always used
+					     and may be NULL. */
+  void		*param;			/*!< Other parameters used by the
+  					     basis function, e.g. delta in
+					     the MQ and Gauss basis
+					     functions. Must be allocated
+					     in a single block to allow
+					     the parameters to be freed
+					     by AlcFree(). */
+#ifdef WLZ_EXT_BIND
+  void		*evalFn;
+#else
+  WlzBasisEvalFn evalFn;		/*!< An alternative basis function
+  					     evaluation function that may
+					     be called if non NULL. */
+#endif
+  WlzHistogramDomain *evalData;		/*!< Data passed to the alternative
+  					     basis function evaluation
+					     function if the function pointer
+					     is non NULL. AlcFree() will be
+					     called to free the data when the
+					     basis function is free'd. */
+#ifdef WLZ_EXT_BIND
+  void		*distFn;
+  void		*mesh;
+#else
+  WlzBasisDistFn distFn;		/*!< An alternative basis function
+  					     distance function that may
+					     be called if non NULL. */
+  WlzCMeshP	mesh;			/*!< Associated mesh. */
+#endif
+  double 	**distMap;		/*!< Array of one dimensional arrays.
+					     There is a one dimensional array
+					     of mesh node distances for each
+					     landmark pair. Where the mesh is
+					     the mesh in the associated
+					     transform. In each one dimensional                                              array the node distances are
+					     indexed bu the node indices.
+					     There is a one dimensional array
+					     for each of the control points.
+					     Essentialy these arrays cache
+					     distances to avoid recomputation.
+					     If a distance array is no longer
+					     valid it should be freed and set
+					     to NULL, it will then be
+					     recomputed as needed.
+					     Athough the number of control
+					     points may vary the number of
+					     mesh nodes must remain constant. */
+} WlzBasisFn;
+
+/*!
+* \struct	_WlzThreshCbStr
+* \ingroup	WlzType
+* \brief	Callback structure from WlzCbThreshold()
+*		Typedef: ::WlzThreshCbStr.
+*/
+typedef struct _WlzThreshCbStr
+{
+  WlzPixelP	pix;
+  WlzIVertex3	pos;
+} WlzThreshCbStr;
+
+/*!
+* \typedef	WlzThreshCbFn
+* \ingroup	WlzFunction
+* \brief	Callback function for the WlzCbThreshold()
+*/
+typedef int (*WlzThreshCbFn)(WlzObject *, void *, WlzThreshCbStr *);
 
 /************************************************************************
 * Transforms
@@ -4218,7 +4275,11 @@ typedef enum _Wlz3DViewStructInitMask
   WLZ_3DVIEWSTRUCT_INIT_TRANS	= (1),	  /*!< Initialised transform */
   WLZ_3DVIEWSTRUCT_INIT_BB	= (1<<1), /*!< Initialised bounding box */
   WLZ_3DVIEWSTRUCT_INIT_LUT     = (1<<2), /*!< Initialised look-up tables */
+#ifndef WLZ_EXT_BIND
   WLZ_3DVIEWSTRUCT_INIT_ALL	= 0x7	  /*!< Initialised all convenience mask */
+#else
+  WLZ_3DVIEWSTRUCT_INIT_ALL	= (7)     /*!< Initialised all convenience mask */
+#endif
 } Wlz3DViewStructInitMask;
 
 /************************************************************************
