@@ -247,7 +247,8 @@ WlzVertexP 	WlzVerticesFromObjBnd(WlzObject *obj,
 WlzErrorNum	WlzVerticesFromObjBnd2I(WlzObject *obj,
 					int *dstNVtx, WlzIVertex2 **dstVtx)
 {
-  int		nVtx = 0;
+  int		off = 0,
+  		nVtx = 0;
   WlzVertexP	vtx;
   WlzObject	*bObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -266,7 +267,8 @@ WlzErrorNum	WlzVerticesFromObjBnd2I(WlzObject *obj,
     }
     else
     {
-      errNum = WlzVerticesCpBound(vtx, NULL, WLZ_VERTEX_I2, 0, bObj->domain.b);
+      errNum = WlzVerticesCpBound(vtx, NULL, WLZ_VERTEX_I2, &off,
+      				  bObj->domain.b);
     }
   }
   (void )WlzFreeObj(bObj);
@@ -1448,10 +1450,13 @@ static WlzVertexP WlzVerticesFromGM3(WlzGMModel *model,
 */
 static int	WlzVerticesCntBound(WlzBoundList *bound)
 {
-  int		cnt;
+  int		cnt = 0;
 
-  cnt = bound->poly->nvertices + WlzVerticesCntBound(bound->next) +
-  	WlzVerticesCntBound(bound->down);
+  if(bound != NULL)
+  {
+    cnt = bound->poly->nvertices + WlzVerticesCntBound(bound->next) +
+	  WlzVerticesCntBound(bound->down);
+  }
   return(cnt);
 }
 

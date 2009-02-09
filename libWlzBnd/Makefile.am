@@ -43,11 +43,11 @@ AM_CPPFLAGS		= \
 			  -I$(top_srcdir)/libAlc \
              		  $(all_includes)
 
-lib_LTLIBRARIES 	= libWlz.la
+lib_LTLIBRARIES 	= libWlzBnd.la
 
-libWlz_la_LDFLAGS 	= -release @PACKAGE_VERSION@
+libWlzBnd_la_LDFLAGS 	= -release @PACKAGE_VERSION@
 
-libWlz_la_SOURCES 	= \
+libWlzBnd_la_SOURCES 	= \
 			  WlzBnd3DWarp.c \
 			  WlzBndBasisFn.c \
 			  WlzBndFunction.c \
