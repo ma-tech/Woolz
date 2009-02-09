@@ -153,13 +153,13 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 *		\f$lambda_0\f$, \f$lambda_1\f$ and \f$lambda_2\f$ is -ve.
 *		It is inside if all are +ve and on an edge of the
 *		triangle if any are close to zero (ie < DBL_EPSILON).
-* \param	vx0			First vertex of triangle.
-* \param	vx1			Second vertex of triangle.
-* \param	vx2			Third vertex of triangle.
-* \param	vxP			Given vertex.
+* \param	p0			First vertex of triangle.
+* \param	p1			Second vertex of triangle.
+* \param	p2			Third vertex of triangle.
+* \param	pP			Given vertex.
 */
-int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
-				     WlzDVertex2 vx2, WlzDVertex2 vxP)
+int		 WlzGeomVxInTriangle2D(WlzDVertex2 p0, WlzDVertex2 p1,
+				       WlzDVertex2 p2, WlzDVertex2 pP)
 {
   int		inside = 0;
   double	tA,
@@ -172,26 +172,86 @@ int		 WlzGeomVxInTriangle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 		l1,
 		l2,
 		delta;
+  const double	eps = 1.0e-10;
 
-  tA = vx0.vtX - vx2.vtX;
-  tB = vx1.vtX - vx2.vtX;
-  tD = vx0.vtY - vx2.vtY;
-  tE = vx1.vtY - vx2.vtY;
+  tA = p0.vtX - p2.vtX;
+  tB = p1.vtX - p2.vtX;
+  tD = p0.vtY - p2.vtY;
+  tE = p1.vtY - p2.vtY;
   delta = (tA * tE) - (tB * tD);
-  if(fabs(delta) > DBL_EPSILON)
+  if(fabs(delta) > eps)
   {
-    tC = vx2.vtX - vxP.vtX;
-    tF = vx2.vtY - vxP.vtY;
-    l0 = ((tB * tF) - (tC * tE)) / delta;
-    l1 = ((tC * tD) - (tA * tF)) / delta;
+    delta = 1.0 / delta;
+    tC = p2.vtX - pP.vtX;
+    tF = p2.vtY - pP.vtY;
+    l0 = delta * ((tB * tF) - (tC * tE));
+    l1 = delta * ((tC * tD) - (tA * tF));
     l2 = 1.0 - (l0 + l1);
-    if((l0 < -DBL_EPSILON) || (l1 < -DBL_EPSILON) ||
-       (l2 < -DBL_EPSILON))
+    if((l0 < -eps) || (l1 < -eps) || (l2 < -eps))
     {
       inside = -1;
     }
-    else if((l0 > DBL_EPSILON) && (l1 > DBL_EPSILON) &&
-            (l2 > DBL_EPSILON))
+    else if((l0 > eps) && (l1 > eps) && (l2 > eps))
+    {
+      inside = 1;
+    }
+  }
+  return(inside);
+}
+
+/*!
+* \return	Value indicating the position of the vertex with respect
+*               to the triangle in 3D:
+*		  +ve if the vertex is inside the triangle,
+*		  0   if the vertex is on an edge of the triangle and
+*		  -ve if the vertex is outside the triangle.
+* \ingroup	WlzGeometry
+* \brief	Test's to set if the given vertex lies within the given
+*		triangle using the signs of cross products.
+*
+*		If the triangle has vertices \f$p_0, p_1, p_2\f$ and the
+*		test vertex is \f$p_x\f$, then the vertex in trinagle
+*		test can be reduced to examinging the signs of three
+*		vector cross products:
+*		\f$(p_1 - p_0) \times (p_x - p_0)\f$,
+*		\f$(p_2 - p_1) \times (p_x - p_1)\f$ and
+*		\f$(p_0 - p_2) \times (p_x - p_2)\f$.
+* \param	p0			First vertex of triangle.
+* \param	p1			Second vertex of triangle.
+* \param	p2			Third vertex of triangle.
+* \param	pP			Given test vertex.
+*/
+int		 WlzGeomVxInTriangle3D(WlzDVertex3 p0, WlzDVertex3 p1,
+				       WlzDVertex3 p2, WlzDVertex3 pP)
+{
+  int		inside = 0;
+  double	s0,
+  		s1;
+  WlzDVertex3	u,
+  		v,
+		w;
+  const double	eps = 1.0e-10;
+
+  /* TODO Test this function. */
+  WLZ_VTX_3_SUB(p0, p0, pP);
+  WLZ_VTX_3_SUB(p1, p1, pP);
+  WLZ_VTX_3_SUB(p2, p2, pP);
+  WLZ_VTX_3_CROSS(u, p0, p1);
+  WLZ_VTX_3_CROSS(v, p1, p2);
+  s0 = WLZ_VTX_3_DOT(u, v);
+  if(s0 < -eps)
+  {
+    inside = -1;
+  }
+  else
+  {
+    WLZ_VTX_3_CROSS(w, p2, p0);
+    s1 = WLZ_VTX_3_DOT(v, w);
+    if(s1 < -eps)
+    {
+      inside = -1;
+    }
+    else if((fabs(s0) > eps) && (fabs(s1) > eps))
     {
       inside = 1;
     }
@@ -296,6 +356,7 @@ int		 WlzGeomVxInTetrahedron(WlzDVertex3 v0, WlzDVertex3 v1,
 		vz12,
 		vz13,
 		vz23;
+  const double	eps = 1.0e-10;
 
   vz01 =  v0.vtZ - v1.vtZ;
   vz02 =  v0.vtZ - v2.vtZ;
@@ -307,8 +368,9 @@ int		 WlzGeomVxInTetrahedron(WlzDVertex3 v0, WlzDVertex3 v1,
 	  + v1.vtX * (-v0.vtY * vz23 + v2.vtY * vz03 - v3.vtY * vz02)
 	  + v2.vtX * ( v0.vtY * vz13 - v1.vtY * vz03 + v3.vtY * vz01)
 	  + v3.vtX * (-v0.vtY * vz12 + v1.vtY * vz02 - v2.vtY * vz01);
-  if(fabs(delta) > DBL_EPSILON)
+  if(fabs(delta) > eps)
   {
+    delta = 1.0 / delta;
     vy01 =  v0.vtY - v1.vtY;
     vy02 =  v0.vtY - v2.vtY;
     vy03 =  v0.vtY - v3.vtY;
@@ -325,8 +387,9 @@ int		 WlzGeomVxInTetrahedron(WlzDVertex3 v0, WlzDVertex3 v1,
     u1 = - v1.vtX * vz23  + v2.vtX * vz13  - v3.vtX * vz12;
     u2 =   v1.vtX * vy23  - v2.vtX * vy13  + v3.vtX * vy12;
     u3 = - v1.vtX * vyz23 + v2.vtX * vyz13 - v3.vtX * vyz12;
-    l0 =  (u0 * vP.vtX + u1 * vP.vtY + u2 * vP.vtZ + u3) / delta;
-    if(l0 < -DBL_EPSILON)
+    l0 =  delta * (u0 * vP.vtX + u1 * vP.vtY + u2 * vP.vtZ + u3);
+    l0 =  delta * (u0 * vP.vtX + u1 * vP.vtY + u2 * vP.vtZ + u3);
+    if(l0 < -eps)
     {
       inside = -1;
     }
@@ -336,8 +399,8 @@ int		 WlzGeomVxInTetrahedron(WlzDVertex3 v0, WlzDVertex3 v1,
       u1 =   v0.vtX * vz23  - v2.vtX * vz03  + v3.vtX * vz02;
       u2 = - v0.vtX * vy23  + v2.vtX * vy03  - v3.vtX * vy02;
       u3 =   v0.vtX * vyz23 - v2.vtX * vyz03 + v3.vtX * vyz02;
-      l1 =  (u0 * vP.vtX + u1 * vP.vtY + u2 * vP.vtZ + u3) / delta;
-      if(l1 < -DBL_EPSILON)
+      l1 =  delta * (u0 * vP.vtX + u1 * vP.vtY + u2 * vP.vtZ + u3);
+      if(l1 < -eps)
       {
         inside = -1;
       }
@@ -347,22 +410,19 @@ int		 WlzGeomVxInTetrahedron(WlzDVertex3 v0, WlzDVertex3 v1,
 	u1 = - v0.vtX * vz13  + v1.vtX * vz03  - v3.vtX * vz01;
 	u2 =   v0.vtX * vy13  - v1.vtX * vy03  + v3.vtX * vy01;
 	u3 = - v0.vtX * vyz13 + v1.vtX * vyz03 - v3.vtX * vyz01;
-	l2 =  (u0 * vP.vtX + u1 * vP.vtY + u2 * vP.vtZ + u3) / delta;
-	if(l2 < -DBL_EPSILON)
+	l2 =  delta * (u0 * vP.vtX + u1 * vP.vtY + u2 * vP.vtZ + u3);
+	if(l2 < -eps)
 	{
 	  inside = -1;
 	}
 	else
 	{
           l3 = 1.0 - (l0 + l1 + l2);
-	  if(l3 < -DBL_EPSILON)
+	  if(l3 < -eps)
 	  {
 	    inside = -1;
 	  }
-	  else if((l0 > DBL_EPSILON) &&
-	          (l1 > DBL_EPSILON) &&
-		  (l2 > DBL_EPSILON) &&
-		  (l3 > DBL_EPSILON))
+	  else if((l0 > eps) && (l1 > eps) && (l2 > eps) && (l3 > eps))
 	  {
 	    inside = 1;
 	  }
@@ -574,6 +634,7 @@ int		WlzGeomLineSegmentsIntersect(WlzDVertex2 p0, WlzDVertex2 p1,
   		tp;
   WlzDVertex2	ict;
 
+  ict = p0;
   /* To minimize numerical problems don't factorize the expresion for dn. */
   dn = (p0.vtX * (q1.vtY - q0.vtY)) + (p1.vtX * (q0.vtY - q1.vtY)) +
        (q0.vtX * (p0.vtY - p1.vtY)) + (q1.vtX * (p1.vtY - p0.vtY));
@@ -1172,6 +1233,7 @@ int		WlzGeomPlaneTriangleIntersect(double a, double b,
   int		isnFlg[3];
   WlzDVertex3	isnVal[3];
 
+  isn0 = isn1 = p0;
   valFlg = dstIsn0 && dstIsn1;
   isnFlg[0] = WlzGeomPlaneLineIntersect(a, b, c, d, p0, p1, isnVal + 0);
   isnFlg[1] = WlzGeomPlaneLineIntersect(a, b, c, d, p1, p2, isnVal + 1);
@@ -2548,9 +2610,9 @@ double		WlzGeomCos3V(WlzDVertex2 v0, WlzDVertex2 v1, WlzDVertex2 v2)
 * \param	seg1				Second vertex of line segment.
 * \param	tol				Tollerance.
 */
-int             WlzGeomVtxOnLineSegment(WlzDVertex2 tst,
-                                        WlzDVertex2 seg0, WlzDVertex2 seg1,
-                                        double tol)
+int             WlzGeomVtxOnLineSegment2D(WlzDVertex2 tst,
+                                          WlzDVertex2 seg0, WlzDVertex2 seg1,
+                                          double tol)
 {
   int           onSeg = 0;
   double        mS,
@@ -2618,6 +2680,94 @@ int             WlzGeomVtxOnLineSegment(WlzDVertex2 tst,
 	    onSeg = 1;
 	  }
 	}
+      }
+    }
+  }
+  return(onSeg);
+}
+
+/*!
+* \return	Non-zero value only if test vertex is on the line segment.
+* \ingroup	WlzGeometry
+* \brief	Tests whether the given test vertex is on the given line
+* 		segment.
+* 		If all three vertices are coincident then the test vertex
+* 		is considered to line on the line segment.
+* \param	tst				Test vertex.
+* \param	seg0				First vertex of line segment.
+* \param	seg1				Second vertex of line segment.
+* \param	tol				Tollerance.
+*/
+int             WlzGeomVtxOnLineSegment3D(WlzDVertex3 tst,
+                                        WlzDVertex3 seg0, WlzDVertex3 seg1,
+                                        double tol)
+{
+  int           onSeg = 0;
+  double        del,
+  		tolSq;
+  WlzDVertex3   crs,
+  		delS,
+                delT;
+  WlzDBox3	box;
+
+  /* TODO Test this function. */
+  /* 1. Simple in box test. */
+  box.xMin = box.xMax = seg0.vtX;
+  box.yMin = box.yMax = seg0.vtY;
+  box.zMin = box.zMax = seg0.vtZ;
+  if(seg1.vtX < box.xMin)
+  {
+    box.xMin = seg1.vtX;
+  }
+  else if(seg1.vtX > box.xMax)
+  {
+    box.xMax = seg1.vtX;
+  }
+  if(seg1.vtY < box.yMin)
+  {
+    box.yMin = seg1.vtY;
+  }
+  else if(seg1.vtY > box.yMax)
+  {
+    box.yMax = seg1.vtY;
+  }
+  if(seg1.vtZ < box.zMin)
+  {
+    box.zMin = seg1.vtZ;
+  }
+  else if(seg1.vtZ > box.zMax)
+  {
+    box.zMax = seg1.vtZ;
+  }
+  if(((tst.vtX - box.xMin) > -tol) &&
+     ((tst.vtY - box.yMin) > -tol) &&
+     ((tst.vtZ - box.zMin) > -tol) &&
+     ((box.xMax - tst.vtX) > -tol) &&
+     ((box.yMax - tst.vtY) > -tol) &&
+     ((box.zMax - tst.vtZ) > -tol))
+  {
+    /* 2. Test vertex coincident with either segment vertex. */
+    tolSq = tol * tol;
+    if(WlzGeomVtxEqual3D(seg0, tst, tolSq) ||
+       WlzGeomVtxEqual3D(seg1, tst, tolSq))
+    {
+      onSeg = 1;
+    }
+    else
+    {
+      /* 3. Test distance between line segments seg0, seg1 and seg0, tst
+       * are neither parallel or anti-parallel. */
+      WLZ_VTX_3_SUB(delS, seg1, seg0);
+      WLZ_VTX_3_SUB(delT, tst, seg0);
+      WLZ_VTX_3_CROSS(crs, delS, delT);
+      del = WLZ_VTX_3_SQRLEN(crs);
+      if(del < tol  * tol)
+      {
+	onSeg = 1;
+      }
+      else
+      {
+	onSeg = 0;
       }
     }
   }
@@ -2745,4 +2895,207 @@ int		WlzGeomRectFromWideLine(WlzDVertex2 s, WlzDVertex2 t,
     WLZ_VTX_2_ADD(v[3], t, f);
   }
   return(coincident);
+}
+
+/*!
+* \return	Intersection of ray with plane.
+* \ingroup	WlzGeometry
+* \brief	Computes the intersection of a ray (vector \f$\mathbf{v}\f$)
+* 		through an off plane vertex (\f$\mathbf{p_3}\f$) with a plane.
+* 		The plane is defined by three on plane vertices
+* 		\f$(\mathbf{p_0}, \mathbf{p_1}, \mathbf{p_2})\f$.
+* 		\f$q\f$ the vertex at the intersection is found by solving
+* 		the vector equations
+* 		\f[
+		(\mathbf{p_1} - \mathbf{p_0}) \times
+		(\mathbf{p_2} - \mathbf{p_0}) .
+		(\mathbf{q}   - \mathbf{p_0}) = \mathbf{0},
+		\mathbf{n} \times (\mathbf{p_3} - \mathbf{q}) = \mathbf{0}
+		\f]
+*		These are equivalunt to solving
+*		\f[
+                \left|\begin{array}{ccc}
+                p_{1x} - p_{0x} & p_{1y} - p_{0y} & p_{1z} - p_{0z} \\
+                p_{2x} - p_{0x} & p_{2y} - p_{0y} & p_{2z} - p_{0z} \\
+                q_x    - p_{0x} & q_y    - p_{0y} & q_z    - p_{0z}
+                \end{array}\right| = 0,
+                \left|\begin{array}{ccc}
+                \mathbf{i}   & \mathbf{j}   & \mathbf{k} \\
+                n_x          & n_y          & n_z \\
+                p_{3x} - q_x & p_{3y} - q_y & p_{3z} - q_z
+                \end{array}\right| = 0
+		\f]
+* \param	v			Unit vector for ray.
+* \param	p0			First point on the plane.
+* \param	p1			Second point on the plane.
+* \param	p2			Third point on the plane.
+* \param	p3			Off plane point that ray passes
+* 					through.
+* \param	dstPar			Destination value set to 1 if the
+* 					vector is parrallel to the plane,
+* 					must not be NULL.
+*/
+WlzDVertex3	WlzGeomRayPlaneIntersection(WlzDVertex3 v,
+					    WlzDVertex3 p0, WlzDVertex3 p1,
+					    WlzDVertex3 p2, WlzDVertex3 p3,
+					    int *dstPar)
+{
+  /* TODO test this function! */
+  double	a,
+  		b,
+		c,
+		d,
+		e,
+		f,
+		g,
+		h;
+  WlzDVertex3	p1r,
+		q;
+  		
+  q = p0;
+  WLZ_VTX_3_SUB(p1r, p1, p0);
+  a = p0.vtY * p1.vtZ - p0.vtZ * p1.vtY +
+      p1r.vtY * p2.vtZ - p1r.vtZ * p2.vtY;
+  b = p0.vtZ * p1.vtX - p0.vtX * p1.vtZ +
+      p1r.vtZ * p2.vtX - p1r.vtX * p2.vtZ;
+  c = p0.vtX * p1.vtY - p0.vtY * p1.vtX +
+      p1r.vtX * p2.vtY - p1r.vtY * p2.vtX;
+  d = -(v.vtX * a + v.vtY * b + v.vtZ * c);
+  if(d * d < DBL_EPSILON)
+  {
+    *dstPar = 1;
+  }
+  else
+  {
+    *dstPar = 0;
+    e = (p0.vtY * p1.vtX - p0.vtX * p1.vtY) * p2.vtZ +
+	(p0.vtX * p1.vtZ - p0.vtZ * p1.vtX) * p2.vtY +
+	(p0.vtZ * p1.vtY - p0.vtY * p1.vtZ) * p2.vtX;
+    f = p0.vtZ * p1.vtY - p0.vtY * p1.vtZ +
+	p1r.vtZ * p2.vtY - p1r.vtY * p2.vtZ;
+    g = p0.vtY * p1.vtX - p0.vtX * p1.vtY +
+	p1r.vtY * p2.vtX - p1r.vtX * p2.vtY;
+    h = p0.vtX * p1.vtZ - p0.vtZ * p1.vtX +
+	p1r.vtX * p2.vtZ - p1r.vtZ * p2.vtX;
+    q.vtX = (v.vtX * (b * p3.vtY + c * p3.vtZ + e) +
+	     v.vtY * h * p3.vtX +
+	     v.vtZ * g * p3.vtX)/ d;
+    q.vtY = (v.vtX * f * p3.vtY +
+	     v.vtY * (c * p3.vtZ + a * p3.vtX + e) +
+	     v.vtZ * g * p3.vtY)/ d;
+    q.vtZ = (v.vtX * f * p3.vtZ +
+	     v.vtY * h * p3.vtZ +
+	     v.vtZ * (a * p3.vtX + b * p3.vtY + e))/ d;
+  }
+  return(q);
+}
+
+/*!
+* \return	Value indicating the position of the vertex with respect
+*               to the triangle in 3D:
+*		  +ve if the vertex is inside the triangle,
+*		  0   if the vertex is on an edge of the triangle and
+*		  -ve if the vertex is outside the triangle.
+* \ingroup	WlzGeometry
+* \brief	Test's to set if a ray directed from a given point
+* 		intersects a triangle in 3D space. This function is
+* 		just a wrapper calling WlzGeomRayPlaneIntersection()
+* 		and WlzGeomVxInTriangle3D().
+* \param	v			Unit vector for ray.
+* \param	p0			First vertex on triangle.
+* \param	p1			Second vertex on the triangle
+* \param	p2			Third vertex on the triangle
+* \param	pOP			Off plane point that ray passes
+* 					through.
+* \param	dstIsnPos		Destination for coordinates of
+* 					the intersection, may be NULL.
+* \param	dstPar			Destination value set to 1 if the
+* 					vector is parrallel to the plane,
+* 					may be NULL.
+*/
+extern int	WlzGeomRayTriangleIntersect3D(WlzDVertex3 v,
+					WlzDVertex3 p0, WlzDVertex3 p1,
+					WlzDVertex3 p2, WlzDVertex3 pOP,
+					WlzDVertex3 *dstIsnPos,
+					int *dstPar)
+{
+  int		isn = 0,
+  		par = 0;
+  WlzDVertex3	isnPos;
+
+  isnPos = WlzGeomRayPlaneIntersection(v, p0, p1, p2, pOP, &par);
+  if(par == 0)
+  {
+    isn = WlzGeomVxInTriangle3D(p0, p1, p2, isnPos);
+  }
+  if(dstIsnPos)
+  {
+    *dstIsnPos = isnPos;
+  }
+  if(dstPar)
+  {
+    *dstPar = par;
+  }
+  return(isn);
+}
+
+/*!
+* \return	Interpolated value.
+* \ingroup	WlzGeometry
+* \brief	Given the coordinates of the vertices of a 2D triangle
+* 		and a set of values at each of these vertices, this
+* 		function interpolates the value at the given position
+* 		which is either inside or on an edge of the triangle.
+* 		This is implimented using barycentric coordinates.
+* 		Once the barycentric coordinates (\f$\lambda_0\f$,
+* 		\f$\lambda_0\f$, \f$\lambda_2\f$) have been computed
+* 		then the interpolated value is given by:
+* 		\f$v = v_0 \lambda_1 + v_1 \lambda_1 + v_2 \lambda_2\f$.
+* 		If the determinant is zero in solving for the barycentric
+* 		coordinates then the interpolated value is just the
+* 		mean of the given values.
+* \param	p0			First vertex of triangle.
+* \param	p1			Second vertex of triangle.
+* \param	p2			Third vertex of triangle.
+* \param	v0			Value at first vertex of triangle.
+* \param	v1			Value at second vertex of triangle.
+* \param	v2			Value at third vertex of triangle.
+* \param	pX			Given position, which is within
+* 					(or on) the triangle.
+*/
+extern double	WlzGeomInterpolateTri2D(WlzDVertex2 p0, WlzDVertex2 p1,
+                                        WlzDVertex2 p2,
+					double v0, double v1, double v2,
+					WlzDVertex2 pX)
+{
+  double	
+		l0,
+		l1,
+		l2,
+		del,
+		val;
+  WlzDVertex2	q0,
+  		q1,
+		qX;
+  const double	eps = 1.0e-10;
+
+  q0.vtX = p0.vtX - p2.vtX;
+  q1.vtX = p1.vtX - p2.vtX;
+  q0.vtY = p0.vtY - p2.vtY;
+  q1.vtY = p1.vtY - p2.vtY;
+  del = (q0.vtX * q1.vtY) - (q1.vtX * q0.vtY);
+  if(fabs(del) > eps)
+  {
+    qX.vtX = pX.vtX - p2.vtX;
+    qX.vtY = pX.vtY - p2.vtY;
+    l0 = ((q1.vtY * qX.vtX) - (q1.vtX * qX.vtY)) / del;
+    l1 = ((q0.vtX * qX.vtY) - (q0.vtY * qX.vtX)) / del;
+    l2 = 1.0 - (l0 + l1);
+    val = (l0 * v0) + (l1 * v1) + (l2 * v2);
+  }
+  else
+  {
+    val = (v0 + v1 + v2) / 3.0;
+  }
+  return(val);
 }
