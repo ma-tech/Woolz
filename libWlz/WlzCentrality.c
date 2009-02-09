@@ -463,8 +463,7 @@ static void	WlzCentralityUpdate2D(double *fNum, double *fDnm,
 {
   int		idA;
   double	ang,
-  		rad,
-		tmp;
+  		rad;
   WlzDVertex2	posD;
 
   posD.vtX = pos.vtX;
