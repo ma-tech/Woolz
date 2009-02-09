@@ -62,6 +62,8 @@ bin_PROGRAMS		= \
 			  WlzChangeEMAPProperty \
 			  WlzClipObjToBox \
 			  WlzClosestVertices \
+			  WlzCMeshDistance \
+			  WlzCMeshGen \
 			  WlzCompound \
 			  WlzCompThresh \
 			  WlzConstruct3D \
@@ -85,6 +87,7 @@ bin_PROGRAMS		= \
 			  WlzErosion \
 			  WlzExplode \
 			  WlzFacts \
+			  WlzFile \
 			  WlzFilterNObjsValues \
 			  WlzGauss \
 			  WlzGaussNoise \
@@ -243,6 +246,14 @@ WlzClosestVertices_SOURCES		= WlzClosestVertices.c
 WlzClosestVertices_LDADD		= $(LDADD)
 WlzClosestVertices_LDFLAGS		= $(AM_LFLAGS)
 
+WlzCMeshDistance_SOURCES		= WlzCMeshDistance.c
+WlzCMeshDistance_LDADD			= $(LDADD)
+WlzCMeshDistance_LDFLAGS		= $(AM_LFLAGS)
+
+WlzCMeshGen_SOURCES			= WlzCMeshGen.c
+WlzCMeshGen_LDADD			= $(LDADD)
+WlzCMeshGen_LDFLAGS			= $(AM_LFLAGS)
+
 WlzCompThresh_SOURCES			= WlzCompThresh.c
 WlzCompThresh_LDADD			= $(LDADD)
 WlzCompThresh_LDFLAGS			= $(AM_LFLAGS)
@@ -334,6 +345,10 @@ WlzExplode_LDFLAGS			= $(AM_LFLAGS)
 WlzFacts_SOURCES			= WlzFacts.c
 WlzFacts_LDADD				= $(LDADD)
 WlzFacts_LDFLAGS			= $(AM_LFLAGS)
+
+WlzFile_SOURCES				= WlzFile.c
+WlzFile_LDADD				= $(LDADD)
+WlzFile_LDFLAGS				= $(AM_LFLAGS)
 
 WlzFilterNObjsValues_SOURCES		= WlzFilterNObjsValues.c
 WlzFilterNObjsValues_LDADD		= $(LDADD)
