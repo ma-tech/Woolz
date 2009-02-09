@@ -92,7 +92,7 @@ to the standard error output.
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>
- 
+
 /* externals required by getopt  - not in ANSI C standard */
 #ifdef __STDC__ /* [ */
 extern int      getopt(int argc, char * const *argv, const char *optstring);
