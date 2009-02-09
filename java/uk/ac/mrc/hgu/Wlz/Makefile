@@ -73,7 +73,7 @@ WlzObject.class:	WlzObject.java
 
 WlzObject.java:
 			$(CP) C2Java/Binding/Enum/*.java \
-			      C2Java/Binding/Struct/*.java .
+			      C2Java/Binding/Struct/*.java . ; \
 			for J in $(HANDCODEDJAVA) ; \
 			do \
 			  $(CPP) -C -I. HandCodedJava/$$J | \
