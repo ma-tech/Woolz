@@ -46,6 +46,7 @@ static char _WlzBasisFn_c[] = "MRC HGU $Id$";
 #include <string.h>
 #include <limits.h>
 #include <float.h>
+#include <math.h>
 #include <Wlz.h>
 
 static void			WlzBasisFnEditSV(
@@ -96,10 +97,14 @@ static double   		WlzBasisFnValueMOSPhiPC(
 static double			WlzBasisFnScalarMOS3DEvalFn(
 				  void *basisFn,
 				  double rad);
-static WlzErrorNum 		WlzBasisFnComputeDistMap2D(
-				  WlzBasisFn *basisFn,
-				  WlzObject *cObj,
-				  WlzObject **dObj);
+static double			WlzBasisFnEucDistFn2D(
+				  void *bFnP,
+				  int idP,
+				  WlzVertex pos);
+static double			WlzBasisFnMapDistFn2D(
+				  void *bFnP,
+				  int idP,
+				  WlzVertex pos);
 static WlzDVertex2 		WlzBasisFnValueRedPoly2D(
 				  WlzDVertex2 *poly,
 				  WlzDVertex2 srcVx);
@@ -130,23 +135,17 @@ WlzErrorNum	WlzBasisFnFree(WlzBasisFn *basisFn)
     AlcFree(basisFn->vertices.v);
     AlcFree(basisFn->sVertices.v);
     AlcFree(basisFn->param);
-    if(basisFn->evalData)
+    if((basisFn->evalData != NULL))
     {
       (void )WlzFreeHistogramDomain(basisFn->evalData);
     }
-    if(basisFn->distMap)
+    if(basisFn->distMap != NULL)
     {
       for(idx = 0; idx < basisFn->nVtx; ++idx)
       {
-	(void )WlzFreeObj(basisFn->distMap[idx]);
+	AlcFree(basisFn->distMap[idx]);
       }
-    }
-    if(basisFn->distWSp)
-    {
-      for(idx = 0; idx < basisFn->nVtx; ++idx)
-      {
-	WlzGreyValueFreeWSp(basisFn->distWSp[idx]);
-      }
+      AlcFree(basisFn->distMap);
     }
     AlcFree(basisFn);
   }
@@ -230,7 +229,6 @@ WlzDVertex2 	WlzBasisFnValueGauss2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
     else
     {
       tD0 = basisFn->distFn(basisFn, idx, sPt);
-      tD0 *= tD0;
     }
     tD1 = (tD0 > DBL_EPSILON)? exp(tD0 * delta): 1.0;
     newVx.vtX += basisCo->vtX * tD1;
@@ -281,7 +279,6 @@ WlzDVertex2 	WlzBasisFnValueMQ2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
     else
     {
       tD0 = basisFn->distFn(basisFn, idx, sPt);
-      tD0 *= tD0;
     }
     tD0 = sqrt(tD0 + delta);
     newVx.vtX += basisCo->vtX * tD0;
@@ -650,70 +647,64 @@ double          WlzBasisFnValueMOSPhi(double r, double delta, double tau)
 * \return	Distance from given position to control point.
 * \ingroup	WlzFunction
 * \brief	Computes the distance from the given position to the control
-*		point with the given index for which a distance map has
-*		been computed.
+*		point with the given index using a simple Euclidean distance.
 * \param	bFnP			Used to pass the basis function
 *					data structure.
-* \param	idx			Index of the control point.
+* \param	idP			Index of the control point.
 * \param	pos			Given position passed using the
 *					vertex pointer union but always
 *					either 2D or 3D double..
 */
-double		WlzBasisFnMapDistFn2D(void *bFnP, int idx, WlzVertex pos)
+static double	WlzBasisFnEucDistFn2D(void *bFnP, int idP, WlzVertex pos)
 {
-  double	px,
-  		py,
-		dist = DBL_MAX;
+  double	dist = DBL_MAX;
+  WlzDVertex2	tmp;
   WlzBasisFn	*bFn;
-  WlzGreyValueWSpace *gVWSp;
 
-  if(((bFn = (WlzBasisFn *)bFnP) != NULL) &&
-     (bFn->distWSp != NULL) && ((gVWSp = bFn->distWSp[idx]) != NULL))
+  if((bFn = (WlzBasisFn *)bFnP) != NULL)
   {
-    px = pos.d2.vtX - WLZ_NINT(pos.d2.vtX - 0.5);
-    py = pos.d2.vtY - WLZ_NINT(pos.d2.vtY - 0.5);
-    WlzGreyValueGetCon(gVWSp, 0.0, pos.d2.vtY, pos.d2.vtX);
-    switch(gVWSp->gType)
-    {
-      case WLZ_GREY_LONG:
-	dist = (((gVWSp->gVal[0]).lnv * (1.0 - px) * (1.0 - py)) +
-		((gVWSp->gVal[1]).lnv * px * (1.0 - py)) +
-		((gVWSp->gVal[2]).lnv * (1.0 - px) * py) +
-		((gVWSp->gVal[3]).lnv * px * py));
-	break;
-      case WLZ_GREY_INT:
-	dist = (((gVWSp->gVal[0]).inv * (1.0 - px) * (1.0 - py)) +
-		((gVWSp->gVal[1]).inv * px * (1.0 - py)) +
-		((gVWSp->gVal[2]).inv * (1.0 - px) * py) +
-		((gVWSp->gVal[3]).inv * px * py));
-	break;
-      case WLZ_GREY_SHORT:
-	dist = (((gVWSp->gVal[0]).shv * (1.0 - px) * (1.0 - py)) +
-		((gVWSp->gVal[1]).shv * px * (1.0 - py)) +
-		((gVWSp->gVal[2]).shv * (1.0 - px) * py) +
-		((gVWSp->gVal[3]).shv * px * py));
-	break;
-      case WLZ_GREY_UBYTE:
-	dist = (((gVWSp->gVal[0]).ubv * (1.0 - px) * (1.0 - py)) +
-		((gVWSp->gVal[1]).ubv * px * (1.0 - py)) +
-		((gVWSp->gVal[2]).ubv * (1.0 - px) * py) +
-		((gVWSp->gVal[3]).ubv * px * py));
-	break;
-      case WLZ_GREY_FLOAT:
-	dist = (((gVWSp->gVal[0]).flv * (1.0 - px) * (1.0 - py)) +
-		((gVWSp->gVal[1]).flv * px * (1.0 - py)) +
-		((gVWSp->gVal[2]).flv * (1.0 - px) * py) +
-		((gVWSp->gVal[3]).flv * px * py));
-	break;
-      case WLZ_GREY_DOUBLE:
-	dist = (((gVWSp->gVal[0]).dbv * (1.0 - px) * (1.0 - py)) +
-		((gVWSp->gVal[1]).dbv * px * (1.0 - py)) +
-		((gVWSp->gVal[2]).dbv * (1.0 - px) * py) +
-		((gVWSp->gVal[3]).dbv * px * py));
-	break;
-      default:
-        break;
-    }
+    tmp = *(bFn->vertices.d2 + idP);
+    WLZ_VTX_2_SUB(tmp, tmp, pos.d2);
+    dist = WLZ_VTX_2_SQRLEN(tmp);
+  }
+  return(dist);
+}
+
+/*!
+* \return	Distance from given position to control point.
+* \ingroup	WlzFunction
+* \brief	Computes the distance from the given position to the control
+*		point with the given index for which a distance map has
+*		been computed.
+* \param	bFnP			Used to pass the basis function
+*					data structure.
+* \param	idP			Index of the control point.
+* \param	pos			Given position passed using the
+*					vertex pointer union but always
+*					either 2D or 3D double..
+*/
+static double	WlzBasisFnMapDistFn2D(void *bFnP, int idP, WlzVertex pos)
+{
+  int		idE;
+  double	dist = DBL_MAX;
+  double	*map;
+  WlzBasisFn	*bFn;
+  WlzCMeshElm2D *elm;
+  WlzCMeshNod2D *nod[3];
+
+  bFn = (WlzBasisFn *)bFnP;
+  map = bFn->distMap[idP];
+  if((idE = WlzCMeshElmEnclosingPos2D(bFn->mesh.m2, -1,
+                                      pos.d2.vtX, pos.d2.vtY, NULL)) >= 0)
+  {
+    elm = (WlzCMeshElm2D *)AlcVectorItemGet(bFn->mesh.m2->res.elm.vec, idE);
+    nod[0] = elm->edu[0].nod;
+    nod[1] = elm->edu[1].nod;
+    nod[2] = elm->edu[2].nod;
+    dist = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos, nod[2]->pos,
+			 map[nod[0]->idx], map[nod[1]->idx], map[nod[2]->idx],
+			 pos.d2);
+    dist *= dist;
   }
   return(dist);
 }
@@ -786,135 +777,48 @@ static double   WlzBasisFnValueMOSPhiPC(double r, double v, double w,
 }
 
 /*!
-* \return	Woolz error code.
-* \ingroup	WlzFunction
-* \brief	Computes distance maps for a 2D basis function transform
-*		which has both the number of control points and the
-*		control points set.
-* \param	basisFn			Partialy completed basis function
-*					under construction.
-* \param	cObj			Constraint object.
-* \param	dObj			Array of pre-computed distance
-*					transform objects.
-*/
-static WlzErrorNum WlzBasisFnComputeDistMap2D(WlzBasisFn *basisFn,
-					WlzObject *cObj, WlzObject **dObj)
-{
-  int		idx;
-  WlzDomain	sDom;
-  WlzValues	sVal;
-  WlzObject	*sObj;
-  WlzPixelV	outsideV;
-  WlzVertexP	vP;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-#ifdef WLZ_BASISFN_DISTMAP_ENV
-  char          *envStr;
-#endif /* WLZ_BASISFN_DISTMAP_ENV */
-  WlzDistanceType dFn = WLZ_APX_EUCLIDEAN_DISTANCE;
-  double 	dParam = 10.0;
-
-#ifdef WLZ_BASISFN_DISTMAP_ENV
-  if(((envStr = getenv("WLZ_BASISFN_DISTMAP_PARAM")) == NULL) ||
-     (sscanf(envStr, "%lg", &dParam) != 1))
-  {
-    dParam = 10.0;
-  }
-  if(((envStr = getenv("WLZ_BASISFN_DISTMAP_DFN")) == NULL) ||
-     (sscanf(envStr, "%d", &dFn) != 1))
-  {
-    dFn = WLZ_APX_EUCLIDEAN_DISTANCE;
-  }
-#endif /* WLZ_BASISFN_DISTMAP_ENV */
-  sVal.core = NULL;
-  outsideV.type = WLZ_GREY_INT;
-  outsideV.v.inv = INT_MAX;
-  basisFn->distFn = WlzBasisFnMapDistFn2D;
-  if(((basisFn->distMap = (WlzObject **)
-		          AlcCalloc(basisFn->nVtx,
-			            sizeof(WlzObject *))) == NULL) ||
-     ((basisFn->distWSp = (WlzGreyValueWSpace **)
-		          AlcCalloc(basisFn->nVtx,
-			            sizeof(WlzGreyValueWSpace *))) == NULL))
-  {
-    errNum = WLZ_ERR_MEM_ALLOC;
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    for(idx = 0; idx < basisFn->nVtx; ++idx)
-    {
-      if(dObj && dObj[idx])
-      {
-        basisFn->distMap[idx] = WlzAssignObject(dObj[idx], NULL);
-      }
-      else
-      {
-	sObj = NULL;
-	vP.d2 = &(basisFn->vertices.d2[idx]);
-	sDom.pts = WlzMakePoints(WLZ_POINTS_2D, 1, vP, 1, &errNum);
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  sObj = WlzMakeMain(WLZ_POINTS, sDom, sVal, NULL, NULL, &errNum);
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  basisFn->distMap[idx] = WlzAssignObject(
-				    WlzDistanceTransform(cObj, sObj,
-				    dFn, dParam,
-				    &errNum), NULL);
-	}
-	if(sObj)
-	{
-	  (void )WlzFreeObj(sObj);
-	}
-	else if(sDom.core)
-	{
-	  (void )WlzFreeDomain(sDom);
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  errNum = WlzSetBackground(basisFn->distMap[idx], outsideV);
-	}
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	basisFn->distWSp[idx] = WlzGreyValueMakeWSp(basisFn->distMap[idx],
-					   	    &errNum);
-      }
-      if(errNum != WLZ_ERR_NONE)
-      {
-	break;
-      }
-    }
-  }
-  return(errNum);
-}
-
-/*!
 * \return	New basis function.
 * \ingroup	WlzFunction
 * \brief	Creates a new Gaussian basis function.
+*
+* 		This function may be used either to compute a new Gaussian
+* 		radial basis function, or if given a previous Gaussian
+* 		radial basis function, to recompute a Gaussian basis
+* 		recycling the buffers (and distance map if used) from
+* 		the prevoius basis function when the control points
+* 		have changed. If recycling the buffers a new basis
+* 		function is created which uses the (reallocated)
+* 		buffers of the previous basis function. After this function
+* 		has been called the previous basis function should be freed.
 * \param	nPts			Number of control point pairs.
 * \param	dPts			Destination control points.
 * \param	sPts			Source control points.
 * \param	delta			Normalized delta value in range 
 *					[> 0.0 , < 1.0 ].
-* \param	cObj			Constraining object, within which all
-*					distances are constrained, if NULL
-*					Euclidean distances are used in place
-*					of constrained distances.
-* \param	dObj			Array of distance transform objects.
+* \param	prvBasisFn		Previous basis function to be recycled,
+* 					may be NULL. Arrays will be used for
+* 					the new basis function. Must be freed
+* 					after recycling.
+* \param	mesh			Used to compute constrained distances.
+* 					If NULL Euclidean distances will be
+* 					used.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
-				    WlzDVertex2 *dPts, WlzDVertex2 *sPts,
-				    double delta, WlzObject *cObj,
-				    WlzObject **dObj, WlzErrorNum *dstErr)
+WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts, WlzDVertex2 *dPts,
+                                      WlzDVertex2 *sPts, double delta,
+				      WlzBasisFn *prvBasisFn,
+				      WlzCMesh2D *mesh,
+				      WlzErrorNum *dstErr)
 {
-  int		idX,
+  int		tI0,
+  		idN,
+  		idX,
   		idY,
 		idX3,
 		idY3,
-		nSys;
+		nSys,
+		maxNod,
+		newMaxVx;
   double	tD0,
 		tD1,
 		deltaRg,
@@ -925,34 +829,183 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
   double	**aMx = NULL,
   		**vMx = NULL;
   WlzVertex	sPt;
-  WlzDVertex2	tDVx0;
   WlzDBox2	extentDB;
-  WlzBasisFn 	*basisFn = NULL;
+  WlzBasisFn	*newBasisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	stepVx = 10;
 
   nSys = nPts + 3;
   deltaSq = delta * delta;
-  if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
-     ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
-     (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
-     (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE) ||
-     ((basisFn = (WlzBasisFn *)AlcCalloc(sizeof(WlzBasisFn), 1)) == NULL) ||
-     ((basisFn->poly.v = AlcMalloc(sizeof(WlzDVertex2) * 3)) == NULL) ||
-     ((basisFn->basis.v = AlcMalloc(sizeof(WlzDVertex2) * nPts)) == NULL) ||
-     ((basisFn->vertices.v = AlcMalloc(sizeof(WlzDVertex2) * nPts)) == NULL) ||
-     ((basisFn->param = AlcMalloc(sizeof(double))) == NULL))
+  if(mesh != NULL)
   {
-    errNum = WLZ_ERR_MEM_ALLOC;
+    if((mesh->type != WLZ_CMESH_TRI2D) ||
+       ((prvBasisFn != NULL) && (mesh != prvBasisFn->mesh.m2)))
+    {
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+    }
   }
-  if((errNum == WLZ_ERR_NONE) && cObj)
+  if(errNum == WLZ_ERR_NONE)
   {
-    if((basisFn->sVertices.v = AlcMalloc(sizeof(WlzDVertex2) * nPts)) == NULL)
+    if(prvBasisFn)
+    {
+      /* Create a new basis function, reallocate the buffers of the previous
+       * basis function as required and then use them for the new basis
+       * function. */
+      if(prvBasisFn->type != WLZ_FN_BASIS_2DGAUSS)
+      {
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+      }
+      else
+      {
+	newMaxVx = prvBasisFn->maxVx;
+	if(prvBasisFn->maxVx < nPts)
+	{
+	  newMaxVx = nPts + stepVx;
+	  if(((newBasisFn = (WlzBasisFn *)AlcCalloc(sizeof(WlzBasisFn),
+	                                            1)) == NULL) ||
+	     ((prvBasisFn->basis.v = AlcRealloc(prvBasisFn->basis.v,
+				       sizeof(WlzDVertex2) *
+				       newMaxVx)) == NULL) ||
+	     ((prvBasisFn->vertices.v = AlcRealloc(prvBasisFn->vertices.v,
+				       sizeof(WlzDVertex2) *
+				       newMaxVx)) == NULL) ||
+	     ((prvBasisFn->sVertices.v = AlcRealloc(prvBasisFn->sVertices.v,
+				       sizeof(WlzDVertex2) *
+				       newMaxVx)) == NULL) ||
+	     ((prvBasisFn->distMap != NULL) &&
+	      ((prvBasisFn->distMap = (double **)
+	                              AlcRealloc(prvBasisFn->distMap,
+				          sizeof(double *) *
+					  newMaxVx)) == NULL)))
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  *newBasisFn = *prvBasisFn;
+	  prvBasisFn->poly.v = NULL;
+	  prvBasisFn->basis.v = NULL;
+	  prvBasisFn->vertices.v = NULL;
+	  prvBasisFn->sVertices.v = NULL;
+	  prvBasisFn->param = NULL;
+	  prvBasisFn->mesh.v = NULL;
+	  prvBasisFn->distMap = NULL;
+	  if(newBasisFn->distMap != NULL)
+	  {
+	    tI0 = ALG_MIN(newBasisFn->nVtx, prvBasisFn->nVtx);
+	    for(idN = 0; idN < tI0; ++idN)
+	    {
+	      if((WlzGeomCmpVtx2D(dPts[idN],
+	                          newBasisFn->vertices.d2[idN],
+				  DBL_EPSILON) == 0) ||
+		  (WlzGeomCmpVtx2D(sPts[idN],
+				   newBasisFn->sVertices.d2[idN],
+				   DBL_EPSILON) == 0))
+	      {
+		AlcFree(newBasisFn->distMap[idN]);
+		newBasisFn->distMap[idN] = NULL;
+	      }
+	    }
+	    for(idN = tI0; idN < prvBasisFn->nVtx; ++idN)
+	    {
+	      AlcFree(newBasisFn->distMap[idN]);
+	      newBasisFn->distMap[idN] = NULL;
+	    }
+	    for(idN = prvBasisFn->nVtx; idN < newBasisFn->maxVx; ++idN)
+	    {
+	      newBasisFn->distMap[idN] = NULL;
+	    }
+	  }
+	}
+      }
+    }
+    else
+    {
+      /* Create a new basis function, allocate the buffers of the new
+       * basis function as required. */
+      newMaxVx = nPts + stepVx;
+      if(((newBasisFn = (WlzBasisFn *)AlcCalloc(sizeof(WlzBasisFn),
+                                                       1)) == NULL) ||
+	 ((newBasisFn->poly.v = AlcMalloc(sizeof(WlzDVertex2) * 3)) == NULL) ||
+	 ((newBasisFn->basis.v = AlcMalloc(sizeof(WlzDVertex2) *
+	                                   newMaxVx)) == NULL) ||
+	 ((newBasisFn->vertices.v = AlcMalloc(sizeof(WlzDVertex2) *
+					      newMaxVx)) == NULL) ||
+	 ((newBasisFn->sVertices.v = AlcMalloc(sizeof(WlzDVertex2) *
+					      newMaxVx)) == NULL) ||
+	 ((newBasisFn->param = AlcMalloc(sizeof(double))) == NULL))
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	newBasisFn->nVtx = nPts;
+        newBasisFn->maxVx = newMaxVx;
+	if(newBasisFn->mesh.m2 == NULL)
+	{
+          newBasisFn->distFn = WlzBasisFnEucDistFn2D;
+	}
+	else
+	{
+	  if((newBasisFn->distMap = (double **)AlcCalloc(sizeof(double *),
+							 newMaxVx)) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	}
+      }
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && (mesh != NULL))
+  {
+    if(newBasisFn->distMap == NULL)
+    {
+      newBasisFn->distFn = WlzBasisFnEucDistFn2D;
+    }
+    else
+    {
+      /* Allocate and compute the distance maps. */
+      maxNod = newBasisFn->mesh.m2->res.nod.maxEnt;
+      newBasisFn->distFn = WlzBasisFnMapDistFn2D;
+      for(idN = 0; idN < newBasisFn->nVtx; ++idN)
+      {
+	if(newBasisFn->distMap[idN] == NULL)
+	{
+	  if((newBasisFn->distMap[idN] = (double *)
+					 AlcMalloc(sizeof(double) *
+						   maxNod)) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	  else
+	  {
+	    errNum = WlzCMeshFMarNodes2D(newBasisFn->mesh.m2,
+					 newBasisFn->distMap[idN],
+					 1, dPts + idN);
+	  }
+	  if(errNum != WLZ_ERR_NONE)
+	  {
+	    break;
+	  }
+	}
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Allocate matrices for solving basis function design equation. */
+    if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
+       ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+       (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    /* Compute range of displacements. */
     WlzBasisFnVxExtent2D(&extentDB, dPts, sPts, nPts);
     tD0 = extentDB.xMax - extentDB.xMin;
     tD1 = extentDB.yMax - extentDB.yMin;
@@ -964,21 +1017,22 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    basisFn->type = WLZ_FN_BASIS_2DGAUSS;
-    basisFn->nVtx = nPts;
-    WlzValueCopyDVertexToDVertex(basisFn->vertices.d2, dPts, nPts);
-    if(cObj)
+    newBasisFn->nVtx = nPts;
+    newBasisFn->maxVx = newMaxVx;
+    newBasisFn->type = WLZ_FN_BASIS_2DGAUSS;
+    newBasisFn->nVtx = nPts;
+    newBasisFn->nPoly = 2;
+    newBasisFn->nBasis = nPts;
+    WlzValueCopyDVertexToDVertex(newBasisFn->vertices.d2, dPts, nPts);
+    if(newBasisFn->mesh.v != NULL)
     {
-      WlzValueCopyDVertexToDVertex(basisFn->sVertices.d2, sPts, nPts);
-      errNum = WlzBasisFnComputeDistMap2D(basisFn, cObj, dObj);
+      WlzValueCopyDVertexToDVertex(newBasisFn->sVertices.d2, sPts, nPts);
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    basisFn->nPoly = 2;
-    basisFn->nBasis = nPts;
     deltaRg = deltaSq / (range * range);
-    *((double *)(basisFn->param)) = deltaRg;
+    *((double *)(newBasisFn->param)) = deltaRg;
     /* Fill matrix A and matrix b for the x component. */
     for(idY = 0; idY < 3; ++idY)
     {
@@ -1002,20 +1056,9 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
       *(*(aMx + 2) + idY3) = tD1;
       for(idX = 0; idX < idY; ++idX)
       {
-	if(basisFn->distFn)
-	{
-	  sPt.d2 = dPts[idX];
-	  tD0 = basisFn->distFn(basisFn, idY, sPt);
-	  tD0 *= tD0 * deltaRg;
-	}
-	else
-	{
-	  tDVx0.vtX = (dPts + idX)->vtX - (dPts + idY)->vtX;
-	  tDVx0.vtX *= tDVx0.vtX;
-	  tDVx0.vtY = (dPts + idX)->vtY - (dPts + idY)->vtY;
-	  tDVx0.vtY *= tDVx0.vtY;
-	  tD0 = (tDVx0.vtX + tDVx0.vtY) * deltaRg;
-        }
+	sPt.d2 = dPts[idX];
+	tD0 = newBasisFn->distFn(newBasisFn, idY, sPt);
+	tD0 *= deltaRg;
 	tD1 = (tD0 > DBL_EPSILON)? exp(tD0): 1.0;
 	idX3 = idX + 3;
 	*(*(aMx + idY3) + idX3) = tD1;
@@ -1038,7 +1081,7 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
   {
     /* Recover lambda and the x polynomial coefficients, then set up for mu
        and the y polynomial coefficients. */
-    WlzBasisFnGauss2DCoef(basisFn, bMx, 1);
+    WlzBasisFnGauss2DCoef(newBasisFn, bMx, 1);
     *(bMx + 0) = 0.0;
     *(bMx + 1) = 0.0;
     *(bMx + 2) = 0.0;
@@ -1053,7 +1096,7 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover mu and the y polynomial coefficients. */
-    WlzBasisFnGauss2DCoef(basisFn, bMx, 0);
+    WlzBasisFnGauss2DCoef(newBasisFn, bMx, 0);
   }
   if(bMx)
   {
@@ -1073,14 +1116,14 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts,
   }
   if(errNum != WLZ_ERR_NONE)
   {
-    (void )WlzBasisFnFree(basisFn);
-    basisFn = NULL;
+    (void )WlzBasisFnFree(newBasisFn);
+    newBasisFn = NULL;
   }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(basisFn);
+  return(newBasisFn);
 }
 
 /*!
@@ -1358,32 +1401,48 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
 * \return	New basis function.
 * \ingroup	WlzFunction
 * \brief	Creates a new multiquadric basis function.
-*		To improve the design matix condition number the problem is
-*		rescaled.
-*		If a distance function is being used then no rescaling
-*		is done.
+*
+*		To improve the design matix condition number the problem
+*		is rescaled when a distance map is not being used.
+*
+* 		This function may be used either to compute a new MQ
+* 		radial basis function, or if given a previous MQ
+* 		radial basis function, to recompute a MQ basis
+* 		recycling the buffers (and distance map if used) from
+* 		the prevoius basis function when the control points
+* 		have changed. If recycling the buffers a new basis
+* 		function is created which uses the (reallocated)
+* 		buffers of the previous basis function. After this function
+* 		has been called the previous basis function should be freed.
 * \param	nPts			Number of control point pairs.
 * \param	dPts			Destination control points.
 * \param	sPts			Source control points.
 * \param	delta			Normalized delta value in range
 *					[> 0.0 , < 1.0 ].
-* \param	cObj			Constraining object, within which all
-*					distances are constrained, if NULL
-*					Euclidean distances are used in place
-*					of constrained distances.
-* \param	dObj			Array of distance transform objects.
+* \param	prvBasisFn		Previous basis function to be recycled,
+* 					may be NULL. Arrays will be used for
+* 					the new basis function. Must be freed
+* 					after recycling.
+* \param	mesh			Used to compute constrained distances.
+* 					If NULL Euclidean distances will be
+* 					used.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
-				WlzDVertex2 *dPts, WlzDVertex2 *sPts,
-				double delta, WlzObject *cObj,
-				WlzObject **dObj, WlzErrorNum *dstErr)
+WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
+                                      WlzDVertex2 *sPts, double delta,
+				      WlzBasisFn *prvBasisFn,
+				      WlzCMesh2D *mesh,
+				      WlzErrorNum *dstErr)
 {
-  int		idX,
+  int		tI0,
+  		idN,
+  		idX,
   		idY,
 		idX3,
 		idY3,
-		nSys;
+		nSys,
+		maxNod,
+		newMaxVx;
   double	tD0,
 		tD1,
 		deltaRg,
@@ -1394,29 +1453,174 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   double	**aMx = NULL,
   		**vMx = NULL;
   WlzVertex	sPt;
-  WlzDVertex2	tDVx0;
+  WlzDVertex2	tV0;
   WlzDBox2	extentDB;
-  WlzBasisFn	*basisFn = NULL;
+  WlzBasisFn	*newBasisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	stepVx = 10;
 
   nSys = nPts + 3;
   deltaSq = delta * delta;
-  if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
-     ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
-     (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
-     (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE) ||
-     ((basisFn = (WlzBasisFn *)
-	       AlcCalloc(sizeof(WlzBasisFn), 1)) == NULL) ||
-     ((basisFn->poly.v = AlcMalloc(sizeof(WlzDVertex2) * 3)) == NULL) ||
-     ((basisFn->basis.v = AlcMalloc(sizeof(WlzDVertex2) * nSys)) == NULL) ||
-     ((basisFn->vertices.v = AlcMalloc(sizeof(WlzDVertex2) * nPts)) == NULL) ||
-     ((basisFn->param = AlcMalloc(sizeof(double))) == NULL))
+  if(mesh != NULL)
   {
-    errNum = WLZ_ERR_MEM_ALLOC;
+    if((mesh->type != WLZ_CMESH_TRI2D) ||
+       ((prvBasisFn != NULL) && (mesh != prvBasisFn->mesh.m2)))
+    {
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+    }
   }
-  if((errNum == WLZ_ERR_NONE) && cObj)
+  if(errNum == WLZ_ERR_NONE)
   {
-    if((basisFn->sVertices.v = AlcMalloc(sizeof(WlzDVertex2) * nPts)) == NULL)
+    if(prvBasisFn)
+    {
+      /* Create a new basis function, reallocate the buffers of the previous
+       * basis function as required and then use them for the new basis
+       * function. */
+      if(prvBasisFn->type != WLZ_FN_BASIS_2DGAUSS)
+      {
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+      }
+      else
+      {
+	newMaxVx = prvBasisFn->maxVx;
+	if(prvBasisFn->maxVx < nPts)
+	{
+	  newMaxVx = nPts + stepVx;
+	  if(((newBasisFn = (WlzBasisFn *)AlcCalloc(sizeof(WlzBasisFn),
+	                                            1)) == NULL) ||
+	     ((prvBasisFn->basis.v = AlcRealloc(prvBasisFn->basis.v,
+				       sizeof(WlzDVertex2) *
+				       newMaxVx)) == NULL) ||
+	     ((prvBasisFn->vertices.v = AlcRealloc(prvBasisFn->vertices.v,
+				       sizeof(WlzDVertex2) *
+				       newMaxVx)) == NULL) ||
+	     ((prvBasisFn->sVertices.v = AlcRealloc(prvBasisFn->sVertices.v,
+				       sizeof(WlzDVertex2) *
+				       newMaxVx)) == NULL) ||
+	     ((prvBasisFn->distMap != NULL) &&
+	      ((prvBasisFn->distMap = (double **)
+	                              AlcRealloc(prvBasisFn->distMap,
+				          sizeof(double *) *
+					  newMaxVx)) == NULL)))
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  *newBasisFn = *prvBasisFn;
+	  prvBasisFn->poly.v = NULL;
+	  prvBasisFn->basis.v = NULL;
+	  prvBasisFn->vertices.v = NULL;
+	  prvBasisFn->sVertices.v = NULL;
+	  prvBasisFn->param = NULL;
+	  prvBasisFn->mesh.v = NULL;
+	  prvBasisFn->distMap = NULL;
+	  if(newBasisFn->distMap != NULL)
+	  {
+	    tI0 = ALG_MIN(newBasisFn->nVtx, prvBasisFn->nVtx);
+	    for(idN = 0; idN < tI0; ++idN)
+	    {
+	      if((WlzGeomCmpVtx2D(dPts[idN],
+	                          newBasisFn->vertices.d2[idN],
+				  DBL_EPSILON) == 0) ||
+		  (WlzGeomCmpVtx2D(sPts[idN],
+				   newBasisFn->sVertices.d2[idN],
+				   DBL_EPSILON) == 0))
+	      {
+		AlcFree(newBasisFn->distMap[idN]);
+		newBasisFn->distMap[idN] = NULL;
+	      }
+	    }
+	    for(idN = tI0; idN < prvBasisFn->nVtx; ++idN)
+	    {
+	      AlcFree(newBasisFn->distMap[idN]);
+	      newBasisFn->distMap[idN] = NULL;
+	    }
+	    for(idN = prvBasisFn->nVtx; idN < newBasisFn->maxVx; ++idN)
+	    {
+	      newBasisFn->distMap[idN] = NULL;
+	    }
+	  }
+	}
+      }
+    }
+    else
+    {
+      /* Create a new basis function, allocate the buffers of the new
+       * basis function as required. */
+      newMaxVx = nPts + stepVx;
+      if(((newBasisFn = (WlzBasisFn *)AlcCalloc(sizeof(WlzBasisFn),
+                                                       1)) == NULL) ||
+	 ((newBasisFn->poly.v = AlcMalloc(sizeof(WlzDVertex2) * 3)) == NULL) ||
+	 ((newBasisFn->basis.v = AlcMalloc(sizeof(WlzDVertex2) *
+	                                   newMaxVx)) == NULL) ||
+	 ((newBasisFn->vertices.v = AlcMalloc(sizeof(WlzDVertex2) *
+					      newMaxVx)) == NULL) ||
+	 ((newBasisFn->sVertices.v = AlcMalloc(sizeof(WlzDVertex2) *
+					      newMaxVx)) == NULL) ||
+	 ((newBasisFn->param = AlcMalloc(sizeof(double))) == NULL))
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	newBasisFn->nVtx = nPts;
+        newBasisFn->maxVx = newMaxVx;
+	newBasisFn->mesh.m2 = mesh;
+	if(newBasisFn->mesh.m2 != NULL)
+	{
+	  if((newBasisFn->distMap = (double **)AlcCalloc(sizeof(double *),
+							 newMaxVx)) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	}
+      }
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && (mesh != NULL))
+  {
+    if(newBasisFn->distMap == NULL)
+    {
+      newBasisFn->distFn = WlzBasisFnEucDistFn2D;
+    }
+    else
+    {
+      /* Allocate and compute the distance maps. */
+      maxNod = newBasisFn->mesh.m2->res.nod.maxEnt;
+      newBasisFn->distFn = WlzBasisFnMapDistFn2D;
+      for(idN = 0; idN < newBasisFn->nVtx; ++idN)
+      {
+	if(newBasisFn->distMap[idN] == NULL)
+	{
+	  if((newBasisFn->distMap[idN] = (double *)
+					 AlcMalloc(sizeof(double) *
+						   maxNod)) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	  else
+	  {
+	    errNum = WlzCMeshFMarNodes2D(newBasisFn->mesh.m2,
+					 newBasisFn->distMap[idN],
+					 1, dPts + idN);
+	  }
+	  if(errNum != WLZ_ERR_NONE)
+	  {
+	    break;
+	  }
+	}
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Allocate matrices for solving basis function the design equation. */
+    if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
+       ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+       (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -1434,21 +1638,20 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    basisFn->type = WLZ_FN_BASIS_2DMQ;
-    basisFn->nVtx = nPts;
-    WlzValueCopyDVertexToDVertex(basisFn->vertices.d2, dPts, nPts);
-    if(cObj)
+    newBasisFn->type = WLZ_FN_BASIS_2DMQ;
+    newBasisFn->nVtx = nPts;
+    WlzValueCopyDVertexToDVertex(newBasisFn->vertices.d2, dPts, nPts);
+    if(newBasisFn->mesh.v != NULL)
     {
-      WlzValueCopyDVertexToDVertex(basisFn->sVertices.d2, sPts, nPts);
-      errNum = WlzBasisFnComputeDistMap2D(basisFn, cObj, dObj);
+      WlzValueCopyDVertexToDVertex(newBasisFn->sVertices.d2, sPts, nPts);
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    basisFn->nPoly = 2;
-    basisFn->nBasis = nPts;
+    newBasisFn->nPoly = 2;
+    newBasisFn->nBasis = nPts;
     deltaRg = deltaSq * range * range;
-    *((double *)(basisFn->param)) = deltaRg;
+    *((double *)(newBasisFn->param)) = deltaRg;
     /* Fill matrix A and matrix b for the x component. */
     for(idY = 0; idY < 3; ++idY)
     {
@@ -1463,7 +1666,7 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
       idY3 = idY + 3;
       tD0 = (dPts + idY)->vtX;
       *(bMx + idY3) = (sPts + idY)->vtX - tD0;
-      if(basisFn->distFn)
+      if(newBasisFn->distMap != NULL)
       {
 	tD1 = (dPts + idY)->vtY;
       }
@@ -1480,19 +1683,18 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
       *(*(aMx + 2) + idY3) = tD1;
       for(idX = 0; idX < idY; ++idX)
       {
-	if(basisFn->distFn)
+	if(newBasisFn->distMap)
 	{
 	  sPt.d2 = dPts[idX];
-	  tD0 = basisFn->distFn(basisFn, idY, sPt);
-	  tD0 *= tD0;
+	  tD0 = newBasisFn->distFn(newBasisFn, idY, sPt);
 	}
 	else
 	{
-	  tDVx0.vtX = ((dPts + idX)->vtX - (dPts + idY)->vtX) / range;
-	  tDVx0.vtX *= tDVx0.vtX;
-	  tDVx0.vtY = ((dPts + idX)->vtY - (dPts + idY)->vtY) / range;
-	  tDVx0.vtY *= tDVx0.vtY;
-	  tD0 = tDVx0.vtX + tDVx0.vtY;
+	  tV0.vtX = ((dPts + idX)->vtX - (dPts + idY)->vtX) / range;
+	  tV0.vtX *= tV0.vtX;
+	  tV0.vtY = ((dPts + idX)->vtY - (dPts + idY)->vtY) / range;
+	  tV0.vtY *= tV0.vtY;
+	  tD0 = tV0.vtX + tV0.vtY;
 	}
 	tD1 = (tD0 > DBL_EPSILON)? sqrt(tD0 + deltaSq): delta;
 	idX3 = idX + 3;
@@ -1516,8 +1718,8 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   {
     /* Recover lambda and the x polynomial coefficients, then set up for mu
        and the y polynomial coefficients. */
-    WlzBasisFnMQ2DCoexff(basisFn, bMx,  &extentDB, range,
-    			 1, (basisFn->distFn)? 0: 1);
+    WlzBasisFnMQ2DCoexff(newBasisFn, bMx,  &extentDB, range,
+    			 1, (newBasisFn->distFn)? 0: 1);
     *(bMx + 0) = 0.0;
     *(bMx + 1) = 0.0;
     *(bMx + 2) = 0.0;
@@ -1532,8 +1734,8 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover mu and the y polynomial coefficients. */
-    WlzBasisFnMQ2DCoexff(basisFn, bMx,  &extentDB, range,
-    			 0, (basisFn->distFn)? 0: 1);
+    WlzBasisFnMQ2DCoexff(newBasisFn, bMx,  &extentDB, range,
+    			 0, (newBasisFn->distFn)? 0: 1);
   }
   if(bMx)
   {
@@ -1553,17 +1755,17 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts,
   }
   if(errNum != WLZ_ERR_NONE)
   {
-    if(basisFn)
+    if(newBasisFn)
     {
-      (void )WlzBasisFnFree(basisFn);
-      basisFn = NULL;
+      (void )WlzBasisFnFree(newBasisFn);
+      newBasisFn = NULL;
     }
   }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(basisFn);
+  return(newBasisFn);
 }
 
 /*!
@@ -1796,23 +1998,36 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts,
 * \param	nPts			Number of control point pairs.
 * \param	dPts			Destination control points.
 * \param	sPts			Source control points.
-* \param	cObj			Constraining object, within which all
-*					distances are constrained, if NULL
-*					Euclidean distances are used in place
-*					of constrained distances.
-* \param	dObj			Array of distance transform objects.
+* \param        mesh                    Mesh which is used to compute
+*                                       constrained distances. If non NULL
+*                                       and the mesh type is
+*                                       WLZ_CMESH_TRI2D then  constrained
+*                                       distances are used and these are
+*                                       computed using the mesh.
+*                                       If NULL or the transform is
+*                                       some other type then Euclidean
+*                                       distances are used.
+*                                       indexed using the node index.
+* \param	prevNVx			Previous number of control points -
+* 					the number of one dimensional arrays
+* 					in the distance map.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
 				  WlzDVertex2 *dPts, WlzDVertex2 *sPts,
-				  WlzObject *cObj,
-				  WlzObject **dObj, WlzErrorNum *dstErr)
+				  WlzBasisFn *prvBasisFn,
+				  WlzCMesh2D *mesh,
+				  WlzErrorNum *dstErr)
 {
-  int		idX,
+  int		tI0,
+		idN,
+		idX,
 		idY,
 		idX3,
 		idY3,
-		nSys;
+		nSys,
+		maxNod,
+                newMaxVx;
   double	tD0,
 		tD1,
 		range;
@@ -1820,28 +2035,174 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   		*wMx = NULL;
   double	**aMx = NULL,
   		**vMx = NULL;
-  WlzBasisFn *basisFn = NULL;
   WlzVertex	sPt;
   WlzDVertex2	tDVx0;
   WlzDBox2	extentDB;
+  WlzBasisFn    *newBasisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int     stepVx = 10;
 
   nSys = nPts + 3;
-  if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
-     ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
-     (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
-     (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE) ||
-     ((basisFn = (WlzBasisFn *)
-	       AlcCalloc(sizeof(WlzBasisFn), 1)) == NULL) ||
-     ((basisFn->poly.v = AlcMalloc(sizeof(WlzDVertex2) * 3)) == NULL) ||
-     ((basisFn->basis.v = AlcMalloc(sizeof(WlzDVertex2) * nPts)) == NULL) ||
-     ((basisFn->vertices.v = AlcMalloc(sizeof(WlzDVertex2) * nPts)) == NULL))
+  if(mesh != NULL)
   {
-    errNum = WLZ_ERR_MEM_ALLOC;
+    if((mesh->type != WLZ_CMESH_TRI2D) ||
+       ((prvBasisFn != NULL) && (mesh != prvBasisFn->mesh.m2)))
+    {
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+    }
   }
-  if((errNum == WLZ_ERR_NONE) && cObj)
+  if(errNum == WLZ_ERR_NONE)
   {
-    if((basisFn->sVertices.v = AlcMalloc(sizeof(WlzDVertex2) * nPts)) == NULL)
+    if(prvBasisFn)
+    {
+      /* Create a new basis function, reallocate the buffers of the previous
+       * basis function as required and then use them for the new basis
+       * function. */
+      if(prvBasisFn->type != WLZ_FN_BASIS_2DTPS)
+      {
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+      }
+      else
+      {
+        newMaxVx = prvBasisFn->maxVx;
+        if(prvBasisFn->maxVx < nPts)
+        {
+          newMaxVx = nPts + stepVx;
+          if(((newBasisFn = (WlzBasisFn *)AlcCalloc(sizeof(WlzBasisFn),
+                                                    1)) == NULL) ||
+             ((prvBasisFn->basis.v = AlcRealloc(prvBasisFn->basis.v,
+                                       sizeof(WlzDVertex2) *
+                                       newMaxVx)) == NULL) ||
+             ((prvBasisFn->vertices.v = AlcRealloc(prvBasisFn->vertices.v,
+                                       sizeof(WlzDVertex2) *
+                                       newMaxVx)) == NULL) ||
+             ((prvBasisFn->sVertices.v = AlcRealloc(prvBasisFn->sVertices.v,
+                                       sizeof(WlzDVertex2) *
+                                       newMaxVx)) == NULL) ||
+             ((prvBasisFn->distMap != NULL) &&
+              ((prvBasisFn->distMap = (double **)
+                                      AlcRealloc(prvBasisFn->distMap,
+                                          sizeof(double *) *
+                                          newMaxVx)) == NULL)))
+          {
+            errNum = WLZ_ERR_MEM_ALLOC;
+          }
+        }
+        if(errNum == WLZ_ERR_NONE)
+        {
+          *newBasisFn = *prvBasisFn;
+          prvBasisFn->poly.v = NULL;
+          prvBasisFn->basis.v = NULL;
+          prvBasisFn->vertices.v = NULL;
+          prvBasisFn->sVertices.v = NULL;
+          prvBasisFn->param = NULL;
+          prvBasisFn->mesh.v = NULL;
+          prvBasisFn->distMap = NULL;
+          if(newBasisFn->distMap != NULL)
+          {
+            tI0 = ALG_MIN(newBasisFn->nVtx, prvBasisFn->nVtx);
+            for(idN = 0; idN < tI0; ++idN)
+            {
+              if((WlzGeomCmpVtx2D(dPts[idN],
+                                  newBasisFn->vertices.d2[idN],
+                                  DBL_EPSILON) == 0) ||
+                  (WlzGeomCmpVtx2D(sPts[idN],
+                                   newBasisFn->sVertices.d2[idN],
+                                   DBL_EPSILON) == 0))
+              {
+                AlcFree(newBasisFn->distMap[idN]);
+                newBasisFn->distMap[idN] = NULL;
+              }
+            }
+            for(idN = tI0; idN < prvBasisFn->nVtx; ++idN)
+            {
+              AlcFree(newBasisFn->distMap[idN]);
+              newBasisFn->distMap[idN] = NULL;
+            }
+            for(idN = prvBasisFn->nVtx; idN < newBasisFn->maxVx; ++idN)
+            {
+              newBasisFn->distMap[idN] = NULL;
+            }
+          }
+        }
+      }
+    }
+    else
+    {
+      /* Create a new basis function, allocate the buffers of the new
+       * basis function as required. */
+      newMaxVx = nPts + stepVx;
+      if(((newBasisFn = (WlzBasisFn *)AlcCalloc(sizeof(WlzBasisFn),
+                                                       1)) == NULL) ||
+         ((newBasisFn->poly.v = AlcMalloc(sizeof(WlzDVertex2) * 3)) == NULL) ||
+         ((newBasisFn->basis.v = AlcMalloc(sizeof(WlzDVertex2) *
+                                           newMaxVx)) == NULL) ||
+         ((newBasisFn->vertices.v = AlcMalloc(sizeof(WlzDVertex2) *
+                                              newMaxVx)) == NULL) ||
+         ((newBasisFn->sVertices.v = AlcMalloc(sizeof(WlzDVertex2) *
+                                              newMaxVx)) == NULL) ||
+         ((newBasisFn->param = AlcMalloc(sizeof(double))) == NULL))
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        newBasisFn->nVtx = nPts;
+        newBasisFn->maxVx = newMaxVx;
+        newBasisFn->mesh.m2 = mesh;
+        if(newBasisFn->mesh.m2 != NULL)
+        {
+          if((newBasisFn->distMap = (double **)AlcCalloc(sizeof(double *),
+                                                         newMaxVx)) == NULL)
+          {
+            errNum = WLZ_ERR_MEM_ALLOC;
+          }
+        }
+      }
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && (mesh != NULL))
+  {
+    if(newBasisFn->distMap == NULL)
+    {
+      newBasisFn->distFn = WlzBasisFnEucDistFn2D;
+    }
+    else
+    {
+      /* Allocate and compute the distance maps. */
+      maxNod = newBasisFn->mesh.m2->res.nod.maxEnt;
+      newBasisFn->distFn = WlzBasisFnMapDistFn2D;
+      for(idN = 0; idN < newBasisFn->nVtx; ++idN)
+      {
+        if(newBasisFn->distMap[idN] == NULL)
+        {
+          if((newBasisFn->distMap[idN] = (double *)
+                                         AlcMalloc(sizeof(double) *
+                                                   maxNod)) == NULL)
+          {
+            errNum = WLZ_ERR_MEM_ALLOC;
+          }
+          else
+          {
+            errNum = WlzCMeshFMarNodes2D(newBasisFn->mesh.m2,
+                                         newBasisFn->distMap[idN],
+                                         1, dPts + idN);
+          }
+          if(errNum != WLZ_ERR_NONE)
+          {
+            break;
+          }
+        }
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Allocate matrices for solving basis function the design equation. */
+    if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
+       ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+       (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
+       (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -1851,7 +2212,7 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
     WlzBasisFnVxExtent2D(&extentDB, dPts, sPts, nPts);
     tD0 = extentDB.xMax - extentDB.xMin;
     tD1 = extentDB.yMax - extentDB.yMin;
-    range = WLZ_MAX(tD0, tD1);
+    range = (tD0 > tD1)? tD0: tD1;
     if(range <= 1.0)
     {
       errNum = WLZ_ERR_PARAM_DATA;
@@ -1859,19 +2220,18 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    basisFn->type = WLZ_FN_BASIS_2DTPS;
-    basisFn->nVtx = nPts;
-    WlzValueCopyDVertexToDVertex(basisFn->vertices.d2, dPts, nPts);
-    if(cObj)
+    newBasisFn->type = WLZ_FN_BASIS_2DTPS;
+    newBasisFn->nVtx = nPts;
+    WlzValueCopyDVertexToDVertex(newBasisFn->vertices.d2, dPts, nPts);
+    if(newBasisFn->mesh.v != NULL)
     {
-      WlzValueCopyDVertexToDVertex(basisFn->sVertices.d2, sPts, nPts);
-      errNum = WlzBasisFnComputeDistMap2D(basisFn, cObj, dObj);
+      WlzValueCopyDVertexToDVertex(newBasisFn->sVertices.d2, sPts, nPts);
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    basisFn->nPoly = 2;
-    basisFn->nBasis = nPts;
+    newBasisFn->nPoly = 2;
+    newBasisFn->nBasis = nPts;
     for(idY = 0; idY < 3; ++idY)
     {
       for(idX = 0; idX < 3; ++idX)
@@ -1895,10 +2255,10 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
       *(*(aMx + 2) + idY3) = tD1;
       for(idX = 0; idX < idY; ++idX)
       {
-	if(basisFn->distFn)
+	if(newBasisFn->distFn)
 	{
 	  sPt.d2 = dPts[idX];
-	  tD0 = basisFn->distFn(basisFn, idY, sPt);
+	  tD0 = newBasisFn->distFn(newBasisFn, idY, sPt);
 	  tD0 *= tD0;
 	}
 	else
@@ -1929,7 +2289,7 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    WlzBasisFnTPS2DCoef(basisFn, bMx,  &extentDB, range, 1);
+    WlzBasisFnTPS2DCoef(newBasisFn, bMx,  &extentDB, range, 1);
     *(bMx + 0) = 0.0;
     *(bMx + 1) = 0.0;
     *(bMx + 2) = 0.0;
@@ -1942,7 +2302,7 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    WlzBasisFnTPS2DCoef(basisFn, bMx,  &extentDB, range, 0);
+    WlzBasisFnTPS2DCoef(newBasisFn, bMx,  &extentDB, range, 0);
   }
   if(bMx)
   {
@@ -1962,17 +2322,17 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   }
   if(errNum != WLZ_ERR_NONE)
   {
-    if(basisFn)
+    if(newBasisFn)
     {
-      (void )WlzBasisFnFree(basisFn);
-      basisFn = NULL;
+      (void )WlzBasisFnFree(newBasisFn);
+      newBasisFn = NULL;
     }
   }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(basisFn);
+  return(newBasisFn);
 }
 
 /*!
