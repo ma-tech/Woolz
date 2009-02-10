@@ -99,12 +99,14 @@ public class WlzDitherViewer extends JFrame implements ActionListener
 			        new WlzPixelV((int )0),
 			        new WlzPixelV((int )255),
 				new WlzPixelV((int )127),
-				new WlzPixelV((int )0));
+				new WlzPixelV((int )0),
+				0);
       WlzObject.WlzGreySetRange(newObj1,
 				new WlzPixelV((int )0),
 				new WlzPixelV((int )255),
 				new WlzPixelV((int )255),
-				new WlzPixelV((int )0));
+				new WlzPixelV((int )0),
+				0);
       obj = WlzObject.WlzImageArithmetic(newObj0,
       	      WlzObject.WlzGreyDitherObj(newObj1, 0x0080),
 	      WlzBinaryOperatorType.WLZ_BO_OR, 0);
