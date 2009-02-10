@@ -32,26 +32,25 @@
 # \bug          None known.
 ##
 
-if  BUILD_EXTFF
-  SUBDIRS =	\
-		libAlc \
-		libAlg \
-		libWlz \
-		libbibfile \
-		libhguDlpList \
-		libWlzExtFF \
-		libReconstruct \
-		binWlz \
-		binWlzTst \
-		binWlzApp \
-		binWlzExtFF
-else
-  SUBDIRS =	\
+SUBDIRS =	\
 		libAlc \
 		libAlg \
 		libWlz \
 		binWlz \
 		binWlzTst
+if  BUILD_EXTFF
+  SUBDIRS +=	\
+		libbibfile \
+		libhguDlpList \
+		libWlzExtFF \
+		libReconstruct \
+		binWlzApp \
+		binWlzExtFF
+endif
+
+if BUILD_JAVA
+  SUBDIRS +=	\
+  		libWlzBnd
 endif
 
 doc:
