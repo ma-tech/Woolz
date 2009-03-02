@@ -1,0 +1,25 @@
+#pragma ident "MRC HGU $Id$"
+/*!
+* \file         AlcHeap.dox
+* \author       Bill Hill
+* \date         February 2009
+* \version      $Id$
+* \note
+*               Copyright
+*               2003 Medical Research Council, UK.
+*               All rights reserved.
+*               All rights reserved.
+* \par Address:
+*               MRC Human Genetics Unit,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \brief	Alc calendar priority queue module.
+* \todo         -
+* \bug          None known.
+*/
+
+/*!
+ * \ingroup	Alc 
+* \defgroup	AlcHeap	AlcHeap
+*/
+
