@@ -48,6 +48,7 @@ libAlc_la_SOURCES 	= \
 			  AlcDLPList.c \
 			  AlcFreeStack.c \
 			  AlcHashTable.c \
+			  AlcHeap.c \
 			  AlcKDTree.c \
 			  AlcString.c \
 			  AlcVector.c
