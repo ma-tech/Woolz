@@ -1476,19 +1476,23 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
       /* Create a new basis function, reallocate the buffers of the previous
        * basis function as required and then use them for the new basis
        * function. */
-      if(prvBasisFn->type != WLZ_FN_BASIS_2DGAUSS)
+      if(prvBasisFn->type != WLZ_FN_BASIS_2DMQ)
       {
 	errNum = WLZ_ERR_DOMAIN_TYPE;
       }
       else
       {
 	newMaxVx = prvBasisFn->maxVx;
-	if(prvBasisFn->maxVx < nPts)
+	if((newBasisFn == NULL) &&
+           ((newBasisFn = (WlzBasisFn *)AlcCalloc(sizeof(WlzBasisFn),
+	                                          1)) == NULL))
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	if((errNum == WLZ_ERR_NONE) && (prvBasisFn->maxVx < nPts))
 	{
 	  newMaxVx = nPts + stepVx;
-	  if(((newBasisFn = (WlzBasisFn *)AlcCalloc(sizeof(WlzBasisFn),
-	                                            1)) == NULL) ||
-	     ((prvBasisFn->basis.v = AlcRealloc(prvBasisFn->basis.v,
+	  if(((prvBasisFn->basis.v = AlcRealloc(prvBasisFn->basis.v,
 				       sizeof(WlzDVertex2) *
 				       newMaxVx)) == NULL) ||
 	     ((prvBasisFn->vertices.v = AlcRealloc(prvBasisFn->vertices.v,
@@ -1516,6 +1520,8 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
 	  prvBasisFn->param = NULL;
 	  prvBasisFn->mesh.v = NULL;
 	  prvBasisFn->distMap = NULL;
+	  newBasisFn->maxVx = newMaxVx;
+	  newBasisFn->nVtx = nPts;
 	  if(newBasisFn->distMap != NULL)
 	  {
 	    tI0 = ALG_MIN(newBasisFn->nVtx, prvBasisFn->nVtx);
@@ -1523,10 +1529,10 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
 	    {
 	      if((WlzGeomCmpVtx2D(dPts[idN],
 	                          newBasisFn->vertices.d2[idN],
-				  DBL_EPSILON) == 0) ||
+				  DBL_EPSILON) != 0) ||
 		  (WlzGeomCmpVtx2D(sPts[idN],
 				   newBasisFn->sVertices.d2[idN],
-				   DBL_EPSILON) == 0))
+				   DBL_EPSILON) != 0))
 	      {
 		AlcFree(newBasisFn->distMap[idN]);
 		newBasisFn->distMap[idN] = NULL;
