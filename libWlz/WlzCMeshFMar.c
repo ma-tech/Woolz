@@ -45,93 +45,20 @@ static char _WlzCMeshFMar_c[] = "MRC HGU $Id$";
 #include <math.h>
 #include <Wlz.h>
 
+/* #define WLZ_CMESH_FMAR_DEBUG HACK */
+
 /*!
 * \struct	_WlzCMeshFMarQEnt
 * \ingroup	WlzMesh
-* \brief	An entry of a WlzCMeshFMarQ queue.
+* \brief	An entry of a AlcHeap based queue.
 * 		Typedef: ::WlzCMeshFMarQEnt.
 */
 typedef struct _WlzCMeshFMarQEnt
 {
-#ifdef DEBUG
-  int			dbgIdx;		/*!< For debug only. */
-#endif
-  int			next;		/*!< Index of next towards tail,
-  					     -ve iff at tail. */
-  int			prev;		/*!< Index of next towards head,
-                                             -ve iff at head. */
-  int			hashNxt;	/*!< Index of next in hash bucket. */
-  void			*entity;	/*!< Pointer to mesh entity. */
   double		priority;	/*!< Entry priority highest priority
   					     at the head of the queue. */
+  void			*entity;	/*!< Pointer to mesh entity. */
 } WlzCMeshFMarQEnt;
-
-/*!
-* \struct	_WlzCMeshFMarQ
-* \ingroup	WlzMesh
-* \brief	A priority queue for the nodes of an advancing front in
-* 		WlzCMesh based fast marching algorithms.
-* 		Typedef: ::WlzCMeshFMarQ.
-*
-* 		The queue is encoded as a linked list of entries with
-* 		fast access to the highest and lowest priority  entries
-* 		via the head/tail fields. There is also fast random
-* 		access to the entries for a node via hash based buckets.
-* 		A key assumption, that is true for it's intended
-* 		purpose (a queue of front nodes in fast marchinga),
-* 		is that a change to a single node can only change the
-* 		priority of the entry holding that node. Because of
-* 		this it is possible to keep the queue sorted through
-* 		incremental actions.
-*/
-typedef struct _WlzCMeshFMarQ
-{
-  int			head;           /*!< Index of the queue head, with
-                                             the highest priority entry at
-					     the head. */
-  int			tail;           /*!< Index of the queue tail, with
-  					     the lowest priority entry at
-					     the tail. */
-  int			last;		/*!< Index of last entry inserted. */
-  int			cnt;		/*!< Number of entries in use:
-                                             incremented when entry inserted,
-					     no change if unlinked,
-					     decremented when entry freed. */
-  int			max;		/*!< Number of entries allocated. */
-  int 			free;		/*!< Index of first free entry, rest
-                                             via next index. */
-  WlzCMeshFMarQEnt	*entries;	/*!< Array of allocated entries. */
-  int			*buckets;	/*!< Indices for hash buckets, used
-  					     fast for access to entry by node
-					     index. */
-  int			(*hashFn)(struct _WlzCMeshFMarQ *, void *);
-  					/*!< Hash function which when passed
-					     an entry entity pointer returns
-					     a hash table index in the range
-					     [0 - (queue->max - 1)]. */
-} WlzCMeshFMarQ;
-
-/*!
-* \struct	_WlzCMeshFMarElmQ
-* \ingroup	WlzMesh
-* \brief	A queue for the elements surrounding a node of an
-* 		advancing front in WlzCMesh based fast marching algorithms.
-* 		Typedef: ::WlzCMeshFMarElmQ.
-*
-* 		The queue is maintained sorted by the number of known
-* 		nodes in the element. The highest priority element is
-* 		the last in the list and this is easily removed by
-* 		decrementing the number of entries counter.
-*/
-typedef struct _WlzCMeshFMarElmQ
-{
-  int			nEnt;		/*!< Number of entries. */
-  int			maxEnt;		/*!< Number of entries space is
-  					     allocated for. */
-  WlzCMeshNodP		nod;		/*!< Current node around which the
-  					     queue is formed. */
-  struct _WlzCMeshFMarElmQEnt *entries;	/*!< The queue entries. */
-} WlzCMeshFMarElmQ;
 
 /*!
 * \struct	_WlzCMeshFMarElmQEnt
@@ -141,68 +68,26 @@ typedef struct _WlzCMeshFMarElmQ
 */
 typedef struct _WlzCMeshFMarElmQEnt
 {
-  WlzCMeshElmP		elm;		/*!< Element pointer. */
-  WlzCMeshNodP		nod[4];		/*!< Pointers to nodes of element. */
-  int			priority;	/*!< Priority of queue entry: The
+  double		priority;	/*!< Priority of queue entry: The
   					     priority is the simple sum of
 					     the priority of the nodes (2
 					     for an upwind node or the current
 					     node, 1 for any other known node
 					     and zero for an unknown (down
 					     wind) node). */
+  WlzCMeshElmP		elm;		/*!< Element pointer. */
 } WlzCMeshFMarElmQEnt;
 
-static int			WlzCMeshFMarQHashFn(
-				  int value,
-				  int maxVal);
-static int			WlzCMeshFMarHashFnElm2D(
-				  WlzCMeshFMarQ *queue,
-				  void *entity);
-static int			WlzCMeshFMarHashFnNod2D(
-				  WlzCMeshFMarQ *queue,
-				  void *entity);
-static int			WlzCMeshFMarHashFnNod3D(
-				  WlzCMeshFMarQ *queue,
-				  void *entity);
-static int			WlzCMeshFMarElmQElmIdxCmp2D(
-				  const void *p0,
-				  const void *p1);
-static int			WlzCMeshFMarElmQElmIdxCmp3D(
-				  const void *p0,
-				  const void *p1);
-static int			WlzCMeshFMarElmQPriorityCmp(
-				  const void *p0,
-				  const void *p1);
-static double		   	WlzCMeshFMarQNodPriority2D(
-				  WlzCMeshNod2D *nod,
-				  double dist);
+static int			WlzCMeshFMarElmQCalcPriority2D(
+				  WlzCMeshElm2D *elm,
+				  WlzCMeshNod2D *cNod);
+static int			WlzCMeshFMarElmQCalcPriority3D(
+				  WlzCMeshElm3D *elm,
+				  WlzCMeshNod3D *cNod);
 static double			WlzCMeshFMarQSElmPriority2D(
 				  WlzCMeshElm2D *elm,
 				  double *dst,
 				  WlzDVertex2 org);
-static double		   	WlzCMeshFMarQNodPriority3D(
-				  WlzCMeshNod3D *nod,
-				  double *dist);
-static void			WlzCMeshFMarQFree(
-				  WlzCMeshFMarQ *queue);
-static void			WlzCMeshFMarElmQFree(
-				  WlzCMeshFMarElmQ *queue);
-static void			WlzCMeshFMarQEntFree(
-				  WlzCMeshFMarQ *queue,
-				  WlzCMeshFMarQEnt *qEnt);
-static void			WlzCMeshFMarQEntFreeAll(
-				  WlzCMeshFMarQ *queue);
-static void			WlzCMeshFMarQUnlinkEntFromList(
-				  WlzCMeshFMarQ *queue,
-				  WlzCMeshFMarQEnt *ent);
-static void			WlzCMeshFMarQUnlinkEntFromHash(
-				  WlzCMeshFMarQ *queue,
-				  WlzCMeshFMarQEnt *ent);
-static void			WlzCMeshFMarQRehash(
-				  WlzCMeshFMarQ *queue);
-static void			WlzCMeshFMarQInsertEnt(
-				  WlzCMeshFMarQ *queue,
-				  WlzCMeshFMarQEnt *gEnt);
 static void		 	WlzCMeshFMarCompute2D(
 				  WlzCMeshNod2D *nod2,
 				  WlzCMeshNod2D *nod0,
@@ -233,84 +118,51 @@ static void			WlzCMeshFMarCompute3D3(
 				  WlzCMeshNod3D *nod2,
 				  WlzCMeshNod3D *nod3,
 				  double *distances);
-static void			WlzCMeshFMarElmQSqueeze2D(
-				  WlzCMeshFMarElmQ *queue);
-static void			WlzCMeshFMarElmQSqueeze3D(
-				  WlzCMeshFMarElmQ *queue);
-static void			WlzCMeshFMarElmQSort2D(
-				  WlzCMeshFMarElmQ* queue);
-static void			WlzCMeshFMarElmQSort3D(
-				  WlzCMeshFMarElmQ* queue);
-static void			WlzCMeshFMarElmQCalcPriority2D(
-				  WlzCMeshFMarElmQEnt *ent,
-				  WlzCMeshNod2D *cNod);
-static void			WlzCMeshFMarElmQCalcPriority3D(
-				  WlzCMeshFMarElmQEnt *ent,
-				  WlzCMeshNod3D *cNod);
-static WlzErrorNum 		WlzCMeshFMarQRealloc(
-				  WlzCMeshFMarQ *queue,
-				  int minEnt);
 static WlzErrorNum 		WlzCMeshFMarAddSeeds2D(
-				  WlzCMeshFMarQ *queue,
+				  AlcHeap *queue,
 				  WlzCMesh2D *mesh, 
 				  int edgQMin,
 				  double *distances,
 				  int nSeeds,
 				  WlzDVertex2 *seeds);
 static WlzErrorNum 		WlzCMeshFMarAddSeeds3D(
-				  WlzCMeshFMarQ *queue,
+				  AlcHeap *queue,
 				  WlzCMesh3D *mesh,
 				  double *distances,
 				  int nSeeds,
 				  WlzDVertex3 *seeds);
 static WlzErrorNum 		WlzCMeshFMarAddSeed2D(
-				  WlzCMeshFMarQ  *edgQ,
+				  AlcHeap  *edgQ,
                                   WlzCMesh2D *mesh,
 				  double *distances,
 				  double *sDists,
 				  WlzDVertex2 seed,
 				  WlzUByte *eFlgs);
 static WlzErrorNum 		WlzCMeshFMarInsertSeed3D(
-				  WlzCMeshFMarQ *queue,
+				  AlcHeap *queue,
 				  WlzCMeshNod3D *nod,
 				  double *distances,
 				  double *speeds,
 				  WlzDVertex3 seedPos);
 static WlzErrorNum 		WlzCMeshFMarQInsertNod2D(
-				  WlzCMeshFMarQ *queue,
+				  AlcHeap *queue,
 				  WlzCMeshNod2D *nod,
 				  double dist);
 static WlzErrorNum 		WlzCMeshFMarQInsertNod3D(
-				  WlzCMeshFMarQ *queue,
+				  AlcHeap *queue,
 				  double *times,
 				  WlzCMeshNod3D *nod);
 static WlzErrorNum 		WlzCMeshFMarSElmQInsert2D(
-				  WlzCMeshFMarQ *edgQ,
+				  AlcHeap *edgQ,
 				  WlzCMeshElm2D *elm,
 				  double *dst,
 				  WlzDVertex2 org);
 static WlzErrorNum 		WlzCMeshFMarElmQInit2D(
-				  WlzCMeshFMarElmQ *queue,
+				  AlcHeap *queue,
 				  WlzCMeshNod2D *nod);
 static WlzErrorNum 		WlzCMeshFMarElmQInit3D(
-				  WlzCMeshFMarElmQ *queue,
+				  AlcHeap *queue,
 				  WlzCMeshNod3D *nod);
-static WlzCMeshFMarQ 		*WlzCMeshFMarQNew(
-				  int nEnt,
-				  int (*hashFn)(WlzCMeshFMarQ *, void *));
-static WlzCMeshFMarQEnt 	*WlzCMeshFMarQPopHead(
-				  WlzCMeshFMarQ *queue);
-static WlzCMeshFMarQEnt 	*WlzCMeshFMarQPopTail(
-				  WlzCMeshFMarQ *queue);
-static WlzCMeshFMarQEnt 	*WlzCMeshFMarQNewEnt(
-				  WlzCMeshFMarQ *queue,
-				  WlzErrorNum *dstErr);
-static WlzCMeshFMarElmQ 	*WlzCMeshFMarElmQNew(
-				  void);
-static WlzCMeshFMarElmQEnt	*WlzCMeshFMarElmQPopTail2D(
-				  WlzCMeshFMarElmQ *queue);
-static WlzCMeshFMarElmQEnt	*WlzCMeshFMarElmQPopTail3D(
-				  WlzCMeshFMarElmQ *queue);
 
 /*!
 * \return	A 2D domain object, an empty object if the mesh has
@@ -470,16 +322,18 @@ WlzObject	*WlzCMeshDistance2D(WlzCMesh2D *mesh,
 WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
 				int nSeeds, WlzDVertex2 *seeds)
 {
-  int		
+  int		idM,
   		idN,
   		idS,
-		nBnd;
+		cnt;
   WlzCMeshNod2D	*nod0,
                 *nod1;
-  WlzCMeshFMarQ *nodQ = NULL;
-  WlzCMeshFMarElmQ *elmQ = NULL;
-  WlzCMeshFMarQEnt *nodQEnt;
-  WlzCMeshFMarElmQEnt *elmQEnt = NULL;
+  WlzCMeshNod2D	*nodes[3];
+  WlzCMeshElm2D	*elm;
+  AlcHeap *nodQ = NULL;
+  AlcHeap *elmQ = NULL;
+  WlzCMeshFMarQEnt *nodQEntP;
+  WlzCMeshFMarElmQEnt *elmQEntP = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(mesh == NULL)
@@ -501,7 +355,7 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
     /* Clear mesh node flags, set boundary node flags and count number of
      * boundary nodes. */
     WlzCMeshClearNodFlags2D(mesh, WLZ_CMESH_NOD_FLAG_ALL);
-    if((nBnd = WlzCMeshSetBoundNodFlags2D(mesh)) <= 0)
+    if((cnt = WlzCMeshSetBoundNodFlags2D(mesh)) <= 0)
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
@@ -510,7 +364,7 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
    * or boundary nodes. */
   if(errNum == WLZ_ERR_NONE)
   {
-    if((nodQ = WlzCMeshFMarQNew(nBnd, WlzCMeshFMarHashFnNod2D)) == NULL)
+    if((nodQ = AlcHeapNew(sizeof(WlzCMeshFMarQEnt), cnt, NULL)) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -519,12 +373,12 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
   {
     if(nSeeds > 0)
     {
-      errNum = WlzCMeshFMarAddSeeds2D(nodQ, mesh, nBnd + 1,
+      errNum = WlzCMeshFMarAddSeeds2D(nodQ, mesh, cnt + 1,
                                       distances, nSeeds, seeds);
     }
     else
     {
-      nSeeds = nBnd;
+      nSeeds = cnt;
       if((seeds = (WlzDVertex2 *)
                   AlcMalloc(nSeeds * sizeof(WlzDVertex2))) == NULL)
       {
@@ -543,7 +397,7 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
 	    ++idS;
 	  }
 	}
-	errNum = WlzCMeshFMarAddSeeds2D(nodQ, mesh, nBnd + 1,
+	errNum = WlzCMeshFMarAddSeeds2D(nodQ, mesh, cnt + 1,
 				        distances, nSeeds, seeds);
 	AlcFree(seeds);
       }
@@ -552,7 +406,7 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
   /* Create element queue. */
   if(errNum == WLZ_ERR_NONE)
   {
-    if((elmQ = WlzCMeshFMarElmQNew()) == NULL)
+    if((elmQ = AlcHeapNew(sizeof(WlzCMeshFMarElmQEnt), 1024, NULL)) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -560,54 +414,66 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
   /* Until the queue is empty: Pop the node with lowest priority (ie
    * lowest distance) from the queue, and process it. */
   while((errNum == WLZ_ERR_NONE) &&
-	((nodQEnt = WlzCMeshFMarQPopTail(nodQ)) != NULL))
+	((nodQEntP = (WlzCMeshFMarQEnt *)AlcHeapTop(nodQ)) != NULL))
   {
     /* Find all neighbouring nodes that are neither active nor upwind.
      * For each of these neighbouring nodes, compute their distance, set
      * them to active and insert them into the queue.*/
-    nod0 = (WlzCMeshNod2D *)(nodQEnt->entity);
-    errNum = WlzCMeshFMarElmQInit2D(elmQ, nod0);
-    if(errNum == WLZ_ERR_NONE)
+    nod0 = (WlzCMeshNod2D *)(nodQEntP->entity);
+    AlcHeapEntFree(nodQ);
+    if((nod0->flags & WLZ_CMESH_NOD_FLAG_UPWIND) == 0)
     {
-      /* While element list is not empty, remove element and compute all
-       * node distances for it. */
-      while((elmQEnt = WlzCMeshFMarElmQPopTail2D(elmQ)) != NULL)
-      {
-	/* Entry nodes must be ordered 
-	 *   0 - current node
-	 *   1 - node with least distance of remaining nodes
-	 *   2 - node with greatest distance of remaining nodes
-	 */
-	if(distances[elmQEnt->nod[2].n2->idx] <
-	   distances[elmQEnt->nod[1].n2->idx])
-	{
-	  nod1 = elmQEnt->nod[2].n2;
-	  elmQEnt->nod[2].n2 = elmQEnt->nod[1].n2;
-	  elmQEnt->nod[1].n2 = nod1;
-	}
-	/* Compute distances. */
-	WlzCMeshFMarCompute2D(elmQEnt->nod[2].n2, elmQEnt->nod[0].n2,
-			      elmQEnt->nod[1].n2, distances, elmQEnt->elm.e2);
-	elmQEnt->nod[2].n2->flags = WLZ_CMESH_NOD_FLAG_KNOWN |
-	                            WLZ_CMESH_NOD_FLAG_ACTIVE;
-	if((errNum = WlzCMeshFMarQInsertNod2D(nodQ, elmQEnt->nod[2].n2,
-			  distances[elmQEnt->nod[2].n2->idx])) != WLZ_ERR_NONE)
-	{
-	  break;
-	}
-      }
-      /* Set the current node to be upwind. */
+      errNum = WlzCMeshFMarElmQInit2D(elmQ, nod0);
       if(errNum == WLZ_ERR_NONE)
       {
-	nod0->flags = (nod0->flags & ~(WLZ_CMESH_NOD_FLAG_ACTIVE)) |
-		     WLZ_CMESH_NOD_FLAG_UPWIND;
+	/* While element list is not empty, remove element and compute all
+	 * node distances for it. */
+	while((elmQEntP = (WlzCMeshFMarElmQEnt *)AlcHeapTop(elmQ)) != NULL)
+	{
+	  elm = elmQEntP->elm.e2;
+	  AlcHeapEntFree(elmQ);
+	  /* Compute distances. */
+	  for(idN = 0; idN < 3; ++idN)
+	  {
+	    if(elm->edu[idN].nod == nod0)
+	    {
+	      break;
+	    }
+	  }
+	  cnt = 0;
+	  for(idM = 0; idM < 3; ++idM)
+	  {
+	    nodes[idM] = elm->edu[(idN + idM) % 3].nod;
+	  }
+	  if((nodes[2]->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0)
+	  {
+	    nod1 = nodes[2];
+	    nodes[2] = nodes[1];
+	    nodes[1] = nod1;
+	  }
+	  WlzCMeshFMarCompute2D(nodes[2], nodes[0], nodes[1],
+				distances, elm);
+	  errNum = WlzCMeshFMarQInsertNod2D(nodQ, nodes[2],
+					    distances[nodes[2]->idx]);
+	  if(errNum != WLZ_ERR_NONE)
+	  {
+	    break;
+	  }
+	}
+	/* Set the current node to be upwind. */
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  nod0->flags = (nod0->flags & ~(WLZ_CMESH_NOD_FLAG_ACTIVE)) |
+					 WLZ_CMESH_NOD_FLAG_KNOWN |
+		                         WLZ_CMESH_NOD_FLAG_UPWIND;
+	}
       }
+      AlcHeapAllEntFree(elmQ, 0);
     }
-    WlzCMeshFMarQEntFree(nodQ, nodQEnt);
   }
   /* Clear up. */
-  WlzCMeshFMarElmQFree(elmQ);
-  WlzCMeshFMarQFree(nodQ);
+  AlcHeapFree(elmQ);
+  AlcHeapFree(nodQ);
   return(errNum);
 }
 
@@ -637,9 +503,9 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
   		idS,
 		nBnd;
   WlzCMeshNod3D	*nod0;
-  WlzCMeshFMarQ *nodQ = NULL;
-  WlzCMeshFMarQEnt *nodQEnt;
-  WlzCMeshFMarElmQ *elmQ = NULL;
+  AlcHeap	*nodQ = NULL;
+  WlzCMeshFMarQEnt *nodQEntP;
+  AlcHeap 	*elmQ = NULL;
   WlzCMeshFMarElmQEnt *elmQEnt;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -674,7 +540,7 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
    * or boundary nodes. */
   if(errNum == WLZ_ERR_NONE)
   {
-    if((nodQ = WlzCMeshFMarQNew(nBnd, WlzCMeshFMarHashFnNod3D)) == NULL)
+    if((nodQ = AlcHeapNew(sizeof(WlzCMeshFMarQEnt), nBnd, NULL)) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -710,7 +576,7 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
   /* Create element queue. */
   if(errNum == WLZ_ERR_NONE)
   {
-    if((elmQ = WlzCMeshFMarElmQNew()) == NULL)
+    if((elmQ = AlcHeapNew(sizeof(WlzCMeshFMarElmQEnt), 1024, NULL)) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -718,7 +584,7 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
   /* Until the queue is empty: Pop the node with lowest priority (ie
    * lowest distance) from the queue, and process it. */
   while((errNum == WLZ_ERR_NONE) &&
-	((nodQEnt = WlzCMeshFMarQPopTail(nodQ)) != NULL))
+	((nodQEntP = (WlzCMeshFMarQEnt *)AlcHeapTop(nodQ)) != NULL))
   {
     /* Find all neighbouring nodes that are neither active nor upwind.
      * For each of these neighbouring nodes, compute their distance, set
@@ -727,18 +593,20 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
      * the current node from the node queue. */
 
     /* Get current node from node queue. */
-    nod0 = (WlzCMeshNod3D *)(nodQEnt->entity);
+    nod0 = (WlzCMeshNod3D *)(nodQEntP->entity);
     errNum = WlzCMeshFMarElmQInit3D(elmQ, nod0);
     if(errNum == WLZ_ERR_NONE)
     {
       /* While element list is not empty, remove element and compute all
        * node distances for it. */
-      while((elmQEnt = WlzCMeshFMarElmQPopTail3D(elmQ)) != NULL)
+      while((elmQEnt = AlcHeapTop(elmQ)) != NULL)
       {
 	/* Compute distances. */
+	/* TODO
 	WlzCMeshFMarCompute3D(elmQEnt->nod[0].n3, elmQEnt->nod[1].n3,
 			      elmQEnt->nod[2].n3, elmQEnt->nod[3].n3,
 			      distances);
+        */
       }
       /* Set the current node to be upwind. */
       if(errNum == WLZ_ERR_NONE)
@@ -749,186 +617,9 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
     }
   }
   /* Clear up. */
-  WlzCMeshFMarQFree(nodQ);
-  WlzCMeshFMarElmQFree(elmQ);
+  AlcHeapFree(nodQ);
+  AlcHeapFree(elmQ);
   return(errNum);
-}
-
-/*!
-* \return	New constrained mesh node priority queue, NULL on error.
-* \ingroup	WlzMesh
-* \brief	Constructs a new constrained mesh node priority queue
-* 		with room allocated for at least the given number of
-* 		entries.
-* \param	nEnt			Initial number of entries allocated
-* 					for the queue.
-*/
-static WlzCMeshFMarQ *WlzCMeshFMarQNew(int nEnt,
-                                       int (*hashFn)(WlzCMeshFMarQ *, void *))
-{
-  int		idE;
-  WlzCMeshFMarQ	*queue;
-  WlzCMeshFMarQEnt *ent;
-  const size_t	minEntries = 1024; /* Just to avoid costly reallocation for
-  				    * small queues. */
-
-  queue = (WlzCMeshFMarQ *)AlcMalloc(sizeof(WlzCMeshFMarQ));
-  if(queue)
-  {
-    queue->hashFn = hashFn;
-    queue->max = (nEnt < minEntries)? minEntries: nEnt;
-    if(((queue->entries = (WlzCMeshFMarQEnt *)
-                          AlcMalloc(sizeof(WlzCMeshFMarQEnt) *
-		                    queue->max)) == NULL) ||
-       ((queue->buckets = (int *)
-                          AlcMalloc(sizeof(int) * queue->max)) == NULL))
-    {
-      AlcFree(queue->entries);
-      AlcFree(queue);
-      queue = NULL;
-    }
-    else
-    {
-      queue->head = queue->tail = queue->last = -1;
-      queue->cnt = 0;
-      queue->free = 0;
-      for(idE = 0; idE < queue->max; ++idE)
-      {
-	ent = queue->entries + idE;
-#ifdef DEBUG
-        ent->dbgIdx = idE;	 	/* For debug only. */
-#endif
-	ent->next = idE + 1;
-	ent->prev = idE - 1;
-        ent->hashNxt = -1;
-	ent->entity = NULL;
-	ent->priority = 0.0;
-        *(queue->buckets + idE) = -1;
-      }
-      ent = queue->entries + queue->max - 1;
-      ent->next = -1;
-    }
-  }
-  return(queue);
-}
-
-/*!
-* \return	Woolz error code.
-* \ingroup	WlzMesh
-* \brief	Reallocates the queue entries and hash buckets so that
-* 		there is room for at least the epecified minimum number.
-* 		After the reallocatiion the hash table is recomputed.
-* \param	queue			The queue to reallocate.
-* \param	minEnt			Minimum number of entries.
-*/
-static WlzErrorNum WlzCMeshFMarQRealloc(WlzCMeshFMarQ *queue, int minEnt)
-{
-  int		idE;
-  WlzCMeshFMarQEnt *ent;
-  size_t	newMax;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const size_t	minEntryInc = 1024;
-
-  /* Avoid frequent costly reallocation by having a minimum reallocation
-   * size.  */
-  newMax = queue->max + minEntryInc;
-  if(minEnt > newMax)
-  {
-    newMax = minEnt;
-  }
-  /* Realllocate the data structures. */
-  if(((queue->entries = (WlzCMeshFMarQEnt *)
-                        AlcRealloc(queue->entries,
-				   sizeof(WlzCMeshFMarQEnt) *
-				   newMax)) == NULL) ||
-     ((queue->buckets = (int *)
-			AlcRealloc(queue->buckets,
-				   sizeof(int) * newMax)) == NULL))
-  {
-    errNum = WLZ_ERR_MEM_ALLOC;
-  }
-  else
-  {
-    /* Setup the new entries in the free list and rebuild the node
-     * index hash table. */
-    for(idE = queue->max; idE < newMax; ++idE)
-    {
-      ent = queue->entries + idE;
-      ent->next = idE + 1;
-      ent->prev = idE - 1;
-      ent->hashNxt = -1;
-      ent->entity = NULL;
-      ent->priority = 0.0;
-    }
-    ent = queue->entries + newMax - 1;
-    ent->next = queue->free;
-    queue->free = queue->max;
-    queue->max = newMax;
-    WlzCMeshFMarQRehash(queue);
-  }
-  return(errNum);
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Frees the given mesh fast marching queue.
-* \param	queue			The queue to free.
-*/
-static void	WlzCMeshFMarQFree(WlzCMeshFMarQ *queue)
-{
-  if(queue != NULL)
-  {
-    AlcFree(queue->entries);
-    AlcFree(queue->buckets);
-    AlcFree(queue);
-  }
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Frees the given mesh fast marching queue entry.
-* 		The entry must already have been unlinked from
-* 		both the queue's list and hash table.
-* \param	queue			The queue.
-* \param	ent			The queue entry to free.
-*/
-static void	WlzCMeshFMarQEntFree(WlzCMeshFMarQ *queue,
-				     WlzCMeshFMarQEnt *qEnt)
-{
-  qEnt->next = queue->free;
-  queue->free = qEnt - queue->entries;
-  --(queue->cnt);
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Unlinks and frees all the mesh fast marching queue
-* 		entries. This resets the queue for reuse.
-* \param	queue			The queue.
-*/
-static void	WlzCMeshFMarQEntFreeAll(WlzCMeshFMarQ *queue)
-{
-  int		idE;
-  WlzCMeshFMarQEnt *ent;
-
-  queue->head = queue->tail = queue->last = -1;
-  queue->cnt = 0;
-  queue->free = 0;
-  for(idE = 0; idE < queue->max; ++idE)
-  {
-    ent = queue->entries + idE;
-#ifdef DEBUG
-    ent->dbgIdx = idE;	 	/* For debug only. */
-#endif
-    ent->next = idE + 1;
-    ent->prev = idE - 1;
-    ent->hashNxt = -1;
-    ent->entity = NULL;
-    ent->priority = 0.0;
-    *(queue->buckets + idE) = -1;
-  }
-  ent = queue->entries + queue->max - 1;
-  ent->next = -1;
 }
 
 /*!
@@ -942,66 +633,18 @@ static void	WlzCMeshFMarQEntFreeAll(WlzCMeshFMarQ *queue)
 * \param	nod			Given node to insert into the queue.
 * \param	dist			Node distance.
 */
-static WlzErrorNum WlzCMeshFMarQInsertNod2D(WlzCMeshFMarQ *queue,
+static WlzErrorNum WlzCMeshFMarQInsertNod2D(AlcHeap *queue,
 					    WlzCMeshNod2D *nod, double dist)
 {
-  int		idE,
-  		idH;
-  WlzCMeshFMarQEnt *ent,
-  		*prevEnt;
-  WlzErrorNum errNum = WLZ_ERR_NONE;
+  WlzCMeshFMarQEnt ent;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
-  /* Check for node already in queue. If the entry already exists remove it
-   * from the queue and the hash table, but don't put it on the free stack. */
-  ent = NULL;
-  idH = queue->hashFn(queue, nod);
-  idE = queue->buckets[idH];
-  if(idE >= 0)
+  nod->flags |= WLZ_CMESH_NOD_FLAG_KNOWN | WLZ_CMESH_NOD_FLAG_ACTIVE;
+  ent.entity = nod;
+  ent.priority = dist;
+  if(AlcHeapInsertEnt(queue, &ent) != ALC_ER_NONE)
   {
-    /* Search through the hash table's list for an entry matching the node
-     * index. If found unlink it from the queue's list and the queue's node
-     * index hash table. */
-    prevEnt = NULL;
-    ent = queue->entries + idE;
-    while(((WlzCMeshNod2D *)(ent->entity) != nod) && (ent->hashNxt > 0))
-    {
-      prevEnt = ent;
-      ent = queue->entries + ent->hashNxt;
-    }
-    /* If entry found matching the node index unlink it and remove the
-     * hash table entry. */
-    if((WlzCMeshNod2D *)(ent->entity) == nod)
-    {
-      WlzCMeshFMarQUnlinkEntFromList(queue, ent);
-      WlzCMeshFMarQUnlinkEntFromHash(queue, ent);
-      if(prevEnt != NULL)
-      {
-        prevEnt->hashNxt = ent->hashNxt;
-      }
-      else
-      {
-        queue->buckets[idH] = ent->hashNxt;
-      }
-    }
-    else
-    {
-      ent = NULL;
-    }
-  }
-  if(ent == NULL)
-  {
-    /* Node entry not found so create a new entry. */
-    ent = WlzCMeshFMarQNewEnt(queue, &errNum);
-  }
-  /* Insert entry into the queue and add hash table entry. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    idE = ent - queue->entries;
-    ent->priority = WlzCMeshFMarQNodPriority2D(nod, dist);
-    WlzCMeshFMarQInsertEnt(queue, ent);
-    ent->entity = nod;
-    ent->hashNxt = queue->buckets[idH];
-    queue->buckets[idH] = idE; 
+    errNum = WLZ_ERR_MEM_ALLOC;
   }
   return(errNum);
 }
@@ -1017,240 +660,13 @@ static WlzErrorNum WlzCMeshFMarQInsertNod2D(WlzCMeshFMarQ *queue,
 * \param	times			Node times.
 * \param	nod			Given node to insert into the queue.
 */
-static WlzErrorNum WlzCMeshFMarQInsertNod3D(WlzCMeshFMarQ *queue,
+static WlzErrorNum WlzCMeshFMarQInsertNod3D(AlcHeap *queue,
 				double *times, WlzCMeshNod3D *nod)
 {
-  int		idE,
-  		idH;
-  WlzCMeshFMarQEnt *ent,
-  		*prevEnt;
-  WlzErrorNum errNum = WLZ_ERR_NONE;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
-  /* Check for node already in queue. If the entry already exists remove it
-   * from the queue and the hash table, but don't put it on the free stack. */
-  ent = NULL;
-  idH = queue->hashFn(queue, nod);
-  idE = queue->buckets[idH];
-  if(idE >= 0)
-  {
-    /* Search through the hash table's list for an entry matching the node
-     * index. If found unlink it from the queue's list and the queue's node
-     * index hash table. */
-    prevEnt = NULL;
-    ent = queue->entries + idE;
-    while(((WlzCMeshNod3D *)(ent->entity) != nod) && (ent->hashNxt > 0))
-    {
-      prevEnt = ent;
-      ent = queue->entries + ent->hashNxt;
-    }
-    /* If entry found matching the node index unlink it and remove the
-     * hash table entry. */
-    if((WlzCMeshNod3D *)(ent->entity) == nod)
-    {
-      WlzCMeshFMarQUnlinkEntFromList(queue, ent);
-      WlzCMeshFMarQUnlinkEntFromHash(queue, ent);
-      if(prevEnt != NULL)
-      {
-        prevEnt->hashNxt = ent->hashNxt;
-      }
-      else
-      {
-        queue->buckets[idH] = ent->hashNxt;
-      }
-    }
-    else
-    {
-      ent = NULL;
-    }
-  }
-  if(ent == NULL)
-  {
-    /* Node entry not found so create a new entry. */
-    ent = WlzCMeshFMarQNewEnt(queue, &errNum);
-  }
-  /* Insert entry into the queue and add hash table entry. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    idE = ent - queue->entries;
-    ent->priority = WlzCMeshFMarQNodPriority3D(nod, times);
-    WlzCMeshFMarQInsertEnt(queue, ent);
-    ent->entity = nod;
-    ent->hashNxt = queue->buckets[idH];
-    queue->buckets[idH] = idE; 
-  }
+  /* TODO */
   return(errNum);
-}
-
-/*!
-* \return	New (or recycled) entry.
-* \ingroup	WlzMesh
-* \brief	Gets a new priority queue which is neither in the queue
-* 		nor hash table buckets.
-* \param	queue			The priority queue.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-static WlzCMeshFMarQEnt *WlzCMeshFMarQNewEnt(WlzCMeshFMarQ *queue,
-				WlzErrorNum *dstErr)
-{
-  int		idE;
-  WlzCMeshFMarQEnt *ent;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(queue->cnt >= queue->max)
-  {
-    /* Reallocate entries to get more and update the free list. */
-    errNum = WlzCMeshFMarQRealloc(queue, queue->cnt);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    /* Pop entry from free list. */
-    idE = queue->free;
-    ent = queue->entries + idE;
-    queue->free = ent->next;
-    ent->next = ent->prev = ent->hashNxt = -1;
-    ent->entity = NULL;
-    ent->priority = 0.0;
-    ++(queue->cnt);
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(ent);
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Unlinks the given entry from the priority queue's list.
-* 		If the head, last or tail index entry is unlinked the
-* 		corresponding index is changed to the next or previous
-* 		entry in the queue.
-* \param	queue			Given constrained mesh node priority
-* 					queue.
-* \param	ent			Entry to unlink.
-*/
-static void	WlzCMeshFMarQUnlinkEntFromList(WlzCMeshFMarQ *queue,
-				WlzCMeshFMarQEnt *ent)
-{
-  /* If unlinked entry is the queue last entry set queue last entry to
-   * next or previous entry. */
-  if(queue->last == ent - queue->entries)
-  {
-    if(ent->next >= 0)
-    {
-      queue->last = ent->next;
-    }
-    else
-    {
-      queue->last = ent->prev;
-    }
-  }
-  /* Break prev link. */
-  if(ent->prev >= 0)
-  {
-    (queue->entries + ent->prev)->next = ent->next;
-  }
-  else
-  {
-    queue->head = ent->next;
-  }
-  /* Break next link. */
-  if(ent->next >= 0)
-  {
-    (queue->entries + ent->next)->prev = ent->prev;
-  }
-  else
-  {
-    queue->tail = ent->prev;
-  }
-  ent->prev = ent->next = -1;
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Unlinks the given entry from the priority queue's node
-* 		index hash table.
-* \param	queue			Given constrained mesh node priority
-* 					queue.
-* \param	ent			Entry to unlink.
-*/
-static void	WlzCMeshFMarQUnlinkEntFromHash(WlzCMeshFMarQ *queue,
-				WlzCMeshFMarQEnt *gEnt)
-{
-  int		idE,
-  		idH;
-  WlzCMeshFMarQEnt *ent,
-  		*prevEnt;
-
-  if((gEnt != NULL) && (gEnt->entity != NULL))
-  {
-    idH = queue->hashFn(queue, gEnt->entity);
-    idE = queue->buckets[idH];
-    if(idE >= 0)
-    {
-      prevEnt = NULL;
-      ent = queue->entries + idE;
-      while((ent != gEnt) && (ent->hashNxt > 0))
-      {
-	prevEnt = ent;
-	ent = queue->entries + ent->hashNxt;
-      }
-      /* If entry found for node remove it. */
-      if(ent == gEnt)
-      {
-	if(prevEnt != NULL)
-	{
-	  prevEnt->hashNxt = ent->hashNxt;
-	}
-	else
-	{
-	  queue->buckets[idH] = ent->hashNxt;
-	}
-      }
-    }
-  }
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Recomputes the hash table of the priority queue.
-* \param	queue			Given constrained mesh node priority
-* 					queue.
-*/
-static void	WlzCMeshFMarQRehash(WlzCMeshFMarQ *queue)
-{
-  int		idE,
-  		idH;
-  WlzCMeshFMarQEnt *ent;
-
-  /* Clear hash table. */
-  for(idE = 0; idE < queue->max; ++idE)
-  {
-    queue->buckets[idE] = -1;
-  }
-  /* Add all entries in the queue's list to the hash table. */
-  idE = queue->head;
-  while(idE >= 0)
-  {
-    ent = queue->entries + idE;
-    idH = queue->hashFn(queue, ent->entity);
-    ent->hashNxt = queue->buckets[idH];
-    queue->buckets[idH] = idE;
-    idE = ent->next;
-  }
-}
-
-/*!
-* \return	Node priority.
-* \ingroup	WlzMesh
-* \brief	Priority for node in queue. The priority is increases with
-* 		distance.
-* \param	nod			Node to compute priority for.
-* \param	dist			Distances of the node.
-*/
-static double	WlzCMeshFMarQNodPriority2D(WlzCMeshNod2D *nod, double dist)
-{
-  return(dist);
 }
 
 /*!
@@ -1284,159 +700,6 @@ static double	WlzCMeshFMarQSElmPriority2D(WlzCMeshElm2D *elm,
     d = WLZ_VTX_2_LENGTH(del);
   }
   return(d);
-}
-
-/*!
-* \return	Node priority.
-* \ingroup	WlzMesh
-* \brief	Priority for node in queue. The priority is increases with
-* 		distance.
-* \param	nod			Node to compute priority for.
-* \param	dist			Array of distances indexed by the
-* 					mesh node indices.
-*/
-static double	WlzCMeshFMarQNodPriority3D(WlzCMeshNod3D *nod, double *dist)
-{
-  return(*(dist + nod->idx));
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Inserts the given entry into the given queue, knowing
-* 		that the entry is valid and that it's not already in
-* 		the queue. The queue is kept sorted with the highest
-* 		priority entry at the head and the lowest at the tail.
-* \param	queue			Given constrained mesh node priority
-* 					queue.
-* \param	ent0			Entry to insert.
-*/
-static void	WlzCMeshFMarQInsertEnt(WlzCMeshFMarQ *queue,
-				WlzCMeshFMarQEnt *gEnt)
-{
-  int		idG;
-  WlzCMeshFMarQEnt *ent0,
-  		*ent1;
-
-  idG = gEnt - queue->entries;
-  if(queue->head < 0)
-  {
-    /* Queue empty. */
-    gEnt->next = gEnt->prev = -1;
-    queue->head = queue->tail = queue->last = idG;
-  }
-  else
-  {
-    ent1 = ent0 = queue->entries + queue->last;
-    if(gEnt->priority > ent0->priority)
-    {
-      /* Insert entry above last, towards the head of the queue. */
-      while((gEnt->priority > ent1->priority) && (ent1->prev >= 0))
-      {
-	ent0 = ent1;
-	ent1 = queue->entries + ent0->prev;
-      }
-      if(ent1->prev < 0)
-      {
-	gEnt->next = queue->head;
-	gEnt->prev = -1;
-        queue->head = idG;
-	ent1->prev = idG;
-      }
-      else
-      {
-	gEnt->prev = ent0->prev;
-	gEnt->next = ent0 - queue->entries;
-	ent0->prev = idG;
-	(queue->entries + gEnt->prev)->next = idG;
-      }
-    }
-    else
-    {
-      /* Insert entry below last, towards the tail of the queue. */
-      while((gEnt->priority < ent1->priority) && (ent1->next >= 0))
-      {
-	ent0 = ent1;
-	ent1 = queue->entries + ent0->next;
-      }
-      if(ent1->next < 0)
-      {
-        gEnt->next = -1;
-	gEnt->prev = queue->tail;
-	queue->tail = idG;
-	ent1->next = idG;
-      }
-      else
-      {
-	gEnt->prev = ent0 - queue->entries;
-	gEnt->next = ent0->next;
-	ent0->next = idG;
-        (queue->entries + gEnt->next)->prev = idG;
-      }
-    }
-  }
-  queue->last = idG;
-#ifdef WLZ_CMESH_FMAR_QUEUE_DEBUG
-  (void )fprintf(stderr, "queue - h % 8d t % 8d l % 8d c % 8d m % 8d f % 8d\n",
-                 queue->head,
-		 queue->tail,
-		 queue->last,
-		 queue->cnt,
-		 queue->max,
-		 queue->free);
-  idG = queue->head;
-  while(idG >= 0)
-  {
-    ent0 = queue->entries + idG;
-    (void )fprintf(stderr, "  entry - i % 8d n % 8d p % 8d % 8d 0x%08lx %g\n",
-    		   ent0->dbgIdx,
-		   ent0->next,
-		   ent0->prev,
-		   ent0->hashNxt,
-		   (unsigned long )(ent0->entity),
-		   ent0->priority);
-    idG = ent0->next;
-  }
-#endif
-}
-
-/*!
-* \return	Unlinked entry.
-* \ingroup	WlzMesh
-* \brief	Unlinks the entry with the lowest priority from the
-* 		given queue but does not free it.
-* \param	queue			Given priority queue.
-*/
-static WlzCMeshFMarQEnt *WlzCMeshFMarQPopHead(WlzCMeshFMarQ *queue)
-{
-  WlzCMeshFMarQEnt *ent = NULL;
-
-  if(queue->head >= 0)
-  {
-    ent = queue->entries + queue->head;
-    WlzCMeshFMarQUnlinkEntFromList(queue, ent);
-    WlzCMeshFMarQUnlinkEntFromHash(queue, ent);
-  }
-  return(ent);
-}
-
-/*!
-* \return	Unlinked entry.
-* \ingroup	WlzMesh
-* \brief	Unlinks the entry with the highest priority from the
-* 		given queue but does not free it.
-* \param	queue			Given priority queue.
-*/
-static WlzCMeshFMarQEnt *WlzCMeshFMarQPopTail(WlzCMeshFMarQ *queue)
-{
-  WlzCMeshFMarQEnt *ent = NULL;
-
-  if(queue->tail >= 0)
-  {
-    ent = queue->entries + queue->tail;
-    WlzCMeshFMarQUnlinkEntFromList(queue, ent);
-    WlzCMeshFMarQUnlinkEntFromHash(queue, ent);
-  }
-  return(ent);
 }
 
 /*!
@@ -1956,7 +1219,7 @@ static void	WlzCMeshFMarCompute3D3(WlzCMeshNod3D *nod0,
 * \param	nSeed			Number of seeds.
 * \param	seeds			Array of seeds.
 */
-static WlzErrorNum WlzCMeshFMarAddSeeds2D(WlzCMeshFMarQ *nodQ,
+static WlzErrorNum WlzCMeshFMarAddSeeds2D(AlcHeap *nodQ,
 				WlzCMesh2D *mesh, int edgQMin,
 				double *distances,
 				int nSeeds, WlzDVertex2 *seeds)
@@ -1968,7 +1231,7 @@ static WlzErrorNum WlzCMeshFMarAddSeeds2D(WlzCMeshFMarQ *nodQ,
   		*nod1;
   WlzCMeshEdgU2D *edu0,
   		*edu1;
-  WlzCMeshFMarQ	*sElmQ = NULL;
+  AlcHeap	*sElmQ = NULL;
   WlzUByte	*eFlgs = NULL;
   double	*sDists = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1978,7 +1241,7 @@ static WlzErrorNum WlzCMeshFMarAddSeeds2D(WlzCMeshFMarQ *nodQ,
                 AlcMalloc(sizeof(double) * mesh->res.nod.maxEnt)) == NULL) ||
      ((eFlgs = (WlzUByte *)
                 AlcMalloc(sizeof(WlzUByte) * mesh->res.elm.maxEnt)) == NULL) ||
-     ((sElmQ = WlzCMeshFMarQNew(edgQMin, WlzCMeshFMarHashFnElm2D)) == NULL))
+     ((sElmQ = AlcHeapNew(sizeof(WlzCMeshFMarQEnt), edgQMin, NULL)) == NULL))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
@@ -1989,13 +1252,13 @@ static WlzErrorNum WlzCMeshFMarAddSeeds2D(WlzCMeshFMarQ *nodQ,
     {
       errNum = WlzCMeshFMarAddSeed2D(sElmQ, mesh,  distances, sDists,
                                      seeds[idS], eFlgs);
-      WlzCMeshFMarQEntFreeAll(sElmQ);
+      AlcHeapAllEntFree(sElmQ, 0);
       ++idS;
     }
   }
   AlcFree(sDists);
   AlcFree(eFlgs);
-  WlzCMeshFMarQFree(sElmQ);
+  AlcHeapFree(sElmQ);
   /* Add nodes which have known distance but are not surrounded by nodes
    * with known distance to the node queue. */
   if(errNum == WLZ_ERR_NONE)
@@ -2024,7 +1287,6 @@ static WlzErrorNum WlzCMeshFMarAddSeeds2D(WlzCMeshFMarQ *nodQ,
 	}
 	else
 	{
-	  nod0->flags |= WLZ_CMESH_NOD_FLAG_ACTIVE;
           if((errNum = WlzCMeshFMarQInsertNod2D(nodQ, nod0,
 					distances[nod0->idx])) != WLZ_ERR_NONE)
 	  {
@@ -2053,7 +1315,7 @@ static WlzErrorNum WlzCMeshFMarAddSeeds2D(WlzCMeshFMarQ *nodQ,
 * 					non zero when element has been
 * 					visited.
 */
-static WlzErrorNum WlzCMeshFMarAddSeed2D(WlzCMeshFMarQ  *sElmQ,
+static WlzErrorNum WlzCMeshFMarAddSeed2D(AlcHeap  *sElmQ,
                                          WlzCMesh2D *mesh,
 					 double *distances, double *sDst,
 					 WlzDVertex2 seed,
@@ -2121,9 +1383,10 @@ static WlzErrorNum WlzCMeshFMarAddSeed2D(WlzCMeshFMarQ  *sElmQ,
   /* Pop element that has the min(maximum node distance) from the edge
    * queue. */
   while((errNum == WLZ_ERR_NONE) &&
-        ((sElmQEnt = WlzCMeshFMarQPopTail(sElmQ)) != NULL))
+        ((sElmQEnt = (WlzCMeshFMarQEnt *)AlcHeapTop(sElmQ)) != NULL))
   {
     elm0 = (WlzCMeshElm2D *)(sElmQEnt->entity);
+    AlcHeapEntFree(sElmQ);
     /* Find node with unknown distance for the element. */
     for(idE = 0; idE < 3; ++idE)
     {
@@ -2215,7 +1478,6 @@ static WlzErrorNum WlzCMeshFMarAddSeed2D(WlzCMeshFMarQ  *sElmQ,
 	}
       }
     }
-    WlzCMeshFMarQEntFree(sElmQ, sElmQEnt);
   }
   return(errNum);
 }
@@ -2229,29 +1491,22 @@ static WlzErrorNum WlzCMeshFMarAddSeed2D(WlzCMeshFMarQ  *sElmQ,
 * \param	dst			Distances for the seed.
 * \param	org			Seed for Euclidean distances.
 */
-static WlzErrorNum WlzCMeshFMarSElmQInsert2D(WlzCMeshFMarQ *queue,
+static WlzErrorNum WlzCMeshFMarSElmQInsert2D(AlcHeap *queue,
 					     WlzCMeshElm2D *elm,
 					     double *dst,
 					     WlzDVertex2 org)
 {
-  int		idE,
-  		idH;
-  WlzCMeshFMarQEnt *ent;
-  WlzErrorNum errNum = WLZ_ERR_NONE;
+  WlzCMeshFMarQEnt ent;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
   if(elm != NULL)
   {
-    idH = queue->hashFn(queue, elm);
-    ent = WlzCMeshFMarQNewEnt(queue, &errNum);
     /* Insert entry into the queue and add hash table entry. */
-    if(errNum == WLZ_ERR_NONE)
+    ent.priority = WlzCMeshFMarQSElmPriority2D(elm, dst, org);
+    ent.entity = elm;
+    if(AlcHeapInsertEnt(queue, &ent) != ALC_ER_NONE)
     {
-      idE = ent - queue->entries;
-      ent->entity = elm;
-      ent->priority = WlzCMeshFMarQSElmPriority2D(elm, dst, org);
-      WlzCMeshFMarQInsertEnt(queue, ent);
-      ent->hashNxt = queue->buckets[idH];
-      queue->buckets[idH] = idE; 
+      errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   return(errNum);
@@ -2268,7 +1523,7 @@ static WlzErrorNum WlzCMeshFMarSElmQInsert2D(WlzCMeshFMarQ *queue,
 * \param	nSeeds			Number of seeds.
 * \param	seeds			Seed positions.
 */
-static WlzErrorNum WlzCMeshFMarAddSeeds3D(WlzCMeshFMarQ *queue,
+static WlzErrorNum WlzCMeshFMarAddSeeds3D(AlcHeap *queue,
 				WlzCMesh3D *mesh, double *distances,
 				int nSeeds, WlzDVertex3 *seeds)
 {
@@ -2457,7 +1712,7 @@ static WlzErrorNum WlzCMeshFMarAddSeeds3D(WlzCMeshFMarQ *queue,
 * 					Speeds must all be > zero.
 * \param	seedPos			Seed position.
 */
-static WlzErrorNum WlzCMeshFMarInsertSeed3D(WlzCMeshFMarQ *queue,
+static WlzErrorNum WlzCMeshFMarInsertSeed3D(AlcHeap *queue,
 				WlzCMeshNod3D *nod,
 				double *times, double *speeds,
 				WlzDVertex3 seedPos)
@@ -2466,6 +1721,7 @@ static WlzErrorNum WlzCMeshFMarInsertSeed3D(WlzCMeshFMarQ *queue,
   WlzDVertex3	dsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+#ifndef HACK_TODO
   WLZ_VTX_3_SUB(dsp, seedPos, nod->pos);
   newT = WLZ_VTX_3_LENGTH(dsp);
   if(speeds != NULL)
@@ -2478,36 +1734,8 @@ static WlzErrorNum WlzCMeshFMarInsertSeed3D(WlzCMeshFMarQ *queue,
     nod->flags |= WLZ_CMESH_NOD_FLAG_ACTIVE | WLZ_CMESH_NOD_FLAG_KNOWN;
     errNum = WlzCMeshFMarQInsertNod3D(queue, times, nod);
   }
+#endif /* HACK_TODO */
   return(errNum);
-}
-
-/*!
-* \return	New element queue with no elements allocated.
-* \ingroup	WlzMesh
-* \brief	Allocates a new element queue, WlzCMeshFMarElmQFree()
-* 		should be used to free the queue. No queue entries
-* 		are allocated by this function.
-*/
-static WlzCMeshFMarElmQ *WlzCMeshFMarElmQNew(void)
-{
-  WlzCMeshFMarElmQ *queue;
-
-  queue = (WlzCMeshFMarElmQ *)AlcCalloc(1, sizeof(WlzCMeshFMarElmQ));
-  return(queue);
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Frees an element queue created by WlzCMeshFMarElmQNew().
-* \param	queue			Queue to free.
-*/
-static void		WlzCMeshFMarElmQFree(WlzCMeshFMarElmQ *queue)
-{
-  if(queue)
-  {
-    AlcFree(queue->entries);
-    AlcFree(queue);
-  }
 }
 
 /*!
@@ -2522,45 +1750,31 @@ static void		WlzCMeshFMarElmQFree(WlzCMeshFMarElmQ *queue)
 * \param	nod			Node with which to populate the
 * 					queue.
 */
-static WlzErrorNum WlzCMeshFMarElmQInit2D(WlzCMeshFMarElmQ *queue,
-					  WlzCMeshNod2D *nod)
+static WlzErrorNum WlzCMeshFMarElmQInit2D(AlcHeap *queue, WlzCMeshNod2D *nod)
 {
+  int		priority;
   WlzCMeshEdgU2D *edu0,
   		*edu1;
-  WlzCMeshFMarElmQEnt *ent;
+  WlzCMeshFMarElmQEnt ent;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	queueEntInc = 1024;
 
   queue->nEnt = 0;
-  queue->nod.n2 = nod;
+  queue->data = nod;
   edu0 = edu1 = nod->edu;
   do
   {
-    /* Add entry to the queue for each edge directed from the node. */
-    if(queue->nEnt >= queue->maxEnt)
+    ent.elm.e2 = edu1->elm;
+    priority = WlzCMeshFMarElmQCalcPriority2D(edu1->elm, nod);
+    if(priority > 0)
     {
-      queue->maxEnt += queueEntInc;
-      if((queue->entries = (WlzCMeshFMarElmQEnt *)
-                           AlcRealloc(queue->entries,
-				      sizeof(WlzCMeshFMarElmQEnt) *
-				      queue->maxEnt)) == NULL)
+      ent.priority = priority;
+      if((errNum = AlcHeapInsertEnt(queue, &ent)) != WLZ_ERR_NONE)
       {
-	errNum = WLZ_ERR_MEM_ALLOC;
+	break;
       }
     }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      ent = queue->entries + queue->nEnt++;
-      ent->elm.e2 = edu1->elm;
-      /* Node pointers are set in WlzCMeshFMarElmQSqueeze2D() after
-       * removing redundant entries. */
-      edu1 = edu1->nnxt;
-    }
-  } while((errNum == WLZ_ERR_NONE) && (edu1 != edu0));
-  if(errNum == WLZ_ERR_NONE)
-  {
-    WlzCMeshFMarElmQSqueeze2D(queue);
-  }
+    edu1 = edu1->nnxt;
+  } while(edu1 != edu0);
   return(errNum);
 }
 
@@ -2576,466 +1790,67 @@ static WlzErrorNum WlzCMeshFMarElmQInit2D(WlzCMeshFMarElmQ *queue,
 * \param	nod			Node with which to populate the
 * 					queue.
 */
-static WlzErrorNum WlzCMeshFMarElmQInit3D(WlzCMeshFMarElmQ *queue,
-					  WlzCMeshNod3D *nod)
+static WlzErrorNum WlzCMeshFMarElmQInit3D(AlcHeap *queue, WlzCMeshNod3D *nod)
 {
-  WlzCMeshEdgU3D *edu0,
-  		*edu1;
-  WlzCMeshFMarElmQEnt *ent;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	queueEntInc = 1024;
 
-  queue->nEnt = 0;
-  queue->nod.n3 = nod;
-  edu0 = edu1 = nod->edu;
-  do
-  {
-    /* Add entry to the queue for each edge directed from the node. */
-    if(queue->nEnt >= queue->maxEnt)
-    {
-      queue->maxEnt += queueEntInc;
-      if((queue->entries = (WlzCMeshFMarElmQEnt *)
-                           AlcRealloc(queue->entries,
-				      sizeof(WlzCMeshFMarElmQEnt) *
-				      queue->maxEnt)) == NULL)
-      {
-	errNum = WLZ_ERR_MEM_ALLOC;
-      }
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      ent = queue->entries + queue->nEnt++;
-      ent->elm.e3 = edu1->face->elm;
-      /* Node pointers are set in WlzCMeshFMarElmQSqueeze3D() after
-       * removing redundant entries. */
-      edu1 = edu1->nnxt;
-    }
-  } while((errNum == WLZ_ERR_NONE) && (edu1 != edu0));
-  if(errNum == WLZ_ERR_NONE)
-  {
-    WlzCMeshFMarElmQSqueeze3D(queue);
-  }
+  /* TODO */
   return(errNum);
 }
 
 /*!
-* \ingroup	WlzMesh
-* \brief	Squeezes out queue entries which have duplicate elements
-* 		or have all four nodes known.
-* \param	queue			Element queue.
-*/
-static void	WlzCMeshFMarElmQSqueeze2D(WlzCMeshFMarElmQ *queue)
-{
-  int		idx0,
-  		idx1,
-		idx2;
-  WlzCMeshNod2D *nod[3];
-  WlzCMeshFMarElmQEnt *ent0,
-  		*ent1;
-
-  /* Squeeze out the duplicate element index entries. */
-  qsort(queue->entries, queue->nEnt, sizeof(WlzCMeshFMarElmQEnt),
-        WlzCMeshFMarElmQElmIdxCmp2D);
-  idx0 = 0;
-  idx1 = 1;
-  ent0 = queue->entries + 0;
-  ent1 = queue->entries + 1;
-  while(idx1 < queue->nEnt)
-  {
-    if(ent0->elm.e2->idx != ent1->elm.e2->idx)
-    {
-      ++idx0;
-      ++ent0;
-      *ent0 = *ent1;
-    }
-    ++idx1;
-    ++ent1;
-  }
-  queue->nEnt = idx0 + 1;
-  /* Set node pointers and compute priority for the elements. */
-  for(idx0 = 0; idx0 < queue->nEnt; ++idx0)
-  {
-    ent0 = queue->entries + idx0;
-    WlzCMeshElmGetNodes2D(ent0->elm.e2, nod + 0, nod + 1, nod + 2);
-    /* Make sure that the current node is the first one. */
-    idx1 = 0;
-    if(nod[1] == queue->nod.n2)
-    {
-      idx1 = 1;
-    }
-    else if(nod[2] == queue->nod.n2)
-    {
-      idx1 = 2;
-    }
-    for(idx2 = 0; idx2 < 3; ++idx2)
-    {
-       ent0->nod[idx2].n2 = nod[(idx1 + idx2) % 3];
-    }
-  }
-  WlzCMeshFMarElmQSort2D(queue);
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Squeezes out queue entries which have duplicate elements
-* 		or have all four nodes known.
-* \param	queue			Element queue.
-*/
-static void	WlzCMeshFMarElmQSqueeze3D(WlzCMeshFMarElmQ *queue)
-{
-  int		idx0,
-  		idx1,
-		idx2;
-  WlzCMeshNod3D *nod[4];
-  WlzCMeshFMarElmQEnt *ent0,
-  		*ent1;
-
-  /* Squeeze out the duplicate element index entries. */
-  qsort(queue->entries, queue->nEnt, sizeof(WlzCMeshFMarElmQEnt),
-        WlzCMeshFMarElmQElmIdxCmp3D);
-  idx0 = 0;
-  idx1 = 1;
-  ent0 = queue->entries + 0;
-  ent1 = queue->entries + 1;
-  while(idx1 < queue->nEnt)
-  {
-    if(ent0->elm.e3->idx != ent1->elm.e3->idx)
-    {
-      ++idx0;
-      ++ent0;
-      *ent0 = *ent1;
-    }
-    ++idx1;
-    ++ent1;
-  }
-  queue->nEnt = idx0 + 1;
-  /* Set node pointers and compute priority for the elements. */
-  for(idx0 = 0; idx0 < queue->nEnt; ++idx0)
-  {
-    ent0 = queue->entries + idx0;
-    WlzCMeshElmGetNodes3D(ent0->elm.e3, nod + 0, nod + 1, nod + 2, nod + 3);
-    /* Make sure that the current node is the first one. */
-    idx1 = 0;
-    if(nod[1] == queue->nod.n3)
-    {
-      idx1 = 1;
-    }
-    else if(nod[2] == queue->nod.n3)
-    {
-      idx1 = 2;
-    }
-    else if(nod[3] == queue->nod.n3)
-    {
-      idx1 = 3;
-    }
-    for(idx2 = 0; idx2 < 4; ++idx2)
-    {
-       ent0->nod[idx2].n3 = nod[(idx1 + idx2) % 4];
-    }
-  }
-  WlzCMeshFMarElmQSort3D(queue);
-  /* Squeeze out unwanted entries, ie those with a priority > 7. */
-  idx0 =  queue->nEnt - 1;
-  while(idx0 >= 0)
-  {
-    ent0 = queue->entries + idx0;
-    if(ent0->priority < 7)
-    {
-      break;
-    }
-    --idx0;
-  }
-  queue->nEnt = idx0 + 1;
-}
-
-/*!
-* \return	List element index entry which will be posative for all
-* 		valid elements), or a negative value if the list is empty.
-* \ingroup	WlzMesh
-* \brief	Removes the entry at the tail of the list and retuurns it.
-* \param	queue			Element queue to get entry from.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-static WlzCMeshFMarElmQEnt *WlzCMeshFMarElmQPopTail2D(WlzCMeshFMarElmQ *queue)
-{
-  WlzCMeshFMarElmQEnt *ent = NULL;
-
-  WlzCMeshFMarElmQSort2D(queue);
-  if(queue->nEnt > 0)
-  {
-    ent = queue->entries + --(queue->nEnt);
-  }
-  return(ent);
-}
-
-/*!
-* \return	List element index entry which will be posative for all
-* 		valid elements), or a negative value if the list is empty.
-* \ingroup	WlzMesh
-* \brief	Removes the entry at the tail of the list and retuurns it.
-* \param	queue			Element queue to get entry from.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-static WlzCMeshFMarElmQEnt *WlzCMeshFMarElmQPopTail3D(WlzCMeshFMarElmQ *queue)
-{
-  WlzCMeshFMarElmQEnt *ent = NULL;
-
-  WlzCMeshFMarElmQSort3D(queue);
-  if(queue->nEnt > 0)
-  {
-    ent = queue->entries + --(queue->nEnt);
-  }
-  return(ent);
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Sorts the mesh element queue by priority so that highest
-* 		priority elements are last ani  the list.
-* \param	queue			The mesh element queue.
-*/
-static void	WlzCMeshFMarElmQSort2D(WlzCMeshFMarElmQ *queue)
-{
-  int		idx;
-  WlzCMeshFMarElmQEnt *ent = NULL;
-
-  for(idx = 0; idx < queue->nEnt; ++idx)
-  {
-    ent = queue->entries + idx;
-    WlzCMeshFMarElmQCalcPriority2D(ent, queue->nod.n2);
-  }
-  qsort(queue->entries, queue->nEnt, sizeof(WlzCMeshFMarElmQEnt),
-        WlzCMeshFMarElmQPriorityCmp);
-  idx =  queue->nEnt - 1;
-  while(idx >= 0)
-  {
-    ent = queue->entries + idx;
-    if(ent->priority < 5)
-    {
-      break;
-    }
-    --idx;
-  }
-  queue->nEnt = idx + 1;
-}
-
-/*!
-* \ingroup	WlzMesh
-* \brief	Sorts the mesh element queue by priority so that highest
-* 		priority elements are last ani  the list.
-* \param	queue			The mesh element queue.
-*/
-static void	WlzCMeshFMarElmQSort3D(WlzCMeshFMarElmQ *queue)
-{
-  int		idx;
-  WlzCMeshFMarElmQEnt *ent = NULL;
-
-  for(idx = 0; idx < queue->nEnt; ++idx)
-  {
-    ent = queue->entries + idx;
-    WlzCMeshFMarElmQCalcPriority3D(ent, queue->nod.n3);
-  }
-  qsort(queue->entries, queue->nEnt, sizeof(WlzCMeshFMarElmQEnt),
-        WlzCMeshFMarElmQPriorityCmp);
-  idx =  queue->nEnt - 1;
-  while(idx >= 0)
-  {
-    ent = queue->entries + idx;
-    if(ent->priority < 7)
-    {
-      break;
-    }
-    --idx;
-  }
-  queue->nEnt = idx + 1;
-}
-  
-/*!
+* \return	Element priority.
 * \ingroup	W;zMesh
-* \brief	Computes the priority value of an element queue entry.
-*		The priority is the simple sum of the priority of the
-*		nodes (2 for an upwind node or the current node,
-*		1 for any other known node and zero for an unknown
-*		(downwind) node.
-* \param	ent			The element queue entry.
+* \brief	Computes the priority value of an element queue entry
+* 		given the element and it's current node about which
+* 		the elements are clustered.
+*		The priority given by:
+*		\f$p = 6 - \sum_{i=0}^{2}{p_i}\f$
+*		where
+*		\f$p_i = 2\f$ if the node is upwind or the current node,
+*		\f$p_i = 1\f$ if the node is an other known node
+*		\f$p_i = 0\f$ if the node is unknown (downwind).
+* \param	elm			Given element.
 * \param	cNod			The current node around wich the
 * 					elements in the queue are clustered.
 */
-static void	WlzCMeshFMarElmQCalcPriority2D(WlzCMeshFMarElmQEnt *ent,
-				WlzCMeshNod2D *cNod)
+static int	WlzCMeshFMarElmQCalcPriority2D(WlzCMeshElm2D *elm,
+				               WlzCMeshNod2D *cNod)
 {
-  int		idx;
+  int		idx,
+  		priority = 6;
   WlzCMeshNod2D *nod;
 
-  ent->priority = 0;
   for(idx = 0; idx < 3; ++idx)
   {
-    nod = ent->nod[idx].n2;
-    ent->priority += ((nod->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) +
-                     ((nod->idx == cNod->idx) ||
-		      ((nod->flags & WLZ_CMESH_NOD_FLAG_UPWIND) != 0));
+    nod = elm->edu[idx].nod;
+    priority -= ((nod->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) +
+                ((nod->idx == cNod->idx) ||
+		 ((nod->flags & WLZ_CMESH_NOD_FLAG_UPWIND) != 0));
   }
+  return(priority);
 }
 
 /*!
 * \ingroup	W;zMesh
-* \brief	Computes the priority value of an element queue entry.
-*		The priority is the simple sum of the priority of the
-*		nodes (2 for an upwind node or the current node,
-*		1 for any other known node and zero for an unknown
-*		(downwind) node.
-* \param	ent			The element queue entry.
+* \brief	Computes the priority value of an element queue entry
+* 		given the element and it's current node about which
+* 		the elements are clustered.
+*		The priority given by:
+*		\f$p = 8 - \sum_{i=0}^{2}{p_i}\f$
+*		where
+*		\f$p_i = 2\f$ if the node is upwind or the current node,
+*		\f$p_i = 1\f$ if the node is an other known node
+*		\f$p_i = 0\f$ if the node is unknown (downwind).
+* \param	elm			The element.
 * \param	cNod			The current node around wich the
 * 					elements in the queue are clustered.
 */
-static void	WlzCMeshFMarElmQCalcPriority3D(WlzCMeshFMarElmQEnt *ent,
+static int	WlzCMeshFMarElmQCalcPriority3D(WlzCMeshElm3D *elm,
 				WlzCMeshNod3D *cNod)
 {
-  int		idx;
-  WlzCMeshNod3D *nod;
+  int		priority = 0;
 
-  ent->priority = 0;
-  for(idx = 0; idx < 4; ++idx)
-  {
-    nod = ent->nod[idx].n3;
-    ent->priority += ((nod->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) +
-                     ((nod->idx == cNod->idx) ||
-		      ((nod->flags & WLZ_CMESH_NOD_FLAG_UPWIND) != 0));
-  }
-}
-
-/*!
-* \return	Comparison value for qsort().
-* \ingroup	WlzMesh
-* \brief	Compares the priority the two given element queue entries.
-* \param	p0			Pointer for first entry.
-* \param	p1			Pointer for second entry.
-*/
-static int	WlzCMeshFMarElmQPriorityCmp(const void *p0, const void *p1)
-{
-  int		cmp;
-  WlzCMeshFMarElmQEnt *ent0,
-  		*ent1;
-
-  ent0 = (WlzCMeshFMarElmQEnt *)p0;
-  ent1 = (WlzCMeshFMarElmQEnt *)p1;
-  cmp = ent0->priority - ent1->priority;
-  return(cmp);
-}
-
-/*!
-* \return	Comparison value for qsort().
-* \ingroup	WlzMesh
-* \brief	Compares the element index the two given element queue entries.
-* \param	p0			Pointer for first entry.
-* \param	p1			Pointer for second entry.
-*/
-static int	WlzCMeshFMarElmQElmIdxCmp2D(const void *p0, const void *p1)
-{
-  int		cmp;
-  WlzCMeshFMarElmQEnt *ent0,
-  		*ent1;
-
-  ent0 = (WlzCMeshFMarElmQEnt *)p0;
-  ent1 = (WlzCMeshFMarElmQEnt *)p1;
-  cmp = ent0->elm.e2->idx - ent1->elm.e2->idx;
-  return(cmp);
-}
-/*!
-* \return	Comparison value for qsort().
-* \ingroup	WlzMesh
-* \brief	Compares the element index the two given element queue entries.
-* \param	p0			Pointer for first entry.
-* \param	p1			Pointer for second entry.
-*/
-static int	WlzCMeshFMarElmQElmIdxCmp3D(const void *p0, const void *p1)
-{
-  int		cmp;
-  WlzCMeshFMarElmQEnt *ent0,
-  		*ent1;
-
-  ent0 = (WlzCMeshFMarElmQEnt *)p0;
-  ent1 = (WlzCMeshFMarElmQEnt *)p1;
-  cmp = ent0->elm.e3->idx - ent1->elm.e3->idx;
-  return(cmp);
-}
-
-/*!
-* \return	Hash key.
-* \ingroup	WlzMesh
-* \brief	Simple hash function for integer values. The hash value
-* 		returned is in the range [0-maxVal], but maxVal must be
-* 		less than the largest of the generator primes (99999989).
-* 		All this function has to do is map the given integers
-* 		fairly uniformly over the integer range 0 - maxVal.
-* \todo		TODO Check the distribution is fairly uniform, without
-* 		to many spikes.
-* \param	value			Given integer value.
-* \param	maxVal			Maximum hash value.
-*/
-static int	WlzCMeshFMarQHashFn(int value, int maxVal)
-{
-  int		key;
-  const long long p0 = 15486157, 	   /* 4 different increasing primes. */
-  		p1 = 32453039,
-		p2 = 46048241,
-		p3 = 99999989;
-
-  key = (((((long long)value * p0) ^ p1) + p2) % p3) % maxVal;
-  return(key);
-}
-
-/*!
-* \return	Hash table index.
-* \ingroup	WlzMesh
-* \brief	Computes a hash table index for a 2D CMesh node.
-* 		The hash index is computed using the nodes index.
-* \param	queue			Given queue.
-* \param	ent			Entity which is a 2D node.
-*/
-static int	WlzCMeshFMarHashFnNod2D(WlzCMeshFMarQ *queue, void *ent)
-{
-  int		idx;
-  WlzCMeshNod2D	*nod;
-
-  nod = (WlzCMeshNod2D *)ent;
-  idx = WlzCMeshFMarQHashFn(nod->idx, queue->max);
-  return(idx);
-}
-
-/*!
-* \return	Hash table index.
-* \ingroup	WlzMesh
-* \brief	Computes a hash table index for a 3D CMesh node.
-* 		The hash index is computed using the nodes index.
-* \param	queue			Given queue.
-* \param	ent			Entity which is a 3D node.
-*/
-static int	WlzCMeshFMarHashFnNod3D(WlzCMeshFMarQ *queue, void *ent)
-{
-  int		idx;
-  WlzCMeshNod3D	*nod;
-
-  nod = (WlzCMeshNod3D *)ent;
-  idx = WlzCMeshFMarQHashFn(nod->idx, queue->max);
-  return(idx);
-}
-
-/*!
-* \return	Hash table index.
-* \ingroup	WlzMesh
-* \brief	Computes a hash table index for a 2D CMesh  use.
-* 		The hash table index is computed using the index of the
-* 		element.
-* \param	queue			Given queue.
-* \param	ent			Entity which is a 2D element.
-*/
-static int	WlzCMeshFMarHashFnElm2D(WlzCMeshFMarQ *queue, void *ent)
-{
-  int		idx;
-  WlzCMeshElm2D *elm;
-
-  elm = (WlzCMeshElm2D *)ent;
-  idx = WlzCMeshFMarQHashFn(elm->idx, queue->max);
-  return(idx);
+  /*  TODO */
+  return(priority);
 }
