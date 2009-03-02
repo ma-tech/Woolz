@@ -54,6 +54,7 @@ typedef enum _WlzTstParam
   WLZTST_SEED_BOUNDARY,
   WLZTST_SEED_SEEDS,
   WLZTST_OUT_IMAGE,
+  WLZTST_OUT_NONE,
   WLZTST_OUT_TXT
 } WlzTstParam;
 
@@ -91,7 +92,7 @@ int		main(int argc, char *argv[])
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*inObj = NULL;
   WlzCMeshP 	mesh;
-  static char   optList[] = "bhto:s:R:S:";
+  static char   optList[] = "bhnto:s:R:S:";
   const char    inObjFileStrDef[] = "-",
   	        outFileStrDef[] = "-";
 
@@ -106,6 +107,9 @@ int		main(int argc, char *argv[])
     {
       case 'b':
 	seedType = WLZTST_SEED_BOUNDARY;
+        break;
+      case 'n':
+	outType = WLZTST_OUT_NONE;
         break;
       case 't':
 	outType = WLZTST_OUT_TXT;
@@ -340,6 +344,8 @@ int		main(int argc, char *argv[])
   {
     switch(outType)
     {
+      case WLZTST_OUT_NONE:
+        break;
       case WLZTST_OUT_TXT:
 	if((fP = (strcmp(outFileStr, "-")?
 		 fopen(outFileStr, "w"): stdout)) == NULL)
@@ -423,7 +429,7 @@ int		main(int argc, char *argv[])
     (void )fprintf(stderr,
     "Usage: %s [-h] [-o<output file>]\n"
     "       [-b] [-s<seed>] [-R<repeats>] [-S<seed file>]\n"
-    "       [-t] [<input cmesh object>]\n"
+    "       [-n] [-t] [<input cmesh object>]\n"
     "Reads a conforming mesh and then computes distances from the given\n"
     "seeds or the boundary nodes.\n"
     "The distances are either printed to the output file as text or output\n"
@@ -446,6 +452,7 @@ int		main(int argc, char *argv[])
     "      the mesh.\n"
     "  -R  number of times to repeat the computation.\n"
     "  -S  File of seed points, each as of which must be within the mesh.\n"
+    "  -n  No output.\n"
     "  -t  Output text data.\n",
     argv[0]);
 
