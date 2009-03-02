@@ -314,6 +314,41 @@ typedef struct _AlcKDTTree
   AlcBlockStack *freeStack;	/*!< Stack of allocated node blocks */
 } AlcKDTTree;
 
+/*!
+* \struct       _AlcHeapEntryCore
+* \ingroup      AlcHeap
+* \brief        Core heap entry data structure. All other heap entry
+*               data structures must have the fields of this data
+*               structure first.
+*               Typedef: ::AlcHeapEntryCore
+*/
+typedef struct _AlcHeapEntryCore
+{
+  double                priority;       /*!< Entry priority highest priority
+                                             at the head of the queue. */
+} AlcHeapEntryCore;
+
+/*!
+* \struct       _AlcHeap
+* \ingroup      AlcHeap
+* \brief        A general purpose heap data structure.
+*               Typedef: ::AlcHeap
+*/
+typedef struct _AlcHeap
+{
+  int                   nEnt;           /*!< Number of entries in use:
+                                             incremented when entry inserted,
+                                             no change is popped,
+                                             decremented when entry freed. */
+  int                   maxEnt;         /*!< Number of entries allocated. */
+  int                   entInc;         /*!< When allocating space for more
+                                             entries, allocate space for
+                                             this many at a time. */
+  int                   entSz;          /*!< Size of each heap entry. */
+  void			*data;		/*!< Application data. */
+  void                  *entries;       /*!< Allocated heap entries. */
+} AlcHeap;
+
 #ifdef __cplusplus
 }					       /* Close scope of 'extern "C" */
 #endif
