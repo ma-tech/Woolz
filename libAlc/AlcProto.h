@@ -487,6 +487,27 @@ extern int			AlcHashItemOrder(
 				  AlcHashItem *item0,
 				  AlcHashItem *item1);
 /************************************************************************
+* AlcHeap.c
+************************************************************************/
+extern AlcHeap         		*AlcHeapNew(
+				  int entSz,
+				  int entInc,
+				  void *data);
+extern void            		AlcHeapFree(
+				  AlcHeap *heap);
+extern void            		AlcHeapEntFree(
+				  AlcHeap *heap);
+extern void			AlcHeapAllEntFree(
+				  AlcHeap *heap,
+				  int reallyFree);
+extern AlcErrno        		AlcHeapInsertEnt(
+				  AlcHeap *heap,
+				  void *ent);
+extern void             	*AlcHeapTop(
+				  AlcHeap *heap);
+
+
+/************************************************************************
 * AlcKDTree.c
 ************************************************************************/
 extern AlcKDTTree	       *AlcKDTTreeNew(
