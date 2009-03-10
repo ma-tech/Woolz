@@ -1769,6 +1769,32 @@ WlzErrorNum 	WlzCMeshVerify3D(WlzCMesh3D *mesh, WlzCMeshElm3D **dstElm,
 			   idE, WLZ_MESH_TOLERANCE_SQ);
 	  }
 	}
+	if(errNum1 == WLZ_ERR_NONE)
+	{
+	  errNum1 = errNum0;
+	}
+	/* Check the node ordering is consistent. */
+	if((allErr == 0)  || (errNum1 == WLZ_ERR_NONE))
+	{
+	  if((elm->face[1].edu[0].nod != elm->face[0].edu[0].nod) ||
+	     (elm->face[1].edu[2].nod != elm->face[0].edu[1].nod) ||
+	     (elm->face[2].edu[0].nod != elm->face[0].edu[0].nod) ||
+	     (elm->face[2].edu[1].nod != elm->face[0].edu[2].nod) ||
+	     (elm->face[2].edu[2].nod != elm->face[1].edu[1].nod) ||
+	     (elm->face[3].edu[0].nod != elm->face[0].edu[2].nod) ||
+	     (elm->face[3].edu[1].nod != elm->face[0].edu[1].nod) ||
+	     (elm->face[3].edu[2].nod != elm->face[1].edu[1].nod))
+	  {
+	    errNum0 = WLZ_ERR_DOMAIN_DATA;
+	    (void )sprintf(msgBuf,
+			   "Node ordering for elm[%d] is inconsistent",
+			   idE);
+	  }
+	}
+	if(errNum1 == WLZ_ERR_NONE)
+	{
+	  errNum1 = errNum0;
+	}
       }
       ++idE;
     }
