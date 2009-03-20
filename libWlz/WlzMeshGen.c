@@ -1341,9 +1341,8 @@ static WlzCMeshFace *WlzCMeshFindOppFce(WlzCMeshFace *gFce)
   		*oFce = NULL;
   WlzCMeshNod3D *tNod[3];
 
-  fEdg = gFce->edu[0].nod->edu;
-  tEdg = fEdg->nnxt;
-  while (tEdg != fEdg)
+  tEdg = fEdg = gFce->edu[0].nod->edu;
+  do
   {
     cnt = 0;
     tFce = tEdg->face;
@@ -1379,11 +1378,8 @@ static WlzCMeshFace *WlzCMeshFindOppFce(WlzCMeshFace *gFce)
       oFce = tFce;
       break;
     }
-    else
-    {
-      tEdg = tEdg->nnxt;
-    }
-  }
+    tEdg = tEdg->nnxt;
+  } while (tEdg != fEdg);
   return(oFce);
 }
 
@@ -3473,6 +3469,47 @@ int		WlzCMeshMatchNNod3D(WlzCMesh3D *mesh, int nNod,
 * 					location. If negative this is ignored.
 * \param        pX			Column coordinate of position.
 * \param        pY			Line coordinate of position.
+* \param        pZ			Plane coordinate of position (ignored
+*                                       for 2D).
+* \param	dstCloseNod		If non NULL, then the value is set
+* 					to the index of the closest node
+* 					to the given position.
+*/
+int             WlzCMeshElmEnclosingPos(WlzCMeshP mesh,
+                                        int lastElmIdx,
+                                        double pX, double pY, double pZ,
+					int *dstCloseNod)
+{
+  int           elmIdx = -1;
+
+  if(mesh.m2->type == WLZ_CMESH_TRI2D)
+  {
+    elmIdx = WlzCMeshElmEnclosingPos2D(mesh.m2, lastElmIdx, pX, pY,
+                                       dstCloseNod);
+  }
+  /* WLZ_CMESH_TET3D  not implimented yet. */
+  return(elmIdx);
+}
+
+/*!
+* \return       Element index or negative value if there is no enclosing
+*               element.
+* \ingroup	WlzMesh
+* \brief	Locates the element of the conforming mesh which encloses
+*		the given position.
+*
+*		If a valid last element index is given then a search is
+*		made for the enclosing element both within this element
+*		and then, if not found, within it's immediate edge
+*		neighbours.
+*		If this simple 'walk search' fails to locate the enclosing
+*		element a 'jump search' is used in which the grid buckets
+*		of the conforming mesh are searched.
+* \param        mesh			The mesh.
+* \param        lastElmIdx		Last element index to help efficient
+* 					location. If negative this is ignored.
+* \param        pX			Column coordinate of position.
+* \param        pY			Line coordinate of position.
 * \param	dstCloseNod		If non NULL, then the value is set
 * 					to the index of the closest node
 * 					to the given position.
@@ -3644,13 +3681,18 @@ static int	WlzCMeshElmWalkPos3D(WlzCMesh3D *mesh, int elmIdx,
 static int	WlzCMeshElmJumpPos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos,
 				     int *dstCloseNod)
 {
-  int		spiralCnt = 0,
-  		elmIdx = -1;
+  int		finished,
+  		elmIdx = -1,
+		ring0 = -1,
+		ring1 = -1,
+		spiralCnt = 0;
   double	d0,
   		d1,
 		minDstSq;
-  WlzDVertex2	bPos,
-  		del;
+  WlzDVertex2	del,
+  		bPos,
+  		bPos0,
+		bPos1;
   WlzIVertex2	idB;
   double	dstSq = 0.0;
   WlzCMeshNod2D	*nod;
@@ -3672,6 +3714,7 @@ static int	WlzCMeshElmJumpPos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos,
   d0 = sqrt((d0 * d0) + (d1 * d1)) - d1;
   /* Find the grid bucket which contains the position. */
   idB = WlzCMeshBucketIdxVtx2D(mesh, gPos);
+  finished = 0;
   do
   {
     if((idB.vtX >= 0) && (idB.vtY >= 0) &&
@@ -3713,36 +3756,58 @@ static int	WlzCMeshElmJumpPos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos,
     }
     /* Spiral out from the initial grid bucket. */
     spiralCnt = WlzGeomItrSpiral2I(spiralCnt, &(idB.vtX), &(idB.vtY));
-    /* Compute squared distance from the position to the closest vertex
-     * of the grid bucket's cell, then subtract the extra distance to
-     * account for search in circle rather than rectangle.  If the
-     * resulting squared distance is greater than the maximum square
-     * edge length then stop searching. */
-    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 0));
-    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 0));
-    dstSq = WlzGeomDistSq2D(gPos, bPos);
-    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 1));
-    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 0));
-    d1 = WlzGeomDistSq2D(gPos, bPos);
-    if(d1 < dstSq)
+    if(dstCloseNod == NULL)
     {
-      dstSq = d1;
+      /* Compute squared distance from the position to the closest vertex
+       * of the grid bucket's cell, then subtract the extra distance to
+       * account for search in circle rather than rectangle.  If the
+       * resulting squared distance is greater than the maximum square
+       * edge length then stop searching. */
+      bPos0.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * idB.vtX);
+      bPos0.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * idB.vtY);
+      bPos1.vtX = bPos0.vtX + mesh->bGrid.bSz.vtX;
+      bPos1.vtY = bPos0.vtY + mesh->bGrid.bSz.vtY;
+      dstSq = WlzGeomDistSq2D(gPos, bPos0);
+      bPos.vtX = bPos1.vtX;
+      bPos.vtY = bPos0.vtY;
+      d1 = WlzGeomDistSq2D(gPos, bPos);
+      if(d1 < dstSq)
+      {
+	dstSq = d1;
+      }
+      bPos.vtX = bPos0.vtX;
+      bPos.vtY = bPos1.vtY;
+      d1 = WlzGeomDistSq2D(gPos, bPos);
+      if(d1 < dstSq)
+      {
+	dstSq = d1;
+      }
+      d1 = WlzGeomDistSq2D(gPos, bPos1);
+      if(d1 < dstSq)
+      {
+	dstSq = d1;
+      }
+      finished = (dstSq  - d0) > mesh->maxSqEdgLen;
     }
-    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 0));
-    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 1));
-    d1 = WlzGeomDistSq2D(gPos, bPos);
-    if(d1 < dstSq)
+    else
     {
-      dstSq = d1;
+      if(*dstCloseNod > 0)
+      {
+	if(ring0 < 0)
+	{
+	  ring0 = WlzGeomItrSpiralRing(spiralCnt);
+	}
+	else
+	{
+	  ring1 = WlzGeomItrSpiralRing(spiralCnt);
+	}
+	if((ring1 - ring0) > 1)
+	{
+	  finished = 1;
+	}
+      }
     }
-    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 1));
-    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 1));
-    d1 = WlzGeomDistSq2D(gPos, bPos);
-    if(d1 < dstSq)
-    {
-      dstSq = d1;
-    }
-  } while((dstSq  - d0) < mesh->maxSqEdgLen);
+  } while(!finished);
 FOUND:
   return(elmIdx);
 }
