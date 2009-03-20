@@ -1784,10 +1784,10 @@ WlzErrorNum 	WlzCMeshVerify3D(WlzCMesh3D *mesh, WlzCMeshElm3D **dstElm,
 	     (elm->face[3].edu[0].nod != elm->face[0].edu[2].nod) ||
 	     (elm->face[3].edu[1].nod != elm->face[0].edu[1].nod) ||
 	     (elm->face[3].edu[2].nod != elm->face[1].edu[1].nod))
-	  {
+          {
 	    errNum0 = WLZ_ERR_DOMAIN_DATA;
 	    (void )sprintf(msgBuf,
-			   "Node ordering for elm[%d] is inconsistent",
+	                   "Node ordering for elm[%d] is inconsistent",
 			   idE);
 	  }
 	}
@@ -2208,23 +2208,10 @@ void		WlzCMeshElmGetNodes3D(WlzCMeshElm3D *elm,
 				      WlzCMeshNod3D **dstNod2,
 				      WlzCMeshNod3D **dstNod3)
 {
-  int		idN;
-  WlzCMeshNod3D	*nod;
-
   *dstNod0 = elm->face[0].edu[0].nod;
   *dstNod1 = elm->face[0].edu[1].nod;
   *dstNod2 = elm->face[0].edu[2].nod;
-  for(idN = 0; idN < 3; ++idN)
-  {
-    nod = elm->face[1].edu[idN].nod;
-    if((nod != *dstNod0) &&
-       (nod != *dstNod1) &&
-       (nod != *dstNod2))
-    {
-      *dstNod3  = nod;
-      break;
-    }
-  }
+  *dstNod3 = elm->face[1].edu[1].nod;
 }
 
 /*!
