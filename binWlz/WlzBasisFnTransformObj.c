@@ -54,9 +54,9 @@ WlzBasisFnTransformObj - computes and applies Woolz basis function transforms.
 \verbatim
 WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
 		       [-m<min mesh dist>] [-M<max mesh dist>]
-		       [-t<basis fn transform>] [-Y<order of polynomial>]
+		       [-b<basis fn transform>] [-Y<order of polynomial>]
 		       [-D<flags>]
-		       [-d] [-g] [-h] [-q] [-s] [-y]
+		       [-d] [-g] [-h] [-q] [-s] [-t] [-y]
 		       [-B] [-C] [-G] [-L] [-N] [-T]
 		       [<in object>]
 \endverbatim
@@ -114,16 +114,16 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
 	basis function transform.
   </tr>
   <tr> 
+    <td><b>-b</b></td>
+    <td>Basis function transform object.</td>
+  </tr>
+  <tr> 
     <td><b>-o</b></td>
     <td>Output object file name.</td>
   </tr>
   <tr> 
     <td><b>-p</b></td>
     <td>Tie point file.</td>
-  </tr>
-  <tr> 
-    <td><b>-t</b></td>
-    <td>Basis function transform object.</td>
   </tr>
   <tr> 
     <td><b>-c</b></td>
@@ -152,6 +152,13 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
     <td><b>-s</b></td>
     <td>Use thin plate spline basis function (default) if tie points
         are given.</td>
+  </tr>
+  <tr>
+    <td><b>-t</b></td>
+    <td>Target mesh. Only valid for conforming meshes. If given then the
+        target mesh is used to compute a target-to-source radial basis
+	function, with distances computed in the target mesh. This is
+	then inverted as a mesh transform is created.
   </tr>
   <tr> 
     <td><b>-T</b></td>
@@ -229,8 +236,8 @@ extern int      optind,
 
 int             main(int argc, char **argv)
 {
-  int		nTiePP,
-		option,
+  int		option,
+  		nTiePP = 0,
 		cdt = 0,
 		cMesh = 0,
 		vxCount = 0,
@@ -245,13 +252,15 @@ int             main(int argc, char **argv)
 		usage = 0;
   double	meshMinDist = 20.0,
   		meshMaxDist = 40.0;
-  WlzDVertex2	*vx0,
-  		*vx1,
+  WlzDVertex2	*vx0 = NULL,
+  		*vx1 = NULL,
 		*vxVec0 = NULL,
 		*vxVec1 = NULL;
   WlzObject	*inObj = NULL,
 		*outObj = NULL,
-		*dilObj = NULL;
+		*dilObj = NULL,
+           	*tmpObj = NULL;
+  WlzCMeshP	tarMesh;
   WlzTransform  meshTr;
   WlzMeshGenMethod meshGenMth = WLZ_MESH_GENMETHOD_GRADIENT;
   WlzBasisFnTransform *basisTr = NULL;
@@ -262,26 +271,31 @@ int             main(int argc, char **argv)
   char 		*rec,
   		*inObjFileStr,
 		*basisFnTrFileStr = NULL,
+		*tarMeshFileStr = NULL,
 		*tiePtFileStr = NULL,
   		*outObjFileStr;
   const int	delOut = 1;
   const char    *errMsg;
-  static char	optList[] = "m:o:p:t:D:M:Y:cdghqsyBCGLNRTU",
+  static char	optList[] = "b:m:o:p:t:D:M:Y:cdghqsyBCGLNRTU",
   		inObjFileStrDef[] = "-",
 		outObjFileStrDef[] = "-",
   		inRecord[IN_RECORD_MAX];
 
   opterr = 0;
+  tarMesh.v = NULL;
   meshTr.core = NULL;
   outObjFileStr = outObjFileStrDef;
   inObjFileStr = inObjFileStrDef;
-  while(ok && ((option = getopt(argc, argv, optList)) != -1))
+  while((usage == 0) && ((option = getopt(argc, argv, optList)) != -1))
   {
     switch(option)
     {
       case 'o':
         outObjFileStr = optarg;
 	break;
+      case 'b':
+        basisFnTrFileStr = optarg;
+        break;
       case 'B':
         meshGenMth = WLZ_MESH_GENMETHOD_BLOCK;
 	break;
@@ -292,7 +306,6 @@ int             main(int argc, char **argv)
 	if(1 != sscanf(optarg, "%d", &dbgFlg))
 	{
 	  usage = 1;
-	  ok = 0;
 	}
 	break;
       case 'c':
@@ -314,14 +327,12 @@ int             main(int argc, char **argv)
 	if(sscanf(optarg, "%lg", &meshMinDist) != 1)
 	{
 	  usage = 1;
-	  ok = 0;
 	}
 	break;
       case 'M':
 	if(sscanf(optarg, "%lg", &meshMaxDist) != 1)
 	{
 	  usage = 1;
-	  ok = 0;
 	}
 	break;
       case 'N':
@@ -333,20 +344,20 @@ int             main(int argc, char **argv)
       case 'q':
         basisFnType = WLZ_FN_BASIS_2DMQ;
 	break;
-      case 's':
-        basisFnType = WLZ_FN_BASIS_2DTPS;
-	break;
-      case 'y':
-        basisFnType = WLZ_FN_BASIS_2DPOLY;
-	break;
-      case 't':
-        basisFnTrFileStr = optarg;
-        break;
       case 'R':
         restrictToBasisFn = 1;
 	break;
+      case 's':
+        basisFnType = WLZ_FN_BASIS_2DTPS;
+	break;
+      case 't':
+        tarMeshFileStr = optarg;
+	break;
       case 'T':
         outBasisTrFlag = 1;
+	break;
+      case 'y':
+        basisFnType = WLZ_FN_BASIS_2DPOLY;
 	break;
       case 'U':
         outMeshTrFlag = 1;
@@ -355,44 +366,86 @@ int             main(int argc, char **argv)
         if(sscanf(optarg, "%d", &basisFnPolyOrder) != 1)
 	{
 	  usage = 1;
-	  ok = 0;
 	}
 	break;
       case 'h':
       default:
         usage = 1;
-	ok = 0;
 	break;
     }
   }
-  if(cdt)
+  if(usage == 0)
   {
-    cMesh = 1;
-    restrictToBasisFn = 1;
-    meshGenMth = WLZ_MESH_GENMETHOD_CONFORM;
+    if(cdt)
+    {
+      cMesh = 1;
+      restrictToBasisFn = 1;
+      meshGenMth = WLZ_MESH_GENMETHOD_CONFORM;
+    }
+    if((tarMeshFileStr != NULL) && (cMesh == 0))
+    {
+      usage = 1;
+    }
   }
-  if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
-     (((tiePtFileStr == NULL) || (*tiePtFileStr == '\0')) &&
-      ((basisFnTrFileStr == NULL) || (*basisFnTrFileStr == '\0'))) ||
-     (outObjFileStr == NULL) || (*outObjFileStr == '\0'))
+  if(usage == 0)
   {
-    ok = 0;
-    usage = 1;
+    if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
+       (((tiePtFileStr == NULL) || (*tiePtFileStr == '\0')) &&
+	((basisFnTrFileStr == NULL) || (*basisFnTrFileStr == '\0'))) ||
+       (outObjFileStr == NULL) || (*outObjFileStr == '\0'))
+    {
+      usage = 1;
+    }
   }
-  if(ok && (optind < argc))
+  if((usage == 0) && (optind < argc))
   {
     if((optind + 1) != argc)
     {
       usage = 1;
-      ok = 0;
     }
     else
     {
       inObjFileStr = *(argv + optind);
     }
   }
+  ok = (usage == 0);
   if(ok)
   {
+    if(tarMeshFileStr != NULL)
+    {
+      errNum = WLZ_ERR_READ_EOF;
+      if((tarMeshFileStr == NULL) ||
+	  (*tarMeshFileStr == '\0') ||
+	  ((fP = (strcmp(tarMeshFileStr, "-")?
+		  fopen(tarMeshFileStr, "r"): stdin)) == NULL) ||
+	  ((tmpObj = WlzAssignObject(WlzReadObj(fP,
+	                                        &errNum), NULL)) == NULL) ||
+	  (errNum != WLZ_ERR_NONE))
+      {
+	ok = 0;
+      }
+      if((tmpObj->type != WLZ_CMESH_2D) ||
+         (tmpObj->domain.core == NULL) ||
+	 (tmpObj->domain.cm2->type != WLZ_CMESH_TRI2D))
+      {
+	ok = 0;
+        errNum = WLZ_ERR_DOMAIN_DATA;
+      }
+      if(ok == 0)
+      {
+	(void )WlzStringFromErrorNum(errNum, &errMsg);
+	(void )fprintf(stderr,
+		 "%s: failed to read target mesh object from file %s (%s).\n",
+		       *argv, inObjFileStr, errMsg);
+      }
+      else
+      {
+        tarMesh.m2 = tmpObj->domain.cm2;
+	tmpObj->domain.cm2 = NULL;
+	(void )WlzFreeObj(tmpObj);
+	tmpObj = NULL;
+      }
+    }
     if(basisFnTrFileStr)
     {
       errNum = WLZ_ERR_UNSPECIFIED;
@@ -454,10 +507,25 @@ int             main(int argc, char **argv)
 	      {
 		vx1->vtX += vx0->vtX;
 		vx1->vtY += vx0->vtY;
-		++vx0;
-		++vx1;
-		++vxCount;
 	      }
+	    }
+	    if((errNum == WLZ_ERR_NONE) && (tarMesh.m2 != NULL))
+	    {
+	      if(WlzCMeshElmEnclosingPos2D(tarMesh.m2, -1,
+	                             vx1->vtX, vx1->vtY, NULL) < 0) 
+	      {
+	        errNum = WLZ_ERR_DOMAIN_DATA;
+		(void )WlzStringFromErrorNum(errNum, &errMsg);
+		(void )fprintf(stderr,
+			   "%s: tie points line %d not in target mesh (%s).\n",
+			   *argv, vxCount, errMsg);
+	      }
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      ++vx0;
+	      ++vx1;
+	      ++vxCount;
 	    }
 	  }
 	}
@@ -508,9 +576,12 @@ int             main(int argc, char **argv)
     {
       if(cMesh)
       {
-	meshTr.cMesh = WlzCMeshTransformFromObj(inObj,
-			      meshGenMth, meshMinDist, meshMaxDist,
-			      &dilObj, delOut, &errNum);
+	if(tarMesh.v == NULL)
+	{
+	  meshTr.cMesh = WlzCMeshTransformFromObj(inObj,
+				meshGenMth, meshMinDist, meshMaxDist,
+				&dilObj, delOut, &errNum);
+        }
       }
       else
       {
@@ -529,10 +600,19 @@ int             main(int argc, char **argv)
       }
       if(errNum == WLZ_ERR_NONE)
       {
-	basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
-					 nTiePP, vxVec0, nTiePP, vxVec1,
-					 (cdt)? meshTr.cMesh->mesh.m2: NULL,
-					 &errNum);
+	if(tarMesh.v == NULL)
+	{
+	  basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
+					   nTiePP, vxVec0, nTiePP, vxVec1,
+					   (cdt)? meshTr.cMesh->mesh.m2: NULL,
+					   &errNum);
+	}
+	else
+	{
+	  basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
+					   nTiePP, vxVec1, nTiePP, vxVec0,
+					   tarMesh.m2, &errNum);
+	}
 	if(errNum != WLZ_ERR_NONE)
 	{
 	  ok = 0;
@@ -580,7 +660,15 @@ int             main(int argc, char **argv)
 	{
 	  if(cMesh)
 	  {
-	    errNum = WlzBasisFnSetCMesh(meshTr.cMesh, basisTr);
+	    if(tarMesh.v == NULL)
+	    {
+	      errNum = WlzBasisFnSetCMesh(meshTr.cMesh, basisTr);
+	    }
+	    else
+	    {
+	       meshTr.cMesh = WlzBasisFnInvertAndSetCMesh(basisTr, tarMesh,
+	       				&errNum);
+	    }
 	  }
 	  else
 	  {
@@ -655,6 +743,7 @@ int             main(int argc, char **argv)
       }
     }
   }
+  (void )WlzCMeshFree(tarMesh);
   if(cMesh)
   {
     (void )WlzFreeCMeshTransform(meshTr.cMesh);
@@ -667,19 +756,20 @@ int             main(int argc, char **argv)
   (void )WlzFreeObj(inObj);
   (void )WlzFreeObj(outObj);
   (void )WlzFreeObj(dilObj);
-  if(usage)
+  if(usage != 0)
   {
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
     " [-o<out object>] [-p<tie points file>]\n"
     "                  [-m<min mesh dist>] [-M<max mesh dist>]\n"
-    "                  [-t<basis fn transform>] [-Y<order of polynomial>]\n"
+    "                  [-b<basis fn transform>] [-Y<order of polynomial>]\n"
     "                  [-D<flags>]\n"
-    "                  [-d] [-g] [-h] [-q] [-s] [-y]\n"
+    "                  [-d] [-g] [-h] [-q] [-s] [-t] [-y]\n"
     "                  [-B] [-C] [-G] [-L] [-N] [-T]\n"
     "                  [<in object>]\n"
     "Options:\n"
+    "  -b  Basis function transform object.\n"
     "  -B  Block mesh generation method (default).\n"
     "  -C  Use conforming mesh.\n"
     "  -D  Debug flags:\n"
@@ -698,7 +788,6 @@ int             main(int argc, char **argv)
     "      basis function transform.\n"
     "  -o  Output object file name.\n"
     "  -p  Tie point file.\n"
-    "  -t  Basis function transform object.\n"
     "  -c  Use conformal polynomial basis function if tie points are given.\n"
     "  -d  Compute transform using conforming distance transforms, also\n"
     "      sets the mesh generation to produce a conforming mesh and\n"
@@ -709,10 +798,14 @@ int             main(int argc, char **argv)
     "  -q  Use multi-quadric basis function if tie points are given.\n"
     "  -s  Use thin plate spline basis function (default) if tie points\n"
     "      are given.\n"
+    "  -t  Target mesh. Only valid for conforming meshes. If given then the\n"
+    "      target mesh is used to compute a target-to-source radial basis\n"
+    "      function, with distances computed in the target mesh. This is\n"
+    "      then inverted as a mesh transform is created.\n"
     "  -T  Output a basis function transform instead of a transformed\n"
     "      object.\n"
     "  -U  Output a mesh transform instead of a transformed object.\n"
-    "  -y  Use polynomianl basis function if tie points are given.\n"
+    "  -y  Use polynomial basis function if tie points are given.\n"
     "  -Y  Polynomial order for polynomial basis function (default 3).\n"
     "Computes and applies Woolz basis function transforms.\n"
     "Tie points may be read from an ascii file with the format:\n"
