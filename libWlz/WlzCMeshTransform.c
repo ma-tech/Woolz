@@ -197,6 +197,10 @@ static int			WlzCMeshItv3Cmp(
 static int			WlzCMeshDVertex3Cmp(
 				  const void *cmp0,
 				  const void *cmp1);
+static WlzErrorNum		WlzCMeshTransformInvert2D(
+				  WlzCMeshTransform *mTr);
+static WlzErrorNum		WlzCMeshTransformInvert3D(
+				  WlzCMeshTransform *mTr);
 static WlzErrorNum 		WlzCMeshTransMakeDispCb2D(
 				  void *meshP,
 				  void *nodP, 
@@ -499,6 +503,120 @@ WlzCMeshTransform *WlzMakeCMeshTransform3D(WlzCMesh3D *mesh,
     *dstErr = errNum;
   }
   return(mTr);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Inverts the given constrained mesh transform in place.
+* \param	mTr			Given constrained mesh transform.
+*/
+WlzErrorNum	WlzCMeshTransformInvert(WlzCMeshTransform *mTr)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(mTr == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(mTr->type)
+    {
+      case WLZ_TRANSFORM_2D_CMESH:
+	errNum = WlzCMeshTransformInvert2D(mTr);
+        break;
+      case WLZ_TRANSFORM_3D_CMESH:
+	errNum = WlzCMeshTransformInvert3D(mTr);
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Inverts the given 2D constrained mesh transform in place.
+* \param	mTr			Given constrained mesh transform.
+*/
+static WlzErrorNum WlzCMeshTransformInvert2D(WlzCMeshTransform *mTr)
+{
+  int		idN,
+  		maxNod;
+  AlcVector	*dspVec,
+  		*nodVec;
+  WlzDVertex2	*pos,
+  		*dsp;
+  WlzCMeshNod2D	*nod;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  dspVec = mTr->dspVec;
+  nodVec = mTr->mesh.m2->res.nod.vec;
+  maxNod = mTr->mesh.m2->res.nod.maxEnt;
+  for(idN = 0; idN < maxNod; ++idN)
+  {
+    nod = (WlzCMeshNod2D *)AlcVectorItemGet(nodVec, idN);
+    if(nod->idx >= 0)
+    {
+      pos = &(nod->pos);
+      dsp = (WlzDVertex2 *)AlcVectorItemGet(dspVec, idN);
+      pos->vtX += dsp->vtX;
+      pos->vtY += dsp->vtY;
+      dsp->vtX = -(dsp->vtX);
+      dsp->vtY = -(dsp->vtY);
+    }
+  }
+  WlzCMeshUpdateBBox2D(mTr->mesh.m2);
+  WlzCMeshUpdateMaxSqEdgLen2D(mTr->mesh.m2);
+  errNum = WlzCMeshReassignBuckets2D(mTr->mesh.m2,
+                                     mTr->mesh.m2->res.nod.numEnt);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Inverts the given 3D constrained mesh transform in place.
+* \param	mTr			Given constrained mesh transform.
+*/
+static WlzErrorNum WlzCMeshTransformInvert3D(WlzCMeshTransform *mTr)
+{
+  int		idN,
+  		maxNod;
+  AlcVector	*dspVec,
+  		*nodVec;
+  WlzDVertex3	*pos,
+  		*dsp;
+  WlzCMeshNod3D	*nod;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  dspVec = mTr->dspVec;
+  nodVec = mTr->mesh.m3->res.nod.vec;
+  maxNod = mTr->mesh.m3->res.nod.maxEnt;
+  for(idN = 0; idN < maxNod; ++idN)
+  {
+    nod = (WlzCMeshNod3D *)AlcVectorItemGet(nodVec, idN);
+    if(nod->idx >= 0)
+    {
+      pos = &(nod->pos);
+      dsp = (WlzDVertex3 *)AlcVectorItemGet(dspVec, idN);
+      pos->vtX += dsp->vtX;
+      pos->vtY += dsp->vtY;
+      pos->vtZ += dsp->vtZ;
+      dsp->vtX = -(dsp->vtX);
+      dsp->vtY = -(dsp->vtY);
+      dsp->vtZ = -(dsp->vtZ);
+    }
+  }
+  WlzCMeshUpdateBBox3D(mTr->mesh.m3);
+  WlzCMeshUpdateMaxSqEdgLen3D(mTr->mesh.m3);
+  errNum = WlzCMeshReassignBuckets3D(mTr->mesh.m3,
+                                     mTr->mesh.m3->res.nod.numEnt);
+  return(errNum);
 }
 
 /*!
