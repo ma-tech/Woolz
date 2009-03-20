@@ -3124,10 +3124,10 @@ typedef struct _WlzCMeshElm2D
 *               Typedef: ::WlzCMeshElm3D.
 *		
 *		The following diagram depicts a mesh element, viewed from
-*		above with the apex (node n1) pointing towards the viewer.
+*		above with the apex (node n0) pointing towards the viewer.
 *		From this view, face f3 is at the rear of the tetrahedron.
 * \verbatim
-                                        O n3                         
+                                        O n1                         
                                        /|\                   
                                       / | \                  
                                      /  |  \                 
@@ -3140,51 +3140,51 @@ typedef struct _WlzCMeshElm2D
                               /         |    .    \                  
                              /          |   .      \                 
                             /           O           \                
-                           /      f2   / \    f1     \               
-                          /          /  n1 \          \              
+                           /      f1   / \    f0     \               
+                          /          /  n0 \          \              
                          /         /         \         \             
                         /        /             \        \            
                        /       /                 \       \            
                       /      /                     \      \            
                      /     /                         \     \            
-                    /    /              f0             \    \            
+                    /    /              f2             \    \            
                    /   /                                 \   \            
                   /  /                                     \  \           
                  / /                                         \ \           
-             n2 O-----------------------------------------------O n0        
+             n3 O-----------------------------------------------O n2        
 \endverbatim
 *		The relationship between nodes and faces depicted in
 *		this diagrap is used in constructing new mesh elements.
 *
 *		The tetrahedron can be opened a net and viewed looking
-*		at the directed edges associated with the faces from
-*		outside surface as shown below:
+*		at the directed edges uses associated with the faces from
+*		*outside* the element surface as shown below:
 * \verbatim
                                     n1                                
-   n3 O-----------------------------O-----------------------------0 n3  
+   n0 O-----------------------------O-----------------------------0 n0  
        \    ---------------------> / \    -------------------->  /    
-        \ %         e2            / % \ %         e1            /     
+        \ %         e0            / % \ %         e1            /     
          \ \                   / / /   \ \                  /  /      
           \ \                 / / /   \ \ \                /  /       
            \ \               / / /     \ \ \              /  /        
-            \ \     f3      / / /       \ \ \     f1     /  /        
-             \ \ e1     e0 / / /         \ \ \ e2    e0 /  /         
+            \ \     f0      / / /       \ \ \     f1     /  /        
+             \ \ e2     e1 / / /         \ \ \ e1    e0 /  /         
               \ \         / / /           \ \ \        /  /           
-               \ \       / / /     f0      \ \ \      /  /             
-                \ \     / / /  e1       e0  \ \ \    /  /               
+               \ \       / / /     f3      \ \ \      /  /             
+                \ \     / / /  e0       e1  \ \ \    /  /               
                  \ \   / / /                 \ \    /  /                 
                   \   / / /                   \ \  %  /                   
                    \ % /           e2          % \   /                    
                     \ /  <--------------------    \ /                       
                      O-----------------------------O                         
-                   n2 \ %  -------------------->  / n0                
-                       \ \         e0            /                    
+                   n2 \ %  -------------------->  / n3                
+                       \ \         e1            /                    
                         \ \                   / /                     
                          \ \                 / /                      
                           \ \               / /                       
                            \ \     f2      / /                        
                             \ \           / /                         
-                             \ \ e1   e2 / /                          
+                             \ \ e0   e2 / /                          
                               \ \       / /                           
                                \ \     / /                            
                                 \ \   / /                            
@@ -3192,12 +3192,36 @@ typedef struct _WlzCMeshElm2D
                                   \ % /                               
                                    \ /                                
                                     O                                 
-                                   n3                                 
+                                   n0                                 
 \endverbatim
 *		Each mesh element has four faces and each face has three
 *		directed edges, with the edges directed counter clockwise
 *		(when viewed from outside the mesh element) away from their
 *		nodes.
+*
+*		<table>
+*		  <caption>
+*		  Indexing of faces, edge uses and nodes in 3D elements.
+*		  <\caption>
+*                 <tr><td>Face</td> <td>Edge Use</td> <td>Node/td></tr>
+*                 <tr><td>0</td>    <td>0</td>        <td>0/td></tr>
+*                 <tr><td>0</td>    <td>1</td>        <td>1/td></tr>
+*                 <tr><td>0</td>    <td>2</td>        <td>2/td></tr>
+*                 <tr><td>1</td>    <td>0</td>        <td>0/td></tr>
+*                 <tr><td>1</td>    <td>1</td>        <td>3/td></tr>
+*                 <tr><td>1</td>    <td>2</td>        <td>1/td></tr>
+*                 <tr><td>2</td>    <td>0</td>        <td>0/td></tr>
+*                 <tr><td>2</td>    <td>1</td>        <td>2/td></tr>
+*                 <tr><td>2</td>    <td>2</td>        <td>3/td></tr>
+*                 <tr><td>3</td>    <td>0</td>        <td>1/td></tr>
+*                 <tr><td>3</td>    <td>1</td>        <td>1/td></tr>
+*                 <tr><td>3</td>    <td>2</td>        <td>3/td></tr>
+*		</table>
+
+*		The face opposite a node, or node opposite a face
+*		can easily be found using: \f$f + n = 3\f$, where
+*		\f$f\f$ is the face and \f$n\f$ is the node.
+*
 */
 typedef struct _WlzCMeshElm3D
 {
