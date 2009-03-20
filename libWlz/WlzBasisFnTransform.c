@@ -49,6 +49,10 @@ static char _WlzBasisFnTransform_c[] = "MRC HGU $Id$";
 #include <float.h>
 #include <Wlz.h>
 
+static WlzCMeshTransform 	*WlzBasisFnInvertAndSetCMesh2D(
+				  WlzBasisFnTransform *basisTr,
+				  WlzCMesh2D *mesh,
+				  WlzErrorNum *dstErr);
 
 /*!
 * \return	New Basis function transform.
@@ -481,7 +485,7 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts3(WlzFnType type,
 * \brief	Sets the displacements of the given mesh transform according
 * 		to the basis function transform.
 * \param	mesh			Given mesh transform.
-* \param	basisTr			Given basis functiontransform.
+* \param	basisTr			Given basis function transform.
 */
 WlzErrorNum    	WlzBasisFnSetMesh(WlzMeshTransform *mesh,
 				  WlzBasisFnTransform *basisTr)
@@ -559,7 +563,7 @@ WlzErrorNum    	WlzBasisFnSetMesh(WlzMeshTransform *mesh,
 * \brief	Sets the displacements of the given conforming mesh
 *		transform according to the basis function transform.
 * \param	meshTr			Given conforming mesh transform.
-* \param	basisTr			Given basis functiontransform.
+* \param	basisTr			Given basis function transform.
 */
 WlzErrorNum    	WlzBasisFnSetCMesh(WlzCMeshTransform *meshTr,
 				   WlzBasisFnTransform *basisTr)
@@ -568,7 +572,7 @@ WlzErrorNum    	WlzBasisFnSetCMesh(WlzCMeshTransform *meshTr,
 
   if((meshTr == NULL) || (basisTr == NULL))
   {
-    errNum = WLZ_ERR_OBJECT_NULL;
+    errNum = WLZ_ERR_DOMAIN_NULL;
   }
   else
   {
@@ -594,7 +598,7 @@ WlzErrorNum    	WlzBasisFnSetCMesh(WlzCMeshTransform *meshTr,
 * \brief	Sets the displacements of the given 2D conforming mesh
 *		transform according to the basis function transform.
 * \param	meshTr			Given mesh transform.
-* \param	basisTr			Given basis functiontransform.
+* \param	basisTr			Given basis function transform.
 */
 WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzCMeshTransform *meshTr,
 				     WlzBasisFnTransform *basisTr)
@@ -645,6 +649,88 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzCMeshTransform *meshTr,
     }
   }
   return(errNum);
+}
+
+/*!
+* \return	New constrained mesh transform.
+* \ingroup	WlzTransform
+* \brief	Uses the given target mesh to create a mesh transform
+* 		which transforms the source to target.
+* \param	basisTr			Given basis function transform
+* 					which transforms target to source.
+* \param	mesh			Given conforming mesh for target.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMeshTransform *WlzBasisFnInvertAndSetCMesh(WlzBasisFnTransform *basisTr,
+				      WlzCMeshP mesh,
+				      WlzErrorNum *dstErr)
+{
+  WlzCMeshTransform *meshTr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((basisTr == NULL) || (mesh.v == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(basisTr->type)
+    {
+      case WLZ_TRANSFORM_2D_BASISFN:
+        meshTr = WlzBasisFnInvertAndSetCMesh2D(basisTr, mesh.m2, &errNum);
+	break;
+      case WLZ_TRANSFORM_3D_BASISFN:
+        errNum = WLZ_ERR_UNIMPLEMENTED;
+	break;
+      default:
+        errNum = WLZ_ERR_TRANSFORM_TYPE;
+	break;
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(meshTr);
+}
+
+/*!
+* \return	New constrained mesh transform.
+* \ingroup	WlzTransform
+* \brief	Uses the given 2D target mesh to create a 2D mesh transform
+* 		which transforms the source to target.
+* \param	basisTr			Given basis function transform
+* 					which transforms target to source.
+* \param	mesh			Given conforming mesh for target.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzCMeshTransform *WlzBasisFnInvertAndSetCMesh2D(
+					WlzBasisFnTransform *basisTr,
+				        WlzCMesh2D *mesh,
+				        WlzErrorNum *dstErr)
+{
+  WlzCMesh2D	*invMesh;
+  WlzCMeshTransform *meshTr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  invMesh = WlzCMeshCopy2D(mesh, 0, NULL, NULL, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    meshTr = WlzMakeCMeshTransform2D(mesh, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzBasisFnSetCMesh2D(meshTr, basisTr);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshTransformInvert(meshTr);
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(meshTr);
 }
 
 /*!
