@@ -1083,6 +1083,12 @@ extern WlzErrorNum		WlzBasisFnTPS2DChangeCPtsParam(
 				  WlzObject *cObj,
 				  int nParam,
 				  double *param);
+#ifndef WLZ_EXT_BIND
+extern WlzCMeshTransform	*WlzBasisFnInvertAndSetCMesh(
+				  WlzBasisFnTransform *basisTr,
+				  WlzCMeshP mesh,
+				  WlzErrorNum *dstErr);
+#endif
 extern WlzErrorNum		WlzBasisFnSetCMesh(
 				  WlzCMeshTransform *meshTr,
 				  WlzBasisFnTransform *basisTr);
@@ -1302,6 +1308,8 @@ extern WlzObject		*WlzCMeshDistance2D(
 * WlzCMeshTransform.c							*
 ************************************************************************/
 extern WlzErrorNum		WlzFreeCMeshTransform(
+				  WlzCMeshTransform *mTr);
+extern WlzErrorNum		WlzCMeshTransformInvert(
 				  WlzCMeshTransform *mTr);
 extern WlzCMeshTransform	*WlzMakeCMeshTransform(
 				  WlzTransformType type,
@@ -2435,11 +2443,6 @@ extern int			WlzGeomVxInTriangle2D(
 				  WlzDVertex2 p1,
 			          WlzDVertex2 p2,
 				  WlzDVertex2 pP);
-extern int			WlzGeomVxInTriangle3D(
-				  WlzDVertex3 p0,
-				  WlzDVertex3 p1,
-			          WlzDVertex3 p2,
-				  WlzDVertex3 pP);
 extern int			WlzGeomVxInTetrahedron(
 				  WlzDVertex3 vx0,
 				  WlzDVertex3 vx1,
@@ -2540,22 +2543,37 @@ extern int			WlzGeomCmpVtx3D(
 				  double tol);
 extern WlzDVertex2		WlzGeomUnitVector2D(
 				  WlzDVertex2 vec);
+extern WlzDVertex3		WlzGeomUnitVector3D(
+				  WlzDVertex3 vec);
 extern WlzDVertex2		WlzGeomUnitVector2D2(
 				  WlzDVertex2 pos1,
 				  WlzDVertex2 pos0);
+extern WlzDVertex3		WlzGeomUnitVector3D2(
+				  WlzDVertex3 pos1,
+				  WlzDVertex3 pos0);
 extern int             		WlzGeomVertexInDiamCircle(
 				  WlzDVertex2 lPos0,
 				  WlzDVertex2 lPos1,
 				  WlzDVertex2 pos);
+extern int			WlzGeomItrSpiralRing(
+				  int step);
 extern int			WlzGeomItrSpiral2I(
 				  int step,
 				  int *dstX,
 				  int *dstY);
+extern int			WlzGeomItrSpiralShell(
+				  int step);
 extern int			WlzGeomItrSpiral3I(
 				  int step,
 				  int *dstX,
 				  int *dstY,
 				  int *dstZ);
+extern double          		WlzGeomDist2D(
+				  WlzDVertex2 v0,
+				  WlzDVertex2 v1);
+extern double          		WlzGeomDist3D(
+				  WlzDVertex3 v0,
+				  WlzDVertex3 v1);
 extern double          		WlzGeomDistSq2D(
 				  WlzDVertex2 v0,
 				  WlzDVertex2 v1);
@@ -2605,26 +2623,38 @@ extern int             		WlzGeomVtxOnLineSegment3D(
 				  WlzDVertex3 tst,
                                   WlzDVertex3 seg0,
 				  WlzDVertex3 seg1,
-                                  double tol);
+                                  WlzDVertex3 *dstN);
 extern double			WlzGeomArcLength2D(
 				  WlzDVertex2 a,
 				  WlzDVertex2 b,
 				  WlzDVertex2 c);
-extern WlzDVertex3		WlzGeomRayPlaneIntersection(
+extern WlzDVertex3		WlzGeomLinePlaneIntersection(
 				  WlzDVertex3 v,
 				  WlzDVertex3 p0,
 				  WlzDVertex3 p1,
 				  WlzDVertex3 p2,
 				  WlzDVertex3 p3,
 				  int *dstPar);
-extern int			WlzGeomRayTriangleIntersect3D(
-				  WlzDVertex3 v,
+extern int			WlzGeomLineTriangleIntersect3D(
+				  WlzDVertex3 org,
+				  WlzDVertex3 dir,
 				  WlzDVertex3 p0,
 				  WlzDVertex3 p1,
 				  WlzDVertex3 p2,
-				  WlzDVertex3 pOP,
-				  WlzDVertex3 *dstIsnPos,
-				  int *dstPar);
+				  int *dstPar,
+				  double *dstT,
+				  double *dstU,
+				  double *dstV);
+extern int			WlzGeomLineLineSegmentIntersect3D(
+				  WlzDVertex3 r0,
+				  WlzDVertex3 rD,
+				  WlzDVertex3 p0,
+				  WlzDVertex3 p1,
+				  WlzDVertex3 *dstN);
+extern int			WlzGeomVtxOnLine3D(
+				  WlzDVertex3 p0,
+				  WlzDVertex3 r0,
+				  WlzDVertex3 rD);
 extern double			WlzGeomInterpolateTri2D(
 				  WlzDVertex2 p0,
 				  WlzDVertex2 p1,
@@ -3693,6 +3723,13 @@ extern int                      WlzCMeshLocateNod3D(
                                   WlzIVertex3 *dstGPos,
                                   WlzCMeshNod3D **dstPrev,
                                   WlzCMeshNod3D **dstNod);
+extern int			WlzCMeshElmEnclosingPos(
+				  WlzCMeshP mesh,
+				  int lastElmIdx,
+				  double pX,
+				  double pY,
+				  double pZ,
+				  int *dstCloseNod);
 extern int			WlzCMeshElmEnclosingPos2D(
 				  WlzCMesh2D *mesh,
 				  int lastElmIdx,
