@@ -181,7 +181,7 @@ int		main(int argc, char *argv[])
 		      seg0.d3.vtX, seg0.d3.vtY, seg0.d3.vtZ,
 		      seg1.d3.vtX, seg1.d3.vtY, seg1.d3.vtZ);
       }
-      onSeg = WlzGeomVtxOnLineSegment3D(tst.d3, seg0.d3, seg1.d3, tol);
+      onSeg = WlzGeomVtxOnLineSegment3D(tst.d3, seg0.d3, seg1.d3, NULL);
     }
     printf("%d\n", onSeg);
   }
