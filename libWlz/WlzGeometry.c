@@ -201,66 +201,6 @@ int		 WlzGeomVxInTriangle2D(WlzDVertex2 p0, WlzDVertex2 p1,
 
 /*!
 * \return	Value indicating the position of the vertex with respect
-*               to the triangle in 3D:
-*		  +ve if the vertex is inside the triangle,
-*		  0   if the vertex is on an edge of the triangle and
-*		  -ve if the vertex is outside the triangle.
-* \ingroup	WlzGeometry
-* \brief	Test's to set if the given vertex lies within the given
-*		triangle using the signs of cross products.
-*
-*		If the triangle has vertices \f$p_0, p_1, p_2\f$ and the
-*		test vertex is \f$p_x\f$, then the vertex in trinagle
-*		test can be reduced to examinging the signs of three
-*		vector cross products:
-*		\f$(p_1 - p_0) \times (p_x - p_0)\f$,
-*		\f$(p_2 - p_1) \times (p_x - p_1)\f$ and
-*		\f$(p_0 - p_2) \times (p_x - p_2)\f$.
-* \param	p0			First vertex of triangle.
-* \param	p1			Second vertex of triangle.
-* \param	p2			Third vertex of triangle.
-* \param	pP			Given test vertex.
-*/
-int		 WlzGeomVxInTriangle3D(WlzDVertex3 p0, WlzDVertex3 p1,
-				       WlzDVertex3 p2, WlzDVertex3 pP)
-{
-  int		inside = 0;
-  double	s0,
-  		s1;
-  WlzDVertex3	u,
-  		v,
-		w;
-  const double	eps = 1.0e-10;
-
-  /* TODO Test this function. */
-  WLZ_VTX_3_SUB(p0, p0, pP);
-  WLZ_VTX_3_SUB(p1, p1, pP);
-  WLZ_VTX_3_SUB(p2, p2, pP);
-  WLZ_VTX_3_CROSS(u, p0, p1);
-  WLZ_VTX_3_CROSS(v, p1, p2);
-  s0 = WLZ_VTX_3_DOT(u, v);
-  if(s0 < -eps)
-  {
-    inside = -1;
-  }
-  else
-  {
-    WLZ_VTX_3_CROSS(w, p2, p0);
-    s1 = WLZ_VTX_3_DOT(v, w);
-    if(s1 < -eps)
-    {
-      inside = -1;
-    }
-    else if((fabs(s0) > eps) && (fabs(s1) > eps))
-    {
-      inside = 1;
-    }
-  }
-  return(inside);
-}
-
-/*!
-* \return	Value indicating the position of the vertex with respect
 *               to the tetrahedron:
 *		  +ve if the vertex is inside the tetrahedron,
 *		  0   if the vertex is on an edge of the tetrahedron and
@@ -461,8 +401,10 @@ double		WlzGeomTriangleSnArea2(WlzDVertex2 vx0, WlzDVertex2 vx1,
 /*!
 * \return	Six times the signed volume of the given tetrahedron.
 * \ingroup	WlzGeometry
-* \brief	Computes six times the signed volume of the given tetrahedron
-*		using simple determinant evaluation:
+* \brief	Computes six times the signed volume of the given tetrahedron.
+*
+* 		The signed volume is computed using simple determinant
+* 		evaluation:
 *		\f[
 		area \times 6 = \left|
 		     \begin{array}{cccc}
@@ -1608,9 +1550,9 @@ int		WlzGeomCmpVtx2D(WlzDVertex2 pos0, WlzDVertex2 pos1, double tol)
 }
 
 /*!
-* \return	Unit vector or zero vector if vertices are coincident.
+* \return	Unit vector or zero vector if components are both zero.
 * \ingroup	WlzGeometry
-* \brief	Computes the unit vector
+* \brief	Computes the 2D unit vector
 *		\f$\frac{1}{|\mathbf{v}|} \mathbf{v}\f$.
 * \param	vec			Given vector, \f$\mathbf{v}\f$.
 */
@@ -1631,31 +1573,80 @@ WlzDVertex2	WlzGeomUnitVector2D(WlzDVertex2 vec)
 }
 
 /*!
-* \return	Unit vector or zero vector if vertices are coincident.
+* \return	Unit vector or zero vector if components are both zero.
 * \ingroup	WlzGeometry
-* \brief	Computes the unit vector with the direction given by
-*		\f$\mathbf{p}_1 - \mathbf{p}_0\f$.
-*		If the two given vertices are coincident then a
-*		zero vector is returned instead of a unit vector.
-* \param	pos1			Position of vertex, \f$\mathbf{p}_1\f$.
-* \param	pos0			Position of vertex, \f$\mathbf{p}_0\f$.
+* \brief	Computes the 3D unit vector
+*		\f$\frac{1}{|\mathbf{v}|} \mathbf{v}\f$.
+* \param	vec			Given vector, \f$\mathbf{v}\f$.
 */
-WlzDVertex2	WlzGeomUnitVector2D2(WlzDVertex2 pos1, WlzDVertex2 pos0)
+WlzDVertex3	WlzGeomUnitVector3D(WlzDVertex3 vec)
 {
   double	len;
-  WlzDVertex2	vec;
 
-  WLZ_VTX_2_SUB(vec, pos1, pos0);
-  if((len = WLZ_VTX_2_LENGTH(vec)) > DBL_EPSILON)
+  if((len = WLZ_VTX_3_LENGTH(vec)) > DBL_EPSILON)
   {
     len = 1.0 / len;
-    WLZ_VTX_2_SCALE(vec, vec, len);
+    WLZ_VTX_3_SCALE(vec, vec, len);
   }
   else
   {
-    vec.vtX = vec.vtY = 0.0;
+    vec.vtX = vec.vtY = vec.vtZ = 0.0;
   }
   return(vec);
+}
+
+/*!
+* \return	Unit vector or zero vector if vertices are coincident.
+* \ingroup	WlzGeometry
+* \brief	Computes the unit 2D vector with the direction given by
+*		\f$\mathbf{p}_1 - \mathbf{p}_0\f$.
+*		If the two given vertices are coincident then a
+*		zero vector is returned instead of a unit vector.
+* \param	v1			Position of vertex, \f$\mathbf{p}_1\f$.
+* \param	v0			Position of vertex, \f$\mathbf{p}_0\f$.
+*/
+WlzDVertex2	WlzGeomUnitVector2D2(WlzDVertex2 v1, WlzDVertex2 v0)
+{
+  double	len;
+
+  WLZ_VTX_2_SUB(v1, v1, v0);
+  if((len = WLZ_VTX_2_LENGTH(v1)) > DBL_EPSILON)
+  {
+    len = 1.0 / len;
+    WLZ_VTX_2_SCALE(v1, v1, len);
+  }
+  else
+  {
+    v1.vtX = v1.vtY = 0.0;
+  }
+  return(v1);
+}
+
+/*!
+* \return	Unit vector or zero vector if vertices are coincident.
+* \ingroup	WlzGeometry
+* \brief	Computes the unit 3D vector with the direction given by
+*		\f$\mathbf{p}_1 - \mathbf{p}_0\f$.
+*		If the two given vertices are coincident then a
+*		zero vector is returned instead of a unit vector.
+* \param	v1			Position of vertex, \f$\mathbf{p}_1\f$.
+* \param	v0			Position of vertex, \f$\mathbf{p}_0\f$.
+*/
+WlzDVertex3	WlzGeomUnitVector3D2(WlzDVertex3 v1, WlzDVertex3 v0)
+{
+  double	len;
+
+  WLZ_VTX_3_SUB(v1, v1, v0);
+  if((len = WLZ_VTX_3_LENGTH(v1)) > DBL_EPSILON)
+  {
+    len = 1.0 / len;
+    WLZ_VTX_3_SCALE(v1, v1, len);
+  }
+  else
+  {
+    v1.vtX = v1.vtY = v1.vtZ = 0.0;
+  }
+  return(v1);
 }
 
 /*!
@@ -1687,6 +1678,22 @@ int		WlzGeomVertexInDiamCircle(WlzDVertex2 lPos0, WlzDVertex2 lPos1,
   prod = WLZ_VTX_2_DOT(v0, v1);
   inside = prod < 0.0;
   return(inside);
+}
+
+/*!
+* \return	Ring of spiral.
+* \ingroup	WlzGeometry
+* \brief	Computes the ring of a spiral. If two rings differ by more
+* 		than one then at least one itteration outwards on the spiral
+* 		has been performed between the rings.
+* \param	step			Spiral step count.
+*/
+int		WlzGeomItrSpiralRing(int step)
+{
+  int ring;
+
+  ring = (int )floor(sqrt(step) + 1) / 2;
+  return(ring);
 }
 
 /*!
@@ -1748,6 +1755,22 @@ int             WlzGeomItrSpiral2I(int step, int *pX, int *pY)
     }
   }
   return(step);
+}
+
+/*!
+* \return	Shell of spiral.
+* \ingroup	WlzGeometry
+* \brief	Computes the shell of a spiral. If two shells differ by more
+* 		than one then at least one itteration outwards on the spiral
+* 		has been performed between the shells.
+* \param	step			Spiral step count.
+*/
+int		WlzGeomItrSpiralShell(int step)
+{
+  int 		shell;
+
+  shell = ((int )(floor(cbrt(step))) + 1) / 2;
+  return(shell);
 }
 
 /*!
@@ -1923,6 +1946,40 @@ double		WlzGeomDistSq3D(WlzDVertex3 v0, WlzDVertex3 v1)
 
   WLZ_VTX_3_SUB(v0, v0, v1);
   dst = WLZ_VTX_3_SQRLEN(v0);
+  return(dst);
+}
+
+/*!
+* \return	Euclidean distance between the given vertices.
+* \ingroup	WlzGeometry
+* \brief	Computes the Euclidean distance between the given
+* 		two vertices.
+* \param	v0			First of the given vertices.
+* \param	v1			Second of the given vertices.
+*/
+double		WlzGeomDist2D(WlzDVertex2 v0, WlzDVertex2 v1)
+{
+  double	dst;
+
+  WLZ_VTX_2_SUB(v0, v0, v1);
+  dst = WLZ_VTX_2_LENGTH(v0);
+  return(dst);
+}
+
+/*!
+* \return	Euclidean distance between the given vertices.
+* \ingroup	WlzGeometry
+* \brief	Computes the Euclidean distance between the given
+* 		two vertices.
+* \param	v0			First of the given vertices.
+* \param	v1			Second of the given vertices.
+*/
+double		WlzGeomDist3D(WlzDVertex3 v0, WlzDVertex3 v1)
+{
+  double	dst;
+
+  WLZ_VTX_3_SUB(v0, v0, v1);
+  dst = WLZ_VTX_3_LENGTH(v0);
   return(dst);
 }
 
@@ -2443,7 +2500,7 @@ WlzDVertex3	WlzGeomObjLineSegIntersect3D(WlzObject *obj,
 /*!
 * \return	Maximum diameter sphere inscribed within the tetrahedron.
 * 		
-* \ingroup
+* \ingroup	WlzGeometry
 * \brief	Given the coordinates of the four vertices of a tetrahedron
 * 		the function computes the maximum diameter of an inscribed
 * 		sphere.
@@ -2489,7 +2546,7 @@ double		WlzGeomTetraInSphereDiam(WlzDVertex3 vx0, WlzDVertex3 vx1,
 * \return	Maximum diameter sphere inscribed within the regular
 * 		tetrahedron.
 * 		
-* \ingroup
+* \ingroup	WlzGeometry
 * \brief	Given the side length of a regular tetrahedron this function
 * 		computes the maximum diameter of an inscribed sphere.
 * 		
@@ -2687,91 +2744,122 @@ int             WlzGeomVtxOnLineSegment2D(WlzDVertex2 tst,
 }
 
 /*!
-* \return	Non-zero value only if test vertex is on the line segment.
+* \return	Integer code corresponding to position of the test
+* 		vertex with respect to the line segment:
+*		<ul>
+*		  <li>0 no intersection.</li>
+*		  <li>1 intersection at an end point.</li>
+*                 <li>2 intersection at a single point (not end points).</li>
+*		</ul>
 * \ingroup	WlzGeometry
 * \brief	Tests whether the given test vertex is on the given line
-* 		segment.
-* 		If all three vertices are coincident then the test vertex
-* 		is considered to line on the line segment.
-* \param	tst				Test vertex.
-* \param	seg0				First vertex of line segment.
-* \param	seg1				Second vertex of line segment.
-* \param	tol				Tollerance.
-*/
-int             WlzGeomVtxOnLineSegment3D(WlzDVertex3 tst,
-                                        WlzDVertex3 seg0, WlzDVertex3 seg1,
-                                        double tol)
-{
-  int           onSeg = 0;
-  double        del,
-  		tolSq;
-  WlzDVertex3   crs,
-  		delS,
-                delT;
-  WlzDBox3	box;
+* 		segment. If all three vertices are coincident then the
+* 		test vertex is considered to be coincident with an end
+* 		point on the line segment.
+*
+* 		Consider a line segment from a vertex at \f$\mathbf{p_0}\f$
+* 		to another vertex at \f$\mathbf{p_1}\f$, with a third test
+* 		vertex at \f$\mathbf{p_x}\f$, the shortest path from
+* 		\f$\mathbf{p_x}\f$ to the line segment will be perpendicular
+* 		to the line segment. Let the position of the intersection
+* 		of this perpendicular with the line segment be at
+* 		\f$\mathbf{p}\f$, with distance \f$d\f$ from \mathbf{p_x},
+* 		then:
+* 		\f[
+		\mathbf{p} = \mathbf{p_0} + s (\mathbf{p_1} - \mathbf{p_0},
+		\f]
+* 		\f[
+		d^2 = \| (\mathbf{p_0} - \mathbf{p_x}) +
+		         (\mathbf{p} - \mathbf{p_0}) \|^2,
+		\f]
+* 		\f[
+                s = \frac{ (\mathbf{p_0} - \mathbf{p_x}) \cdot
+		           (\mathbf{p_1} - \mathbf{p_0})}
+		         {\| \mathbf{p_1} - \mathbf{p_0} \|^2},
+		\f]
+* 		and after substitution:
+* 		\f[
+		d^2 = \frac{\| \mathbf{p_0} - \mathbf{p_x} \|^2
+		            \| \mathbf{p_1} - \mathbf{p_0} \|^2 -
+			    \left[(\mathbf{p_1} - \mathbf{p_0})\right]^2 }
+		           {\| \mathbf{p_1} - \mathbf{p_0} \|^2},
+		\f]
+* 		Observing that the numerator is a vector quad product
+* 		\f[
+		\mathbf{A} \times \mathbf{B} = 
+		\|\mathbf{A}\|^2\|\mathbf{A}\|^2 -
+		(\mathbf{A} \cdot \mathbf{Ba})^2
+		\f]
+		gives
+* 		\f[
+		d^2 = \frac{\| \mathbf{p_1} - \mathbf{p_0}  \times
+		               \mathbf{p_0} - \mathbf{p_x} \|^2 }
+		           {\| \mathbf{p_1} - \mathbf{p_0} \|^2},
 
-  /* TODO Test this function. */
-  /* 1. Simple in box test. */
-  box.xMin = box.xMax = seg0.vtX;
-  box.yMin = box.yMax = seg0.vtY;
-  box.zMin = box.zMax = seg0.vtZ;
-  if(seg1.vtX < box.xMin)
+		\f]
+*		Obviously if \f$\mathbf{p_x}\f$ is on the line segment then
+*		\f$d^2 = 0\f$.
+*		DBL_EPSILON as a tolerance for squared distances in this
+*		function.
+* \param	pX				Test vertex.
+* \param	p0				First vertex of line segment.
+* \param	p1				Second vertex of line segment.
+* \param	dstN				Destination pointer for the
+* 						intersection, may be NULL.
+*/
+int             WlzGeomVtxOnLineSegment3D(WlzDVertex3 pX,
+                                        WlzDVertex3 p0, WlzDVertex3 p1,
+                                        WlzDVertex3 *dstN)
+{
+  int           isn = 0;
+  double	s,
+  		tSq,
+  		l10Sq;
+  WlzDVertex3	pT,
+  		p10,
+  		p0X;
+
+  WLZ_VTX_3_SUB(p10, p1, p0);
+  WLZ_VTX_3_SUB(p0X, p0, pX);
+  l10Sq = WLZ_VTX_3_SQRLEN(p10);
+  if(l10Sq < DBL_EPSILON)
   {
-    box.xMin = seg1.vtX;
-  }
-  else if(seg1.vtX > box.xMax)
-  {
-    box.xMax = seg1.vtX;
-  }
-  if(seg1.vtY < box.yMin)
-  {
-    box.yMin = seg1.vtY;
-  }
-  else if(seg1.vtY > box.yMax)
-  {
-    box.yMax = seg1.vtY;
-  }
-  if(seg1.vtZ < box.zMin)
-  {
-    box.zMin = seg1.vtZ;
-  }
-  else if(seg1.vtZ > box.zMax)
-  {
-    box.zMax = seg1.vtZ;
-  }
-  if(((tst.vtX - box.xMin) > -tol) &&
-     ((tst.vtY - box.yMin) > -tol) &&
-     ((tst.vtZ - box.zMin) > -tol) &&
-     ((box.xMax - tst.vtX) > -tol) &&
-     ((box.yMax - tst.vtY) > -tol) &&
-     ((box.zMax - tst.vtZ) > -tol))
-  {
-    /* 2. Test vertex coincident with either segment vertex. */
-    tolSq = tol * tol;
-    if(WlzGeomVtxEqual3D(seg0, tst, tolSq) ||
-       WlzGeomVtxEqual3D(seg1, tst, tolSq))
+    tSq = WLZ_VTX_3_SQRLEN(p0X);
+    if(tSq < DBL_EPSILON)
     {
-      onSeg = 1;
-    }
-    else
-    {
-      /* 3. Test distance between line segments seg0, seg1 and seg0, tst
-       * are neither parallel or anti-parallel. */
-      WLZ_VTX_3_SUB(delS, seg1, seg0);
-      WLZ_VTX_3_SUB(delT, tst, seg0);
-      WLZ_VTX_3_CROSS(crs, delS, delT);
-      del = WLZ_VTX_3_SQRLEN(crs);
-      if(del < tol  * tol)
+      isn = 1;
+      if(dstN)
       {
-	onSeg = 1;
-      }
-      else
-      {
-	onSeg = 0;
+        *dstN = p0;
       }
     }
   }
-  return(onSeg);
+  else
+  {
+    WLZ_VTX_3_CROSS(pT, p10, p0X);
+    tSq = WLZ_VTX_3_SQRLEN(pT) / l10Sq;
+    if(tSq < DBL_EPSILON)
+    {
+      s = WLZ_VTX_3_DOT(p0X, p10) / l10Sq;
+      if((1.0 - s) * (1.0 - s) < DBL_EPSILON)
+      {
+        isn = 1;
+	if(dstN)
+	{
+	  *dstN = p1;
+	}
+      }
+      else if((s > 0) && (s < 1.0))
+      {
+        isn = 2;
+	if(dstN)
+	{
+	  WLZ_VTX_3_SCALE_ADD(*dstN, p10, s, p0);
+	}
+      }
+    }
+  }
+  return(isn);
 }
 
 /*!
@@ -2847,7 +2935,10 @@ double		WlzGeomArcLength2D(WlzDVertex2 a, WlzDVertex2 b, WlzDVertex2 c)
 /*!
 * \return	Non-zero if \f$S\f$ and \f$T\f$ are coincident.
 * \ingroup	WlzGeometry
-* \brief 	Given two vertices \f$S\f$, \f$T\f$ which define a line
+* \brief 	Computes the coordinates of vertices that may be used
+* 		to draw a wide rectangle.
+*
+* 		Given two vertices \f$S\f$, \f$T\f$ which define a line
 * 		segment and width \f$w\f$ perpendicular to the line segent,
 * 		this function computes the coordinates of the vertices
 * 		\f$V_i\f$, \f$i\in[0-3]\f$ of the rectangle. The vertices
@@ -2898,9 +2989,11 @@ int		WlzGeomRectFromWideLine(WlzDVertex2 s, WlzDVertex2 t,
 }
 
 /*!
-* \return	Intersection of ray with plane.
+* \return	Intersection of line with plane.
 * \ingroup	WlzGeometry
-* \brief	Computes the intersection of a ray (vector \f$\mathbf{v}\f$)
+* \brief	Computes the intersection of a line with a plane.
+* 		
+* 		Computes the intersection of line (vector \f$\mathbf{v}\f$)
 * 		through an off plane vertex (\f$\mathbf{p_3}\f$) with a plane.
 * 		The plane is defined by three on plane vertices
 * 		\f$(\mathbf{p_0}, \mathbf{p_1}, \mathbf{p_2})\f$.
@@ -2935,12 +3028,11 @@ int		WlzGeomRectFromWideLine(WlzDVertex2 s, WlzDVertex2 t,
 * 					vector is parrallel to the plane,
 * 					must not be NULL.
 */
-WlzDVertex3	WlzGeomRayPlaneIntersection(WlzDVertex3 v,
+WlzDVertex3	WlzGeomLinePlaneIntersection(WlzDVertex3 v,
 					    WlzDVertex3 p0, WlzDVertex3 p1,
 					    WlzDVertex3 p2, WlzDVertex3 p3,
 					    int *dstPar)
 {
-  /* TODO test this function! */
   double	a,
   		b,
 		c,
@@ -2993,48 +3085,359 @@ WlzDVertex3	WlzGeomRayPlaneIntersection(WlzDVertex3 v,
 /*!
 * \return	Value indicating the position of the vertex with respect
 *               to the triangle in 3D:
-*		  +ve if the vertex is inside the triangle,
-*		  0   if the vertex is on an edge of the triangle and
-*		  -ve if the vertex is outside the triangle.
+*		<ul>
+*		  <li>0 if the vertex is outside the triangle.</li>
+*		  <li>1 if the vertex is on an edge of the triangle
+*		        or line passes through triangle in it's plane.</li>
+*		  <li>2 if the vertex is inside the triangle.</li>
+*		</ul>
 * \ingroup	WlzGeometry
-* \brief	Test's to set if a ray directed from a given point
+* \brief	Test's to set if a line directed from a given origin
 * 		intersects a triangle in 3D space. This function is
-* 		just a wrapper calling WlzGeomRayPlaneIntersection()
-* 		and WlzGeomVxInTriangle3D().
-* \param	v			Unit vector for ray.
+* 		based on the algorithm: Tomas Moller and Ben Trumbore,
+* 		"Fast, Minimum Storage Ray/Triangle Intersection",
+* 		Journal of Graphics Tools, 1997(2), pp 25--30.
+*
+* 		Given a parameterised line
+* 		\f[
+ 		R(t) = O + t D
+		\f]
+*		and a triangle specified by it's vertices
+*		\f$(V_0, V_1, V_2)\f$, the point of intersection may
+*		be written in terms of the barycentric coordinates
+*		\f$u, v\f$
+* 		\f[
+                O + t D = T(u, v) = (1 - u - v) V_0 + u V_1 + v V_2
+                \f]
+*		Solving for \f$t\f$, \f$u\f$ and \f$v\f$ gives
+*		\f[
+		\left[ \begin{array}{c}
+		       t \\
+		       u \\
+		       v
+		       \end{array}
+		\right] = 
+		\frac{1}{P \cdot E_1}
+		\left[ \begin{array}{c}
+
+		       Q \cdot E_2 \\
+		       P \cdot t \\
+		       Q \cdot D
+		       \end{array}
+		\right]
+		\f]
+*		where \f$E_1 = V_1 - V_0\f$, \f$E_2 = V_2 - V_0\f$
+*		\f$t = O - V_0\f$, \f$P = D \times E_2\f$ and
+*		\f$Q = T \times E_1\f$.
+* \param	org			Line origin, \f$O\f$.
+* \param	dir			Line direction, \f$D\f$ (does not
+* 					need to be a unit vector).
 * \param	p0			First vertex on triangle.
 * \param	p1			Second vertex on the triangle
 * \param	p2			Third vertex on the triangle
-* \param	pOP			Off plane point that ray passes
-* 					through.
-* \param	dstIsnPos		Destination for coordinates of
-* 					the intersection, may be NULL.
-* \param	dstPar			Destination value set to 1 if the
-* 					vector is parrallel to the plane,
+* \param	dstPar			Destination pointer for flag set to
+* 					1 if the vector is parrallel to the
+* 					plane, may be NULL.
+* \param	dstT			Destination pointer for t parameter,
+* 					may be NULL.
+* \param	dstU			Destination pointer for u parameter,
+* 					may be NULL.
+* \param	dstV			Destination pointer for v parameter,
 * 					may be NULL.
 */
-extern int	WlzGeomRayTriangleIntersect3D(WlzDVertex3 v,
-					WlzDVertex3 p0, WlzDVertex3 p1,
-					WlzDVertex3 p2, WlzDVertex3 pOP,
-					WlzDVertex3 *dstIsnPos,
-					int *dstPar)
+int		WlzGeomLineTriangleIntersect3D(WlzDVertex3 org, WlzDVertex3 dir,
+				WlzDVertex3 v0, WlzDVertex3 v1, WlzDVertex3 v2,
+				int *dstPar, double *dstT,
+				double *dstU, double *dstV)
 {
-  int		isn = 0,
-  		par = 0;
-  WlzDVertex3	isnPos;
+  int		isn = 0;
+  double	det,
+		u,
+		v;
+  WlzDVertex3	e1,
+  		e2,
+		p,
+		q,
+		t;
 
-  isnPos = WlzGeomRayPlaneIntersection(v, p0, p1, p2, pOP, &par);
-  if(par == 0)
+  /* TODO Test this function! */
+  /* Find vectors for two edges sharing v0. */
+  WLZ_VTX_3_SUB(e1, v1, v0);
+  WLZ_VTX_3_SUB(e2, v2, v0);
+  /* Compute determinant, if near zero line passes through plane of triangle. */
+  WLZ_VTX_3_CROSS(p, dir, e2);
+  det = WLZ_VTX_3_DOT(e1, p);
+  if(det * det < DBL_EPSILON)
   {
-    isn = WlzGeomVxInTriangle3D(p0, p1, p2, isnPos);
+    if((WlzGeomLineLineSegmentIntersect3D(org, dir, v0, v1, NULL) == 0) &&
+       (WlzGeomLineLineSegmentIntersect3D(org, dir, v0, v2, NULL) == 0))
+    {
+      isn = 0;
+    }
+    if(dstPar)
+    {
+      *dstPar = 1;
+    }
   }
-  if(dstIsnPos)
+  else
   {
-    *dstIsnPos = isnPos;
+    det = 1.0 / det;
+    /* Calculate distance from v0 to org. */
+    WLZ_VTX_3_SUB(t, org, v0);
+    /* Calculate barycentric u parameter and test bounds. */
+    u = WLZ_VTX_3_DOT(t, p) * det;
+    if((u * u < DBL_EPSILON) || ((1.0 - u) * (1.0 - u) < DBL_EPSILON))
+    {
+      isn = 1;
+    }
+    else if((u > 0.0) && (u < 1.0))
+    {
+      /* Compute barycentric v parameter and test bounds. */
+      WLZ_VTX_3_CROSS(q, t, e1);
+      v = WLZ_VTX_3_DOT(dir, q) * det;
+      if((v * v < DBL_EPSILON) || ((1.0 - v) * (1.0 - v) < DBL_EPSILON))
+      {
+	isn = 1;
+      }
+      else if((v > 0.0) && (v < 1.0))
+      {
+        isn = 2;
+	if(dstU)
+	{
+	  *dstU = u;
+	}
+	if(dstV)
+	{
+	  *dstV = v;
+	}
+	if(dstT)
+	{
+	  *dstT = WLZ_VTX_3_DOT(e2, q) * det;
+	}
+      }
+    }
   }
-  if(dstPar)
+  return(isn);
+}
+
+/*!
+* \return	Integer value which classifies the intersection of
+*		the line with the line line segment. Values are:
+*		<ul>
+*		  <li>0 no intersection.</li>
+*		  <li>1 intersection along line segment, all points
+*			on the line segment are coincident.</li>
+*                 <li>2 intersection at end points.</li>
+*                 <li>3 intersection at a single point (not end points).</li>
+*		</ul>
+* \ingroup	WlzGeometry
+* \brief	Tests to see if the two given line segment is intersected
+* 		by the given line using the DBL_EPSILON tollerance value.
+* 		The line is a line which passes through the given point
+* 		to infinity (on both sides) with the given direction.
+*
+* 		Given a line parameterised by \f$t\f$:
+* 		\f[
+		\mathbf{x} = \mathbf{R_0} + t \mathbf{R_d}
+		\f]
+* 		and a line segment parameterised by \f$s\f$:
+* 		\f[
+		\mathbf{x} = \mathbf{P_0} + s (\mathbf{P_1} - \mathbf{P_0})
+		\f]
+*		their intersection at \f$\mathbf{x}\f$ is given by
+* 		\f[
+ 		\mathbf{P_0} + s (\mathbf{P_1} - \mathbf{P_0}) =
+		\mathbf{R_0} + t \mathbf{R_d}
+ 		\f]
+* 		giving
+* 		\f[
+		s (\mathbf{P_1} - \mathbf{P_0}) \times \mathbf{R_d} =
+		  (\mathbf{R_0} - \mathbf{P_0} \times \mathbf{R_d}
+		t \mathbf{R_d} \times (\mathbf{P_1} - \mathbf{P_0}) =
+		  (\mathbf{P_0} - \mathbf{R_0} \times
+		  (\mathbf{P_1} - \mathbf{P_0})
+ 		\f]
+* 		\f[
+ 		s ((\mathbf{P_1} - \mathbf{P_0}) \times \mathbf{R_d}) \cdot
+ 		  ((\mathbf{P_1} - \mathbf{P_0}) \times \mathbf{R_d}) =
+		  ((\mathbf{R_0} - \mathbf{P_0}) \times \mathbf{R_d}) \cdot
+		  ((\mathbf{P_1} - \mathbf{P_0}) \times \mathbf{R_d})
+ 		t (\mathbf{R_d} \times (\mathbf{P_1} - \mathbf{P_0})) \cdot
+ 		  (\mathbf{R_d} \times (\mathbf{P_1} - \mathbf{P_0})) =
+		  ((\mathbf{P_0} - \mathbf{R_0} \times
+		   (\mathbf{P_1} - \mathbf{P_0})) \cdot
+		  (\mathbf{R_d} \times (\mathbf{P_1} - \mathbf{P_0}))
+		\f]
+* 		\f[
+  		s = \frac{\mbox{det}(\mathbf{R_0} - \mathbf{P_0},
+  		                     \mathbf{R_d},
+  		                     (\mathbf{P_1} - \mathbf{P_0}) \times
+  		                     \mathbf{R_d}}
+  		         {\|(\mathbf{P_1} - \mathbf{P_0}) \times
+  		            \mathbf{R_d}\|^2}
+  		t = \frac{\mbox{det}(\mathbf{R_0} - \mathbf{P_0},
+  		                     \mathbf{R_d},
+  		                     (\mathbf{P_1} - \mathbf{P_0}) \times
+  		                     \mathbf{R_d}}
+  		         {\|(\mathbf{P_1} - \mathbf{P_0}) \times
+  		            \mathbf{R_d}\|^2}
+		\f]
+*		If the denominator
+*	      \f$\|(\mathbf{P_1} - \mathbf{P_0}) \times \mathbf{R_d}\|^2 = 0\f$
+*		then the line and the line segment are parrallel, provided
+*		that \f$\mathbf{P_1} \neq \mathbf{P_0}\f$ and
+*		\f$\mathbf{R_d} \neq \mathbf{0}\f$.
+*		The line segment is intersected by the line if
+*		\f$s\f$ is in the range [0-1].
+*		The point of intersection \f$\mathbf{x}\f$ is
+*		\f[
+		\mathbf{x} = \mathbf{P_0} + s (\mathbf{P_1} - \mathbf{P_0})
+		\f]
+*		Special cases are considered for
+*		\f$\mathbf{R_0} = \mathbf{P_0},\mathbf{P_1}\f$,
+*		\f$\mathbf{R_0} = 2 \mathbf{P_0} - \mathbf{P_1}\f$ and
+*		\f$\mathbf{R_d} = \alpha (\mathbf{P_1} - \mathbf{P_0})\f$.
+* \param	r0			A vertex on the line.
+* \param	rD			Direction of the line.
+* \param	p0			First end vertex of the line segment.
+* \param	p1			Second end vertex of the line segment.
+* \param	dstN			Destination ptr for intersection
+*					vertex, may be NULL. The intersection
+*					value will be set if the ray and line
+*					segment intersect at a single point.
+*/
+int		WlzGeomLineLineSegmentIntersect3D(WlzDVertex3 r0,
+				WlzDVertex3 rD,
+				WlzDVertex3 p0, WlzDVertex3 p1,
+				WlzDVertex3 *dstN)
+{
+  int		isn = 0;
+  double	den,
+  		lSq,
+		s;
+  WlzDVertex3	p,
+		r,
+  		v;
+
+  /* TODO Test this function. */
+  WLZ_VTX_3_SUB(p, p1, p0);
+  lSq = WLZ_VTX_3_SQRLEN(p);
+  if(lSq < DBL_EPSILON)
   {
-    *dstPar = par;
+    /* Given line segment is a single point at p0. */
+    if(WlzGeomVtxOnLine3D(p0, r0, rD) != 0)
+    {
+      isn = 1;
+    }
+  }
+  else
+  {
+    lSq = WLZ_VTX_3_SQRLEN(rD);
+    if(lSq < DBL_EPSILON)
+    {
+      /* Line is a single point at r0. */
+      switch(WlzGeomVtxOnLineSegment3D(r0, p0, p1, dstN)) /* TODO */
+      {
+        case 1:
+	  isn = 2;
+	  break;
+	case 2:
+	  isn = 3;
+	  break;
+        default:
+	  break;
+      }
+    }
+    else
+    {
+      WLZ_VTX_3_CROSS(v, p, rD);
+      den = WLZ_VTX_3_SQRLEN(v);
+      if(den < DBL_EPSILON)
+      {
+	/* Line and line segment are parralel. */
+	if(WlzGeomVtxOnLine3D(p0, r0, rD) > 0)
+	{
+	  isn = 1;
+	}
+      }
+      else
+      {
+	WLZ_VTX_3_SUB(p, p1, p0);
+	s = r.vtX * (rD.vtY * v.vtZ - rD.vtZ * v.vtY) +
+	    r.vtY * (rD.vtZ * v.vtX - rD.vtX * v.vtZ) +
+	    r.vtZ * (rD.vtX * v.vtY - rD.vtY * v.vtX);
+	if((s * s) < DBL_EPSILON)
+	{
+	  isn = 2;
+	  if(dstN)
+	  {
+	    *dstN = p0;
+	  }
+	}
+	else if((1 - s) * (1 - s) < DBL_EPSILON)
+	{
+	  isn = 2;
+	  if(dstN)
+	  {
+	    *dstN = p1;
+	  }
+	}
+	else if((s > 0) && (s < 1.0))
+	{
+	  isn = 3;
+	  if(dstN)
+	  {
+	    WLZ_VTX_3_SCALE_ADD(*dstN, p, s, p0);
+	  }
+	}
+      }
+    }
+  }
+  return(isn);
+}
+
+/*!
+* \return	If the vertex is on the ray 1, otherwise 0.
+* \ingroup	WlzGeometry
+* \brief	Tests whether a vertex is a line.
+*
+* 		Tests whether the given vertex \f$p_0\f$ is on the
+* 		given line
+* 		\f$\mathbf{x} = \mathbf{r_0} + \mathbf{r_D}\f$.
+* 		If the point on the line and the given vertex are
+* 		coincident then obviously the vertex is on the line
+* 		otherwise the vertex is on the line if the squared
+* 		length of the cross product of the line direction and
+* 		the direction of the vertex (with respect to the point
+* 		on the line) is less than DBL_EPSILON, ie if
+* 		\f[
+		\| (\mathbf{p_0} - \mathbf{r_0}) \times \mathbf{r_D} \|
+		< \epsilon
+ 		\f]
+* \param	p0			Given vertex.
+* \param	r0			Point on line.
+* \param	rD			Direction of line.
+*/
+int		WlzGeomVtxOnLine3D(WlzDVertex3 p0, WlzDVertex3 r0,
+				  WlzDVertex3 rD)
+{
+  int		isn = 0;
+  double	lSq;
+
+  WLZ_VTX_3_SUB(p0, p0, r0);
+  lSq = WLZ_VTX_3_SQRLEN(p0);
+  if(lSq < DBL_EPSILON)
+  {
+    isn = 1;
+  }
+  else
+  {
+    WLZ_VTX_3_CROSS(r0, p0, rD);
+    lSq = WLZ_VTX_3_SQRLEN(r0);
+    if(lSq < DBL_EPSILON)
+    {
+      isn = 1;
+    }
   }
   return(isn);
 }
