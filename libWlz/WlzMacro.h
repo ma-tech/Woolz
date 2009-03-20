@@ -257,11 +257,22 @@ extern "C" {
 		(U).vtX = 0, \
 		(U).vtY = 0
 
-/* WLZ_VTX_2_ZERO: Set vector to zero. */
-#define WLZ_VTX_3_ZERO(U) \
+/* WLZ_VTX_3_ZERO: Set vector to zero. */
+#define WLZ_VTX_3_ZERO(U,V) \
 		(U).vtX = 0, \
 		(U).vtY = 0, \
 		(U).vtZ = 0
+
+/* WLZ_VTX_2_NEGATE: Set vector to zero. */
+#define WLZ_VTX_2_NEGATE(U,V) \
+		(U).vtX = -((V).vtX), \
+		(U).vtY = -((V).vtY)
+
+/* WLZ_VTX_3_NEGATE: Set vector to zero. */
+#define WLZ_VTX_3_NEGATE(U,V) \
+		(U).vtX = -((V).vtX), \
+		(U).vtY = -((V).vtY), \
+		(U).vtZ = -((V).vtZ)
 
 /* WLZ_VTX_2_EQUAL: Tests for equality of vertices. */
 #define WLZ_VTX_2_EQUAL(U,V,T) \
