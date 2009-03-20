@@ -1108,7 +1108,7 @@ WlzObject *WlzMakeCuboidObject(
 *               arbitrarily oriented quadrilateral with the given ordered
 *               vertex coordinates. The ordering is such that the vertices
 *               allow the rectangle to be drawn by line segments conecting
-*               v[i] to v[(i + 1)%4], with i \$\in\f$ [0-3].
+*               v[i] to v[(i + 1)%4], with i \f$\in\f$ [0-3].
 * \param    x0                  Column coordinate of the first vertex.
 * \param    y0                  Row coordinate of the first vertex.
 * \param    x1                  Column coordinate of the second vertex.
