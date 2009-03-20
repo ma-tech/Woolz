@@ -7,7 +7,7 @@
 #endif
 #endif
 /*!
-* \file         WlzScalarBinaryOp.c
+* \file         binWlz/WlzScalarBinaryOp.c
 * \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
 * \date         Fri Oct 20 09:57:05 2006
 * \version      MRC HGU $Id$

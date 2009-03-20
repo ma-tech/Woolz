@@ -44,12 +44,12 @@ static char _WlzFilterNObjsValues_c[] = "MRC HGU $Id$";
 * \bug          None known.
 *
 * \par Binary
-* \ref wlzconstruct3d "WlzFilterNObjsValues"
+* \ref wlzfilternobjsvalues "WlzFilterNObjsValues"
 */
 
 /*!
 \ingroup      BinWlz
-\defgroup     wlzconstruct3d WlzFilterNObjsValues
+\defgroup     wlzfilternobjsvalues  WlzFilterNObjsValues
 \par Name
 WlzFilterNObjsValues - Filters the values of multiple domain objects to
                      construct a construct a new domainn object.
