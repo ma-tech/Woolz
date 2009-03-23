@@ -716,7 +716,7 @@ static WlzCMeshTransform *WlzBasisFnInvertAndSetCMesh2D(
   invMesh = WlzCMeshCopy2D(mesh, 0, NULL, NULL, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    meshTr = WlzMakeCMeshTransform2D(mesh, &errNum);
+    meshTr = WlzMakeCMeshTransform2D(invMesh, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
