@@ -49,6 +49,7 @@ bin_PROGRAMS		= \
 			  WlzTstCMeshGen \
 			  WlzTstCMeshTransformObj \
 			  WlzTstGeomArcLength2D \
+			  WlzTstGeomLineTriangleIntersect \
 			  WlzTstGeomRectFromWideLine \
 			  WlzTstGeomTetraAffineSolve \
 			  WlzTstGeomTriangleAffineSolve \
@@ -73,6 +74,10 @@ WlzTstCMeshTransformObj_LDFLAGS		= $(AM_LFLAGS)
 WlzTstGeomArcLength2D_SOURCES		= WlzTstGeomArcLength2D.c
 WlzTstGeomArcLength2D_LDADD		= $(LDADD)
 WlzTstGeomArcLength2D_LDFLAGS		= $(AM_LFLAGS)
+
+WlzTstGeomLineTriangleIntersect_SOURCES	= WlzTstGeomLineTriangleIntersect.c
+WlzTstGeomLineTriangleIntersect_LDADD	= $(LDADD)
+WlzTstGeomLineTriangleIntersect_LDFLAGS	= $(AM_LFLAGS)
 
 WlzTstGeomRectFromWideLine_SOURCES	= WlzTstGeomRectFromWideLine.c
 WlzTstGeomRectFromWideLine_LDADD	= $(LDADD)
