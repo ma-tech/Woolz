@@ -158,7 +158,7 @@ AC_SUBST(LIBS_EXTFF)
 AC_PROG_CC
 if test "$GCC" = yes
 then
-  CFLAGS="${CFLAGS} -Wall"
+  CFLAGS="${CFLAGS} -pipe -Wall"
 fi
 
 CFLAGS="${CFLAGS} ${CPUDEF}"
