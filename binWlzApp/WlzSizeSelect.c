@@ -126,7 +126,8 @@ static WlzObject *WlzSizeFilter(
   WlzObject	*nobj,
   int		mesh_area,
   int		mesh_flag,
-  WlzConnectType connectFlg)
+  WlzConnectType connectFlg,
+  int		max_obj)
 {
   WlzObject	**objs;
   WlzObject	*new_obj, *obj1;
@@ -137,7 +138,7 @@ static WlzObject *WlzSizeFilter(
     return( NULL );
   }
 
-  (void) WlzLabel(nobj, &num_obj, &objs, 2047, 0, connectFlg);
+  (void) WlzLabel(nobj, &num_obj, &objs, max_obj, 0, connectFlg);
   if( num_obj <= 0 )
   {
     return( NULL );
@@ -208,6 +209,7 @@ static void usage(
 	  "\t           the bounding box, default - use the foreground\n"
 	  "\t-m:        keep domains <= area,\n"
 	  "\t           default - keep domains > area\n"
+	  "\t-M:        maximum number of parts to select from\n"
 	  "\t-h         print this message\n"
 	  "\t-v         verbose operation\n"
 	  "Examples:\n"
@@ -233,6 +235,7 @@ int main(
   int   argc,
   char  **argv)
 {
+  int			max_obj = 2047;
   WlzObject     	*obj, *nobj, *tmpobj, *obj1;
   WlzPlaneDomain	*planedmn, *new_planedmn;
   int           	mesh_area = 5;
@@ -294,6 +297,13 @@ int main(
       mesh_flag = 1;
       break;
 
+    case 'M':
+      if(( sscanf(*argv,"-M%d",&max_obj) < 1 ) || (max_obj < 1)){
+      fprintf(stderr,"Setting maximum objects to 2047\n");
+      max_obj = 2047;
+      }
+      break;
+
     case 'v':
       verboseFlg = 1;
       break;
@@ -309,8 +319,9 @@ int main(
   if( verboseFlg ){
     fprintf(stderr,
 	    "%s: mesh_area = %d,"
-	    " hole_flag = %d, mesh_flag = %d, connectivity = %d\n",
-	    nameStr, mesh_area, hole_flag, mesh_flag, connectivity);
+	    " hole_flag = %d, mesh_flag = %d,\n"
+	    " connectivity = %d, max_obj=%d\n",
+	    nameStr, mesh_area, hole_flag, mesh_flag, connectivity, max_obj);
   }
 
   while((obj = WlzReadObj(stdin, NULL)) != NULL) 
@@ -338,7 +349,7 @@ int main(
 	  obj = WlzAssignObject(tmpobj, NULL);
 	}
 
-        nobj = WlzSizeFilter(obj, mesh_area, mesh_flag, connectFlg);
+        nobj = WlzSizeFilter(obj, mesh_area, mesh_flag, connectFlg, max_obj);
 	if( nobj )
 	{
 	  (void) WlzWriteObj( stdout, nobj );
@@ -391,7 +402,7 @@ int main(
 	  }
 
 	  if((nobj = WlzSizeFilter(tmpobj, mesh_area, mesh_flag,
-	                           connectFlg)) != NULL)
+	                           connectFlg, max_obj)) != NULL)
 	  {
 	    new_planedmn->domains[plane] = WlzAssignDomain(nobj->domain, NULL);
 	    WlzFreeObj( nobj );
