@@ -92,6 +92,7 @@ bin_PROGRAMS		= \
 			  WlzGauss \
 			  WlzGaussNoise \
 			  WlzGeometryTrackUpAndDown \
+			  WlzGetSubSectionFromObj \
 			  WlzGreyCrossing \
 			  WlzGreyGradient \
 			  WlzGreyInvert \
@@ -365,6 +366,10 @@ WlzGaussNoise_LDFLAGS			= $(AM_LFLAGS)
 WlzGeometryTrackUpAndDown_SOURCES	= WlzGeometryTrackUpAndDown.c
 WlzGeometryTrackUpAndDown_LDADD		= $(LDADD)
 WlzGeometryTrackUpAndDown_LDFLAGS	= $(AM_LFLAGS)
+
+WlzGetSubSectionFromObj_SOURCES		= WlzGetSubSectionFromObj.c
+WlzGetSubSectionFromObj_LDADD		= $(LDADD)
+WlzGetSubSectionFromObj_LDFLAGS		= $(AM_LFLAGS)
 
 WlzGreyCrossing_SOURCES			= WlzGreyCrossing.c
 WlzGreyCrossing_LDADD			= $(LDADD)
