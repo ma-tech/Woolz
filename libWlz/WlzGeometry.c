@@ -62,6 +62,12 @@ static int			WlzGeomVtxSortRadialFn(
 				  int *idxP,
 				  int idx0,
 				  int idx1);
+static int			WlzGeomLineTriangleIntersectEdge3D(
+				  WlzDVertex3 org,
+				  WlzDVertex3 dir,
+				  WlzDVertex3 v0,
+				  WlzDVertex3 v1,
+				  WlzDVertex3 v2);
 
 /*!
 * \return	Zero if the circumcentre of the triangle lies at infinity,
@@ -3129,12 +3135,16 @@ WlzDVertex3	WlzGeomLinePlaneIntersection(WlzDVertex3 v,
 *		where \f$E_1 = V_1 - V_0\f$, \f$E_2 = V_2 - V_0\f$
 *		\f$t = O - V_0\f$, \f$P = D \times E_2\f$ and
 *		\f$Q = T \times E_1\f$.
+*
+*		The \f$t, u\f$ and \f$v\f$ are only set if the line passes
+*		through the triangle.
+*
 * \param	org			Line origin, \f$O\f$.
 * \param	dir			Line direction, \f$D\f$ (does not
 * 					need to be a unit vector).
-* \param	p0			First vertex on triangle.
-* \param	p1			Second vertex on the triangle
-* \param	p2			Third vertex on the triangle
+* \param	v0			First vertex on triangle.
+* \param	v1			Second vertex on the triangle
+* \param	v2			Third vertex on the triangle
 * \param	dstPar			Destination pointer for flag set to
 * 					1 if the vector is parrallel to the
 * 					plane, may be NULL.
@@ -3150,17 +3160,18 @@ int		WlzGeomLineTriangleIntersect3D(WlzDVertex3 org, WlzDVertex3 dir,
 				int *dstPar, double *dstT,
 				double *dstU, double *dstV)
 {
-  int		isn = 0;
+  int		par,
+  		isn = 0;
   double	det,
-		u,
-		v;
+		u = 0,
+		v = 0,
+		w;
   WlzDVertex3	e1,
   		e2,
 		p,
 		q,
-		t;
+		m;
 
-  /* TODO Test this function! */
   /* Find vectors for two edges sharing v0. */
   WLZ_VTX_3_SUB(e1, v1, v0);
   WLZ_VTX_3_SUB(e2, v2, v0);
@@ -3169,54 +3180,79 @@ int		WlzGeomLineTriangleIntersect3D(WlzDVertex3 org, WlzDVertex3 dir,
   det = WLZ_VTX_3_DOT(e1, p);
   if(det * det < DBL_EPSILON)
   {
-    if((WlzGeomLineLineSegmentIntersect3D(org, dir, v0, v1, NULL) == 0) &&
-       (WlzGeomLineLineSegmentIntersect3D(org, dir, v0, v2, NULL) == 0))
-    {
-      isn = 0;
-    }
-    if(dstPar)
-    {
-      *dstPar = 1;
-    }
+    par = 1;
+    isn = WlzGeomLineTriangleIntersectEdge3D(org, dir, v0, v1, v2);
   }
   else
   {
+    par = 0;
     det = 1.0 / det;
     /* Calculate distance from v0 to org. */
-    WLZ_VTX_3_SUB(t, org, v0);
+    WLZ_VTX_3_SUB(m, org, v0);
     /* Calculate barycentric u parameter and test bounds. */
-    u = WLZ_VTX_3_DOT(t, p) * det;
-    if((u * u < DBL_EPSILON) || ((1.0 - u) * (1.0 - u) < DBL_EPSILON))
+    u = WLZ_VTX_3_DOT(m, p) * det;
+    if((u > -DBL_EPSILON) && (u  <  1.0 + DBL_EPSILON))
     {
-      isn = 1;
-    }
-    else if((u > 0.0) && (u < 1.0))
-    {
-      /* Compute barycentric v parameter and test bounds. */
-      WLZ_VTX_3_CROSS(q, t, e1);
+      /* Calculate barycentric v parameter and test bounds. */
+      WLZ_VTX_3_CROSS(q, m, e1);
       v = WLZ_VTX_3_DOT(dir, q) * det;
-      if((v * v < DBL_EPSILON) || ((1.0 - v) * (1.0 - v) < DBL_EPSILON))
+      if((v > -DBL_EPSILON) && (v < 1.0 + DBL_EPSILON))
       {
-	isn = 1;
-      }
-      else if((v > 0.0) && (v < 1.0))
-      {
-        isn = 2;
-	if(dstU)
+        /* Test bounds of the trird barycentric coordinate. */
+        w = 1.0 - (u + v);
+	if((w > -DBL_EPSILON) && (w < 1.0 + DBL_EPSILON))
 	{
-	  *dstU = u;
-	}
-	if(dstV)
-	{
-	  *dstV = v;
-	}
-	if(dstT)
-	{
-	  *dstT = WLZ_VTX_3_DOT(e2, q) * det;
+	  if((u < DBL_EPSILON) || (v < DBL_EPSILON) || (w < DBL_EPSILON))
+	  {
+	    isn = 1;
+	  }
+	  else
+	  {
+	    isn = 2;
+	  }
+	  if(dstU)
+	  {
+	    *dstU = u;
+	  }
+	  if(dstV)
+	  {
+	    *dstV = v;
+	  }
+	  if(dstT)
+	  {
+	    *dstT = WLZ_VTX_3_DOT(e2, q) * det;
+	  }
 	}
       }
     }
   }
+  if(dstPar)
+  {
+    *dstPar = par;
+  }
+  return(isn);
+}
+
+/*!
+* \return	1 for intersection 0 for no intersection.
+* \ingroup	WlzGeometry
+* \brief	Tests for an intersection of the given line with the edges
+* 		of a given triangle.
+* \param	org			Line origin, \f$O\f$.
+* \param	dir			Line direction, \f$D\f$ (does not
+* 					need to be a unit vector).
+* \param	v0			First vertex on triangle.
+* \param	v1			Second vertex on the triangle
+* \param	v2			Third vertex on the triangle
+*/
+static int	WlzGeomLineTriangleIntersectEdge3D(WlzDVertex3 org,
+				WlzDVertex3 dir, WlzDVertex3 v0,
+				WlzDVertex3 v1, WlzDVertex3 v2)
+{
+  int		isn;
+
+  isn = (WlzGeomLineLineSegmentIntersect3D(org, dir, v0, v1, NULL) > 0) ||
+        (WlzGeomLineLineSegmentIntersect3D(org, dir, v0, v2, NULL) > 0);
   return(isn);
 }
 
@@ -3336,7 +3372,7 @@ int		WlzGeomLineLineSegmentIntersect3D(WlzDVertex3 r0,
     if(lSq < DBL_EPSILON)
     {
       /* Line is a single point at r0. */
-      switch(WlzGeomVtxOnLineSegment3D(r0, p0, p1, dstN)) /* TODO */
+      switch(WlzGeomVtxOnLineSegment3D(r0, p0, p1, dstN))
       {
         case 1:
 	  isn = 2;
@@ -3363,9 +3399,10 @@ int		WlzGeomLineLineSegmentIntersect3D(WlzDVertex3 r0,
       else
       {
 	WLZ_VTX_3_SUB(p, p1, p0);
-	s = r.vtX * (rD.vtY * v.vtZ - rD.vtZ * v.vtY) +
-	    r.vtY * (rD.vtZ * v.vtX - rD.vtX * v.vtZ) +
-	    r.vtZ * (rD.vtX * v.vtY - rD.vtY * v.vtX);
+	WLZ_VTX_3_SUB(r, r0, p0);
+	s = (r.vtX * (rD.vtY * v.vtZ - rD.vtZ * v.vtY) +
+	     r.vtY * (rD.vtZ * v.vtX - rD.vtX * v.vtZ) +
+	     r.vtZ * (rD.vtX * v.vtY - rD.vtY * v.vtX)) / den;
 	if((s * s) < DBL_EPSILON)
 	{
 	  isn = 2;
