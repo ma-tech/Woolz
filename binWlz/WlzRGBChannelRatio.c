@@ -248,7 +248,7 @@ int		main(int argc, char *argv[])
   else
   {
     (void )fprintf(stderr,
-      "Usage: %s [-h] [-o<out>] [-d<r|g|b>] [-n<r|g|b>] [<in>]\n"
+      "Usage: %s [-h] [-N] [-o<out>] [-d<r|g|b>] [-n<r|g|b>] [<in>]\n"
       "Computes log ratio of RGB channels in an RGBA object for each\n"
       "pixel using: ratio = ln(1 + n/(1 + d)). This results in an\n"
       "object normalised to the range 0-255.\n"
@@ -260,6 +260,7 @@ int		main(int argc, char *argv[])
       "By default the input object is read from the standard input and the\n"
       "output object is written to standard the output.\n"
       "Options are:\n"
+      "  -N  Output is normalised to range 0-255.\n"
       "  -d  Denominator colour channel.\n"
       "  -n  Numerator colour channel.\n"
       "  -m  Multiplier colour channel.\n"
