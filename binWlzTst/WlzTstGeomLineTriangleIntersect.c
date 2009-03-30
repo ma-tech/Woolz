@@ -166,9 +166,8 @@ int		main(int argc, char *argv[])
       if(verbose)
       {
 	(void )printf(
-	"Test line with origin (%g, %g, %g) and direction (%g, %g, %g)\n"
-	"passes through the triangle (%g, %g, %g), (%g, %g, %g),\n"
-	"(%g, %g, %g):",
+	"Test for line with origin (%g, %g, %g) and direction (%g, %g, %g)\n"
+	"passing through triangle (%g, %g, %g), (%g, %g, %g), (%g, %g, %g):\n",
 	org.d3.vtX, org.d3.vtY, org.d3.vtZ,
 	dir.d3.vtX, dir.d3.vtY, dir.d3.vtZ,
 	tri[0].d3.vtX, tri[0].d3.vtY, tri[0].d3.vtZ,
@@ -182,7 +181,39 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    printf("%d %d %lg %lg %lg\n", isn, par, t, u, v);
+    if(verbose)
+    {
+      switch(isn)
+      {
+        case 0:
+	  (void )printf("No intersection.\n");
+	  break;
+	case 1:
+	  (void )printf("Intersection on edge of triangle.\n");
+	  break;
+	case 2:
+	  (void )printf("Intersection in triangle.\n");
+	  break;
+	default:
+	  (void )printf("Unknown intersection code %d!\n", isn);
+	  break;
+      }
+      (void )printf("Line is%s parralel to the plane of the triangle.\n",
+                    (par)? "": " not");
+      if(isn > 1)
+      {
+	(void )printf("Distance from line origin to intersection is %g.\n",
+		      t);
+	(void )printf(
+	       "Barycentric coordinates of the intersection are %g,%g.\n",
+		      u, v);
+      }
+      (void )printf("\n");
+    }
+    else
+    {
+      printf("%d %d %lg %lg %lg\n", isn, par, t, u, v);
+    }
   }
   if(usage)
   {

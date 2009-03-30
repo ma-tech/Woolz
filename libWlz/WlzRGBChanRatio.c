@@ -54,6 +54,14 @@ static WlzObject 		*WlzRGBChanRatio2D(
 				  int useMul,
 				  int norm,
 				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzRGBChanRatio3D(
+				  WlzObject *rgbObj,
+				  WlzRGBAColorChannel numC,
+				  WlzRGBAColorChannel denC,
+				  WlzRGBAColorChannel mulC,
+				  int useMul,
+				  int norm,
+				  WlzErrorNum *dstErr);
 static WlzErrorNum 		WlzRGBAChanValid(
 				  WlzRGBAColorChannel chan);
 static WlzUByte			WlzRGBAChanGetValue(
@@ -126,6 +134,10 @@ WlzObject 	*WlzRGBChanRatio(WlzObject *rgbObj,
         ratioObj = WlzRGBChanRatio2D(rgbObj, num, den, mul, useMul, norm,
 				     &errNum);
 	break;
+      case WLZ_3D_DOMAINOBJ:
+        ratioObj = WlzRGBChanRatio3D(rgbObj, num, den, mul, useMul, norm,
+				     &errNum);
+	break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
 	break;
@@ -145,6 +157,105 @@ WlzObject 	*WlzRGBChanRatio(WlzObject *rgbObj,
     *dstErr = errNum;
   }
   return(ratioObj);
+}
+
+/*!
+* \return	Ratio object or NULL on error.
+* \ingroup	WlzArithmetic
+* \brief	Computes log ratio of RGB channels in a RGBA object for each
+* 		pixel using ratio \f$r\f$ with
+\f[
+r = m \log(1 + \frac{n}{1 + d}).
+\f]
+*		where m is the multipler channel value or unity if not
+*		used.
+* 		This results in either an object with float values or if
+* 		the normalise parameter is non-zero an object with unsigned
+* 		byte values normalised to the range 0-255.
+* 		The numerator and denominator channels must be red, green
+* 		blue, yellow, magenta, cyan, hue, staturation, brightness,
+* 		or grey (modulus).
+* \param	rgbObj			The input RGBA object.
+* \param	num			Channel for numerator in ratio.
+* \param	den			Channel for denominator in ratio.
+* \param	mul			Channel for multiplier value.
+* \param	useMul			Multiplier used if non zero.
+* \param	norm			Normalise whole object values and
+* 					return a ubyte object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject *WlzRGBChanRatio3D(WlzObject *rgbObj,
+				WlzRGBAColorChannel num,
+				WlzRGBAColorChannel den,
+				WlzRGBAColorChannel mul,
+				int useMul, int norm,
+				WlzErrorNum *dstErr)
+{
+  int		idP,
+  		idQ;
+  WlzObject	*tObj0 = NULL,
+		*tObj1 = NULL,
+		*rtnObj = NULL,
+  		*ratioObj = NULL;
+  WlzPlaneDomain *pDom;
+  WlzVoxelValues *vTab0,
+  		 *vTab1;
+  WlzDomain	dom;
+  WlzValues	val;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  pDom = rgbObj->domain.p;
+  vTab0 = rgbObj->values.vox;
+  vTab1 = WlzMakeVoxelValueTb(vTab0->type, vTab0->plane1, vTab0->lastpl,
+                              vTab0->bckgrnd, NULL, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dom.p = pDom;
+    val.vox = vTab1;
+    ratioObj = WlzMakeMain(rgbObj->type, dom, val, NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    idP = pDom->plane1;
+    while((errNum == WLZ_ERR_NONE) && (idP <= pDom->lastpl))
+    {
+      idQ = idP - pDom->plane1;;
+      tObj0 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+			  pDom->domains[idQ], vTab0->values[idQ],
+			  NULL, NULL, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	tObj1 = WlzRGBChanRatio2D(tObj0, num, den, mul, useMul, 0, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        vTab1->values[idQ] = WlzAssignValues(tObj1->values, NULL);
+      }
+      (void )WlzFreeObj(tObj0);
+      (void )WlzFreeObj(tObj1);
+      ++idP;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(norm)
+    {
+      if((errNum = WlzGreyNormalise(ratioObj, 1)) == WLZ_ERR_NONE)
+      {
+        rtnObj = WlzConvertPix(ratioObj, WLZ_GREY_UBYTE, &errNum);
+      }
+    }
+    else
+    {
+      rtnObj = ratioObj;
+      ratioObj = NULL;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rtnObj);
 }
 
 /*!
@@ -249,6 +360,11 @@ static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
       {
         rtnObj = WlzConvertPix(ratioObj, WLZ_GREY_UBYTE, &errNum);
       }
+    }
+    else
+    {
+      rtnObj = ratioObj;
+      ratioObj = NULL;
     }
   }
   (void )WlzFreeValues(values);
