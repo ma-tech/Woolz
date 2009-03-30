@@ -1774,7 +1774,7 @@ static WlzErrorNum WlzCMeshFMarAddSeed3D(AlcHeap  *sElmQ,
       idF = 3 - idN;
       nod0 = nodes[idN];
       fce0 = elm0->face + idF;
-      dir = WlzGeomUnitVector3D2(seed, nod0->pos);
+      WLZ_VTX_3_SUB(dir, seed, nod0->pos);
       if(WlzGeomLineTriangleIntersect3D(seed, dir,
                                        fce0->edu[0].nod->pos,
                                        fce0->edu[1].nod->pos,
