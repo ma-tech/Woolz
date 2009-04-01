@@ -3022,6 +3022,8 @@ extern int 			WlzHasIntersection(
 /************************************************************************
 * WlzIntervalCount.c							*
 ************************************************************************/
+extern int			WlzIDomMaxItvLn(
+				  WlzIntervalDomain *iDom);
 extern int 			WlzIntervalCount(
 				  WlzIntervalDomain *idom,
 			    	  WlzErrorNum *dstErr);

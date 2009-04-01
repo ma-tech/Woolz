@@ -44,7 +44,46 @@ static char _WlzIntervalCount_c[] = "MRC HGU $Id$";
 
 #include <Wlz.h>
 
-/* function:     WlzIntervalCount    */
+/*!
+* \return	Maximum number of intervals on a line.
+* \ingroup	WlzDomainOps
+* \brief	Computes the maximum number of intervals on any line.
+* \param	iDom			Given interval domain.
+*/
+int		WlzIDomMaxItvLn(WlzIntervalDomain *iDom)
+{
+  int		ln,
+		lLn,
+		nItv,
+  		maxItv = 0;
+  WlzIntervalLine *iLn;
+
+  if(iDom != NULL)
+  {
+    switch(iDom->type)
+    {
+      case WLZ_INTERVALDOMAIN_INTVL:
+	lLn = iDom->lastln;
+	iLn = iDom->intvlines;
+	for(ln = iDom->line1; ln <= lLn; ++ln)
+	{
+	  nItv = (iLn + ln)->nintvs;
+	  if(nItv > maxItv)
+	  {
+	    maxItv = nItv;
+	  }
+	}
+        break;
+      case WLZ_INTERVALDOMAIN_RECT:
+	maxItv = 1;
+        break;
+      default:
+        break;
+    }
+  }
+  return(maxItv);
+}
+
 /*! 
 * \ingroup      WlzDomainOps
 * \brief        Count the number of intervals or equivalent if rectangular.
