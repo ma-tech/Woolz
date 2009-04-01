@@ -90,9 +90,9 @@ int WlzRGBAGreyStats(
     *dstGType = WLZ_GREY_RGBA;
     for(i=0; (i < 4) && (errNum == WLZ_ERR_NONE) ; i++){
       area = WlzGreyStats(cmpnd->o[i], &gType,
-			  &(dstMin[i]), &(dstMax[i]),
-			  &(dstSum[i]), &(dstSumSq[i]),
-			  &(dstMean[i]), &(dstStdDev[i]),
+			  dstMin + i, dstMax + i,
+			  dstSum + i, dstSumSq + i,
+			  dstMean + i, dstStdDev + i,
 			  &errNum);
     }
     WlzFreeObj((WlzObject *) cmpnd);
