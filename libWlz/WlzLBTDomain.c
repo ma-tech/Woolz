@@ -2252,9 +2252,13 @@ static int	WlzPartialItv3DCmpFn(const void *vc,
 */
 static int	WlzLBTIdxCmpFn(void *datum0, void *datum1)
 {
-  int		cmp;
+  int		i0,
+  		i1,
+		cmp;
 
-  cmp = (int )datum0 - (int )datum1;
+  i0 = (int )datum0;
+  i1 = (int )datum1;
+  cmp = i0 - i1;
   return(cmp);
 }
 
@@ -2266,11 +2270,14 @@ static int	WlzLBTIdxCmpFn(void *datum0, void *datum1)
 */
 static unsigned WlzLBTIdxHashFn(void *datum)
 {
-  unsigned	hVal;
+  unsigned	dVal,
+  		hVal;
   const unsigned p0 = 399989, /* These are three different 6 digit primes */
   		 p1 = 599999,
   		 p2 = 999983;
-  hVal = (((unsigned )datum + p0) * p1) % p2;
+
+  dVal = (unsigned )datum;
+  hVal = ((dVal + p0) * p1) % p2;
   return(hVal);
 }
 
