@@ -224,9 +224,11 @@ WlzObject *WlzErosion(
     }
   }
 
-  /* Make buffers with room for the maximum number of intervals in any line. */
+  /* Make buffers with room for the maximum number of intervals in any line
+   * x 3. This replaces a previous hard coded maximum number (300), but
+   * I'm not convinced that this is right. */
   if( errNum == WLZ_ERR_NONE ){
-    maxItvLn = WlzIDomMaxItvLn(idmn);
+    maxItvLn = WlzIDomMaxItvLn(idmn) * 3;
     if(maxItvLn < 1){
       errNum = WLZ_ERR_DOMAIN_DATA;
     }

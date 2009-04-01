@@ -222,9 +222,11 @@ WlzObject *WlzDilation(
     }
   }
 
-  /* Make buffer with room for the maximum number of intervals in any line. */
+  /* Make buffer with room for the maximum number of intervals in any line
+   * x 3. This replaces a previous hard coded maximum number (300), but
+   * I'm not convinced that this is right. */
   if( errNum == WLZ_ERR_NONE ){
-    maxItvLn = WlzIDomMaxItvLn(domain.i);
+    maxItvLn = WlzIDomMaxItvLn(domain.i) * 3;
     if(maxItvLn < 1){
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
@@ -797,9 +799,11 @@ static WlzObject *WlzDilation4(
     }
   }
 
-  /* Make buffer with room for the maximum number of intervals in any line. */
+  /* Make buffer with room for the maximum number of intervals in any line
+   * x 3. This replaces a previous hard coded maximum number (300), but
+   * I'm not convinced that this is right. */
   if( errNum == WLZ_ERR_NONE ){
-    maxItvLn = WlzIDomMaxItvLn(domain.i);
+    maxItvLn = WlzIDomMaxItvLn(domain.i) * 3;
     if(maxItvLn < 1){
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
