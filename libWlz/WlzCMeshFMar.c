@@ -1962,9 +1962,29 @@ static WlzErrorNum WlzCMeshFMarElmQInit2D(AlcHeap *queue, WlzCMeshNod2D *nod)
 */
 static WlzErrorNum WlzCMeshFMarElmQInit3D(AlcHeap *queue, WlzCMeshNod3D *nod)
 {
+  int		priority;
+  WlzCMeshEdgU3D *edu0,
+  		*edu1;
+  WlzCMeshFMarElmQEnt ent;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* TODO */
+  queue->nEnt = 0;
+  queue->data = nod;
+  edu0 = edu1 = nod->edu;
+  do
+  {
+    ent.elm.e3 = edu1->face->elm;
+    priority = WlzCMeshFMarElmQCalcPriority3D(edu1->face->elm, nod);
+    if(priority > 0)
+    {
+      ent.priority = priority;
+      if((errNum = AlcHeapInsertEnt(queue, &ent)) != WLZ_ERR_NONE)
+      {
+	break;
+      }
+    }
+    edu1 = edu1->nnxt;
+  } while(edu1 != edu0);
   return(errNum);
 }
 
@@ -2019,8 +2039,20 @@ static int	WlzCMeshFMarElmQCalcPriority2D(WlzCMeshElm2D *elm,
 static int	WlzCMeshFMarElmQCalcPriority3D(WlzCMeshElm3D *elm,
 				WlzCMeshNod3D *cNod)
 {
-  int		priority = 0;
+  int		idx,
+  		priority = 8;
+  WlzCMeshNod3D *nod;
 
-  /*  TODO */
+  for(idx = 0; idx < 3; ++idx)
+  {
+    nod = elm->face[0].edu[idx].nod;
+    priority -= ((nod->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) +
+                ((nod->idx == cNod->idx) ||
+		 ((nod->flags & WLZ_CMESH_NOD_FLAG_UPWIND) != 0));
+  }
+  nod = elm->face[1].edu[1].nod;
+  priority -= ((nod->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) +
+              ((nod->idx == cNod->idx) ||
+	       ((nod->flags & WLZ_CMESH_NOD_FLAG_UPWIND) != 0));
   return(priority);
 }
