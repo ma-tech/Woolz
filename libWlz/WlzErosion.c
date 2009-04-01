@@ -44,8 +44,6 @@ static char _WlzErosion_c[] = "MRC HGU $Id$";
 #include <stdlib.h>
 #include <Wlz.h>
 
-#define MAXLNITV 100
-
 static int 			line_int_int(
 				  WlzIntervalLine *inta,
 				  WlzIntervalLine *intb,
@@ -92,8 +90,10 @@ WlzObject *WlzErosion(
   WlzIntervalDomain 	*idmn;
   WlzIntervalLine 	*itvl;
   WlzInterval 		*jp, *jwp;
-  WlzInterval 		buff[MAXLNITV], tmp[MAXLNITV];
+  WlzInterval 		*buff = NULL,
+  			*tmp = NULL;
   int			i, j;
+  int			maxItvLn;
   int 			inttot, *nitv;
   int 			line1, lastln, line;
   int 			k1, kol1,lastkl;
@@ -224,6 +224,20 @@ WlzObject *WlzErosion(
     }
   }
 
+  /* Make buffers with room for the maximum number of intervals in any line. */
+  if( errNum == WLZ_ERR_NONE ){
+    maxItvLn = WlzIDomMaxItvLn(idmn);
+    if(maxItvLn < 1){
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+    else if(((buff = (WlzInterval *)
+                     AlcMalloc(sizeof(WlzInterval) * maxItvLn)) == NULL) ||
+            ((tmp = (WlzInterval *)
+                    AlcMalloc(sizeof(WlzInterval) * maxItvLn)) == NULL)) {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+
   /*
    * initialize
    * ----------
@@ -339,6 +353,9 @@ WlzObject *WlzErosion(
     }
     AlcFree((void *) nitv);
   }
+
+  AlcFree(buff);
+  AlcFree(tmp);
 
   if( dstErr ){
     *dstErr = errNum;

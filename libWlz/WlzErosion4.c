@@ -80,9 +80,11 @@ WlzObject *WlzErosion4(
   WlzIntervalDomain	*idmn2;
   WlzIntervalLine	*itvl;
   WlzInterval		*jp, *ptr;
-  WlzInterval		buff[100], *jpw;
+  WlzInterval		*jpw;
+  WlzInterval		*buff = NULL;
   int			i, n, line;
   int			line1, lastln, totint;
+  int			maxItvLn;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   values.core = NULL;
@@ -154,13 +156,24 @@ WlzObject *WlzErosion4(
    * reserve space for erosion object
    */
   if( errNum == WLZ_ERR_NONE ){
-    totint =  2*WlzIntervalCount(idmn2, NULL);
-    if( (jp = (WlzInterval *) AlcMalloc(totint*sizeof(WlzInterval)))
-       == NULL ){
+    totint =  2 * WlzIntervalCount(idmn2, NULL);
+    if( (jp = (WlzInterval *) AlcMalloc(totint*sizeof(WlzInterval))) == NULL ){
       errNum = WLZ_ERR_MEM_ALLOC;
     }
     else {
       jpw = jp;
+    }
+  }
+
+  /* Make buffers with room for the maximum number of intervals in any line. */
+  if( errNum == WLZ_ERR_NONE ){
+    maxItvLn = WlzIDomMaxItvLn(idmn2);
+    if(maxItvLn < 1){
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+    else if((buff = (WlzInterval *)
+                    AlcMalloc(sizeof(WlzInterval) * maxItvLn)) == NULL) {
+      errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
 
@@ -193,6 +206,8 @@ WlzObject *WlzErosion4(
     /* reaching here implies an error and jp != NULL */
     AlcFree( jp );
   }
+
+  AlcFree(buff);
 
   if( dstErr ){
     *dstErr = errNum;

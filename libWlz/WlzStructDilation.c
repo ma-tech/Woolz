@@ -44,39 +44,37 @@ static char _WlzStructDilation_c[] = "MRC HGU $Id$";
 #include <stdlib.h>
 #include <Wlz.h>
 
-#define WLZ_STRUCT_DILATE_MAXLNITV 50
+static int 			unionitvs(
+				  WlzIntervalLine *itva,
+				  WlzIntervalLine *itvb,
+				  int n,
+				  WlzInterval *jp,
+				  WlzInterval *aa,
+				  WlzInterval *bb,
+				  WlzInterval *cc);
+static int 			line_struct_dil(
+				  WlzIntervalLine *itvl,
+				  WlzInterval *jntl,
+				  WlzInterval *ll);
+static int 			arr_arr_union(
+				  WlzInterval *aa,
+				  int m,
+				  WlzInterval *bb,
+				  int n,
+				  WlzInterval *cc);
+static WlzObject 		*WlzStructDilation3d(
+				  WlzObject *obj,
+				  WlzObject *structElm,
+				  WlzErrorNum *dstErr);
 
-static int unionitvs(WlzIntervalLine	*itva,
-		     WlzIntervalLine	*itvb,
-		     int		n,
-		     WlzInterval	*jp,
-		     WlzInterval	*aa,
-		     WlzInterval	*bb,
-		     WlzInterval	*cc);
 
-static int line_struct_dil(WlzIntervalLine	*itvl,
-			   WlzInterval		*jntl,
-			   WlzInterval		*ll);
-
-static int arr_arr_union(WlzInterval	*aa,
-			 int		m,
-			 WlzInterval	*bb,
-			 int		n,
-			 WlzInterval	*cc);
-
-static WlzObject *WlzStructDilation3d(WlzObject		*obj,
-				      WlzObject		*structElm,
-				      WlzErrorNum	*dstErr);
-
-
-/* function:     WlzStructDilation    */
 /*! 
+* \return       Dilated domain object.
 * \ingroup      WlzMorphologyOps
 * \brief        Dilate an object with respect to the given
- structuring element. This is defined as the domain obtained as
- the union of the SE placed at every pixel of the input domain.
-*
-* \return       Dilated domain object.
+*		structuring element. This is defined as the domain
+*		obtained as the union of the SE placed at every pixel
+*		of the input domain.
 * \param    obj	Input object to be dilated
 * \param    structElm	Structuring element.
 * \param    dstErr	Error return.
@@ -98,9 +96,10 @@ WlzObject *WlzStructDilation(
   int 			i, j, k;
   int 			n = 0, m, size;
   int 			line1, kol1, lastln, lastkl;
-  WlzInterval 		aa[2 * WLZ_STRUCT_DILATE_MAXLNITV];
-  WlzInterval 		bb[2 * WLZ_STRUCT_DILATE_MAXLNITV];
-  WlzInterval 		cc[2 * WLZ_STRUCT_DILATE_MAXLNITV];
+  int			maxItvLn;
+  WlzInterval 		*aa = NULL;
+  WlzInterval 		*bb = NULL;
+  WlzInterval 		*cc = NULL;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   bDom.core = NULL;
@@ -250,6 +249,23 @@ WlzObject *WlzStructDilation(
     }
   }
 
+  /* Make buffers with room for the maximum number of intervals in any line. */
+  if( errNum == WLZ_ERR_NONE ){
+    maxItvLn = 2 * (WlzIDomMaxItvLn(sDom.i) + WlzIDomMaxItvLn(bDom.i));
+    if(maxItvLn < 1){
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+    else if(((aa = (WlzInterval *)
+                   AlcMalloc(sizeof(WlzInterval) * maxItvLn)) == NULL) ||
+            ((bb = (WlzInterval *)
+                   AlcMalloc(sizeof(WlzInterval) * maxItvLn)) == NULL) ||
+            ((cc = (WlzInterval *)
+                   AlcMalloc(sizeof(WlzInterval) * maxItvLn)) == NULL)) {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+
+
   /*
    * scanning from first line to last line
    */
@@ -291,6 +307,9 @@ WlzObject *WlzStructDilation(
       rtnObj = NULL;
     }
   }
+  AlcFree(aa);
+  AlcFree(bb);
+  AlcFree(cc);
   if(bDom.core)
   {
     (void )WlzFreeDomain(bDom);

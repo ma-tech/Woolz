@@ -44,10 +44,6 @@ static char _WlzStructErosion_c[] = "MRC HGU $Id$";
 #include <stdlib.h>
 #include <Wlz.h>
 
-/* this sets the number of intervals in a calculation buffer
-   and probably should be calculated for each object */
-#define WLZ_STRUCT_ERODE_MAXLNITV 50
-
 static int 			intersecitvs(
 				  WlzIntervalLine *itva,
 				  WlzIntervalLine *itvb,
@@ -99,7 +95,11 @@ WlzObject *WlzStructErosion(
   WlzValues		values;
   WlzInterval		*jp, *jpw;
   WlzIntervalLine	*bitv, *sitv;
+  WlzInterval 		*aa = NULL;
+  WlzInterval 		*bb = NULL;
+  WlzInterval 		*cc = NULL;
   int			i, j, k, m;
+  int			maxItvLn;
   int			line1, kol1, lastln, lastkl;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
@@ -174,7 +174,7 @@ WlzObject *WlzStructErosion(
     }
   }
 
-  /* if we get this far we have 2D object and structuring element of
+  /* If we get this far we have 2D object and structuring element of
      domain type and with non-null domains */
   if(errNum == WLZ_ERR_NONE)
   {
@@ -245,13 +245,25 @@ WlzObject *WlzStructErosion(
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
+  /* Make buffers with room for the maximum number of intervals in any line. */
+  if( errNum == WLZ_ERR_NONE ){
+    maxItvLn = 2 * (WlzIDomMaxItvLn(sDom.i) + WlzIDomMaxItvLn(bDom.i));
+    if(maxItvLn < 1){
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+    else if(((aa = (WlzInterval *)
+                   AlcMalloc(sizeof(WlzInterval) * maxItvLn)) == NULL) ||
+            ((bb = (WlzInterval *)
+                   AlcMalloc(sizeof(WlzInterval) * maxItvLn)) == NULL) ||
+            ((cc = (WlzInterval *)
+                   AlcMalloc(sizeof(WlzInterval) * maxItvLn)) == NULL)) {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
   /*
    * scan from first line to last line
    */
   if( errNum == WLZ_ERR_NONE ){
-    WlzInterval aa[WLZ_STRUCT_ERODE_MAXLNITV];
-    WlzInterval bb[WLZ_STRUCT_ERODE_MAXLNITV];
-    WlzInterval cc[WLZ_STRUCT_ERODE_MAXLNITV];
 
     k = sDom.i->lastln - sDom.i->line1 + 1;
     j = 0;
@@ -286,6 +298,9 @@ WlzObject *WlzStructErosion(
   {
     (void )WlzFreeDomain(sDom);
   }
+  AlcFree(aa);
+  AlcFree(bb);
+  AlcFree(cc);
   if( dstErr ){
     *dstErr = errNum;
   }

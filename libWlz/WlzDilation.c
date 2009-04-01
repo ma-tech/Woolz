@@ -44,8 +44,6 @@ static char _WlzDilation_c[] = "MRC HGU $Id$";
 #include <stdlib.h>
 #include <Wlz.h>
 
-#define MAXLNITV 300
-
 static int line_int_dil(WlzIntervalLine *inta,
 			WlzIntervalLine *intb,
 			WlzInterval 	*cc);
@@ -92,9 +90,10 @@ WlzObject *WlzDilation(
   WlzValues		dilatvalues;
   WlzIntervalDomain 	*idmn;
   WlzIntervalLine 	*itvl;
-  WlzInterval 		buff[MAXLNITV];
+  WlzInterval 		*buff = NULL;
   WlzInterval 		*jp;
   int 			i, j;
+  int			maxItvLn;
   int 			inttot, nitv;
   int 			line1, lastln, line;
   int 			kol1,lastkl;
@@ -198,7 +197,7 @@ WlzObject *WlzDilation(
        occasionally but the #new intervals <= 3 * #old intervals therefore
        use this formula and shrink the storage requirement after the
        calculation using realloc if it seems important */
-    /*inttot += 10 * MAXLNITV;*/
+    /* Was inttot += 10 * MAXLNITV, with MAXLNITV = 300 */
     inttot *= 3;
     if( errNum == WLZ_ERR_NONE ){
       if((jp = (WlzInterval *)AlcMalloc(inttot *
@@ -220,6 +219,18 @@ WlzObject *WlzDilation(
       else {
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
+    }
+  }
+
+  /* Make buffer with room for the maximum number of intervals in any line. */
+  if( errNum == WLZ_ERR_NONE ){
+    maxItvLn = WlzIDomMaxItvLn(domain.i);
+    if(maxItvLn < 1){
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+    else if((buff = (WlzInterval *)
+                    AlcMalloc(sizeof(WlzInterval) *maxItvLn)) == NULL) {
+      errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
 
@@ -287,6 +298,8 @@ WlzObject *WlzDilation(
       jp += nitv;
     }
   }
+
+  AlcFree(buff);
 
   if( dstErr ){
     *dstErr = errNum;
@@ -688,11 +701,12 @@ static WlzObject *WlzDilation4(
   WlzDomain	domain;
   WlzValues	values;
   WlzInterval	*jp;
+  int		maxItvLn;
   int		kol1, lastkl, line1, lastln;
   int		line, width, inttot, nitv;
   WlzIntervalDomain 	*idmn;
   WlzIntervalLine 	*itvl;
-  WlzInterval 		buff[MAXLNITV];
+  WlzInterval 		*buff = NULL;
   int 			length;
 
   /* only need to check the domain type to set the dilated object */
@@ -759,7 +773,7 @@ static WlzObject *WlzDilation4(
        occasionally but the #new intervals <= 3 * #old intervals therefore
        use this formula and shrink the storage requirement after the
        calculation using realloc if it seems important */
-    /*inttot += 10 * MAXLNITV;*/
+    /* Was inttot += 10 * MAXLNITV, with MAXLNITV = 300 */
     inttot *= 3;
     if( errNum == WLZ_ERR_NONE ){
       if((jp = (WlzInterval *) AlcMalloc(inttot *
@@ -780,6 +794,18 @@ static WlzObject *WlzDilation4(
       else {
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
+    }
+  }
+
+  /* Make buffer with room for the maximum number of intervals in any line. */
+  if( errNum == WLZ_ERR_NONE ){
+    maxItvLn = WlzIDomMaxItvLn(domain.i);
+    if(maxItvLn < 1){
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+    else if((buff = (WlzInterval *)
+                    AlcMalloc(sizeof(WlzInterval) * maxItvLn)) == NULL) {
+      errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
 
@@ -835,6 +861,8 @@ static WlzObject *WlzDilation4(
       WlzMakeInterval(line, domain.i, nitv, jp);
     }
   }
+
+  AlcFree(buff);
 
   if( dstErr ){
     *dstErr = errNum;
