@@ -53,7 +53,7 @@ static char _WlzIntervalCount_c[] = "MRC HGU $Id$";
 int		WlzIDomMaxItvLn(WlzIntervalDomain *iDom)
 {
   int		ln,
-		lLn,
+		nLn,
 		nItv,
   		maxItv = 0;
   WlzIntervalLine *iLn;
@@ -63,9 +63,9 @@ int		WlzIDomMaxItvLn(WlzIntervalDomain *iDom)
     switch(iDom->type)
     {
       case WLZ_INTERVALDOMAIN_INTVL:
-	lLn = iDom->lastln;
+	nLn = iDom->lastln - iDom->line1 + 1;
 	iLn = iDom->intvlines;
-	for(ln = iDom->line1; ln <= lLn; ++ln)
+	for(ln = 0; ln < nLn; ++ln)
 	{
 	  nItv = (iLn + ln)->nintvs;
 	  if(nItv > maxItv)
