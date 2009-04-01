@@ -51,7 +51,7 @@ static char _WlzLabel_c[] = "MRC HGU $Id$";
 WlzLabel - labels (segments) the input objects.
 \par Synopsis
 \verbatim
-WlzLabel [i#] [-v] [-h] [<input file>]
+WlzLabel [i#] [-v] [-h] [-M#] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -66,6 +66,10 @@ WlzLabel [i#] [-v] [-h] [<input file>]
   <tr> 
     <td><b>-i</b></td>
     <td>Ignore objects with number of lines \f$<\f$ the given number.</td>
+  </tr>
+  <tr> 
+    <td><b>-M</b></td>
+    <td>Maximum number of segmented objects.</td>
   </tr>
 </table>
 \par Description
@@ -114,12 +118,13 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [i#] [-v] [-h] [<input file>]\n"
+	  "Usage:\t%s [i#] [-M#] [-v] [-h] [<input file>]\n"
 	  "\tLabel (segment) the input objects and write the result\n"
 	  "\tto stdout. Non-domain objects are ignored, the number\n"
 	  "\tof segments found is written to stderr\n"
 	  "\tOptions are:\n"
 	  "\t  -i#       Ignore objects with number of lines < #\n"
+	  "\t  -M#       Maximum number of segmented objects.\n"
 	  "\t  -v        Verbose flag\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "",
@@ -136,9 +141,9 @@ int main(int	argc,
   WlzObject	*obj;
   WlzObject	**objlist = NULL;
   FILE		*inFile;
-  char 		optList[] = "i:vh";
+  char 		optList[] = "i:M:vh";
   int		option;
-  int		count, numobj, i, verbose = 0;
+  int		count, numobj, maxobj = MAXOBJS, i, verbose = 0;
   int		ignw = -1;
   const char	*errMsg;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -152,6 +157,15 @@ int main(int	argc,
       ignw = atoi(optarg);
       if( ignw < 0 ){
         fprintf(stderr, "%s: ignw = %d is invalid\n", argv[0], ignw);
+        usage(argv[0]);
+        return( 1 );
+      }
+      break;
+
+    case 'M':
+      maxobj = atoi(optarg);
+      if( maxobj <= 0 ){
+        fprintf(stderr, "%s: maxobj = %d is invalid\n", argv[0], maxobj);
         usage(argv[0]);
         return( 1 );
       }
@@ -188,7 +202,7 @@ int main(int	argc,
 
     case WLZ_2D_DOMAINOBJ:
     case WLZ_3D_DOMAINOBJ:
-      errNum = WlzLabel(obj, &numobj, &objlist, MAXOBJS, ignw, WLZ_8_CONNECTED);
+      errNum = WlzLabel(obj, &numobj, &objlist, maxobj, ignw, WLZ_8_CONNECTED);
       if(errNum == WLZ_ERR_DOMAIN_TYPE) {
 	errNum = WlzWriteObj(stdout, obj);
       }

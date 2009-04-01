@@ -54,7 +54,7 @@ WlzSizeSelect - selects components of an object's domain on the basis of
 \par Synopsis
 \verbatim
 WlzSizeSelect [-h] [-v] -a<mesh_area> -c<conn> -H -m
-              [-f] [-g] [-h] [-i] [-l] [-L] [-p]
+              [-f] [-g] [-h] [-i] [-l] [-L] [-p] [-M #]
               [-s #] [-m #] [-c #,#,#] [-C #,#,#] <in bib file>
 \endverbatim
 \par Options
@@ -80,6 +80,10 @@ WlzSizeSelect [-h] [-v] -a<mesh_area> -c<conn> -H -m
   <tr> 
     <td><b>-m</b></td>
     <td>Keep domains <= area, the default is to keep domains > area.</td>
+  </tr>
+  <tr> 
+    <td><b>-M</b></td>
+    <td>Maximum number of parts to select from.</td>
   </tr>
 </table>
 \par Description
