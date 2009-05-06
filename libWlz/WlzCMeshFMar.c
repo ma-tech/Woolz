@@ -92,32 +92,32 @@ static double			WlzCMeshFMarQSElmPriority3D(
 				  WlzCMeshElm3D *elm,
 				  double *dst,
 				  WlzDVertex3 org);
-static void		 	WlzCMeshFMarCompute2D(
+static int		 	WlzCMeshFMarCompute2D(
 				  WlzCMeshNod2D *nod0,
 				  WlzCMeshNod2D *nod1,
 				  WlzCMeshNod2D *nod2,
 				  double *distances,
 				  WlzCMeshElm2D *elm);
-static void			WlzCMeshFMarCompute3D(
+static int			WlzCMeshFMarCompute3D(
                                   WlzCMeshNod3D *nod0,
 				  WlzCMeshNod3D *nod1,
 				  WlzCMeshNod3D *nod2,
 				  WlzCMeshNod3D *nod3,
 				  double *distances,
 				  WlzCMeshElm3D *elm);
-static void			WlzCMeshFMarCompute3D1(
+static int			WlzCMeshFMarCompute3D1(
                                   WlzCMeshNod3D *nod0,
 				  WlzCMeshNod3D *nod1,
 				  WlzCMeshNod3D *nod2,
 				  WlzCMeshNod3D *nod3,
 				  double *distances);
-static void			WlzCMeshFMarCompute3D2(
+static int			WlzCMeshFMarCompute3D2(
                                   WlzCMeshNod3D *nod0,
 				  WlzCMeshNod3D *nod1,
 				  WlzCMeshNod3D *nod2,
 				  WlzCMeshNod3D *nod3,
 				  double *distances);
-static void			WlzCMeshFMarCompute3D3(
+static int			WlzCMeshFMarCompute3D3(
                                   WlzCMeshNod3D *nod0,
 				  WlzCMeshNod3D *nod1,
 				  WlzCMeshNod3D *nod2,
@@ -463,13 +463,15 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
 	    nodes[2] = nodes[1];
 	    nodes[1] = nod1;
 	  }
-	  WlzCMeshFMarCompute2D(nodes[0], nodes[1], nodes[2],
-				distances, elm);
-	  errNum = WlzCMeshFMarQInsertNod2D(nodQ, nodes[2],
-					    distances[nodes[2]->idx]);
-	  if(errNum != WLZ_ERR_NONE)
+	  if(WlzCMeshFMarCompute2D(nodes[0], nodes[1], nodes[2],
+				   distances, elm) != 0)
 	  {
-	    break;
+	    errNum = WlzCMeshFMarQInsertNod2D(nodQ, nodes[2],
+					      distances[nodes[2]->idx]);
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
 	  }
 	}
 	/* Set the current node to be upwind. */
@@ -639,13 +641,15 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
 	    }
 	    nod1 = nodes[idM]; nodes[idM] = nodes[idP]; nodes[idP] = nod1;
 	  }
-	  WlzCMeshFMarCompute3D(nodes[0], nodes[1], nodes[2], nodes[3],
-				distances, elm);
-	  errNum = WlzCMeshFMarQInsertNod3D(nodQ, nodes[3],
-					    distances[nodes[3]->idx]);
-	  if(errNum != WLZ_ERR_NONE)
+	  if(WlzCMeshFMarCompute3D(nodes[0], nodes[1], nodes[2], nodes[3],
+				   distances, elm) != 0)
 	  {
-	    break;
+	    errNum = WlzCMeshFMarQInsertNod3D(nodQ, nodes[3],
+					      distances[nodes[3]->idx]);
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
 	  }
 	}
 	/* Set the current node to be upwind. */
@@ -784,6 +788,7 @@ static double	WlzCMeshFMarQSElmPriority3D(WlzCMeshElm3D *elm,
 }
 
 /*!
+* \return	Non zero if distance computed and less than current distance.
 * \ingroup	WlzMesh
 * \brief	Computes wavefront distance for the given unknown node.
 * 		Given a pair of nodes that are connected by a single edge
@@ -810,12 +815,13 @@ static double	WlzCMeshFMarQSElmPriority3D(WlzCMeshElm3D *elm,
 * 					set for the unknown node on return.
 * 		elm			Element using these nodes.
 */
-static void	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
+static int	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
 				WlzCMeshNod2D *nod1, WlzCMeshNod2D *nod2, 
 				double *distances, WlzCMeshElm2D *elm)
 {
   int		idN,
-  		flg;
+  		flg,
+		rtn = 0;
   double	d0,
 		d1,
 		theta;
@@ -936,11 +942,14 @@ static void	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
   if(dist[2] < *(distances + nod2->idx))
   {
     *(distances + nod2->idx) = dist[2];
+    rtn = 1;
   }
+  return(rtn);
 }
 
 /*!
 * \ingroup	WlzMesh
+* \return	Non zero if distance computed and less than current distance.
 * \brief	Computes wavefront propagation time for the unknown nodes of
 * 		the given element.
 * 		This function just classifies the problem according to the
@@ -955,14 +964,15 @@ static void	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
 * 					set for the unknown node on return.
 * 		elm			Element using these nodes.
 */
-static void	WlzCMeshFMarCompute3D(WlzCMeshNod3D *nod0,
+static int	WlzCMeshFMarCompute3D(WlzCMeshNod3D *nod0,
 				      WlzCMeshNod3D *nod1,
 				      WlzCMeshNod3D *nod2,
 				      WlzCMeshNod3D *nod3,
 				      double *distances,
 				      WlzCMeshElm3D *elm)
 {
-  int		kwnMsk = 0;
+  int		rtn = 0,
+  		kwnMsk = 0;
 
   kwnMsk = (((nod0->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) << 0) |
            (((nod1->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) << 1) |
@@ -971,53 +981,55 @@ static void	WlzCMeshFMarCompute3D(WlzCMeshNod3D *nod0,
   switch(kwnMsk)
   {
     case  1: /* 0001 */
-      WlzCMeshFMarCompute3D1(nod0, nod1, nod2, nod3, distances);
+      rtn = WlzCMeshFMarCompute3D1(nod0, nod1, nod2, nod3, distances);
       break;
     case  2: /* 0010 */
-      WlzCMeshFMarCompute3D1(nod1, nod2, nod3, nod0, distances);
+      rtn = WlzCMeshFMarCompute3D1(nod1, nod2, nod3, nod0, distances);
       break;
     case  3: /* 0011 */
-      WlzCMeshFMarCompute3D2(nod0, nod1, nod2, nod3, distances);
+      rtn = WlzCMeshFMarCompute3D2(nod0, nod1, nod2, nod3, distances);
       break;
     case  4: /* 0100 */
-      WlzCMeshFMarCompute3D1(nod2, nod3, nod0, nod1, distances);
+      rtn = WlzCMeshFMarCompute3D1(nod2, nod3, nod0, nod1, distances);
       break;
     case  5: /* 0101 */
-      WlzCMeshFMarCompute3D2(nod0, nod2, nod1, nod3, distances);
+      rtn = WlzCMeshFMarCompute3D2(nod0, nod2, nod1, nod3, distances);
       break;
     case  6: /* 0110 */
-      WlzCMeshFMarCompute3D2(nod1, nod2, nod0, nod3, distances);
+      rtn = WlzCMeshFMarCompute3D2(nod1, nod2, nod0, nod3, distances);
       break;
     case  7: /* 0111 */
-      WlzCMeshFMarCompute3D3(nod0, nod1, nod2, nod3, distances);
+      rtn = WlzCMeshFMarCompute3D3(nod0, nod1, nod2, nod3, distances);
       break;
     case  8: /* 1000 */
-      WlzCMeshFMarCompute3D1(nod3, nod0, nod1, nod2, distances);
+      rtn = WlzCMeshFMarCompute3D1(nod3, nod0, nod1, nod2, distances);
       break;
     case  9: /* 1001 */
-      WlzCMeshFMarCompute3D2(nod0, nod3, nod1, nod2, distances);
+      rtn = WlzCMeshFMarCompute3D2(nod0, nod3, nod1, nod2, distances);
       break;
     case 10: /* 1010 */
-      WlzCMeshFMarCompute3D2(nod1, nod3, nod0, nod2, distances);
+      rtn = WlzCMeshFMarCompute3D2(nod1, nod3, nod0, nod2, distances);
       break;
     case 11: /* 1011 */
-      WlzCMeshFMarCompute3D3(nod0, nod1, nod3, nod2, distances);
+      rtn = WlzCMeshFMarCompute3D3(nod0, nod1, nod3, nod2, distances);
       break;
     case 12: /* 1100 */
-      WlzCMeshFMarCompute3D2(nod2, nod3, nod0, nod1, distances);
+      rtn = WlzCMeshFMarCompute3D2(nod2, nod3, nod0, nod1, distances);
       break;
     case 13: /* 1101 */
-      WlzCMeshFMarCompute3D3(nod0, nod2, nod3, nod1, distances);
+      rtn = WlzCMeshFMarCompute3D3(nod0, nod2, nod3, nod1, distances);
       break;
     case 14: /* 1110 */
-      WlzCMeshFMarCompute3D3(nod1, nod2, nod3, nod0, distances);
+      rtn = WlzCMeshFMarCompute3D3(nod1, nod2, nod3, nod0, distances);
       break;
     default:
       break;
   }
+  return(rtn);
 }
 
 /*!
+* \return	Non zero if distance computed and less than current distance.
 * \ingroup	WlzMesh
 * \brief	Computes wavefront propagation time for the unknown nodes of
 * 		the given element.
@@ -1032,13 +1044,14 @@ static void	WlzCMeshFMarCompute3D(WlzCMeshNod3D *nod0,
 * 					mesh node indices, which will be
 * 					set for the unknown node on return.
 */
-static void	WlzCMeshFMarCompute3D1(WlzCMeshNod3D *nod0,
+static int	WlzCMeshFMarCompute3D1(WlzCMeshNod3D *nod0,
                                        WlzCMeshNod3D *nod1,
                                        WlzCMeshNod3D *nod2,
                                        WlzCMeshNod3D *nod3,
 				       double *distances)
 {
-  int		idx;
+  int		idx,
+  		rtn = 0;
   double	d;
   double	*dP;
   WlzDVertex3	del;
@@ -1055,17 +1068,62 @@ static void	WlzCMeshFMarCompute3D1(WlzCMeshNod3D *nod0,
     if(*dP > d)
     {
       *dP = d;
+      rtn = 1;
     }
   }
+  return(rtn);
 }
 
 /*!
+* \return	Non zero if distance computed and less than current distance.
 * \ingroup	WlzMesh
 * \brief	Computes wavefront propagation time for the unknown nodes of
 * 		the given element.
 * 		This function is given just two known nodes and computes the
 * 		times for the other nodes by assuming that the propagation
-* 		is along the edges of the element.
+* 		is along the faces joined by the two known nodes.
+*
+* 		Given a planar wavefront which has arrived at two nodes
+* 		(\f$n_0\f$ and \f$n_1\f$) of a triangle (third unknown node
+* 		\f$n_2\f$) with distance traveled by fron \f$d_i\f$ at
+* 		node \f$n_i\f$ and the node positions \f$\mathbf{p_0}\f$,
+* 		\f$\mathbf{p_1}\f$ and \f$\mathbf{p_2}\f$. Then the
+* 		normal vector for the front can be computed using:
+* 		\f[
+		\mathbf{l_1}\cdot\mathbf{n} = d
+ 		\f]
+* 		\f[
+		\|\mathbf{n}\|^2 = 1
+ 		\f]
+* 		\f[
+                \mathbf{l_2}\cdot(\mathbf{n}\times\mathbf{l_1}) = 0
+ 		\f]
+*		Solving for n using maxima gives:
+*		\f[
+		nz = \frac{d l_{1z} \pm
+		           ((l_{2y} l_{1z} - l_{2z} l_{1y})l_{1y} -
+			    (l_{2z} l_{1x} - l_{2x} l_{1z})l_{1x})
+			   \sqrt(l^2 - d^2)/k}
+			  {l^2}
+		\f]
+*		\f[
+		ny = \frac{((l_{2y} l_{1z} - l_{2z} l_{1y})l_{1z} -
+		            (l_{2x} l_{1y} + l_{2y}.l_{1x})l_{1x}) nz -
+		           (l_{2y} l_{1z} + l_{2z} l_{1y})d}
+		     {l_{2z} l_{1y}^2 + l_{2z} l_{1x}^2 -
+		      (l_{2y} l_{1y} + l_{2x} l_{1x}) l_{1z}}
+		\f]
+*		\f[
+                n_x = {d - l_{0z} n_z - l_{0y} n_y}{l_{0x}}
+		\f]
+*		Where:
+*		\[
+		d = d_1 - d_0,
+		\mathbf{l_1} = \mathbf{p_1} - \mathbf{p_0},
+		\mathbf{l_2} = \mathbf{p_2} - \mathbf{p_0},
+		l^2 = \|\mathbf{l_1}\|^2,
+		k^2 = \|\mathbf{l_2} \times \mathbf{l_1}\|^2
+ 		\f]
 * \param	nod0			First known (current) node.
 * \param	nod1			Second known node.
 * \param	nod2			First unknown node.
@@ -1074,17 +1132,29 @@ static void	WlzCMeshFMarCompute3D1(WlzCMeshNod3D *nod0,
 * 					mesh node indices, which will be
 * 					set for the unknown node on return.
 */
-static void	WlzCMeshFMarCompute3D2(WlzCMeshNod3D *nod0,
+static int	WlzCMeshFMarCompute3D2(WlzCMeshNod3D *nod0,
                                        WlzCMeshNod3D *nod1,
                                        WlzCMeshNod3D *nod2,
                                        WlzCMeshNod3D *nod3,
 				       double *distances)
 {
+  int		rtn = 0;
+
   /* TODO restrict to face of element. */
-  /* HACK WlzCMeshFMarCompute3D1(nod0, nod1, nod2, nod3, s0, times); */
+/*
+l^2 = lx^2+ly^2+lz^2
+k^2 = (jy*lz-jz*ly)^2 + (jx*lz-jz*lx)^2 + (jx*ly-jy*lx)^2
+[nz = (d*lz - ((jy*lz-jz*ly)*ly-(jz*lx-jx*lz)*lx)*sqrt(l^2-d^2)/k) /(l^2),
+ nz = (d*lz + ((jy*lz-jz*ly)*ly-(jz*lx-jx*lz)*lx)*sqrt(l^2-d^2)/k) /(l^2)]
+ny = ((jy*lz^2-jz*ly*lz-jx*lx*ly+jy*lx^2)*nz-d*jy*lz+d*jz*ly)/
+     (jz*ly^2+jz*lx^2-(jy*ly+jx*lx)*lz)
+nx = (d - lz*nz - ly*ny)/lx;
+*/
+  return(rtn);
 }
 
 /*!
+* \return	Non zero if distance computed and less than current distance.
 * \ingroup	WlzMesh
 * \brief	Computes wavefront propagation time for the unknown nodes of
 * 		the given element.
@@ -1149,7 +1219,7 @@ static void	WlzCMeshFMarCompute3D2(WlzCMeshNod3D *nod0,
 * 					mesh node indices, which will be
 * 					set for the unknown node on return.
 */
-static void	WlzCMeshFMarCompute3D3(WlzCMeshNod3D *nod0,
+static int	WlzCMeshFMarCompute3D3(WlzCMeshNod3D *nod0,
                                        WlzCMeshNod3D *nod1,
                                        WlzCMeshNod3D *nod2,
                                        WlzCMeshNod3D *nod3,
@@ -1157,8 +1227,9 @@ static void	WlzCMeshFMarCompute3D3(WlzCMeshNod3D *nod0,
 {
   int		id0,
   		id1,
-  		onEdge = 1,
-		hit = 0;
+		hit = 0,
+		par = 0,
+		rtn = 0;
   double	a,
 		a2,
   		b,
@@ -1234,10 +1305,10 @@ static void	WlzCMeshFMarCompute3D3(WlzCMeshNod3D *nod0,
     n0.vtX =  (d + b * n0.vtZ) / a;
     n1.vtX =  (d + b * n1.vtZ) / a;
     /* Have two solutions for the normal: n0 and n1, choose the one that runs
-     * from node 3 towards the face formed by nodes 0, 1 and 2. */
+     * from the centre of the triangle formed by nodes 0, 1 and 2 to node 3. */
     WLZ_VTX_3_ADD3(t0, nod[0]->pos, nod[1]->pos, nod[2]->pos);
     WLZ_VTX_3_SCALE(t0, t0, 1.0 / 3.0);
-    WLZ_VTX_3_SUB(t1, t0, nod[3]->pos);
+    WLZ_VTX_3_SUB(t1, nod[3]->pos, t0);
     a = WLZ_VTX_3_DOT(n0, t1);
     if(a < 0)
     {
@@ -1245,45 +1316,51 @@ static void	WlzCMeshFMarCompute3D3(WlzCMeshNod3D *nod0,
     }
     hit = WlzGeomLineTriangleIntersect3D(nod[3]->pos, n0,
 					nod[0]->pos, nod[1]->pos, nod[2]->pos,
-					NULL, NULL, NULL, NULL);
-    if(hit)
+					&par, NULL, NULL, NULL);
+    if(par != 0)
     {
-      /* Normal from node 3 passes through the triangle formed by the three
-       * known nodes: 0, 1 and 2. Calculate the distance from the plane of
-       * propagation (which passes through node 0) to node 3.
-       * This is just: \frac{1}{s_3}(p_0 - p_3) . n + p3. */
+      hit = 0;
+    }
+    else if(hit != 0)
+    {
+      /* Normal is through the triangle (nodes 0, 1 and 2), so compute the
+       * distance at node 3: t_3 = t_0 + n . (n_3 - n_0). */
       WLZ_VTX_3_SUB(l[3], nod[3]->pos, nod[0]->pos);
-      WLZ_VTX_3_SUB(t0, n0, nod[3]->pos);
-      d = WLZ_VTX_3_LENGTH(t0);
+      d = WLZ_VTX_3_DOT(n0, l[3]);
       if(d > 0.0)
       {
 	d = *(distances + nod[0]->idx) + d;
 	if(*(distances + nod[3]->idx) > d)
 	{
 	  *(distances + nod[3]->idx) = d;
-	  onEdge = 0;
+	  rtn = 1;
 	}
       }
     }
   }
-  if(onEdge != 0)
+  else
   {
-    /* TODO Do something more sophisticated here if needed. 
     for(id0 = 0; id0 < 3; ++id0)
     {
-      WLZ_VTX_3_SUB(t0, nod[id0]->pos, nod[3]->pos);
-      d = WLZ_VTX_3_LENGTH(t0);
-      if(d > 0.0)
+      /* TODO */
+      
+    }
+  }
+  if(hit == 0)
+  {
+    /* TODO Do something more sophisticated here if needed.  */
+    for(id0 = 0; id0 < 3; ++id0)
+    {
+      WLZ_VTX_3_SUB(t0, nod[3]->pos, nod[id0]->pos);
+      d = WLZ_VTX_3_LENGTH(t0) + *(distances + nod[id0]->idx);
+      if(*(distances + nod[3]->idx) > d)
       {
-	d += *(distances + nod[0]->idx);
-	if(*(distances + nod[3]->idx) > d)
-	{
-	  *(distances + nod[3]->idx) = d;
-	}
+	rtn = 1;
+	*(distances + nod[3]->idx) = d;
       }
     }
-    */
   }
+  return(rtn);
 }
 
 /*!
@@ -1458,7 +1535,7 @@ static WlzErrorNum WlzCMeshFMarAddSeeds3D(AlcHeap *nodQ,
 	} while(edu1 != edu0);
 	if(hit == 0)
 	{
-	  nod0->flags |= WLZ_CMESH_NOD_FLAG_UPWIND;
+	  nod0->flags |= WLZ_CMESH_NOD_FLAG_KNOWN | WLZ_CMESH_NOD_FLAG_UPWIND;
 	}
 	else
 	{
@@ -1989,13 +2066,14 @@ static WlzErrorNum WlzCMeshFMarElmQInit3D(AlcHeap *queue, WlzCMeshNod3D *nod)
 }
 
 /*!
+* \return	Element priority value.
 * \return	Element priority.
 * \ingroup	W;zMesh
 * \brief	Computes the priority value of an element queue entry
 * 		given the element and it's current node about which
 * 		the elements are clustered.
 *		The priority given by:
-*		\f$p = 6 - \sum_{i=0}^{2}{p_i}\f$
+*		\f$p = \sum_{i=0}^{2}{p_i}\f$
 *		where
 *		\f$p_i = 2\f$ if the node is upwind or the current node,
 *		\f$p_i = 1\f$ if the node is an other known node
@@ -2022,7 +2100,8 @@ static int	WlzCMeshFMarElmQCalcPriority2D(WlzCMeshElm2D *elm,
 }
 
 /*!
-* \ingroup	W;zMesh
+* \return	Element priority value.
+* \ingroup	WlzMesh
 * \brief	Computes the priority value of an element queue entry
 * 		given the element and it's current node about which
 * 		the elements are clustered.
