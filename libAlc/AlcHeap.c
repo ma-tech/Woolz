@@ -236,8 +236,7 @@ void     	AlcHeapAllEntFree(AlcHeap *heap, int reallyFree)
 * \ingroup      AlcHeap
 * \return       Error code.
 * \brief        Inserts the given entry into the queue.
-* \param        queue                   Given constrained mesh node priority
-*                                       queue.
+* \param        heap                  Given heap data structure.
 * \param        ent                    Entry to insert.
 */
 AlcErrno	AlcHeapInsertEnt(AlcHeap *heap, void *ent)
