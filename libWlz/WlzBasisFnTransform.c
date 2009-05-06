@@ -726,6 +726,10 @@ static WlzCMeshTransform *WlzBasisFnInvertAndSetCMesh2D(
   {
     errNum = WlzCMeshTransformInvert(meshTr);
   }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshFixNegativeElms(meshTr->mesh);
+  }
   if(dstErr != NULL)
   {
     *dstErr = errNum;
