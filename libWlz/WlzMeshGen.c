@@ -183,19 +183,6 @@ static WlzErrorNum 		WlzCMeshAddLBTNode3D(
 				  WlzLBTDomain3D *lDom,
 				  WlzGreyValueWSpace *iGVWSp,
 				  int idN);
-static WlzErrorNum  		WlzCMeshSetElm2D(
-				  WlzCMesh2D *mesh,
-				  WlzCMeshElm2D *elm,
-				  WlzCMeshNod2D *nod0,
-				  WlzCMeshNod2D *nod1,
-				  WlzCMeshNod2D *nod2);
-static WlzErrorNum  		WlzCMeshSetElm3D(
-				  WlzCMesh3D *mesh,
-				  WlzCMeshElm3D *elm,
-				  WlzCMeshNod3D *nod0,
-				  WlzCMeshNod3D *nod1,
-				  WlzCMeshNod3D *nod2,
-				  WlzCMeshNod3D *nod3);
 static WlzErrorNum 		WlzCMeshAddEntCb(
 				  WlzCMeshCbEntry **list,
 				  WlzCMeshCbFn fn,
@@ -1161,7 +1148,7 @@ static WlzCMeshElm3D *WlzCMeshAllocElm3D(WlzCMesh3D *mesh)
 * \param	nod1			Second mesh node of element.
 * \param	nod2			Third mesh node of element.
 */
-static WlzErrorNum  WlzCMeshSetElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm,
+WlzErrorNum  	WlzCMeshSetElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm,
 				     WlzCMeshNod2D *nod0, WlzCMeshNod2D *nod1,
 				     WlzCMeshNod2D *nod2)
 {
@@ -1237,7 +1224,7 @@ static WlzErrorNum  WlzCMeshSetElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm,
 * \param	nod2			Third mesh node of element.
 * \param	nod3			Fourth mesh node of element.
 */
-static WlzErrorNum  WlzCMeshSetElm3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm,
+WlzErrorNum  	WlzCMeshSetElm3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm,
 				     WlzCMeshNod3D *nod0, WlzCMeshNod3D *nod1,
 				     WlzCMeshNod3D *nod2, WlzCMeshNod3D *nod3)
 {
