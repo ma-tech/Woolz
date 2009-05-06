@@ -2727,3 +2727,207 @@ WlzCMesh3D	*WlzCMeshCopy3D(WlzCMesh3D *gvnMesh, size_t datSz,
   }
   return(newMesh);
 }
+
+/*!
+* \return       Woolz error code.
+* \ingroup      WlzMesh
+* \brief        Reorders nodes in any elements which have negative
+		area.
+* \param        mesh                     The given constrained mesh.
+*/
+WlzErrorNum     WlzCMeshFixNegativeElms(WlzCMeshP mesh)
+{
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if(mesh.v == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(mesh.m2->type)
+    {
+      case WLZ_CMESH_TRI2D:
+        errNum = WlzCMeshFixNegativeElms2D(mesh.m2);
+        break;
+      case WLZ_CMESH_TET3D:
+        errNum = WlzCMeshFixNegativeElms3D(mesh.m3);
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+        break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return       Woolz error code.
+* \ingroup      WlzMesh
+* \brief        Reorders nodes in any elements which have negative
+		area.
+* \param        mesh                     Given 2D constrained mesh.
+*/
+WlzErrorNum     WlzCMeshFixNegativeElms2D(WlzCMesh2D *mesh)
+{
+  int		idE,
+  		idG;
+  double	sA2;
+  WlzCMeshElm2D *elm;
+  WlzCMeshEdgU2D *edu0,
+  		*edu1,
+		*edu2;
+  WlzCMeshNod2D	*nod[3];
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  /* TODO Check this function. */
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_TRI2D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	WlzCMeshElmGetNodes2D(elm, nod + 0, nod + 1, nod + 2);
+	sA2 = WlzGeomTriangleSnArea2(nod[0]->pos, nod[1]->pos, nod[2]->pos);
+	if(fabs(sA2) < WLZ_MESH_TOLERANCE_SQ)
+	{
+	  /* Might need to remove the element and repair the mesh here? */
+	  errNum = WLZ_ERR_DOMAIN_DATA;
+	}
+	else if(sA2 < WLZ_MESH_TOLERANCE_SQ)
+	{
+	  /* Unlink the edge uses from the rest of the mesh. */
+	  for(idG = 0; idG < 3; ++idG)
+	  {
+	    edu0 = elm->edu + idG;
+	    if((edu0->opp != NULL) && (edu0->opp->opp != NULL) &&
+	       (edu0->opp->opp->elm == elm))
+            {
+	      edu0->opp->opp = NULL;
+	    }
+	    if(edu0 == edu0->nnxt)
+	    {
+	      edu0->nnxt = NULL;
+	    }
+	    else
+	    {
+	      edu1 = edu0;
+	      while((edu2 = edu1->nnxt) != edu0)
+	      {
+	        edu1 = edu2;
+	      }
+	      edu1->nnxt = edu0->nnxt;
+	      if(edu0->nod->edu == edu0)
+	      {
+	        edu0->nod->edu = edu1;
+	      }
+	    }
+	  }
+	  /* Create connnectivities with the element and to the rest of the
+	   * mesh. */
+	  errNum = WlzCMeshSetElm2D(mesh, elm, nod[1], nod[0], nod[2]);
+	}
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return       Woolz error code.
+* \ingroup      WlzMesh
+* \brief        Reorders nodes in any elements which have negative
+		area.
+* \param        mesh                     Given 3D constrained mesh.
+*/
+WlzErrorNum     WlzCMeshFixNegativeElms3D(WlzCMesh3D *mesh)
+{
+  int		idE,
+		idF,
+  		idG;
+  double	sV6;
+  WlzCMeshElm3D *elm;
+  WlzCMeshFace	*fce0;
+  WlzCMeshEdgU3D *edu0,
+  		*edu1,
+		*edu2;
+  WlzCMeshNod3D	*nod[4];
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  /* TODO Check this function. */
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_TET3D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	WlzCMeshElmGetNodes3D(elm, nod + 0, nod + 1, nod + 2, nod + 3);
+	sV6 = WlzGeomTetraSnVolume6(nod[0]->pos, nod[1]->pos, nod[2]->pos,
+				    nod[3]->pos);
+	if(fabs(sV6) < WLZ_MESH_TOLERANCE_SQ)
+	{
+	  /* Might need to remove the element and repair the mesh here? */
+	  errNum = WLZ_ERR_DOMAIN_DATA;
+	}
+	else if(sV6 < WLZ_MESH_TOLERANCE_SQ)
+	{
+	  for(idF = 0; idF < 4; ++idF)
+	  {
+	    fce0 = elm->face + idF;
+	    /* Unlink edge uses from the nodes. */
+	    for(idG = 0; idG < 3; ++idG)
+	    {
+	      edu0 = fce0->edu + idG;
+	      if(edu0 == edu0->nnxt)
+	      {
+		edu0->nnxt = NULL;
+	      }
+	      else
+	      {
+		edu1 = edu0;
+		edu2 = edu1->nnxt;
+		while(edu2 != edu0)
+		{
+		  edu1 = edu2;
+		  edu2 = edu2->nnxt;
+		}
+		edu1->nnxt = edu2->nnxt;
+		edu1->nod->edu = edu1;
+	      }
+	    }
+	    /* Unlink face. Need to make sure that the opp - opp link is back
+	     * to this element and not some other that will replace it. */
+	    if((fce0->opp != NULL) && (fce0->opp->opp != NULL) &&
+	       (fce0->opp->opp->elm == elm))
+	    {
+	      fce0->opp->opp = NULL;
+	    }
+	  }
+	  /* Create connnectivities with the element and to the rest of the
+	   * mesh. */
+	  errNum = WlzCMeshSetElm3D(mesh, elm, nod[1], nod[0], nod[2],
+	  			    nod[3]);
+	}
+      }
+    }
+  }
+  return(errNum);
+}
