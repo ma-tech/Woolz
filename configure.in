@@ -156,9 +156,23 @@ LIBS_EXTFF=""
 AC_SUBST(LIBS_EXTFF)
 
 AC_PROG_CC
-if test "$GCC" = yes
+
+AC_ARG_ENABLE(icc,
+  [  --enable-icc          build using the Intel C compiler],
+  GCC= "no"
+  CC="icc"
+  CXX="icpc"
+  LD="xild"
+  AR="xiar"
+  )
+
+if test "$CC" = "gcc"
 then
   CFLAGS="${CFLAGS} -pipe -Wall"
+fi
+if test "$CC" = "icc"
+then
+  CFLAGS="${CFLAGS} -w2"
 fi
 
 CFLAGS="${CFLAGS} ${CPUDEF}"
@@ -175,32 +189,43 @@ AC_ARG_ENABLE(optimise,
     then
       CFLAGS="${CFLAGS} -O2"
     else
-      # AIX CC
-      if test "`uname`" = "AIX"
-      then
-        CFLAGS="${CFLAGS} -O3"
-      fi
-      # SGI CC
-      if test "`uname`" = "IRIX" || test "`uname`" = "IRIX64" 
-      then
-        CFLAGS="${CFLAGS} -Ofast"
-	LDDFLAGS="${LDFLAGS} -IPA"
-      fi
-      # HP-UX CC
-      if test "`uname`" = "HP-UX"
+      #Intel CC
+      if test "$CC" = "icc"
       then
         CFLAGS="${CFLAGS} -fast"
-      fi
-      # Sun CC
-      if test "`uname`" = "SunOS"
-      then
-        CFLAGS="${CFLAGS} -fast"
+      else
+	# AIX CC
+	if test "`uname`" = "AIX"
+	then
+	  CFLAGS="${CFLAGS} -O3"
+	fi
+	# SGI CC
+	if test "`uname`" = "IRIX" || test "`uname`" = "IRIX64" 
+	then
+	  CFLAGS="${CFLAGS} -Ofast"
+	  LDDFLAGS="${LDFLAGS} -IPA"
+	fi
+	# HP-UX CC
+	if test "`uname`" = "HP-UX"
+	then
+	  CFLAGS="${CFLAGS} -fast"
+	fi
+	# Sun CC
+	if test "`uname`" = "SunOS"
+	then
+	  CFLAGS="${CFLAGS} -fast"
+	fi
       fi
     fi)
 
 AC_ARG_ENABLE(openmp,
   [  --enable-openmp	build with openmp flags set],
-    # INTEL CC
+    # GNU CC
+    if test "$CC" = "gcc"
+    then
+      CFLAGS="${CFLAGS} -fopenmp"
+    fi
+    # Intel CC
     if test "$CC" = "icc"
     then
       CFLAGS="${CFLAGS} -openmp"
@@ -314,7 +339,10 @@ Woolz core has been configured for ${host}
   Source directory:                ${srcdir}
   Installation directory:          ${prefix}
   C compiler:                      ${CC}
-  CFLAGS:                         ${CFLAGS}
+  C++ compiler:                    ${CXX}
+  Linker:                          ${LD}
+  Archiver:                        ${AR}
+  CFLAGS:                          ${CFLAGS}
   LIBS needed for configure:       ${LIBS_EXTFF} ${LIBS}
   Woolz external file format code: ${ENABLE_EXTFF}
   Java Woolz binding:              ${ENABLE_JAVA}
