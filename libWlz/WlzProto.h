@@ -1515,6 +1515,12 @@ extern WlzErrorNum		WlzCMeshCmpElmFeat3D(
 				  double **dstVol,
 				  double **dstMinLen,
 				  double **dstMaxLen);
+extern WlzErrorNum		WlzCMeshFixNegativeElms(
+				  WlzCMeshP mesh);
+extern WlzErrorNum		WlzCMeshFixNegativeElms2D(
+				  WlzCMesh2D *mesh);
+extern WlzErrorNum		WlzCMeshFixNegativeElms3D(
+				  WlzCMesh3D *mesh);
 extern void            		WlzCMeshSetVertices2D(
 				  WlzCMesh2D *mesh,
 				  WlzDVertex2 *vtxBuf,
@@ -3548,6 +3554,19 @@ extern WlzCMesh3D               *WlzCMeshFromObj3D(
 				  WlzObject **dstDilObj,
 				  int conform,
                                   WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzCMeshSetElm2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshElm2D *elm,
+				  WlzCMeshNod2D *nod0,
+				  WlzCMeshNod2D *nod1,
+				  WlzCMeshNod2D *nod2);
+extern WlzErrorNum		WlzCMeshSetElm3D(
+				  WlzCMesh3D *mesh,
+				  WlzCMeshElm3D *elm,
+				  WlzCMeshNod3D *nod0,
+				  WlzCMeshNod3D *nod1,
+				  WlzCMeshNod3D *nod2,
+				  WlzCMeshNod3D *nod3);
 extern WlzErrorNum		WlzCMeshAddNewNodCb2D(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshCbFn fn,
