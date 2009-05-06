@@ -188,10 +188,10 @@ int		 WlzGeomVxInTriangle2D(WlzDVertex2 p0, WlzDVertex2 p1,
   if(fabs(delta) > eps)
   {
     delta = 1.0 / delta;
-    tC = p2.vtX - pP.vtX;
-    tF = p2.vtY - pP.vtY;
-    l0 = delta * ((tB * tF) - (tC * tE));
-    l1 = delta * ((tC * tD) - (tA * tF));
+    tC = pP.vtX - p2.vtX;
+    tF = pP.vtY - p2.vtY;
+    l0 = delta * ((tC * tE) - (tB * tF));
+    l1 = delta * ((tA * tF) - (tC * tD));
     l2 = 1.0 - (l0 + l1);
     if((l0 < -eps) || (l1 < -eps) || (l2 < -eps))
     {
