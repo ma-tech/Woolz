@@ -155,8 +155,7 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
 					WlzIVertex2 **dstCoords,
 					WlzSampleFn samFn, int samFac)
 {
-  int		tI0,
-  		gSz,
+  int		gSz,
 		iPos,
 		bIdx,
 		bWidth,
@@ -214,7 +213,6 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    tI0 = (samFac * samFac);
     if(samFac > 1)
     {
       aSz = ((2 * aSz) / (samFac * samFac)) + 1000;

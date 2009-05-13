@@ -146,23 +146,34 @@ WlzObject *WlzThreshold(WlzObject	*obj,
   if( errNum == WLZ_ERR_NONE ){
     switch( threshV.type ){
     case WLZ_GREY_INT:
-      thresh_i = thresh_f = thresh_d = threshV.v.inv;
+      thresh_i = threshV.v.inv;
+      thresh_f = (float )thresh_i;
+      thresh_d = thresh_i;
       break;
     case WLZ_GREY_SHORT:
-      thresh_i = thresh_f = thresh_d = (int) threshV.v.shv;
+      thresh_i = (int )(threshV.v.shv);
+      thresh_f = (float )thresh_i;
+      thresh_d = thresh_i;
       break;
     case WLZ_GREY_UBYTE:
-      thresh_i = thresh_f = thresh_d = (int) threshV.v.ubv;
+      thresh_i = (int )(threshV.v.ubv);
+      thresh_f = (float )thresh_i;
+      thresh_d = thresh_i;
       break;
     case WLZ_GREY_FLOAT:
-      thresh_i = thresh_f = thresh_d = threshV.v.flv;
+      thresh_f = threshV.v.flv;
+      thresh_d = thresh_f;
+      thresh_i = (int )thresh_f;
       break;
     case WLZ_GREY_DOUBLE:
-      thresh_i = thresh_f = thresh_d = threshV.v.dbv;
+      thresh_d = threshV.v.dbv;
+      thresh_f = (float )thresh_d;
+      thresh_i = (int )thresh_d;
       break;
     case WLZ_GREY_RGBA:
-      thresh_i = WLZ_RGBA_MODULUS(threshV.v.rgbv);
-      thresh_f = thresh_d = thresh_i;
+      thresh_d = WLZ_RGBA_MODULUS(threshV.v.rgbv);
+      thresh_f = (float )thresh_d;
+      thresh_i = (int )thresh_d;
       break;
     default:
       errNum = WLZ_ERR_GREY_TYPE;

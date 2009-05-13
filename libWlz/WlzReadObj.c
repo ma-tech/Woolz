@@ -167,10 +167,10 @@ static WlzCMeshTransform	*WlzReadCMeshTransform2D(
 static WlzCMeshTransform	*WlzReadCMeshTransform3D(
 				  FILE *fp,
 				  WlzErrorNum *);
-WlzCMesh2D			*WlzReadCMesh2D(
+static WlzCMesh2D		*WlzReadCMesh2D(
 				  FILE *fp,
 				  WlzErrorNum *dstErr);
-WlzCMesh3D			*WlzReadCMesh3D(
+static WlzCMesh3D		*WlzReadCMesh3D(
 				  FILE *fp,
 				  WlzErrorNum *dstErr);
 
@@ -243,13 +243,13 @@ static float 	getfloat(FILE *fp)
 fread(cin,sizeof(char),4,fp);
 
 #if defined (__sparc) || defined (__mips) || defined (__ppc)
-  cout[0] = cin[1] - 1;
+  cout[0] = (char )(cin[1] - 1);
   cout[1] = cin[0];
   cout[2] = cin[3];
   cout[3] = cin[2];
 #endif /* __sparc || __mips */
 #if defined (__x86) || defined (__alpha)
-  cout[3] = cin[1] - 1;
+  cout[3] = (char )(cin[1] - 1);
   cout[2] = cin[0];
   cout[1] = cin[3];
   cout[0] = cin[2];
@@ -845,7 +845,7 @@ static WlzErrorNum WlzReadPixelV(FILE *fP, WlzPixelV *pV, int nPV)
   while((errNum == WLZ_ERR_NONE) && (nPV-- > 0))
   {
 
-    pV->type = getc(fP);
+    pV->type = (WlzGreyType )getc(fP);
 
     errNum = WlzReadGreyV(fP, pV->type, &(pV->v), 1);
     ++pV;
@@ -879,7 +879,7 @@ static WlzErrorNum WlzReadGreyV(FILE *fP, WlzGreyType gType, WlzGreyV *gV,
     case WLZ_GREY_SHORT:
       while(nGV-- > 0)
       {
-	gV->shv = getshort(fP);
+	gV->shv = (short )getshort(fP);
 	++gV;
       }
       break;
@@ -1340,7 +1340,7 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
 
     packing = (WlzGreyType) getc(fp);
 
-    backgrnd.v.shv = getword(fp);
+    backgrnd.v.shv = (short )getword(fp);
 
     /* create the value table */
     if( (values.v = WlzMakeValueTb(type, l1, ll, k1,
@@ -1371,14 +1371,14 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
 	case WLZ_GREY_SHORT:
 	  g.shp = v.shp+iwsp.lftpos-kstart;
 	  for (i=0; i<iwsp.colrmn; i++){
-	    *g.shp++ = getshort(fp);
+	    *g.shp++ = (short )getshort(fp);
 	  }
 	  break;
 	case WLZ_GREY_UBYTE:
 	  g.shp = v.shp+iwsp.lftpos-kstart;
 	  for (i=0; i<iwsp.colrmn; i++){
 
-		  *g.shp++ = getc(fp);
+		  *g.shp++ = (short )getc(fp);
 
 	  }
 	  break;
@@ -1407,7 +1407,7 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
 
     packing = (WlzGreyType) getc(fp);
 
-    backgrnd.v.ubv = getword(fp);
+    backgrnd.v.ubv = (WlzUByte )getword(fp);
 
     /* create the value table */
     if( (values.v = WlzMakeValueTb(type, l1, ll, k1,
@@ -1437,7 +1437,7 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
 	g.ubp = v.ubp+iwsp.lftpos-kstart;
 	for (i=0; i<iwsp.colrmn; i++){
 
-	  *g.ubp++ = getc(fp);
+	  *g.ubp++ = (WlzUByte )getc(fp);
 
 	}
 	if (iwsp.intrmn == 0) {
@@ -1670,11 +1670,11 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
     values.inp = (int *) AlcMalloc(num*sizeof(int));
     break;
   case WLZ_GREY_SHORT:
-    vtb.r->bckgrnd.v.shv = getword(fp);
+    vtb.r->bckgrnd.v.shv = (short )getword(fp);
     values.shp = (short *) AlcMalloc(num*sizeof(short));
     break;
   case WLZ_GREY_UBYTE:
-    vtb.r->bckgrnd.v.ubv = getword(fp);
+    vtb.r->bckgrnd.v.ubv = (WlzUByte )getword(fp);
     values.ubp = (WlzUByte *) AlcMalloc(num*sizeof(WlzUByte));
     break;
   case WLZ_GREY_FLOAT:
@@ -1712,7 +1712,7 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
       break;
     case WLZ_GREY_SHORT:
       for (i=0 ; i<num ; i++){
-short shv = getshort(fp);
+        short shv = (short )getshort(fp);
 	*values.inp++ = shv;
 /*fprintf(stderr, "%d\n", shv);*/}
       break;
@@ -1732,12 +1732,12 @@ short shv = getshort(fp);
     switch (packing) {
     case WLZ_GREY_SHORT:
       for (i=0 ; i<num ; i++)
-	*values.shp++ = getshort(fp);
+	*values.shp++ = (short )getshort(fp);
       break;
     case WLZ_GREY_UBYTE:
 		for (i=0 ; i<num ; i++){
 
-	*values.shp++ = getc(fp);
+	*values.shp++ = (short )getc(fp);
 
 		}
       break;
@@ -1911,7 +1911,7 @@ static WlzProperty WlzReadProperty(
 
   rtnProp.core = NULL;
 
-  type = getc(fp);
+  type = (WlzObjectType )getc(fp);
 
   switch( type ){
 
@@ -1958,7 +1958,7 @@ static WlzProperty WlzReadProperty(
 
     /* read the property values */
 
-    rtnProp.emap->emapType = getc(fp);
+    rtnProp.emap->emapType = (WlzEMAPPropertyType )getc(fp);
 
     fread(rtnProp.emap->modelUID,
 	  EMAP_PROPERTY_UID_LENGTH, 1, fp);
@@ -2059,7 +2059,7 @@ static WlzPropertyList *WlzReadPropertyList(FILE *fp, WlzErrorNum *dstErr)
 
   /* Find number of properties */
 
-  type = getc(fp);
+  type = (WlzObjectType )getc(fp);
 
   switch(type)
   {
@@ -2760,7 +2760,7 @@ static WlzWarpTrans *WlzReadWarpTrans(FILE *fp, WlzErrorNum *dstErr)
       eptr = obj->eltlist;
       for(i=0; i<obj->nelts; i++, eptr++){
 
-	eptr->type = (int) getc(fp);
+	eptr->type = (WlzElementType )getc(fp);
 
 	eptr->n = getword(fp);
 	for(j=0; j<3; j++){
@@ -2830,7 +2830,7 @@ static WlzFMatchObj *WlzReadFMatchObj(FILE *fp,
       else {
 	mptr = obj->matchpts;
 	for(i=0; i<obj->nopts; i++, mptr++){
-	  mptr->type = getword(fp);
+	  mptr->type = (WlzMatchType )getword(fp);
 	  mptr->node = getword(fp);
 	  mptr->ptcoords.vtX = getfloat(fp);
 	  mptr->ptcoords.vtY = getfloat(fp);
@@ -2944,7 +2944,7 @@ static WlzContour *WlzReadContour(FILE *fP, WlzErrorNum *dstErr)
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
 
-  cType = getc(fP);
+  cType = (WlzObjectType )getc(fP);
 
   switch(cType)
   {
@@ -3006,7 +3006,7 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
   		nrm3D[3];
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  mType = getc(fP);
+  mType = (WlzGMModelType )getc(fP);
 
   switch(mType)
   {
@@ -3646,7 +3646,7 @@ static WlzCMeshTransform *WlzReadCMeshTransform3D(FILE *fp,
 * \param	fp			Given file pointer.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzCMesh2D	*WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
+static WlzCMesh2D *WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
 {
   int		idE,
   		idN,
@@ -3806,7 +3806,7 @@ WlzCMesh2D	*WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
 * \param	fp			Given file pointer.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzCMesh3D	*WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
+static WlzCMesh3D *WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
 {
   int		idE,
   		idN,

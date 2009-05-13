@@ -3,7 +3,8 @@
 #else
 #if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id:"
-#else static char _Wlz3DSubS_ction_c[] = "MRC HGU $Id:";
+#else
+static char _Wlz3DSubSection_c[] = "MRC HGU $Id:";
 #endif
 #endif
 /*!
@@ -265,9 +266,9 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
 	yp = iwsp.linpos - WLZ_NINT(viewStr->minvals.vtY);
 	for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
 	  xp = k - WLZ_NINT(viewStr->minvals.vtX);
-	  vtx.vtX = viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp];
-	  vtx.vtY = viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp];
-	  vtx.vtZ = viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp];
+	  vtx.vtX = (float )(viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp]);
+	  vtx.vtY = (float )(viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp]);
+	  vtx.vtZ = (float )(viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp]);
 
 	  /* apply interpolation */
 	  switch( interp ){
@@ -330,7 +331,7 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
 		((gVWSp->gVal[7]).shv *
 		 tDV0.vtX * tDV0.vtY * tDV0.vtZ);
 	      tD0 = WLZ_CLAMP(tD0, SHRT_MIN, SHRT_MAX);
-	      *(gwsp.u_grintptr.shp) = WLZ_NINT(tD0);
+	      *(gwsp.u_grintptr.shp) = (short )WLZ_NINT(tD0);
 	      break;
 	    case WLZ_GREY_UBYTE:
 	      tD0 = ((gVWSp->gVal[0]).ubv *
@@ -350,7 +351,7 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
 		((gVWSp->gVal[7]).ubv *
 		 tDV0.vtX * tDV0.vtY * tDV0.vtZ);
 	      tD0 = WLZ_CLAMP(tD0, 0, 255);
-	      *(gwsp.u_grintptr.ubp) = WLZ_NINT(tD0);
+	      *(gwsp.u_grintptr.ubp) = (WlzUByte )WLZ_NINT(tD0);
 	      break;
 	    case WLZ_GREY_FLOAT:
 	      tD0 = ((gVWSp->gVal[0]).flv *
@@ -370,7 +371,7 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
 		((gVWSp->gVal[7]).flv *
 		 tDV0.vtX * tDV0.vtY * tDV0.vtZ);
 	      tD0 = WLZ_CLAMP(tD0, FLT_MIN, FLT_MAX);
-	      *(gwsp.u_grintptr.flp) = tD0;
+	      *(gwsp.u_grintptr.flp) = (float )tD0;
 	      break;
 	    case WLZ_GREY_DOUBLE:
 	      tD0 = ((gVWSp->gVal[0]).dbv *
@@ -442,9 +443,9 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
 	yp = iwsp.linpos - WLZ_NINT(viewStr->minvals.vtY);
 	for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
 	  xp = k - WLZ_NINT(viewStr->minvals.vtX);
-	  vtx.vtX = viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp];
-	  vtx.vtY = viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp];
-	  vtx.vtZ = viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp];
+	  vtx.vtX = (float )(viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp]);
+	  vtx.vtY = (float )(viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp]);
+	  vtx.vtZ = (float )(viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp]);
 
 	  if( WlzInsideDomain(obj, WLZ_NINT(vtx.vtZ), WLZ_NINT(vtx.vtY),
 			      WLZ_NINT(vtx.vtX), NULL) ){

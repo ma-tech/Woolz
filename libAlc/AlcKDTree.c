@@ -172,7 +172,7 @@ int		AlcKDTTreeFacts(AlcKDTTree *tree, FILE *fP)
 
   if(tree)
   {
-    (void )fprintf(fP, "type         %-d\n", tree->type);
+    (void )fprintf(fP, "type         %-d\n", (int )(tree->type));
     (void )fprintf(fP, "dim          %-d\n", tree->dim);
     (void )fprintf(fP, "keySz        %-d\n", (int )(tree->keySz));
     (void )fprintf(fP, "tol          %-g\n", tree->tol);

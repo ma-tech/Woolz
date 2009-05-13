@@ -238,7 +238,7 @@ static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *dstIDom,
 	itvLen = 1;
         itvLft = dstPos.vtX;
       }
-      *dstBuf = dCode | 0x80;
+      *dstBuf = (WlzUByte )(dCode | 0x80);
     }
     if((itvLen > 0) && ((cnt == 0) || (maximal == 0)))
     {
@@ -397,7 +397,7 @@ static WlzErrorNum WlzNMSuppress2DBufD(WlzIntervalDomain *dstIDom,
     }
     if(maximal)
     {
-      *dstBuf = dCode | 0x80;
+      *dstBuf = (WlzUByte )(dCode | 0x80);
     }
     if((itvLen > 0) && ((cnt == 0) || (maximal == 0)))
     {

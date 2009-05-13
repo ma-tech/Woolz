@@ -127,7 +127,7 @@ WlzObject *WlzGauss2(
 
   /* now start work */
   if( errNum == WLZ_ERR_NONE ){
-    alpha = (float) 4.0 * log( (double) 2.0 );
+    alpha = (float )(4.0 * log((double )2.0));
     
     /* set up x function parameters */
     x_params.mask_size = (((int) wx * 4)/2)*2 + 1;
@@ -142,7 +142,7 @@ WlzObject *WlzGauss2(
 
       case 0:
 	for(i=0, sum = -AFACTOR; i <= n; i++){
-	  value = (int) (AFACTOR * exp(((double) -alpha*i*i/wx/wx)));
+	  value = (int )(AFACTOR * exp(((double) -alpha*i*i/wx/wx)));
 	  *(x_params.mask_values+n-i) = value;
 	  *(x_params.mask_values+n+i) = value;
 	  sum += 2 * value;
@@ -153,7 +153,7 @@ WlzObject *WlzGauss2(
       case 1:
 	*(x_params.mask_values+n) = 0.0;
 	for(i=1, sum = 0; i <= n; i++){
-	  value = (int) AFACTOR * i * exp(((double) -alpha*i*i/wx/wx));
+	  value = (int )(AFACTOR * i * exp(((double) -alpha*i*i/wx/wx)));
 	  *(x_params.mask_values+n-i) = value;
 	  *(x_params.mask_values+n+i) = -value;
 	  sum += value;
@@ -167,13 +167,14 @@ WlzObject *WlzGauss2(
 
       case 2:
 	for(i=0; i <= n; i++){
-	  value = (int) AFACTOR * (alpha * i*i / wx/wx -1) *
-	    exp(((double) -alpha*i*i/wx/wx));
+	  value = (int )(AFACTOR * (alpha * i*i / wx/wx -1) *
+	                 exp(((double) -alpha*i*i/wx/wx)));
 	  *(x_params.mask_values+n-i) = value;
 	  *(x_params.mask_values+n+i) = value;
 	}
-	x_params.norm_factor = *(x_params.mask_values+n) * wx*wx*wx / 4 / alpha
-	  / sqrt( log( (double) 2 ) / WLZ_M_PI );
+	x_params.norm_factor = (int )(*(x_params.mask_values+n) * wx*wx*wx /
+	                              4 / alpha / sqrt(log((double )2) /
+				      WLZ_M_PI ));
 	break;
 
       default:
@@ -200,7 +201,7 @@ WlzObject *WlzGauss2(
 
       case 0:
 	for(i=0, sum = -AFACTOR; i <= n; i++){
-	  value = (int) AFACTOR * exp(((double) -alpha*i*i/wy/wy));
+	  value = (int )(AFACTOR * exp(((double) -alpha*i*i/wy/wy)));
 	  *(y_params.mask_values+n-i) = value;
 	  *(y_params.mask_values+n+i) = value;
 	  sum += 2 * value;
@@ -211,7 +212,7 @@ WlzObject *WlzGauss2(
       case 1:
 	*(y_params.mask_values+n) = 0.0;
 	for(i=1, sum = 0; i <= n; i++){
-	  value = (int) AFACTOR * i * exp(((double) -alpha*i*i/wy/wy));
+	  value = (int )(AFACTOR * i * exp(((double) -alpha*i*i/wy/wy)));
 	  *(y_params.mask_values+n-i) = value;
 	  *(y_params.mask_values+n+i) = -value;
 	  sum += value;
@@ -225,13 +226,13 @@ WlzObject *WlzGauss2(
 
       case 2:
 	for(i=0; i <= n; i++){
-	  value = (int) AFACTOR * (alpha * i*i / wy/wy -1) *
-	    exp(((double) -alpha*i*i/wy/wy));
+	  value = (int )(AFACTOR * (alpha * i*i / wy/wy -1) *
+	                 exp(((double) -alpha*i*i/wy/wy)));
 	  *(y_params.mask_values+n-i) = value;
 	  *(y_params.mask_values+n+i) = value;
 	}
-	y_params.norm_factor = *(y_params.mask_values+n) * wy*wy*wy / 4 / alpha
-	  / sqrt( log( (double) 2 ) / WLZ_M_PI );
+	y_params.norm_factor = (int )(*(y_params.mask_values+n) * wy*wy*wy / 4 / alpha
+	  / sqrt( log( (double) 2 ) / WLZ_M_PI ));
 	break;
 
       default:
@@ -313,19 +314,19 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.inp++ = intSum/factor;
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = intSum/factor;
+	*outbuf.shp++ = (short )(intSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(intSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = intSum/factor;
+	*outbuf.flp++ = (float )(intSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = intSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(intSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -349,19 +350,19 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.inp++ = intSum/factor;
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = intSum/factor;
+	*outbuf.shp++ = (short )(intSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(intSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = intSum/factor;
+	*outbuf.flp++ = (float )(intSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = intSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(intSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -385,19 +386,19 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.inp++ = intSum/factor;
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = intSum/factor;
+	*outbuf.shp++ = (short )(intSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(intSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = intSum/factor;
+	*outbuf.flp++ = (float )(intSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = intSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(intSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -423,19 +424,19 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.inp++ = intSum/factor;
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = intSum/factor;
+	*outbuf.shp++ = (short )(intSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(intSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = intSum/factor;
+	*outbuf.flp++ = (float )(intSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = intSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(intSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -459,19 +460,19 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.inp++ = intSum/factor;
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = intSum/factor;
+	*outbuf.shp++ = (short )(intSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(intSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = intSum/factor;
+	*outbuf.flp++ =(float )( intSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = intSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(intSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -495,19 +496,19 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.inp++ = intSum/factor;
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = intSum/factor;
+	*outbuf.shp++ = (short )(intSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(intSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = intSum/factor;
+	*outbuf.flp++ = (float )(intSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = intSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(intSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -533,19 +534,19 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.inp++ = intSum/factor;
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = intSum/factor;
+	*outbuf.shp++ = (short )(intSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(intSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = intSum/factor;
+	*outbuf.flp++ = (float )(intSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = intSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(intSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -569,19 +570,19 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.inp++ = intSum/factor;
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = intSum/factor;
+	*outbuf.shp++ = (short )(intSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(intSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = intSum/factor;
+	*outbuf.flp++ = (float )(intSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = intSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(intSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -605,19 +606,19 @@ WlzErrorNum Wlz1DConv(
 	*outbuf.inp++ = intSum/factor;
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = intSum/factor;
+	*outbuf.shp++ = (short )(intSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) intSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(intSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = intSum/factor;
+	*outbuf.flp++ = (float )(intSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = intSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(intSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(intSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -640,22 +641,22 @@ WlzErrorNum Wlz1DConv(
       inbuf.flp++;
       switch( stwspc->outbuf.type ){
       case WLZ_GREY_INT:
-	*outbuf.inp++ = dblSum/factor;
+	*outbuf.inp++ = (int )(dblSum/factor);
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = dblSum/factor;
+	*outbuf.shp++ = (short )(dblSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) dblSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(dblSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = dblSum/factor;
+	*outbuf.flp++ = (float )(dblSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = dblSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(dblSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(dblSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -676,22 +677,22 @@ WlzErrorNum Wlz1DConv(
       i++;
       switch( stwspc->outbuf.type ){
       case WLZ_GREY_INT:
-	*outbuf.inp++ = dblSum/factor;
+	*outbuf.inp++ = (int )(dblSum/factor);
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = dblSum/factor;
+	*outbuf.shp++ = (short )(dblSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) dblSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(dblSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = dblSum/factor;
+	*outbuf.flp++ = (float )(dblSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = dblSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(dblSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(dblSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -712,22 +713,22 @@ WlzErrorNum Wlz1DConv(
       i++;
       switch( stwspc->outbuf.type ){
       case WLZ_GREY_INT:
-	*outbuf.inp++ = dblSum/factor;
+	*outbuf.inp++ = (int )(dblSum/factor);
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = dblSum/factor;
+	*outbuf.shp++ = (short )(dblSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) dblSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(dblSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = dblSum/factor;
+	*outbuf.flp++ = (float )(dblSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = dblSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(dblSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(dblSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -750,22 +751,22 @@ WlzErrorNum Wlz1DConv(
       inbuf.dbp++;
       switch( stwspc->outbuf.type ){
       case WLZ_GREY_INT:
-	*outbuf.inp++ = dblSum/factor;
+	*outbuf.inp++ = (int )(dblSum/factor);
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = dblSum/factor;
+	*outbuf.shp++ = (short )(dblSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) dblSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(dblSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = dblSum/factor;
+	*outbuf.flp++ = (float )(dblSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = dblSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(dblSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(dblSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -786,22 +787,22 @@ WlzErrorNum Wlz1DConv(
       i++;
       switch( stwspc->outbuf.type ){
       case WLZ_GREY_INT:
-	*outbuf.inp++ = dblSum/factor;
+	*outbuf.inp++ = (int )(dblSum/factor);
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = dblSum/factor;
+	*outbuf.shp++ = (short )(dblSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) dblSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(dblSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = dblSum/factor;
+	*outbuf.flp++ = (float )(dblSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = dblSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(dblSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(dblSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -822,22 +823,22 @@ WlzErrorNum Wlz1DConv(
       i++;
       switch( stwspc->outbuf.type ){
       case WLZ_GREY_INT:
-	*outbuf.inp++ = dblSum/factor;
+	*outbuf.inp++ = (int )(dblSum/factor);
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = dblSum/factor;
+	*outbuf.shp++ = (short )(dblSum/factor);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) dblSum/factor;
+	*outbuf.ubp++ = (WlzUByte )(dblSum/factor);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = dblSum/factor;
+	*outbuf.flp++ = (float )(dblSum/factor);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = dblSum/factor;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(dblSum/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(dblSum/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, red, red, 255);
 	outbuf.rgbp++;
 	break;
@@ -869,24 +870,24 @@ WlzErrorNum Wlz1DConv(
       inbuf.rgbp++;
       switch( stwspc->outbuf.type ){
       case WLZ_GREY_INT:
-	*outbuf.inp++ = (red+green+blue)/factor/3.0;
+	*outbuf.inp++ = (int )((red+green+blue)/factor/3.0);
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = (red+green+blue)/factor/3.0;
+	*outbuf.shp++ = (short )((red+green+blue)/factor/3.0);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) (red+green+blue)/factor/3.0;
+	*outbuf.ubp++ = (WlzUByte )((red+green+blue)/factor/3.0);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = (red+green+blue)/factor/3.0;
+	*outbuf.flp++ = (float )((red+green+blue)/factor/3.0);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = (red+green+blue)/factor/3.0;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(red/factor, 0, 255);
-	green = WLZ_CLAMP(green/factor, 0, 255);
-	blue = WLZ_CLAMP(blue/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(red/factor, 0, 255);
+	green = (WlzUInt )WLZ_CLAMP(green/factor, 0, 255);
+	blue = (WlzUInt )WLZ_CLAMP(blue/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, green, blue, 255);
 	outbuf.rgbp++;
 	break;
@@ -913,24 +914,24 @@ WlzErrorNum Wlz1DConv(
       i++;
       switch( stwspc->outbuf.type ){
       case WLZ_GREY_INT:
-	*outbuf.inp++ = (red+green+blue)/factor/3.0;
+	*outbuf.inp++ = (int )((red+green+blue)/factor/3.0);
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = (red+green+blue)/factor/3.0;
+	*outbuf.shp++ = (short )((red+green+blue)/factor/3.0);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) (red+green+blue)/factor/3.0;
+	*outbuf.ubp++ = (WlzUByte )((red+green+blue)/factor/3.0);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = (red+green+blue)/factor/3.0;
+	*outbuf.flp++ = (float )((red+green+blue)/factor/3.0);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = (red+green+blue)/factor/3.0;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(red/factor, 0, 255);
-	green = WLZ_CLAMP(green/factor, 0, 255);
-	blue = WLZ_CLAMP(blue/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(red/factor, 0, 255);
+	green = (WlzUInt )WLZ_CLAMP(green/factor, 0, 255);
+	blue = (WlzUInt )WLZ_CLAMP(blue/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, green, blue, 255);
 	outbuf.rgbp++;
 	break;
@@ -960,24 +961,24 @@ WlzErrorNum Wlz1DConv(
       i++;
       switch( stwspc->outbuf.type ){
       case WLZ_GREY_INT:
-	*outbuf.inp++ = (red+green+blue)/factor/3.0;
+	*outbuf.inp++ = (int )((red+green+blue)/factor/3.0);
 	break;
       case WLZ_GREY_SHORT:
-	*outbuf.shp++ = (red+green+blue)/factor/3.0;
+	*outbuf.shp++ = (short )((red+green+blue)/factor/3.0);
 	break;
       case WLZ_GREY_UBYTE:
-	*outbuf.ubp++ = (WlzUByte) (red+green+blue)/factor/3.0;
+	*outbuf.ubp++ = (WlzUByte)((red+green+blue)/factor/3.0);
 	break;
       case WLZ_GREY_FLOAT:
-	*outbuf.flp++ = (red+green+blue)/factor/3.0;
+	*outbuf.flp++ = (float )((red+green+blue)/factor/3.0);
 	break;
       case WLZ_GREY_DOUBLE:
 	*outbuf.dbp++ = (red+green+blue)/factor/3.0;
 	break;
       case WLZ_GREY_RGBA:
-	red = WLZ_CLAMP(red/factor, 0, 255);
-	green = WLZ_CLAMP(green/factor, 0, 255);
-	blue = WLZ_CLAMP(blue/factor, 0, 255);
+	red = (WlzUInt )WLZ_CLAMP(red/factor, 0, 255);
+	green = (WlzUInt )WLZ_CLAMP(green/factor, 0, 255);
+	blue = (WlzUInt )WLZ_CLAMP(blue/factor, 0, 255);
 	WLZ_RGBA_RGBA_SET(*outbuf.rgbp, red, green, blue, 255);
 	outbuf.rgbp++;
 	break;

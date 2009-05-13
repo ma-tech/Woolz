@@ -202,6 +202,9 @@ static void             WlzGMLoopTSetT(
                           WlzGMLoopT *eLT);
 static void		WlzGMElmMarkFree(
 			  int *idxP);
+static WlzGMDiskT 	*WlzGMModelNewDT(
+			  WlzGMModel *model,
+			  WlzErrorNum *dstErr);
 
 /* Resource callback function list manipulation. */
 
@@ -588,7 +591,7 @@ WlzGMLoopT	*WlzGMModelNewLT(WlzGMModel *model, WlzErrorNum *dstErr)
 * \param	dstErr			Destination error pointer, may
 *                                       be null.
 */
-WlzGMDiskT     *WlzGMModelNewDT(WlzGMModel *model, WlzErrorNum *dstErr)
+static WlzGMDiskT *WlzGMModelNewDT(WlzGMModel *model, WlzErrorNum *dstErr)
 {
   WlzGMResource	*resDT;
   WlzGMDiskT	*diskT = NULL;
@@ -1799,7 +1802,6 @@ WlzErrorNum	WlzGMModelDeleteS(WlzGMModel *model, WlzGMShell *dS)
 */
 WlzErrorNum	WlzGMModelDeleteF(WlzGMModel *model, WlzGMFace *dF)
 {
-  /* TODO */
   return(WLZ_ERR_UNIMPLEMENTED);
 }
 
@@ -2948,19 +2950,19 @@ WlzErrorNum	WlzGMShellUpdateG3D(WlzGMShell *shell, WlzDVertex3 pos)
     switch(shell->geo.core->type)
     {
       case WLZ_GMELM_SHELL_G2I:
-	if((tI0 = pos.vtX) < shell->geo.sg2I->bBox.xMin)
+	if((tI0 = (int )floor(pos.vtX)) < shell->geo.sg2I->bBox.xMin)
 	{
 	  shell->geo.sg2I->bBox.xMin = tI0;
 	}
-	else if(tI0 > shell->geo.sg2I->bBox.xMax)
+	else if((tI0 = (int )ceil(pos.vtX)) > shell->geo.sg2I->bBox.xMax)
 	{
 	  shell->geo.sg2I->bBox.xMax = tI0;
 	}
-	if((tI0 = pos.vtY) < shell->geo.sg2I->bBox.yMin)
+	if((tI0 = (int )floor(pos.vtY)) < shell->geo.sg2I->bBox.yMin)
 	{
 	  shell->geo.sg2I->bBox.yMin = tI0;
 	}
-	else if(tI0 > shell->geo.sg2I->bBox.yMax)
+	else if((tI0 = (int )ceil(pos.vtY)) > shell->geo.sg2I->bBox.yMax)
 	{
 	  shell->geo.sg2I->bBox.yMax = tI0;
 	}
@@ -2984,27 +2986,27 @@ WlzErrorNum	WlzGMShellUpdateG3D(WlzGMShell *shell, WlzDVertex3 pos)
 	}
 	break;
       case WLZ_GMELM_SHELL_G3I:
-	if((tI0 = pos.vtX) < shell->geo.sg3I->bBox.xMin)
+	if((tI0 = (int )floor(pos.vtX)) < shell->geo.sg3I->bBox.xMin)
 	{
 	  shell->geo.sg3I->bBox.xMin = tI0;
 	}
-	else if(tI0 > shell->geo.sg3I->bBox.xMax)
+	else if((tI0 = (int )ceil(pos.vtX)) > shell->geo.sg3I->bBox.xMax)
 	{
 	  shell->geo.sg3I->bBox.xMax = tI0;
 	}
-	if((tI0 = pos.vtY) < shell->geo.sg3I->bBox.yMin)
+	if((tI0 = (int )floor(pos.vtY)) < shell->geo.sg3I->bBox.yMin)
 	{
 	  shell->geo.sg3I->bBox.yMin = tI0;
 	}
-	else if(tI0 > shell->geo.sg3I->bBox.yMax)
+	else if((tI0 = (int )ceil(pos.vtY)) > shell->geo.sg3I->bBox.yMax)
 	{
 	  shell->geo.sg3I->bBox.yMax = tI0;
 	}
-	if((tI0 = pos.vtZ) < shell->geo.sg3I->bBox.zMin)
+	if((tI0 = (int )floor(pos.vtZ)) < shell->geo.sg3I->bBox.zMin)
 	{
 	  shell->geo.sg3I->bBox.zMin = tI0;
 	}
-	else if(tI0 > shell->geo.sg3I->bBox.zMax)
+	else if((tI0 = (int )ceil(pos.vtZ)) > shell->geo.sg3I->bBox.zMax)
 	{
 	  shell->geo.sg3I->bBox.zMax = tI0;
 	}
@@ -3066,19 +3068,19 @@ WlzErrorNum	WlzGMShellUpdateG2D(WlzGMShell *shell, WlzDVertex2 pos)
     switch(shell->geo.core->type)
     {
       case WLZ_GMELM_SHELL_G2I:
-	if((tI0 = pos.vtX) < shell->geo.sg2I->bBox.xMin)
+	if((tI0 = (int )floor(pos.vtX)) < shell->geo.sg2I->bBox.xMin)
 	{
 	  shell->geo.sg2I->bBox.xMin = tI0;
 	}
-	else if(tI0 > shell->geo.sg2I->bBox.xMax)
+	else if((tI0 = (int )ceil(pos.vtX)) > shell->geo.sg2I->bBox.xMax)
 	{
 	  shell->geo.sg2I->bBox.xMax = tI0;
 	}
-	if((tI0 = pos.vtY) < shell->geo.sg2I->bBox.yMin)
+	if((tI0 = (int )floor(pos.vtY)) < shell->geo.sg2I->bBox.yMin)
 	{
 	  shell->geo.sg2I->bBox.yMin = tI0;
 	}
-	else if(tI0 > shell->geo.sg2I->bBox.yMax)
+	else if((tI0 = (int )ceil(pos.vtY)) > shell->geo.sg2I->bBox.yMax)
 	{
 	  shell->geo.sg2I->bBox.yMax = tI0;
 	}
@@ -3102,19 +3104,19 @@ WlzErrorNum	WlzGMShellUpdateG2D(WlzGMShell *shell, WlzDVertex2 pos)
 	}
 	break;
       case WLZ_GMELM_SHELL_G3I:
-	if((tI0 = pos.vtX) < shell->geo.sg3I->bBox.xMin)
+	if((tI0 = (int )floor(pos.vtX)) < shell->geo.sg3I->bBox.xMin)
 	{
 	  shell->geo.sg3I->bBox.xMin = tI0;
 	}
-	else if(tI0 > shell->geo.sg3I->bBox.xMax)
+	else if((tI0 = (int )ceil(pos.vtX)) > shell->geo.sg3I->bBox.xMax)
 	{
 	  shell->geo.sg3I->bBox.xMax = tI0;
 	}
-	if((tI0 = pos.vtY) < shell->geo.sg3I->bBox.yMin)
+	if((tI0 = (int )floor(pos.vtY)) < shell->geo.sg3I->bBox.yMin)
 	{
 	  shell->geo.sg3I->bBox.yMin = tI0;
 	}
-	else if(tI0 > shell->geo.sg3I->bBox.yMax)
+	else if((tI0 = (int )ceil(pos.vtY)) > shell->geo.sg3I->bBox.yMax)
 	{
 	  shell->geo.sg3I->bBox.yMax = tI0;
 	}
@@ -3202,7 +3204,7 @@ WlzErrorNum	WlzGMShellUpdateGBB3D(WlzGMShell *shell, WlzDBox3 bBox)
 	}
 	if(bBox.yMax > shell->geo.sg2D->bBox.yMax)
 	{
-	  shell->geo.sg2I->bBox.yMax = bBox.yMax;
+	  shell->geo.sg2I->bBox.yMax = (int )(bBox.yMax);
 	}
 	break;
       case WLZ_GMELM_SHELL_G3I:
@@ -3310,19 +3312,19 @@ WlzErrorNum	WlzGMShellUpdateGBB2D(WlzGMShell *shell, WlzDBox2 bBox)
       case WLZ_GMELM_SHELL_G2D:
 	if(bBox.xMin < shell->geo.sg2D->bBox.xMin)
 	{
-	  shell->geo.sg2D->bBox.xMin = bBox.xMin;
+	  shell->geo.sg2D->bBox.xMin = (int )floor(bBox.xMin);
 	}
 	if(bBox.yMin < shell->geo.sg2D->bBox.yMin)
 	{
-	  shell->geo.sg2D->bBox.yMin = bBox.yMin;
+	  shell->geo.sg2D->bBox.yMin = (int )floor(bBox.yMin);
 	}
 	if(bBox.xMax > shell->geo.sg2D->bBox.xMax)
 	{
-	  shell->geo.sg2D->bBox.xMax = bBox.xMax;
+	  shell->geo.sg2D->bBox.xMax = (int )ceil(bBox.xMax);
 	}
 	if(bBox.yMax > shell->geo.sg2D->bBox.yMax)
 	{
-	  shell->geo.sg2I->bBox.yMax = bBox.yMax;
+	  shell->geo.sg2I->bBox.yMax = (int )ceil(bBox.yMax);
 	}
 	break;
       case WLZ_GMELM_SHELL_G3I:
@@ -3392,10 +3394,14 @@ WlzErrorNum	WlzGMShellDndateG2D(WlzGMShell *shell, WlzDVertex2 pos)
     switch(shell->geo.core->type)
     {
       case WLZ_GMELM_SHELL_G2I:
-	recompFlg[0] = (pos.vtX == shell->geo.sg2I->bBox.xMin) ||
-		       (pos.vtX == shell->geo.sg2I->bBox.xMax) ||
-		       (pos.vtY == shell->geo.sg2I->bBox.yMin) ||
-		       (pos.vtY == shell->geo.sg2I->bBox.yMax);
+	tD0 = pos.vtX - shell->geo.sg2I->bBox.xMin;
+	recompFlg[0] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtX - shell->geo.sg2I->bBox.xMax;
+	recompFlg[1] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtY - shell->geo.sg2I->bBox.yMin;
+	recompFlg[2] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtY - shell->geo.sg2I->bBox.yMax;
+	recompFlg[3] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
 	break;
       case WLZ_GMELM_SHELL_G2D:
 	tD0 = pos.vtX - shell->geo.sg2D->bBox.xMin;
@@ -3406,17 +3412,18 @@ WlzErrorNum	WlzGMShellDndateG2D(WlzGMShell *shell, WlzDVertex2 pos)
 	recompFlg[2] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
 	tD0 = pos.vtY - shell->geo.sg2D->bBox.yMax;
 	recompFlg[3] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
-	recompFlg[0] = recompFlg[0] || recompFlg[1] ||
-		       recompFlg[2] || recompFlg[3];
 	break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
 	break;
     }
   }
-  if((errNum == WLZ_ERR_NONE) && recompFlg[0])
+  if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzGMShellComputeGBB(shell);
+    if(recompFlg[0] || recompFlg[1] || recompFlg[2] || recompFlg[3])
+    {
+      errNum = WlzGMShellComputeGBB(shell);
+    }
   }
   return(errNum);
 }
@@ -3444,12 +3451,18 @@ WlzErrorNum	WlzGMShellDndateG3D(WlzGMShell *shell, WlzDVertex3 pos)
     switch(shell->geo.core->type)
     {
       case WLZ_GMELM_SHELL_G3I:
-	recompFlg[0] = (pos.vtX == shell->geo.sg3I->bBox.xMin) ||
-		       (pos.vtX == shell->geo.sg3I->bBox.xMax) ||
-		       (pos.vtY == shell->geo.sg3I->bBox.yMin) ||
-		       (pos.vtY == shell->geo.sg3I->bBox.yMax) ||
-		       (pos.vtZ == shell->geo.sg3I->bBox.zMin) ||
-		       (pos.vtZ == shell->geo.sg3I->bBox.zMax);
+	tD0 = pos.vtX - shell->geo.sg3I->bBox.xMin;
+	recompFlg[0] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtX - shell->geo.sg3D->bBox.xMax;
+	recompFlg[1] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtY - shell->geo.sg3D->bBox.yMin;
+	recompFlg[2] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtY - shell->geo.sg3D->bBox.yMax;
+	recompFlg[3] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtZ - shell->geo.sg3D->bBox.zMin;
+	recompFlg[4] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
+	tD0 = pos.vtZ - shell->geo.sg3D->bBox.zMax;
+	recompFlg[5] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
 	break;
       case WLZ_GMELM_SHELL_G3D:
 	tD0 = pos.vtX - shell->geo.sg3D->bBox.xMin;
@@ -3464,18 +3477,19 @@ WlzErrorNum	WlzGMShellDndateG3D(WlzGMShell *shell, WlzDVertex3 pos)
 	recompFlg[4] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
 	tD0 = pos.vtZ - shell->geo.sg3D->bBox.zMax;
 	recompFlg[5] = (tD0 * tD0) < WLZ_GM_TOLERANCE;
-	recompFlg[0] = recompFlg[0] || recompFlg[1] ||
-		       recompFlg[2] || recompFlg[3] ||
-		       recompFlg[4] || recompFlg[5] ;
 	break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
 	break;
     }
   }
-  if((errNum == WLZ_ERR_NONE) && recompFlg[0])
+  if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzGMShellComputeGBB(shell);
+    if(recompFlg[0] || recompFlg[1] || recompFlg[2] ||
+       recompFlg[3] || recompFlg[4] || recompFlg[5])
+    {
+      errNum = WlzGMShellComputeGBB(shell);
+    }
   }
   return(errNum);
 }
@@ -4532,7 +4546,7 @@ double		WlzGMVertexDistSq3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 *               vertices found on the loops surrounding the given
 *               vertex. For efficiency this can/should be reused
 *               between calls of this function.
-* \param	model			The given model.
+* \param	dummy			Dummy model, unused.
 * \param	gV			Given vertex in the model.
 * \param	sVBufSz			Ptr to the number WlzGMVertex's
 *                                       that can be held in *sVBuf.
@@ -4545,7 +4559,7 @@ double		WlzGMVertexDistSq3D(WlzGMVertex *vertex, WlzDVertex3 pos)
 * \param	dstErr			Destination error pointer, may
 *                                       be null.
 */
-WlzDVertex3	WlzGMVertexNormal3D(WlzGMModel *model, WlzGMVertex *gV,
+WlzDVertex3	WlzGMVertexNormal3D(WlzGMModel *dummy, WlzGMVertex *gV,
 				    int *sVBufSz, WlzGMVertex ***sVBuf,
 				    WlzErrorNum *dstErr)
 {
@@ -4873,7 +4887,7 @@ static double	WlzGMVertexShellDist2(WlzGMVertex *v0, WlzGMVertex *v1,
   }
   if(dstErr)
   {
-    errNum = *dstErr;
+    *dstErr = errNum;
   }
   return(dist);
 }
@@ -8749,7 +8763,6 @@ static WlzErrorNum WlzGMModelExtend3V3E1S3D(WlzGMModel *model,
 		nIdx;
   WlzGMVertexT	*nVT0[3],
 		*nVT1[3];
-  WlzGMVertex	*eV;
   WlzGMDiskT	*eDT[2];
   WlzGMEdgeT	*nET0[3],
 		*nET1[3];
@@ -8784,8 +8797,8 @@ static WlzErrorNum WlzGMModelExtend3V3E1S3D(WlzGMModel *model,
       {
 	nIdx = (idx + 1) % 3;
 	pIdx = (idx + 3 - 1) % 3;
-	eV = WlzGMEdgeCommonVertexGetDiskTs(eE[idx], eE[pIdx],
-						 eDT + 0, eDT + 1);
+	(void )WlzGMEdgeCommonVertexGetDiskTs(eE[idx], eE[pIdx],
+					      eDT + 0, eDT + 1);
 	if(eDT[0] != eDT[1])
 	{
 	  /* Join the disk topology elements. */

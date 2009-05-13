@@ -159,14 +159,14 @@ void     	AlcHeapEntFree(AlcHeap *heap)
   {
     if(--(heap->nEnt) >= 0)
     {
-      p0 = ((AlcHeapEntryCore *)(heap->entries +
+      p0 = ((AlcHeapEntryCore *)((char *)(heap->entries) +
                                  (heap->nEnt * heap->entSz)))->priority;
       id0 = 0;
       id1 = ((id0 + 1) * 2) - 1;
       while(id1 <= heap->nEnt)
       {
-	ent1 = heap->entries + (id1 * heap->entSz);
-	ent2 = ent1 + heap->entSz;
+	ent1 = (void *)((char *)(heap->entries) + (id1 * heap->entSz));
+	ent2 = (void *)((char *)ent1 + heap->entSz);
 	p1 = ((AlcHeapEntryCore *)ent1)->priority;
 	p2 = ((AlcHeapEntryCore *)ent2)->priority;
 	if((id1 + 1 <= heap->nEnt) && (p1 > p2))
@@ -177,7 +177,7 @@ void     	AlcHeapEntFree(AlcHeap *heap)
 	}
 	if(p1 < p0)
 	{
-	  ent0 = heap->entries + (id0 * heap->entSz);
+	  ent0 = (void *)((char *)(heap->entries) + (id0 * heap->entSz));
 	  (void )memcpy(ent0, ent1, heap->entSz);
 	  id0 = id1;
 	  id1 = ((id0 + 1) * 2) - 1;
@@ -187,8 +187,8 @@ void     	AlcHeapEntFree(AlcHeap *heap)
 	  break;
 	}
       }
-      ent0 = heap->entries + (id0 * heap->entSz);
-      ent1 = heap->entries + (heap->nEnt * heap->entSz);
+      ent0 = (void *)((char *)(heap->entries) + (id0 * heap->entSz));
+      ent1 = (void *)((char *)(heap->entries) + (heap->nEnt * heap->entSz));
       (void )memcpy(ent0, ent1, heap->entSz);
     }
   }
@@ -267,11 +267,11 @@ AlcErrno	AlcHeapInsertEnt(AlcHeap *heap, void *ent)
       while(id0 > 0)
       {
 	id1 = ((id0 + 1) / 2) - 1;
-        ent1 = heap->entries + (id1 * heap->entSz);
+        ent1 = (void *)((char *)(heap->entries) + (id1 * heap->entSz));
 	p1 = ((AlcHeapEntryCore *)ent1)->priority;
 	if(p1 > p)
 	{
-          ent0 = heap->entries + (id0 * heap->entSz);
+          ent0 = (void *)((char *)(heap->entries) + (id0 * heap->entSz));
           (void )memcpy(ent0, ent1, heap->entSz);
 	}
 	else
@@ -280,7 +280,7 @@ AlcErrno	AlcHeapInsertEnt(AlcHeap *heap, void *ent)
 	}
 	id0 = id1;
       }
-      ent0 = heap->entries + (id0 * heap->entSz);
+      ent0 = (void *)((char *)(heap->entries) + (id0 * heap->entSz));
       (void )memcpy(ent0, ent, heap->entSz);
     }
   }

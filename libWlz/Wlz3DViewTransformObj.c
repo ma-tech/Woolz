@@ -169,9 +169,9 @@ WlzObject *Wlz3DViewTransformObj(
 	    continue;
 	  }
 	  xp = k - (int) viewStr->minvals.vtX;
-	  x = viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp];
-	  y = viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp];
-	  z = viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp];
+	  x = (float )(viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp]);
+	  y = (float )(viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp]);
+	  z = (float )(viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp]);
 	  vertices[numVtxs].vtX = WLZ_NINT(x);
 	  vertices[numVtxs].vtY = WLZ_NINT(y);
 	  vertices[numVtxs].vtZ = WLZ_NINT(z);

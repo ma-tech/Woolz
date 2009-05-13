@@ -1162,11 +1162,12 @@ WlzAffineTransform *WlzAffineTransformLSqScale2D(WlzDVertex2 *vT,
   WLZ_VTX_2_SCALE(cen0, cen0, tD0);
   WLZ_VTX_2_SCALE(cen1, cen1, tD0);
 
-  /* compute the sum of weighted distances from each centroid 
-     dist0 and dist1 */
+  /* Compute the sum of weighted distances from each centroid 
+   * dist0 and dist1. */
   dist0 = 0.0;
   dist1 = 0.0;
-  for(idN=0; idN < nVtx; idN++){
+  for(idN=0; idN < nVtx; idN++)
+  {
     if(vW)
     {
       WLZ_VTX_2_SCALE(p0, *(vT + idN), *(vW + idN));
@@ -1179,26 +1180,28 @@ WlzAffineTransform *WlzAffineTransformLSqScale2D(WlzDVertex2 *vT,
     }
     WLZ_VTX_2_SUB(p0, p0, cen0);
     WLZ_VTX_2_SUB(p1, p1, cen1);
-    if( (p0.vtX != 0.0) || (p0.vtY != 0.0) ){
+    if((fabs(p0.vtX) > DBL_EPSILON) || (fabs(p0.vtY) > DBL_EPSILON))
+    {
       dist0 += WLZ_VTX_2_LENGTH(p0);
     }
-    if( (p1.vtX != 0.0) || (p1.vtY != 0.0) ){
+    if((fabs(p1.vtX) > DBL_EPSILON) || (fabs(p1.vtY) > DBL_EPSILON))
+    {
       dist1 += WLZ_VTX_2_LENGTH(p1);
     }
   }
-
-  /* now make the transform */
-  if( dist1 > tol ){
+  /* Now make the transform */
+  if(dist1 > tol)
+  {
     tr = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
 				       0.0, 0.0, 0.0,
 				       dist0/dist1,
 				       0.0, 0.0, 0.0, 0.0, 0.0,
 				       0, &errNum);
   }
-  else {
+  else
+  {
     errNum = WLZ_ERR_PARAM_DATA;
   }
-
   if(dstErr)
   {
     *dstErr = errNum;

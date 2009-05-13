@@ -154,7 +154,7 @@ WlzErrorNum WlzGaussNoise(
 	for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
 	  mu = (double) *gptr.inp;
 	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
-	  *gptr.inp = WLZ_CLAMP(tmpVal.v.dbv, INT_MIN, INT_MAX);
+	  *gptr.inp = (int )WLZ_CLAMP(tmpVal.v.dbv, INT_MIN, INT_MAX);
 	}
 	break;
 
@@ -162,7 +162,7 @@ WlzErrorNum WlzGaussNoise(
 	for (i=0; i<iwsp.colrmn; i++, gptr.shp++){
 	  mu = (double) *gptr.shp;
 	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
-	  *gptr.shp = WLZ_CLAMP(tmpVal.v.dbv, SHRT_MIN, SHRT_MAX);
+	  *gptr.shp = (short )WLZ_CLAMP(tmpVal.v.dbv, SHRT_MIN, SHRT_MAX);
 	}
 	break;
 
@@ -170,7 +170,7 @@ WlzErrorNum WlzGaussNoise(
 	for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
 	  mu = (double) *gptr.ubp;
 	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
-	  *gptr.ubp = WLZ_CLAMP(tmpVal.v.dbv, 0, 255);
+	  *gptr.ubp = (WlzUByte )WLZ_CLAMP(tmpVal.v.dbv, 0, 255);
 	}
 	break;
 
@@ -178,7 +178,7 @@ WlzErrorNum WlzGaussNoise(
 	for (i=0; i<iwsp.colrmn; i++, gptr.flp++){
 	  mu = (double) *gptr.flp;
 	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
-	  *gptr.flp = WLZ_CLAMP(tmpVal.v.dbv, FLT_MIN, FLT_MAX);
+	  *gptr.flp = (float )WLZ_CLAMP(tmpVal.v.dbv, FLT_MIN, FLT_MAX);
 	}
 	break;
 
@@ -186,7 +186,7 @@ WlzErrorNum WlzGaussNoise(
 	for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
 	  mu = (double) *gptr.inp;
 	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
-	  *gptr.inp = tmpVal.v.dbv;
+	  *gptr.inp = (int )(tmpVal.v.dbv);
 	}
 	break;
 
@@ -194,7 +194,7 @@ WlzErrorNum WlzGaussNoise(
 	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
 	  mu = (double) *gptr.inp;
 	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
-	  *gptr.rgbp = WLZ_CLAMP(tmpVal.v.dbv, 0, 0xffffff);
+	  *gptr.rgbp = (WlzUInt )WLZ_CLAMP(tmpVal.v.dbv, 0, 0xffffff);
 	  *gptr.rgbp |= 0xff000000;
 	}
 	break;

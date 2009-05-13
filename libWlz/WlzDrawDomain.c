@@ -258,7 +258,8 @@ WlzObject	*WlzDrawDomainObj(WlzDVertex2 org, WlzThreeDViewStruct *view,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    obj1 = WlzShiftObject(obj0, org.vtX, org.vtY, 0.0, &errNum);
+    obj1 = WlzShiftObject(obj0, WLZ_NINT(org.vtX), WLZ_NINT(org.vtY), 0.0,
+                          &errNum);
   }
   (void )WlzFreeObj(obj0);
   if(errNum == WLZ_ERR_NONE)
@@ -490,7 +491,7 @@ static WlzDrawDomCmd	WlzDrawDomStrGetCmd(WlzDrawDomWSp *wSp)
     /* Strip out white space from the buffered command and make all
      * letters upper case. */
     str0 = str1 = wSp->buf;
-    while((*str1 = toupper(*str0++)) != '\0')
+    while((*str1 = (char )toupper(*str0++)) != '\0')
     {
       if(isspace(*str1) == 0)
       {

@@ -963,11 +963,11 @@ static WlzErrorNum WlzObjFactsProperty(WlzObjFactsData *fData,
 * \ingroup      WlzDebug
 * \brief	Produces a text description of a property list.
 * \param	fData			Facts data structure.
-* \param	obj			Object to determine property list type.
+* \param	dummy			Object, unused.
 * \param	pList			Given property list.
 */
 static WlzErrorNum WlzObjFactsPropList(WlzObjFactsData *fData,
-				       WlzObject *obj,
+				       WlzObject *dummy,
 				       WlzPropertyList *pList)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1491,11 +1491,11 @@ static WlzErrorNum WlzObjFactsContour(WlzObjFactsData *fData,
 * \ingroup      WlzDebug
 * \brief	Produces a text description of a geometric model.
 * \param	fData			Facts data structure.
-* \param	obj			Object type, not used.
+* \param	dummy			Object, not used.
 * \param	model			Given geometric model.
 */
 static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
-				      WlzObject *obj,
+				      WlzObject *dummy,
 				      WlzGMModel *model)
 {
   int		idS,

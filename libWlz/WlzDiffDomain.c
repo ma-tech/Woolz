@@ -45,10 +45,6 @@ static char _WlzDiffDomain_c[] = "MRC HGU $Id$";
 #include <stdlib.h>
 #include <Wlz.h>
 
-extern WlzObject *WlzDiffDomain3d(WlzObject *obj1,
-				  WlzObject *obj2,
-				  WlzErrorNum	*dstErr);
-
 /*!
 * \return	Object with domain equal to the set difference between the
 *		first and second object, with valuetable from the first
@@ -145,7 +141,7 @@ WlzObject *WlzDiffDomain(
     idom1 = obj1->domain.i;
     k1 = idom1->kol1;
     if( (intp = (WlzInterval *)
-	 AlcCalloc(WlzIntervalCount(idom1, NULL)+
+	 AlcCalloc(WlzIntervalCount(idom1, NULL) +
 		   WlzIntervalCount(obj2->domain.i, NULL),
 		   sizeof(WlzInterval))) == NULL ){
       errNum = WLZ_ERR_MEM_ALLOC;

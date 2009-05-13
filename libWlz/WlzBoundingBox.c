@@ -900,12 +900,12 @@ WlzFBox3	WlzBoundingBox3DTo3F(WlzDBox3 bBox3D)
 {
   WlzFBox3	bBox3F;
 
-  bBox3F.xMin = bBox3D.xMin;
-  bBox3F.yMin = bBox3D.yMin;
-  bBox3F.zMin = bBox3D.zMin;
-  bBox3F.xMax = bBox3D.xMax;
-  bBox3F.yMax = bBox3D.yMax;
-  bBox3F.zMax = bBox3D.zMax;
+  bBox3F.xMin = (float )(bBox3D.xMin);
+  bBox3F.yMin = (float )(bBox3D.yMin);
+  bBox3F.zMin = (float )(bBox3D.zMin);
+  bBox3F.xMax = (float )(bBox3D.xMax);
+  bBox3F.yMax = (float )(bBox3D.yMax);
+  bBox3F.zMax = (float )(bBox3D.zMax);
   return(bBox3F);
 }
 

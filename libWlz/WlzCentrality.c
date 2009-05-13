@@ -64,7 +64,7 @@ static void			WlzCentralityCompPolarTblPly2D(
 				  WlzDVertex2 cmV,
 				  int pTblSz,
 				  double *pTbl,
-				  WlzPolygonDomain *ply);;
+				  WlzPolygonDomain *ply);
 static void			WlzCentralityCompPolarTblBnd2D(
 				  WlzDVertex2 cmV,
 				  int pTblSz,

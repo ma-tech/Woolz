@@ -48,7 +48,7 @@ static char _WlzGeometry_c[] = "MRC HGU $Id$";
 #include <Wlz.h>
 
 extern double			cbrt(double c);
-#ifdef _BORLAND_HACK_FOR_JATLASVIEWER
+#ifdef _BORLAND_FOR_JATLASVIEWER
 /*!
  *  Dummy function to allow compilation with borland bcc32 under Windows
  */
@@ -1398,7 +1398,7 @@ unsigned int	WlzGeomHashVtx3D(WlzDVertex3 pos, double tol)
   fF = floor(fF / tol) * tol;
   fI *= pX;
   fF *= pY * pZ;
-#ifdef _BORLAND_HACK_FOR_JATLASVIEWER
+#ifdef _BORLAND_FOR_JATLASVIEWER
   hVal ^= ((long)fI + (long)fF) & UINT_MAX;
 #else
   hVal = ((long long)fI + (long long)fF) & UINT_MAX;
@@ -1407,7 +1407,7 @@ unsigned int	WlzGeomHashVtx3D(WlzDVertex3 pos, double tol)
   fF = floor(fF / tol) * tol;
   fI *= pY;
   fF *= pZ * pX;
-#ifdef _BORLAND_HACK_FOR_JATLASVIEWER
+#ifdef _BORLAND_FOR_JATLASVIEWER
   hVal ^= ((long)fI + (long)fF) & UINT_MAX;
 #else
   hVal ^= ((long long)fI + (long long)fF) & UINT_MAX;
@@ -1416,7 +1416,7 @@ unsigned int	WlzGeomHashVtx3D(WlzDVertex3 pos, double tol)
   fF = floor(fF / tol) * tol;
   fI *= pZ;
   fF *= pX * pY;
-#ifdef _BORLAND_HACK_FOR_JATLASVIEWER
+#ifdef _BORLAND_FOR_JATLASVIEWER
   hVal ^= ((long)fI + (long)fF) & UINT_MAX;
 #else
   hVal ^= ((long long)fI + (long long)fF) & UINT_MAX;
@@ -1445,7 +1445,7 @@ unsigned int	WlzGeomHashVtx2D(WlzDVertex2 pos, double tol)
   fF = floor(fF / tol) * tol;
   fI *= pX;
   fF *= pY * pZ;
-#ifdef _BORLAND_HACK_FOR_JATLASVIEWER
+#ifdef _BORLAND_FOR_JATLASVIEWER
   hVal = ((long)fI + (long)fF) & UINT_MAX;
 #else
   hVal = ((long long)fI + (long long)fF) & UINT_MAX;
@@ -1454,7 +1454,7 @@ unsigned int	WlzGeomHashVtx2D(WlzDVertex2 pos, double tol)
   fF = floor(fF / tol) * tol;
   fI *= pY;
   fF *= pZ * pX;
-#ifdef _BORLAND_HACK_FOR_JATLASVIEWER
+#ifdef _BORLAND_FOR_JATLASVIEWER
   hVal ^= ((long)fI + (long)fF) & UINT_MAX;
 #else
   hVal ^= ((long long)fI + (long long)fF) & UINT_MAX;

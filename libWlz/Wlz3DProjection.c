@@ -156,7 +156,7 @@ WlzObject *WlzGetProjectionFromObject(
     vtx.vtZ -= vtx1.vtZ;
 
     /* assign lut values */
-    s = WLZ_NINT(viewStr1->minvals.vtZ) - viewStr1->dist;
+    s = (int )(WLZ_NINT(viewStr1->minvals.vtZ) - viewStr1->dist);
     for(sp=0; sp < length; sp++, s++){
       s_to_x[sp] = s * vtx.vtX;
       s_to_y[sp] = s * vtx.vtY;
@@ -252,7 +252,7 @@ WlzObject *WlzGetProjectionFromObject(
 	/* if no function then just check for occupancy */
 	if( intFunc == NULL ){
 	  occupiedFlg = 0;
-	  sp = viewStr1->dist - WLZ_NINT(viewStr1->minvals.vtZ);
+	  sp = (int )(viewStr1->dist - WLZ_NINT(viewStr1->minvals.vtZ));
 	  for(; !occupiedFlg && (sp < length); sp++){
 	    x = vtx.vtX + s_to_x[sp];
 	    y = vtx.vtY + s_to_y[sp];
@@ -261,7 +261,7 @@ WlzObject *WlzGetProjectionFromObject(
 	      occupiedFlg = 1;
 	    }
 	  }
-	  sp = viewStr1->dist - WLZ_NINT(viewStr1->minvals.vtZ) - 1;
+	  sp = (int )(viewStr1->dist - WLZ_NINT(viewStr1->minvals.vtZ) - 1);
 	  for(; !occupiedFlg && (sp >= 0); sp--){
 	    x = vtx.vtX + s_to_x[sp];
 	    y = vtx.vtY + s_to_y[sp];
@@ -272,7 +272,7 @@ WlzObject *WlzGetProjectionFromObject(
 	  }
 
 	  /* set the integrated value - only WlzUByte at the moment */
-	  *(gwsp.u_grintptr.ubp) = occupiedFlg;
+	  *(gwsp.u_grintptr.ubp) = (WlzUByte )occupiedFlg;
 	  gwsp.u_grintptr.ubp++;
 	}
 	/* use integration function */
@@ -312,8 +312,8 @@ WlzObject *WlzGetProjectionFromObject(
 	    }
 	  }
 	  /* call integration function and seet value */
-	  intFunc(pixptr, length, viewStr1->dist -
-		  WLZ_NINT(viewStr1->minvals.vtZ),
+	  intFunc(pixptr, length, (int )(viewStr1->dist -
+		                         WLZ_NINT(viewStr1->minvals.vtZ)),
 		  intFuncData, &errNum);
 	}
       }

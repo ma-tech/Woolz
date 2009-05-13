@@ -233,8 +233,6 @@ static WlzObject *WlzScalarFn3D(WlzObject *sObj, WlzFnType fn,
 {
   int		idx,
   		off;
-  WlzGreyType	sGType,
-  		dGType;
   WlzPixelV	sBgd,
   		dBgd;
   WlzValues	dVal;
@@ -243,11 +241,6 @@ static WlzObject *WlzScalarFn3D(WlzObject *sObj, WlzFnType fn,
   		*dObj = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  sGType = WlzGreyTypeFromObj(sObj, &errNum);
-  if(errNum == WLZ_ERR_NONE)
-  {
-    dGType = WlzScalarFnPromoteGType(fn, sGType, &errNum);
-  }
   if(errNum == WLZ_ERR_NONE)
   {
     sBgd = WlzGetBackground(sObj, &errNum);
@@ -321,7 +314,7 @@ static WlzGreyType WlzScalarFnPromoteGType(WlzFnType fn, WlzGreyType gType,
     case WLZ_GREY_DOUBLE:
       break;
     default:
-      errNum = WLZ_GREY_ERROR;
+      errNum = WLZ_ERR_GREY_TYPE;
       break;
   }
   switch(fn)

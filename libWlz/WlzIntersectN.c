@@ -544,7 +544,7 @@ firstfinished:
 	    }
 	    gv.shv += *(gwsp[i].u_grintptr.shp + k - iwsp->lftpos);
 	  }
-	  *greyptr.shp = gv.shv / n;
+	  *greyptr.shp = (short )(gv.shv / n);
 	  greyptr.shp++;
 	}
 	break;
@@ -560,7 +560,7 @@ firstfinished:
 	    }
 	    gv.ubv += *(gwsp[i].u_grintptr.ubp + k - iwsp->lftpos);
 	  }
-	  *greyptr.ubp = (int) gv.ubv / n;
+	  *greyptr.ubp = (WlzUByte )(gv.ubv / n);
 	  greyptr.ubp++;
 	}
 	break;

@@ -181,11 +181,11 @@ WlzObject *WlzSepTrans(
 	  break;
 	case WLZ_GREY_SHORT:
 	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.shp++)
-	    *stwspc.inbuf.p.shp = stwspc.outbuf.p.inp[i];
+	    *stwspc.inbuf.p.shp = (short )(stwspc.outbuf.p.inp[i]);
 	  break;
 	case WLZ_GREY_UBYTE:
 	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.ubp++)
-	    *stwspc.inbuf.p.ubp = stwspc.outbuf.p.inp[i];
+	    *stwspc.inbuf.p.ubp = (WlzUByte )(stwspc.outbuf.p.inp[i]);
 	  break;
 	case WLZ_GREY_FLOAT:
 	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.flp++)
@@ -234,11 +234,11 @@ WlzObject *WlzSepTrans(
 	  break;
 	case WLZ_GREY_SHORT:
 	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.shp++)
-	    *stwspc.inbuf.p.shp = stwspc.outbuf.p.inp[i];
+	    *stwspc.inbuf.p.shp = (short )(stwspc.outbuf.p.inp[i]);
 	  break;
 	case WLZ_GREY_UBYTE:
 	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.ubp++)
-	    *stwspc.inbuf.p.ubp = stwspc.outbuf.p.inp[i];
+	    *stwspc.inbuf.p.ubp = (WlzUByte )(stwspc.outbuf.p.inp[i]);
 	  break;
 	case WLZ_GREY_FLOAT:
 	  for(i=0; i < stwspc.len; i++, stwspc.inbuf.p.flp++)

@@ -226,12 +226,12 @@ static void	WlzWindowApplyFn(WlzObject *obj, WlzIVertex2 center,
 	      if(quadOff[0].vtX >= 0)
 	      {
 		tData.shp = rVData.shp + quadOff[0].vtY + quadOff[0].vtX;
-		*(tData.shp) = WLZ_NINT(*(tData.shp) * tD0);
+		*(tData.shp) = (short )WLZ_NINT(*(tData.shp) * tD0);
 	      }
 	      if((pos.vtX != 0) && (quadOff[1].vtX >= 0))
 	      {
 		tData.shp = rVData.shp + quadOff[0].vtY + quadOff[1].vtX;
-		*(tData.shp) = WLZ_NINT(*(tData.shp) * tD0);
+		*(tData.shp) = (short )WLZ_NINT(*(tData.shp) * tD0);
 	      }
 	    }
 	    if((pos.vtY != 0) && (quadOff[1].vtY >= 0))
@@ -239,12 +239,12 @@ static void	WlzWindowApplyFn(WlzObject *obj, WlzIVertex2 center,
 	      if(quadOff[0].vtX >= 0)
 	      {
 		tData.shp = rVData.shp + quadOff[1].vtY + quadOff[0].vtX;
-		*(tData.shp) = WLZ_NINT(*(tData.shp) * tD0);
+		*(tData.shp) = (short )WLZ_NINT(*(tData.shp) * tD0);
 	      }
 	      if((pos.vtX != 0) && (quadOff[1].vtX >= 0))
 	      {
 		tData.shp = rVData.shp + quadOff[1].vtY + quadOff[1].vtX;
-		*(tData.shp) = WLZ_NINT(*(tData.shp) * tD0);
+		*(tData.shp) = (short )WLZ_NINT(*(tData.shp) * tD0);
 	      }
 	    }
 	    break;
@@ -254,12 +254,12 @@ static void	WlzWindowApplyFn(WlzObject *obj, WlzIVertex2 center,
 	      if(quadOff[0].vtX >= 0)
 	      {
 		tData.ubp = rVData.ubp + quadOff[0].vtY + quadOff[0].vtX;
-		*(tData.ubp) = (unsigned int )((*(tData.ubp) * tD0) + 0.5);
+		*(tData.ubp) = (WlzUByte )((*(tData.ubp) * tD0) + 0.5);
 	      }
 	      if((pos.vtX != 0) && (quadOff[1].vtX >= 0))
 	      {
 		tData.ubp = rVData.ubp + quadOff[0].vtY + quadOff[1].vtX;
-		*(tData.ubp) = (unsigned int )((*(tData.ubp) * tD0) + 0.5);
+		*(tData.ubp) = (WlzUByte )((*(tData.ubp) * tD0) + 0.5);
 	      }
 	    }
 	    if((pos.vtY != 0) && (quadOff[1].vtY >= 0))
@@ -267,12 +267,12 @@ static void	WlzWindowApplyFn(WlzObject *obj, WlzIVertex2 center,
 	      if(quadOff[0].vtX >= 0)
 	      {
 		tData.ubp = rVData.ubp + quadOff[1].vtY + quadOff[0].vtX;
-		*(tData.ubp) = (unsigned int )((*(tData.ubp) * tD0) + 0.5);
+		*(tData.ubp) = (WlzUByte )((*(tData.ubp) * tD0) + 0.5);
 	      }
 	      if((pos.vtX != 0) && (quadOff[1].vtX >= 0))
 	      {
 		tData.ubp = rVData.ubp + quadOff[1].vtY + quadOff[1].vtX;
-		*(tData.ubp) = (unsigned int )((*(tData.ubp) * tD0) + 0.5);
+		*(tData.ubp) = (WlzUByte )((*(tData.ubp) * tD0) + 0.5);
 	      }
 	    }
 	    break;

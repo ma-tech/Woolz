@@ -190,7 +190,7 @@ WlzPolygonDomain  *WlzPolyEquispace(
      leave space for kept vertices if required - not yet implemented */
   if( errNum == WLZ_ERR_NONE ){
     length = WlzPolyLength(poly, wrap, &errNum);
-    n = length / spacing + wrap + poly->nvertices;
+    n = (int )(length / spacing + wrap + poly->nvertices);
     rtnPoly = WlzMakePolygonDomain(poly->type, 0, NULL, n, 1, &errNum);
   }
 
@@ -255,8 +255,8 @@ WlzPolygonDomain  *WlzPolyEquispace(
       while( i < nVtxs ){
 	if( del <= dist ){
 	  /* new point in this span */
-	  gVtxs[n].vtX = fVtxs[i-1].vtX + dx*del/dist;
-	  gVtxs[n].vtY = fVtxs[i-1].vtY + dy*del/dist;
+	  gVtxs[n].vtX = (float )(fVtxs[i-1].vtX + dx*del/dist);
+	  gVtxs[n].vtY = (float )(fVtxs[i-1].vtY + dy*del/dist);
 	  del += spacing;
 	  n++;
 	}

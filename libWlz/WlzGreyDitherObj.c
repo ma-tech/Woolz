@@ -177,7 +177,7 @@ WlzObject *WlzGreyDitherObj(
 	      {
 		G += (*gwsp1.u_grintptr.shp) & 255;
 		g = (G * factor_to) / factor_from;
-		(*gwsp2.u_grintptr.shp) = permute_val[g];
+		(*gwsp2.u_grintptr.shp) = (short )(permute_val[g]);
 		G -= (g * factor_from) / factor_to;
 	      }
 	      break;
@@ -189,7 +189,7 @@ WlzObject *WlzGreyDitherObj(
 	      {
 		G += (*gwsp1.u_grintptr.ubp);
 		g = (G * factor_to) / factor_from;
-		(*gwsp2.u_grintptr.ubp) = permute_val[g];
+		(*gwsp2.u_grintptr.ubp) = (WlzUByte )(permute_val[g]);
 		G -= (g * factor_from) / factor_to;
 	      }
 	      break;

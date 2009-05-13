@@ -46,6 +46,7 @@ static char _Wlz3DSection_c[] = "MRC HGU $Id$";
 
 #include <Wlz.h>
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 static WlzObject 		*WlzGetSectionFrom3DDomObj(
   				  WlzObject *obj,
 				  WlzThreeDViewStruct *viewStr,
@@ -56,14 +57,15 @@ static WlzObject 		*WlzGetMaskedSectionFrom3DDomObj(
 				  WlzThreeDViewStruct *viewStr,
 				  WlzInterpolationType	interp,
 				  WlzErrorNum *dstErr);
+static WlzPixelP 		WlzGetSectionConvertGreyType(
+				  WlzPixelP pixptr,
+				  WlzGreyType grey_type);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static WlzContour 		*WlzGetSectionFromCtr(
 				  WlzContour *ctr,
 				  WlzThreeDViewStruct *view,
 				  WlzInterpolationType	interp,
 				  WlzErrorNum *dstErr);
-static WlzPixelP 		WlzGetSectionConvertGreyType(
-				  WlzPixelP pixptr,
-				  WlzGreyType grey_type);
 
 
 /*!
@@ -210,12 +212,13 @@ WlzObject 	*WlzGetMaskedSectionFromObject(WlzObject *obj,
 *		the given view structure from the given 3D contour.
 * \param	ctr			Given contour.
 * \param	view			The given view structure.
+* \param	dummy			Unused interpolation parameter.
 * \param	dstErr			Destination pointer for error
 *					code, may be NULL.
 */
 static WlzContour *WlzGetSectionFromCtr(WlzContour *ctr,
 				        WlzThreeDViewStruct *view,
-					WlzInterpolationType	interp,
+					WlzInterpolationType dummy,
 					WlzErrorNum *dstErr)
 {
   WlzGMModel	*newModel = NULL;
@@ -259,6 +262,7 @@ static WlzContour *WlzGetSectionFromCtr(WlzContour *ctr,
   return(newCtr);
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return				The section as a new 2D woolz object.
 * \ingroup	WlzSectionTransform
@@ -419,9 +423,9 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
 	yp = iwsp.linpos - WLZ_NINT(viewStr->minvals.vtY);
 	for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
 	  xp = k - WLZ_NINT(viewStr->minvals.vtX);
-	  vtx.vtX = viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp];
-	  vtx.vtY = viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp];
-	  vtx.vtZ = viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp];
+	  vtx.vtX = (float )(viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp]);
+	  vtx.vtY = (float )(viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp]);
+	  vtx.vtZ = (float )(viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp]);
 
 	  /* apply interpolation */
 	  if( voxvals ){
@@ -487,7 +491,7 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
 		  ((gVWSp->gVal[7]).shv *
 		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
 		tD0 = WLZ_CLAMP(tD0, SHRT_MIN, SHRT_MAX);
-		*(pixptr.p.shp) = WLZ_NINT(tD0);
+		*(pixptr.p.shp) = (short )WLZ_NINT(tD0);
 		break;
 	      case WLZ_GREY_UBYTE:
 		tD0 = ((gVWSp->gVal[0]).ubv *
@@ -507,7 +511,7 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
 		  ((gVWSp->gVal[7]).ubv *
 		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
 		tD0 = WLZ_CLAMP(tD0, 0, 255);
-		*(pixptr.p.ubp) = WLZ_NINT(tD0);
+		*(pixptr.p.ubp) = (WlzUByte )WLZ_NINT(tD0);
 		break;
 	      case WLZ_GREY_FLOAT:
 		tD0 = ((gVWSp->gVal[0]).flv *
@@ -527,7 +531,7 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
 		  ((gVWSp->gVal[7]).flv *
 		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
 		tD0 = WLZ_CLAMP(tD0, FLT_MIN, FLT_MAX);
-		*(pixptr.p.flp) = tD0;
+		*(pixptr.p.flp) = (float )tD0;
 		break;
 	      case WLZ_GREY_DOUBLE:
 		tD0 = ((gVWSp->gVal[0]).dbv *
@@ -651,7 +655,9 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
   }
   return newobj;
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return				The section as a new 2D woolz object.
 * \ingroup	WlzSectionTransform
@@ -795,9 +801,9 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
 	for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
 /*	  xp = k - newobj->domain.i->kol1;*/
 	  xp = k - WLZ_NINT(viewStr->minvals.vtX);
-	  vtx.vtX = viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp];
-	  vtx.vtY = viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp];
-	  vtx.vtZ = viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp];
+	  vtx.vtX = (float )(viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp]);
+	  vtx.vtY = (float )(viewStr->xp_to_y[xp] + viewStr->yp_to_y[yp]);
+	  vtx.vtZ = (float )(viewStr->xp_to_z[xp] + viewStr->yp_to_z[yp]);
 
 	  /* apply interpolation */
 	  if( voxvals ){
@@ -862,7 +868,7 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
 		  ((gVWSp->gVal[7]).shv *
 		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
 		tD0 = WLZ_CLAMP(tD0, SHRT_MIN, SHRT_MAX);
-		*(pixptr.p.shp) = WLZ_NINT(tD0);
+		*(pixptr.p.shp) = (short )WLZ_NINT(tD0);
 		break;
 	      case WLZ_GREY_UBYTE:
 		tD0 = ((gVWSp->gVal[0]).ubv *
@@ -882,7 +888,7 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
 		  ((gVWSp->gVal[7]).ubv *
 		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
 		tD0 = WLZ_CLAMP(tD0, 0, 255);
-		*(pixptr.p.ubp) = WLZ_NINT(tD0);
+		*(pixptr.p.ubp) = (WlzUByte )WLZ_NINT(tD0);
 		break;
 	      case WLZ_GREY_FLOAT:
 		tD0 = ((gVWSp->gVal[0]).flv *
@@ -902,7 +908,7 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
 		  ((gVWSp->gVal[7]).flv *
 		   tDV0.vtX * tDV0.vtY * tDV0.vtZ);
 		tD0 = WLZ_CLAMP(tD0, FLT_MIN, FLT_MAX);
-		*(pixptr.p.flp) = tD0;
+		*(pixptr.p.flp) = (float )tD0;
 		break;
 	      case WLZ_GREY_DOUBLE:
 		tD0 = ((gVWSp->gVal[0]).dbv *
@@ -1003,7 +1009,9 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
   }
   return newobj;
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return				Converted pixel.
 * \brief	Convert the type of the given pixel.
@@ -1029,16 +1037,16 @@ static WlzPixelP WlzGetSectionConvertGreyType(
       GetSectionStaticGreyVal.inv = *(pixptr.p.inp);
       return pix;
     case WLZ_GREY_SHORT:
-      GetSectionStaticGreyVal.shv = *(pixptr.p.inp);
+      GetSectionStaticGreyVal.shv = (short )*(pixptr.p.inp);
       return pix;
     case WLZ_GREY_UBYTE:
       GetSectionStaticGreyVal.ubv = (WlzUByte) *(pixptr.p.inp);
       return pix;
     case WLZ_GREY_FLOAT:
-      GetSectionStaticGreyVal.flv = *(pixptr.p.inp);
+      GetSectionStaticGreyVal.flv = (float )*(pixptr.p.inp);
       return pix;
     case WLZ_GREY_DOUBLE:
-      GetSectionStaticGreyVal.dbv = *(pixptr.p.inp);
+      GetSectionStaticGreyVal.dbv = (double )*(pixptr.p.inp);
       return pix;
     case WLZ_GREY_RGBA:
       uval = WLZ_CLAMP(*(pixptr.p.inp), 0, 255);
@@ -1098,10 +1106,10 @@ static WlzPixelP WlzGetSectionConvertGreyType(
   case WLZ_GREY_FLOAT:
     switch( grey_type ){
     case WLZ_GREY_INT:
-      GetSectionStaticGreyVal.inv = *(pixptr.p.flp);
+      GetSectionStaticGreyVal.inv = (int )*(pixptr.p.flp);
       return pix;
     case WLZ_GREY_SHORT:
-      GetSectionStaticGreyVal.shv = *(pixptr.p.flp);
+      GetSectionStaticGreyVal.shv = (short )*(pixptr.p.flp);
       return pix;
     case WLZ_GREY_UBYTE:
       GetSectionStaticGreyVal.ubv = (WlzUByte) *(pixptr.p.flp);
@@ -1110,7 +1118,7 @@ static WlzPixelP WlzGetSectionConvertGreyType(
       GetSectionStaticGreyVal.flv = *(pixptr.p.flp);
       return pix;
     case WLZ_GREY_DOUBLE:
-      GetSectionStaticGreyVal.dbv = *(pixptr.p.flp);
+      GetSectionStaticGreyVal.dbv = (double )*(pixptr.p.flp);
       return pix;
     case WLZ_GREY_RGBA:
       uval = WLZ_CLAMP(*(pixptr.p.flp), 0, 255);
@@ -1122,41 +1130,41 @@ static WlzPixelP WlzGetSectionConvertGreyType(
   case WLZ_GREY_DOUBLE:
     switch( grey_type ){
     case WLZ_GREY_INT:
-      GetSectionStaticGreyVal.inv = *(pixptr.p.dbp);
+      GetSectionStaticGreyVal.inv = (int )*(pixptr.p.dbp);
       return pix;
     case WLZ_GREY_SHORT:
-      GetSectionStaticGreyVal.shv = *(pixptr.p.dbp);
+      GetSectionStaticGreyVal.shv = (short )*(pixptr.p.dbp);
       return pix;
     case WLZ_GREY_UBYTE:
-      GetSectionStaticGreyVal.ubv = (WlzUByte) *(pixptr.p.dbp);
+      GetSectionStaticGreyVal.ubv = (WlzUByte )*(pixptr.p.dbp);
       return pix;
     case WLZ_GREY_FLOAT:
-      GetSectionStaticGreyVal.flv = *(pixptr.p.dbp);
+      GetSectionStaticGreyVal.flv = (float )*(pixptr.p.dbp);
       return pix;
     case WLZ_GREY_DOUBLE:
       GetSectionStaticGreyVal.dbv = *(pixptr.p.dbp);
       return pix;
     case WLZ_GREY_RGBA:
-      uval = WLZ_CLAMP(*(pixptr.p.dbp), 0, 255);
+      uval = (WlzUInt )WLZ_CLAMP(*(pixptr.p.dbp), 0, 255);
       GetSectionStaticGreyVal.rgbv = uval + (uval<<8) + (uval<<16) + 0xff000000;
       return pix;
     default:
       break;
     }
   case WLZ_GREY_RGBA:
-    uval = WLZ_RGBA_MODULUS(*(pixptr.p.rgbp));
+    uval = (WlzUInt )WLZ_RGBA_MODULUS(*(pixptr.p.rgbp));
     switch( grey_type ){
     case WLZ_GREY_INT:
       GetSectionStaticGreyVal.inv = uval;
       return pix;
     case WLZ_GREY_SHORT:
-      GetSectionStaticGreyVal.shv = uval;
+      GetSectionStaticGreyVal.shv = (short )uval;
       return pix;
     case WLZ_GREY_UBYTE:
-      GetSectionStaticGreyVal.ubv = (uval/sqrt(3.0));
+      GetSectionStaticGreyVal.ubv = (WlzUByte )(uval/sqrt(3.0));
       return pix;
     case WLZ_GREY_FLOAT:
-      GetSectionStaticGreyVal.flv = uval;
+      GetSectionStaticGreyVal.flv = (float )uval;
       return pix;
     case WLZ_GREY_DOUBLE:
       GetSectionStaticGreyVal.dbv = uval;
@@ -1172,3 +1180,4 @@ static WlzPixelP WlzGetSectionConvertGreyType(
   }
   return(pix);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */

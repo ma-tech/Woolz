@@ -171,7 +171,7 @@ WlzErrorNum WlzGreySetRange(
     if( WlzGreyTypeFromObj(obj, &errNum) == WLZ_GREY_RGBA ){
       WlzUByte	rgbaLut[4][256];
       WlzUInt	rgbamin[4], rgbaMin[4];
-      double	rgbaFactor[4], val;
+      double	rgbaFactor[4], val1;
       WlzUInt	red, green, blue, alpha;
 
       rgbamin[0] = WLZ_RGBA_RED_GET(min.v.rgbv);
@@ -225,8 +225,8 @@ WlzErrorNum WlzGreySetRange(
       /* now set up the LUTS */
       for(i=0; i < 4; i++){
 	for(j=0; j < 256; j++){
-	  val = rgbaFactor[i] * (j - rgbamin[i]) + rgbaMin[i];
-	  rgbaLut[i][j] = WLZ_CLAMP(val, 0, 255);
+	  val1 = rgbaFactor[i] * (j - rgbamin[i]) + rgbaMin[i];
+	  rgbaLut[i][j] = (WlzUByte )WLZ_CLAMP(val1, 0, 255);
 	}
       }
 
@@ -317,7 +317,7 @@ WlzErrorNum WlzGreySetRange(
 	      } else {
 		val = factor * (*gptr.shp - min.v.dbv) + Min.v.dbv;
 	      }
-	      *gptr.shp = WLZ_NINT(val);
+	      *gptr.shp = (short )WLZ_NINT(val);
 	    }
 	    break;
 	  case WLZ_GREY_UBYTE:
@@ -330,7 +330,7 @@ WlzErrorNum WlzGreySetRange(
 	      } else {
 		val = factor * (*gptr.ubp - min.v.dbv) + Min.v.dbv;
 	      }
-	      *gptr.ubp = WLZ_NINT(val);
+	      *gptr.ubp = (WlzUByte )WLZ_NINT(val);
 	    }
 	    break;
 	  case WLZ_GREY_FLOAT:

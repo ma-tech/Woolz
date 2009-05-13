@@ -941,7 +941,7 @@ double Wlz3DViewGetIntersectionAngle(
 	}
 
 	/* check for undefined angle - from planes with the same normal */
-	if( l[1] == 0.0 && l[0]== 0.0 )
+	if((fabs(l[1]) < DBL_EPSILON) && (fabs(l[0]) < DBL_EPSILON))
 	  rtnAngle = 0.0;
 	else
 	  rtnAngle = viewStructAtan2(l[1], l[0]);

@@ -137,11 +137,9 @@ static unsigned 		WlzLBTIdxHashFn(
 				  void *datum);
 static void			WlzLBTCondenseNodes3D(
 				  WlzLBTDomain3D *lDom,
-				  WlzPlaneDomain *pDom,
 				  int bndCndFlg);
 static void			WlzLBTCondenseNodes2D(
 				  WlzLBTDomain2D *lDom,
-				  WlzIntervalDomain *iDom,
 				  int bndCndFlg);
 static void			WlzLBTSetNodeIndexObj2D(
 				  WlzLBTDomain2D *lDom,
@@ -1024,7 +1022,7 @@ WlzLBTDomain3D	*WlzLBTDomain3DFromPDomain(WlzPlaneDomain *pDom,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Condense the nodes to get the linear binary tree. */
-    WlzLBTCondenseNodes3D(lDom, pDom, 0);
+    WlzLBTCondenseNodes3D(lDom, 0);
   }
   if(dstErr)
   {
@@ -1147,7 +1145,7 @@ WlzLBTDomain2D	*WlzLBTDomain2DFromIDomain(WlzIntervalDomain *iDom,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Condense the nodes to get the linear binary tree. */
-    WlzLBTCondenseNodes2D(lDom, iDom, 0);
+    WlzLBTCondenseNodes2D(lDom, 0);
   }
   if(dstErr)
   {
@@ -1927,54 +1925,54 @@ static WlzLBTNodeClass2D WlzLBTClassifyNodeFromEdgeMask2D(unsigned msk)
 {
   WlzLBTNodeClass2D cls;
   const WlzLBTNodeClass2D clsTab[16] = {
-				0, 		/*  0  o-o
-						       | |
-						       o-o */
-				1,		/*  1  o-o
-						       | o
-						       o-o */
-				1,		/*  2  ooo
-						       | |
-						       o-o */
-				2,		/*  3  ooo
-						       | o
-						       o-o */
-				1,		/*  4  o-o
-						       o |
-						       o-o */
-				3,		/*  5  o-o
-						       o o
-						       o-o */
-				2,		/*  6  ooo
-						       o |
-						       o-o */
-				4,		/*  7  ooo
-						       o o
-						       o-o */
-				1,		/*  8  o-o
-						       | |
-						       ooo */
-				2,		/*  9  o-o
-						       | o
-						       ooo */
-				3,		/* 10  ooo
-						       | |
-						       ooo */
-				4,		/* 11  ooo
-						       | o
-						       ooo */
-				2,		/* 12  o-o
-						       o |
-						       ooo */
-				4,		/* 13  o-o
-						       o o
-						       ooo */
-				4,		/* 14  ooo
-						       o |
-						       ooo */
-				5};		/* 15  ooo
-						       o o
-						       ooo */
+				WLZ_LBT_NODE_CLASS_2D_0,	/*  0  o-o
+						                       | |
+						                       o-o */
+				WLZ_LBT_NODE_CLASS_2D_1,	/*  1  o-o
+						       		       | o
+						       		       o-o */
+				WLZ_LBT_NODE_CLASS_2D_1,	/*  2  ooo
+						       		       | |
+						       		       o-o */
+				WLZ_LBT_NODE_CLASS_2D_2,	/*  3  ooo
+						       		       | o
+						       		       o-o */
+				WLZ_LBT_NODE_CLASS_2D_1,	/*  4  o-o
+						       		       o |
+						       		       o-o */
+				WLZ_LBT_NODE_CLASS_2D_3,	/*  5  o-o
+						       		       o o
+						       		       o-o */
+				WLZ_LBT_NODE_CLASS_2D_2,	/*  6  ooo
+						       		       o |
+						       		       o-o */
+				WLZ_LBT_NODE_CLASS_2D_4,	/*  7  ooo
+						       		       o o
+						       		       o-o */
+				WLZ_LBT_NODE_CLASS_2D_1,	/*  8  o-o
+						       		       | |
+						       		       ooo */
+				WLZ_LBT_NODE_CLASS_2D_2,	/*  9  o-o
+						       		       | o
+						       		       ooo */
+				WLZ_LBT_NODE_CLASS_2D_3,	/* 10  ooo
+						       		       | |
+						       		       ooo */
+				WLZ_LBT_NODE_CLASS_2D_4,	/* 11  ooo
+						       		       | o
+						       		       ooo */
+				WLZ_LBT_NODE_CLASS_2D_2,	/* 12  o-o
+						       		       o |
+						       		       ooo */
+				WLZ_LBT_NODE_CLASS_2D_4,	/* 13  o-o
+						       		       o o
+						       		       ooo */
+				WLZ_LBT_NODE_CLASS_2D_4,	/* 14  ooo
+						       		       o |
+						       		       ooo */
+				WLZ_LBT_NODE_CLASS_2D_5};	/* 15  ooo
+						       		       o o
+						       		       ooo */
   cls = clsTab[msk & 0xf];
   return(cls);
 }
@@ -2006,7 +2004,7 @@ void		WlzLBTClassifyNode2D(WlzLBTDomain2D *lDom,
   if(nSz == 1)
   {
     *dstRot = 0;
-    *dstCls = 0;
+    *dstCls = WLZ_LBT_NODE_CLASS_2D_0;
   }
   else
   {
@@ -2126,7 +2124,7 @@ void		WlzLBTClassifyNodeFace3D(WlzLBTDomain3D *lDom,
   if(nSz == 1)
   {
     *dstRot = 0;
-    *dstCls = 0;
+    *dstCls = WLZ_LBT_NODE_CLASS_2D_0;
   }
   else
   {
@@ -2196,11 +2194,11 @@ void		WlzLBTClassifyNodeFace3D(WlzLBTDomain3D *lDom,
 * \return	Returns signed comparison for AlgQSort().
 * \ingroup	WlzDomainOps
 * \brief	Compares two 2D partial intervals.
-* \param	vc			Unused client data.
+* \param	dummy			Unused client data.
 * \param	v0			First partial interval.
 * \param	v1			Second partial interval.
 */
-static int	WlzPartialItv2DCmpFn(const void *vc,
+static int	WlzPartialItv2DCmpFn(const void *dummy,
 				     const void *v0, const void *v1)
 {
   int		cmp;
@@ -2220,11 +2218,11 @@ static int	WlzPartialItv2DCmpFn(const void *vc,
 * \return	Returns signed comparison for AlgQSort().
 * \ingroup	WlzDomainOps
 * \brief	Compares two 3D partial intervals.
-* \param	vc			Unused client data.
+* \param	dummy			Unused client data.
 * \param	v0			First partial interval.
 * \param	v1			Second partial interval.
 */
-static int	WlzPartialItv3DCmpFn(const void *vc,
+static int	WlzPartialItv3DCmpFn(const void *dummy,
 				     const void *v0, const void *v1)
 {
   int		cmp;
@@ -3402,7 +3400,7 @@ void		WlzLBTGetKeyDigits3D(unsigned *keys, WlzUByte *digits)
     k1 = (keys[1] & dMsk) != 0; 
     k2 = (keys[2] & dMsk) != 0; 
     k3 = (keys[3] & dMsk) != 0; 
-    digits[idD] = k0 + (k1 << 1) + (k2 << 2) + (k3 << 3);
+    digits[idD] = (WlzUByte )(k0 + (k1 << 1) + (k2 << 2) + (k3 << 3));
     ++idD;
     dMsk <<= 1;
   }
@@ -3432,7 +3430,7 @@ void		WlzLBTGetKeyDigits2D(unsigned *keys, WlzUByte *digits)
     k0 = (keys[0] & dMsk) != 0; 
     k1 = (keys[1] & dMsk) != 0; 
     k2 = (keys[2] & dMsk) != 0; 
-    digits[idD] = k0 + (k1 << 1) + (k2 << 2);
+    digits[idD] = (WlzUByte )(k0 + (k1 << 1) + (k2 << 2));
     ++idD;
     dMsk <<= 1;
   }
@@ -3633,12 +3631,10 @@ static int	WlzLBTDomain2DNodeCmpFn(const void *ptrC,
 *		When all such sequences have been marked identical keys
 *		are removed leaving the linear quadtree nodes.
 * \param	lDom			The LBT domain.
-* \param	pDom			The corresponding plane domain.
 * \param	bndCndFlg		If non-zero then condensation of
 *					boundary nodes is allowed.
 */
 static void	 WlzLBTCondenseNodes3D(WlzLBTDomain3D *lDom,
-    				       WlzPlaneDomain *pDom,
 				       int bndCndFlg)
 {
   int		idC,
@@ -3824,12 +3820,10 @@ static void	 WlzLBTCondenseNodes3D(WlzLBTDomain3D *lDom,
 *		When all such sequences have been marked identical keys
 *		are removed leaving the linear quadtree nodes.
 * \param	lDom			The LBT domain.
-* \param	iDom			The corresponding interval domain.
 * \param	bndCndFlg		If non-zero then condensation of
 *					boundary nodes is allowed.
 */
 static void	 WlzLBTCondenseNodes2D(WlzLBTDomain2D *lDom,
-    				       WlzIntervalDomain *iDom,
 				       int bndCndFlg)
 {
   int		idC,
@@ -4096,7 +4090,7 @@ WlzErrorNum	WlzLBTTestOutputNodesTxt(FILE *fP, WlzDomain dom)
     switch(dom.core->type)
     {
       case WLZ_LBTDOMAIN_2D:
-	(void )fprintf(fP, "type = %d\n", dom.l2->type);
+	(void )fprintf(fP, "type = %d\n", (int )(dom.l2->type));
 	(void )fprintf(fP, "linkcount = %d\n", dom.l2->linkcount);
 	(void )fprintf(fP, "freeptr = 0x%lx\n",
 	               (unsigned long )(dom.l2->freeptr));
@@ -4129,7 +4123,7 @@ WlzErrorNum	WlzLBTTestOutputNodesTxt(FILE *fP, WlzDomain dom)
 	}
         break;
       case WLZ_LBTDOMAIN_3D:
-	(void )fprintf(fP, "type = %d\n", dom.l3->type);
+	(void )fprintf(fP, "type = %d\n", (int )(dom.l3->type));
 	(void )fprintf(fP, "linkcount = %d\n", dom.l3->linkcount);
 	(void )fprintf(fP, "freeptr = 0x%lx\n",
 	               (unsigned long )(dom.l3->freeptr));

@@ -48,6 +48,7 @@ bin_PROGRAMS		= \
 			  WlzTstCMeshDist \
 			  WlzTstCMeshGen \
 			  WlzTstCMeshTransformObj \
+			  WlzTstCMeshVtxInMesh \
 			  WlzTstGeomArcLength2D \
 			  WlzTstGeomLineTriangleIntersect \
 			  WlzTstGeomRectFromWideLine \
@@ -70,6 +71,10 @@ WlzTstCMeshGen_LDFLAGS			= $(AM_LFLAGS)
 WlzTstCMeshTransformObj_SOURCES		= WlzTstCMeshTransformObj.c
 WlzTstCMeshTransformObj_LDADD		= $(LDADD)
 WlzTstCMeshTransformObj_LDFLAGS		= $(AM_LFLAGS)
+
+WlzTstCMeshVtxInMesh_SOURCES		= WlzTstCMeshVtxInMesh.c
+WlzTstCMeshVtxInMesh_LDADD		= $(LDADD)
+WlzTstCMeshVtxInMesh_LDFLAGS		= $(AM_LFLAGS)
 
 WlzTstGeomArcLength2D_SOURCES		= WlzTstGeomArcLength2D.c
 WlzTstGeomArcLength2D_LDADD		= $(LDADD)

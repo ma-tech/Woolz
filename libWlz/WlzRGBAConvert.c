@@ -175,22 +175,22 @@ WlzCompoundArray *WlzRGBAToCompound(
 
     /* red */
     newBck.type = WLZ_GREY_UBYTE;
-    newBck.v.ubv = WLZ_RGBA_RED_GET(oldBck.v.rgbv);
+    newBck.v.ubv = (WlzUByte )WLZ_RGBA_RED_GET(oldBck.v.rgbv);
     values.v = WlzNewValueTb(obj, type, newBck, &errNum);
     objs[0] = WlzMakeMain(obj->type, obj->domain, values,
 			  NULL, NULL, &errNum);
     /* green */
-    newBck.v.ubv = WLZ_RGBA_GREEN_GET(oldBck.v.rgbv);
+    newBck.v.ubv = (WlzUByte )WLZ_RGBA_GREEN_GET(oldBck.v.rgbv);
     values.v = WlzNewValueTb(obj, type, newBck, &errNum);
     objs[1] = WlzMakeMain(obj->type, obj->domain, values,
 			  NULL, NULL, &errNum);
     /* blue */
-    newBck.v.ubv = WLZ_RGBA_BLUE_GET(oldBck.v.rgbv);
+    newBck.v.ubv = (WlzUByte )WLZ_RGBA_BLUE_GET(oldBck.v.rgbv);
     values.v = WlzNewValueTb(obj, type, newBck, &errNum);
     objs[2] = WlzMakeMain(obj->type, obj->domain, values,
 			  NULL, NULL, &errNum);
     /* alpha */
-    newBck.v.ubv = WLZ_RGBA_ALPHA_GET(oldBck.v.rgbv);
+    newBck.v.ubv = (WlzUByte )WLZ_RGBA_ALPHA_GET(oldBck.v.rgbv);
     values.v = WlzNewValueTb(obj, type, newBck, &errNum);
     objs[3] = WlzMakeMain(obj->type, obj->domain, values,
 			  NULL, NULL, &errNum);
@@ -222,13 +222,13 @@ WlzCompoundArray *WlzRGBAToCompound(
 	for(j=0, k=iwsp0.lftpos; k <= iwsp0.rgtpos; j++, k++,
 	      gwsp0.u_grintptr.rgbp++){
 	  *(gwsp[0].u_grintptr.ubp++) =
-	    WLZ_RGBA_RED_GET(*(gwsp0.u_grintptr.rgbp));
+	    (WlzUByte )WLZ_RGBA_RED_GET(*(gwsp0.u_grintptr.rgbp));
 	  *(gwsp[1].u_grintptr.ubp++) =
-	    WLZ_RGBA_GREEN_GET(*(gwsp0.u_grintptr.rgbp));
+	    (WlzUByte )WLZ_RGBA_GREEN_GET(*(gwsp0.u_grintptr.rgbp));
 	  *(gwsp[2].u_grintptr.ubp++) =
-	    WLZ_RGBA_BLUE_GET(*(gwsp0.u_grintptr.rgbp));
+	    (WlzUByte )WLZ_RGBA_BLUE_GET(*(gwsp0.u_grintptr.rgbp));
 	  *(gwsp[3].u_grintptr.ubp++) =
-	    WLZ_RGBA_ALPHA_GET(*(gwsp0.u_grintptr.rgbp));
+	    (WlzUByte )WLZ_RGBA_ALPHA_GET(*(gwsp0.u_grintptr.rgbp));
 	}
 	break;
       
@@ -240,10 +240,10 @@ WlzCompoundArray *WlzRGBAToCompound(
 	  col[2] = WLZ_RGBA_BLUE_GET(*(gwsp0.u_grintptr.rgbp));
 	  a = WLZ_RGBA_ALPHA_GET(*(gwsp0.u_grintptr.rgbp));
 	  WlzRGBAConvertRGBToHSV_UBYTENormalised(col);
-	  *(gwsp[0].u_grintptr.ubp++) = col[0];
-	  *(gwsp[1].u_grintptr.ubp++) = col[1];
-	  *(gwsp[2].u_grintptr.ubp++) = col[2];
-	  *(gwsp[3].u_grintptr.ubp++) = a;
+	  *(gwsp[0].u_grintptr.ubp++) = (WlzUByte )(col[0]);
+	  *(gwsp[1].u_grintptr.ubp++) = (WlzUByte )(col[1]);
+	  *(gwsp[2].u_grintptr.ubp++) = (WlzUByte )(col[2]);
+	  *(gwsp[3].u_grintptr.ubp++) = (WlzUByte )a;
 	    }
 	break;
       
@@ -254,10 +254,10 @@ WlzCompoundArray *WlzRGBAToCompound(
 	  col[1] = WLZ_RGBA_GREEN_GET(*(gwsp0.u_grintptr.rgbp));
 	  col[2] = WLZ_RGBA_BLUE_GET(*(gwsp0.u_grintptr.rgbp));
 	  a = WLZ_RGBA_ALPHA_GET(*(gwsp0.u_grintptr.rgbp));
-	  *(gwsp[0].u_grintptr.ubp++) = (col[1] + col[2]) / 2;
-	  *(gwsp[1].u_grintptr.ubp++) = (col[2] + col[0]) / 2;
-	  *(gwsp[2].u_grintptr.ubp++) = (col[0] + col[1]) / 2;
-	  *(gwsp[3].u_grintptr.ubp++) = a;
+	  *(gwsp[0].u_grintptr.ubp++) = (WlzUByte )((col[1] + col[2]) / 2);
+	  *(gwsp[1].u_grintptr.ubp++) = (WlzUByte )((col[2] + col[0]) / 2);
+	  *(gwsp[2].u_grintptr.ubp++) = (WlzUByte )((col[0] + col[1]) / 2);
+	  *(gwsp[3].u_grintptr.ubp++) = (WlzUByte )a;
 	    }
 	break;
       default:
@@ -524,7 +524,7 @@ WlzObject *WlzRGBAToModulus(
       WLZ_GREY_SHORT, &errNum);
     oldBck = WlzGetBackground(obj, &errNum);
     newBck.type = WLZ_GREY_SHORT;
-    newBck.v.shv = WLZ_RGBA_MODULUS(oldBck.v.rgbv);
+    newBck.v.shv = (short )WLZ_RGBA_MODULUS(oldBck.v.rgbv);
 
     /* make values table and return object */
     values.v = WlzNewValueTb(obj, type, newBck, &errNum);
@@ -545,7 +545,8 @@ WlzObject *WlzRGBAToModulus(
       errNum = WlzNextGreyInterval(&iwsp1);
       for(j=0, k=iwsp0.lftpos; k <= iwsp0.rgtpos; j++, k++,
 	    gwsp0.u_grintptr.rgbp++){
-	*(gwsp1.u_grintptr.shp++) = WLZ_RGBA_MODULUS(*(gwsp0.u_grintptr.rgbp));
+	*(gwsp1.u_grintptr.shp++) = (short )
+	                            WLZ_RGBA_MODULUS(*(gwsp0.u_grintptr.rgbp));
       }
     }
     if( errNum == WLZ_ERR_EOO ){
@@ -672,7 +673,7 @@ WlzObject *WlzIndexToRGBA(
       break;
 
     case WLZ_GREY_DOUBLE:
-      greyVal = WLZ_CLAMP(bg.v.dbv, 0, 255);
+      greyVal = (int )WLZ_CLAMP(bg.v.dbv, 0, 255);
       break;
 
     default:
@@ -732,7 +733,7 @@ WlzObject *WlzIndexToRGBA(
 	break;
 
       case WLZ_GREY_DOUBLE:
-	greyVal = WLZ_CLAMP(*(go.dbp), 0, 255);
+	greyVal = (int )WLZ_CLAMP(*(go.dbp), 0, 255);
 	go.dbp++;
 	break;
 

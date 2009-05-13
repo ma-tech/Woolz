@@ -573,7 +573,7 @@ void		 WlzValueClampIntIntoShort(short *dst, int *src, int count)
     }
     else
     {
-      *dst = *src;
+      *dst = (short )*src;
     }
     ++src;
     ++dst;
@@ -603,7 +603,7 @@ void		 WlzValueClampIntIntoUByte(WlzUByte *dst, int *src, int count)
     }
     else
     {
-      *dst = *src;
+      *dst = (WlzUByte )*src;
     }
     ++src;
     ++dst;
@@ -634,7 +634,7 @@ void		 WlzValueClampShortIntoUByte(WlzUByte *dst, short *src,
     }
     else
     {
-      *dst = *src;
+      *dst = (WlzUByte )*src;
     }
     ++src;
     ++dst;
@@ -694,7 +694,7 @@ void		WlzValueClampFloatIntoShort(short *dst, float *src, int count)
     }
     else
     {
-      *dst = WLZ_NINT(*src);
+      *dst = (short )WLZ_NINT(*src);
     }
     ++src;
     ++dst;
@@ -785,7 +785,7 @@ void		WlzValueClampDoubleIntoShort(short *dst, double *src, int count)
     }
     else
     {
-      *dst = WLZ_NINT(*src);
+      *dst = (short )WLZ_NINT(*src);
     }
     ++src;
     ++dst;
@@ -846,7 +846,7 @@ void		WlzValueClampDoubleIntoFloat(float *dst, double *src, int count)
     }
     else
     {
-      *dst = *src;
+      *dst = (float )*src;
     }
     ++src;
     ++dst;
@@ -1221,7 +1221,7 @@ void		WlzValueCopyIntToShort(short *dst, int *src, int count)
 {
   while(count-- > 0)
   {
-    *dst++ = *src++;
+    *dst++ = (short )*src++;
   }
 }
 
@@ -1237,7 +1237,7 @@ void		WlzValueCopyIntToUByte(WlzUByte *dst, int *src, int count)
 {
   while(count-- > 0)
   {
-    *dst++ = (unsigned )*src++;
+    *dst++ = (WlzUByte )*src++;
   }
 }
 
@@ -1253,7 +1253,7 @@ void		WlzValueCopyIntToFloat(float *dst, int *src, int count)
 {
   while(count-- > 0)
   {
-    *dst++ = *src++;
+    *dst++ = (float )*src++;
   }
 }
 
@@ -1327,7 +1327,7 @@ void		WlzValueCopyShortToUByte(WlzUByte *dst, short *src, int count)
 {
   while(count-- > 0)
   {
-    *dst++ = (unsigned )*src++;
+    *dst++ = (WlzUByte )*src++;
   }
 }
 
@@ -1503,7 +1503,7 @@ void		WlzValueCopyFloatToShort(short *dst, float *src, int count)
 {
   while(count-- > 0)
   {
-    *dst++ = WLZ_NINT(*src);
+    *dst++ = (short )WLZ_NINT(*src);
     ++src;
   }
 }
@@ -1520,7 +1520,7 @@ void		WlzValueCopyFloatToUByte(WlzUByte *dst, float *src, int count)
 {
   while(count-- > 0)
   {
-    *dst++ = (unsigned )WLZ_NINT(*src);
+    *dst++ = (WlzUByte )WLZ_NINT(*src);
     ++src;
   }
 }
@@ -1596,7 +1596,7 @@ void		WlzValueCopyDoubleToShort(short *dst, double *src, int count)
 {
   while(count-- > 0)
   {
-    *dst++ = WLZ_NINT(*src);
+    *dst++ = (short )WLZ_NINT(*src);
     ++src;
   }
 }
@@ -1614,7 +1614,7 @@ void		WlzValueCopyDoubleToUByte(WlzUByte *dst, double *src,
 {
   while(count-- > 0)
   {
-    *dst++ = (unsigned )WLZ_NINT(*src);
+    *dst++ = (WlzUByte )WLZ_NINT(*src);
     ++src;
   }
 }
@@ -1631,7 +1631,7 @@ void		WlzValueCopyDoubleToFloat(float *dst, double *src, int count)
 {
   while(count-- > 0)
   {
-    *dst++ = *src++;
+    *dst++ = (float )*src++;
   }
 }
 
@@ -1673,7 +1673,7 @@ void		WlzValueCopyRGBAToInt(int *dst, WlzUInt *src, int count)
 {
   while(count-- > 0)
   {
-    *dst++ = WLZ_RGBA_MODULUS(*src);
+    *dst++ = (int )WLZ_RGBA_MODULUS(*src);
     ++src;
   }
 }
@@ -1690,7 +1690,7 @@ void		WlzValueCopyRGBAToShort(short *dst, WlzUInt *src, int count)
 {
   while(count-- > 0)
   {
-    *dst++ = WLZ_RGBA_MODULUS(*src);
+    *dst++ = (short )WLZ_RGBA_MODULUS(*src);
     ++src;
   }
 }
@@ -1710,8 +1710,8 @@ void		WlzValueCopyRGBAToUByte(WlzUByte *dst, WlzUInt *src,
 
   while(count-- > 0)
   {
-    ival = WLZ_RGBA_MODULUS(*src);
-    *dst++ = WLZ_CLAMP(ival, 0, 255);
+    ival = (int )WLZ_RGBA_MODULUS(*src);
+    *dst++ = (WlzUByte )WLZ_CLAMP(ival, 0, 255);
     ++src;
   }
 }
@@ -1728,7 +1728,7 @@ void		WlzValueCopyRGBAToFloat(float *dst, WlzUInt *src, int count)
 {
   while(count-- > 0)
   {
-    *dst++ = WLZ_RGBA_MODULUS(*src);
+    *dst++ = (float )WLZ_RGBA_MODULUS(*src);
     ++src;
   }
 }
@@ -2009,8 +2009,8 @@ void		WlzValueCopyDVertexToFVertex(WlzFVertex2 *dst,
 {
   while(count-- > 0)
   {
-    dst->vtX = WLZ_NINT(src->vtX);
-    dst->vtY = WLZ_NINT(src->vtY);
+    dst->vtX = (float )(src->vtX);
+    dst->vtY = (float )(src->vtY);
     ++dst;
     ++src;
   }
@@ -2135,8 +2135,8 @@ void		WlzValueCopyIVertexToFVertex(WlzFVertex2 *dst,
 {
   while(count-- > 0)
   {
-    dst->vtX = src->vtX;
-    dst->vtY = src->vtY;
+    dst->vtX = (float )(src->vtX);
+    dst->vtY = (float )(src->vtY);
     ++dst;
     ++src;
   }
@@ -2189,9 +2189,9 @@ void		WlzValueCopyDVertexToFVertex3(WlzFVertex3 *dst,
 {
   while(count-- > 0)
   {
-    dst->vtX = WLZ_NINT(src->vtX);
-    dst->vtY = WLZ_NINT(src->vtY);
-    dst->vtZ = WLZ_NINT(src->vtZ);
+    dst->vtX = (float )(src->vtX);
+    dst->vtY = (float )(src->vtY);
+    dst->vtZ = (float )(src->vtZ);
     ++dst;
     ++src;
   }
@@ -2320,9 +2320,9 @@ void		WlzValueCopyIVertexToFVertex3(WlzFVertex3 *dst,
 {
   while(count-- > 0)
   {
-    dst->vtX = src->vtX;
-    dst->vtY = src->vtY;
-    dst->vtZ = src->vtZ;
+    dst->vtX = (float )(src->vtX);
+    dst->vtY = (float )(src->vtY);
+    dst->vtZ = (float )(src->vtZ);
     ++dst;
     ++src;
   }
@@ -2378,16 +2378,16 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 	  case WLZ_GREY_SHORT:
 	    dstPix->type = dstType;
 	    WlzValueClampIntToShort(&(srcPix.v.inv), 1);
-	    dstPix->v.shv = srcPix.v.inv;
+	    dstPix->v.shv = (short )(srcPix.v.inv);
 	    break;
 	  case WLZ_GREY_UBYTE:
 	    dstPix->type = dstType;
 	    WlzValueClampIntToUByte(&(srcPix.v.inv), 1);
-	    dstPix->v.ubv = (unsigned )(srcPix.v.inv);
+	    dstPix->v.ubv = (WlzUByte )(srcPix.v.inv);
 	    break;
 	  case WLZ_GREY_FLOAT:
 	    dstPix->type = dstType;
-	    dstPix->v.flv = srcPix.v.inv;
+	    dstPix->v.flv = (float )(srcPix.v.inv);
 	    break;
 	  case WLZ_GREY_DOUBLE:
 	    dstPix->type = dstType;
@@ -2416,7 +2416,7 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 	  case WLZ_GREY_UBYTE:
 	    dstPix->type = dstType;
 	    WlzValueClampShortToUByte(&(srcPix.v.shv), 1);
-	    dstPix->v.ubv =  (unsigned )(srcPix.v.shv);
+	    dstPix->v.ubv =  (WlzUByte )(srcPix.v.shv);
 	    break;
 	  case WLZ_GREY_FLOAT:
 	    dstPix->type = dstType;
@@ -2479,12 +2479,12 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 	  case WLZ_GREY_SHORT:
 	    dstPix->type = dstType;
 	    WlzValueClampFloatToShort(&(srcPix.v.flv), 1);
-	    dstPix->v.shv = WLZ_NINT(srcPix.v.flv);
+	    dstPix->v.shv = (short )WLZ_NINT(srcPix.v.flv);
 	    break;
 	  case WLZ_GREY_UBYTE:
 	    dstPix->type = dstType;
 	    WlzValueClampFloatToUByte(&(srcPix.v.flv), 1);
-	    dstPix->v.ubv = (unsigned )(WLZ_NINT(srcPix.v.flv));
+	    dstPix->v.ubv = (WlzUByte )(WLZ_NINT(srcPix.v.flv));
 	    break;
 	  case WLZ_GREY_FLOAT:
 	    *dstPix = srcPix;
@@ -2514,24 +2514,24 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 	  case WLZ_GREY_SHORT:
 	    dstPix->type = dstType;
 	    WlzValueClampDoubleToShort(&(srcPix.v.dbv), 1);
-	    dstPix->v.shv =  WLZ_NINT(srcPix.v.dbv);
+	    dstPix->v.shv =  (short )WLZ_NINT(srcPix.v.dbv);
 	    break;
 	  case WLZ_GREY_UBYTE:
 	    dstPix->type = dstType;
 	    WlzValueClampDoubleToUByte(&(srcPix.v.dbv), 1);
-	    dstPix->v.ubv = (unsigned )WLZ_NINT(srcPix.v.dbv);
+	    dstPix->v.ubv = (WlzUByte )WLZ_NINT(srcPix.v.dbv);
 	    break;
 	  case WLZ_GREY_FLOAT:
 	    dstPix->type = dstType;
 	    WlzValueClampDoubleToFloat(&(srcPix.v.dbv), 1);
-	    dstPix->v.flv = srcPix.v.dbv;
+	    dstPix->v.flv = (float )(srcPix.v.dbv);
 	    break;
 	  case WLZ_GREY_DOUBLE:
 	    *dstPix = srcPix;
 	    break;
 	  case WLZ_GREY_RGBA:
 	    dstPix->type = dstType;
-	    val = WLZ_CLAMP(srcPix.v.dbv, 0, 255);
+	    val = (WlzUInt )WLZ_CLAMP(srcPix.v.dbv, 0, 255);
 	    WLZ_RGBA_RGBA_SET(dstPix->v.rgbv, val, val, val, 255);
 	    break;
 	  default:
@@ -2540,7 +2540,7 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 	}
 	break;
       case WLZ_GREY_RGBA:
-	val = WLZ_RGBA_MODULUS(srcPix.v.rgbv);
+	val = (WlzUInt )WLZ_RGBA_MODULUS(srcPix.v.rgbv);
         switch(dstType)
 	{
 	  case WLZ_GREY_INT:
@@ -2549,15 +2549,15 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 	    break;
 	  case WLZ_GREY_SHORT:
 	    dstPix->type = dstType;
-	    dstPix->v.shv = val;
+	    dstPix->v.shv = (short )val;
 	    break;
 	  case WLZ_GREY_UBYTE:
 	    dstPix->type = dstType;
-	    dstPix->v.ubv = WLZ_CLAMP(val, 0, 255);
+	    dstPix->v.ubv = (WlzUByte )WLZ_CLAMP(val, 0, 255);
 	    break;
 	  case WLZ_GREY_FLOAT:
 	    dstPix->type = dstType;
-	    dstPix->v.flv = val;
+	    dstPix->v.flv = (float )val;
 	    break;
 	  case WLZ_GREY_DOUBLE:
 	    dstPix->type = dstType;

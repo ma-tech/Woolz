@@ -405,7 +405,7 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 	    {
 	      tD0 = (*(srcPix.shp)++ * nrmVal) / (*(shdPix.shp)++ + 1.0);
 	      tI0 = WLZ_NINT(tD0);
-	      *(rtnPix.shp)++ = WLZ_CLAMP(tI0, SHRT_MIN, SHRT_MAX);
+	      *(rtnPix.shp)++ = (short )WLZ_CLAMP(tI0, SHRT_MIN, SHRT_MAX);
 	    }
 	    break;
 	  case WLZ_GREY_UBYTE:
@@ -413,14 +413,14 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 	    {
 	      tD0 = (*(srcPix.ubp)++ * nrmVal) / (*(shdPix.ubp)++ + 1.0);
 	      tI0 = WLZ_NINT(tD0);
-	      *(rtnPix.ubp)++ = WLZ_CLAMP(tI0, 0, 255);
+	      *(rtnPix.ubp)++ = (WlzUByte )WLZ_CLAMP(tI0, 0, 255);
 	    }
 	    break;
 	  case WLZ_GREY_FLOAT:
 	    while(iCnt-- > 0)
 	    {
 	      tD0 = (*(srcPix.flp)++ * nrmVal) / (*(shdPix.flp)++ + 1.0);
-	      *(rtnPix.flp)++ = tD0;
+	      *(rtnPix.flp)++ = (float )tD0;
 	    }
 	    break;
 	  case WLZ_GREY_DOUBLE:
@@ -438,13 +438,19 @@ static WlzObject *WlzShadeCorrect2DG(WlzObject *srcObj, WlzObject *shdObj,
 	      tUI0 = *(srcPix.rgbp)++;
 	      tUI1 = *(shdPix.rgbp)++;
 	      red = WLZ_RGBA_RED_GET(tUI1);
-	      red = (red)?((WLZ_RGBA_RED_GET(tUI0) * nrmVal)) / red : nrmVal;
+	      red = (red)?
+		    (int )(((WLZ_RGBA_RED_GET(tUI0) * nrmVal))/red):
+		    (int )nrmVal;
 	      red = WLZ_CLAMP(red, 0, 255);
 	      green = WLZ_RGBA_GREEN_GET(tUI1);
-	      green = (green)?((WLZ_RGBA_GREEN_GET(tUI0) * nrmVal)) / green : nrmVal;
+	      green = (green)?
+	              (int )(((WLZ_RGBA_GREEN_GET(tUI0) * nrmVal))/green):
+		      (int )nrmVal;
 	      green = WLZ_CLAMP(green, 0, 255);
 	      blue = WLZ_RGBA_BLUE_GET(tUI1);
-	      blue = (blue)?((WLZ_RGBA_BLUE_GET(tUI0) * nrmVal)) / blue : nrmVal;
+	      blue = (blue)?
+	             (int )(((WLZ_RGBA_BLUE_GET(tUI0) * nrmVal))/blue):
+	             (int )nrmVal;
 	      blue = WLZ_CLAMP(blue, 0, 255);
 	      WLZ_RGBA_RGBA_SET(tUI0, red, green, blue, 255);
 	      *(rtnPix.rgbp)++ = tUI0;

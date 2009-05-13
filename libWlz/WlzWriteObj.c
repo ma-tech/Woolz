@@ -249,18 +249,18 @@ static int putfloat(float f, FILE *fP)
 
   cin = (unsigned char *) &ff;
 #if defined (__sparc) || defined (__mips) || defined (__ppc)
-  cout[0] = *(cin+1);
-  cout[1] = *cin + 1;
-  cout[2] = *(cin+3);
-  cout[3] = *(cin+2);
+  cout[0] = *(cin + 1);
+  cout[1] = (unsigned char )(*cin + 1);
+  cout[2] = *(cin + 3);
+  cout[3] = *(cin + 2);
 #endif /* __sparc || __mips */
 #if defined (__x86) || defined (__alpha)
   cout[3] = *(cin+1);
   cout[2] = *(cin+0);
-  cout[1] = *(cin+3) + 1;
+  cout[1] = (unsigned char )(*(cin + 3) + 1);
   cout[0] = *(cin+2);
 #endif /* __x86 || __alpha */
-  return( (int) fwrite(&cout[0], sizeof(char), 4, fP) );
+  return( (int )fwrite(&cout[0], sizeof(char), 4, fP) );
 }
 
 /*!
@@ -2655,11 +2655,6 @@ static WlzErrorNum	WlzWriteCMeshTransform2D(
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((mesh->res.nod.numEnt < 0) ||
-          (mesh->res.elm.numEnt < 0))
-  {
-    errNum = WLZ_ERR_DOMAIN_DATA;
-  }
   /* Generate mesh node index table to avoid deleted nodes and then
    * write the number of nodes followed by the number of elements
    * to the file. */
@@ -2864,11 +2859,6 @@ static WlzErrorNum WlzWriteCMesh2D(FILE *fP, int **dstNodTbl,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((mesh->res.nod.numEnt < 0) ||
-          (mesh->res.elm.numEnt < 0))
-  {
-    errNum = WLZ_ERR_DOMAIN_DATA;
-  }
   /* Generate mesh node index table to avoid deleted nodes and then
    * write the number of nodes followed by the number of elements
    * to the file. */
@@ -3006,11 +2996,6 @@ static WlzErrorNum WlzWriteCMesh3D(FILE *fP, int **dstNodTbl,
   else if(mesh->type != WLZ_CMESH_TET3D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  else if((mesh->res.nod.numEnt < 0) ||
-          (mesh->res.elm.numEnt < 0))
-  {
-    errNum = WLZ_ERR_DOMAIN_DATA;
   }
   /* Generate mesh node index table to avoid deleted nodes and then
    * write the number of nodes followed by the number of elements

@@ -131,10 +131,10 @@ WlzPolygonDomain *WlzPolySmooth(
 	  /* loop though polyline */
 	  for (i=0; i < (rtnPoly->nvertices - wrap - 1); i++) {
 	    x0 = fVtxs->vtX;
-	    fVtxs->vtX = x1 + 2 * x0 + (fVtxs+1)->vtX;
+	    fVtxs->vtX = (float )(x1 + 2 * x0 + (fVtxs+1)->vtX);
 	    x1 = x0;
 	    y0 = fVtxs->vtY;
-	    fVtxs->vtY = y1 + 2 * y0 + (fVtxs+1)->vtY;
+	    fVtxs->vtY = (float )(y1 + 2 * y0 + (fVtxs+1)->vtY);
 	    y1 = y0;
 	    fVtxs++;
 	  }
@@ -142,9 +142,9 @@ WlzPolygonDomain *WlzPolySmooth(
 	  /* last vertex, take care of wrap */
 	  if( wrap ){
 	    x0 = fVtxs->vtX;
-	    fVtxs->vtX = x1 + 2 * x0 + x2;
+	    fVtxs->vtX = (float )(x1 + 2 * x0 + x2);
 	    y0 = fVtxs->vtY;
-	    fVtxs->vtY = y1 + 2 * y0 + y2;
+	    fVtxs->vtY = (float )(y1 + 2 * y0 + y2);
 	    fVtxs++;
 	    i++;
 	    while( i < rtnPoly->nvertices ){

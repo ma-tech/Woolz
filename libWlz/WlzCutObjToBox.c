@@ -834,7 +834,7 @@ static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
       while(count-- > 0)
       {
 	noise = AlgRandNormal(mu, sigma);
-	*(vec.lnp)++ = WLZ_CLAMP(noise, INT_MIN, INT_MAX);
+	*(vec.lnp)++ = (long )(WLZ_CLAMP(noise, INT_MIN, INT_MAX));
       }
       break;
     case WLZ_GREY_INT:
@@ -842,7 +842,7 @@ static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
       while(count-- > 0)
       {
 	noise = AlgRandNormal(mu, sigma);
-	*(vec.inp)++ = WLZ_CLAMP(noise, INT_MIN, INT_MAX);
+	*(vec.inp)++ = (int )(WLZ_CLAMP(noise, INT_MIN, INT_MAX));
       }
       break;
     case WLZ_GREY_SHORT:
@@ -850,7 +850,7 @@ static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
       while(count-- > 0)
       {
 	noise = AlgRandNormal(mu, sigma);
-	*(vec.shp)++ = WLZ_CLAMP(noise, SHRT_MIN, SHRT_MAX);
+	*(vec.shp)++ = (short )(WLZ_CLAMP(noise, SHRT_MIN, SHRT_MAX));
       }
       break;
     case WLZ_GREY_UBYTE:
@@ -858,7 +858,7 @@ static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
       while(count-- > 0)
       {
 	noise = AlgRandNormal(mu, sigma);
-	*(vec.ubp)++ = WLZ_CLAMP(noise, 0, 255);
+	*(vec.ubp)++ = (WlzUByte )(WLZ_CLAMP(noise, 0, 255));
       }
       break;
     case WLZ_GREY_FLOAT:
@@ -866,7 +866,7 @@ static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
       while(count-- > 0)
       {
 	noise = AlgRandNormal(mu, sigma);
-	*(vec.flp)++ = WLZ_CLAMP(noise, FLT_MIN, FLT_MAX);
+	*(vec.flp)++ = (float )(WLZ_CLAMP(noise, FLT_MIN, FLT_MAX));
       }
       break;
     case WLZ_GREY_DOUBLE:
@@ -882,7 +882,7 @@ static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
       while(count-- > 0)
       {
 	noise = AlgRandNormal(mu, sigma);
-	*(vec.rgbp)++ = WLZ_CLAMP(noise, 0, 0xffffff) + 0xff000000;
+	*(vec.rgbp)++ = (WlzUInt )(WLZ_CLAMP(noise, 0, 0xffffff) + 0xff000000);
       }
       break;
     default:

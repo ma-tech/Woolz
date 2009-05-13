@@ -60,9 +60,6 @@ static int 			intv_arr(WlzInterval *intl,
 		    		  WlzInterval *buff,
 		    		  WlzInterval *tmp);
 
-extern WlzObject 		*WlzErosion4(WlzObject *obj,
-			      	  WlzErrorNum *wlzErr);
-
 static WlzObject 		*WlzErosion3d(WlzObject *obj,
 			          WlzConnectType  connectivity,
 			       	  WlzErrorNum *wlzErr);

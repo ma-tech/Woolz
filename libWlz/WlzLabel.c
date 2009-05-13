@@ -151,7 +151,7 @@ WlzErrorNum WlzLabel(
   int			oll, ofl, jjj;
   WlzDomain		domain;
   WlzValues		values;
-  WlzConnectType	jdqt;
+  int			jdqt;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
   WlzObject		**objlist;
 
@@ -327,7 +327,7 @@ WlzErrorNum WlzLabel(
       rtprec = precal->a_int.iright +2 ;
 
       /* test whether last interval in preceeding line dealt with */
-      if (precal > prlast || rtcrn <= lftprc+(int )jdqt) { 
+      if (precal > prlast || rtcrn <= lftprc + jdqt) { 
 	/* is interval in current line already allocated */
 	if (!alloc) { 
 	  /* start a new object and allocate this interval to it */

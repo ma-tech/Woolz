@@ -240,6 +240,7 @@ static void	AlgMatrixCGDebug(FILE *fP, const char *name,
 }
 #endif /* ALG_MATRIXCG_DEBUG */
 
+#ifdef ALG_MATRIXCG_TEST
 #if (ALG_MATRIXCG_TEST == 1)
 int		main(int argc, char *argv[])
 {
@@ -513,3 +514,4 @@ int		main(int argc, char *argv[])
   }
 }
 #endif /* ALG_MATRIXCG_TEST == 3 */
+#endif /* ALG_MATRIXCG_TEST */

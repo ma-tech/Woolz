@@ -139,8 +139,8 @@ double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
     {
       while((errNum = WlzNextInterval(&iWsp)) == WLZ_ERR_NONE)
       {
-	delta.vtY = iWsp.linpos - cMass.vtY;
-	delta.vtX = iWsp.lftpos - cMass.vtX;
+	delta.vtY = (int )(iWsp.linpos - cMass.vtY);
+	delta.vtX = (int )(iWsp.lftpos - cMass.vtX);
 	iCount = iWsp.rgtpos - iWsp.lftpos + 1;
 	tI0 = iCount * (iCount - 1);
 	ixx += iCount * delta.vtY * delta.vtY;
@@ -155,12 +155,12 @@ double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
     }
     else
     {
-      while((errNum = WLZ_ERR_NONE) &&
+      while((errNum == WLZ_ERR_NONE) &&
             ((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE))
       {
 	gPix = gWsp.u_grintptr;
-	delta.vtX = iWsp.lftpos - cMass.vtX;
-	delta.vtY = iWsp.linpos - cMass.vtY;
+	delta.vtX = (int )(iWsp.lftpos - cMass.vtX);
+	delta.vtY = (int )(iWsp.linpos - cMass.vtY);
 	iCount = iWsp.rgtpos - iWsp.lftpos;
 	switch(gWsp.pixeltype)
 	{
@@ -227,7 +227,7 @@ double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
 	  case WLZ_GREY_RGBA:
 	    while(iCount-- >= 0)
 	    {
-	      tI0 = WLZ_RGBA_MODULUS(*gPix.rgbp);
+	      tI0 = (WlzUInt )WLZ_RGBA_MODULUS(*gPix.rgbp);
 	      tI1 = delta.vtX * tI0;
 	      ixx += delta.vtY * delta.vtY * tI0;
 	      iyy += delta.vtX * tI1;

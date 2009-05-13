@@ -115,15 +115,13 @@ int		AlgBitSetPositions(int *posA, unsigned long gMsk)
 unsigned long	AlgBitNextNOfM(unsigned long curMsk, int n, int m)
 {
   int		idx,
-		search,
-  		ok = 0;
+		search;
   unsigned long	tmpMsk,
   		maxMsk,
   		nxtMsk = 0;
 
   if((n > 0) && (m > n) && (m < 32))
   {
-    ok = 1;
     if(curMsk == 0)
     {
       /* Compute initial value for mask. */

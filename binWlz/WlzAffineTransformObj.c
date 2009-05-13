@@ -678,7 +678,7 @@ int             main(int argc, char **argv)
   {
     WlzFreeObj(trObj);
   }
-  if(trans)
+  else if(trans)
   {
     WlzFreeAffineTransform(trans);
   }

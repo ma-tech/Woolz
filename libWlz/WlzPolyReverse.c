@@ -86,8 +86,8 @@ WlzPolygonDomain *WlzPolyReverse(
 	  y = iVtxs->vtY;
 	  iVtxs->vtX = jVtxs->vtX;
 	  iVtxs->vtY = jVtxs->vtY;
-	  jVtxs->vtX = x;
-	  jVtxs->vtY = y;
+	  jVtxs->vtX = (int )x;
+	  jVtxs->vtY = (int )y;
 	}
 	break;
 
@@ -101,8 +101,8 @@ WlzPolygonDomain *WlzPolyReverse(
 	  y = fVtxs->vtY;
 	  fVtxs->vtX = gVtxs->vtX;
 	  fVtxs->vtY = gVtxs->vtY;
-	  gVtxs->vtX = x;
-	  gVtxs->vtY = y;
+	  gVtxs->vtX = (float )x;
+	  gVtxs->vtY = (float )y;
 	}
 	break;
 

@@ -497,8 +497,10 @@ static WlzPolygonDomain *WlzAffineTransformPoly2(WlzPolygonDomain *srcPoly,
         count = srcPoly->nvertices;
         while(count-- > 0)
         {
-          dstVtxF->vtX = (cx * srcVtxF->vtX) + (sx * srcVtxF->vtY) + tx;
-          dstVtxF->vtY = (sy * srcVtxF->vtX) + (cy * srcVtxF->vtY) + ty;
+          dstVtxF->vtX = (float)
+	                 ((cx * srcVtxF->vtX) + (sx * srcVtxF->vtY) + tx);
+          dstVtxF->vtY = (float )
+	                 ((sy * srcVtxF->vtX) + (cy * srcVtxF->vtY) + ty);
           ++srcVtxF;
           ++dstVtxF;
         }
@@ -509,8 +511,10 @@ static WlzPolygonDomain *WlzAffineTransformPoly2(WlzPolygonDomain *srcPoly,
         count = srcPoly->nvertices;
         while(count-- > 0)
         {
-          dstVtxF->vtX = (cx * srcVtxF->vtX) + (sx * srcVtxF->vtY) + tx;
-          dstVtxF->vtY = (sy * srcVtxF->vtX) + (cy * srcVtxF->vtY) + ty;
+          dstVtxF->vtX = (float )((cx * srcVtxF->vtX) + (sx * srcVtxF->vtY) +
+	                          tx);
+          dstVtxF->vtY = (float )((sy * srcVtxF->vtX) + (cy * srcVtxF->vtY) +
+	                          ty);
           ++srcVtxD;
           ++dstVtxD;
         }
@@ -1087,7 +1091,7 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 		       ((gVWSp->gVal[1]).flv * tD0 * (1.0 - tD1)) +
 		       ((gVWSp->gVal[2]).flv * (1.0 - tD0) * tD1) +
 		       ((gVWSp->gVal[3]).flv * tD0 * tD1));
-		*(gWSp.u_grintptr.flp)++ = tD0;
+		*(gWSp.u_grintptr.flp)++ = (float )tD0;
 		break;
 	      case WLZ_GREY_DOUBLE:
 		tD0 = (((gVWSp->gVal[0]).dbv * (1.0 - tD0) * (1.0 - tD1)) +
@@ -1167,7 +1171,7 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 	      gTmp[indx] = (double )((gVWSp->gVal[indx]).shv);
 	    }
 	    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-	    *(gWSp.u_grintptr.shp)++ = WLZ_NINT(tD0);
+	    *(gWSp.u_grintptr.shp)++ = (short )WLZ_NINT(tD0);
 	    break;
 	  case WLZ_GREY_UBYTE:
 	    for(indx=0; indx < 4; indx++){
@@ -1182,7 +1186,7 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 	      gTmp[indx] = (double )((gVWSp->gVal[indx]).flv);
 	    }
 	    tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-	    *(gWSp.u_grintptr.flp)++ = tD0;
+	    *(gWSp.u_grintptr.flp)++ = (float )tD0;
 	    break;
 	  case WLZ_GREY_DOUBLE:
 	    for(indx=0; indx < 4; indx++){
@@ -1353,9 +1357,12 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 	    case WLZ_INTERPOLATION_NEAREST:
 	      while(count-- > 0)
 	      {
-		sPos.vtX = tMat[0][1] + (tMat[0][0] * (double )(dPos.vtX));
-		sPos.vtY = tMat[1][1] + (tMat[1][0] * (double )(dPos.vtX));
-		sPos.vtZ = tMat[2][1] + (tMat[2][0] * (double )(dPos.vtX));
+		sPos.vtX = (int )(tMat[0][1] +
+		                  (tMat[0][0] * (double )(dPos.vtX)));
+		sPos.vtY = (int )(tMat[1][1] +
+		                  (tMat[1][0] * (double )(dPos.vtX)));
+		sPos.vtZ = (int )(tMat[2][1] +
+		                  (tMat[2][0] * (double )(dPos.vtX)));
 		WlzGreyValueGet(gVWSp, (double )(sPos.vtZ),
 		                (double )(sPos.vtY), (double )(sPos.vtX));
 		switch(gWSp.pixeltype)
@@ -1442,7 +1449,7 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		    tD0 = WLZ_CLAMP(tD0,
 			            (double )(SHRT_MIN), (double )(SHRT_MAX));
 		    tI0 = WLZ_NINT(tD0);
-		    *(gWSp.u_grintptr.shp)++ = tI0;
+		    *(gWSp.u_grintptr.shp)++ = (short )tI0;
 		    break;
 		  case WLZ_GREY_UBYTE:
 		    tD0 = ((gVWSp->gVal[0]).ubv *
@@ -1463,7 +1470,7 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
 		    tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
 		    tI0 = WLZ_NINT(tD0);
-		    *(gWSp.u_grintptr.ubp)++ = tI0;
+		    *(gWSp.u_grintptr.ubp)++ = (WlzUByte )tI0;
 		    break;
 		  case WLZ_GREY_FLOAT:
 		    tD0 = ((gVWSp->gVal[0]).flv *
@@ -1483,7 +1490,7 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		      ((gVWSp->gVal[7]).flv *
 		       tDV0.vtX * tDV0.vtY * tDV0.vtZ);
 		    tD0 = WLZ_CLAMP(tD0, FLT_MIN, FLT_MAX);
-		    *(gWSp.u_grintptr.flp)++ = tD0;
+		    *(gWSp.u_grintptr.flp)++ = (float )tD0;
 		    break;
 		  case WLZ_GREY_DOUBLE:
 		    tD0 = ((gVWSp->gVal[0]).dbv *
@@ -1717,9 +1724,9 @@ static WlzPlaneDomain *WlzAffineTransformPDom(WlzObject *srcObj,
 	tMat[2][1] = tMat[2][2] + (invTrans->mat[2][1] * dPos.vtY);
 	while(dPos.vtX <= bBox.xMax)
 	{
-	  sPos.vtX = tMat[0][1] + (tMat[0][0] * dPos.vtX);
-          sPos.vtY = tMat[1][1] + (tMat[1][0] * dPos.vtX);
-          sPos.vtZ = tMat[2][1] + (tMat[2][0] * dPos.vtX);
+	  sPos.vtX = (int )(tMat[0][1] + (tMat[0][0] * dPos.vtX));
+          sPos.vtY = (int )(tMat[1][1] + (tMat[1][0] * dPos.vtX));
+          sPos.vtZ = (int )(tMat[2][1] + (tMat[2][0] * dPos.vtX));
 	  insideFlg = WlzInsideDomain(srcObj,
 	                              (double )(sPos.vtZ), (double )(sPos.vtY),
 				      (double )(sPos.vtX), NULL) != 0;
@@ -3261,8 +3268,8 @@ WlzFVertex2	WlzAffineTransformVertexF2(WlzAffineTransform *trans,
   dVtx = WlzAffineTransformVertexD2(trans, dVtx, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    dstVtx.vtX = dVtx.vtX;
-    dstVtx.vtY = dVtx.vtY;
+    dstVtx.vtX = (float )(dVtx.vtX);
+    dstVtx.vtY = (float )(dVtx.vtY);
   }
   if(dstErr)
   {
@@ -3294,9 +3301,9 @@ WlzFVertex3	WlzAffineTransformVertexF3(WlzAffineTransform *trans,
   dVtx = WlzAffineTransformVertexD3(trans, dVtx, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    dstVtx.vtX = dVtx.vtX;
-    dstVtx.vtY = dVtx.vtY;
-    dstVtx.vtZ = dVtx.vtZ;
+    dstVtx.vtX = (float )(dVtx.vtX);
+    dstVtx.vtY = (float )(dVtx.vtY);
+    dstVtx.vtZ = (float )(dVtx.vtZ);
   }
   if(dstErr)
   {

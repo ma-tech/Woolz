@@ -451,7 +451,7 @@ WlzObject *WlzUnionN(
 		gv.shv += *(gwsp[i].u_grintptr.shp + k - iwsp->lftpos);
 	      }
 	    }
-	    *greyptr.shp = gv.shv / noverlap;
+	    *greyptr.shp = (short )(gv.shv / noverlap);
 	    greyptr.shp++;
 	  }
 	  break;
@@ -472,7 +472,7 @@ WlzObject *WlzUnionN(
 		gv.inv += *(gwsp[i].u_grintptr.ubp + k - iwsp->lftpos);
 	      }
 	    }
-	    *greyptr.ubp = (int) gv.inv / noverlap;
+	    *greyptr.ubp = (WlzUByte )(gv.inv / noverlap);
  	    greyptr.ubp++;
 	  }
 	  break;

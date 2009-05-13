@@ -164,7 +164,7 @@ WlzObject *WlzTransposeObj(
 	  domain.r->irk[i] = obj->domain.r->irl[i];
 	  domain.r->irl[i] = obj->domain.r->irk[i];
 	}
-	domain.r->rangle = WLZ_M_PI_2 - obj->domain.r->rangle;
+	domain.r->rangle = (float )(WLZ_M_PI_2 - obj->domain.r->rangle);
 	return WlzMakeMain(WLZ_RECTANGLE, domain, values,
 			   NULL, NULL, dstErr);
 
@@ -177,7 +177,7 @@ WlzObject *WlzTransposeObj(
 	  domain.fr->frk[i] = obj->domain.fr->frl[i];
 	  domain.fr->frl[i] = obj->domain.fr->frk[i];
 	}
-	domain.fr->rangle = WLZ_M_PI_2 - obj->domain.fr->rangle;
+	domain.fr->rangle = (float )(WLZ_M_PI_2 - obj->domain.fr->rangle);
 	return WlzMakeMain(WLZ_RECTANGLE, domain, values,
 			   NULL, NULL, dstErr);
 
@@ -371,7 +371,7 @@ static WlzPolygonDomain *WlzTransposePolygon(
       for(i=0; i < newpoly->nvertices; i++, fvtx++){
 	dbx = fvtx->vtX;
 	fvtx->vtX = fvtx->vtY;
-	fvtx->vtY = dbx;
+	fvtx->vtY = (float )dbx;
       }
       break;
 

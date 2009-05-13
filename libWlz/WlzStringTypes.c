@@ -225,7 +225,7 @@ WlzObjectType	WlzStringToObjType(const char *oTypeStr,
 		"WLZ_CMESH_TRANS", WLZ_CMESH_TRANS,
 		NULL))
   {
-    oType = tI0;
+    oType = (WlzObjectType )tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
@@ -445,7 +445,7 @@ WlzObjectType	WlzStringToObjDomainType(const char *oDomTypeStr,
 		"WLZ_RECTANGLE_DOMAIN_FLOAT", WLZ_RECTANGLE_DOMAIN_FLOAT,
 		NULL))
   {
-    oDomType = tI0;
+    oDomType = (WlzObjectType )tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
@@ -549,7 +549,7 @@ WlzObjectType	WlzStringToObjValuesType(const char *oValTypeStr,
 		"WLZ_VOXELVALUETABLE_GREY", WLZ_VOXELVALUETABLE_GREY,
 		NULL))
   {
-    oValType = tI0;
+    oValType = (WlzObjectType )tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
@@ -609,7 +609,7 @@ WlzScalarFeatureType WlzStringToScalarFeatureType(const char *fTypeStr,
 		"WLZ_SCALARFEATURE_GRADIENT", WLZ_SCALARFEATURE_GRADIENT,
 		NULL))
   {
-    fType = tI0;
+    fType = (WlzScalarFeatureType )tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
@@ -686,7 +686,7 @@ WlzObjectType WlzStringToPropertyType(const char *pStr, WlzErrorNum *dstErr)
 			 "WLZ_PROPERTY_GREY", WLZ_PROPERTY_GREY,
 			 NULL))
   {
-    pType = tI0;
+    pType = (WlzObjectType )tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
@@ -773,7 +773,7 @@ WlzEMAPPropertyType WlzStringToEMAPPropertyType(const char *pStr,
        "WLZ_EMAP_PROPERTY_DUMMY", WLZ_EMAP_PROPERTY_DUMMY,
        NULL))
   {
-    pType = tI0;
+    pType = (WlzEMAPPropertyType )tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
@@ -895,7 +895,7 @@ WlzTransformType WlzStringToTransformType(const char *tStr,
 		      "WLZ_TRANSFORM_3D_CMESH", WLZ_TRANSFORM_3D_CMESH,
 		      NULL))
   {
-    tType = tI0;
+    tType = (WlzTransformType )tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
@@ -962,7 +962,7 @@ WlzMeshGenMethod WlzStringToMeshGenMethod(const char *tStr,
 		    "WLZ_MESH_GENMETHOD_CONFORM", WLZ_MESH_GENMETHOD_CONFORM,
 		    NULL))
   {
-    mtd = tI0;
+    mtd = (WlzMeshGenMethod )tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
@@ -1001,7 +1001,7 @@ WlzFnType	WlzStringToFnType(const char *tStr,
 		       "WLZ_FN_BASIS_SCALAR_3DMOS", WLZ_FN_BASIS_SCALAR_3DMOS,
 		       NULL))
   {
-    fn = tI0;
+    fn = (WlzFnType )tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
@@ -1143,7 +1143,7 @@ WlzGMModelType	WlzStringToGMModelType(const char *tStr,
 			 "WLZ_GMMOD_3N", WLZ_GMMOD_3N,
 			 NULL))
   {
-    mType = tI0;
+    mType = (WlzGMModelType )tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
@@ -1223,7 +1223,7 @@ WlzGreyType	WlzStringToGreyType(const char *gStr,
 			 "WLZ_GREY_RGBA", WLZ_GREY_RGBA,
 			 NULL))
   {
-    gType = tI0;
+    gType = (WlzGreyType )tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
@@ -1295,7 +1295,7 @@ WlzInterpolationType WlzStringToInterpolationType(const char *iStr,
 		 "WLZ_INTERPOLATION_CALLBACK", WLZ_INTERPOLATION_CALLBACK,
 		 NULL))
   {
-    iType = tI0;
+    iType = (WlzInterpolationType )tI0;
     errNum = WLZ_ERR_NONE;
   }
   if(dstErr)
@@ -1669,7 +1669,7 @@ WlzErrorNum	WlzStringToErrorNum(const char *errStr)
 	      "WLZ_ERR_UNSPECIFIED", WLZ_ERR_UNSPECIFIED,
 	      NULL))
   {
-    errNum = tI0;
+    errNum = (WlzErrorNum )tI0;
   }
   return(errNum);
 }

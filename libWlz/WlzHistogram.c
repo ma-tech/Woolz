@@ -212,7 +212,7 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
   WLZ_DBG((WLZ_DBG_LVL_2),
 	  ("WlzHistogramCompute2D FE 0x%lx 0x%lx\n",
 	   (unsigned long )histDom, (unsigned long )srcObj));
-  originI = floor(histDom->origin + DBL_EPSILON);
+  originI = (int )floor(histDom->origin + DBL_EPSILON);
   unityBinSize = (histDom->binSize >= (1.0 - DBL_EPSILON)) &&
                  (histDom->binSize <= (1.0 + DBL_EPSILON));
   histBin = histDom->binValues.inp;
@@ -240,8 +240,8 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
 	  {
 	    while(ivCount-- > 0)
 	    {
-	      idx = floor((*(objPix.inp)++ - histDom->origin) /
-	                  histDom->binSize);
+	      idx = (int )floor((*(objPix.inp)++ - histDom->origin) /
+	                        histDom->binSize);
 	      if((idx >= 0) && (idx < histDom->nBins))
 	      {
 		++*(histBin + idx);
@@ -266,8 +266,8 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
 	  {
 	    while(ivCount-- > 0)
 	    {
-	      idx = floor((*(objPix.shp)++ - histDom->origin) /
-	                  histDom->binSize);
+	      idx = (int )floor((*(objPix.shp)++ - histDom->origin) /
+	                        histDom->binSize);
 	      if((idx >= 0) && (idx < histDom->nBins))
 	      {
 		++*(histBin + idx);
@@ -299,8 +299,8 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
 	  {
 	    while(ivCount-- > 0)
 	    {
-	      idx = floor((*(objPix.ubp)++ - histDom->origin) /
-	                  histDom->binSize);
+	      idx = (int )floor((*(objPix.ubp)++ - histDom->origin) /
+	                        histDom->binSize);
 	      if((idx >= 0) && (idx < histDom->nBins))
 	      {
 		++*(histBin + idx);
@@ -312,8 +312,8 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
 	  objPix.flp = gWSp.u_grintptr.flp;
 	  while(ivCount-- > 0)
 	  {
-	    idx = floor((*(objPix.flp)++ - histDom->origin) /
-	    		histDom->binSize);
+	    idx = (int )floor((*(objPix.flp)++ - histDom->origin) /
+	    		      histDom->binSize);
 	    if((idx >= 0) && (idx < histDom->nBins))
 	    {
 	      ++*(histBin + idx);
@@ -324,8 +324,8 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
 	  objPix.dbp = gWSp.u_grintptr.dbp;
 	  while(ivCount-- > 0)
 	  {
-	    idx = floor((*(objPix.dbp)++ - histDom->origin) / 
-	    		histDom->binSize);
+	    idx = (int )floor((*(objPix.dbp)++ - histDom->origin) / 
+	    		      histDom->binSize);
 	    if((idx >= 0) && (idx < histDom->nBins))
 	    {
 	      ++*(histBin + idx);
@@ -405,12 +405,12 @@ static void	WlzHistogramReBinUbyte(WlzHistogramDomain *histDom,
       {
         --srcBinIdx;
       }
-      nBins = srcBinIdx - origin + 1;
+      nBins = srcBinIdx - (int )origin + 1;
     }
     srcBinIdx = 0;
     while(srcBinIdx < 256)
     {
-      dstBinIdx = floor((srcBinIdx - origin) / binSize);
+      dstBinIdx = (int )floor((srcBinIdx - origin) / binSize);
       if((dstBinIdx >= 0) && (dstBinIdx < nBins))
       {
         *(histBins + dstBinIdx) += oldBins[srcBinIdx];
@@ -670,7 +670,7 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 					      WLZ_GREY_DOUBLE);
 		  (void )WlzValueConvertPixel(&greyMaxV, greyMaxV,
 					      WLZ_GREY_DOUBLE);
-		  nBins = ceil(greyMaxV.v.dbv - greyMinV.v.dbv + 1.0);
+		  nBins = (int )ceil(greyMaxV.v.dbv - greyMinV.v.dbv + 1.0);
 		  binOrigin = greyMinV.v.dbv;
 		  nBins0 = nBins;
 		  binOrigin0 = binOrigin;
@@ -708,8 +708,9 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 	  }
 	}
 	if((errNum == WLZ_ERR_NONE) && (greyType == WLZ_GREY_UBYTE) &&
-	   ((nBins != nBins0) || (binOrigin != binOrigin0) ||
-	    (binSize != binSize0)))
+	   ((nBins != nBins0) ||
+	    (fabs(binOrigin - binOrigin0) > DBL_EPSILON) ||
+	    (fabs(binSize - binSize0) > DBL_EPSILON)))
 	{
 	  WlzHistogramReBinUbyte(histObj->domain.hist, nBins, binOrigin,
 	  			 binSize);
@@ -747,7 +748,7 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 					      WLZ_GREY_DOUBLE);
 		  (void )WlzValueConvertPixel(&greyMaxV, greyMaxV,
 					      WLZ_GREY_DOUBLE);
-		  nBins = ceil(greyMaxV.v.dbv - greyMinV.v.dbv + 1.0);
+		  nBins = (int )ceil(greyMaxV.v.dbv - greyMinV.v.dbv + 1.0);
 		  binOrigin = greyMinV.v.dbv;
 		}
 	      }
@@ -827,8 +828,9 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 	  }
 	}
 	if((errNum == WLZ_ERR_NONE) && (greyType == WLZ_GREY_UBYTE) &&
-	   ((nBins != nBins0) || (binOrigin != binOrigin0) ||
-	    (binSize != binSize0)))
+	   ((nBins != nBins0) ||
+	    (fabs(binOrigin - binOrigin0) > DBL_EPSILON) ||
+	    (fabs(binSize - binSize0) > DBL_EPSILON)))
 	{
 	  WlzHistogramReBinUbyte(histObj->domain.hist, nBins, binOrigin,
 	  			 binSize);
@@ -1597,7 +1599,7 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 	{
           mapping = mapHistDom->binValues.inp;
 	  originD = mapHistDom->origin;
-	  originI = floor(originD);
+	  originI = (int )floor(originD);
 	  while((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)
 	  {
 	    ivCount = iWSp.rgtpos - iWSp.lftpos + 1;
@@ -1644,7 +1646,8 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 		  {
 		    while(ivCount-- > 0)
 		    {
-		      *(objPix.shp) = *(mapping + *(objPix.shp) - originI);
+		      *(objPix.shp) = (short )
+		                      *(mapping + *(objPix.shp) - originI);
 		      ++(objPix.shp);
 		    }
 		  }
@@ -1652,7 +1655,8 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 		  {
 		    while(ivCount-- > 0)
 		    {
-		      *(objPix.shp) = *(mapping + *(objPix.shp));
+		      *(objPix.shp) = (short )
+		                      *(mapping + *(objPix.shp));
 		      ++(objPix.shp);
 		    }
 		  }
@@ -1661,7 +1665,8 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 		{
 		  while(ivCount-- > 0)
 		  {
-		    *(objPix.shp) = WlzHistogramMapValuesDitherI(mapping,
+		    *(objPix.shp) = (short )
+		                    WlzHistogramMapValuesDitherI(mapping,
 		    			*(objPix.shp) - originI,
 					mapHistDom->nBins);
 		    ++(objPix.shp);
@@ -1676,7 +1681,8 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 		  {
 		    while(ivCount-- > 0)
 		    {
-		      *(objPix.ubp) = *(mapping + *(objPix.ubp) - originI);
+		      *(objPix.ubp) = (WlzUByte )
+		                      *(mapping + *(objPix.ubp) - originI);
 		      ++(objPix.ubp);
 		    }
 		  }
@@ -1684,7 +1690,7 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 		  {
 		    while(ivCount-- > 0)
 		    {
-		      *(objPix.ubp) = *(mapping + *(objPix.ubp));
+		      *(objPix.ubp) = (WlzUByte )*(mapping + *(objPix.ubp));
 		      ++(objPix.ubp);
 		    }
 		  }
@@ -1693,7 +1699,8 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 		{
 		  while(ivCount-- > 0)
 		  {
-		    *(objPix.ubp) = WlzHistogramMapValuesDitherI(mapping,
+		    *(objPix.ubp) = (WlzUByte )
+		                    WlzHistogramMapValuesDitherI(mapping,
 		    			*(objPix.ubp) - originI,
 					mapHistDom->nBins);
 		    ++(objPix.ubp);
@@ -1706,8 +1713,8 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 		{
 		  while(ivCount-- > 0)
 		  {
-		    tI0 = floor(*(objPix.flp) - originD);
-		    *(objPix.flp) = *(mapping + tI0);
+		    tI0 = (int )floor(*(objPix.flp) - originD);
+		    *(objPix.flp) = (float )*(mapping + tI0);
 		    ++(objPix.flp);
 		  }
 		}
@@ -1715,7 +1722,8 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 		{
 		  while(ivCount-- > 0)
 		  {
-		    *(objPix.flp) = WlzHistogramMapValuesDitherD(mapping,
+		    *(objPix.flp) = (float )
+		    		    WlzHistogramMapValuesDitherD(mapping,
 		    			(int )(floor(*(objPix.flp) - originD)),
 					mapHistDom->nBins);
 		    ++(objPix.flp);
@@ -1728,7 +1736,7 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 		{
 		  while(ivCount-- > 0)
 		  {
-		    tI0 = floor(*(objPix.dbp) - originD);
+		    tI0 = (int )floor(*(objPix.dbp) - originD);
 		    *(objPix.dbp) = *(mapping + tI0);
 		    ++(objPix.dbp);
 		  }
@@ -1933,7 +1941,7 @@ WlzErrorNum     WlzHistogramFindPeaks(WlzObject *histObj,
 	  {
 	    if(*sDC > thresh)
 	    {
-	      if(*sDC == maxD)
+	      if(fabs(*sDC - maxD) < DBL_EPSILON)
 	      {
 		if(((binIdx - binLst) > minSep) || (featIdx == 0))
 		{
@@ -2505,7 +2513,7 @@ double		WlzHistogramDistance(WlzObject *histObj0,
       tD5 = (newOrigin - histDom1->origin) / histDom1->binSize;
       for(idx = 0; idx < newBinSize; ++idx)
       {
-        idx0 = (idx * tD2) + tD3;
+        idx0 = WLZ_NINT((idx * tD2) + tD3);
 	if((idx0 < 0) || (idx0 >= histDom0->nBins))
 	{
 	  tD0 = 0.0;
@@ -2515,7 +2523,7 @@ double		WlzHistogramDistance(WlzObject *histObj0,
 	  tD0 = (histDom0->type == WLZ_HISTOGRAMDOMAIN_INT)?
 		*(binVal0.inp + idx0): *(binVal0.dbp + idx0);
 	}
-	idx1 = (idx * tD4) + tD5;
+	idx1 = (int )((idx * tD4) + tD5);
 	if((idx1 < 0) || (idx1 >= histDom1->nBins))
 	{
 	  tD1 = 0.0;
@@ -2643,7 +2651,7 @@ WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
     if((srcObj->type == WLZ_2D_DOMAINOBJ) ||
        (srcObj->type == WLZ_3D_DOMAINOBJ))
     {
-      tI0 = ceil((histDom->binSize * histDom->nBins) + histDom->origin);
+      tI0 = (int )ceil((histDom->binSize * histDom->nBins) + histDom->origin);
       if(tI0 < 256)
       {
         tI0 = 256;
@@ -2872,8 +2880,7 @@ WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
 WlzErrorNum	WlzHistogramEqualiseObj(WlzObject *srcObj, int smoothing,
 					int dither)
 {
-  int		tI0,
-  		count;
+  int		count;
   int		*map;
   double	mass,
   		normFac;
@@ -2909,12 +2916,11 @@ WlzErrorNum	WlzHistogramEqualiseObj(WlzObject *srcObj, int smoothing,
 	  histDom = histObj->domain.hist;
 	  map = histDom->binValues.inp;
 	  mass = *(map + histDom->nBins - 1);
-	  normFac = (mass)? (255 / mass): 0;
+	  normFac = (fabs(mass) > DBL_EPSILON)? (255.0 / mass): 0.0;
 	  count = histDom->nBins;
 	  while(count-- > 0)
 	  {
-	    tI0 = *map * normFac;
-	    *map++ = WLZ_NINT(tI0);
+	    *map++ = WLZ_NINT(*map * normFac);
 	  }
           errNum = WlzHistogramMapValues(srcObj, histObj, dither);
 	}

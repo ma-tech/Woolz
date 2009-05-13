@@ -328,15 +328,11 @@ static double	WlzCompThreshFracMin(WlzHistogramDomain *hDom,
   		hF,
 		hV0,
 		hV1,
-		thrVal,
-  		hMaxV;
+		thrVal;
   WlzThresholdType thrType;
 
   /* Find histogram maximum. */
   hMaxI = WlzHistogramBinMax(hDom);
-  hMaxV = (hDom->type == WLZ_HISTOGRAMDOMAIN_INT)?
-	   *(hDom->binValues.inp + hMaxI):
-	   *(hDom->binValues.dbp + hMaxI);
   hF = WlzHistogramBinSum(hDom);
   hF *= bFrac;
   thrType = (hMaxI > (((hDom->nBins * hDom->binSize) + hDom->origin) / 2))?
@@ -479,7 +475,7 @@ static double	WlzCompThreshFoot(WlzHistogramDomain *histDom)
   switch(histDom->type)
   {
     case WLZ_HISTOGRAMDOMAIN_INT:
-      tI0 = maxVal * 0.9;
+      tI0 = (int )(maxVal * 0.9);
       binVal.inp = histDom->binValues.inp + topIdx;
       while((topIdx < binCount) && (*(binVal.inp) > tI0)) 
       {
@@ -492,7 +488,7 @@ static double	WlzCompThreshFoot(WlzHistogramDomain *histDom)
       }
       break;
     case WLZ_HISTOGRAMDOMAIN_FLOAT:
-      tD0 = maxVal * 0.9;
+      tD0 = (float )(maxVal * 0.9);
       binVal.dbp = histDom->binValues.dbp + topIdx;
       while((topIdx < binCount) && (*(binVal.dbp) > tD0)) 
       {
@@ -513,7 +509,7 @@ static double	WlzCompThreshFoot(WlzHistogramDomain *histDom)
   switch(histDom->type)
   {
     case WLZ_HISTOGRAMDOMAIN_INT:
-      tI0 = maxVal * 0.33;
+      tI0 = (int )(maxVal * 0.33);
       binVal.inp = histDom->binValues.inp + botIdx;
       while((botIdx < binCount) && (*(binVal.inp) > tI0)) 
       {
@@ -526,7 +522,7 @@ static double	WlzCompThreshFoot(WlzHistogramDomain *histDom)
       }
       break;
     case WLZ_HISTOGRAMDOMAIN_FLOAT:
-      tD0 = maxVal * 0.33;
+      tD0 = (float )(maxVal * 0.33);
       binVal.dbp = histDom->binValues.dbp + botIdx;
       while((botIdx < binCount) && (*(binVal.dbp) > tD0)) 
       {
@@ -677,7 +673,7 @@ static double	WlzCompThreshSmoothSplit(WlzObject *gObj,
       sObj = WlzCopyObject(gObj, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-        errNum = WlzHistogramSmooth(sObj, sm);
+        errNum = WlzHistogramSmooth(sObj, (int )sm);
       }
       /* Find closest histogram minimum to previous. */
       if(errNum == WLZ_ERR_NONE)
@@ -837,7 +833,7 @@ static double	WlzCompThreshGradient(WlzHistogramDomain *histDom)
   switch(histDom->type)
   {
     case WLZ_HISTOGRAMDOMAIN_INT:
-      tI0 = maxVal * 0.60;
+      tI0 = (int )(maxVal * 0.60);
       binVal.inp = histDom->binValues.inp + topIdx;
       while((topIdx < binCount) && (*(binVal.inp) > tI0)) 
       {

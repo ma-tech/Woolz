@@ -45,7 +45,7 @@ static char _WlzCMeshFMar_c[] = "MRC HGU $Id$";
 #include <math.h>
 #include <Wlz.h>
 
-/* #define WLZ_CMESH_FMAR_DEBUG HACK */
+/* #define WLZ_CMESH_FMAR_DEBUG */
 
 /*!
 * \struct	_WlzCMeshFMarQEnt
@@ -206,6 +206,7 @@ WlzObject	*WlzCMeshDistance2D(WlzCMesh2D *mesh,
   		*obj1 = NULL;
   WlzCMeshElm2D	*elm;
   WlzCMeshNod2D	*nod[3];
+  WlzCMeshTransform *mTr = NULL;
   WlzObjectType	vTT;
   WlzValues	val;
   WlzPixelV	bgdV;
@@ -225,10 +226,6 @@ WlzObject	*WlzCMeshDistance2D(WlzCMesh2D *mesh,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if(mesh->res.elm.numEnt < 0)
-  {
-    errNum = WLZ_ERR_DOMAIN_DATA;
-  }
   else if(mesh->res.elm.numEnt == 0)
   {
     obj1 = WlzMakeEmpty(&errNum);
@@ -245,7 +242,17 @@ WlzObject	*WlzCMeshDistance2D(WlzCMesh2D *mesh,
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      obj0 = WlzCMeshToDomObj2D(mesh, &errNum);
+      mTr = WlzMakeCMeshTransform(WLZ_TRANSFORM_2D_CMESH, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      mTr->mesh.m2 = mesh;
+      obj0 = WlzCMeshToDomObj(mTr, 0, &errNum);
+    }
+    if(mTr)
+    {
+      mTr->mesh.m2 = NULL;
+      (void )WlzFreeCMeshTransform(mTr);
     }
     if(errNum == WLZ_ERR_NONE)
     {
@@ -2015,8 +2022,9 @@ static WlzErrorNum WlzCMeshFMarElmQInit2D(AlcHeap *queue, WlzCMeshNod2D *nod)
     if(priority > 0)
     {
       ent.priority = priority;
-      if((errNum = AlcHeapInsertEnt(queue, &ent)) != WLZ_ERR_NONE)
+      if(AlcHeapInsertEnt(queue, &ent) != ALC_ER_NONE)
       {
+	errNum = WLZ_ERR_MEM_ALLOC;
 	break;
       }
     }
@@ -2055,8 +2063,9 @@ static WlzErrorNum WlzCMeshFMarElmQInit3D(AlcHeap *queue, WlzCMeshNod3D *nod)
     if(priority > 0)
     {
       ent.priority = priority;
-      if((errNum = AlcHeapInsertEnt(queue, &ent)) != WLZ_ERR_NONE)
+      if(AlcHeapInsertEnt(queue, &ent) != ALC_ER_NONE)
       {
+	errNum = WLZ_ERR_MEM_ALLOC;
 	break;
       }
     }

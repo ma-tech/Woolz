@@ -77,6 +77,10 @@ WlzPropertyList	*WlzMakePropertyList(WlzErrorNum *dstErr)
       pList = NULL;
     }
   }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
   return(pList);
 }
 

@@ -177,7 +177,7 @@ int		WlzInsideDomain(WlzObject *obj,
 	}
 	else
 	{
-	  inside = WlzInsideDomain2D(obj->domain.i, line,  kol,
+	  inside = WlzInsideDomain2D(obj->domain.i, (int )line,  (int )kol,
 	  			     &errNum);
 	}
 	break;
@@ -192,7 +192,8 @@ int		WlzInsideDomain(WlzObject *obj,
 	}
 	else
 	{
-	  inside = WlzInsideDomain3D(obj->domain.p, plane, line,  kol,
+	  inside = WlzInsideDomain3D(obj->domain.p,
+	                             (int )plane, (int )line,  (int )kol,
 	  			     &errNum);
 	}
 	break;

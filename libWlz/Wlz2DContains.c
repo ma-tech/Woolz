@@ -115,7 +115,9 @@ WlzObject *Wlz2DContains(WlzObject *obj,
 	       */
 	       break;
 	    } else {
-	       fprintf(stderr, "WlzInsideDomain, Wlz error: %d\n", errNum);
+	       (void )fprintf(stderr,
+	                      "WlzInsideDomain, Wlz error: %d\n",
+			      (int )errNum);
 	       fflush(stderr);
 	    }
 	 } else {
@@ -127,7 +129,9 @@ WlzObject *Wlz2DContains(WlzObject *obj,
 	 retObj = WlzCopyObject(objArray[i], &errNum);
 	 WlzFreeObj(objArray[i]);
 	 if(errNum != WLZ_ERR_NONE) {
-	    fprintf(stderr, "WlzCopyObject, Wlz error: %d\n", errNum);
+	    (void )fprintf(stderr,
+	                   "WlzCopyObject, Wlz error: %d\n",
+			   (int )errNum);
 	    fflush(stderr);
 	 }
       }

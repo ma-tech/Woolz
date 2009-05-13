@@ -402,17 +402,18 @@ WlzGreyInterval(WlzIntervalWSpace *iwsp)
 
       case WLZ_GREY_SHORT:
 	for (i=0; i<iwsp->colrmn; i++)
-	  *g.shp++ = WLZ_CLAMP (gwsp->u_grintptr.inp[i], SHRT_MIN, SHRT_MAX);
+	  *g.shp++ = (short )WLZ_CLAMP(gwsp->u_grintptr.inp[i],
+	  			       SHRT_MIN, SHRT_MAX);
 	break;
 
       case WLZ_GREY_UBYTE:
 	for (i=0; i<iwsp->colrmn; i++)
-	  *g.ubp++ = WLZ_CLAMP (gwsp->u_grintptr.inp[i], 0, 255);
+	  *g.ubp++ = (WlzUByte )WLZ_CLAMP(gwsp->u_grintptr.inp[i], 0, 255);
 	break;
 
       case WLZ_GREY_FLOAT:
 	for (i=0; i<iwsp->colrmn; i++)
-	  *g.flp++ = gwsp->u_grintptr.inp[i];
+	  *g.flp++ = (float )(gwsp->u_grintptr.inp[i]);
 	break;
 
       case WLZ_GREY_DOUBLE:
@@ -452,12 +453,12 @@ WlzGreyInterval(WlzIntervalWSpace *iwsp)
 
       case WLZ_GREY_FLOAT:
 	for (i=0; i<iwsp->colrmn; i++)
-	  gwsp->u_grintptr.inp[i] = *g.flp++;
+	  gwsp->u_grintptr.inp[i] = (int )(*g.flp++);
 	break;
 
       case WLZ_GREY_DOUBLE:
 	for (i=0; i<iwsp->colrmn; i++)
-	  gwsp->u_grintptr.inp[i] = *g.dbp++;
+	  gwsp->u_grintptr.inp[i] = (int )(*g.dbp++);
 	break;
 
       case WLZ_GREY_RGBA:

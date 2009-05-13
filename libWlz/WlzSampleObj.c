@@ -1289,7 +1289,7 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 		*(tGP0.inp)++ = tI1;
 		break;
 	      case WLZ_GREY_SHORT:
-		*(tGP0.shp)++ = tI1;
+		*(tGP0.shp)++ = (short )tI1;
 		break;
 	      case WLZ_GREY_UBYTE:
 		if(tI1 < 0)
@@ -1643,7 +1643,7 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 	    switch(greyType)
 	    {
 	      case WLZ_GREY_FLOAT:
-		*(tGP0.flp)++ = tD0;
+		*(tGP0.flp)++ = (float )tD0;
 		break;
 	      case WLZ_GREY_DOUBLE:
 		*(tGP0.dbp)++ = tD0;
@@ -2080,7 +2080,7 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 		*(tGP0.inp)++ = tI1;
 		break;
 	      case WLZ_GREY_SHORT:
-		*(tGP0.shp)++ = tI1;
+		*(tGP0.shp)++ = (short )tI1;
 		break;
 	      case WLZ_GREY_UBYTE:
 		*(tGP0.ubp)++ = (WlzUByte )tI1; /* Fits because rank op. */

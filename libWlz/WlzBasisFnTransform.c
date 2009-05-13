@@ -906,8 +906,8 @@ WlzPolygonDomain *WlzBasisFnTransformPoly2(WlzPolygonDomain *srcPoly,
 	tD = WlzBasisFnTransformVertexD(basisTr, tD, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  dVP.i2->vtX = tD.vtX;
-	  dVP.i2->vtY = tD.vtY;
+	  dVP.i2->vtX = (int )(tD.vtX);
+	  dVP.i2->vtY = (int )(tD.vtY);
 	  for(idN = 1; idN < srcPoly->nvertices; ++idN)
 	  {
 	    ++(sVP.i2);
@@ -915,8 +915,8 @@ WlzPolygonDomain *WlzBasisFnTransformPoly2(WlzPolygonDomain *srcPoly,
 	    tD.vtX = sVP.i2->vtX;
 	    tD.vtY = sVP.i2->vtY;
 	    tD = WlzBasisFnTransformVertexD(basisTr, tD, NULL);
-	    dVP.i2->vtX = tD.vtX;
-	    dVP.i2->vtY = tD.vtY;
+	    dVP.i2->vtX = (int )(tD.vtX);
+	    dVP.i2->vtY = (int )(tD.vtY);
 	  }
 	}
         break;
@@ -926,8 +926,8 @@ WlzPolygonDomain *WlzBasisFnTransformPoly2(WlzPolygonDomain *srcPoly,
 	tD = WlzBasisFnTransformVertexD(basisTr, tD, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  dVP.f2->vtX = tD.vtX;
-	  dVP.f2->vtY = tD.vtY;
+	  dVP.f2->vtX = (float )(tD.vtX);
+	  dVP.f2->vtY = (float )(tD.vtY);
 	  for(idN = 1; idN < srcPoly->nvertices; ++idN)
 	  {
 	    ++(sVP.f2);
@@ -935,8 +935,8 @@ WlzPolygonDomain *WlzBasisFnTransformPoly2(WlzPolygonDomain *srcPoly,
 	    tD.vtX = sVP.f2->vtX;
 	    tD.vtY = sVP.f2->vtY;
 	    tD = WlzBasisFnTransformVertexD(basisTr, tD, NULL);
-	    dVP.f2->vtX = tD.vtX;
-	    dVP.f2->vtY = tD.vtY;
+	    dVP.f2->vtX = (float )(tD.vtX);
+	    dVP.f2->vtY = (float )(tD.vtY);
 	  }
 	}
         break;
@@ -1356,8 +1356,8 @@ WlzFVertex2	WlzBasisFnTransformVertexF(WlzBasisFnTransform *basisTr,
   srcVxD.vtX = srcVxF.vtX;
   srcVxD.vtY = srcVxF.vtY;
   dstVxD = WlzBasisFnTransformVertexD(basisTr, srcVxD, dstErr);
-  dstVxF.vtX = dstVxD.vtX;
-  dstVxF.vtY = dstVxD.vtY;
+  dstVxF.vtX = (float )(dstVxD.vtX);
+  dstVxF.vtY = (float )(dstVxD.vtY);
   return(dstVxF);
 }
 

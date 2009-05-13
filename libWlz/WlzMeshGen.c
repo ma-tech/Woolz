@@ -3014,8 +3014,8 @@ WlzErrorNum 	WlzCMeshReassignBuckets2D(WlzCMesh2D *mesh, int newNumNod)
   }
   /* This assumes that the mesh nodes will be evenly distributed over
    * the LBT domain (which they're not). */
-  bSz.vtX = mesh->bBox.xMax - mesh->bBox.xMin + 1;
-  bSz.vtY = mesh->bBox.yMax - mesh->bBox.yMin + 1;
+  bSz.vtX = (int )ceil(mesh->bBox.xMax - mesh->bBox.xMin + 1.0);
+  bSz.vtY = (int )ceil(mesh->bBox.yMax - mesh->bBox.yMin + 1.0);
   mesh->bGrid.bSz.vtX = WlzCMeshCompGridBSz2D(newNumNod, nodPerBucket,
                                               bSz.vtX, bSz.vtY);
   mesh->bGrid.bSz.vtY = WlzCMeshCompGridBSz2D(newNumNod, nodPerBucket,
@@ -3075,9 +3075,9 @@ WlzErrorNum 	WlzCMeshReassignBuckets3D(WlzCMesh3D *mesh, int newNumNod)
   }
   /* This assumes that the mesh nodes will be evenly distributed over
    * the LBT domain (which they're not). */
-  bSz.vtX = mesh->bBox.xMax - mesh->bBox.xMin + 1;
-  bSz.vtY = mesh->bBox.yMax - mesh->bBox.yMin + 1;
-  bSz.vtZ = mesh->bBox.zMax - mesh->bBox.zMin + 1;
+  bSz.vtX = (int )ceil(mesh->bBox.xMax - mesh->bBox.xMin + 1.0);
+  bSz.vtY = (int )ceil(mesh->bBox.yMax - mesh->bBox.yMin + 1.0);
+  bSz.vtZ = (int )ceil(mesh->bBox.zMax - mesh->bBox.zMin + 1.0);
   mesh->bGrid.bSz.vtX = WlzCMeshCompGridBSz3D(newNumNod, nodPerBucket,
   					      bSz.vtX, bSz.vtY, bSz.vtZ);
   mesh->bGrid.bSz.vtY = WlzCMeshCompGridBSz3D(newNumNod, nodPerBucket,
@@ -3473,8 +3473,11 @@ int             WlzCMeshElmEnclosingPos(WlzCMeshP mesh,
   {
     elmIdx = WlzCMeshElmEnclosingPos2D(mesh.m2, lastElmIdx, pX, pY,
                                        dstCloseNod);
+  } else if(mesh.m3->type == WLZ_CMESH_TET3D)
+  {
+    elmIdx = WlzCMeshElmEnclosingPos3D(mesh.m3, lastElmIdx, pX, pY, pZ,
+    				       dstCloseNod);
   }
-  /* WLZ_CMESH_TET3D  not implimented yet. */
   return(elmIdx);
 }
 
@@ -4369,8 +4372,8 @@ WlzCMesh2D	*WlzCMeshFromBalLBTDom2D(WlzLBTDomain2D *lDom, WlzObject *iObj,
     mesh->bBox.yMin = lDom->line1;
     mesh->bBox.xMax = lDom->lastkl;
     mesh->bBox.yMax = lDom->lastln;
-    bSz.vtX = mesh->bBox.xMax - mesh->bBox.xMin + 1;
-    bSz.vtY = mesh->bBox.yMax - mesh->bBox.yMin + 1;
+    bSz.vtX = (int )ceil(mesh->bBox.xMax - mesh->bBox.xMin + 1.0);
+    bSz.vtY = (int )ceil(mesh->bBox.yMax - mesh->bBox.yMin + 1.0);
     if((lDom->nNodes <= 0) || (bSz.vtX <= 0) || (bSz.vtY <= 0))
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
@@ -4601,9 +4604,9 @@ WlzCMesh3D	*WlzCMeshFromBalLBTDom3D(WlzLBTDomain3D *lDom, WlzObject *iObj,
     mesh->bBox.xMax = lDom->lastkl;
     mesh->bBox.yMax = lDom->lastln;
     mesh->bBox.zMax = lDom->lastpl;
-    bSz.vtX = mesh->bBox.xMax - mesh->bBox.xMin + 1;
-    bSz.vtY = mesh->bBox.yMax - mesh->bBox.yMin + 1;
-    bSz.vtZ = mesh->bBox.zMax - mesh->bBox.zMin + 1;
+    bSz.vtX = (int )ceil(mesh->bBox.xMax - mesh->bBox.xMin + 1.0);
+    bSz.vtY = (int )ceil(mesh->bBox.yMax - mesh->bBox.yMin + 1.0);
+    bSz.vtZ = (int )(ceil )(mesh->bBox.zMax - mesh->bBox.zMin + 1.0);
     if((lDom->nNodes <= 0) ||
        (bSz.vtX <= 0) || (bSz.vtY <= 0) || (bSz.vtZ <= 0))
     {

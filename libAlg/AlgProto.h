@@ -68,6 +68,8 @@ extern int			AlgBitNextPowerOfTwo(
 				  unsigned int *dstP2I,
 				  unsigned int gI);
 /* From AlgComplexUtils.c */
+extern double			AlgCModSq(
+				  ComplexD z);
 extern double			AlgCMod(
 				  ComplexD z);
 extern double			AlgCArg(
@@ -422,6 +424,10 @@ extern void            		AlgMatrixCopy(
 				  double **bM,
 				  size_t nR,
 				  size_t nC);
+extern void			AlgMatrixScalar(
+				  double **aM,
+				  double sv,
+				  size_t nRC);
 extern void			AlgMatrixZero(
 				  double **aM,
 				  size_t nR,

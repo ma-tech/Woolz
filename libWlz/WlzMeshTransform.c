@@ -1015,17 +1015,24 @@ double 		WlzClassValCon4(double *g, double p, double q)
   double	classVal[4], classProb[4], maxProb;
   int		i, j, nClass;
 
-  /* initialise probability matrix */
-  for(i=0; i < 4; i++){classProb[i] = 0.0;}
-  /* determine classes and probabilities */
+  /* Initialise probability matrix */
+  for(i=0; i < 4; i++)
+  {
+    classProb[i] = 0.0;
+  }
+  /* Determine classes and probabilities */
   nClass = 0;
-  for(i=0; i < 4; i++){
-    for(j=0; j < nClass; j++){
-      if( g[i] == classVal[j] ){
+  for(i=0; i < 4; i++)
+  {
+    for(j=0; j < nClass; j++)
+    {
+      if( fabs(g[i] - classVal[j]) < DBL_EPSILON )
+      {
 	break;
       }
     }
-    if( j == nClass ){
+    if( j == nClass )
+    {
       classVal[j] = g[i];
       nClass++;
     }
@@ -1046,8 +1053,10 @@ double 		WlzClassValCon4(double *g, double p, double q)
   }
   /* find max probability */
   maxProb = 0.0;
-  for(i=0; i < nClass; i++){
-    if( classProb[i] > maxProb ){
+  for(i=0; i < nClass; i++)
+  {
+    if( classProb[i] > maxProb )
+    {
       maxProb = classProb[i];
       j = i;
     }
@@ -1242,7 +1251,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 			((gVWSp->gVal[1]).shv * tD0 * tD3) +
 			((gVWSp->gVal[2]).shv * tD2 * tD1) +
 			((gVWSp->gVal[3]).shv * tD0 * tD1);
-		  *(dGP.shp)++ = WLZ_NINT(tD0);
+		  *(dGP.shp)++ = (short )WLZ_NINT(tD0);
 		  break;
 		case WLZ_GREY_UBYTE:
 		  tD0 = ((gVWSp->gVal[0]).ubv * tD2 * tD3) +
@@ -1250,14 +1259,14 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 			((gVWSp->gVal[2]).ubv * tD2 * tD1) +
 			((gVWSp->gVal[3]).ubv * tD0 * tD1);
 		  tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
-		  *(dGP.ubp)++ = WLZ_NINT(tD0);
+		  *(dGP.ubp)++ = (WlzUByte )WLZ_NINT(tD0);
 		  break;
 		case WLZ_GREY_FLOAT:
 		  tD0 = ((gVWSp->gVal[0]).flv * tD2 * tD3) +
 			((gVWSp->gVal[1]).flv * tD0 * tD3) +
 			((gVWSp->gVal[2]).flv * tD2 * tD1) +
 			((gVWSp->gVal[3]).flv * tD0 * tD1);
-		  *(dGP.flp)++ = tD0;
+		  *(dGP.flp)++ = (float )tD0;
 		  break;
 		case WLZ_GREY_DOUBLE:
 		  tD0 = ((gVWSp->gVal[0]).dbv * tD2 * tD3) +
@@ -1328,7 +1337,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 		    gTmp[indx] = (gVWSp->gVal[indx]).shv;
 		  }
 		  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-		  *(dGP.shp)++ = WLZ_NINT(tD0);
+		  *(dGP.shp)++ = (short )WLZ_NINT(tD0);
 		  break;
 		case WLZ_GREY_UBYTE:
 		  for(indx=0; indx < 4; indx++){
@@ -1336,14 +1345,14 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 		  }
 		  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
 		  tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
-		  *(dGP.ubp)++ = WLZ_NINT(tD0);
+		  *(dGP.ubp)++ = (WlzUByte )WLZ_NINT(tD0);
 		  break;
 		case WLZ_GREY_FLOAT:
 		  for(indx=0; indx < 4; indx++){
 		    gTmp[indx] = (gVWSp->gVal[indx]).flv;
 		  }
 		  tD0 = WlzClassValCon4(gTmp, tD0, tD1);
-		  *(dGP.flp)++ = tD0;
+		  *(dGP.flp)++ = (float )tD0;
 		  break;
 		case WLZ_GREY_DOUBLE:
 		  for(indx=0; indx < 4; indx++){
@@ -1709,8 +1718,8 @@ static WlzErrorNum WlzMeshBoundPolyFix(WlzObject *polyObj, double minDist)
       fstVxElm = curVxElm;
       do
       {
-	curVxP->vtX = curVxElm->vx.vtX;
-	curVxP->vtY = curVxElm->vx.vtY;
+	curVxP->vtX = (int )(curVxElm->vx.vtX);
+	curVxP->vtY = (int )(curVxElm->vx.vtY);
 	++curVxP;
 	curVxElm = curVxElm->next;
 	++tstId;
@@ -2240,12 +2249,12 @@ static WlzErrorNum WlzMeshTransFillBlock(WlzMeshTransform *mesh,
           (mesh->nodes + nodIdxLoLft)->position.vtX;
     if(tD0 > 0.5)
     {
-      tI0 = (tD0 + 0.5) / lDist;
+      tI0 = (int )((tD0 + 0.5) / lDist);
       nodIdxLoLft += tI0;
     }
     else if(tD0 < -0.5)
     {
-      tI0 = (-tD0 + 0.5) / lDist;
+      tI0 = (int )((-tD0 + 0.5) / lDist);
       nodIdxHiLft += tI0;
     }
     nodIdxLoRgt = nodIdx0 + nNod0 - 1;
@@ -2254,12 +2263,12 @@ static WlzErrorNum WlzMeshTransFillBlock(WlzMeshTransform *mesh,
           (mesh->nodes + nodIdxLoRgt)->position.vtX;
     if(tD0 > 0.5)
     {
-      tI0 = (tD0 + 0.5) / lDist;
+      tI0 = (int )((tD0 + 0.5) / lDist);
       nodIdxHiRgt -= tI0;
     }
     else if(tD0 < -0.5)
     {
-      tI0 = (tD0 - 0.5) / lDist;
+      tI0 = (int )((tD0 - 0.5) / lDist);
       nodIdxLoRgt += tI0;
     }
     nodIdxLo = nodIdxLoLft;
@@ -2582,8 +2591,10 @@ static WlzErrorNum WlzMeshTransformVtxAryF(WlzMeshTransform *mesh,
       }
       /* Vertex is in this element interpolate new displaced vertex using
       the affine transform. */
-      vxAry->vtX = (xTr[0] * vxAry->vtX) + (xTr[1] * vxAry->vtY) + xTr[2];
-      vxAry->vtY = (yTr[0] * vxAry->vtX) + (yTr[1] * vxAry->vtY) + yTr[2];
+      vxAry->vtX = (float )
+                   ((xTr[0] * vxAry->vtX) + (xTr[1] * vxAry->vtY) + xTr[2]);
+      vxAry->vtY = (float )
+                   ((yTr[0] * vxAry->vtX) + (yTr[1] * vxAry->vtY) + yTr[2]);
       if(vxCount-- > 0)
       {
         ++vxAry;

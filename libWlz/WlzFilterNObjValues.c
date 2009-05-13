@@ -249,6 +249,7 @@ static WlzObject *WlzFilterNObjValues2DCb(WlzObject *rObj, WlzGreyType gType,
 {
   int		idI;
   WlzObject	*fObj = NULL;
+  WlzObjectType	gTblType;
   WlzIVertex3	pos;
   WlzIntervalWSpace iWSp;
   WlzGreyWSpace gWSp;
@@ -258,9 +259,10 @@ static WlzObject *WlzFilterNObjValues2DCb(WlzObject *rObj, WlzGreyType gType,
   WlzGreyValueWSpace **wBuf = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  bgdV.type = WLZ_GREY_INT;
-  bgdV.v.inv = 0;
   pos.vtZ = 0;
+  bgdV.v.inv = 0;
+  bgdV.type = WLZ_GREY_INT;
+  gTblType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
   if((vBuf.v = WlzFilterNObjMakeVBuf(gType, nObj)) == NULL)
   {
     errNum = WLZ_ERR_MEM_ALLOC;
@@ -271,7 +273,7 @@ static WlzObject *WlzFilterNObjValues2DCb(WlzObject *rObj, WlzGreyType gType,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    newVal.v = WlzNewValueTb(rObj, gType, bgdV, &errNum);
+    newVal.v = WlzNewValueTb(rObj, gTblType, bgdV, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -343,6 +345,7 @@ static WlzObject *WlzFilterNObjValues3DCb(WlzObject *rObj, WlzGreyType gType,
 		idQ;
   WlzObject	*obj2D,
   		*fObj = NULL;
+  WlzObjectType gTblType;
   WlzIVertex3	pos;
   WlzIntervalWSpace iWSp;
   WlzGreyWSpace gWSp;
@@ -355,8 +358,9 @@ static WlzObject *WlzFilterNObjValues3DCb(WlzObject *rObj, WlzGreyType gType,
   WlzGreyValueWSpace **wBuf = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  bgdV.type = WLZ_GREY_INT;
   bgdV.v.inv = 0;
+  bgdV.type = WLZ_GREY_INT;
+  gTblType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
   if((vBuf.v = WlzFilterNObjMakeVBuf(gType, nObj)) == NULL)
   {
     errNum = WLZ_ERR_MEM_ALLOC;
@@ -367,7 +371,7 @@ static WlzObject *WlzFilterNObjValues3DCb(WlzObject *rObj, WlzGreyType gType,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    newVal.vox = WlzNewValuesVox(rObj, gType, bgdV, &errNum);
+    newVal.vox = WlzNewValuesVox(rObj, gTblType, bgdV, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -590,21 +594,21 @@ static WlzErrorNum WlzFilterValuesMeanFn(WlzGreyType gType,
       {
         sum += val.shp[idX];
       }
-      val.shp[idR] = WLZ_NINT(sum / (double )nVal);
+      val.shp[idR] = (short )WLZ_NINT(sum / (double )nVal);
       break;
     case WLZ_GREY_UBYTE:
       for(idX = 0; idX < nVal; ++idX)
       {
         sum += val.ubp[idX];
       }
-      val.ubp[idR] = WLZ_NINT(sum / (double )nVal);
+      val.ubp[idR] = (WlzUByte )WLZ_NINT(sum / (double )nVal);
       break;
     case WLZ_GREY_FLOAT:
       for(idX = 0; idX < nVal; ++idX)
       {
         sum += val.flp[idX];
       }
-      val.flp[idR] = sum / (double )nVal;
+      val.flp[idR] = (float )(sum / (double )nVal);
       break;
     case WLZ_GREY_DOUBLE:
       for(idX = 0; idX < nVal; ++idX)

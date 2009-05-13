@@ -794,6 +794,11 @@ extern WlzObject		*WlzFromDArray2D(
 				  double **arrayDat,
 				  WlzIVertex2 arrayOrigin,
 				  WlzErrorNum *dstErrNum);
+extern WlzObject		*WlzFromBArray3D(
+				  WlzIVertex3 arraySizeDat,
+				  WlzUByte ***arrayDat,
+				  WlzIVertex3 arrayOrigin,
+				  WlzErrorNum *dstErrNum);
 extern WlzObject		*WlzFromIArray3D(
 				  WlzIVertex3 arraySizeDat,
 				  int ***arrayDat,
@@ -1317,6 +1322,9 @@ extern WlzCMeshTransform	*WlzMakeCMeshTransform(
 extern WlzCMeshTransform 	*WlzMakeCMeshTransform2D(
 				  WlzCMesh2D *mesh,
 				  WlzErrorNum *dstErr);
+extern WlzCMeshTransform 	*WlzMakeCMeshTransform3D(
+				  WlzCMesh3D *mesh,
+				  WlzErrorNum *dstErr);
 extern WlzCMeshTransform	*WlzCMeshTransformFromObj(
 				  WlzObject *srcObj,
 				  WlzMeshGenMethod method,
@@ -1352,15 +1360,18 @@ extern WlzErrorNum		WlzCMeshGetNodesAndEdges(
 				  int *dstSizeArrayEdg,
 				  int **dstArrayEdg);
 extern WlzObject		*WlzCMeshToDomObj(
-				  WlzCMeshP mesh,
+				  WlzCMeshTransform *mTr,
+				  int trans,
+				  WlzErrorNum *dstErr);
+extern WlzDBox2			WlzCMeshTransformGetBBox2D(
+				  WlzCMeshTransform *mTr,
+				  int trans,
+				  WlzErrorNum *dstErr);
+extern WlzDBox3			WlzCMeshTransformGetBBox3D(
+				  WlzCMeshTransform *mTr,
+				  int trans,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
-extern WlzObject		*WlzCMeshToDomObj2D(
-				  WlzCMesh2D *mesh,
-				  WlzErrorNum *dstErr);
-extern WlzObject		*WlzCMeshToDomObj3D(
-				  WlzCMesh3D *mesh,
-				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzCMeshUtils.c							*
@@ -1775,6 +1786,13 @@ extern WlzObject		*WlzDiffDomain(
 				  WlzObject *obj2,
 				  WlzErrorNum *dstErr);
 /************************************************************************
+* WlzDiffDomain3d.c							*
+************************************************************************/
+extern WlzObject 		*WlzDiffDomain3d(
+				  WlzObject *obj1,
+				  WlzObject *obj2,
+				  WlzErrorNum *dstErr);
+/************************************************************************
 * WlzDilation.c								*
 ************************************************************************/
 extern WlzObject		*WlzDilation(
@@ -1890,6 +1908,12 @@ extern WlzErrorNum		WlzStandardIntervalDomain(
 extern WlzObject		*WlzErosion(
 				  WlzObject *obj,
 				  WlzConnectType connectivity,
+				  WlzErrorNum *dstErr);
+/************************************************************************
+* WlzErosion4.c								*
+************************************************************************/
+extern WlzObject		*WlzErosion4(
+				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
 
 #ifndef WLZ_EXT_BIND
@@ -2890,6 +2914,10 @@ extern WlzObject 		*WlzHistogramRebin(
 				  double rtnOrigin,
 				  double rtnBinSize,
 				  WlzErrorNum *dstErr);
+extern double			WlzHistogramDistance(
+				  WlzObject *histObj0,
+				  WlzObject *histObj1,
+				  WlzErrorNum *dstErrNum);
 extern double 			WlzHistogramBinSum(
 				  WlzHistogramDomain *histDom);
 extern int 			WlzHistogramBinMax(
@@ -4066,8 +4094,9 @@ extern WlzObject		*WlzReadObj(
 				  FILE *fP,
 			          WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
-extern WlzMeshTransform3D *WlzReadMeshTransform3D(FILE *fP,
-				      WlzErrorNum *dstErr);
+extern WlzMeshTransform3D 	*WlzReadMeshTransform3D(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
 #endif /* !WLZ_EXT_BIND */
 
 /************************************************************************
@@ -4887,6 +4916,10 @@ extern void			WlzValueClampFloatIntoUByte(
 				  int count);
 extern void			WlzValueClampDoubleIntoInt(
 				  int *dst,
+				  double *src,
+				  int count);
+extern void			WlzValueClampDoubleIntoShort(
+ 				  short *dst,
 				  double *src,
 				  int count);
 extern void			WlzValueClampDoubleIntoUByte(

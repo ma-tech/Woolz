@@ -703,7 +703,7 @@ static float	AlcCPQQueueNewBWidth(AlcCPQQueue *q, AlcErrno *dstErr)
   {
     *dstErr = errNum;
   }
-  return(newBWidth);
+  return((float )newBWidth);
 }
 
 #ifdef ALC_CPQ_DEBUG
@@ -739,6 +739,7 @@ static void	AlcCPQDebugOut(AlcCPQQueue *q)
 }
 #endif /* ALC_CPQ_DEBUG */
 
+#ifdef ALC_CPQ_TEST
 #if (ALC_CPQ_TEST_MAIN == 1)
 /*
 * Test #1
@@ -932,3 +933,4 @@ int		main(int argc, char *argv[])
   return(0);
 }
 #endif /* ALC_CPQ_TEST_MAIN == 2 */
+#endif /* ALC_CPQ_TEST */

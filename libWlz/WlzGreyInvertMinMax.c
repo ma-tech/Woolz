@@ -165,19 +165,19 @@ WlzErrorNum WlzGreyInvertMinMax(
 
     case WLZ_GREY_SHORT:
       for (i=0; i<iwsp.colrmn; i++, g.shp++){
-	*g.shp = irange - *g.shp;
+	*g.shp = (short )(irange - *g.shp);
       }
       break;
 
     case WLZ_GREY_UBYTE: 
       for (i=0; i<iwsp.colrmn; i++, g.ubp++){
-	*g.ubp = irange - *g.ubp;
+	*g.ubp = (WlzUByte )(irange - *g.ubp);
       }
       break;
 
     case WLZ_GREY_FLOAT: 
       for (i=0; i<iwsp.colrmn; i++, g.flp++){
-	*g.flp = drange - *g.flp;
+	*g.flp = (float )(drange - *g.flp);
       }
       break;
 

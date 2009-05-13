@@ -839,7 +839,7 @@ static WlzErrorNum WlzContourFromPoints3DPn(WlzDomain dom, WlzValues val,
 	  for(klIdx = iWSp.lftpos; klIdx <= iWSp.rgtpos; ++klIdx)
 	  {
 	    dPos.vtX = klIdx;
-	    *(tGP.flp)++ = WlzBasisFnValueScalarMOS3D(basisFn, dPos);
+	    *(tGP.flp)++ = (float )WlzBasisFnValueScalarMOS3D(basisFn, dPos);
 	  }
 	  break;
 	case WLZ_GREY_DOUBLE:
@@ -1495,7 +1495,8 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
 	     * is above the minimum gradient threshold. */
 	    if((grdM0 = *(*(grdMBuf + lnIdx[1]) + klIdx[1])) >= grdLo)
 	    {
-	      *(*(grdLBuf + lnIdx[1]) + klIdx[2]) = 1 + (grdM0 > grdHi);
+	      *(*(grdLBuf + lnIdx[1]) + klIdx[2]) = (WlzUByte)(1 +
+	                                             (grdM0 > grdHi));
 	      /* Compute and classify the direction of gradient at centre of
 	       * neighbourhood. */
 	      grdX0 = *(*(grdXBuf + lnIdx[1]) + klIdx[1]);

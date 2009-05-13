@@ -2837,10 +2837,10 @@ WlzObject *WlzFromBArray1D(
     srcOffset = 0;
     for(i=0; i < arraySizeDat.vtY; i++){
       for(j=0; j < arraySizeDat.vtX; j++){
-	bitmask = (1 << (srcOffset%8));
+	bitmask = (WlzUByte )(1 << (srcOffset % 8));
 	if( bitData[srcOffset/8] & bitmask ){
 /*	  arrayData[i][j/8] |= bitmask;*/
-	  arrayData[i][j/8] |= (1 << (j%8));
+	  arrayData[i][j/8] |= (1 << (j % 8));
 	}
 	srcOffset++;
       }

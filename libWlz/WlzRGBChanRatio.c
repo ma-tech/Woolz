@@ -340,7 +340,7 @@ static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
 	    ratio = ratio * mul;
 	  }
 	  ++(gP0.rgbp);
-	  *(gP1.flp)++ = ratio;
+	  *(gP1.flp)++ = (float )ratio;
 	}
 	break;
       default:
@@ -443,16 +443,16 @@ static WlzUByte	WlzRGBAChanGetValue(WlzUInt rgba, WlzRGBAColorChannel chan)
   switch(chan)
   {
     case WLZ_RGBA_CHANNEL_GREY:
-      val = WLZ_NINT((double )(WLZ_RGBA_MODULUS(rgba)) / sqrt(3.0));
+      val = (WlzUByte )WLZ_NINT((double )(WLZ_RGBA_MODULUS(rgba)) / sqrt(3.0));
       break;
     case WLZ_RGBA_CHANNEL_RED:
-      val = WLZ_RGBA_RED_GET(rgba);
+      val = (WlzUByte )WLZ_RGBA_RED_GET(rgba);
       break;
     case WLZ_RGBA_CHANNEL_GREEN:
-      val = WLZ_RGBA_GREEN_GET(rgba);
+      val = (WlzUByte )WLZ_RGBA_GREEN_GET(rgba);
       break;
     case WLZ_RGBA_CHANNEL_BLUE:
-      val = WLZ_RGBA_BLUE_GET(rgba);
+      val = (WlzUByte )WLZ_RGBA_BLUE_GET(rgba);
       break;
     case WLZ_RGBA_CHANNEL_CYAN:     /* FALLTHROUGH */
     case WLZ_RGBA_CHANNEL_MAGENTA:  /* FALLTHROUGH */
@@ -464,13 +464,13 @@ static WlzUByte	WlzRGBAChanGetValue(WlzUInt rgba, WlzRGBAColorChannel chan)
       switch(chan)
       {
         case WLZ_RGBA_CHANNEL_CYAN:
-	  val = c - k;
+	  val = (WlzUByte )(c - k);
 	  break;
         case WLZ_RGBA_CHANNEL_MAGENTA:
-	  val = m - k;
+	  val = (WlzUByte )(m - k);
 	  break;
         case WLZ_RGBA_CHANNEL_YELLOW:
-	  val = y - k;
+	  val = (WlzUByte )(y - k);
 	  break;
 	default:
 	  break;
@@ -486,14 +486,14 @@ static WlzUByte	WlzRGBAChanGetValue(WlzUInt rgba, WlzRGBAColorChannel chan)
       max = ALG_MAX3(red, green, blue);
       del = max - min;
       b = max;
-      s = (max == 0)? 0: 255.0 * del / max;
+      s = (max == 0)? 0: (int )(255.0 * del / max);
       switch(chan)
       {
         case WLZ_RGBA_CHANNEL_BRIGHTNESS:
-	  val = b;
+	  val = (WlzUByte )b;
 	  break;
         case WLZ_RGBA_CHANNEL_SATURATION:
-	  val = s;
+	  val = (WlzUByte )s;
 	  break;
         case WLZ_RGBA_CHANNEL_HUE:
 	  if(s == 0)
@@ -516,7 +516,7 @@ static WlzUByte	WlzRGBAChanGetValue(WlzUInt rgba, WlzRGBAColorChannel chan)
 	    }
 	  }
 	  h = (360 + (h * 60)) % 360;
-	  val = h;
+	  val = (WlzUByte )h;
 	  break;
         default:
 	  break;

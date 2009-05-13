@@ -165,7 +165,7 @@ static int IsDVertexZero( WlzDVertex3  normal);
 #ifdef DEBUGME 
 static int IsDVertexEqual( WlzDVertex3 p1, WlzDVertex3 p2);
 #endif
-#ifdef _BORLAND_HACK_FOR_JATLASVIEWER
+#ifdef _BORLAND_FOR_JATLASVIEWER
 #else
 static void RecalInOutPBy3DNorm(
                                   int            numOf2DWlzFiles,
@@ -176,7 +176,7 @@ static void RecalInOutPBy3DNorm(
 				  int           *nOfVWithinTheS,
 				  WlzDVertex3   *OutPoints,     
 				  int           *nOfVOutTheS );
-#endif /* _BORLAND_HACK_FOR_JATLASVIEWER */
+#endif /* _BORLAND_FOR_JATLASVIEWER */
 #ifdef DEBUGME 
 static void pureThisGM(WlzGMModel *gMC, 
 		       int LoopIdx, 
@@ -408,7 +408,7 @@ static void GetSamplePointsForNextTrackFromTheTrackedLoopOfGM(
 			   int         *suc,
                            WlzErrorNum *dstErr );
 
-#ifdef _BORLAND_HACK_FOR_JATLASVIEWER
+#ifdef _BORLAND_FOR_JATLASVIEWER
 #else
 /* function:     WlzGeometryTrackUpAndDown_s    */
 /*! 
@@ -1298,7 +1298,7 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 
   return surfP; 
 }
-#endif /* _BORLAND_HACK_FOR_JATLASVIEWER */
+#endif /* _BORLAND_FOR_JATLASVIEWER */
 
 
 
@@ -5008,7 +5008,7 @@ static void pureThisGM(WlzGMModel *gMC,
 
 }
 #endif
-#ifdef _BORLAND_HACK_FOR_JATLASVIEWER
+#ifdef _BORLAND_FOR_JATLASVIEWER
 #else
 /*!
 * \return       none.	
@@ -5549,7 +5549,7 @@ static void RecalInOutPBy3DNorm(
 
 
 }
-#endif /* _BORLAND_HACK_FOR_JATLASVIEWER */
+#endif /* _BORLAND_FOR_JATLASVIEWER */
 
 
 /*!

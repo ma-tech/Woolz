@@ -3,7 +3,8 @@
 #else
 #if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
 #pragma ident "MRC HGU $Id:"
-#else static char _WlzRGBA_calarBinaryOp_c[] = "MRC HGU $Id:";
+#else
+static char _WlzRGBA_calarBinaryOp_c[] = "MRC HGU $Id:";
 #endif
 #endif
 /*!

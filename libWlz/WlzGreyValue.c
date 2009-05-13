@@ -626,7 +626,7 @@ static void	WlzGreyValueGetTransCon(WlzGreyValueWSpace *gVWSp,
 	  vtx2.vtX = kol + idX;
 	  vtx2.vtY = line + idY;
 	  vtx2 = WlzAffineTransformVertexD2(gVWSp->invTrans, vtx2, NULL);
-	  WlzGreyValueGet2D1(gVWSp, vtx2.vtY, vtx2.vtX);
+	  WlzGreyValueGet2D1(gVWSp, (int )(vtx2.vtY), (int )(vtx2.vtX));
 	  gPtr[idN] = gVWSp->gPtr[0];
 	  gVal[idN] = gVWSp->gVal[0];
 	  ++idN;
@@ -650,7 +650,8 @@ static void	WlzGreyValueGetTransCon(WlzGreyValueWSpace *gVWSp,
 	    vtx3.vtY = line + idY;
 	    vtx3.vtZ = plane + idZ;
 	    vtx3 = WlzAffineTransformVertexD3(gVWSp->invTrans, vtx3, NULL);
-	    WlzGreyValueGet3D1(gVWSp, vtx3.vtZ, vtx3.vtY, vtx3.vtX);
+	    WlzGreyValueGet3D1(gVWSp, (int )(vtx3.vtZ), (int )(vtx3.vtY),
+	                       (int )(vtx3.vtX));
 	    gPtr[idN] = gVWSp->gPtr[0];
 	    gVal[idN] = gVWSp->gVal[0];
 	    ++idN;
@@ -1054,7 +1055,7 @@ void		WlzGreyValueGetCon(WlzGreyValueWSpace *gVWSp,
   {
     if(gVWSp->invTrans)
     {
-      WlzGreyValueGetTransCon(gVWSp, plane, line, kol);
+      WlzGreyValueGetTransCon(gVWSp, (int )plane, (int )line, (int )kol);
     }
     else
     {

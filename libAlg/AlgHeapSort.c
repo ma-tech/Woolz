@@ -346,9 +346,18 @@ int		AlgHeapSortCmpLFn(void *datum0, void *datum1)
 */
 int		AlgHeapSortCmpFFn(void *datum0, void *datum1)
 {
-  int		cmp;
+  int		cmp = 0;
+  float		cmpF;
 
-  cmp = *((float *)datum0) - *((float *)datum1);
+  cmpF = *((float *)datum0) - *((float *)datum1);
+  if(cmpF < 0.0)
+  {
+    cmp = -1;
+  }
+  else if(cmpF > 0.0)
+  {
+    cmp = 1;
+  }
   return(cmp);
 }
 
@@ -362,9 +371,18 @@ int		AlgHeapSortCmpFFn(void *datum0, void *datum1)
 */
 int		AlgHeapSortCmpDFn(void *datum0, void *datum1)
 {
-  int		cmp;
+  int		cmp = 0;
+  double	cmpD;
 
-  cmp = *((double *)datum0) - *((double *)datum1);
+  cmpD = *((double *)datum0) - *((double *)datum1);
+  if(cmpD < 0.0)
+  {
+    cmp = -1;
+  }
+  else if(cmpD > 0.0)
+  {
+    cmp = 1;
+  }
   return(cmp);
 }
 
@@ -458,9 +476,18 @@ int		AlgHeapSortInvCmpLFn(void *datum0, void *datum1)
 */
 int		AlgHeapSortInvCmpFFn(void *datum0, void *datum1)
 {
-  int		cmp;
+  int		cmp = 0;
+  float		cmpF;
 
-  cmp = *((float *)datum1) - *((float *)datum0);
+  cmpF = *((float *)datum1) - *((float *)datum0);
+  if(cmpF < 0.0)
+  {
+    cmp = -1;
+  }
+  else if(cmpF > 0.0)
+  {
+    cmp = 1;
+  }
   return(cmp);
 }
 
@@ -474,9 +501,18 @@ int		AlgHeapSortInvCmpFFn(void *datum0, void *datum1)
 */
 int		AlgHeapSortInvCmpDFn(void *datum0, void *datum1)
 {
-  int		cmp;
+  int		cmp = 0;
+  double	cmpD;
 
-  cmp = *((double *)datum1) - *((double *)datum0);
+  cmpD = *((double *)datum1) - *((double *)datum0);
+  if(cmpD < 0.0)
+  {
+    cmp = -1;
+  }
+  else if(cmpD > 0.0)
+  {
+    cmp = 1;
+  }
   return(cmp);
 }
 
@@ -589,9 +625,18 @@ int		AlgHeapSortCmpIdxLFn(void *data, int *idx, int id0, int id1)
 */
 int		AlgHeapSortCmpIdxFFn(void *data, int *idx, int id0, int id1)
 {
-  int		cmp;
+  int		cmp = 0;
+  float		cmpF;
 
-  cmp = *((float *)data + *(idx + id0)) - *((float *)data + *(idx + id1));
+  cmpF = *((float *)data + *(idx + id0)) - *((float *)data + *(idx + id1));
+  if(cmpF < 0.0)
+  {
+    cmp = -1;
+  }
+  else if(cmpF > 0.0)
+  {
+    cmp = 1;
+  }
   return(cmp);
 }
 
@@ -608,9 +653,18 @@ int		AlgHeapSortCmpIdxFFn(void *data, int *idx, int id0, int id1)
 */
 int		AlgHeapSortCmpIdxDFn(void *data, int *idx, int id0, int id1)
 {
-  int		cmp;
+  int		cmp = 0;
+  double	cmpD;
 
-  cmp = *((double *)data + *(idx + id0)) - *((double *)data + *(idx + id1));
+  cmpD = *((double *)data + *(idx + id0)) - *((double *)data + *(idx + id1));
+  if(cmpD < 0.0)
+  {
+    cmp = -1;
+  }
+  else if(cmpD > 0.0)
+  {
+    cmp = 1;
+  }
   return(cmp);
 }
 
@@ -723,9 +777,18 @@ int		AlgHeapSortInvCmpIdxLFn(void *data, int *idx, int id0, int id1)
 */
 int		AlgHeapSortInvCmpIdxFFn(void *data, int *idx, int id0, int id1)
 {
-  int		cmp;
+  int		cmp = 0;
+  float		cmpF;
 
-  cmp = *((float *)data + *(idx + id1)) - *((float *)data + *(idx + id0));
+  cmpF = *((float *)data + *(idx + id1)) - *((float *)data + *(idx + id0));
+  if(cmpF < 0.0)
+  {
+    cmp = -1;
+  }
+  else if(cmpF > 0.0)
+  {
+    cmp = 1;
+  }
   return(cmp);
 }
 
@@ -742,9 +805,18 @@ int		AlgHeapSortInvCmpIdxFFn(void *data, int *idx, int id0, int id1)
 */
 int		AlgHeapSortInvCmpIdxDFn(void *data, int *idx, int id0, int id1)
 {
-  int		cmp;
+  int		cmp = 0;
+  double	cmpD;
 
-  cmp = *((double *)data + *(idx + id1)) - *((double *)data + *(idx + id0));
+  cmpD = *((double *)data + *(idx + id1)) - *((double *)data + *(idx + id0));
+  if(cmpD < 0.0)
+  {
+    cmp = -1;
+  }
+  else if(cmpD > 0.0)
+  {
+    cmp = 1;
+  }
   return(cmp);
 }
 
