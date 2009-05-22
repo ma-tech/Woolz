@@ -1308,6 +1308,11 @@ extern WlzObject		*WlzCMeshDistance2D(
 				  int sizeArraySeeds,
 				  WlzDVertex2 *arraySeeds,
 				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzCMeshDistance3D(
+				  WlzCMesh3D *mesh,
+				  int sizeArraySeeds,
+				  WlzDVertex3 *arraySeeds,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzCMeshTransform.c							*
@@ -2693,6 +2698,22 @@ extern double			WlzGeomInterpolateTri2D(
 				  double v1,
 				  double v2,
 				  WlzDVertex2 pX);
+extern double			WlzGeomInterpolateTet3D(
+				  WlzDVertex3 p0,
+				  WlzDVertex3 p1,
+                                  WlzDVertex3 p2,
+                                  WlzDVertex3 p3,
+				  double v0,
+				  double v1,
+				  double v2,
+				  double v3,
+				  WlzDVertex3 pX);
+extern void			WlzGeomMap3DTriangleTo2D(
+				  WlzDVertex3 p0,
+				  WlzDVertex3 p1,
+				  WlzDVertex3 p2,
+				  WlzDVertex2 *dstQ1,
+				  WlzDVertex2 *dstQ2);
 
 /************************************************************************
 * WlzGreyCrossing.c							*
