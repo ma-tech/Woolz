@@ -1076,6 +1076,7 @@ WlzObject       *WlzCMeshToDomObj3D(WlzCMeshTransform *mTr, int trans,
 {
   WlzObject     *domObj = NULL;
   WlzCMesh3D	*mesh;
+  WlzCMeshScanWSp3D *mSWSp = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   if((mTr == NULL) || ((mesh = mTr->mesh.m3) == NULL))
@@ -1094,7 +1095,17 @@ WlzObject       *WlzCMeshToDomObj3D(WlzCMeshTransform *mTr, int trans,
     }
     else
     {
-      errNum = WLZ_ERR_UNIMPLEMENTED; /* TODO */
+      /* Make workspace intervals for the elements in the displaced
+       * mesh, with intervals sorted by plane, line and then column. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	mSWSp = WlzCMeshScanWSpInit3D(mTr, &errNum);
+      }
+      /* Scan through the sorted intervals creating domains as required. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	domObj = WlzCMeshScanObjPDomain3D(NULL, mSWSp, &errNum); 
+      }
     }
   }
   if(dstErr != NULL)
@@ -1218,11 +1229,21 @@ static void 	WlzCMeshUpdateScanElm3D(WlzCMeshTransform *mTr,
   {
     WlzCMeshElmGetNodes3D(elm, nod + 0, nod + 1, nod + 2, nod + 3);
     vec = mTr->dspVec;
-    for(idN = 0; idN < 4; ++idN)
+    if(vec == NULL)
     {
-      sVx[idN] = nod[idN]->pos;
-      dVx[idN] = *(WlzDVertex3 *)AlcVectorItemGet(vec, nod[idN]->idx);
-      WLZ_VTX_3_ADD(dVx[idN], dVx[idN], sVx[idN]);
+      for(idN = 0; idN < 4; ++idN)
+      {
+	sVx[idN] = dVx[idN] = nod[idN]->pos;
+      }
+    }
+    else
+    {
+      for(idN = 0; idN < 4; ++idN)
+      {
+	sVx[idN] = nod[idN]->pos;
+	dVx[idN] = *(WlzDVertex3 *)AlcVectorItemGet(vec, nod[idN]->idx);
+	WLZ_VTX_3_ADD(dVx[idN], dVx[idN], sVx[idN]);
+      }
     }
     if(fwd)
     {
@@ -1987,8 +2008,16 @@ static WlzCMeshScanWSp3D *WlzCMeshScanWSpInit3D(WlzCMeshTransform *mTr,
 	                      nodBuf + 2, nodBuf + 3);
         for(idN = 0; idN < 4; ++idN)
 	{
-	  dsp = (WlzDVertex3 *)AlcVectorItemGet(mTr->dspVec, nodBuf[idN]->idx);
-	  WLZ_VTX_3_ADD(dspP, nodBuf[idN]->pos, *dsp);
+	  if(mTr->dspVec == NULL)
+	  {
+	    dspP = nodBuf[idN]->pos;
+	  }
+	  else
+	  {
+	    dsp = (WlzDVertex3 *)AlcVectorItemGet(mTr->dspVec,
+	                                          nodBuf[idN]->idx);
+	    WLZ_VTX_3_ADD(dspP, nodBuf[idN]->pos, *dsp);
+	  }
 	  dspPos[idN] = dspP;
 	  if(fstNod)
 	  {
@@ -3441,7 +3470,9 @@ static WlzErrorNum WlzCMeshVerifyWSp3D(WlzObject *srcObj,
 * \brief	Applies a 3D conforming mesh transform to the given source
 *		object (which must be a 3D domain object) using the already
 *		initialized mesh transform workspace.
-* \param	srcObj			Object to be transformed.
+*		If the given source object is NULL a domain will be created
+*		corresponding to the given mesh transform.
+* \param	srcObj			Object to be transformed, may be NULL.
 * \param	mTr			Conforming mesh transform.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
@@ -3461,6 +3492,7 @@ static WlzObject *WlzCMeshScanObjPDomain3D(WlzObject *srcObj,
   WlzDynItvPool	itvPool;
   WlzCMeshScanItv3D *curItv,
   		*prvItv;
+  WlzObjectType	dstObjType;
   WlzCMeshScanElm3D *sE;
   WlzUByte	*lnMsk = NULL;
   WlzDomain	dom2,
@@ -3483,6 +3515,7 @@ static WlzObject *WlzCMeshScanObjPDomain3D(WlzObject *srcObj,
   }
   else
   {
+    dstObjType = (srcObj == NULL)? WLZ_3D_DOMAINOBJ: srcObj->type;
     itvLnWidth = mSWSp->dBox.xMax - mSWSp->dBox.xMin + 1;
     itvLnByteWidth = (itvLnWidth + 7) / 8;
     /* Initialize a dynamic interval pool. Any size greater than the maximum
@@ -3541,8 +3574,8 @@ static WlzObject *WlzCMeshScanObjPDomain3D(WlzObject *srcObj,
 	sPos.vtX = WLZ_NINT(tV.vtX);
 	sPos.vtY = WLZ_NINT(tV.vtY);
 	sPos.vtZ = WLZ_NINT(tV.vtZ);
-	if(WlzInsideDomain(srcObj, sPos.vtZ, sPos.vtY,
-	                   sPos.vtX, NULL) != 0)
+	if((srcObj == NULL) ||
+	   (WlzInsideDomain(srcObj, sPos.vtZ, sPos.vtY, sPos.vtX, NULL) != 0))
 	{
 	  ++itvLnCnt;
 	  WlzBitLnSetItv(lnMsk,
@@ -3585,11 +3618,14 @@ static WlzObject *WlzCMeshScanObjPDomain3D(WlzObject *srcObj,
     if(errNum == WLZ_ERR_NONE)
     {
       /* Set voxel size. */
-      dom3.p->voxel_size[0] = srcObj->domain.p->voxel_size[0];
-      dom3.p->voxel_size[1] = srcObj->domain.p->voxel_size[1];
-      dom3.p->voxel_size[2] = srcObj->domain.p->voxel_size[2];
+      if(srcObj != NULL)
+      {
+	dom3.p->voxel_size[0] = srcObj->domain.p->voxel_size[0];
+	dom3.p->voxel_size[1] = srcObj->domain.p->voxel_size[1];
+	dom3.p->voxel_size[2] = srcObj->domain.p->voxel_size[2];
+      }
       /* Create new object from the transformed plane domain. */
-      dstObj = WlzMakeMain(srcObj->type, dom3, nullVal, NULL, NULL, &errNum);
+      dstObj = WlzMakeMain(dstObjType, dom3, nullVal, NULL, NULL, &errNum);
     }
   }
   /* Clear up. */
