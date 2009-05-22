@@ -141,7 +141,7 @@ int		main(int argc, char *argv[])
 		*meshObj = NULL,
   		*refObj = NULL;
   WlzCMeshP 	mesh;
-  WlzCMeshNod2D	*nod;
+  WlzCMeshNodP	nod;
   static char   optList[] = "bho:r:s:";
   const char    meshFileStrDef[] = "-",
   	        outObjFileStrDef[] = "-";
@@ -257,14 +257,14 @@ int		main(int argc, char *argv[])
 	break;
     }
   }
-  if(ok && refObj)
+  if(ok && meshObj)
   {
     switch(meshObj->type)
     {
       case WLZ_CMESH_2D:
 	vtxType = WLZ_VERTEX_D2;
 	vtxSize = sizeof(WlzDVertex2);
-        if(refObj->type != WLZ_2D_DOMAINOBJ)
+        if((refObj != NULL) && (refObj->type != WLZ_2D_DOMAINOBJ))
 	{
 	  ok = 0;
 	}
@@ -272,7 +272,7 @@ int		main(int argc, char *argv[])
       case WLZ_CMESH_3D:
 	vtxType = WLZ_VERTEX_D3;
 	vtxSize = sizeof(WlzDVertex3);
-        if(refObj->type != WLZ_3D_DOMAINOBJ)
+        if((refObj != NULL) && (refObj->type != WLZ_3D_DOMAINOBJ))
 	{
 	  ok = 0;
 	}
@@ -351,11 +351,12 @@ int		main(int argc, char *argv[])
 	{
 	  for(idM = 0; idM < mesh.m2->res.nod.maxEnt; ++idM)
 	  {
-	    nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh.m2->res.nod.vec, idM);
-	    if((nod->idx >= 0) &&
-	       ((nod->flags & WLZ_CMESH_NOD_FLAG_BOUNDARY) != 0))
+	    nod.n2 = (WlzCMeshNod2D *)
+	             AlcVectorItemGet(mesh.m2->res.nod.vec, idM);
+	    if((nod.n2->idx >= 0) &&
+	       ((nod.n2->flags & WLZ_CMESH_NOD_FLAG_BOUNDARY) != 0))
 	    {
-	      seeds.d2[idN++] = nod->pos;
+	      seeds.d2[idN++] = nod.n2->pos;
 	    }
 	  }
 	}
@@ -386,7 +387,52 @@ int		main(int argc, char *argv[])
 	}
 	break;
       case WLZ_CMESH_3D:
-	errNum = WLZ_ERR_UNIMPLEMENTED;
+	idN = 0;
+	if(seedFlg)
+	{
+	  idN = 1;
+	  seeds.d3->vtX = seed.d3.vtX;
+	  seeds.d3->vtY = seed.d3.vtY;
+	}
+	if(boundFlg)
+	{
+	  for(idM = 0; idM < mesh.m3->res.nod.maxEnt; ++idM)
+	  {
+	    nod.n3 = (WlzCMeshNod3D *)
+	             AlcVectorItemGet(mesh.m3->res.nod.vec, idM);
+	    if((nod.n3->idx >= 0) &&
+	       ((nod.n3->flags & WLZ_CMESH_NOD_FLAG_BOUNDARY) != 0))
+	    {
+	      seeds.d3[idN++] = nod.n3->pos;
+	    }
+	  }
+	}
+	if(refObj)
+	{
+	  switch(bndVtxType)
+	  {
+	    case WLZ_VERTEX_I3:
+	      WlzValueCopyIVertexToDVertex3(seeds.d3 + idN, bndSeeds.i3,
+	      				    nBndSeeds);
+	      break;
+	    case WLZ_VERTEX_F3:
+	      WlzValueCopyFVertexToDVertex3(seeds.d3 + idN, bndSeeds.f3,
+	      				    nBndSeeds);
+	      break;
+	    case WLZ_VERTEX_D3:
+	      WlzValueCopyDVertexToDVertex3(seeds.d3 + idN, bndSeeds.d3,
+	      				    nBndSeeds);
+	      break;
+	    default:
+	      errNum = WLZ_ERR_PARAM_TYPE;
+	      break;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  outObj = WlzCMeshDistance3D(mesh.m3, nSeeds, seeds.d3, &errNum);
+	}
+	break;
 	break;
       default:
 	break;
@@ -428,8 +474,6 @@ int		main(int argc, char *argv[])
     fprintf(stderr,
             "Usage: %s [-b] [-h] [-o<out obj file>] [-r<ref obj file>]\n"
 	    "                        [-s #,#,#] [<input mesh file>]\n"
-            "Usage: %s [-h] [-o<output object>]\n"
-	    "       [-b] [-s #,#,#] [-r <ref object>]  [<input mesh>]\n"
 	    "Constructs a 2D or 3D domain object the values of which are\n"
 	    "the minimum distance from the given seeds points in the given\n"
 	    "conforming mesh. The domain of the output object covers the\n"
