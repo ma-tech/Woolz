@@ -92,6 +92,12 @@ static double			WlzCMeshFMarQSElmPriority3D(
 				  WlzCMeshElm3D *elm,
 				  double *dst,
 				  WlzDVertex3 org);
+static double 			WlzCMeshFMarSolve2D2(
+				  WlzDVertex2 p0,
+				  WlzDVertex2 p1,
+				  WlzDVertex2 p2,
+				  double d0,
+				  double d1);
 static int		 	WlzCMeshFMarCompute2D(
 				  WlzCMeshNod2D *nod0,
 				  WlzCMeshNod2D *nod1,
@@ -302,6 +308,170 @@ WlzObject	*WlzCMeshDistance2D(WlzCMesh2D *mesh,
       if(errNum == WLZ_ERR_EOO)
       {
         errNum = WLZ_ERR_NONE;
+      }
+    }
+  }
+  AlcFree(distances);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeObj(obj1);
+    obj1 = NULL;
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(obj1);
+}
+
+
+/*!
+* \return	A 3D domain object, an empty object if the mesh has
+* 		no elements or NULL on error.
+* \ingroup	WlzMesh
+* \brief	Computes a new 3D domain object with values that are the
+* 		distance from the given seeds within the given mesh.
+* \param	mesh			Given mesh.
+* \param	nSeeds			Number of seed nodes, if \f$<\f$ 1
+* 					then all boundary nodes of the
+* 					given mesh are used as seed nodes.
+* \param	seeds			Array of seed positions, may be
+* 					NULL iff the number of seed nodes
+* 					is \f$<\f$ 1. It is an error if
+*					are not within the mesh.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzCMeshDistance3D(WlzCMesh3D *mesh,
+				int nSeeds, WlzDVertex3 *seeds,
+				WlzErrorNum *dstErr)
+{
+  int		idE,
+  		idK,
+		idP,
+		idN,
+		pCnt;
+  double	d;
+  double	*distances = NULL,
+  		*dst;
+  WlzObject	*obj0 = NULL,
+  		*obj1 = NULL,
+		*obj2 = NULL;
+  WlzCMeshElm3D	*elm;
+  WlzCMeshNod3D	*nod[3];
+  WlzCMeshTransform *mTr = NULL;
+  WlzObjectType	vTT;
+  WlzValues	val;
+  WlzPixelV	bgdV;
+  WlzDVertex3	pos;
+  WlzGreyWSpace gWsp;
+  WlzIntervalWSpace iWsp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  bgdV.type = WLZ_GREY_DOUBLE;
+  bgdV.v.dbv = DBL_MAX;
+  vTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_TET3D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if(mesh->res.elm.numEnt == 0)
+  {
+    obj1 = WlzMakeEmpty(&errNum);
+  }
+  else
+  {
+    if((distances = AlcMalloc(sizeof(double) * mesh->res.nod.maxEnt)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzCMeshFMarNodes3D(mesh, distances, nSeeds, seeds);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      mTr = WlzMakeCMeshTransform(WLZ_TRANSFORM_3D_CMESH, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      mTr->mesh.m3 = mesh;
+      obj0 = WlzCMeshToDomObj(mTr, 0, &errNum);
+    }
+    if(mTr)
+    {
+      mTr->mesh.m3 = NULL;
+      (void )WlzFreeCMeshTransform(mTr);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      val.vox = WlzNewValuesVox(obj0, vTT, bgdV, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ,
+			 obj0->domain, val, NULL, NULL, &errNum);
+    }
+    (void )WlzFreeObj(obj0);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      pCnt = obj1->domain.p->lastpl - obj1->domain.p->plane1 + 1;
+      for(idP = 0; idP < pCnt; ++idP)
+      {
+        obj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+	                   *(obj1->domain.p->domains + idP),
+			   *(obj1->values.vox->values + idP),
+			   NULL, NULL, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  pos.vtZ = obj1->domain.p->plane1 + idP;
+          errNum = WlzInitGreyScan(obj2, &iWsp, &gWsp);
+	}
+	while((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE)
+	{
+	  dst = gWsp.u_grintptr.dbp;
+	  pos.vtY = iWsp.linpos;
+	  idE = -1;
+	  for(idK = iWsp.lftpos; idK <= iWsp.rgtpos; ++idK)
+	  {
+	    pos.vtX = idK;
+	    if((idE = WlzCMeshElmEnclosingPos3D(mesh, idE,
+						pos.vtX, pos.vtY, pos.vtZ,
+						&idN)) >= 0)
+	    {
+	      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+	      WlzCMeshElmGetNodes3D(elm, nod + 0, nod + 1, nod + 2, nod + 3);
+	      d = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
+	                                  nod[2]->pos, nod[3]->pos,
+					  distances[nod[0]->idx],
+					  distances[nod[1]->idx],
+					  distances[nod[2]->idx],
+					  distances[nod[3]->idx],
+					  pos);
+	    }
+	    else if((idN >= 0) && (idN < mesh->res.nod.maxEnt))
+	    {
+	      d = distances[idN];
+	    }
+	    else
+	    {
+	      d = DBL_MAX;
+	    }
+	    *dst++ = d;
+	  }
+	}
+        (void )WlzFreeObj(obj2);
+	if(errNum == WLZ_ERR_EOO)
+	{
+	  errNum = WLZ_ERR_NONE;
+	}
+	else if(errNum != WLZ_ERR_NONE)
+	{
+	  break;
+	}
       }
     }
   }
@@ -825,6 +995,47 @@ static double	WlzCMeshFMarQSElmPriority3D(WlzCMeshElm3D *elm,
 static int	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
 				WlzCMeshNod2D *nod1, WlzCMeshNod2D *nod2, 
 				double *distances, WlzCMeshElm2D *elm)
+#define NEW_CODE_HACK
+#ifdef NEW_CODE_HACK
+{
+  int		idN,
+		rtn = 0;
+  double	d0,
+		d2;
+  WlzCMeshNod2D *nod3;
+  WlzCMeshEdgU2D *edu;
+  const double  maxCosAng = 0.996195;		        /* Cosine 5 degrees. */
+
+  /* For each element which is a neighbour of the given one find a
+   * node in the element which is not a node of the current element.
+   * If this node has a smaller distance than nod1 use it as nod1. */
+  for(idN = 0; idN < 3; ++idN)
+  {
+    edu = elm->edu + idN;
+    if((edu->opp != NULL) && (edu->opp != edu))
+    {
+      nod3 = edu->opp->next->next->nod;
+      if(distances[nod3->idx] < distances[nod1->idx])
+      {
+	d0 = WlzGeomCos3V(nod0->pos, nod3->pos, nod2->pos);
+	if(d0 < maxCosAng)
+	{
+	  nod1 = nod3;
+	}
+      }
+    }
+  }
+  d2 = WlzCMeshFMarSolve2D2(nod0->pos, nod1->pos, nod2->pos,
+			    *(distances + nod0->idx),
+			    *(distances + nod1->idx));
+  if(d2 < *(distances + nod2->idx))
+  {
+    *(distances + nod2->idx) = d2;
+    rtn = 1;
+  }
+  return(rtn);
+}
+#else /* NEW_CODE_HACK */
 {
   int		idN,
   		flg,
@@ -952,6 +1163,95 @@ static int	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
     rtn = 1;
   }
   return(rtn);
+}
+#endif /* NEW_CODE_HACK */
+
+/*!
+* \return	Computed distance of the third vertex.
+* \ingroup	WlzMesh
+* \brief	Computes the distances of the third vertex in a triangle
+* 		of three vertices, with the first two having known distances
+* 		which are given.
+* \param	p0			Position of first vertex.
+* \param	p1			Position of second vertex.
+* \param	p2			Position of third vertex.
+* \param	d0			Known distance of first vertex.
+* \param	d1			Known distance of second vertex.
+*/
+static double 	WlzCMeshFMarSolve2D2(WlzDVertex2 p0, WlzDVertex2 p1,
+			             WlzDVertex2 p2, double d0, double d1)
+{
+  int		flg;
+  double	d2,
+  		d20,
+		d21,
+		theta;
+  double	len[3],
+		lenSq[3],
+  		phi[3];
+  WlzDVertex2	del,
+  		pos;
+
+  if(d1 < d0)
+  {
+    pos = p0; p0 = p1; p1 = pos;
+    d20 = d0; d0 = d1; d1 = d20;
+  }
+  WLZ_VTX_2_SUB(del, p0, p1);
+  lenSq[2] = WLZ_VTX_2_SQRLEN(del);
+  len[2] = sqrt(lenSq[2]);
+  if(len[2] < DBL_EPSILON)
+  {
+    /* Element is degenerate so just use edge length to compute distance. */
+    d2 = d0 + len[1];
+  }
+  else
+  {
+    WLZ_VTX_2_SUB(del, p1, p2);
+    lenSq[0] = WLZ_VTX_2_SQRLEN(del);
+    len[0] = sqrt(lenSq[0]);
+    WLZ_VTX_2_SUB(del, p2, p0);
+    lenSq[1] = WLZ_VTX_2_SQRLEN(del);
+    len[1] = sqrt(lenSq[1]);
+    phi[2] = acos((lenSq[0] + lenSq[1] - lenSq[2]) / (2.0 * len[0] * len[1]));
+    if(ALG_M_PI_2 < phi[2])
+    {
+      /* Angle at unknown node is obtuse so interpolate a virtual node
+       * half way between nod0 and nod1 which will bisect phi2  with
+       * d1 = (d0 + d1)/2, pos1 = (pos1 + pos0)/2. */
+      WLZ_VTX_2_ADD(pos, p0, p1);
+      WLZ_VTX_2_SCALE(pos, pos, 0.5);
+      d1 = 0.5 * (d1 + d0);
+      WLZ_VTX_2_SUB(del, p0, pos);
+      lenSq[2] = WLZ_VTX_2_SQRLEN(del);
+      len[2] = sqrt(lenSq[2]);
+      WLZ_VTX_2_SUB(del, pos, p2);
+      lenSq[0] = WLZ_VTX_2_SQRLEN(del);
+      len[0] = sqrt(lenSq[0]);
+    }
+    flg = 0;
+    if(len[2] > (d1 - d0))
+    {
+      theta = asin((d1 - d0) / len[2]);
+      phi[0] = acos((lenSq[1] + lenSq[2] - lenSq[0])/(2.0 * len[1] * len[2]));
+      phi[1] = acos((lenSq[2] + lenSq[0] - lenSq[1])/(2.0 * len[2] * len[0]));
+      if((theta > DBL_EPSILON) && (theta > (phi[1] - ALG_M_PI_2)) && 
+	 ((ALG_M_PI_2 - phi[0]) > theta))
+      {
+	flg = 1;
+	d20 = len[0] * sin(phi[1] - theta); /* h0 */
+	d21 = len[1] * sin(phi[0] + theta); /* h1 */
+	d2 = 0.5 * ((d20 + d0) + (d21 + d1));
+      }
+    }
+    if(flg == 0)
+    {
+      d20 = d0 + len[1];
+      d21 = d1 + len[0];
+      d2 = ALG_MIN(d20, d21);
+    }
+  }
+  return(d2);
 }
 
 /*!
@@ -1085,52 +1385,7 @@ static int	WlzCMeshFMarCompute3D1(WlzCMeshNod3D *nod0,
 * \return	Non zero if distance computed and less than current distance.
 * \ingroup	WlzMesh
 * \brief	Computes wavefront propagation time for the unknown nodes of
-* 		the given element.
-* 		This function is given just two known nodes and computes the
-* 		times for the other nodes by assuming that the propagation
-* 		is along the faces joined by the two known nodes.
-*
-* 		Given a planar wavefront which has arrived at two nodes
-* 		(\f$n_0\f$ and \f$n_1\f$) of a triangle (third unknown node
-* 		\f$n_2\f$) with distance traveled by fron \f$d_i\f$ at
-* 		node \f$n_i\f$ and the node positions \f$\mathbf{p_0}\f$,
-* 		\f$\mathbf{p_1}\f$ and \f$\mathbf{p_2}\f$. Then the
-* 		normal vector for the front can be computed using:
-* 		\f[
-		\mathbf{l_1}\cdot\mathbf{n} = d
- 		\f]
-* 		\f[
-		\|\mathbf{n}\|^2 = 1
- 		\f]
-* 		\f[
-                \mathbf{l_2}\cdot(\mathbf{n}\times\mathbf{l_1}) = 0
- 		\f]
-*		Solving for n using maxima gives:
-*		\f[
-		nz = \frac{d l_{1z} \pm
-		           ((l_{2y} l_{1z} - l_{2z} l_{1y})l_{1y} -
-			    (l_{2z} l_{1x} - l_{2x} l_{1z})l_{1x})
-			   \sqrt(l^2 - d^2)/k}
-			  {l^2}
-		\f]
-*		\f[
-		ny = \frac{((l_{2y} l_{1z} - l_{2z} l_{1y})l_{1z} -
-		            (l_{2x} l_{1y} + l_{2y}.l_{1x})l_{1x}) nz -
-		           (l_{2y} l_{1z} + l_{2z} l_{1y})d}
-		     {l_{2z} l_{1y}^2 + l_{2z} l_{1x}^2 -
-		      (l_{2y} l_{1y} + l_{2x} l_{1x}) l_{1z}}
-		\f]
-*		\f[
-                n_x = {d - l_{0z} n_z - l_{0y} n_y}{l_{0x}}
-		\f]
-*		Where:
-*		\[
-		d = d_1 - d_0,
-		\mathbf{l_1} = \mathbf{p_1} - \mathbf{p_0},
-		\mathbf{l_2} = \mathbf{p_2} - \mathbf{p_0},
-		l^2 = \|\mathbf{l_1}\|^2,
-		k^2 = \|\mathbf{l_2} \times \mathbf{l_1}\|^2
- 		\f]
+* 		the given element along the faces of the element.
 * \param	nod0			First known (current) node.
 * \param	nod1			Second known node.
 * \param	nod2			First unknown node.
@@ -1146,17 +1401,28 @@ static int	WlzCMeshFMarCompute3D2(WlzCMeshNod3D *nod0,
 				       double *distances)
 {
   int		rtn = 0;
+  double	d;
+  WlzDVertex2	q0,
+  		q1,
+		q2;
 
-  /* TODO restrict to face of element. */
-/*
-l^2 = lx^2+ly^2+lz^2
-k^2 = (jy*lz-jz*ly)^2 + (jx*lz-jz*lx)^2 + (jx*ly-jy*lx)^2
-[nz = (d*lz - ((jy*lz-jz*ly)*ly-(jz*lx-jx*lz)*lx)*sqrt(l^2-d^2)/k) /(l^2),
- nz = (d*lz + ((jy*lz-jz*ly)*ly-(jz*lx-jx*lz)*lx)*sqrt(l^2-d^2)/k) /(l^2)]
-ny = ((jy*lz^2-jz*ly*lz-jx*lx*ly+jy*lx^2)*nz-d*jy*lz+d*jz*ly)/
-     (jz*ly^2+jz*lx^2-(jy*ly+jx*lx)*lz)
-nx = (d - lz*nz - ly*ny)/lx;
-*/
+  WLZ_VTX_2_SET(q0, 0.0, 0.0);
+  WlzGeomMap3DTriangleTo2D(nod0->pos, nod1->pos, nod2->pos, &q1, &q2);
+  d = WlzCMeshFMarSolve2D2(q0, q1, q2,
+                          distances[nod0->idx], distances[nod1->idx]);
+  if(d < distances[nod2->idx])
+  {
+    distances[nod2->idx] = d;
+    ++rtn;
+  }
+  WlzGeomMap3DTriangleTo2D(nod0->pos, nod1->pos, nod3->pos, &q1, &q2);
+  d = WlzCMeshFMarSolve2D2(q0, q1, q2,
+                          distances[nod0->idx], distances[nod1->idx]);
+  if(d < distances[nod3->idx])
+  {
+    distances[nod3->idx] = d;
+    ++rtn;
+  }
   return(rtn);
 }
 
@@ -1252,6 +1518,9 @@ static int	WlzCMeshFMarCompute3D3(WlzCMeshNod3D *nod0,
 		f2,
 		g,
 		h;
+  WlzDVertex2	q0,
+  		q1,
+		q2;
   WlzDVertex3	n0,
 		n1,
 		t0,
@@ -1347,15 +1616,27 @@ static int	WlzCMeshFMarCompute3D3(WlzCMeshNod3D *nod0,
   }
   else
   {
+    /* Find minimum distance using path along the faces of the tetrahedron. */
+    WLZ_VTX_2_SET(q0, 0.0, 0.0);
     for(id0 = 0; id0 < 3; ++id0)
     {
-      /* TODO */
-      
+      id1 = (id0 + 1) % 3;
+      WlzGeomMap3DTriangleTo2D(nod[id0]->pos, nod[id1]->pos,
+                               nod[3]->pos, &q1, &q2);
+      d = WlzCMeshFMarSolve2D2(q0, q1, q2,
+                          distances[nod[id0]->idx],
+			  distances[nod[id1]->idx]);
+      if(d < distances[nod[3]->idx])
+      {
+	distances[nod[3]->idx] = d;
+	hit = 1;
+	rtn = 1;
+      }
     }
   }
   if(hit == 0)
   {
-    /* TODO Do something more sophisticated here if needed.  */
+    /* TIf all else fails use the minimum distance along the edges. */
     for(id0 = 0; id0 < 3; ++id0)
     {
       WLZ_VTX_3_SUB(t0, nod[3]->pos, nod[id0]->pos);
