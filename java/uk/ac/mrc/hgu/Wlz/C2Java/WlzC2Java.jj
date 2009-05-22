@@ -724,7 +724,7 @@ public class WlzC2Java
 	  {
 	    jPmKey = WLZ_JPM_KEY_LONG;
 	  }
-	  else if(cPmType.equals("int"))
+	  else if(cPmType.equals("int") || cPmType.equals("WlzUInt"))
 	  {
 	    jPmKey = WLZ_JPM_KEY_INT;
 	  }
@@ -744,7 +744,7 @@ public class WlzC2Java
 	  {
 	    jPmKey = WLZ_JPM_KEY_INT;
 	  }
-	  else if(cPmType.equals("char"))
+	  else if(cPmType.equals("char") || cPmType.equals("WlzUByte"))
 	  {
 	    // A C char is closest to a Java byte.
 	    jPmKey = WLZ_JPM_KEY_BYTE;
@@ -829,7 +829,7 @@ public class WlzC2Java
 	      jPmKey = WLZ_JPM_KEY_LONG_PTR1;
 	    }
 	  }
-	  else if(cPmType.equals("int"))
+	  else if(cPmType.equals("int") || cPmType.equals("WlzUInt"))
 	  {
 	    if(cPmIdent.startsWith("array"))
 	    {
@@ -851,7 +851,7 @@ public class WlzC2Java
 	      jPmKey = WLZ_JPM_KEY_SHORT_PTR1;
 	    }
 	  }
-	  else if(cPmType.equals("char"))
+	  else if(cPmType.equals("char") || cPmType.equals("WlzUByte"))
 	  {
 	    if(cPmIdent.startsWith("dst"))
 	    {
@@ -1076,7 +1076,7 @@ public class WlzC2Java
 	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
 	    }
 	  }
-	  else if(cPmType.equals("int"))
+	  else if(cPmType.equals("int") || cPmType.equals("WlzUInt"))
 	  {
 	    if(cPmIdent.startsWith("array"))
 	    {
@@ -1098,7 +1098,7 @@ public class WlzC2Java
 	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
 	    }
 	  }
-	  else if(cPmType.equals("char"))
+	  else if(cPmType.equals("char") || cPmType.equals("WlzUByte"))
 	  {
 	    if(cPmIdent.startsWith("dst"))
 	    {
@@ -1216,7 +1216,7 @@ public class WlzC2Java
 	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
 	    }
 	  }
-	  else if(cPmType.equals("int"))
+	  else if(cPmType.equals("int") || cPmType.equals("WlzUInt"))
 	  {
 	    if(cPmIdent.startsWith("array"))
 	    {
@@ -1246,7 +1246,7 @@ public class WlzC2Java
 	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
 	    }
 	  }
-	  else if(cPmType.equals("char"))
+	  else if(cPmType.equals("char") || cPmType.equals("WlzUByte"))
 	  {
 	    if(cPmIdent.startsWith("array"))
 	    {
@@ -1327,7 +1327,7 @@ public class WlzC2Java
 	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
 	    }
 	  }
-	  else if(cPmType.equals("int"))
+	  else if(cPmType.equals("int") || cPmType.equals("WlzUInt"))
 	  {
 	    if(cPmIdent.startsWith("dstArray"))
 	    {
@@ -1338,7 +1338,7 @@ public class WlzC2Java
 	      jPmKey = WLZ_JPM_KEY_PARSE_ERROR;
 	    }
 	  }
-	  else if(cPmType.equals("short"))
+	  else if(cPmType.equals("short") || cPmType.equals("WlzUByte"))
 	  {
 	    if(cPmIdent.startsWith("dstArray"))
 	    {
@@ -1423,7 +1423,7 @@ public class WlzC2Java
 	  {
 	    jPmKey = WLZ_JPM_KEY_LONG;
 	  }
-	  else if(cFnType.equals("int"))
+	  else if(cFnType.equals("int") || cFnType.equals("WlzUInt"))
 	  {
 	    jPmKey = WLZ_JPM_KEY_INT;
 	  }
@@ -1439,7 +1439,7 @@ public class WlzC2Java
 	  {
 	    jPmKey = WLZ_JPM_KEY_DOUBLE;
 	  }
-	  else if(cFnType.equals("char"))
+	  else if(cFnType.equals("char") || cFnType.equals("WlzUByte"))
 	  {
 	    // A C char is closest to a Java byte.
 	    jPmKey = WLZ_JPM_KEY_BYTE;
@@ -1536,7 +1536,7 @@ public class WlzC2Java
 	  {
 	    jPmKey = WLZ_JPM_KEY_LONG_PTR1;
 	  }
-	  else if(cFnType.equals("int"))
+	  else if(cFnType.equals("int") || cFnType.equals("WlzUInt"))
 	  {
 	    jPmKey = WLZ_JPM_KEY_INT_PTR1;
 	  }
@@ -1544,7 +1544,7 @@ public class WlzC2Java
 	  {
 	    jPmKey = WLZ_JPM_KEY_SHORT_PTR1;
 	  }
-	  else if(cFnType.equals("char"))
+	  else if(cFnType.equals("char") || cFnType.equals("WlzUByte"))
 	  {
 	    jPmKey = WLZ_JPM_KEY_STRING;
 	  }
