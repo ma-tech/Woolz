@@ -153,10 +153,11 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 *
 *		If a triangle has vertices \f$p_0, p_1, p_2\f$, then any point
 *		in the plane containing the triangle can be represented
-*		by: \f[p = \lambda_0 p_0 + \lambda_1 p_2 + \lambda_2 p_3\f]
-*		subject to the constraint: \f[\lambda_0 + \lambda_1 + \lambda_2 = 1\f]
+*		by: \f$p = \lambda_0 p_0 + \lambda_1 p_2 + \lambda_2 p_3\f$
+*		subject to the constraint:
+*		\f$\lambda_0 + \lambda_1 + \lambda_2 = 1\f$
 *		\f$p\f$ is outside the triangle at one or more of 
-*		\f$lambda_0\f$, \f$lambda_1\f$ and \f$lambda_2\f$ is -ve.
+*		\f$\lambda_0\f$, \f$\lambda_1\f$ and \f$\lambda_2\f$ is -ve.
 *		It is inside if all are +ve and on an edge of the
 *		triangle if any are close to zero (ie < DBL_EPSILON).
 * \param	p0			First vertex of triangle.
@@ -253,7 +254,7 @@ int		 WlzGeomVxInTriangle2D(WlzDVertex2 p0, WlzDVertex2 p1,
                 \f]
 *              and the point to be queried
 *		\f[
-                U = \left[
+                P = \left[
 		    \begin{array}{c}
 		    px \\
 		    py \\
@@ -333,7 +334,6 @@ int		 WlzGeomVxInTetrahedron(WlzDVertex3 v0, WlzDVertex3 v1,
     u1 = - v1.vtX * vz23  + v2.vtX * vz13  - v3.vtX * vz12;
     u2 =   v1.vtX * vy23  - v2.vtX * vy13  + v3.vtX * vy12;
     u3 = - v1.vtX * vyz23 + v2.vtX * vyz13 - v3.vtX * vyz12;
-    l0 =  delta * (u0 * vP.vtX + u1 * vP.vtY + u2 * vP.vtZ + u3);
     l0 =  delta * (u0 * vP.vtX + u1 * vP.vtY + u2 * vP.vtZ + u3);
     if(l0 < -eps)
     {
@@ -3490,7 +3490,7 @@ int		WlzGeomVtxOnLine3D(WlzDVertex3 p0, WlzDVertex3 r0,
 * 		Once the barycentric coordinates (\f$\lambda_0\f$,
 * 		\f$\lambda_0\f$, \f$\lambda_2\f$) have been computed
 * 		then the interpolated value is given by:
-* 		\f$v = v_0 \lambda_1 + v_1 \lambda_1 + v_2 \lambda_2\f$.
+* 		\f$v = \sum_{i=0}^{2}{v_i \lambda_i}\f$.
 * 		If the determinant is zero in solving for the barycentric
 * 		coordinates then the interpolated value is just the
 * 		mean of the given values.
@@ -3538,4 +3538,216 @@ extern double	WlzGeomInterpolateTri2D(WlzDVertex2 p0, WlzDVertex2 p1,
     val = (v0 + v1 + v2) / 3.0;
   }
   return(val);
+}
+
+/*!
+* \return	Interpolated value.
+* \ingroup	WlzGeometry
+* \brief	Given the coordinates of the vertices of a 3D tetrahedron
+* 		and a set of values at each of these vertices, this
+* 		function interpolates the value at the given position
+* 		which is either inside or on a face/edge of the tetrahedron.
+* 		This is implimented using barycentric coordinates.
+* 		Once the barycentric coordinates (\f$\lambda_0\f$,
+* 		\f$\lambda_0\f$, \f$\lambda_2\f$, \f$\lambda_3\f$)
+* 		have been computed then the interpolated value is given by:
+* 		\f$v = \sum_{i=0}^{3}{v_i \lambda_i}\f$.
+* 		If the determinant is zero in solving for the barycentric
+* 		coordinates then the interpolated value is just the
+* 		mean of the given values.
+* \param	p0			First vertex of tetrahedron.
+* \param	p1			Second vertex of tetrahedron.
+* \param	p2			Third vertex of tetrahedron.
+* \param	p3			Fourth vertex of tetrahedron.
+* \param	v0			Value at first vertex of tetrahedron.
+* \param	v1			Value at second vertex of tetrahedron.
+* \param	v2			Value at third vertex of tetrahedron.
+* \param	v3			Value at fourth vertex of tetrahedron.
+* \param	pX			Given position, which is within
+* 					(or on) the tetrahedron.
+*/
+extern double	WlzGeomInterpolateTet3D(WlzDVertex3 p0, WlzDVertex3 p1,
+                                        WlzDVertex3 p2, WlzDVertex3 p3,
+					double v0, double v1,
+					double v2, double v3,
+					WlzDVertex3 pX)
+{
+  double	detA,
+  		val;
+  double	l[4],
+  		c[5],
+  		s[5];
+  const double  eps = 1.0e-10;
+
+  /* HACK TODO Check this function! HACK TODO */
+  s[0] = p1.vtX - p0.vtX;
+  s[1] = p2.vtX - p0.vtX;
+  s[2] = p3.vtX - p0.vtX;
+  s[3] = p2.vtX - p1.vtX;
+  s[4] = p3.vtX - p1.vtX;
+  s[5] = p3.vtX - p2.vtX;
+  c[0] = p0.vtY * p1.vtZ - p1.vtY * p0.vtZ;
+  c[1] = p0.vtY * p2.vtZ - p2.vtY * p0.vtZ;
+  c[2] = p0.vtY * p3.vtZ - p3.vtY * p0.vtZ;
+  c[3] = p1.vtY * p2.vtZ - p2.vtY * p1.vtZ;
+  c[4] = p1.vtY * p3.vtZ - p3.vtY * p1.vtZ;
+  c[5] = p2.vtY * p3.vtZ - p3.vtY * p2.vtZ;
+  detA = s[0] * c[5] - s[1] * c[4] + s[2] * c[3] +
+         s[3] * c[2] - s[4] * c[1] + s[5] * c[0];
+  if(fabs(detA) > eps)
+  {
+    l[0] = (( p1.vtX * c[5] - p2.vtX * c[4] + p3.vtX * c[3]) +
+	    (-c[5] + c[4] - c[3]) * pX.vtX +
+	    ( p1.vtZ * s[5] - p2.vtZ * s[4] + p3.vtZ * s[3]) * pX.vtY +
+	    (-p1.vtY * s[5] + p2.vtY * s[4] - p3.vtY * s[3]) * pX.vtZ) / detA;
+    l[1] = ((-p0.vtX * c[5] + p2.vtX * c[2] - p3.vtX * c[1]) +
+	    ( c[5] - c[2] + c[1]) * pX.vtX +
+	    (-p0.vtZ * s[5] + p2.vtZ * s[2] - p3.vtZ * s[1]) * pX.vtY +
+	    ( p0.vtY * s[5] - p2.vtY * s[2] + p3.vtY * s[1]) * pX.vtZ) / detA;
+    l[2] = (( p0.vtX * c[4] - p1.vtX * c[2] + p3.vtX * c[0]) +
+	    (-c[4] + c[2] - c[0]) * pX.vtX +
+	    ( p0.vtZ * s[4] - p1.vtZ * s[2] + p3.vtZ * s[0]) * pX.vtY +
+	    (-p0.vtY * s[4] + p1.vtY * s[2] - p3.vtY * s[0]) * pX.vtZ) / detA;
+    l[3] = 1.0 - (l[0] + l[1] + l[2]);
+    val = (l[0] * v0) + (l[1] * v1) + (l[2] * v2) + (l[3] * v3);
+  }
+  else
+  {
+    val = (v0 + v1 + v2 + v3) / 4.0;
+  }
+/* HACK replace a10 ->p0.vtX, a11 -> p1.vtX, ...
+  s0 = a11 - a10;
+  s1 = a12 - a10;
+  s2 = a13 - a10;
+  s3 = a12 - a11;
+  s4 = a13 - a11;
+  s5 = a13 - a12;
+  c0 = a20 * a31 - a21 * a30;
+  c1 = a20 * a32 - a22 * a30;
+  c2 = a20 * a33 - a23 * a30;
+  c3 = a21 * a32 - a22 * a31;
+  c4 = a21 * a33 - a23 * a31;
+  c5 = a22 * a33 - a23 * a32;
+  detA = s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0;
+  if(fabs(detA) > eps)
+  {
+    l0 = (( a11 * c5 - a12 * c4 + a13 * c3) +
+	  (-c5 + c4 - c3) * px +
+	  ( a31 * s5 - a32 * s4 + a33 * s3) * py +
+	  (-a21 * s5 + a22 * s4 - a23 * s3) * pz) / detA;
+    l1 = ((-a10 * c5 + a12 * c2 - a13 * c1) +
+	  ( c5 - c2 + c1) * px +
+	  (-a30 * s5 + a32 * s2 - a33 * s1) * py +
+	  ( a20 * s5 - a22 * s2 + a23 * s1) * pz) / detA;
+    l2 = (( a10 * c4 - a11 * c2 + a13 * c0) +
+	  (-c4 + c2 - c0) * px +
+	  ( a30 * s4 - a31 * s2 + a33 * s0) * py +
+	  (-a20 * s4 + a21 * s2 - a23 * s0) * pz) / detA;
+    l3 = 1.0 - (l0 + l1 + l2);
+    val = (l0 * v0) + (l1 * v1) + (l2 * v2) + (l3 * v3);
+  }
+  else
+  {
+    val = (v0 + v1 + v2 + v3) / 4.0;
+  }
+*/
+  return(val);
+}
+
+/*!
+* \ingroup	WlzGeometry
+* \brief	Given the three vertices of a triangle in 3D computes the 2D
+* 		coordinates within the plane of the thriangle.
+*
+* 		If the 3D coordinates of the vertices of the triangle are
+* 		\f$\mathbf{p_0}\f$, \f$\mathbf{p_1}\f$ and \f$\mathbf{p_2}\f$
+* 		then this function computes the coordinates of vertices in
+* 		the plane of the triangle, such that:
+* 		\f$\mathbf{q_0} = (0,0)\f$,
+* 		\f$\mathbf{q_1} = (\|\mathbf{l_1}\|,0)\f$ and
+* 		\f$\mathbf{q_2} = (\mathbf{l_2}\cdot\mathbf{u}\f$,
+ 		                   \mathbf{l_1}\cdot\mathbf{v})\f$.
+* 		Where:
+* 		  \f$\mathbf{l_1} = \mathbf{p_1} - \mathbf{p_0}\f$,
+* 		  \f$\mathbf{l_2} = \mathbf{p_2} - \mathbf{p_0}\f$,
+* 		  \f$\mathbf{u} = \frac{\mathbf{1}}{\|\mathbf{l_1}\|}
+ 		                  \mathbf{l_1}\f$,
+* 		  \f$\mathbf{n} = \frac{\mathbf{1}}
+ 		                       {\|\mathbf{l_1} \times \mathbf{l_2}\|}
+				  \mathbf{l_1} \times \mathbf{l_2}\f$
+* 		and
+* 		  \f$\mathbf{v} = \mathbf{n}} \times \mathbf{l_1}\|}\f$.
+*
+*		The first vertex in the plane is not returned because it's
+*		coordinates are always (0,0).
+* \param	p0			First vertex of triangle (origin
+* 					of the 2D plane).
+* \param	p1			Second vertex of triangle (on the
+* 					\f$\mathbf{u}\f$ axis in the 2D
+* 					plane).
+* \param	p2			Third vertex of triangle.
+* \param	dstQ1			Destination pointer for the second
+* 					vertex in the plane, must not be
+* 					NULL.
+* \param	dstQ2			Destination pointer for the third
+* 					vertex in the plane, must not be
+* 					NULL.
+*/
+void		WlzGeomMap3DTriangleTo2D(WlzDVertex3 p0,
+				WlzDVertex3 p1, WlzDVertex3 p2,
+				WlzDVertex2 *dstQ1, WlzDVertex2 *dstQ2)
+{
+  double	ln1,
+  		ln2,
+		t;
+  WlzDVertex2	q1,
+  		q2;
+  WlzDVertex3	l1,
+  		l2,
+		n,
+  		u,
+  		v;
+
+  WLZ_VTX_3_SUB(l1, p1, p0);
+  WLZ_VTX_3_SUB(l2, p2, p0);
+  ln1 = WLZ_VTX_3_LENGTH(l1);
+  ln2 = WLZ_VTX_3_LENGTH(l1);
+  if(fabs(ln1) < DBL_EPSILON)
+  {
+    q1.vtX = 0.0;
+    q1.vtY = 0.0;
+    q2.vtX = 0.0;
+    q2.vtY = ln2;
+  }
+  else if(fabs(ln2) < DBL_EPSILON)
+  {
+    q1.vtX = ln1;
+    q1.vtY = 0.0;
+    q2.vtX = 0.0;
+    q2.vtY = 0.0;
+  }
+  else
+  {
+    q1.vtX = ln1;
+    q1.vtY = 0.0;
+    t = 1.0 / ln1;
+    WLZ_VTX_3_SCALE(u, l1, t);
+    WLZ_VTX_3_CROSS(n, l1, l2);
+    t = WLZ_VTX_3_LENGTH(n);
+    if(fabs(t) < DBL_EPSILON)
+    {
+      q2.vtX = ln1 + ln2;
+      q2.vtY = 0.0;
+    }
+    else
+    {
+      t = 1.0 / t;
+      WLZ_VTX_3_SCALE(n, n, t);
+      WLZ_VTX_3_CROSS(v, n, u);
+      q2.vtX = WLZ_VTX_3_DOT(l2, u);
+      q2.vtY = WLZ_VTX_3_DOT(l2, v);
+    }
+  }
+  *dstQ1 = q1;
+  *dstQ2 = q2;
 }
