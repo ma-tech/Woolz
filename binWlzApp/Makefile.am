@@ -51,9 +51,8 @@ LDADD 			= \
 			  -L$(top_srcdir)/libWlz/.libs -lWlz \
 			  -L$(top_srcdir)/libAlg/.libs -lAlg \
 			  -L$(top_srcdir)/libAlc/.libs -lAlc \
-			  -ljpeg \
-			  -ltiff \
-			  -lm
+			  -L$(libdir) \
+			  ${LIBS_EXTFF} ${LIBS}
 
 bin_PROGRAMS		=  \
 			  Wlz3DGetProjection \
