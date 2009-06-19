@@ -57,6 +57,9 @@ static WlzEffAmHead 		*WlzEffAmNewHead(
 				  void);
 static void			WlzEffAmFreeHead(
 				  WlzEffAmHead *head);
+static void			WlzEffAmSwapBytes(
+				  void *buf,
+				  int n);
 static WlzErrorNum		WlzEffAmReadAToken(
 				  FILE *fP,
 				  const char *sep,
@@ -462,49 +465,63 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
   if(errNum == WLZ_ERR_NONE)
   {
     tok[0] = WLZEFF_AM_DIM_NONE;
+    head->dim = WLZEFF_AM_DIM_3;
+    head->fmt = WLZEFF_AM_FMT_BINARY;
+    head->endian = WLZEFF_AM_ENDIAN_BIG;
     (void )WlzStringMatchValue((int *)&(tok[0]), tokBuf,
-			       "2D", WLZEFF_AM_DIM_2,
-			       "3D", WLZEFF_AM_DIM_3,
-			       NULL);
-    if(tok[0] == WLZEFF_AM_DIM_NONE)
+			     "2D", WLZEFF_AM_DIM_2,
+			     "3D", WLZEFF_AM_DIM_3,
+			     "BINARY-BIG-ENDIAN", WLZEFF_AM_ENDIAN_BIG,
+			     "BINARY-LITTLE-ENDIAN", WLZEFF_AM_ENDIAN_LITTLE,
+			     NULL);
+    switch(tok[0])
     {
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-    }
-    else
-    {
-      head->dim = tok[0];
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    errNum = WlzEffAmReadAToken(fP, tokSepWS, tokBuf, tokBufMax);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    tok[0] = WLZEFF_AM_FMT_NONE;
-    (void )WlzStringMatchValue((int *)&(tok[0]), tokBuf,
-			       "ASCII", WLZEFF_AM_FMT_ASCII,
-			       "BINARY", WLZEFF_AM_FMT_BINARY,
-			       NULL);
-    if(tok[0] == WLZEFF_AM_TOKEN_NONE)
-    {
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-    }
-    else
-    {
-      head->fmt = tok[0];
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    errNum = WlzEffAmReadAToken(fP, tokSepWS, tokBuf, tokBufMax);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if(sscanf(tokBuf, "%d.%d",
-              &(head->versionMajor), &(head->versionMinor)) != 2)
-    {
-      errNum = WLZ_ERR_READ_INCOMPLETE;
+      case WLZEFF_AM_DIM_2: /* FALLTHROUGH */
+      case WLZEFF_AM_DIM_3:
+	head->dim = tok[0];
+        errNum = WlzEffAmReadAToken(fP, tokSepWS, tokBuf, tokBufMax);
+	tok[0] = WLZEFF_AM_FMT_NONE;
+	(void )WlzStringMatchValue((int *)&(tok[0]), tokBuf,
+				   "ASCII", WLZEFF_AM_FMT_ASCII,
+				   "BINARY", WLZEFF_AM_FMT_BINARY,
+				   NULL);
+	if(tok[0] == WLZEFF_AM_TOKEN_NONE)
+	{
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+	else
+	{
+	  head->fmt = tok[0];
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzEffAmReadAToken(fP, tokSepWS, tokBuf, tokBufMax);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  if(sscanf(tokBuf, "%d.%d",
+		    &(head->versionMajor), &(head->versionMinor)) != 2)
+	  {
+	    errNum = WLZ_ERR_READ_INCOMPLETE;
+	  }
+	}
+        break;
+      case WLZEFF_AM_ENDIAN_BIG: /* FALLTHROUGH */
+      case WLZEFF_AM_ENDIAN_LITTLE:
+	head->endian = tok[0];
+	errNum = WlzEffAmReadAToken(fP, tokSepWS, tokBuf, tokBufMax);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  if(sscanf(tokBuf, "%d.%d",
+	             &(head->versionMajor), &(head->versionMinor)) != 2)
+          {
+	    errNum = WLZ_ERR_READ_INCOMPLETE;
+	  }
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_READ_INCOMPLETE;
+	break;
     }
   }
   /* Read rest of header. */
@@ -597,6 +614,7 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 				   "Materials", WLZEFF_AM_TOKEN_MATERIALS,
 				   "Seeds", WLZEFF_AM_TOKEN_SEEDS,
 				   "Limits", WLZEFF_AM_TOKEN_LIMITS,
+				   "TIFF", WLZEFF_AM_TOKEN_TIFF,
 				   NULL);
 	      switch(tok[1])
 	      {
@@ -647,6 +665,10 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 		  *tokBuf = '\0';
 		  break;
 		case WLZEFF_AM_TOKEN_LIMITS:
+		  errNum = WlzEffAmReadAndSkipValues(fP, tokBuf, tokBufMax);
+		  *tokBuf = '\0';
+		  break;
+		case WLZEFF_AM_TOKEN_TIFF:
 		  errNum = WlzEffAmReadAndSkipValues(fP, tokBuf, tokBufMax);
 		  *tokBuf = '\0';
 		  break;
@@ -1613,6 +1635,12 @@ static WlzErrorNum WlzEffAmReadArray3D(FILE *fP, void ***data,
 	{
 	  errNum = WLZ_ERR_READ_INCOMPLETE;
 	}
+	if((errNum == WLZ_ERR_NONE) &&
+	   (gType == WLZ_GREY_SHORT) &&
+	   (head->endian = WLZEFF_AM_ENDIAN_LITTLE))
+	{
+	  WlzEffAmSwapBytes(buf, head->latBytes);
+	}
 	break;
       case WLZEFF_AM_LATCOMP_HXBYTERLE:
 	if((buf = AlcMalloc(datumSz * head->latBytes)) == NULL)
@@ -1625,6 +1653,11 @@ static WlzErrorNum WlzEffAmReadArray3D(FILE *fP, void ***data,
 	}
 	else
 	{
+	  if((gType == WLZ_GREY_SHORT) &&
+	     (head->endian = WLZEFF_AM_ENDIAN_LITTLE))
+	  {
+	    WlzEffAmSwapBytes(buf, head->latBytes);
+	  }
 	  nDst = head->latSize.vtX * head->latSize.vtY * head->latSize.vtZ;
 	  switch(gType)
 	  {
@@ -1727,6 +1760,29 @@ static void	WlzEffAmBufDecodeHXByteRLEShort(short *dst, short *src,
     }
     vVal = *src++;
   } 
+}
+
+/*!
+* \ingroup	WlzExtFF
+* \brief	Swaps bytes, exchanging adjacent even and odd bytes,
+* 		through the given buffer.
+* \param	buf			Buffer of bytes to be swaped.
+* \param	n			Number of bytes in buffer.
+*/
+static void	WlzEffAmSwapBytes(void *buf, int n)
+{
+  char		t;
+  char		*buf0,
+  		*buf1;
+
+  buf0 = (char *)buf;
+  buf1 = buf0 + 1;
+  while((n = n - 2) >= 0)
+  {
+    t = *buf0; *buf0 = *buf1; *buf1 = t;
+    buf0 += 2;
+    buf1 += 2;
+  }
 }
 
 /*!

@@ -473,7 +473,8 @@ typedef enum _WlzEffAmToken
   WLZEFF_AM_TOKEN_OPEN,
   WLZEFF_AM_TOKEN_PARAMETERS,
   WLZEFF_AM_TOKEN_SEEDS,
-  WLZEFF_AM_TOKEN_LIMITS
+  WLZEFF_AM_TOKEN_LIMITS,
+  WLZEFF_AM_TOKEN_TIFF
 } WlzEffAmToken;
 
 /*!
@@ -488,6 +489,21 @@ typedef	enum _WlzEffAmDim
   WLZEFF_AM_DIM_2		= (2),	/*!< 2D. */
   WLZEFF_AM_DIM_3		= (3)	/*!< 3D. */
 } WlzEffAmDim;
+
+/*!
+* \enum		_WlzEffAmEndian
+* \ingroup	WlzExtFF
+* \brief	Big or little endian binary data. The values endian enum
+* 		must be kept distinct from the dimension enum values
+* 		(apart from none).
+*		Typedef: ::WlzEffAmFormat
+*/
+typedef enum _WlzEffAmEndian
+{
+  WLZEFF_AM_ENDIAN_NONE		= (0),	/*!< Unknown endianness. */
+  WLZEFF_AM_ENDIAN_BIG		= (10),	/*!< Big endian. */
+  WLZEFF_AM_ENDIAN_LITTLE	= (11)	/*!< Little endian. */
+} WlzEffAmEndian;
 
 /*!
 * \enum		_WlzEffAmFormat
@@ -580,20 +596,22 @@ typedef struct _WlzEffAmHead
   int			versionMinor;
   WlzEffAmDim 		dim; 		/*!< Dimension of the data. */
   WlzEffAmFormat	fmt;		/*!< Data format. */
+  WlzEffAmEndian	endian;		/*!< Whether the binary data in a file
+  					     is big or little endian? */
   WlzEffAmLatType	latType;	/*!< Lattice type. */
   WlzEffAmDatType	latDatType;	/*!< Lattice data type. */
   WlzEffAmCoordType	coordType;	/*!< Coordinate type. */
   WlzDBox3		bBox;		/*!< Real world coordinates of the
-  					    bounding box. */
+  					     bounding box. */
   WlzIVertex3		latSize; 	/*!< Lattice size. */
   int			latBytes;	/*!< Number of bytes to read. */
   int			latLabel;	/*!< Label for lattice. */
   WlzEffAmLatComp	latComp;	/*!< Lattice compression. */
   int			matCount;	/*!< Number of materials. */
   WlzEffAmMaterial	*materials;	/*!< Linked list of materials, with
-  					    the first item in the list having
-					    a NULL 'prev' entry and the last
-					    having a NULL 'next' entry. */
+  					     the first item in the list having
+					     a NULL 'prev' entry and the last
+					     having a NULL 'next' entry. */
   char			*imageData;	/*!< Associated image file. */
 } WlzEffAmHead;
 
