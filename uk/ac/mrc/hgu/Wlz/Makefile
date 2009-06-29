@@ -46,7 +46,7 @@ archive:
 			$(CP) C2Java/Binding/WlzObjectC2J.c C
 			$(CP) C2Java/Binding/WlzObjectC2J.h C
 			$(CP) HandCodedC/*.c HandCodedC/*.h C
-			cd C; $(MAKE) soarchive
+#			cd C; $(MAKE) soarchive
 endif							
 
 ifeq ($(UNIXTYPE), CYGWIN) 
@@ -81,3 +81,6 @@ WlzObject.java:
 			done
 jar:
 			cd ../../../../..;gmake clean jar
+
+unixtype:	
+			echo $(UNIXTYPE)
