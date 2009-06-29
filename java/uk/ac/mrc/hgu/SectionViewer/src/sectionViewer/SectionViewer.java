@@ -3,7 +3,6 @@ package sectionViewer;
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
-import javax.help.*;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -223,11 +222,6 @@ public class SectionViewer
    */
   showMenuHandler handler_3 = null;
 
-  /**
-   *   Event handler for help menu selections.
-   */
-  helpMenuHandler handler_4 = null;
-
   // temporarily disabled ... don't remove
   /**
    *   Event handler for threshold menu selections.
@@ -288,28 +282,24 @@ public class SectionViewer
     handler_1 = new fileMenuHandler();
     handler_2 = new controlMenuHandler();
     handler_3 = new showMenuHandler();
-    handler_4 = new helpMenuHandler();
     handler_5 = new thresholdMenuHandler();
 
     // remove any existing handlers
     removeHandlers(fileMenu);
     removeHandlers(controlMenu);
     removeHandlers(showMenu);
-    removeHandlers(helpMenu);
     //removeHandlers(thresholdMenu);
 
     // attach appropriate event handler
     addHandler(fileMenu, handler_1);
     addHandler(controlMenu, handler_2);
     addHandler(showMenu, handler_3);
-    addHandler(helpMenu, handler_4);
     //addHandler(thresholdMenu, handler_5);
 
     // attach appropriate menu font
     Utils.attachMenuFont(fileMenu, _menuFont);
     Utils.attachMenuFont(controlMenu, _menuFont);
     Utils.attachMenuFont(showMenu, _menuFont);
-    Utils.attachMenuFont(helpMenu, _menuFont);
     //Utils.attachMenuFont(thresholdMenu, _menuFont);
 
     colourHandler = new planeColChooser();
@@ -3514,29 +3504,6 @@ public class SectionViewer
   } // class showMenuHandler
 
 //---------------------------------------
-  /**
-   *   Event handler for menu selections from
-   *   the help menu.
-   */
-  public class helpMenuHandler implements ActionListener {
-
-    public helpMenuHandler() {
-    }
-
-    public void actionPerformed(ActionEvent e) {
-      try {
-        if (((JMenuItem)e.getSource()).equals(helpMenu_4)) {
-           about();
-        }
-      }
-      catch (Exception ex) {
-        System.out.println(ex.getMessage());
-      }
-    } // actionPerformed()
-
-  } // class helpMenuHandler
-
-   //----------------------------------------
    /**
     *   Called when menu item "About" is selected.
     */
