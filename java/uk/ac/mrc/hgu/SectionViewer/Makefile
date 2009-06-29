@@ -18,6 +18,11 @@ JAVACFLAGS = -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -d $(TARGETPATH1)
 JAVADOC = /net/mahost/export/system0/java/j2sdk1.4.1_01/bin/javadoc
 JAVADOCFLAGS = -sourcepath ./src -d docs
 
+ifeq ($(UNIXTYPE), DARWIN)
+	JAVAC = /usr/bin/javac
+	JAR = /usr/bin/jar
+endif
+
 all:	sectionViewer jar
 
 sectionViewer:
