@@ -964,13 +964,11 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
   /* Get  grey types */
   if(errNum == WLZ_ERR_NONE)
   {
-    gType[0] = WlzGreyTableTypeToGreyType(obj0->values.core->type,
-					  &errNum);
+    gType[0] = WlzGreyTypeFromObj(obj0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    gType[1] = WlzGreyTableTypeToGreyType(obj1->values.core->type,
-					  &errNum);
+    gType[1] = WlzGreyTypeFromObj(obj1, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {

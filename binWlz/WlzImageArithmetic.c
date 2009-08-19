@@ -338,7 +338,7 @@ int             main(int argc, char **argv)
 		       *argv, errMsg);
       }
     }
-    else if((outObj = WlzImageArithmetic(inObj[0], inObj[1], operator, 1,
+    else if((outObj = WlzImageArithmetic(inObj[0], inObj[1], operator, 0,
 				    &errNum)) == NULL)
     {
       ok = 0;
