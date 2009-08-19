@@ -172,6 +172,16 @@ WlzObject *WlzUnionN(
 		       objs[0]->values, NULL, NULL, dstErr);
   }
 
+  /* check if grey-value merge is possible */
+  if( errNum == WLZ_ERR_NONE ){
+    for (i=0; i<n ; i++ ){
+      if( objs[i]->values.core == NULL ){
+	uvt = 0;
+	break;
+      }
+    }
+  }
+
   /*
    * find the line and column bounds of the union.
    */

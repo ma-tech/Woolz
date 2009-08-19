@@ -174,15 +174,11 @@ int main(int	argc,
       type = obj->type;
     }
 
-    if( obj->type == type ){
+    if( (obj->type == type) || (obj->type == WLZ_EMPTY_OBJ) ){
       objlist[n++] = WlzAssignObject(obj, NULL);
     } else {
       WlzFreeObj( obj );
     }
-  }
-
-  if( type == WLZ_EMPTY_OBJ ){
-    return( 0 );
   }
 
   if((obj1 = WlzUnionN(n, objlist, 1, &errNum)) == NULL) {
