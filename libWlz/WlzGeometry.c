@@ -68,6 +68,11 @@ static int			WlzGeomLineTriangleIntersectEdge3D(
 				  WlzDVertex3 v0,
 				  WlzDVertex3 v1,
 				  WlzDVertex3 v2);
+static int			WlzGeomTetAABBIsnDir(
+				  WlzDVertex3 d,
+                                  WlzDVertex3 *t,
+				  WlzDVertex3 *b,
+				  double tol);
 
 /*!
 * \return	Zero if the circumcentre of the triangle lies at infinity,
@@ -964,6 +969,424 @@ WlzDVertex3	WlzGeomTriangleNormal(WlzDVertex3 v0, WlzDVertex3 v1,
     nrm.vtZ = 0.0;
   }
   return(nrm);
+}
+
+/*!
+* \return	The result of the intersection test: 0 - no intersection,
+* 		1 - triangle and box are touching or intersect.
+* \ingroup	WlzGeometry
+* \brief	Tests for an intersection between the given triangle and
+* 		the axis aligned bounding box using the Separating Axis
+* 		Theorem (SAT).
+*
+* 		Given an axis aligned bounding box and a triangle this
+* 		function tests for an intersection using the Separating
+* 		Axis Theorem (SAT) which states : Two 2D convex domains do
+* 		not intersect iff there exists a line, called a separating
+* 		axis, on which projection intervals of the domains do not
+* 		intersect.  The minimal set of axes that need to be considered
+* 		is formed by the normals to all edges of the (polygonal)
+* 		domains. For an axis aligned bounding box and a triangle
+* 		in 2D, this is equivalent to testing for the intersection
+* 		of the given axis aligned bounding box with the axis
+* 		aligned bounding box of the triangle and the axes
+* 		normal to the faces of the triangle. The mathematics
+* 		are simplified by the box being axis aligned.
+*
+* 		The algorithm may return false positives when the domains
+* 		are very close to touching.
+* \param	t0			First vertex of triangle.
+* \param	t1			Second vertex of triangle.
+* \param	t2			Third vertex of triangle.
+* \param	b0			Minimum coordinates of axis aligned
+* 					bounding box.
+* \param	b1			Maximum coordinates of axis aligned
+* 					bounding box.
+* \param	tst			Determines the actual intersection
+* 					tests used:
+* 					0 - AABB / triangle.
+* 					1 - AABB / AABB(triangle) only.
+* 					2 - AABB / triangle omitting the
+* 					    AABB / AABB(triangle) test
+* 					    this is probably only useful if
+* 					    the AABB / AABB(triangle) are
+* 					    known to intersect.
+*/
+int		WlzGeomTriangleAABBIntersect2D(WlzDVertex2 t0,
+				WlzDVertex2 t1, WlzDVertex2 t2,
+				WlzDVertex2 b0, WlzDVertex2 b1,
+				int tst)
+{
+  int		idx,
+  		isn = 1;
+  WlzDVertex2	b,
+  		c;
+  WlzDVertex2	t[3];
+  const double	tol = 10.0 * DBL_EPSILON;
+
+  /* Make origin centroid of the AABB. */
+  c.vtX = (b0.vtX + b1.vtX) * 0.5;
+  c.vtY = (b0.vtY + b1.vtY) * 0.5;
+  WLZ_VTX_2_SUB(b, b1, c);
+  WLZ_VTX_2_SUB(t[0], t0, c);
+  WLZ_VTX_2_SUB(t[1], t1, c);
+  WLZ_VTX_2_SUB(t[2], t2, c);
+  /* Check AABB and the AABB of the triangle intersect. */
+  if((tst == 0) || (tst == 1))
+  {
+    /* Compute the AABB of the triangle. */
+    WlzDVertex2	bT[2];
+
+    bT[0] = bT[1] = t[0];
+    for(idx = 1; idx <= 2; ++idx)
+    {
+      if(t[idx].vtX < bT[0].vtX)
+      {
+	bT[0].vtX = t[idx].vtX;
+      }
+      else if(t[idx].vtX > bT[1].vtX)
+      {
+	bT[1].vtX = t[idx].vtX;
+      }
+      if(t[idx].vtY < bT[0].vtY)
+      {
+	bT[0].vtY = t[idx].vtY;
+      }
+      else if(t[idx].vtY > bT[1].vtY)
+      {
+	bT[1].vtY = t[idx].vtY;
+      }
+    }
+    /* Compare AABB of triangle with given AABB. If is an intersection
+     * when using tolerance then there may be an intersection. Set
+     * intersection (will keep looking below). */
+    if(((-b.vtX > bT[1].vtX + tol) || (b.vtX + tol < bT[0].vtX)) &&
+       ((-b.vtY > bT[1].vtY + tol) || (b.vtY + tol < bT[0].vtY)))
+    {
+      isn = 0;
+    }
+  }
+  if((tst == 0) || (tst == 2))
+  {
+    if(isn != 0)
+    {
+      WlzDVertex2	e,
+		  f;
+      double	p[2],
+		  q[3];
+
+      for(idx = 0; idx < 3; ++idx)
+      {
+	/* Compute an edge vector for the triangle. */
+	WLZ_VTX_2_SUB(e, t[(idx + 1) % 3], t[idx]);
+	/* Project two vertices onto perpendicular to first edge. */
+	p[0] = t[idx].vtX * e.vtY - t[idx].vtY * e.vtX;
+	p[1] = t[(idx + 2) % 3].vtX * e.vtY - t[(idx + 2) % 3].vtY * e.vtX;
+	if(p[0] > p[1])
+	{
+	  q[2] = p[0]; p[0] = p[1]; p[1] = q[2];
+	}
+	/* Project AABB vertices onto perpendicular and find limits. */
+	f.vtX = b.vtX * e.vtY;
+	f.vtY = b.vtY * e.vtX;
+	q[0] = -f.vtX + f.vtY;
+	q[1] =  f.vtX + f.vtY;
+	if(q[1] < q[0])
+	{
+	  q[2] = q[0]; q[0] = q[1]; q[1] = q[2];
+	}
+	q[2] =  f.vtX - f.vtY;
+	if(q[2] < q[0])
+	{
+	  q[0] = q[2];
+	}
+	else if(q[2] > q[1])
+	{
+	  q[1] = q[2];
+	}
+	q[2] = -f.vtX - f.vtY;
+	if(q[2] < q[0])
+	{
+	  q[0] = q[2];
+	}
+	else if(q[2] > q[1])
+	{
+	  q[1] = q[2];
+	}
+	/* Look for intersection of projections. */
+	if((p[0] > q[1] + tol) || (p[1] + tol < q[0]))
+	{
+	  isn = 0;
+	  break;
+	}
+      }
+    }
+  }
+  return(isn);
+}
+
+/*!
+* \return	The result of the intersection test: 0 - no intersection,
+* 		1 - tetrahedron and box touching or intersect.
+* \ingroup	WlzGeometry
+* \brief	Tests for an intersection between the given tetrahedron and
+* 		the axis aligned bounding box using the Separating Axis
+* 		Theorem (SAT).
+*
+* 		Given an axis aligned bounding box and a tetrahedron this
+* 		function tests for an intersection using the Separating
+* 		Axis Theorem (SAT) which states : Two 3D convex domains do
+* 		not intersect iff there exists a line, called a separating
+* 		axis, on which projection intervals of the domains do not
+* 		intersect.  The minimal set of axes that need to be considered
+* 		is formed by the normals to all faces of the (polyhedral)
+* 		domains and the cross product of all edge combinations in
+* 		which one edge is from each polyhedron. For an axis aligned
+* 		bounding box and a tetrahedron in 3D, this is equivalent to
+* 		testing for the intersection of the given axis aligned
+* 		bounding box with the axis aligned bounding box of the
+* 		tetrahedron, testing for intersections on the axes
+* 		normal to the faces of the tetrahedron and testing
+* 		for intersection along the cross product of the axis
+* 		aligned bounding box - tetrahedron edges. The mathematics
+* 		are simplified by the box being axis aligned.
+*
+* 		The algorithm may return false positives when the domains
+* 		are very close to touching.
+* \param	t0			First vertex of tetrahedron.
+* \param	t1			Second vertex of tetrahedron.
+* \param	t2			Third vertex of tetrahedron.
+* \param	t3			Fourth vertex of tetrahedron.
+* \param	b0			Minimum coordinates of axis aligned
+* 					bounding box.
+* \param	b1			Maximum coordinates of axis aligned
+* 					bounding box.
+* \param	tst			Determines the actual intersection
+* 					tests used:
+* 					0 - AABB / tetrahedron.
+* 					1 - AABB / AABB(tetrahedron) only.
+* 					2 - AABB / tetrahedron omitting the
+* 					    AABB / AABB(tetrahedron) test
+* 					    this is probably only useful if
+* 					    the AABB / AABB(tetrahedron) are
+* 					    known to intersect.
+*/
+int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
+				WlzDVertex3 t1, WlzDVertex3 t2,
+				WlzDVertex3 t3, WlzDVertex3 b0,
+				WlzDVertex3 b1, int tst)
+{
+  int		idx,
+  		isn = 1;
+  double	l;
+  WlzDVertex3	b,
+  		c,
+		d;
+  WlzDVertex3	e[6],
+  		t[4],
+		x[8];
+  const double	tol = 10.0 * DBL_EPSILON;
+
+  /* Make origin centroid of the AABB. */
+  c.vtX = (b0.vtX + b1.vtX) * 0.5;
+  c.vtY = (b0.vtY + b1.vtY) * 0.5;
+  c.vtZ = (b0.vtZ + b1.vtZ) * 0.5;
+  WLZ_VTX_3_SUB(b, b1, c);
+  WLZ_VTX_3_SUB(t[0], t0, c);
+  WLZ_VTX_3_SUB(t[1], t1, c);
+  WLZ_VTX_3_SUB(t[2], t2, c);
+  WLZ_VTX_3_SUB(t[3], t3, c);
+  /* Check AABB and the AABB of the tetrahedron intersect. This is equivalent
+   * to checking for an intersection using projections of the tetrahedron
+   * onto vectors perpendicular to the faces of the AABB. */
+  if((tst == 0) || (tst == 1))
+  {
+    /* Compute the AABB of the tetrahedron. */
+    WlzDVertex3	bT[2];
+
+    bT[0] = bT[1] = t[0];
+    for(idx = 1; idx <= 3; ++idx)
+    {
+      if(t[idx].vtX < bT[0].vtX)
+      {
+	bT[0].vtX = t[idx].vtX;
+      }
+      else if(t[idx].vtX > bT[1].vtX)
+      {
+	bT[1].vtX = t[idx].vtX;
+      }
+      if(t[idx].vtY < bT[0].vtY)
+      {
+	bT[0].vtY = t[idx].vtY;
+      }
+      else if(t[idx].vtY > bT[1].vtY)
+      {
+	bT[1].vtY = t[idx].vtY;
+      }
+      if(t[idx].vtZ < bT[0].vtZ)
+      {
+	bT[0].vtZ = t[idx].vtZ;
+      }
+      else if(t[idx].vtZ > bT[1].vtZ)
+      {
+	bT[1].vtZ = t[idx].vtZ;
+      }
+    }
+    /* Compare AABB of triangle with given AABB. */
+    if(((-b.vtX > bT[1].vtX + tol) || (b.vtX + tol < bT[0].vtX)) &&
+       ((-b.vtY > bT[1].vtY + tol) || (b.vtY + tol < bT[0].vtY)) &&
+       ((-b.vtZ > bT[1].vtZ + tol) || (b.vtZ + tol < bT[0].vtZ)))
+    {
+      isn = 0;        /* No intersection of the AABB with AABB(tetrahedron). */
+    }
+  }
+  /* Check for intersection using projections of the AABB onto vectors
+   * perpendicular to the faces of the tetrahedron. */
+  if((tst == 0) || (tst == 2))
+  {
+    if(isn != 0)
+    {
+      /* Compute the 6 edge vectors for the tetrahedron with the first 3 being
+       * along the edges of one face. */
+      WLZ_VTX_3_SUB(e[0], t[1], t[0]);
+      WLZ_VTX_3_SUB(e[1], t[2], t[1]);
+      WLZ_VTX_3_SUB(e[2], t[0], t[2]);
+      WLZ_VTX_3_SUB(e[3], t[3], t[0]);
+      WLZ_VTX_3_SUB(e[4], t[3], t[1]);
+      WLZ_VTX_3_SUB(e[5], t[3], t[2]);
+      x[0].vtX = -b.vtX; x[0].vtY = -b.vtY; x[0].vtZ = -b.vtZ;
+      x[1].vtX = -b.vtX; x[1].vtY = -b.vtY; x[1].vtZ =  b.vtZ;
+      x[2].vtX = -b.vtX; x[2].vtY =  b.vtY; x[2].vtZ = -b.vtZ;
+      x[3].vtX = -b.vtX; x[3].vtY =  b.vtY; x[3].vtZ =  b.vtZ;
+      x[4].vtX =  b.vtX; x[4].vtY = -b.vtY; x[4].vtZ = -b.vtZ;
+      x[5].vtX =  b.vtX; x[5].vtY = -b.vtY; x[5].vtZ =  b.vtZ;
+      x[6].vtX =  b.vtX; x[6].vtY =  b.vtY; x[6].vtZ = -b.vtZ;
+      x[7].vtX =  b.vtX; x[7].vtY =  b.vtY; x[7].vtZ =  b.vtZ;
+      /* For each direction vector normal to a tetrahedron face project
+       * the AABB and check for intersection. */
+      idx = 0;
+      WLZ_VTX_3_CROSS(d, e[0], e[1]); 
+      l = WLZ_VTX_3_SQRLEN(d);
+      if(l > tol)
+      {
+	isn = WlzGeomTetAABBIsnDir(d, t, x, tol);
+      }
+      while((isn != 0) && (idx < 3))
+      {
+	WLZ_VTX_3_CROSS(d, e[idx], e[idx + 3]); 
+	l = WLZ_VTX_3_SQRLEN(d);
+	if(l > tol)
+	{
+	  isn = WlzGeomTetAABBIsnDir(d, t, x, tol);
+	}
+	++idx;
+      }
+    }
+    /* Check for intersection along vectors which are the cross product of
+     * all possible edge combinations where one edge is from the AABB and
+     * the other is from the tetrahedron. */
+    if(isn != 0)
+    {
+      /* Cross product of tetrahedron edges with the AABB edges can be
+       * computed avoiding a full cross product as (0, -z, y), (z, 0, -x),
+       * and (-y, x, 0) where (x, y, z) is the tetrahedron edge vector.
+       * Edge - edge intersections with the edges parallel and consequent
+       * zero length cross product are ignored because the AABB - AABB
+       * intersection test above will find these intersections. */
+      idx = 0;
+      do
+      {
+	d.vtX =  0.0;
+	d.vtY = -e[idx].vtZ;
+	d.vtZ =  e[idx].vtY;
+	l = WLZ_VTX_3_SQRLEN(d);
+	if(l > tol)
+	{
+	  isn = WlzGeomTetAABBIsnDir(d, t, x, tol);
+	  if(isn == 0)
+	  {
+	    break;
+	  }
+	}
+	d.vtX =  e[idx].vtZ;
+	d.vtY =  0.0;
+	d.vtZ = -e[idx].vtX;
+	l = WLZ_VTX_3_SQRLEN(d);
+	if(l > tol)
+	{
+	  isn = WlzGeomTetAABBIsnDir(d, t, x, tol);
+	  if(isn == 0)
+	  {
+	    break;
+	  }
+	}
+	d.vtX = -e[idx].vtY;
+	d.vtY =  e[idx].vtX;
+	d.vtZ =  0.0;
+	l = WLZ_VTX_3_SQRLEN(d);
+	if(l > tol)
+	{
+	  isn = WlzGeomTetAABBIsnDir(d, t, x, tol);
+	}
+      } while((isn >= 0) && (++idx < 6));
+    }
+  }
+  return(isn);
+}
+
+/*!
+* \return	Intersection code : 0 - no intersection,
+* 		1 - tetrahedron and box touching or intersect.
+* \ingroup	WlzGeometry
+* \brief	Intersection interval test code for
+* 		WlzGeomTetrahedronAABBIntersect3D().
+* \param	d			Direction vector.
+* \param	t			Array of four vertices of the
+* 					tetrahedron.
+* \param	b			Array of 8 vertices of the box.
+* \param	tol			Tollerance value.
+*/
+static int	WlzGeomTetAABBIsnDir(WlzDVertex3 d,
+                                     WlzDVertex3 t[], WlzDVertex3 b[],
+				     double tol)
+{
+  int		idx;
+  double	f;
+  double	p[2],
+  		q[2];
+  int		isn = 1;
+
+  p[0] = p[1] = WLZ_VTX_3_DOT(d, t[0]);
+  for(idx = 1; idx < 4; ++idx)
+  {
+    f = WLZ_VTX_3_DOT(d, t[idx]);
+    if(f < p[0])
+    {
+      p[0] = f;
+    }
+    else if(f > p[1])
+    {
+      p[1] = f;
+    }
+  }
+  q[0] = q[1] = WLZ_VTX_3_DOT(d, b[0]);
+  for(idx = 1; idx < 8; ++idx)
+  {
+    f = WLZ_VTX_3_DOT(d, b[idx]);
+    if(f < q[0])
+    {
+      q[0] = f;
+    }
+    else if(f > q[1])
+    {
+      q[1] = f;
+    }
+  }
+  if((q[1] + tol < p[0]) || (q[0] > p[1] + tol))
+  {
+    isn = 0;              /* No intersection of the AABB with tetrahedron. */
+  }
+  return(isn);
 }
 
 /*!
@@ -3572,86 +3995,45 @@ extern double	WlzGeomInterpolateTet3D(WlzDVertex3 p0, WlzDVertex3 p1,
 					double v2, double v3,
 					WlzDVertex3 pX)
 {
-  double	detA,
-  		val;
-  double	l[4],
-  		c[5],
-  		s[5];
-  const double  eps = 1.0e-10;
+  double	d,
+  		vX;
+  double	c[3],
+  		l[4];
+  WlzDVertex3	q0,
+  		q1,
+		q2,
+		qX;
+  const double	eps = 1.0e-10;
 
-  /* HACK TODO Check this function! HACK TODO */
-  s[0] = p1.vtX - p0.vtX;
-  s[1] = p2.vtX - p0.vtX;
-  s[2] = p3.vtX - p0.vtX;
-  s[3] = p2.vtX - p1.vtX;
-  s[4] = p3.vtX - p1.vtX;
-  s[5] = p3.vtX - p2.vtX;
-  c[0] = p0.vtY * p1.vtZ - p1.vtY * p0.vtZ;
-  c[1] = p0.vtY * p2.vtZ - p2.vtY * p0.vtZ;
-  c[2] = p0.vtY * p3.vtZ - p3.vtY * p0.vtZ;
-  c[3] = p1.vtY * p2.vtZ - p2.vtY * p1.vtZ;
-  c[4] = p1.vtY * p3.vtZ - p3.vtY * p1.vtZ;
-  c[5] = p2.vtY * p3.vtZ - p3.vtY * p2.vtZ;
-  detA = s[0] * c[5] - s[1] * c[4] + s[2] * c[3] +
-         s[3] * c[2] - s[4] * c[1] + s[5] * c[0];
-  if(fabs(detA) > eps)
+  WLZ_VTX_3_SUB(q0, p0, p3);
+  WLZ_VTX_3_SUB(q1, p1, p3);
+  WLZ_VTX_3_SUB(q2, p2, p3);
+  WLZ_VTX_3_SUB(qX, pX, p3);
+  d = q0.vtX * (q1.vtY * q2.vtZ - q2.vtY * q1.vtZ) +
+      q1.vtX * (q2.vtY * q0.vtZ - q0.vtY * q2.vtZ) +
+      q2.vtX * (q0.vtY * q1.vtZ - q1.vtY * q0.vtZ);
+  if(fabs(d) > eps)
   {
-    l[0] = (( p1.vtX * c[5] - p2.vtX * c[4] + p3.vtX * c[3]) +
-	    (-c[5] + c[4] - c[3]) * pX.vtX +
-	    ( p1.vtZ * s[5] - p2.vtZ * s[4] + p3.vtZ * s[3]) * pX.vtY +
-	    (-p1.vtY * s[5] + p2.vtY * s[4] - p3.vtY * s[3]) * pX.vtZ) / detA;
-    l[1] = ((-p0.vtX * c[5] + p2.vtX * c[2] - p3.vtX * c[1]) +
-	    ( c[5] - c[2] + c[1]) * pX.vtX +
-	    (-p0.vtZ * s[5] + p2.vtZ * s[2] - p3.vtZ * s[1]) * pX.vtY +
-	    ( p0.vtY * s[5] - p2.vtY * s[2] + p3.vtY * s[1]) * pX.vtZ) / detA;
-    l[2] = (( p0.vtX * c[4] - p1.vtX * c[2] + p3.vtX * c[0]) +
-	    (-c[4] + c[2] - c[0]) * pX.vtX +
-	    ( p0.vtZ * s[4] - p1.vtZ * s[2] + p3.vtZ * s[0]) * pX.vtY +
-	    (-p0.vtY * s[4] + p1.vtY * s[2] - p3.vtY * s[0]) * pX.vtZ) / detA;
+    c[0] = qX.vtX * (q1.vtY * q2.vtZ - q2.vtY * q1.vtZ) +
+	   q1.vtX * (q2.vtY * qX.vtZ - qX.vtY * q2.vtZ) +
+	   q2.vtX * (qX.vtY * q1.vtZ - q1.vtY * qX.vtZ);
+    c[1] = q0.vtX * (qX.vtY * q2.vtZ - q2.vtY * qX.vtZ) +
+           qX.vtX * (q2.vtY * q0.vtZ - q0.vtY * q2.vtZ) +
+           q2.vtX * (q0.vtY * qX.vtZ - qX.vtY * q0.vtZ);
+    c[2] = q0.vtX * (q1.vtY * qX.vtZ - qX.vtY * q1.vtZ) +
+           q1.vtX * (qX.vtY * q0.vtZ - q0.vtY * qX.vtZ) +
+           qX.vtX * (q0.vtY * q1.vtZ - q1.vtY * q0.vtZ);
+    l[0] = c[0] / d;
+    l[1] = c[1] / d;
+    l[2] = c[2] / d;
     l[3] = 1.0 - (l[0] + l[1] + l[2]);
-    val = (l[0] * v0) + (l[1] * v1) + (l[2] * v2) + (l[3] * v3);
+    vX = l[0] * v0  + l[1] * v1 + l[2] * v2 + l[3] * v3;
   }
   else
   {
-    val = (v0 + v1 + v2 + v3) / 4.0;
+    vX = (v0 + v1 + v2 + v3) / 4.0;
   }
-/* HACK replace a10 ->p0.vtX, a11 -> p1.vtX, ...
-  s0 = a11 - a10;
-  s1 = a12 - a10;
-  s2 = a13 - a10;
-  s3 = a12 - a11;
-  s4 = a13 - a11;
-  s5 = a13 - a12;
-  c0 = a20 * a31 - a21 * a30;
-  c1 = a20 * a32 - a22 * a30;
-  c2 = a20 * a33 - a23 * a30;
-  c3 = a21 * a32 - a22 * a31;
-  c4 = a21 * a33 - a23 * a31;
-  c5 = a22 * a33 - a23 * a32;
-  detA = s0 * c5 - s1 * c4 + s2 * c3 + s3 * c2 - s4 * c1 + s5 * c0;
-  if(fabs(detA) > eps)
-  {
-    l0 = (( a11 * c5 - a12 * c4 + a13 * c3) +
-	  (-c5 + c4 - c3) * px +
-	  ( a31 * s5 - a32 * s4 + a33 * s3) * py +
-	  (-a21 * s5 + a22 * s4 - a23 * s3) * pz) / detA;
-    l1 = ((-a10 * c5 + a12 * c2 - a13 * c1) +
-	  ( c5 - c2 + c1) * px +
-	  (-a30 * s5 + a32 * s2 - a33 * s1) * py +
-	  ( a20 * s5 - a22 * s2 + a23 * s1) * pz) / detA;
-    l2 = (( a10 * c4 - a11 * c2 + a13 * c0) +
-	  (-c4 + c2 - c0) * px +
-	  ( a30 * s4 - a31 * s2 + a33 * s0) * py +
-	  (-a20 * s4 + a21 * s2 - a23 * s0) * pz) / detA;
-    l3 = 1.0 - (l0 + l1 + l2);
-    val = (l0 * v0) + (l1 * v1) + (l2 * v2) + (l3 * v3);
-  }
-  else
-  {
-    val = (v0 + v1 + v2 + v3) / 4.0;
-  }
-*/
-  return(val);
+  return(vX);
 }
 
 /*!
