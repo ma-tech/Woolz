@@ -226,6 +226,22 @@ static void			WlzPolyOutputPS(
 				  WlzPolygonDomain *poly,
 			          double scale,
 				  WlzDVertex2 offset);
+static WlzErrorNum 		WlzBFTOGetVertices2D(
+				  int *dstNVx,
+				  WlzDVertex2 **dstVx0,
+				  WlzDVertex2 **dstVx1,
+				  FILE *fP,
+				  WlzCMesh2D *tMesh,
+				  const char *prog,
+				  const char *fStr);
+static WlzErrorNum 		WlzBFTOGetVertices3D(
+				  int *dstNVx,
+				  WlzDVertex3 **dstVx0,
+				  WlzDVertex3 **dstVx1,
+				  FILE *fP,
+				  WlzCMesh3D *tMesh,
+				  const char *prog,
+				  const char *fStr);
 
 extern int      getopt(int argc, char * const *argv, const char *optstring);
  
@@ -238,10 +254,9 @@ int             main(int argc, char **argv)
 {
   int		option,
   		nTiePP = 0,
+		dim = 0,                /* Dimension will be set by objects. */
 		cdt = 0,
 		cMesh = 0,
-		vxCount = 0,
-		vxLimit = 0,
 		basisFnPolyOrder = 3,
 		dbgFlg = 0, 		  /* Bit wise debug flags see usage. */
 		noTrObj = 0,
@@ -252,10 +267,8 @@ int             main(int argc, char **argv)
 		usage = 0;
   double	meshMinDist = 20.0,
   		meshMaxDist = 40.0;
-  WlzDVertex2	*vx0 = NULL,
-  		*vx1 = NULL,
-		*vxVec0 = NULL,
-		*vxVec1 = NULL;
+  WlzVertexP	vxA0,
+  		vxA1;
   WlzObject	*inObj = NULL,
 		*outObj = NULL,
 		*dilObj = NULL,
@@ -268,8 +281,7 @@ int             main(int argc, char **argv)
   WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   FILE		*fP = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  char 		*rec,
-  		*inObjFileStr,
+  char 		*inObjFileStr,
 		*basisFnTrFileStr = NULL,
 		*tarMeshFileStr = NULL,
 		*tiePtFileStr = NULL,
@@ -278,10 +290,11 @@ int             main(int argc, char **argv)
   const char    *errMsg;
   static char	optList[] = "b:m:o:p:t:D:M:Y:cdghqsyBCGLNRTU",
   		inObjFileStrDef[] = "-",
-		outObjFileStrDef[] = "-",
-  		inRecord[IN_RECORD_MAX];
+		outObjFileStrDef[] = "-";
 
   opterr = 0;
+  vxA0.v = NULL;
+  vxA1.v = NULL;
   tarMesh.v = NULL;
   meshTr.core = NULL;
   outObjFileStr = outObjFileStrDef;
@@ -409,6 +422,55 @@ int             main(int argc, char **argv)
     }
   }
   ok = (usage == 0);
+  /* Read input object that's to be transformed. */
+  if(ok)
+  {
+    errNum = WLZ_ERR_READ_EOF;
+    if((inObjFileStr == NULL) ||
+	(*inObjFileStr == '\0') ||
+	((fP = (strcmp(inObjFileStr, "-")?
+		fopen(inObjFileStr, "r"): stdin)) == NULL) ||
+	((inObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
+	(errNum != WLZ_ERR_NONE))
+    {
+      ok = 0;
+    }
+    if(fP)
+    {
+      if(strcmp(inObjFileStr, "-"))
+      {
+	fclose(fP);
+      }
+      fP = NULL;
+    }
+    if(ok)
+    {
+      switch(inObj->type)
+      {
+        case WLZ_2D_DOMAINOBJ:
+	  dim = 2;
+	  break;
+	case WLZ_3D_DOMAINOBJ:
+	  dim = 3;
+	  break;
+        default:
+	  errNum = WLZ_ERR_OBJECT_TYPE;
+	  break;
+      }
+      if(errNum != WLZ_ERR_NONE)
+      {
+        ok = 0;
+      }
+    }
+    if(ok == 0)
+    {
+      (void )WlzStringFromErrorNum(errNum, &errMsg);
+      (void )fprintf(stderr,
+		     "%s: failed to read object from file %s (%s)\n",
+		     *argv, inObjFileStr, errMsg);
+    }
+  }
+  /* Read target mesh if required. */
   if(ok)
   {
     if(tarMeshFileStr != NULL)
@@ -424,13 +486,73 @@ int             main(int argc, char **argv)
       {
 	ok = 0;
       }
-      if((tmpObj->type != WLZ_CMESH_2D) ||
-         (tmpObj->domain.core == NULL) ||
-	 (tmpObj->domain.cm2->type != WLZ_CMESH_TRI2D))
+      else
       {
-	ok = 0;
-        errNum = WLZ_ERR_DOMAIN_DATA;
+        switch(tmpObj->type)
+	{
+	  case WLZ_CMESH_2D:
+	    if(dim == 0)
+	    {
+	      dim = 2;
+	    }
+	    if(dim != 2)
+	    {
+	      errNum = WLZ_ERR_OBJECT_TYPE;
+	    }
+	    else
+	    {
+	      if(tmpObj->domain.core == NULL)
+	      {
+		errNum = WLZ_ERR_DOMAIN_NULL;
+	      }
+	      else if(tmpObj->domain.cm2->type != WLZ_CMESH_TRI2D)
+	      {
+		errNum = WLZ_ERR_DOMAIN_DATA;
+	      }
+	      else
+	      {
+		tarMesh.m2 = tmpObj->domain.cm2;
+		tmpObj->domain.cm2 = NULL;
+	      }
+	    }
+	    break;
+	  case WLZ_CMESH_3D:
+	    if(dim == 0)
+	    {
+	      dim = 3;
+	    }
+	    if(dim != 3)
+	    {
+	      errNum = WLZ_ERR_OBJECT_TYPE;
+	    }
+	    else
+	    {
+	      if(tmpObj->domain.core == NULL)
+	      {
+		errNum = WLZ_ERR_DOMAIN_NULL;
+	      }
+	      else if(tmpObj->domain.cm3->type != WLZ_CMESH_TET3D)
+	      {
+		errNum = WLZ_ERR_DOMAIN_DATA;
+	      }
+	      else
+	      {
+		tarMesh.m3 = tmpObj->domain.cm3;
+		tmpObj->domain.cm3 = NULL;
+	      }
+	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_OBJECT_TYPE;
+	    break;
+	}
+        if(errNum != WLZ_ERR_NONE)
+	{
+	  ok = 0;
+	}
       }
+      (void )WlzFreeObj(tmpObj);
+      tmpObj = NULL;
       if(ok == 0)
       {
 	(void )WlzStringFromErrorNum(errNum, &errMsg);
@@ -438,14 +560,12 @@ int             main(int argc, char **argv)
 		 "%s: failed to read target mesh object from file %s (%s).\n",
 		       *argv, inObjFileStr, errMsg);
       }
-      else
-      {
-        tarMesh.m2 = tmpObj->domain.cm2;
-	tmpObj->domain.cm2 = NULL;
-	(void )WlzFreeObj(tmpObj);
-	tmpObj = NULL;
-      }
     }
+  }
+  /* Either read the basis function transform from a file or compute it
+   * from a set of tie points. */
+  if(ok)
+  {
     if(basisFnTrFileStr)
     {
       errNum = WLZ_ERR_UNSPECIFIED;
@@ -467,76 +587,21 @@ int             main(int argc, char **argv)
 		       "%s: failed to open tie points file %s (%s).\n",
 		       *argv, tiePtFileStr, errMsg);
       }
-      if(errNum == WLZ_ERR_NONE)
+      else
       {
-	while((errNum == WLZ_ERR_NONE) &&
-	      (fgets(inRecord, IN_RECORD_MAX - 1, fP) != NULL))
+        if(dim == 2)
 	{
-	  inRecord[IN_RECORD_MAX - 1] = '\0';
-	  rec = inRecord;
-	  while(*rec && isspace(*rec))
-	  {
-	    ++rec;
-	  }
-	  if(*rec && (*rec != '#'))
-	  {
-	    if(vxCount >= vxLimit)
-	    {
-	      vxLimit = (vxLimit + 1024) * 2;
-	      if(((vxVec0 = (WlzDVertex2 *)AlcRealloc(vxVec0,
-				     vxLimit * sizeof(WlzDVertex2))) == NULL) ||
-		 ((vxVec1 = (WlzDVertex2 *)AlcRealloc(vxVec1,
-				     vxLimit * sizeof(WlzDVertex2))) == NULL))
-	      {
-		errNum = WLZ_ERR_MEM_ALLOC;
-	      }
-	      else
-	      {
-		vx0 = vxVec0 + vxCount;
-		vx1 = vxVec1 + vxCount;
-	      }
-	    }
-	    if(errNum == WLZ_ERR_NONE)
-	    {
-	      if(sscanf(rec, "%lg %lg %lg %lg", &(vx0->vtX), &(vx0->vtY),
-			&(vx1->vtX), &(vx1->vtY)) != 4)
-	      {
-		errNum = WLZ_ERR_READ_INCOMPLETE;
-	      }
-	      else
-	      {
-		vx1->vtX += vx0->vtX;
-		vx1->vtY += vx0->vtY;
-	      }
-	    }
-	    if((errNum == WLZ_ERR_NONE) && (tarMesh.m2 != NULL))
-	    {
-	      if(WlzCMeshElmEnclosingPos2D(tarMesh.m2, -1,
-	                             vx1->vtX, vx1->vtY, NULL) < 0) 
-	      {
-	        errNum = WLZ_ERR_DOMAIN_DATA;
-		(void )WlzStringFromErrorNum(errNum, &errMsg);
-		(void )fprintf(stderr,
-			   "%s: tie points line %d not in target mesh (%s).\n",
-			   *argv, vxCount, errMsg);
-	      }
-	    }
-	    if(errNum == WLZ_ERR_NONE)
-	    {
-	      ++vx0;
-	      ++vx1;
-	      ++vxCount;
-	    }
-	  }
+	  errNum = WlzBFTOGetVertices2D(&nTiePP, &(vxA0.d2), &(vxA1.d2),
+	  				fP, tarMesh.m2, argv[0], tiePtFileStr);
 	}
-	nTiePP = vxCount;
+	else /* dim == 3 */
+	{
+	  errNum = WlzBFTOGetVertices3D(&nTiePP, &(vxA0.d3), &(vxA1.d3),
+	  				fP, tarMesh.m3, argv[0], tiePtFileStr);
+	}
 	if(errNum != WLZ_ERR_NONE)
 	{
 	  ok = 0;
-	  (void )WlzStringFromErrorNum(errNum, &errMsg);
-	  (void )fprintf(stderr,
-			 "%s: failed to read tie points file %s (%s).\n",
-			 *argv, tiePtFileStr, errMsg);
 	}
       }
       if(fP && strcmp(tiePtFileStr, "-"))
@@ -548,26 +613,22 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    errNum = WLZ_ERR_READ_EOF;
-    if((inObjFileStr == NULL) ||
-	(*inObjFileStr == '\0') ||
-	((fP = (strcmp(inObjFileStr, "-")?
-		fopen(inObjFileStr, "r"): stdin)) == NULL) ||
-	((inObj= WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
-	(errNum != WLZ_ERR_NONE))
+    if(dim == 3)
     {
-      ok = 0;
-      (void )fprintf(stderr,
-		     "%s: failed to read object from file %s\n",
-		     *argv, inObjFileStr);
-    }
-    if(fP)
-    {
-      if(strcmp(inObjFileStr, "-"))
+      /* Promote basis function type from 2D to 3D. */
+      switch(basisFnType)
       {
-	fclose(fP);
+        case WLZ_FN_BASIS_2DMQ:
+          basisFnType = WLZ_FN_BASIS_3DMQ;
+	  break;
+        default:
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	  ok = 0;
+	  (void )WlzStringFromErrorNum(errNum, &errMsg);
+	  (void )fprintf(stderr,
+	                 "%s: invalid basis function type for 3D (%s).\n",
+			 *argv, errMsg);
       }
-      fP = NULL;
     }
   }
   if(ok)
@@ -602,23 +663,42 @@ int             main(int argc, char **argv)
       {
 	if(tarMesh.v == NULL)
 	{
-	  basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
-					   nTiePP, vxVec0, nTiePP, vxVec1,
-					   (cdt)? meshTr.cMesh->mesh.m2: NULL,
-					   &errNum);
+	  if(dim == 2)
+	  {
+	    basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
+					     nTiePP, vxA0.d2, nTiePP, vxA1.d2,
+					     (cdt)? meshTr.cMesh->mesh.m2: NULL,
+					     &errNum);
+	  }
+	  else /* dim == 3 */
+	  {
+	    basisTr = WlzBasisFnTrFromCPts3D(basisFnType, basisFnPolyOrder,
+					     nTiePP, vxA0.d3, nTiePP, vxA1.d3,
+					     (cdt)? meshTr.cMesh->mesh.m3: NULL,
+					     &errNum);
+	  }
 	}
 	else
 	{
-	  basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
-					   nTiePP, vxVec1, nTiePP, vxVec0,
-					   tarMesh.m2, &errNum);
+	  if(dim == 2)
+	  {
+	    basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
+	    				     nTiePP, vxA1.d2, nTiePP, vxA0.d2,
+					     tarMesh.m2, &errNum);
+	  }
+	  else /* dim == 3 */
+	  {
+	    basisTr = WlzBasisFnTrFromCPts3D(basisFnType, basisFnPolyOrder,
+	    				     nTiePP, vxA1.d3, nTiePP, vxA0.d3,
+					     tarMesh.m3, &errNum);
+	  }
 	}
 	if(errNum != WLZ_ERR_NONE)
 	{
 	  ok = 0;
 	  (void )WlzStringFromErrorNum(errNum, &errMsg);
 	  (void )fprintf(stderr,
-		       "%s: failed to compute basis function transform (%s).\n",
+		   "%s: failed to compute basis function transform (%s).\n",
 		       *argv, errMsg);
 	}
       }
@@ -627,7 +707,7 @@ int             main(int argc, char **argv)
     {
       meshTr.mesh = WlzMeshTransformFromCPts(inObj,
       				basisFnType, basisFnPolyOrder,
-      				nTiePP, vxVec0, nTiePP, vxVec1,
+      				nTiePP, vxA0.d2, nTiePP, vxA1.d2,
 				meshGenMth, meshMinDist, meshMaxDist,
 				&errNum);
     }
@@ -808,8 +888,10 @@ int             main(int argc, char **argv)
     "  -y  Use polynomial basis function if tie points are given.\n"
     "  -Y  Polynomial order for polynomial basis function (default 3).\n"
     "Computes and applies Woolz basis function transforms.\n"
-    "Tie points may be read from an ascii file with the format:\n"
-    "  <vertex x> <vertex y> <displacement x> <displacement y>\n"
+    "Tie points may be read from an ascii file with the 2D format:\n"
+    "  <x> <y> <displacement x> <displacement y>\n"
+    "and the 3D format:\n"
+    "  <x> <y> <z> <displacement x> <displacement y> <displacement z>\n"
     "Objects are read from stdin and written to stdout unless the filenames\n"
     "are given.\n",
     *argv,
@@ -820,6 +902,231 @@ int             main(int argc, char **argv)
     "is then written to tied.wlz.\n");
   }
   return(!ok);
+}
+
+
+/*!
+* \return	Woolz error code.
+* \brief	Reads 2D tie points from the file and checks that they
+* 		are within the mesh if the mesh is given.
+* \param	dstNVx			Destination pointer for number of
+* 					tie point pairs, must not be NULL.
+* \param	dstVx0			Destination pointer for source
+* 					vertices, must not be NULL.
+* \param	dstVx1			Destination pointer for displacement
+* 					vertices, must not be NULL.
+* \param	fP			Input file.
+* \param	tMesh			Target mesh, may be NULL.
+* \param	prog			Program name for error output, must
+* 					not be NULL.
+* \param	fStr			input file name for error output, must
+* 					not be NULL.
+*/
+static WlzErrorNum WlzBFTOGetVertices2D(int *dstNVx,
+				WlzDVertex2 **dstVx0, WlzDVertex2 **dstVx1,
+				FILE *fP, WlzCMesh2D *tMesh,
+				const char *prog, const char *fStr)
+{
+  int		vxCount = 0,
+  		vxLimit = 0;
+  char 		*rec;
+  WlzDVertex2	*vx0,
+  		*vx1,
+		*vxA0 = NULL,
+		*vxA1 = NULL;
+  const char    *errMsg;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  char  	inRecord[IN_RECORD_MAX];
+
+  while((errNum == WLZ_ERR_NONE) &&
+        (fgets(inRecord, IN_RECORD_MAX - 1, fP) != NULL))
+  {
+    inRecord[IN_RECORD_MAX - 1] = '\0';
+    rec = inRecord;
+    while(*rec && isspace(*rec))
+    {
+      ++rec;
+    }
+    if(*rec && (*rec != '#'))
+    {
+      if(vxCount >= vxLimit)
+      {
+	vxLimit += 4096;
+	if(((vxA0 = (WlzDVertex2 *)
+		    AlcRealloc(vxA0,
+			       vxLimit * sizeof(WlzDVertex2))) == NULL) ||
+	    ((vxA1 = (WlzDVertex2 *)
+		     AlcRealloc(vxA1,
+				vxLimit * sizeof(WlzDVertex2))) == NULL))
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  vx0 = vxA0 + vxCount;
+	  vx1 = vxA1 + vxCount;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	if(sscanf(rec, "%lg %lg %lg %lg", &(vx0->vtX), &(vx0->vtY),
+	      &(vx1->vtX), &(vx1->vtY)) != 4)
+	{
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+	else
+	{
+	  vx1->vtX += vx0->vtX;
+	  vx1->vtY += vx0->vtY;
+	}
+      }
+      if((errNum == WLZ_ERR_NONE) && (tMesh != NULL))
+      {
+	if(WlzCMeshElmEnclosingPos2D(tMesh, -1, vx1->vtX, vx1->vtY,
+	                             0, NULL) < 0) 
+	{
+	  errNum = WLZ_ERR_DOMAIN_DATA;
+	  (void )WlzStringFromErrorNum(errNum, &errMsg);
+	  (void )fprintf(stderr,
+	      "%s: tie points line %d not in target mesh (%s).\n",
+	      prog, vxCount, errMsg);
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	++vx0;
+	++vx1;
+	++vxCount;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    *dstNVx = vxCount;
+    *dstVx0 = vxA0;
+    *dstVx1 = vxA1;
+  }
+  else
+  {
+    (void )WlzStringFromErrorNum(errNum, &errMsg);
+    (void )fprintf(stderr,
+	"%s: failed to read tie points file %s (%s).\n",
+	prog, fStr, errMsg);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Reads 3D tie points from the file and checks that they
+* 		are within the mesh if the mesh is given.
+* \param	dstNVx			Destination pointer for number of
+* 					tie point pairs, must not be NULL.
+* \param	dstVx0			Destination pointer for source
+* 					vertices, must not be NULL.
+* \param	dstVx1			Destination pointer for displacement
+* 					vertices, must not be NULL.
+* \param	fP			Input file.
+* \param	tMesh			Target mesh, may be NULL.
+* \param	prog			Program name for error output, must
+* 					not be NULL.
+* \param	fStr			input file name for error output, must
+* 					not be NULL.
+*/
+static WlzErrorNum WlzBFTOGetVertices3D(int *dstNVx,
+				WlzDVertex3 **dstVx0, WlzDVertex3 **dstVx1,
+				FILE *fP, WlzCMesh3D *tMesh,
+				const char *prog, const char *fStr)
+{
+  int		vxCount = 0,
+  		vxLimit = 0;
+  char 		*rec;
+  WlzDVertex3	*vx0,
+  		*vx1,
+		*vxA0 = NULL,
+		*vxA1 = NULL;
+  const char    *errMsg;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  char  	inRecord[IN_RECORD_MAX];
+
+  while((errNum == WLZ_ERR_NONE) &&
+        (fgets(inRecord, IN_RECORD_MAX - 1, fP) != NULL))
+  {
+    inRecord[IN_RECORD_MAX - 1] = '\0';
+    rec = inRecord;
+    while(*rec && isspace(*rec))
+    {
+      ++rec;
+    }
+    if(*rec && (*rec != '#'))
+    {
+      if(vxCount >= vxLimit)
+      {
+	vxLimit += 4096;
+	if(((vxA0 = (WlzDVertex3 *)
+		    AlcRealloc(vxA0,
+			       vxLimit * sizeof(WlzDVertex3))) == NULL) ||
+	    ((vxA1 = (WlzDVertex3 *)
+		     AlcRealloc(vxA1,
+				vxLimit * sizeof(WlzDVertex3))) == NULL))
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  vx0 = vxA0 + vxCount;
+	  vx1 = vxA1 + vxCount;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	if(sscanf(rec, "%lg %lg %lg %lg %lg %lg",
+	          &(vx0->vtX), &(vx0->vtY), &(vx0->vtZ),
+	          &(vx1->vtX), &(vx1->vtY), &(vx1->vtZ)) != 6)
+	{
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+	else
+	{
+	  vx1->vtX += vx0->vtX;
+	  vx1->vtY += vx0->vtY;
+	  vx1->vtZ += vx0->vtZ;
+	}
+      }
+      if((errNum == WLZ_ERR_NONE) && (tMesh != NULL))
+      {
+	if(WlzCMeshElmEnclosingPos3D(tMesh, -1, vx1->vtX, vx1->vtY, vx1->vtZ,
+				     0, NULL) < 0) 
+	{
+	  errNum = WLZ_ERR_DOMAIN_DATA;
+	  (void )WlzStringFromErrorNum(errNum, &errMsg);
+	  (void )fprintf(stderr,
+	      "%s: tie points line %d not in target mesh (%s).\n",
+	      prog, vxCount, errMsg);
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	++vx0;
+	++vx1;
+	++vxCount;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    *dstNVx = vxCount;
+    *dstVx0 = vxA0;
+    *dstVx1 = vxA1;
+  }
+  else
+  {
+    (void )WlzStringFromErrorNum(errNum, &errMsg);
+    (void )fprintf(stderr,
+	"%s: failed to read tie points file %s (%s).\n",
+	prog, fStr, errMsg);
+  }
+  return(errNum);
 }
 
 /*!
