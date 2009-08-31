@@ -64,6 +64,7 @@ bin_PROGRAMS		= \
 			  WlzClosestVertices \
 			  WlzCMeshDistance \
 			  WlzCMeshGen \
+			  WlzCMeshToSpatialDomain \
 			  WlzCompound \
 			  WlzCompThresh \
 			  WlzConstruct3D \
@@ -254,6 +255,10 @@ WlzCMeshDistance_LDFLAGS		= $(AM_LFLAGS)
 WlzCMeshGen_SOURCES			= WlzCMeshGen.c
 WlzCMeshGen_LDADD			= $(LDADD)
 WlzCMeshGen_LDFLAGS			= $(AM_LFLAGS)
+
+WlzCMeshToSpatialDomain_SOURCES		= WlzCMeshToSpatialDomain.c
+WlzCMeshToSpatialDomain_LDADD		= $(LDADD)
+WlzCMeshToSpatialDomain_LDFLAGS		= $(AM_LFLAGS)
 
 WlzCompThresh_SOURCES			= WlzCompThresh.c
 WlzCompThresh_LDADD			= $(LDADD)
