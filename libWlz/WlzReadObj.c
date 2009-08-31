@@ -3692,7 +3692,7 @@ static WlzCMesh2D *WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
     }
     else
     {
-      errNum = WlzCMeshReassignBuckets2D(mesh, nNod);
+      errNum = WlzCMeshReassignGridCells2D(mesh, nNod);
     }
   }
   /* Read nodes. */
@@ -3727,7 +3727,7 @@ static WlzCMesh2D *WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
     /* Update the bounding box. */
     WlzCMeshUpdateBBox2D(mesh);
     /* Compute a new bucket grid and reassign nodes to it. */
-    errNum = WlzCMeshReassignBuckets2D(mesh, nNod);
+    errNum = WlzCMeshReassignGridCells2D(mesh, nNod);
     /* Recompute maximum edge length. */
     WlzCMeshUpdateMaxSqEdgLen2D(mesh);
   }
@@ -3913,7 +3913,7 @@ static WlzCMesh3D *WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
   /* Setup the bucket grid using the bounding box of the node positions. */
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshReassignBuckets3D(mesh, nNod);
+    errNum = WlzCMeshReassignGridCells3D(mesh, nNod);
   }
   /* Create all nodes. */
   if(errNum == WLZ_ERR_NONE)
