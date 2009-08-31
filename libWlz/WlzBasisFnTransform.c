@@ -53,6 +53,10 @@ static WlzCMeshTransform 	*WlzBasisFnInvertAndSetCMesh2D(
 				  WlzBasisFnTransform *basisTr,
 				  WlzCMesh2D *mesh,
 				  WlzErrorNum *dstErr);
+static WlzCMeshTransform 	*WlzBasisFnInvertAndSetCMesh3D(
+				  WlzBasisFnTransform *basisTr,
+				  WlzCMesh3D *mesh,
+				  WlzErrorNum *dstErr);
 
 /*!
 * \return	New Basis function transform.
@@ -267,6 +271,108 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2DParam(WlzFnType type,
   }
   return(basisTr);
 }
+/*!
+* \return	New basis function transform.
+* \ingroup	WlzTransform
+* \brief	Creates a new basis function transform of the given
+*		type, which will transform an object with the given
+*		source verticies into an object with the given destination
+*		verticies.
+*		If a constraining object is given all distances will be
+*		computed within the given object for those basis functions
+*		which support constrained evaluation (Gauss, multi-quadric
+*		and thin-plate spline).
+*		Additional basis functions parameters may be supplied via
+*		the nParam and param parameters. Currently this is only used to
+*		supply the multi-quadric delta or gauss parameter scaling.
+*		The default values of multi-quadric delta = 0.001 and
+*		gauss param = 0.9 are used if nParam <= 0 or param == NULL.
+* \param	type			Required basis function type.
+* \param	order			Order of polynomial, only used for
+* 					WLZ_FN_BASIS_3DPOLY.
+* \param	nDPts			Number of destination control points.
+* \param	dPts			Destination control points.
+* \param	nSPts			Number of source control points
+*					(must be same as nDPts).
+* \param	sPts			Source control points.
+* \param        mesh                    Mesh which is used to compute
+*                                       constrained distances. If non NULL
+*                                       and the mesh type is
+*                                       WLZ_CMESH_TET3D then  constrained
+*                                       distances are used and these are
+*                                       computed using the mesh.
+*                                       If NULL or the transform is
+*                                       some other type then Euclidean
+*                                       distances are used.
+* \param	nParam			Number of additional parameters.
+* \param	param			Array of additional parameters.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzBasisFnTransform *WlzBasisFnTrFromCPts3DParam(WlzFnType type,
+					  int order,
+					  int nDPts,
+					  WlzDVertex3 *dPts,
+					  int nSPts,
+					  WlzDVertex3 *sPts,
+					  WlzCMesh3D *mesh,
+					  int nParam,
+					  double *param,
+					  WlzErrorNum *dstErr)
+{
+  WlzBasisFnTransform *basisTr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	deltaMQ = 0.001;
+
+  if((nDPts != nSPts) || (nDPts <= 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if((dPts == NULL) || (sPts == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(mesh)
+  {
+    if(mesh->type != WLZ_CMESH_TET3D)
+    {
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((basisTr = WlzMakeBasisFnTransform(NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    basisTr->type = WLZ_TRANSFORM_3D_BASISFN;
+    switch(type)
+    {
+      case WLZ_FN_BASIS_3DMQ:
+	basisTr->basisFn = WlzBasisFnMQ3DFromCPts(nDPts,
+					dPts, sPts,
+					((nParam > 0) && (param != NULL))?
+					*param: deltaMQ,
+					NULL, mesh, &errNum);
+	break;
+      default:
+	 errNum = WLZ_ERR_TRANSFORM_TYPE;
+	 break;
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      (void )WlzBasisFnFreeTransform(basisTr);
+      basisTr = NULL;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(basisTr);
+}
 
 /*!
 * \return	Woolz error code.
@@ -428,54 +534,32 @@ WlzErrorNum	WlzBasisFnTPS2DChangeCPtsParam(WlzBasisFnTransform *basisTr,
 * \param	nSPts			Number of source control points
 *					(must be same as nDPts)
 * \param	sPts			Source control points.	
+* \param        mesh                    Mesh which is used to compute
+*                                       constrained distances. If non NULL
+*                                       and the mesh type is
+*                                       WLZ_CMESH_TET3D then  constrained
+*                                       distances are used and these are
+*                                       computed using the mesh.
+*                                       If NULL or the transform is
+*                                       some other type then Euclidean
+*                                       distances are used.
 * \param	dstErr			Destination error pointer,
 *					may be NULL.
 */
-WlzBasisFnTransform *WlzBasisFnTrFromCPts3(WlzFnType type,
+WlzBasisFnTransform *WlzBasisFnTrFromCPts3D(WlzFnType type,
 					  int order,
 					  int nDPts,
 					  WlzDVertex3 *dPts,
 					  int nSPts,
 					  WlzDVertex3 *sPts,
+					  WlzCMesh3D *mesh,
 					  WlzErrorNum *dstErr)
 {
   WlzBasisFnTransform *basisTr = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((nDPts != nSPts) || (nDPts <= 0))
-  {
-    errNum = WLZ_ERR_PARAM_DATA;
-  }
-  else if((dPts == NULL) || (sPts == NULL))
-  {
-    errNum = WLZ_ERR_PARAM_NULL;
-  }
-  else if((basisTr = WlzMakeBasisFnTransform(NULL)) == NULL)
-  {
-   errNum = WLZ_ERR_MEM_ALLOC;
-  }
-  else
-  {
-    switch(type)
-    { 
-      case WLZ_FN_BASIS_3DMQ:
-        {
-	  basisTr->basisFn = WlzBasisFnMQ3DFromCPts(nDPts, dPts, sPts, 0.2,
-	  					    &errNum);
-	  basisTr->linkcount = 0;
-	  basisTr->freeptr   = NULL;
-	  
-	}
-	break;
-      default:
-	 errNum = WLZ_ERR_TRANSFORM_TYPE;
-	 break;
-    }
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
+  basisTr = WlzBasisFnTrFromCPts3DParam(type, order, nDPts, dPts,
+                                        nSPts, sPts, mesh, 0, NULL,
+					dstErr);
   return(basisTr);
 }
 
@@ -582,7 +666,7 @@ WlzErrorNum    	WlzBasisFnSetCMesh(WlzCMeshTransform *meshTr,
         errNum = WlzBasisFnSetCMesh2D(meshTr, basisTr);
 	break;
       case WLZ_TRANSFORM_3D_CMESH:
-        errNum = WLZ_ERR_UNIMPLEMENTED;
+        errNum = WlzBasisFnSetCMesh3D(meshTr, basisTr);
 	break;
       default:
         errNum = WLZ_ERR_TRANSFORM_TYPE;
@@ -652,6 +736,60 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzCMeshTransform *meshTr,
 }
 
 /*!
+* \return	Error number.
+* \ingroup	WlzTransform
+* \brief	Sets the displacements of the given 3D conforming mesh
+*		transform according to the basis function transform.
+* \param	meshTr			Given mesh transform.
+* \param	basisTr			Given basis function transform.
+*/
+WlzErrorNum    	WlzBasisFnSetCMesh3D(WlzCMeshTransform *meshTr,
+				     WlzBasisFnTransform *basisTr)
+{
+  int		idN;
+  WlzDVertex3	*dspP;
+  WlzCMeshNod3D	*nod;
+  WlzCMesh3D	*mesh;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((meshTr == NULL) || (basisTr == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((meshTr->type != WLZ_TRANSFORM_3D_CMESH) ||
+	  (basisTr->type != WLZ_TRANSFORM_3D_BASISFN))
+  {
+    errNum = WLZ_ERR_TRANSFORM_TYPE;
+  }
+  else if((mesh = meshTr->mesh.m3) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+        dspP = (WlzDVertex3 *)AlcVectorItemGet(meshTr->dspVec, idN);
+	switch(basisTr->basisFn->type)
+	{
+	    break;
+	  case WLZ_FN_BASIS_3DMQ:
+	    *dspP = WlzBasisFnValueMQ3D(basisTr->basisFn, nod->pos);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_TRANSFORM_TYPE;
+	    break;
+	}
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
 * \return	New constrained mesh transform.
 * \ingroup	WlzTransform
 * \brief	Uses the given target mesh to create a mesh transform
@@ -680,7 +818,7 @@ WlzCMeshTransform *WlzBasisFnInvertAndSetCMesh(WlzBasisFnTransform *basisTr,
         meshTr = WlzBasisFnInvertAndSetCMesh2D(basisTr, mesh.m2, &errNum);
 	break;
       case WLZ_TRANSFORM_3D_BASISFN:
-        errNum = WLZ_ERR_UNIMPLEMENTED;
+        meshTr = WlzBasisFnInvertAndSetCMesh3D(basisTr, mesh.m3, &errNum);
 	break;
       default:
         errNum = WLZ_ERR_TRANSFORM_TYPE;
@@ -721,6 +859,49 @@ static WlzCMeshTransform *WlzBasisFnInvertAndSetCMesh2D(
   if(errNum == WLZ_ERR_NONE)
   {
     errNum = WlzBasisFnSetCMesh2D(meshTr, basisTr);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshTransformInvert(meshTr);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshFixNegativeElms(meshTr->mesh);
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(meshTr);
+}
+
+/*!
+* \return	New constrained mesh transform.
+* \ingroup	WlzTransform
+* \brief	Uses the given 3D target mesh to create a 3D mesh transform
+* 		which transforms the source to target.
+* \param	basisTr			Given basis function transform
+* 					which transforms target to source.
+* \param	mesh			Given conforming mesh for target.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzCMeshTransform *WlzBasisFnInvertAndSetCMesh3D(
+					WlzBasisFnTransform *basisTr,
+				        WlzCMesh3D *mesh,
+				        WlzErrorNum *dstErr)
+{
+  WlzCMesh3D	*invMesh;
+  WlzCMeshTransform *meshTr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  invMesh = WlzCMeshCopy3D(mesh, 0, NULL, NULL, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    meshTr = WlzMakeCMeshTransform3D(invMesh, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzBasisFnSetCMesh3D(meshTr, basisTr);
   }
   if(errNum == WLZ_ERR_NONE)
   {
