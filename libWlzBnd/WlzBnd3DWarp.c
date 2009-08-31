@@ -154,9 +154,10 @@ WlzObject  *WlzBnd3DWarpFile(char *inFileStr, char *TiePointsFileStr, char *outF
         }
 
         /* get the basis transform */
-        basisTr = WlzBasisFnTrFromCPts3( basisFnType, basisFnPolyOrder,
-        nTiePP, vxVec0,
-        nTiePP, vxVec1, &errNum );
+        basisTr = WlzBasisFnTrFromCPts3D(basisFnType, basisFnPolyOrder,
+					 nTiePP, vxVec0,
+					 nTiePP, vxVec1,
+					 NULL, &errNum );
         /* get the mesh transformation  */
         { /* need consistency with 2D format */
         if( WlzGetTransformedMesh(wmt3D, basisTr) != WLZ_ERR_NONE )
@@ -289,8 +290,10 @@ WlzObject  *WlzBnd3DWarpObj(WlzObject *ObjS, int arraySizeVec0, WlzDVertex3 *arr
     if( (wmt3D = WlzTetrahedronMeshFromObj(ObjS, bBoxS,numOfElemAlonX,
       numOfElemAlonY, numOfElemAlonZ, &errNum) ) != NULL)
     {
-      basisTr = WlzBasisFnTrFromCPts3( basisFnType, basisFnPolyOrder,
-        arraySizeVec0, arrayVec0, arraySizeVec1, arrayVec1, &errNum );
+      basisTr = WlzBasisFnTrFromCPts3D(basisFnType, basisFnPolyOrder,
+                                       arraySizeVec0, arrayVec0,
+				       arraySizeVec1, arrayVec1,
+				       NULL, &errNum );
 
     if( WlzGetTransformedMesh(wmt3D, basisTr) != WLZ_ERR_NONE )
       errNum = WLZ_ERR_TRANSFORM_DATA;

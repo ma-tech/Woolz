@@ -41,6 +41,7 @@ static char _WlzBndBasisFn_c[] = "MRC HGU $Id$";
                   arrayVec0,
                   arrayVec1,
                   delta,
+		  NULL, NULL,
                   dstErr);
 
    }
@@ -106,6 +107,6 @@ static char _WlzBndBasisFn_c[] = "MRC HGU $Id$";
    WlzBasisFnTransform *WlzBndBasisFnTrFromCPts3(WlzFnType type, int order,
                 int arraySizeVec0, WlzDVertex3 *arrayVec0, int arraySizeVec1, WlzDVertex3 *arrayVec1, WlzErrorNum *dstErr)
     {
-        return  WlzBasisFnTrFromCPts3(type, order, arraySizeVec0, arrayVec0, arraySizeVec1, arrayVec1, dstErr);
+        return  WlzBasisFnTrFromCPts3D(type, order, arraySizeVec0, arrayVec0, arraySizeVec1, arrayVec1, NULL, dstErr);
     }
 
