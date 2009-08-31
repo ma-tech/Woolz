@@ -46,15 +46,6 @@ static char _WlzTstCMeshVtxInMesh_c[] = "MRC HGU $Id$";
 #include <string.h>
 #include <Wlz.h>
 
-typedef enum _WlzTstParam
-{
-  WLZTST_SEED_BOUNDARY,
-  WLZTST_SEED_SEEDS,
-  WLZTST_OUT_IMAGE,
-  WLZTST_OUT_NONE,
-  WLZTST_OUT_TXT
-} WlzTstParam;
-
 /* Externals required by getopt  - not in ANSI C standard */
 #ifdef __STDC__ /* [ */
 extern int      getopt(int argc, char * const *argv, const char *optstring);
@@ -69,6 +60,7 @@ int		main(int argc, char *argv[])
 		eIdx = -1,
 		nIdx = -1,
   		ok = 1,
+		exhaustive = 0,
   		option,
 		repeats = 1,
   		usage = 0;
@@ -80,7 +72,7 @@ int		main(int argc, char *argv[])
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*inObj = NULL;
   WlzCMeshP 	mesh;
-  static char   optList[] = "ho:p:R:";
+  static char   optList[] = "eho:p:R:";
   const char    inObjFileStrDef[] = "-",
   	        outFileStrDef[] = "-";
 
@@ -92,6 +84,9 @@ int		main(int argc, char *argv[])
   {
     switch(option)
     {
+      case 'e':
+        exhaustive = 1;
+	break;
       case 'o':
         outFileStr = optarg;
 	break;
@@ -179,7 +174,7 @@ int		main(int argc, char *argv[])
     for(idN = 0; idN < repeats; ++idN)
     {
       eIdx = WlzCMeshElmEnclosingPos(mesh, -1, vtx.vtX, vtx.vtY, vtx.vtZ,
-                                     &nIdx);
+                                     exhaustive, &nIdx);
     }
     if((fP = (strcmp(outFileStr, "-")?
 	     fopen(outFileStr, "w"): stdout)) == NULL)
@@ -216,6 +211,7 @@ int		main(int argc, char *argv[])
     "index will be a negative value. If the element index is not negative\n"
     "then the node index may not be the closest node.\n"
     "Options are:\n"
+    "  -e  Exhaustive search (slow), every element in the mesh searched.\n"
     "  -h  Help, prints this usage message.\n"
     "  -o  Output file.\n"
     "  -p  Given vertex position given as <vx>,<vy>,<vz>.\n"
