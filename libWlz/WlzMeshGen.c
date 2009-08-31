@@ -50,6 +50,25 @@ static char _WlzMeshGen_c[] = "MRC HGU $Id$";
 #include <string.h>
 #include <Wlz.h>
 
+/* #define WLZ_CMESH_DEBUG_LOCATION */
+
+/*!
+* \enum		_WlzCMeshConformAction
+* \ingroup	WlzMesh
+* \brief	Possible mesh element conformation actions.
+* 		Typedef: ::WlzCMeshConformAction.
+*/
+typedef enum _WlzCMeshConformAction
+{
+  WLZ_CMESH_CONFORM_NONE,
+  WLZ_CMESH_CONFORM_DELETE,
+  WLZ_CMESH_CONFORM_MODIFY
+} WlzCMeshConformAction;
+
+static void	  		WlzCMeshFreeGridCells2D(
+				  WlzCMesh2D *mesh);
+static void	  		WlzCMeshFreeGridCells3D(
+				  WlzCMesh3D *mesh);
 static void			WlzCMeshAddNodToGrid2D(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshNod2D *nod);
@@ -64,6 +83,9 @@ static void			WlzCMeshRemNodFromGrid3D(
 				  WlzCMeshNod3D *nod);
 static void			WlzCMeshEntMarkFree(
 				  int *idx);
+static void			WlzCMeshRemElmFromGrid2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshElm2D *elm);
 static void 			WlzCMeshRemEntCb(
 				  WlzCMeshCbEntry **list,
 				  WlzCMeshCbFn fn,
@@ -85,6 +107,22 @@ static WlzCMeshNod3D 		*WlzCMeshComputeBoundNod3D(
 				  WlzCMeshNod3D *nod1,
 				  double tol,
 				  WlzErrorNum *dstErr);
+static WlzCMeshCellElm2D 	*WlzCMeshNewCElm2D(
+				  WlzCMesh2D *mesh,
+				  WlzErrorNum *dstErr);
+static WlzCMeshCellElm3D 	*WlzCMeshNewCElm3D(
+				  WlzCMesh3D *mesh,
+				  WlzErrorNum *dstErr);
+static WlzErrorNum 		WlzCMeshAllocGridCells2D(
+				  WlzCMesh2D *mesh);
+static WlzErrorNum 		WlzCMeshAllocGridCells3D(
+				  WlzCMesh3D *mesh);
+static WlzErrorNum 		WlzCMeshAddElmToGrid2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshElm2D *elm);
+static WlzErrorNum 		WlzCMeshAddElmToGrid3D(
+				  WlzCMesh3D *mesh,
+				  WlzCMeshElm3D *elm);
 static WlzErrorNum 		WlzCMeshBoundConformElm2D1(
 				  WlzCMesh2D *mesh,
 				  WlzObject *obj,
@@ -162,17 +200,22 @@ static int			WlzCMeshElmJumpPos3D(
 				  WlzCMesh3D *mesh,
 				  WlzDVertex3 gPos,
 				  int *dstCloseNod);
-static double			WlzCMeshCompGridBSz2D(
-				  int tnn,
-				  double npb,
-				  double sz0,
-				  double sz1);
-static double			WlzCMeshCompGridBSz3D(
-				  int tnn,
-				  double npb,
-				  double sz0,
-				  double sz1,
-				  double sz2);
+static int			WlzCMeshElmExhaustivePos2D(
+				  WlzCMesh2D *mesh,
+				  WlzDVertex2 gPos,
+				  int *dstCloseNod);
+static int			WlzCMeshElmExhaustivePos3D(
+				  WlzCMesh3D *mesh,
+				  WlzDVertex3 gPos,
+				  int *dstCloseNod);
+static double	 		WlzCMeshCompGridBSz2D(
+				  int nN,
+				  double nPB,
+				  WlzDVertex2 mSz);
+static double	 		WlzCMeshCompGridBSz3D(
+				  int nN,
+				  double nPB,
+				  WlzDVertex3 mSz);
 static WlzErrorNum 		WlzCMeshAddLBTNode2D(
 				  WlzCMesh2D *mesh,
 				  WlzLBTDomain2D *lDom,
@@ -276,10 +319,10 @@ static WlzErrorNum 		WlzCMeshElmsFromLBTNode3D5(
 				  WlzCMeshNod3D **mNod,
 				  WlzDVertex3 *nPos,
 				  int *dstNElm);
-static WlzIVertex2 		WlzCMeshBucketIdxVtx2D(
+static WlzIVertex2 		WlzCMeshCellIdxVtx2D(
 				  WlzCMesh2D *mesh,
 				  WlzDVertex2 vtx);
-static WlzIVertex3 		WlzCMeshBucketIdxVtx3D(
+static WlzIVertex3 		WlzCMeshCellIdxVtx3D(
 				  WlzCMesh3D *mesh,
 				  WlzDVertex3 vtx);
 static WlzCMeshElm2D 		*WlzCMeshAllocElm2D(
@@ -290,6 +333,28 @@ static WlzCMeshEdgU2D 		*WlzCMeshEdgUseFindOpp2D(
 				  WlzCMeshEdgU2D *gEdu);
 static WlzCMeshFace 		*WlzCMeshFindOppFce(
 				  WlzCMeshFace *gFce);
+
+#ifdef WLZ_CMESH_DEBUG_LOCATION
+static int	elmQueryCnt = 0,
+		nElmQuery = 0,
+		nElmQuerySum = 0,
+		nElmQueryMax = 0;
+
+void		WlzCMeshDebugResetNElmQuery(void)
+{
+  nElmQuery = 0;
+  nElmQuerySum = 0;
+  nElmQueryMax = 0;
+}
+
+void		WlzCMeshDebugReportNElmQuery(void)
+{
+  (void )fprintf(stderr,
+  "WlzCMeshDebugPrintNElmQuery() mean = %d, max = %d\n",
+  (nElmQuery > 0)? nElmQuerySum / nElmQuery: 0,
+  nElmQueryMax);
+}
+#endif /* WLZ_CMESH_DEBUG_LOCATION */
 
 /*!
 * \return	New 2D mesh.
@@ -305,7 +370,8 @@ WlzCMesh2D	*WlzCMeshNew2D(WlzErrorNum *dstErr)
 {
   WlzCMesh2D	*mesh = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	blkSz = 1024;
+  const int	nodBSz = 1024,
+  		elmBSz = 1024;
 
   if(errNum == WLZ_ERR_NONE)
   {
@@ -318,9 +384,9 @@ WlzCMesh2D	*WlzCMeshNew2D(WlzErrorNum *dstErr)
   {
     mesh->type = WLZ_CMESH_TRI2D;
     if(((mesh->res.nod.vec = AlcVectorNew(1, sizeof(WlzCMeshNod2D),
-    					  blkSz, NULL)) == NULL) ||
+    					  nodBSz, NULL)) == NULL) ||
        ((mesh->res.elm.vec = AlcVectorNew(1, sizeof(WlzCMeshElm2D),
-       					  blkSz, NULL)) == NULL))
+       					  elmBSz, NULL)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -351,7 +417,8 @@ WlzCMesh3D	*WlzCMeshNew3D(WlzErrorNum *dstErr)
 {
   WlzCMesh3D	*mesh = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	blkSz = 1024;
+  const int	nodBSz = 1024,
+  		elmBSz = 1024;
 
   if(errNum == WLZ_ERR_NONE)
   {
@@ -364,9 +431,9 @@ WlzCMesh3D	*WlzCMeshNew3D(WlzErrorNum *dstErr)
   {
     mesh->type = WLZ_CMESH_TET3D;
     if(((mesh->res.nod.vec = AlcVectorNew(1, sizeof(WlzCMeshNod3D),
-    					  blkSz, NULL)) == NULL) ||
+    					  nodBSz, NULL)) == NULL) ||
        ((mesh->res.elm.vec = AlcVectorNew(1, sizeof(WlzCMeshElm3D),
-       					  blkSz, NULL)) == NULL))
+       					  elmBSz, NULL)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -771,6 +838,7 @@ WlzCMeshNod2D	*WlzCMeshNewNod2D(WlzCMesh2D *mesh, WlzDVertex2 pos,
   else
   {
     nNod->pos = pos;
+    nNod->next = NULL;
     WlzCMeshAddNodToGrid2D(mesh, nNod);
   }
   if((errNum == WLZ_ERR_NONE) && mesh->res.nod.newEntCb)
@@ -787,51 +855,311 @@ WlzCMeshNod2D	*WlzCMeshNewNod2D(WlzCMesh2D *mesh, WlzDVertex2 pos,
 /*!
 * \return	void
 * \ingroup	WlzMesh
-* \brief	Adds a new mesh node to the mesh's bucket grid.
+* \brief	Adds a new mesh node to the mesh's cell grid.
 *		It is assumed that the given node is not already in the
-*		bucket grid but this is not checked for.
+*		cell grid but this is not checked for.
 * \param	mesh			The mesh.
-* \param	nod			New node to add.
+* \param	nod			Node to add to the cell grid.
 */
 static void	WlzCMeshAddNodToGrid2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
 {
   WlzIVertex2	idx;
-  WlzCMeshNod2D	**bktP;
+  WlzCMeshCell2D *cell;
 
-  /* Find the bucket in the grid. */
-  idx = WlzCMeshBucketIdxVtx2D(mesh, nod->pos);
-  bktP = *(mesh->bGrid.buckets + idx.vtY) + idx.vtX;
-  /* Add the node to the bucket. */
-  nod->next = *bktP;
-  *bktP = nod;
+  /* Find the cell in the grid. */
+  idx = WlzCMeshCellIdxVtx2D(mesh, nod->pos);
+  cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
+  /* Add the node to the cell. */
+  nod->next = cell->nod; cell->nod = nod;
 }
 
 /*!
 * \return	void
 * \ingroup	WlzMesh
-* \brief	Adds a new mesh node to the mesh's bucket grid.
+* \brief	Adds a new mesh node to the mesh's cell grid.
 *		It is assumed that the given node is not already in the
-*		bucket grid but this is not checked for.
+*		cell grid but this is not checked for.
 * \param	mesh			The mesh.
-* \param	nod			New node to add.
+* \param	nod			Node to add to the cell grid.
 */
 static void	WlzCMeshAddNodToGrid3D(WlzCMesh3D *mesh, WlzCMeshNod3D *nod)
 {
   WlzIVertex3	idx;
-  WlzCMeshNod3D	**bktP;
+  WlzCMeshCell3D *cell;
 
-  /* Find the bucket in the grid. */
-  idx = WlzCMeshBucketIdxVtx3D(mesh, nod->pos);
-  bktP = *(*(mesh->bGrid.buckets + idx.vtZ) + idx.vtY) + idx.vtX;
-  /* Add the node to the bucket. */
-  nod->next = *bktP;
-  *bktP = nod;
+  /* Find the cell in the grid. */
+  idx = WlzCMeshCellIdxVtx3D(mesh, nod->pos);
+  cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+  /* Add the node to the cell. */
+  nod->next = cell->nod; cell->nod = nod;
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Adds a new 2D mesh element to the mesh's cell grid.
+* 		It is assumed that the given element is not already in the
+* 		cell grid but this is not checked for.
+* \param	mesh			The mesh.
+* \param	elm			Element to add to the cell grid.
+*/
+static WlzErrorNum WlzCMeshAddElmToGrid2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
+{
+  double	delta;
+  WlzIVertex2	idx;
+  WlzDVertex2	cBoxMin,
+  		cBoxMax;
+  WlzIBox2	cBox;
+  WlzDBox2	eBox;
+  WlzCMeshCell2D *cell;
+  WlzCMeshCellElm2D *cElm;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	eps = 0.001;
+
+  elm->cElm = NULL;
+  delta = eps * mesh->cGrid.cellSz;
+  /* Find grid cells that may be intersected by the element on the basis
+   * of this element's axis aligned bounding box. */
+  eBox = WlzCMeshElmBBox2D(elm);
+  cBox.xMin = (int )floor((eBox.xMin - mesh->bBox.xMin - delta) /
+                          mesh->cGrid.cellSz);
+  cBox.yMin = (int )floor((eBox.yMin - mesh->bBox.yMin - delta) /
+                          mesh->cGrid.cellSz);
+  cBox.xMax = (int )ceil((eBox.xMax - mesh->bBox.xMin + delta) /
+                         mesh->cGrid.cellSz);
+  cBox.yMax = (int )ceil((eBox.yMax - mesh->bBox.yMin + delta) /
+                         mesh->cGrid.cellSz);
+  cBox.xMin = WLZ_CLAMP(cBox.xMin, 0,  mesh->cGrid.nCells.vtX - 1);
+  cBox.xMax = WLZ_CLAMP(cBox.xMax, 0,  mesh->cGrid.nCells.vtX - 1);
+  cBox.yMin = WLZ_CLAMP(cBox.yMin, 0,  mesh->cGrid.nCells.vtY - 1);
+  cBox.yMax = WLZ_CLAMP(cBox.yMax, 0,  mesh->cGrid.nCells.vtY - 1);
+  /* For each of the grid cells found, check for an intersection with the
+   * element and then if there is an intersection add a grid cell element
+   * to the cell. */
+  for(idx.vtY = cBox.yMin; idx.vtY <= cBox.yMax; ++idx.vtY)
+  {
+    cBoxMin.vtY = mesh->bBox.yMin + (idx.vtY * mesh->cGrid.cellSz);
+    cBoxMax.vtY = mesh->bBox.yMin + ((idx.vtY + 1) * mesh->cGrid.cellSz);
+    for(idx.vtX = cBox.xMin; idx.vtX <= cBox.xMax; ++idx.vtX)
+    {
+      cBoxMin.vtX = mesh->bBox.xMin + (idx.vtX * mesh->cGrid.cellSz);
+      cBoxMax.vtX = mesh->bBox.xMin + ((idx.vtX + 1) * mesh->cGrid.cellSz);
+      /* Faster to test using AABB(cell)/AABB(element) only and incur
+       * false positives. */
+      if(WlzGeomTriangleAABBIntersect2D(elm->edu[0].nod->pos,
+					elm->edu[1].nod->pos,
+					elm->edu[2].nod->pos,
+					cBoxMin, cBoxMax, 1) != 0)
+      {
+        if((cElm = WlzCMeshNewCElm2D(mesh, &errNum)) == NULL)
+	{
+	  goto RETURN;
+	}
+	cElm->elm = elm;
+	cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
+	cElm->cell = cell;
+	/* Next element of this cell. */
+	cElm->next = cell->cElm; cell->cElm = cElm;
+	/* Next cell of this element. */
+	cElm->nextCell = elm->cElm; elm->cElm = cElm;
+      }
+    }
+  }
+RETURN:
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Adds a new 3D mesh element to the mesh's cell grid.
+* 		It is assumed that the given element is not already in the
+* 		cell grid but this is not checked for.
+* \param	mesh			The mesh.
+* \param	elm			Element to add to the cell grid.
+*/
+static WlzErrorNum WlzCMeshAddElmToGrid3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm)
+{
+  double	delta;
+  WlzIVertex3	idx;
+  WlzDVertex3	cBoxMin,
+  		cBoxMax;
+  WlzIBox3	cBox;
+  WlzDBox3	eBox;
+  WlzCMeshCell3D *cell;
+  WlzCMeshCellElm3D *cElm;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	eps = 0.001;
+
+  elm->cElm = NULL;
+  delta = eps * mesh->cGrid.cellSz;
+  /* Find grid cells that may be intersected by the element on the basis
+   * of this element's axis aligned bounding box. */
+  eBox = WlzCMeshElmBBox3D(elm);
+  cBox.xMin = (int )floor((eBox.xMin - mesh->bBox.xMin - delta) /
+                          mesh->cGrid.cellSz);
+  cBox.yMin = (int )floor((eBox.yMin - mesh->bBox.yMin - delta) /
+                          mesh->cGrid.cellSz);
+  cBox.zMin = (int )floor((eBox.zMin - mesh->bBox.zMin - delta) /
+                          mesh->cGrid.cellSz);
+  cBox.xMax = (int )ceil((eBox.xMax - mesh->bBox.xMin + delta) /
+                         mesh->cGrid.cellSz);
+  cBox.yMax = (int )ceil((eBox.yMax - mesh->bBox.yMin + delta) /
+                         mesh->cGrid.cellSz);
+  cBox.zMax = (int )ceil((eBox.zMax - mesh->bBox.zMin + delta) /
+                         mesh->cGrid.cellSz);
+  cBox.xMin = WLZ_CLAMP(cBox.xMin, 0,  mesh->cGrid.nCells.vtX - 1);
+  cBox.xMax = WLZ_CLAMP(cBox.xMax, 0,  mesh->cGrid.nCells.vtX - 1);
+  cBox.yMin = WLZ_CLAMP(cBox.yMin, 0,  mesh->cGrid.nCells.vtY - 1);
+  cBox.yMax = WLZ_CLAMP(cBox.yMax, 0,  mesh->cGrid.nCells.vtY - 1);
+  cBox.zMin = WLZ_CLAMP(cBox.zMin, 0,  mesh->cGrid.nCells.vtZ - 1);
+  cBox.zMax = WLZ_CLAMP(cBox.zMax, 0,  mesh->cGrid.nCells.vtZ - 1);
+  /* For each of the grid cells found, check for an intersection with the
+   * element and then if there is an intersection add a grid cell element
+   * to the cell. */
+  for(idx.vtZ = cBox.zMin; idx.vtZ <= cBox.zMax; ++idx.vtZ)
+  {
+    cBoxMin.vtZ = mesh->bBox.zMin + (idx.vtZ * mesh->cGrid.cellSz);
+    cBoxMax.vtZ = mesh->bBox.zMin + ((idx.vtZ + 1) * mesh->cGrid.cellSz);
+    for(idx.vtY = cBox.yMin; idx.vtY <= cBox.yMax; ++idx.vtY)
+    {
+      cBoxMin.vtY = mesh->bBox.yMin + (idx.vtY * mesh->cGrid.cellSz);
+      cBoxMax.vtY = mesh->bBox.yMin + ((idx.vtY + 1) * mesh->cGrid.cellSz);
+      for(idx.vtX = cBox.xMin; idx.vtX <= cBox.xMax; ++idx.vtX)
+      {
+	cBoxMin.vtX = mesh->bBox.xMin + (idx.vtX * mesh->cGrid.cellSz);
+	cBoxMax.vtX = mesh->bBox.xMin + ((idx.vtX + 1) * mesh->cGrid.cellSz);
+	/* Faster to test using AABB(cell)/AABB(element) only and incur
+	 * false positives. */
+	if(WlzGeomTetrahedronAABBIntersect3D(elm->face[0].edu[0].nod->pos,
+					     elm->face[0].edu[1].nod->pos,
+					     elm->face[0].edu[2].nod->pos,
+					     elm->face[1].edu[1].nod->pos,
+					     cBoxMin, cBoxMax, 1) != 0)
+	{
+	  if((cElm = WlzCMeshNewCElm3D(mesh, &errNum)) == NULL)
+	  {
+	    goto RETURN;
+	  }
+	  cElm->elm = elm;
+	  cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+	  cElm->cell = cell;
+	  /* Next element of this cell. */
+	  cElm->next = cell->cElm; cell->cElm = cElm;
+	  /* Next cell of this element. */
+	  cElm->nextCell = elm->cElm; elm->cElm = cElm;
+	}
+      }
+    }
+  }
+RETURN:
+  return(errNum);
+}
+
+/*!
+* \return	New mesh cell element.
+* \ingroup	WlzMesh
+* \brief	Gets a new 2D mesh cell element allocating more cell
+* 		elements as required.
+* \param	mesh			The mesh.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzCMeshCellElm2D *WlzCMeshNewCElm2D(WlzCMesh2D *mesh,
+				            WlzErrorNum *dstErr)
+{
+  int		idE;
+  WlzCMeshCellElm2D *cElm = NULL;
+  WlzCMeshCellGrid2D *cGrid;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int 	elmBSz = 1024;
+
+  cGrid = &(mesh->cGrid);
+  if(cGrid->freeCE == NULL)
+  {
+    cGrid->allCE = AlcBlockStackNew(elmBSz, sizeof(WlzCMeshCellElm2D),
+				    cGrid->allCE, NULL);
+    
+    if(cGrid->allCE == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      cElm = (WlzCMeshCellElm2D *)(cGrid->allCE->elements);
+      for(idE = 0; idE < elmBSz; ++idE)
+      {
+	cElm->next = cGrid->freeCE;
+	cGrid->freeCE = cElm;
+	++cElm;
+      }
+    }
+  }
+  if(cGrid->freeCE != NULL)
+  {
+    cElm = cGrid->freeCE;
+    cGrid->freeCE = cElm->next;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(cElm);
+}
+
+/*!
+* \return	New mesh cell element.
+* \ingroup	WlzMesh
+* \brief	Gets a new 3D mesh cell element allocating more cell
+* 		elements as required.
+* \param	mesh			The mesh.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzCMeshCellElm3D *WlzCMeshNewCElm3D(WlzCMesh3D *mesh,
+				            WlzErrorNum *dstErr)
+{
+  int		idE;
+  WlzCMeshCellElm3D *cElm = NULL;
+  WlzCMeshCellGrid3D *cGrid;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int 	elmBSz = 1024;
+
+  cGrid = &(mesh->cGrid);
+  if(cGrid->freeCE == NULL)
+  {
+    cGrid->allCE = AlcBlockStackNew(elmBSz, sizeof(WlzCMeshCellElm3D),
+				    cGrid->allCE, NULL);
+    
+    if(cGrid->allCE == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      cElm = (WlzCMeshCellElm3D *)(cGrid->allCE->elements);
+      for(idE = 0; idE < elmBSz; ++idE)
+      {
+	cElm->next = cGrid->freeCE;
+	cGrid->freeCE = cElm;
+	++cElm;
+      }
+    }
+  }
+  if(cGrid->freeCE != NULL)
+  {
+    cElm = cGrid->freeCE;
+    cGrid->freeCE = cElm->next;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(cElm);
 }
 
 /*!
 * \return	void
 * \ingroup	WlzMesh
-* \brief	Removes a mesh node from the mesh's bucket grid.
+* \brief	Removes a mesh node from the mesh's cell grid.
 * \param	mesh			The mesh.
 * \param	nod			New node to add.
 */
@@ -840,26 +1168,26 @@ static void	WlzCMeshRemNodFromGrid2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
   WlzCMeshNod2D	*nod0,
   		*nod1;
   WlzIVertex2	idx;
-  WlzCMeshNod2D	**bktP;
+  WlzCMeshCell2D *cell;
 
-  /* Find the bucket in the grid. */
-  idx = WlzCMeshBucketIdxVtx2D(mesh, nod->pos);
-  bktP = *(mesh->bGrid.buckets + idx.vtY) + idx.vtX;
-  if(*bktP)
+  /* Find the cell in the grid. */
+  idx = WlzCMeshCellIdxVtx2D(mesh, nod->pos);
+  cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
+  /* Remove node from linked list of nodes in the cell. */
+  if(cell->nod != NULL)
   {
-    if(*bktP == nod)
+    if(cell->nod == nod)
     {
-      *bktP = nod->next;
+      cell->nod = nod->next;
     }
     else
     {
-      nod0 = *bktP;
-      while(nod0)
+      nod0 = cell->nod;
+      while((nod1 = nod0->next) != NULL)
       {
-	nod1 = nod0->next;
 	if(nod1 == nod)
 	{
-	  nod0->next = nod->next;
+	  nod0->next = nod1->next;
 	  break;
 	}
 	nod0 = nod1;
@@ -871,7 +1199,7 @@ static void	WlzCMeshRemNodFromGrid2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
 /*!
 * \return	void
 * \ingroup	WlzMesh
-* \brief	Removes a mesh node from the mesh's bucket grid.
+* \brief	Removes a mesh node from the mesh's cell grid.
 * \param	mesh			The mesh.
 * \param	nod			New node to add.
 */
@@ -880,31 +1208,113 @@ static void	WlzCMeshRemNodFromGrid3D(WlzCMesh3D *mesh, WlzCMeshNod3D *nod)
   WlzCMeshNod3D	*nod0,
   		*nod1;
   WlzIVertex3	idx;
-  WlzCMeshNod3D	**bktP;
+  WlzCMeshCell3D *cell;
 
-  /* Find the bucket in the grid. */
-  idx = WlzCMeshBucketIdxVtx3D(mesh, nod->pos);
-  bktP = *(*(mesh->bGrid.buckets + idx.vtZ) + idx.vtY) + idx.vtX;
-  if(*bktP)
+  /* Find the cell in the grid. */
+  idx = WlzCMeshCellIdxVtx3D(mesh, nod->pos);
+  cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+  /* Remove node from linked list of nodes in the cell. */
+  if(cell->nod != NULL)
   {
-    if(*bktP == nod)
+    if(cell->nod == nod)
     {
-      *bktP = nod->next;
+      cell->nod = nod->next;
     }
     else
     {
-      nod0 = *bktP;
-      while(nod0)
+      nod0 = cell->nod;
+      while((nod1 = nod0->next) != NULL)
       {
-	nod1 = nod0->next;
 	if(nod1 == nod)
 	{
-	  nod0->next = nod->next;
+	  nod0->next = nod1->next;
 	  break;
 	}
 	nod0 = nod1;
       }
     }
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Removes a 2D mesh element from the cell linked list.
+* \param	mesh			The mesh.
+* \param	elm			Elememnt to remove.
+*/
+static void	WlzCMeshRemElmFromGrid2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
+{
+  WlzCMeshCellElm2D *cElm0,
+  		*cElm1,
+		*cElm2;
+  WlzCMeshCell2D *cell;
+
+  cElm0 = elm->cElm;
+  while(cElm0 != NULL)
+  {
+    cell = cElm0->cell;
+    cElm1 = NULL;
+    cElm2 = cell->cElm;
+    while(cElm2 != NULL)
+    {
+      if(cElm2->elm == elm)
+      {
+	if(cElm1 == NULL)
+	{
+	  cell->cElm = cElm2->next;
+	}
+	else
+	{
+	  cElm1->next = cElm2->next;
+	}
+	cElm2->next = mesh->cGrid.freeCE; mesh->cGrid.freeCE = cElm2;
+        break;
+      }
+      cElm1 = cElm2;
+      cElm2 = cElm2->next;           /* Next element intersecting this cell. */
+    }
+    cElm0 = cElm0->nextCell;            /* Next cell intersected by element. */
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Removes a 3D mesh element from the cell linked list.
+* \param	mesh			The mesh.
+* \param	elm			Elememnt to remove.
+*/
+static void	WlzCMeshRemElmFromGrid3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm)
+{
+  WlzCMeshCellElm3D *cElm0,
+  		*cElm1,
+		*cElm2;
+  WlzCMeshCell3D *cell;
+
+  cElm0 = elm->cElm;
+  while(cElm0 != NULL)
+  {
+    cell = cElm0->cell;
+    cElm1 = NULL;
+    cElm2 = cell->cElm;
+    while(cElm2 != NULL)
+    {
+      if(cElm2->elm == elm)
+      {
+	if(cElm1 == NULL)
+	{
+	  cell->cElm = cElm2->next;
+	}
+	else
+	{
+	  cElm1->next = cElm2->next;
+	}
+	cElm2->next = mesh->cGrid.freeCE; mesh->cGrid.freeCE = cElm2;
+        break;
+      }
+      cElm1 = cElm2;
+      cElm2 = cElm2->next;           /* Next element intersecting this cell. */
+    }
+    cElm0 = cElm0->nextCell;            /* Next cell intersected by element. */
   }
 }
 
@@ -1022,6 +1432,10 @@ WlzCMeshElm2D 	*WlzCMeshNewElm2D(WlzCMesh2D *mesh,
   {
     errNum = WlzCMeshSetElm2D(mesh, nElm, nod0, nod1, nod2);
   }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshAddElmToGrid2D(mesh, nElm);
+  }
   if((errNum == WLZ_ERR_NONE) && mesh->res.elm.newEntCb)
   {
     errNum = WlzCMeshCallCallbacks(mesh, nElm, mesh->res.elm.newEntCb);
@@ -1072,6 +1486,10 @@ WlzCMeshElm3D 	*WlzCMeshNewElm3D(WlzCMesh3D *mesh,
   if(errNum == WLZ_ERR_NONE)
   {
     errNum = WlzCMeshSetElm3D(mesh, nElm, nod0, nod1, nod2, nod3);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshAddElmToGrid3D(mesh, nElm);
   }
   if((errNum == WLZ_ERR_NONE) && mesh->res.elm.newEntCb)
   {
@@ -1394,7 +1812,7 @@ static void	WlzCMeshNodAddEdu3D(WlzCMeshNod3D *nod, WlzCMeshEdgU3D *edu)
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
-* \brief	Free's the mesh, it's buckets, nodes and elements.
+* \brief	Free's the mesh, it's cells, nodes and elements.
 * \param	mesh			Mesh to free.
 */
 WlzErrorNum	WlzCMeshFree(WlzCMeshP mesh)
@@ -1426,7 +1844,7 @@ WlzErrorNum	WlzCMeshFree(WlzCMeshP mesh)
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
-* \brief	Free's the 2D mesh, it's buckets, nodes and elements.
+* \brief	Free's the 2D mesh, it's cells, nodes and elements.
 * \param	mesh			Mesh to free.
 */
 WlzErrorNum	WlzCMeshFree2D(WlzCMesh2D *mesh)
@@ -1441,7 +1859,8 @@ WlzErrorNum	WlzCMeshFree2D(WlzCMesh2D *mesh)
   {
     (void )AlcVectorFree(mesh->res.elm.vec);
     (void )AlcVectorFree(mesh->res.nod.vec);
-    (void )Alc2Free((void **)(mesh->bGrid.buckets));
+    (void )AlcBlockStackFree(mesh->cGrid.allCE);
+    (void )WlzCMeshFreeGridCells2D(mesh);
     AlcFree(mesh);
   }
   return(errNum);
@@ -1450,7 +1869,7 @@ WlzErrorNum	WlzCMeshFree2D(WlzCMesh2D *mesh)
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
-* \brief	Free's the 3D mesh, it's buckets, nodes and elements.
+* \brief	Free's the 3D mesh, it's cells, nodes and elements.
 * \param	mesh			Mesh to free.
 */
 WlzErrorNum	WlzCMeshFree3D(WlzCMesh3D *mesh)
@@ -1465,7 +1884,8 @@ WlzErrorNum	WlzCMeshFree3D(WlzCMesh3D *mesh)
   {
     (void )AlcVectorFree(mesh->res.elm.vec);
     (void )AlcVectorFree(mesh->res.nod.vec);
-    (void )Alc3Free((void ***)(mesh->bGrid.buckets));
+    (void )AlcBlockStackFree(mesh->cGrid.allCE);
+    (void )WlzCMeshFreeGridCells3D(mesh);
     AlcFree(mesh);
   }
   return(errNum);
@@ -1587,7 +2007,11 @@ WlzErrorNum	WlzCMeshDelElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
 	}
       }
     }
-    WlzCMeshElmFree2D(mesh, elm);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzCMeshRemElmFromGrid2D(mesh, elm);
+      WlzCMeshElmFree2D(mesh, elm);
+    }
   }
 #ifdef WLZ_CMESH_DEBUG_VERIFY_DELETE
   if(errNum == WLZ_ERR_NONE)
@@ -1649,7 +2073,14 @@ WlzErrorNum	WlzCMeshDelElm3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm)
       fce0->opp->opp = NULL;
     }
   }
+  WlzCMeshRemElmFromGrid3D(mesh, elm);
   WlzCMeshElmFree3D(mesh, elm);
+#ifdef WLZ_CMESH_DEBUG_VERIFY_DELETE
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshVerify3D(mesh, NULL, 1, stderr);
+  }
+#endif
   return(errNum);
 }
 
@@ -1777,8 +2208,8 @@ WlzErrorNum	WlzCMeshAffineTransformMesh2D(WlzCMesh2D *mesh,
     }
     /* Update the bounding box. */
     WlzCMeshUpdateBBox2D(mesh);
-    /* Compute a new bucket grid and reassign nodes to it. */
-    errNum = WlzCMeshReassignBuckets2D(mesh, nNod);
+    /* Compute a new cell grid and reassign nodes to it. */
+    errNum = WlzCMeshReassignGridCells2D(mesh, nNod);
     /* Recompute maximum edge length. */
     WlzCMeshUpdateMaxSqEdgLen2D(mesh);
   }
@@ -1825,8 +2256,8 @@ WlzErrorNum	WlzCMeshAffineTransformMesh3D(WlzCMesh3D *mesh,
     WlzCMeshUpdateBBox3D(mesh);
     /* Recompute maximum edge length. */
     WlzCMeshUpdateMaxSqEdgLen3D(mesh);
-    /* Compute a new bucket grid and reassign nodes to it. */
-    errNum = WlzCMeshReassignBuckets3D(mesh, nNod);
+    /* Compute a new cell grid and reassign nodes to it. */
+    errNum = WlzCMeshReassignGridCells3D(mesh, nNod);
   }
   return(errNum);
 }
@@ -1937,7 +2368,7 @@ WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
 #endif
     ++idE;
   }
-  /* Pass 1: Delete new elemets marked as boundary but outside the
+  /* Pass 1: Delete new elements marked as boundary but outside the
    * given object's domain. */
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2013,6 +2444,12 @@ WlzErrorNum 	WlzCMeshBoundConform3D(WlzCMesh3D *mesh,
    * domain of the given object. */
   idE = 0;
   idM = mesh->res.elm.maxEnt;
+#ifdef WLZ_CMESH_DEBUG_VERIFY_CONFORM
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshVerify3D(mesh, NULL, 1, stderr);
+  }
+#endif
   while((errNum == WLZ_ERR_NONE) && (idE < idM))
   {
     elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
@@ -2106,9 +2543,15 @@ WlzErrorNum 	WlzCMeshBoundConform3D(WlzCMesh3D *mesh,
 	  break;
       }
     }
+#ifdef WLZ_CMESH_DEBUG_VERIFY_CONFORM
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzCMeshVerify3D(mesh, NULL, 1, stderr);
+    }
+#endif
     ++idE;
   }
-  /* Pass 1: Delete new elemets marked as boundary but outside the
+  /* Pass 1: Delete new elements marked as boundary but outside the
    * given object's domain. */
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2144,6 +2587,12 @@ WlzErrorNum 	WlzCMeshBoundConform3D(WlzCMesh3D *mesh,
       ++idE;
     }
   }
+#ifdef WLZ_CMESH_DEBUG_VERIFY_CONFORM
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzCMeshVerify3D(mesh, NULL, 1, stderr);
+    }
+#endif /* WLZ_CMESH_DEBUG_VERIFY_CONFORM */
   return(errNum);
 }
 
@@ -2171,12 +2620,10 @@ static WlzCMeshNod2D *WlzCMeshComputeBoundNod2D(WlzCMesh2D *mesh,
 					WlzErrorNum *dstErr)
 {
   double	tolSq;
-  WlzIVertex2	dumGrdPos;
   WlzDVertex2	pos;
   WlzDVertex2   pos0,
   		pos1;
-  WlzCMeshNod2D *pNod,
-  		*nod = NULL;
+  WlzCMeshNod2D *nod = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   pos0 = nod0->pos;
@@ -2193,7 +2640,7 @@ static WlzCMeshNod2D *WlzCMeshComputeBoundNod2D(WlzCMesh2D *mesh,
   }
   else
   {
-    if(WlzCMeshLocateNod2D(mesh, pos, &dumGrdPos, &pNod, &nod) == 0)
+    if(WlzCMeshLocateNod2D(mesh, pos, &nod) == 0)
     {
       nod = WlzCMeshNewNod2D(mesh, pos, &errNum); 
     }
@@ -2538,88 +2985,101 @@ static WlzErrorNum WlzCMeshBoundConformElm3D1(WlzCMesh3D *mesh,
       break;
     }
   }
-  /* Create (or find existing) nodes at centres of quadrilateral faces:
-   * Nodes 7 - 9. */
+  /* Check for nod[0] on the boundary rather than outside. If it then don't
+   * do anything except for clear the outside flag. */
   if(errNum == WLZ_ERR_NONE)
   {
-    for(idE = 0; idE < 3; ++idE)
+    if((nod[0] == nod[4]) && (nod[0] == nod[5]) && (nod[0] == nod[6]))
     {
-      pos[0] = nod[quadFceNodTbl[idE][0]]->pos;
-      pos[1] = nod[quadFceNodTbl[idE][1]]->pos;
-      pos[2] = nod[quadFceNodTbl[idE][2]]->pos;
-      pos[3] = nod[quadFceNodTbl[idE][3]]->pos;
-      pos[idE + 7].vtX = (pos[0].vtX + pos[1].vtX +
-                          pos[2].vtX + pos[3].vtX) / 4.0;
-      pos[idE + 7].vtY = (pos[0].vtY + pos[1].vtY +
-                          pos[2].vtY + pos[3].vtY) / 4.0;
-      pos[idE + 7].vtZ = (pos[0].vtZ + pos[1].vtZ +
-                          pos[2].vtZ + pos[3].vtZ) / 4.0;
-      if(WlzCMeshLocateNod3D(mesh, pos[idE + 7],
-                             &dumGrdPos, eNod + 1, eNod + 0) == 0)
+      elm->flags &= ~(WLZ_CMESH_ELM_FLAG_OUTSIDE);
+    }
+    else
+    {
+      /* Create (or find existing) nodes at centres of quadrilateral faces:
+       * Nodes 7 - 9. */
+      if(errNum == WLZ_ERR_NONE)
       {
-        eNod[0] = WlzCMeshNewNod3D(mesh, pos[idE + 7], &errNum); 
-	if(errNum != WLZ_ERR_NONE)
+	for(idE = 0; idE < 3; ++idE)
 	{
-	  break;
+	  pos[0] = nod[quadFceNodTbl[idE][0]]->pos;
+	  pos[1] = nod[quadFceNodTbl[idE][1]]->pos;
+	  pos[2] = nod[quadFceNodTbl[idE][2]]->pos;
+	  pos[3] = nod[quadFceNodTbl[idE][3]]->pos;
+	  pos[idE + 7].vtX = (pos[0].vtX + pos[1].vtX +
+			      pos[2].vtX + pos[3].vtX) / 4.0;
+	  pos[idE + 7].vtY = (pos[0].vtY + pos[1].vtY +
+			      pos[2].vtY + pos[3].vtY) / 4.0;
+	  pos[idE + 7].vtZ = (pos[0].vtZ + pos[1].vtZ +
+			      pos[2].vtZ + pos[3].vtZ) / 4.0;
+	  if(WlzCMeshLocateNod3D(mesh, pos[idE + 7],
+				 &dumGrdPos, eNod + 1, eNod + 0) == 0)
+	  {
+	    eNod[0] = WlzCMeshNewNod3D(mesh, pos[idE + 7], &errNum); 
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
+	  nod[idE + 7] = eNod[0];
 	}
       }
-      nod[idE + 7] = eNod[0];
-    }
-  }
-  /* Create node at centre of truncated tetrahedron: Node 10. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    pos[10].vtX = (pos[7].vtX + pos[8].vtX + pos[9].vtX) / 3.0;
-    pos[10].vtY = (pos[7].vtY + pos[8].vtY + pos[9].vtY) / 3.0;
-    pos[10].vtZ = (pos[7].vtZ + pos[8].vtZ + pos[9].vtZ) / 3.0;
-    nod[10] = WlzCMeshNewNod3D(mesh, pos[10], &errNum);
-  }
-  /* Create new elements and then delete the given one. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    for(idE = 0; idE < 14; ++idE)
-    {
-      eNod[0] = nod[elmNodTbl[idE][0]];
-      eNod[1] = nod[elmNodTbl[idE][1]];
-      eNod[2] = nod[elmNodTbl[idE][2]];
-      eNod[3] = nod[elmNodTbl[idE][3]];
-      vol = WlzGeomTetraSnVolume6(eNod[0]->pos, eNod[1]->pos,
-				  eNod[2]->pos, eNod[3]->pos);
-      if(vol * vol > WLZ_MESH_TOLERANCE_SQ)
+      /* Create node at centre of truncated tetrahedron: Node 10. */
+      if(errNum == WLZ_ERR_NONE)
       {
-	if(vol < 0)
+	pos[10].vtX = (pos[7].vtX + pos[8].vtX + pos[9].vtX) / 3.0;
+	pos[10].vtY = (pos[7].vtY + pos[8].vtY + pos[9].vtY) / 3.0;
+	pos[10].vtZ = (pos[7].vtZ + pos[8].vtZ + pos[9].vtZ) / 3.0;
+	nod[10] = WlzCMeshNewNod3D(mesh, pos[10], &errNum);
+      }
+      /* Delete the existing element. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	(void )WlzCMeshDelElm3D(mesh, elm);
+      }
+      /* Create new elements and then delete the given one. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	for(idE = 0; idE < 14; ++idE)
 	{
-	  (void )WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[3], eNod[2],
-				  &errNum);
-	}
-	else
-	{
-	  (void )WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[2], eNod[3],
-				  &errNum);
-	}
-	if(errNum != WLZ_ERR_NONE)
-	{
-	  break;
-	}
-	else
-	{
-	  elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+	  eNod[0] = nod[elmNodTbl[idE][0]];
+	  eNod[1] = nod[elmNodTbl[idE][1]];
+	  eNod[2] = nod[elmNodTbl[idE][2]];
+	  eNod[3] = nod[elmNodTbl[idE][3]];
+	  vol = WlzGeomTetraSnVolume6(eNod[0]->pos, eNod[1]->pos,
+				      eNod[2]->pos, eNod[3]->pos);
+	  if(vol * vol > WLZ_MESH_TOLERANCE_SQ)
+	  {
+	    if(vol < 0)
+	    {
+	      elm = WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[3], eNod[2],
+				     &errNum);
+	    }
+	    else
+	    {
+	      elm = WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[2], eNod[3],
+				     &errNum);
+	    }
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	    else
+	    {
+	      elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+	    }
+	  }
 	}
       }
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      (void )WlzCMeshDelElm3D(mesh, elm);
-    }
-  }
-  /* Delete any unused nodes which may result from zero volume elements. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    for(idE = 0; idE <= 10; ++idE)
-    {
-      if(nod[idE]->edu == NULL)
+      /* Delete any unused nodes which may result from zero volume elements. */
+      if(errNum == WLZ_ERR_NONE)
       {
-        (void )WlzCMeshDelNod3D(mesh, nod[idE]);
+	for(idE = 0; idE <= 10; ++idE)
+	{
+	  if(nod[idE]->edu == NULL)
+	  {
+	    (void )WlzCMeshDelNod3D(mesh, nod[idE]);
+	  }
+	}
       }
     }
   }
@@ -2665,22 +3125,21 @@ static WlzErrorNum WlzCMeshBoundConformElm3D2(WlzCMesh3D *mesh,
   WlzDVertex3	pos[12];
   WlzCMeshNod3D	*nod[12];
   WlzCMeshNod3D	*eNod[4];
+  WlzCMeshConformAction action = WLZ_CMESH_CONFORM_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	edgNodTbl[4][2] =
-  {
-    {0, 2},
-    {0, 3},
-    {1, 2},
-    {1, 3}
+  { {0, 2}, {0, 3}, {1, 2}, {1, 3}
   };
   const int quadFceNodTbl[3][4] =
   {
-    {2, 3, 5, 7},
+    {2, 3, 5, 4},
     {4, 5, 7, 6},
     {2, 3, 7, 6}
   };
   const int	elmNodTbl[14][4] =
   {
+    {2, 4,  6, 11},
+    {3, 5,  7, 11},
     {2, 3,  8, 11},
     {3, 5,  8, 11},
     {5, 4,  8, 11},
@@ -2692,9 +3151,7 @@ static WlzErrorNum WlzCMeshBoundConformElm3D2(WlzCMesh3D *mesh,
     {2, 3, 10, 11},
     {3, 7, 10, 11},
     {7, 6, 10, 11},
-    {6, 2, 10, 11},
-    {2, 4,  6, 11},
-    {3, 5,  7, 11}
+    {6, 2, 10, 11}
   };
 
   /* Nodes 0 - 3 are the nodes of the given element. */
@@ -2716,88 +3173,126 @@ static WlzErrorNum WlzCMeshBoundConformElm3D2(WlzCMesh3D *mesh,
       break;
     }
   }
-  /* Create (or find existing) nodes at centres of quadrilateral faces:
-   * Nodes 8 - 10.*/
+  /* Determine the action required. */
   if(errNum == WLZ_ERR_NONE)
   {
-    for(idE = 0; idE < 3; ++idE)
+    if((nod[4] == nod[edgNodTbl[0][1]]) &&
+       (nod[5] == nod[edgNodTbl[1][1]]) &&
+       (nod[6] == nod[edgNodTbl[2][1]]) &&
+       (nod[7] == nod[edgNodTbl[3][1]]))
     {
-      pos[0] = nod[quadFceNodTbl[idE][0]]->pos;
-      pos[1] = nod[quadFceNodTbl[idE][1]]->pos;
-      pos[2] = nod[quadFceNodTbl[idE][2]]->pos;
-      pos[3] = nod[quadFceNodTbl[idE][3]]->pos;
-      pos[idE + 8].vtX = (pos[0].vtX + pos[1].vtX +
-                          pos[2].vtX + pos[3].vtX) / 4.0;
-      pos[idE + 8].vtY = (pos[0].vtY + pos[1].vtY +
-                          pos[2].vtY + pos[3].vtY) / 4.0;
-      pos[idE + 8].vtZ = (pos[0].vtZ + pos[1].vtZ +
-                          pos[2].vtZ + pos[3].vtZ) / 4.0;
-      if(WlzCMeshLocateNod3D(mesh, pos[idE + 8],
-                             &dumGrdPos, eNod + 1, eNod + 0) == 0)
-      {
-        eNod[0] = WlzCMeshNewNod3D(mesh, pos[idE + 8], &errNum); 
-	if(errNum != WLZ_ERR_NONE)
-	{
-	  break;
-	}
-      }
-      nod[idE + 8] = eNod[0];
+      action = WLZ_CMESH_CONFORM_DELETE;
+    }
+    else if((nod[4] == nod[edgNodTbl[0][0]]) &&
+            (nod[5] == nod[edgNodTbl[1][0]]) &&
+            (nod[6] == nod[edgNodTbl[2][0]]) &&
+	    (nod[7] == nod[edgNodTbl[3][0]]))
+    {
+      action = WLZ_CMESH_CONFORM_NONE;
+    }
+    else
+    {
+      action = WLZ_CMESH_CONFORM_MODIFY;
     }
   }
-  /* Create node at centre of truncated tetrahedron: Node 11. */
-  if(errNum == WLZ_ERR_NONE)
+  if(action == WLZ_CMESH_CONFORM_MODIFY)
   {
-    pos[11].vtX = (pos[8].vtX + pos[9].vtX + pos[10].vtX) / 3.0;
-    pos[11].vtY = (pos[8].vtY + pos[9].vtY + pos[10].vtY) / 3.0;
-    pos[11].vtZ = (pos[8].vtZ + pos[9].vtZ + pos[10].vtZ) / 3.0;
-    nod[11] = WlzCMeshNewNod3D(mesh, pos[11], &errNum);
-  }
-  /* Create new elements and then delete the given one. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    for(idE = 0; idE < 14; ++idE)
+    /* Create (or find existing) nodes at centres of quadrilateral faces:
+     * Nodes 8 - 10.*/
+    if(errNum == WLZ_ERR_NONE)
     {
-      eNod[0] = nod[elmNodTbl[idE][0]];
-      eNod[1] = nod[elmNodTbl[idE][1]];
-      eNod[2] = nod[elmNodTbl[idE][2]];
-      eNod[3] = nod[elmNodTbl[idE][3]];
-      vol = WlzGeomTetraSnVolume6(eNod[0]->pos, eNod[1]->pos,
-				  eNod[2]->pos, eNod[3]->pos);
-      if(vol * vol > WLZ_MESH_TOLERANCE_SQ)
+      for(idE = 0; idE < 3; ++idE)
       {
-	if(vol < 0)
+	pos[0] = nod[quadFceNodTbl[idE][0]]->pos;
+	pos[1] = nod[quadFceNodTbl[idE][1]]->pos;
+	pos[2] = nod[quadFceNodTbl[idE][2]]->pos;
+	pos[3] = nod[quadFceNodTbl[idE][3]]->pos;
+	pos[idE + 8].vtX = (pos[0].vtX + pos[1].vtX +
+			    pos[2].vtX + pos[3].vtX) / 4.0;
+	pos[idE + 8].vtY = (pos[0].vtY + pos[1].vtY +
+			    pos[2].vtY + pos[3].vtY) / 4.0;
+	pos[idE + 8].vtZ = (pos[0].vtZ + pos[1].vtZ +
+			    pos[2].vtZ + pos[3].vtZ) / 4.0;
+	if(WlzCMeshLocateNod3D(mesh, pos[idE + 8],
+			       &dumGrdPos, eNod + 1, eNod + 0) == 0)
 	{
-	  (void )WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[3], eNod[2],
-				  &errNum);
+	  eNod[0] = WlzCMeshNewNod3D(mesh, pos[idE + 8], &errNum); 
+	  if(errNum != WLZ_ERR_NONE)
+	  {
+	    break;
+	  }
 	}
-	else
+	nod[idE + 8] = eNod[0];
+      }
+    }
+    /* Create node at centre of truncated tetrahedron: Node 11. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      pos[11].vtX = (pos[8].vtX + pos[9].vtX + pos[10].vtX) / 3.0;
+      pos[11].vtY = (pos[8].vtY + pos[9].vtY + pos[10].vtY) / 3.0;
+      pos[11].vtZ = (pos[8].vtZ + pos[9].vtZ + pos[10].vtZ) / 3.0;
+      nod[11] = WlzCMeshNewNod3D(mesh, pos[11], &errNum);
+    }
+    /* Delete the existing element. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzCMeshDelElm3D(mesh, elm);
+    }
+    /* Create new elements and then delete the given one. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      for(idE = 0; idE < 14; ++idE)
+      {
+	eNod[0] = nod[elmNodTbl[idE][0]];
+	eNod[1] = nod[elmNodTbl[idE][1]];
+	eNod[2] = nod[elmNodTbl[idE][2]];
+	eNod[3] = nod[elmNodTbl[idE][3]];
+	vol = WlzGeomTetraSnVolume6(eNod[0]->pos, eNod[1]->pos,
+				    eNod[2]->pos, eNod[3]->pos);
+	if(vol * vol > WLZ_MESH_TOLERANCE_SQ)
 	{
-	  (void )WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[2], eNod[3],
-				  &errNum);
-	}
-	if(errNum != WLZ_ERR_NONE)
-	{
-	  break;
-	}
-	else
-	{
-	  elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+	  if(vol < 0)
+	  {
+	    elm = WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[3], eNod[2],
+				   &errNum);
+	  }
+	  else
+	  {
+	    elm = WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[2], eNod[3],
+				   &errNum);
+	  }
+	  if(errNum != WLZ_ERR_NONE)
+	  {
+	    break;
+	  }
+	  else
+	  {
+	    elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+	  }
 	}
       }
     }
+  }
+  else if(action == WLZ_CMESH_CONFORM_DELETE)
+  {
     if(errNum == WLZ_ERR_NONE)
     {
       (void )WlzCMeshDelElm3D(mesh, elm);
     }
   }
-  /* Delete any unused nodes which may result from zero volume elements. */
   if(errNum == WLZ_ERR_NONE)
   {
-    for(idE = 0; idE <= 11; ++idE)
+    if((action == WLZ_CMESH_CONFORM_MODIFY) ||
+       (action == WLZ_CMESH_CONFORM_DELETE))
     {
-      if(nod[idE]->edu == NULL)
+      /* Delete any unused nodes. */
+      for(idE = 0; idE <= 11; ++idE)
       {
-        (void )WlzCMeshDelNod3D(mesh, nod[idE]);
+	if((nod[idE] != NULL) && (nod[idE]->idx >= 0) &&
+	   (nod[idE]->edu == NULL))
+	{
+	  (void )WlzCMeshDelNod3D(mesh, nod[idE]);
+	}
       }
     }
   }
@@ -2839,6 +3334,7 @@ static WlzErrorNum WlzCMeshBoundConformElm3D3(WlzCMesh3D *mesh,
   int		idE;
   double	vol;
   WlzCMeshNod3D	*nod[8];
+  WlzCMeshConformAction action = WLZ_CMESH_CONFORM_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   nod[0] = *(nodBuf + nIdx0);
@@ -2856,29 +3352,70 @@ static WlzErrorNum WlzCMeshBoundConformElm3D3(WlzCMesh3D *mesh,
       break;
     }
   }
+  /* Determine the action required. */
   if(errNum == WLZ_ERR_NONE)
   {
-    vol = WlzGeomTetraSnVolume6(nod[3]->pos, nod[4]->pos,
-				nod[5]->pos, nod[6]->pos);
-    if(vol * vol > WLZ_MESH_TOLERANCE_SQ)
+    if((nod[4] == nod[3]) ||
+       (nod[5] == nod[3]) ||
+       (nod[6] == nod[3]) ||
+       (nod[7] == nod[3]))
     {
-      /* Create new element. */
-      if(vol < 0)
-      {
-	(void )WlzCMeshNewElm3D(mesh, nod[3], nod[4], nod[6], nod[5],
-				&errNum);
-      }
-      else
-      {
-	(void )WlzCMeshNewElm3D(mesh, nod[3], nod[4], nod[5], nod[6],
-				&errNum);
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
-      }
+      action = WLZ_CMESH_CONFORM_DELETE;
+    }
+    else if((nod[4] == nod[0]) &&
+            (nod[5] == nod[1]) &&
+            (nod[6] == nod[2]) &&
+	    (nod[7] == nod[3]))
+    {
+      action = WLZ_CMESH_CONFORM_NONE;
     }
     else
+    {
+      action = WLZ_CMESH_CONFORM_MODIFY;
+    }
+  }
+  if(action == WLZ_CMESH_CONFORM_MODIFY)
+  {
+    if(errNum == WLZ_ERR_NONE)
+    {
+      vol = WlzGeomTetraSnVolume6(nod[3]->pos, nod[4]->pos,
+				  nod[5]->pos, nod[6]->pos);
+      if(vol * vol > WLZ_MESH_TOLERANCE_SQ)
+      {
+	/* Delete current element. */
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  (void )WlzCMeshDelElm3D(mesh, elm);
+	}
+	/* Create new element. */
+	if(vol < 0)
+	{
+	  elm = WlzCMeshNewElm3D(mesh, nod[3], nod[4], nod[6], nod[5],
+				 &errNum);
+	}
+	else
+	{
+	  elm = WlzCMeshNewElm3D(mesh, nod[3], nod[4], nod[5], nod[6],
+				 &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
+	}
+      }
+    }
+  }
+  else if(action == WLZ_CMESH_CONFORM_DELETE)
+  {
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzCMeshDelElm3D(mesh, elm);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((action == WLZ_CMESH_CONFORM_MODIFY) ||
+       (action == WLZ_CMESH_CONFORM_DELETE))
     {
       /* Delete the unused new nodes. */
       for(idE = 0; idE < 8; ++idE)
@@ -2889,7 +3426,6 @@ static WlzErrorNum WlzCMeshBoundConformElm3D3(WlzCMesh3D *mesh,
 	}
       }
     }
-    (void )WlzCMeshDelElm3D(mesh, elm);
   }
   return(errNum);
 }
@@ -2991,48 +3527,186 @@ double 		WlzCMeshElmMinEdgLnSq3D(WlzCMeshElm3D *elm)
 }
 
 /*!
+* \ingroup	WlzMesh
+* \brief	Free's the grid cells of a 2D mesh.
+* \param	mesh			Given 2D mesh.
+*/
+static void	  WlzCMeshFreeGridCells2D(WlzCMesh2D *mesh)
+{
+  if((mesh != NULL) && (mesh->cGrid.cells != NULL))
+  {
+    AlcFree(*(mesh->cGrid.cells));
+    AlcFree(mesh->cGrid.cells);
+    mesh->cGrid.cells = NULL;
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Free's the grid cells of a 3D mesh.
+* \param	mesh			Given 3D mesh.
+*/
+static void	  WlzCMeshFreeGridCells3D(WlzCMesh3D *mesh)
+{
+  if((mesh != NULL) && (mesh->cGrid.cells != NULL))
+  {
+    AlcFree(**(mesh->cGrid.cells));
+    AlcFree(*(mesh->cGrid.cells));
+    AlcFree(mesh->cGrid.cells);
+    mesh->cGrid.cells = NULL;
+  }
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Allocates the grid cells of a 2D mesh.
+* \param	mesh			Given 2D mesh.
+*/
+static WlzErrorNum WlzCMeshAllocGridCells2D(WlzCMesh2D *mesh)
+{
+  int		idy;
+  WlzCMeshCell2D *cellP;
+  WlzCMeshCellGrid2D *cGrid;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    cGrid = &(mesh->cGrid);
+    if(((cellP = (WlzCMeshCell2D *)
+                 AlcCalloc(cGrid->nCells.vtY * cGrid->nCells.vtX,
+			   sizeof(WlzCMeshCell2D))) == NULL) ||
+       ((cGrid->cells = (WlzCMeshCell2D **)
+			AlcMalloc(cGrid->nCells.vtY *
+				  sizeof(WlzCMeshCell2D *))) == NULL))
+    {
+      AlcFree(cellP);
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idy = 0; idy < cGrid->nCells.vtY; ++idy)
+    {
+      *(cGrid->cells + idy) = cellP;
+      cellP += cGrid->nCells.vtX;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Allocates the grid cells of a 3D mesh.
+* \param	mesh			Given 3D mesh.
+*/
+static WlzErrorNum WlzCMeshAllocGridCells3D(WlzCMesh3D *mesh)
+{
+  int		idy,
+  		idz;
+  WlzCMeshCell3D *cellP;
+  WlzCMeshCell3D **cellPP;
+  WlzCMeshCellGrid3D *cGrid;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    cGrid = &(mesh->cGrid);
+    if(((cellP = (WlzCMeshCell3D *)
+                 AlcCalloc(cGrid->nCells.vtZ * cGrid->nCells.vtY *
+		           cGrid->nCells.vtX,
+			   sizeof(WlzCMeshCell3D))) == NULL) ||
+       ((cellPP = (WlzCMeshCell3D **)
+			AlcMalloc(cGrid->nCells.vtZ * cGrid->nCells.vtY *
+				  sizeof(WlzCMeshCell3D *))) == NULL) ||
+       ((cGrid->cells = (WlzCMeshCell3D ***)
+			AlcMalloc(cGrid->nCells.vtZ *
+				  sizeof(WlzCMeshCell3D **))) == NULL))
+    {
+      AlcFree(cellP);
+      AlcFree(cellPP);
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idz = 0; idz < cGrid->nCells.vtZ; ++idz)
+    {
+      *(cGrid->cells + idz) = cellPP;
+      for(idy = 0; idy < cGrid->nCells.vtY; ++idy)
+      {
+	*(*(cGrid->cells + idz) + idy) = cellP;
+	cellP += cGrid->nCells.vtX;
+      }
+      cellPP += cGrid->nCells.vtY;
+    }
+  }
+  return(errNum);
+}
+
+/*!
 * \return	Wlz error code.
 * \ingroup	WlzMesh
-* \brief	Allocates a new bucket grid and then reassigns the nodes
-*		to the buckets.
+* \brief	Allocates a new cell grid and then reassigns the nodes
+*		to the cells.
 * \param	mesh			The mesh.
 * \param	newNumNod		New expected number of nodes.
 */
-WlzErrorNum 	WlzCMeshReassignBuckets2D(WlzCMesh2D *mesh, int newNumNod)
+WlzErrorNum 	WlzCMeshReassignGridCells2D(WlzCMesh2D *mesh, int newNumNod)
 {
-  int		idN;
-  WlzIVertex2	bSz;
+  int		idE,
+  		idN;
+  WlzDVertex2	mSz;
   WlzCMeshNod2D	*nod;
+  WlzCMeshElm2D	*elm;
+  AlcBlockStack *bStack;
+  WlzCMeshCellGrid2D *cGrid;
+  WlzCMeshCellElm2D *cElm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	nodPerBucket = 2.0; /* TODO This is an efficiency tuning
-  				       parameter which is to be determined. */
+  const int	nodBSz = 1024; 	  /* Minimum number of nodes for which to
+                                     allocate space. */
+  const double	nodPerCell = 2.0; /* Number of nodes per cell on average. */
 
   if(newNumNod <= 0)
   {
-    newNumNod = (mesh->res.nod.numEnt < 1024)?
-                1024: mesh->res.nod.numEnt;
+    newNumNod = (mesh->res.nod.numEnt < nodBSz)?
+                nodBSz: mesh->res.nod.numEnt;
   }
   /* This assumes that the mesh nodes will be evenly distributed over
    * the LBT domain (which they're not). */
-  bSz.vtX = (int )ceil(mesh->bBox.xMax - mesh->bBox.xMin + 1.0);
-  bSz.vtY = (int )ceil(mesh->bBox.yMax - mesh->bBox.yMin + 1.0);
-  mesh->bGrid.bSz.vtX = WlzCMeshCompGridBSz2D(newNumNod, nodPerBucket,
-                                              bSz.vtX, bSz.vtY);
-  mesh->bGrid.bSz.vtY = WlzCMeshCompGridBSz2D(newNumNod, nodPerBucket,
-                                              bSz.vtY, bSz.vtX);
-  mesh->bGrid.nB.vtX = (int )ceil(bSz.vtX / mesh->bGrid.bSz.vtX) + 1;
-  mesh->bGrid.nB.vtY = (int )ceil(bSz.vtY / mesh->bGrid.bSz.vtY) + 1;
-  /* Reallocate the grid buckets. */
-  Alc2Free((void **)(mesh->bGrid.buckets));
-  /* Allowing one more bucket in each dimension removes the need for lots of
-   * boundary checks and so speeds node location significantly. */
-  if(AlcPtr2Calloc((void ****)&(mesh->bGrid.buckets),
-		    mesh->bGrid.nB.vtY + 1,
-		    mesh->bGrid.nB.vtX + 1) != ALC_ER_NONE)
+  mSz.vtX = ceil(mesh->bBox.xMax - mesh->bBox.xMin + 1.0);
+  mSz.vtY = ceil(mesh->bBox.yMax - mesh->bBox.yMin + 1.0);
+  cGrid = &(mesh->cGrid);
+  cGrid->cellSz = WlzCMeshCompGridBSz2D(newNumNod, nodPerCell, mSz);
+  cGrid->nCells.vtX = (int )ceil(mSz.vtX / cGrid->cellSz) + 1;
+  cGrid->nCells.vtY = (int )ceil(mSz.vtY / cGrid->cellSz) + 1;
+  /* Reclaim all cell elements. */
+  cGrid->freeCE = NULL;
+  bStack = cGrid->allCE;
+  while(bStack != NULL)
   {
-    errNum = WLZ_ERR_MEM_ALLOC;
+    cElm = (WlzCMeshCellElm2D *)(bStack->elements);
+    for(idE = 0; idE < bStack->maxElm; ++idE)
+    {
+      cElm->next = cGrid->freeCE;
+      cGrid->freeCE = cElm;
+      ++cElm;
+    }
+    bStack = bStack->next;
   }
-  /* Add all the nodes to the grid buckets. */
+  /* Reallocate the grid cells. */
+  WlzCMeshFreeGridCells2D(mesh);
+  errNum = WlzCMeshAllocGridCells2D(mesh);
+  /* Add all nodes to grid of cells. */
   if(errNum == WLZ_ERR_NONE)
   {
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
@@ -3040,8 +3714,22 @@ WlzErrorNum 	WlzCMeshReassignBuckets2D(WlzCMesh2D *mesh, int newNumNod)
       nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
       if(nod->idx >= 0)
       {
-	nod->next = NULL;
 	WlzCMeshAddNodToGrid2D(mesh, nod);
+      }
+    }
+  }
+  /* Add all elements to grid of cells. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	if((errNum = WlzCMeshAddElmToGrid2D(mesh, elm)) != WLZ_ERR_NONE)
+	{
+	  break;
+	}
       }
     }
   }
@@ -3051,54 +3739,62 @@ WlzErrorNum 	WlzCMeshReassignBuckets2D(WlzCMesh2D *mesh, int newNumNod)
 /*!
 * \return	Wlz error code.
 * \ingroup	WlzMesh
-* \brief	Allocates a new bucket grid and then reassigns the nodes
-*		to the buckets.
+* \brief	Allocates a new cell grid and then reassigns the nodes
+*		and elements to the cells.
 * \param	mesh			The mesh.
 * \param	newNumNod		New expected number of nodes.
 *					If zero the current number of nodes
 *					or a small number (1024) will be used
 *					(which ever is the greater).
 */
-WlzErrorNum 	WlzCMeshReassignBuckets3D(WlzCMesh3D *mesh, int newNumNod)
+WlzErrorNum 	WlzCMeshReassignGridCells3D(WlzCMesh3D *mesh, int newNumNod)
 {
-  int		idN;
-  WlzIVertex3	bSz;
+  int		idE,
+  		idN;
+  WlzDVertex3	mSz;
   WlzCMeshNod3D	*nod;
+  WlzCMeshElm3D	*elm;
+  AlcBlockStack *bStack;
+  WlzCMeshCellGrid3D *cGrid;
+  WlzCMeshCellElm3D *cElm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	nodPerBucket = 2.0; /* This is an efficiency tuning
-  				       parameter which is to be determined. */
+  const int	nodBSz = 1024; 	  /* Minimum number of nodes for which to
+                                     allocate space. */
+  const double	nodPerCell = 1.0; /* Number of nodes per cell on average. */
 
   if(newNumNod <= 0)
   {
-    newNumNod = (mesh->res.nod.numEnt < 1024)?
-                1024: mesh->res.nod.numEnt;
+    newNumNod = (mesh->res.nod.numEnt < nodBSz)?
+                nodBSz: mesh->res.nod.numEnt;
   }
   /* This assumes that the mesh nodes will be evenly distributed over
    * the LBT domain (which they're not). */
-  bSz.vtX = (int )ceil(mesh->bBox.xMax - mesh->bBox.xMin + 1.0);
-  bSz.vtY = (int )ceil(mesh->bBox.yMax - mesh->bBox.yMin + 1.0);
-  bSz.vtZ = (int )ceil(mesh->bBox.zMax - mesh->bBox.zMin + 1.0);
-  mesh->bGrid.bSz.vtX = WlzCMeshCompGridBSz3D(newNumNod, nodPerBucket,
-  					      bSz.vtX, bSz.vtY, bSz.vtZ);
-  mesh->bGrid.bSz.vtY = WlzCMeshCompGridBSz3D(newNumNod, nodPerBucket,
-                                              bSz.vtY, bSz.vtZ, bSz.vtX);
-  mesh->bGrid.bSz.vtZ = WlzCMeshCompGridBSz3D(newNumNod, nodPerBucket,
-                                              bSz.vtZ, bSz.vtX, bSz.vtY);
-  mesh->bGrid.nB.vtX = (int )ceil(bSz.vtX / mesh->bGrid.bSz.vtX) + 1;
-  mesh->bGrid.nB.vtY = (int )ceil(bSz.vtY / mesh->bGrid.bSz.vtY) + 1;
-  mesh->bGrid.nB.vtZ = (int )ceil(bSz.vtZ / mesh->bGrid.bSz.vtZ) + 1;
-  /* Reallocate the grid buckets. */
-  Alc3Free((void ***)(mesh->bGrid.buckets));
-  /* Allowing one more bucket in each dimension removes the need for lots of
-   * boundary checks and so speeds node location significantly. */
-  if(AlcPtr3Calloc((void *****)&(mesh->bGrid.buckets),
-		    mesh->bGrid.nB.vtZ + 1,
-		    mesh->bGrid.nB.vtY + 1,
-		    mesh->bGrid.nB.vtX + 1) != ALC_ER_NONE)
+  mSz.vtX = ceil(mesh->bBox.xMax - mesh->bBox.xMin + 1.0);
+  mSz.vtY = ceil(mesh->bBox.yMax - mesh->bBox.yMin + 1.0);
+  mSz.vtZ = ceil(mesh->bBox.zMax - mesh->bBox.zMin + 1.0);
+  cGrid = &(mesh->cGrid);
+  cGrid->cellSz = WlzCMeshCompGridBSz3D(newNumNod, nodPerCell, mSz);
+  cGrid->nCells.vtX = (int )ceil(mSz.vtX / cGrid->cellSz) + 1;
+  cGrid->nCells.vtY = (int )ceil(mSz.vtY / cGrid->cellSz) + 1;
+  cGrid->nCells.vtZ = (int )ceil(mSz.vtZ / cGrid->cellSz) + 1;
+  /* Reclaim all cell elements. */
+  cGrid->freeCE = NULL;
+  bStack = cGrid->allCE;
+  while(bStack != NULL)
   {
-    errNum = WLZ_ERR_MEM_ALLOC;
+    cElm = (WlzCMeshCellElm3D *)(bStack->elements);
+    for(idE = 0; idE < bStack->maxElm; ++idE)
+    {
+      cElm->next = cGrid->freeCE;
+      cGrid->freeCE = cElm;
+      ++cElm;
+    }
+    bStack = bStack->next;
   }
-  /* Add all the nodes to the grid buckets. */
+  /* Reallocate the grid cells. */
+  WlzCMeshFreeGridCells3D(mesh);
+  errNum = WlzCMeshAllocGridCells3D(mesh);
+  /* Add all nodes to grid of cells. */
   if(errNum == WLZ_ERR_NONE)
   {
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
@@ -3106,8 +3802,22 @@ WlzErrorNum 	WlzCMeshReassignBuckets3D(WlzCMesh3D *mesh, int newNumNod)
       nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
       if(nod->idx >= 0)
       {
-	nod->next = NULL;
 	WlzCMeshAddNodToGrid3D(mesh, nod);
+      }
+    }
+  }
+  /* Add all elements to grid of cells. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	if((errNum = WlzCMeshAddElmToGrid3D(mesh, elm)) != WLZ_ERR_NONE)
+	{
+	  break;
+	}
       }
     }
   }
@@ -3115,92 +3825,82 @@ WlzErrorNum 	WlzCMeshReassignBuckets3D(WlzCMesh3D *mesh, int newNumNod)
 }
 
 /*!
-* \return	Bucket size.
-*		dimension.
+* \return	Cell size.
 * \ingroup	WlzMesh
-* \brief	Computes the bucket size for the 2D mesh node location grid.
+* \brief	Computes the cell size for the 2D mesh node location grid.
 *		The function assumes that nodes are evenly distributed over
 *		the bounding box of the mesh and uses simple scaling to
-*		compute  the bucket size. The function should be called for
+*		compute  the cell size. The function should be called for
 *		the x, and y components.
-* \param	tnn			Total number of nodes in the mesh.
-* \param	npb			Number of nodes per bucket.
-* \param	sz0			Component of mesh size same as
-*					return (eg x if x required, y if
-*					y required).
-* \param	sz1			Other component of mesh size.
+* \param	nN			Total number of nodes in the mesh.
+* \param	nPC			Number of nodes per cell.
+* \param	mSz			Mesh size.
 */
-static double	WlzCMeshCompGridBSz2D(int tnn, double npb,
-				    double sz0, double sz1)
+static double	WlzCMeshCompGridBSz2D(int nN, double nPC, WlzDVertex2 mSz)
 {
-  double	bs;
-  const double	delta = WLZ_MESH_TOLERANCE; /* A small +ve number which is
-  					       smaller than any expected
-					       mesh node separation. */
-  bs = sqrt(fabs((tnn * sz0) / ( npb * sz1)) + delta);
-  return(bs);
+  double	bSz;
+
+  bSz = sqrt(fabs((nPC * mSz.vtX * mSz.vtY)/(nN + 1.0)));
+  return(bSz);
 }
 
 /*!
 * \return	Bucket size.
-*		dimension.
 * \ingroup	WlzMesh
 * \brief	Computes the bucket size for the 3D mesh node location grid.
 *		The function assumes that nodes are evenly distributed over
 *		the bounding box of the mesh and uses simple scaling to
 *		compute  the bucket size. The function should be called for
-*		the x, y and z components.
-* \param	tnn			Total number of nodes in the mesh.
-* \param	npb			Number of nodes per bucket.
-* \param	sz0			Component of mesh size same as
-*					return (eg x if x required, y if
-*					y required...).
-* \param	sz1			Other component of mesh size.
-* \param	sz2			Other component of mesh size.
+*		the x, and y components.
+* \param	Nn			Total number of nodes in the mesh.
+* \param	nPB			Number of nodes per bucket.
+* \param	mSz			Mesh size.
 */
-static double	WlzCMeshCompGridBSz3D(int tnn, double npb,
-				    double sz0, double sz1, double sz2)
+static double 	WlzCMeshCompGridBSz3D(int nN, double nPB, WlzDVertex3 mSz)
 {
-  double	bs;
-  const double	delta = WLZ_MESH_TOLERANCE; /* A small +ve number which is
-  					       smaller than any expected
-					       mesh node separation. */
-  bs = pow((fabs((tnn * sz0 * sz0)/(npb * sz1 * sz2)) + delta), 1.0 / 3.0);
-  return(bs);
+  double	bSz;
+
+  bSz = pow(fabs((nPB * mSz.vtX * mSz.vtY * mSz.vtZ)/(nN + 1.0)), 1.0 / 3.0);
+  return(bSz);
 }
 
 /*!
 * \return	Mesh grid bucket indices.
 * \ingroup	WlzMesh
-* \brief	Computes the mesh grid bucket indices for a given
+* \brief	Computes the mesh cell grid indices for a given
 *		vertex position.
 * \param	mesh			The mesh.
 * \param	vtx			Given vertex.
 */
-static WlzIVertex2 WlzCMeshBucketIdxVtx2D(WlzCMesh2D *mesh, WlzDVertex2 vtx)
+static WlzIVertex2 WlzCMeshCellIdxVtx2D(WlzCMesh2D *mesh, WlzDVertex2 vtx)
 {
   WlzIVertex2	idx;
 
-  idx.vtX = abs((int )((vtx.vtX - mesh->bBox.xMin) / mesh->bGrid.bSz.vtX));
-  idx.vtY = abs((int )((vtx.vtY - mesh->bBox.yMin) / mesh->bGrid.bSz.vtY));
+  idx.vtX = (int )((vtx.vtX - mesh->bBox.xMin) / mesh->cGrid.cellSz);
+  idx.vtX = WLZ_CLAMP(idx.vtX, 0,  mesh->cGrid.nCells.vtX - 1);
+  idx.vtY = (int )((vtx.vtY - mesh->bBox.yMin) / mesh->cGrid.cellSz);
+  idx.vtY = WLZ_CLAMP(idx.vtY, 0,  mesh->cGrid.nCells.vtY - 1);
   return(idx);
 }
 
 /*!
 * \return	Mesh grid bucket indices.
 * \ingroup	WlzMesh
-* \brief	Computes the mesh grid bucket indices for a given
+* \brief	Computes the mesh cell grid indices for a given
 *		vertex position.
 * \param	mesh			The mesh.
 * \param	vtx			Given vertex.
 */
-static WlzIVertex3 WlzCMeshBucketIdxVtx3D(WlzCMesh3D *mesh, WlzDVertex3 vtx)
+static WlzIVertex3 WlzCMeshCellIdxVtx3D(WlzCMesh3D *mesh, WlzDVertex3 vtx)
 {
   WlzIVertex3	idx;
 
-  idx.vtX = abs((int )((vtx.vtX - mesh->bBox.xMin) / mesh->bGrid.bSz.vtX));
-  idx.vtY = abs((int )((vtx.vtY - mesh->bBox.yMin) / mesh->bGrid.bSz.vtY));
-  idx.vtZ = abs((int )((vtx.vtZ - mesh->bBox.zMin) / mesh->bGrid.bSz.vtZ));
+  idx.vtX = (int )((vtx.vtX - mesh->bBox.xMin) / mesh->cGrid.cellSz);
+  idx.vtX = WLZ_CLAMP(idx.vtX, 0,  mesh->cGrid.nCells.vtX - 1);
+  idx.vtY = (int )((vtx.vtY - mesh->bBox.yMin) / mesh->cGrid.cellSz);
+  idx.vtY = WLZ_CLAMP(idx.vtY, 0,  mesh->cGrid.nCells.vtY - 1);
+  idx.vtZ = (int )((vtx.vtZ - mesh->bBox.zMin) / mesh->cGrid.cellSz);
+  idx.vtZ = WLZ_CLAMP(idx.vtZ, 0,  mesh->cGrid.nCells.vtZ - 1);
   return(idx);
 }
 
@@ -3211,17 +3911,9 @@ static WlzIVertex3 WlzCMeshBucketIdxVtx3D(WlzCMesh3D *mesh, WlzDVertex3 vtx)
 *		position. The matched node is the mesh node which has the
 *		same position (within WLZ_MESH_TOLERANCE distance) of
 *		the given vertex. This function also gives access to the
-*		grid bucket containing the node.
+*		grid cell containing the node.
 * \param	mesh			The mesh.
 * \param	pos			Given node position.
-* \param	dstGPos			Destination pointer for the grid
-*					position. Must not be NULL.
-* \param	dstPrev			Destination pointer for the previous
-*					node in the bucket's linked list,
-*					which will be NULL if either the
-*					bucket is empty or the matched node
-*					is the first in the bucket. Must not
-*					be NULL.
 * \param	dstNod			Destination pointer for the matched
 *					node which will be NULL if there
 *					is no node at the given position.
@@ -3229,34 +3921,35 @@ static WlzIVertex3 WlzCMeshBucketIdxVtx3D(WlzCMesh3D *mesh, WlzDVertex3 vtx)
 */
 int	 	WlzCMeshLocateNod2D(WlzCMesh2D *mesh, 
 				    WlzDVertex2 pos,
-				    WlzIVertex2 *dstGPos,
-				    WlzCMeshNod2D **dstPrev,
 				    WlzCMeshNod2D **dstNod)
 {
   int		found = 0;
   double	delta;
-  WlzDVertex2	relPos;
-  WlzIVertex2	idx;
-  WlzIBox2	box;
+  WlzDVertex2	pos0,
+  		pos1;
+  WlzIVertex2	idx,
+  		idxMin,
+		idxMax;
+  WlzCMeshCell2D *cell;
   WlzCMeshNod2D	*nod;
-  const double	eps = 0.01;
+  const double	eps = 0.001;
 
-  /* Search within a box of buckets because the vertex may be on the
-   * edge of a bucket. */
-  relPos.vtX = pos.vtX - mesh->bBox.xMin;
-  relPos.vtY = pos.vtY - mesh->bBox.yMin;
-  delta = eps * mesh->bGrid.bSz.vtX;
-  box.xMin = abs((int )((relPos.vtX - delta) / mesh->bGrid.bSz.vtX));
-  box.xMax = abs((int )((relPos.vtX + delta) / mesh->bGrid.bSz.vtX));
-  delta = eps * mesh->bGrid.bSz.vtY;
-  box.yMin = abs((int )((relPos.vtY - delta) / mesh->bGrid.bSz.vtY));
-  box.yMax = abs((int )((relPos.vtY + delta) / mesh->bGrid.bSz.vtY));
-  for(idx.vtY = box.yMin; idx.vtY <= box.yMax; ++idx.vtY)
+  /* Search within a range of cells because the vertex may be on the
+   * edge of a cell. */
+  delta = eps * mesh->cGrid.cellSz;
+  pos0.vtX = pos.vtX - delta;
+  pos0.vtY = pos.vtY - delta;
+  pos1.vtX = pos.vtX + delta;
+  pos1.vtY = pos.vtY + delta;
+  idxMin = WlzCMeshCellIdxVtx2D(mesh, pos0);
+  idxMax = WlzCMeshCellIdxVtx2D(mesh, pos1);
+  for(idx.vtY = idxMin.vtY; idx.vtY <= idxMax.vtY; ++idx.vtY)
   {
-    for(idx.vtX = box.xMin; idx.vtX <= box.xMax; ++idx.vtX)
+    for(idx.vtX = idxMin.vtX; idx.vtX <= idxMax.vtX; ++idx.vtX)
     {
-      nod = *(*(mesh->bGrid.buckets + idx.vtY) + idx.vtX);
-      while(nod)
+      cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
+      nod = cell->nod;
+      while(nod != NULL)
       {
 	if(WLZ_VTX_2_EQUAL(nod->pos, pos, WLZ_MESH_TOLERANCE))
 	{
@@ -3279,16 +3972,16 @@ FOUND:
 *		position. The matched node is the mesh node which has the
 *		same position (within WLZ_MESH_TOLERANCE distance) of
 *		the given vertex. This function also gives access to the
-*		grid bucket containing the node.
+*		grid cell containing the node.
 * \param	mesh			The mesh.
 * \param	pos			Given node position.
 * \param	dstGPos			Destination pointer for the grid
 *					position. Must not be NULL.
 * \param	dstPrev			Destination pointer for the previous
-*					node in the bucket's linked list,
+*					node in the cell's linked list,
 *					which will be NULL if either the
-*					bucket is empty or the matched node
-*					is the first in the bucket. Must not
+*					cell is empty or the matched node
+*					is the first in the cell. Must not
 *					be NULL.
 * \param	dstNod			Destination pointer for the matched
 *					node which will be NULL if there
@@ -3303,34 +3996,35 @@ int	 	WlzCMeshLocateNod3D(WlzCMesh3D *mesh,
 {
   int		found = 0;
   double	delta;
-  WlzDVertex3	relPos;
-  WlzIVertex3	idx;
-  WlzIBox3	box;
+  WlzDVertex3	pos0,
+  		pos1;
+  WlzIVertex3	idx,
+  		idxMin,
+		idxMax;
+  WlzCMeshCell3D *cell;
   WlzCMeshNod3D	*nod;
-  const double	eps = 0.01;
+  const double	eps = 0.001;
 
-  /* Search within a box of buckets because the vertex may be on the
-   * edge of a bucket. */
-  relPos.vtX = pos.vtX - mesh->bBox.xMin;
-  relPos.vtY = pos.vtY - mesh->bBox.yMin;
-  relPos.vtZ = pos.vtZ - mesh->bBox.zMin;
-  delta = eps * mesh->bGrid.bSz.vtX;
-  box.xMin = abs((int )((relPos.vtX - delta) / mesh->bGrid.bSz.vtX));
-  box.xMax = abs((int )((relPos.vtX + delta) / mesh->bGrid.bSz.vtX));
-  delta = eps * mesh->bGrid.bSz.vtY;
-  box.yMin = abs((int )((relPos.vtY - delta) / mesh->bGrid.bSz.vtY));
-  box.yMax = abs((int )((relPos.vtY + delta) / mesh->bGrid.bSz.vtY));
-  delta = eps * mesh->bGrid.bSz.vtZ;
-  box.zMin = abs((int )((relPos.vtZ - delta) / mesh->bGrid.bSz.vtZ));
-  box.zMax = abs((int )((relPos.vtZ + delta) / mesh->bGrid.bSz.vtZ));
-  for(idx.vtZ = box.zMin; idx.vtZ <= box.zMax; ++idx.vtZ)
+  /* Search within a range of cells because the vertex may be on the
+   * edge of a cell. */
+  delta = eps * mesh->cGrid.cellSz;
+  pos0.vtX = pos.vtX - delta;
+  pos0.vtY = pos.vtY - delta;
+  pos0.vtZ = pos.vtZ - delta;
+  pos1.vtX = pos.vtX + delta;
+  pos1.vtY = pos.vtY + delta;
+  pos1.vtZ = pos.vtZ + delta;
+  idxMin = WlzCMeshCellIdxVtx3D(mesh, pos0);
+  idxMax = WlzCMeshCellIdxVtx3D(mesh, pos1);
+  for(idx.vtZ = idxMin.vtZ; idx.vtZ <= idxMax.vtZ; ++idx.vtZ)
   {
-    for(idx.vtY = box.yMin; idx.vtY <= box.yMax; ++idx.vtY)
+    for(idx.vtY = idxMin.vtY; idx.vtY <= idxMax.vtY; ++idx.vtY)
     {
-      for(idx.vtX = box.xMin; idx.vtX <= box.xMax; ++idx.vtX)
+      for(idx.vtX = idxMin.vtX; idx.vtX <= idxMax.vtX; ++idx.vtX)
       {
-	nod = *(*(*(mesh->bGrid.buckets + idx.vtZ) + idx.vtY) + idx.vtX);
-	while(nod)
+	cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+	nod = cell->nod;
+	while(nod != NULL)
 	{
 	  if(WLZ_VTX_3_EQUAL(nod->pos, pos, WLZ_MESH_TOLERANCE))
 	  {
@@ -3359,11 +4053,9 @@ FOUND:
 */
 WlzCMeshNod2D 	*WlzCMeshMatchNod2D(WlzCMesh2D *mesh, WlzDVertex2 nPos)
 {
-  WlzIVertex2	gPos;
-  WlzCMeshNod2D	*prev,
-  		*mNod;
+  WlzCMeshNod2D	*mNod;
 
-  (void )WlzCMeshLocateNod2D(mesh, nPos, &gPos, &prev, &mNod);
+  (void )WlzCMeshLocateNod2D(mesh, nPos, &mNod);
   return(mNod);
 }
 
@@ -3449,7 +4141,7 @@ int		WlzCMeshMatchNNod3D(WlzCMesh3D *mesh, int nNod,
 *		and then, if not found, within it's immediate edge
 *		neighbours.
 *		If this simple 'walk search' fails to locate the enclosing
-*		element a 'jump search' is used in which the grid buckets
+*		element a 'jump search' is used in which the grid cells
 *		of the conforming mesh are searched.
 * \param        mesh			The mesh.
 * \param        lastElmIdx		Last element index to help efficient
@@ -3458,6 +4150,11 @@ int		WlzCMeshMatchNNod3D(WlzCMesh3D *mesh, int nNod,
 * \param        pY			Line coordinate of position.
 * \param        pZ			Plane coordinate of position (ignored
 *                                       for 2D).
+* \param	exhaustive		If non zero every element is the mesh
+* 					is checked to see if the position is
+* 					contained within it. This is very
+* 					slow and is probably only useful for
+* 					debuging.
 * \param	dstCloseNod		If non NULL, then the value is set
 * 					to the index of the closest node
 * 					to the given position.
@@ -3465,18 +4162,19 @@ int		WlzCMeshMatchNNod3D(WlzCMesh3D *mesh, int nNod,
 int             WlzCMeshElmEnclosingPos(WlzCMeshP mesh,
                                         int lastElmIdx,
                                         double pX, double pY, double pZ,
-					int *dstCloseNod)
+					int exhaustive, int *dstCloseNod)
 {
   int           elmIdx = -1;
 
   if(mesh.m2->type == WLZ_CMESH_TRI2D)
   {
     elmIdx = WlzCMeshElmEnclosingPos2D(mesh.m2, lastElmIdx, pX, pY,
-                                       dstCloseNod);
-  } else if(mesh.m3->type == WLZ_CMESH_TET3D)
+                                       exhaustive, dstCloseNod);
+  }
+  else if(mesh.m3->type == WLZ_CMESH_TET3D)
   {
     elmIdx = WlzCMeshElmEnclosingPos3D(mesh.m3, lastElmIdx, pX, pY, pZ,
-    				       dstCloseNod);
+    				       exhaustive, dstCloseNod);
   }
   return(elmIdx);
 }
@@ -3493,13 +4191,20 @@ int             WlzCMeshElmEnclosingPos(WlzCMeshP mesh,
 *		and then, if not found, within it's immediate edge
 *		neighbours.
 *		If this simple 'walk search' fails to locate the enclosing
-*		element a 'jump search' is used in which the grid buckets
+*		element a 'jump search' is used in which the grid cells
 *		of the conforming mesh are searched.
+*		For jump search to work coreectly the maximum edge
+*		length in th emesh must be valid.
 * \param        mesh			The mesh.
 * \param        lastElmIdx		Last element index to help efficient
 * 					location. If negative this is ignored.
 * \param        pX			Column coordinate of position.
 * \param        pY			Line coordinate of position.
+* \param	exhaustive		If non zero every element is the mesh
+* 					is checked to see if the position is
+* 					contained within it. This is very
+* 					slow and is probably only useful for
+* 					debuging.
 * \param	dstCloseNod		If non NULL, then the value is set
 * 					to the index of the closest node
 * 					to the given position.
@@ -3507,21 +4212,39 @@ int             WlzCMeshElmEnclosingPos(WlzCMeshP mesh,
 int             WlzCMeshElmEnclosingPos2D(WlzCMesh2D *mesh,
                                         int lastElmIdx,
                                         double pX, double pY,
-					int *dstCloseNod)
+					int exhaustive, int *dstCloseNod)
 {
   WlzDVertex2	gPos;
   int           elmIdx = -1;
 
+#ifdef WLZ_CMESH_DEBUG_LOCATION
+  elmQueryCnt = 0;
+#endif /* WLZ_CMESH_DEBUG_LOCATION */
   gPos.vtX = pX;
   gPos.vtY = pY;
-  if(lastElmIdx >= 0)
+  if(exhaustive)
   {
-    elmIdx = WlzCMeshElmWalkPos2D(mesh, lastElmIdx, gPos);
+    elmIdx = WlzCMeshElmExhaustivePos2D(mesh, gPos, dstCloseNod);
   }
-  if(elmIdx < 0)
+  else
   {
-    elmIdx = WlzCMeshElmJumpPos2D(mesh, gPos, dstCloseNod);
+    if(lastElmIdx >= 0)
+    {
+      elmIdx = WlzCMeshElmWalkPos2D(mesh, lastElmIdx, gPos);
+    }
+    if(elmIdx < 0)
+    {
+      elmIdx = WlzCMeshElmJumpPos2D(mesh, gPos, dstCloseNod);
+    }
   }
+#ifdef WLZ_CMESH_DEBUG_LOCATION
+  ++nElmQuery;
+  nElmQuerySum += elmQueryCnt;
+  if(nElmQueryMax < elmQueryCnt)
+  {
+    nElmQueryMax = elmQueryCnt;
+  }
+#endif /* WLZ_CMESH_DEBUG_LOCATION */
   return(elmIdx);
 }
 
@@ -3537,14 +4260,21 @@ int             WlzCMeshElmEnclosingPos2D(WlzCMesh2D *mesh,
 *		and then, if not found, within it's immediate edge
 *		neighbours.
 *		If this simple 'walk search' fails to locate the enclosing
-*		element a 'jump search' is used in which the grid buckets
+*		element a 'jump search' is used in which the grid cells
 *		of the conforming mesh are searched.
+*		For jump search to work coreectly the maximum edge
+*		length in th emesh must be valid.
 * \param        mesh			The mesh.
 * \param        lastElmIdx		Last element index to help efficient
 * 					location. If negative this is ignored.
 * \param        pX			Column coordinate of position.
 * \param        pY			Line coordinate of position.
 * \param        pZ			Plane coordinate of position.
+* \param	exhaustive		If non zero every element is the mesh
+* 					is checked to see if the position is
+* 					contained within it. This is very
+* 					slow and is probably only useful for
+* 					debuging.
 * \param	dstCloseNod		If non NULL, then the value is set
 * 					to the index of the closest node
 * 					to the given position.
@@ -3552,22 +4282,40 @@ int             WlzCMeshElmEnclosingPos2D(WlzCMesh2D *mesh,
 int             WlzCMeshElmEnclosingPos3D(WlzCMesh3D *mesh,
                                         int lastElmIdx,
                                         double pX, double pY, double pZ,
-					int *dstCloseNod)
+					int exhaustive, int *dstCloseNod)
 {
   WlzDVertex3	gPos;
   int           elmIdx = -1;
 
+#ifdef WLZ_CMESH_DEBUG_LOCATION
+  elmQueryCnt = 0;
+#endif /* WLZ_CMESH_DEBUG_LOCATION */
   gPos.vtX = pX;
   gPos.vtY = pY;
   gPos.vtZ = pZ;
-  if(lastElmIdx >= 0)
+  if(exhaustive)
   {
-    elmIdx = WlzCMeshElmWalkPos3D(mesh, lastElmIdx, gPos);
+    elmIdx = WlzCMeshElmExhaustivePos3D(mesh, gPos, dstCloseNod);
   }
-  if(elmIdx < 0)
+  else
   {
-    elmIdx = WlzCMeshElmJumpPos3D(mesh, gPos, dstCloseNod);
+    if(lastElmIdx >= 0)
+    {
+      elmIdx = WlzCMeshElmWalkPos3D(mesh, lastElmIdx, gPos);
+    }
+    if(elmIdx < 0)
+    {
+      elmIdx = WlzCMeshElmJumpPos3D(mesh, gPos, dstCloseNod);
+    }
   }
+#ifdef WLZ_CMESH_DEBUG_LOCATION
+  ++nElmQuery;
+  nElmQuerySum += elmQueryCnt;
+  if(nElmQueryMax < elmQueryCnt)
+  {
+    nElmQueryMax = elmQueryCnt;
+  }
+#endif /* WLZ_CMESH_DEBUG_LOCATION */
   return(elmIdx);
 }
 
@@ -3610,6 +4358,127 @@ static int	WlzCMeshElmWalkPos2D(WlzCMesh2D *mesh, int elmIdx,
   }
   return(elmIdx);
 }
+
+/*!
+* \return	Index of the enclosing element or < 0 if no enclosing
+*		element is found.
+* \ingroup	WlzMesh
+* \brief	Performs an exhaustive search for the conforming mesh
+* 		element which encloses the given position by examining
+* 		all elements in the mesh or all elements in the mesh
+* 		until the enclosing element is found. This function is
+* 		very slow and is probably only useful for debuging.
+* \param	mesh			The conforming  mesh.
+* \param	gPos			Given position.
+* \param	dstCloseNod		If non NULL, then the value is set
+* 					to the index of the closest node
+* 					to the given position.
+*/
+static int	WlzCMeshElmExhaustivePos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos,
+				           int *dstCloseNod)
+{
+  int		idx,
+  		elmIdx = -1;
+  double	dstSq,
+  		minDstSq;
+  WlzDVertex2	del;
+  WlzCMeshElm2D *elm;
+  WlzCMeshNod2D *nod;
+
+  for(idx = 0; idx < mesh->res.elm.maxEnt; ++idx)
+  {
+    elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idx);
+    if(elm->idx >= 0)
+    {
+      if(WlzCMeshElmEnclosesPos2D(elm, gPos) != 0)
+      {
+        elmIdx = elm->idx;
+	break;
+      }
+    }
+  }
+  if(dstCloseNod)
+  {
+    *dstCloseNod = -1;
+    minDstSq = DBL_MAX;
+    for(idx = 0; idx < mesh->res.nod.maxEnt; ++idx)
+    {
+      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idx);
+      if(nod->idx >= 0)
+      {
+        WLZ_VTX_2_SUB(del, gPos, nod->pos);
+        dstSq = WLZ_VTX_2_SQRLEN(del);
+	if(dstSq < minDstSq)
+	{
+	  minDstSq = dstSq;
+	  *dstCloseNod = nod->idx;
+	}
+      }
+    }
+  }
+  return(elmIdx);
+}
+
+/*!
+* \return	Index of the enclosing element or < 0 if no enclosing
+*		element is found.
+* \ingroup	WlzMesh
+* \brief	Performs an exhaustive search for the conforming mesh
+* 		element which encloses the given position by examining
+* 		all elements in the mesh or all elements in the mesh
+* 		until the enclosing element is found. This function is
+* 		very slow and is probably only useful for debuging.
+* \param	mesh			The conforming  mesh.
+* \param	gPos			Given position.
+* \param	dstCloseNod		If non NULL, then the value is set
+* 					to the index of the closest node
+* 					to the given position.
+*/
+static int	WlzCMeshElmExhaustivePos3D(WlzCMesh3D *mesh, WlzDVertex3 gPos,
+				           int *dstCloseNod)
+{
+  int		idx,
+  		elmIdx = -1;
+  double	dstSq,
+  		minDstSq;
+  WlzDVertex3	del;
+  WlzCMeshElm3D *elm;
+  WlzCMeshNod3D *nod;
+
+  for(idx = 0; idx < mesh->res.elm.maxEnt; ++idx)
+  {
+    elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idx);
+    if(elm->idx >= 0)
+    {
+      if(WlzCMeshElmEnclosesPos3D(elm, gPos) != 0)
+      {
+        elmIdx = elm->idx;
+	break;
+      }
+    }
+  }
+  if(dstCloseNod)
+  {
+    *dstCloseNod = -1;
+    minDstSq = DBL_MAX;
+    for(idx = 0; idx < mesh->res.nod.maxEnt; ++idx)
+    {
+      nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idx);
+      if(nod->idx >= 0)
+      {
+        WLZ_VTX_3_SUB(del, gPos, nod->pos);
+        dstSq = WLZ_VTX_3_SQRLEN(del);
+	if(dstSq < minDstSq)
+	{
+	  minDstSq = dstSq;
+	  *dstCloseNod = nod->idx;
+	}
+      }
+    }
+  }
+  return(elmIdx);
+}
+
 
 /*!
 * \return	Element index or negative value if no enclosing element found.
@@ -3655,150 +4524,63 @@ static int	WlzCMeshElmWalkPos3D(WlzCMesh3D *mesh, int elmIdx,
 * \return	Index of the enclosing element or < 0 if no enclosing
 *		element is found.
 * \ingroup	WlzMesh
-* \brief	Searches for the conforming mesh element which encloses
-*		the given position by jumping to the corresponding grid
-*		bucket and then spiraling out from this grid bucket until
-*		the maximum search distance is reached. For each of the
-*		grid buckets - all the elements of it's nodes are searched.
-*		The search terminates either when the enclosing element
-*		is found or when the maximum search distance is reached.
+* \brief	Finds which cell or small group of cells (if degenerate)
+* 		the given position lies within. Then searches the cell
+* 		for the first element which encloses the position.
+* 		This element may not be unique if the position is
+* 		coincident with a node or and edge of the mesh.
 * \param	mesh			The conforming  mesh.
-* \param	gPos			Given position.
+* \param	pos			Given position.
 * \param	dstCloseNod		If non NULL, then the value is set
 * 					to the index of the closest node
 * 					to the given position.
+* 					The function may be much faster if
+* 					dstCloseNod is NULL.
 */
-static int	WlzCMeshElmJumpPos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos,
+static int	WlzCMeshElmJumpPos2D(WlzCMesh2D *mesh, WlzDVertex2 pos,
 				     int *dstCloseNod)
 {
-  int		finished,
-  		elmIdx = -1,
-		ring0 = -1,
-		ring1 = -1,
-		spiralCnt = 0;
-  double	d0,
-  		d1,
-		minDstSq;
-  WlzDVertex2	del,
-  		bPos,
-  		bPos0,
-		bPos1;
-  WlzIVertex2	idB;
-  double	dstSq = 0.0;
-  WlzCMeshNod2D	*nod;
-  WlzCMeshEdgU2D *edu;
-  WlzCMeshNod2D	**bktP;
+  int		elmIdx = -1;
+  double	delta;
+  WlzDVertex2	pos0;
+  WlzIVertex2	idx,
+  		idxMin,
+		idxMax;
+  WlzCMeshCell2D *cell;
+  WlzCMeshCellElm2D *cElm;
+  const double	eps = 0.001;
 
+  /* Search within a range of cells because the vertex may be on the
+   * edge of a cell. */
+  delta = eps * mesh->cGrid.cellSz;
+  pos0.vtX = pos.vtX - delta;
+  pos0.vtY = pos.vtY - delta;
+  idxMin = WlzCMeshCellIdxVtx2D(mesh, pos0);
+  pos0.vtX = pos.vtX + delta;
+  pos0.vtY = pos.vtY + delta;
+  idxMax = WlzCMeshCellIdxVtx2D(mesh, pos0);
+  for(idx.vtY = idxMin.vtY; idx.vtY <= idxMax.vtY; ++idx.vtY)
+  {
+    for(idx.vtX = idxMin.vtX; idx.vtX <= idxMax.vtX; ++idx.vtX)
+    {
+      cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
+      cElm = cell->cElm;
+      while(cElm)
+      {
+	if(WlzCMeshElmEnclosesPos2D(cElm->elm, pos))
+	{
+	  elmIdx = cElm->elm->idx;
+	  goto FOUND;
+	}
+	cElm = cElm->next;
+      }
+    }
+  }
+FOUND:
   if(dstCloseNod)
   {
-    *dstCloseNod = -1;
-    minDstSq = DBL_MAX;
+    *dstCloseNod = WlzCMeshClosestNod2D(mesh, pos);
   }
-  /* Compute extra distance to allow for search within circle rather than
-   * rectangle: \f$h = \sqrt{d_0^2 + d_1^2} - d_1\f$, where \f$d_0\f$ and
-   * \f$d_1\f$ are twice the maximum and minimum grid buckect cell dimensions
-   * respectively. */
-  d0 = ALG_MAX(mesh->bGrid.bSz.vtX, mesh->bGrid.bSz.vtY) * 0.5;
-  d1 = ALG_MIN(mesh->bGrid.bSz.vtX, mesh->bGrid.bSz.vtY) * 0.5;
-  /* d0 is the extra distance. */
-  d0 = sqrt((d0 * d0) + (d1 * d1)) - d1;
-  /* Find the grid bucket which contains the position. */
-  idB = WlzCMeshBucketIdxVtx2D(mesh, gPos);
-  finished = 0;
-  do
-  {
-    if((idB.vtX >= 0) && (idB.vtY >= 0) &&
-       (idB.vtX < mesh->bGrid.nB.vtX) && (idB.vtY < mesh->bGrid.nB.vtY))
-    {
-      bktP = *(mesh->bGrid.buckets + idB.vtY) + idB.vtX;
-      /* For each node in the grid bucket. */
-      nod = *bktP;
-      while(nod)
-      {
-	if(dstCloseNod)
-	{
-	  WLZ_VTX_2_SUB(del, gPos, nod->pos);
-	  d0 = WLZ_VTX_2_SQRLEN(del);
-	  if(d0 < minDstSq)
-	  {
-	    *dstCloseNod = nod->idx;
-	    minDstSq = d0;
-	  }
-	}
-	edu = nod->edu;
-	do
-	{
-	  if(WlzCMeshElmEnclosesPos2D(edu->elm, gPos))
-	  {
-	    elmIdx = edu->elm->idx;
-	    goto FOUND;
-	  }
-	  if(edu->opp && WlzCMeshElmEnclosesPos2D(edu->opp->elm, gPos))
-	  {
-	    elmIdx = edu->opp->elm->idx;
-	    goto FOUND;
-	  }
-	  edu = edu->nnxt;
-	}
-	while(edu != nod->edu);
-	nod = nod->next;
-      }
-    }
-    /* Spiral out from the initial grid bucket. */
-    spiralCnt = WlzGeomItrSpiral2I(spiralCnt, &(idB.vtX), &(idB.vtY));
-    if(dstCloseNod == NULL)
-    {
-      /* Compute squared distance from the position to the closest vertex
-       * of the grid bucket's cell, then subtract the extra distance to
-       * account for search in circle rather than rectangle.  If the
-       * resulting squared distance is greater than the maximum square
-       * edge length then stop searching. */
-      bPos0.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * idB.vtX);
-      bPos0.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * idB.vtY);
-      bPos1.vtX = bPos0.vtX + mesh->bGrid.bSz.vtX;
-      bPos1.vtY = bPos0.vtY + mesh->bGrid.bSz.vtY;
-      dstSq = WlzGeomDistSq2D(gPos, bPos0);
-      bPos.vtX = bPos1.vtX;
-      bPos.vtY = bPos0.vtY;
-      d1 = WlzGeomDistSq2D(gPos, bPos);
-      if(d1 < dstSq)
-      {
-	dstSq = d1;
-      }
-      bPos.vtX = bPos0.vtX;
-      bPos.vtY = bPos1.vtY;
-      d1 = WlzGeomDistSq2D(gPos, bPos);
-      if(d1 < dstSq)
-      {
-	dstSq = d1;
-      }
-      d1 = WlzGeomDistSq2D(gPos, bPos1);
-      if(d1 < dstSq)
-      {
-	dstSq = d1;
-      }
-      finished = (dstSq  - d0) > mesh->maxSqEdgLen;
-    }
-    else
-    {
-      if(*dstCloseNod > 0)
-      {
-	if(ring0 < 0)
-	{
-	  ring0 = WlzGeomItrSpiralRing(spiralCnt);
-	}
-	else
-	{
-	  ring1 = WlzGeomItrSpiralRing(spiralCnt);
-	}
-	if((ring1 - ring0) > 1)
-	{
-	  finished = 1;
-	}
-      }
-    }
-  } while(!finished);
-FOUND:
   return(elmIdx);
 }
 
@@ -3806,135 +4588,210 @@ FOUND:
 * \return	Index of the enclosing element or < 0 if no enclosing
 *		element is found.
 * \ingroup	WlzMesh
-* \brief	Searches for the conforming mesh element which encloses
-*		the given position by jumping to the corresponding grid
-*		bucket and then spiraling out from this grid bucket until
-*		the maximum search distance is reached. For each of the
-*		grid buckets - all the elements of it's nodes are searched.
-*		The search terminates either when the enclosing element
-*		is found or when the maximum search distance is reached.
+* \brief	Finds which cell or small group of cells (if degenerate)
+* 		the given position lies within. Then searches the cell
+* 		for the first element which encloses the position.
+* 		This element may not be unique if the position is
+* 		coincident with a node or and edge of the mesh.
 * \param	mesh			The conforming  mesh.
-* \param	gPos			Given position.
+* \param	pos			Given position.
 * \param	dstCloseNod		If non NULL, then the value is set
 * 					to the index of the closest node
 * 					to the given position.
+* 					The function may be much faster if
+* 					dstCloseNod is NULL.
 */
-static int	WlzCMeshElmJumpPos3D(WlzCMesh3D *mesh, WlzDVertex3 gPos,
+static int	WlzCMeshElmJumpPos3D(WlzCMesh3D *mesh, WlzDVertex3 pos,
 				     int *dstCloseNod)
 {
-  int		spiralCnt,
-  		elmIdx = -1;
-  double	d0,
-  		d1,
-		minDstSq;
-  WlzDVertex3	bPos,
-  		del;
-  WlzIVertex3	idB,
-		idC,
-                idS;
-  double	dstSq = 0.0;
-  WlzCMeshNod3D	*nod;
-  WlzCMeshEdgU3D *edu;
-  WlzCMeshNod3D	**bktP;
+  int		elmIdx = -1;
+  double	delta;
+  WlzDVertex3	pos0;
+  WlzIVertex3	idx,
+  		idxMin,
+		idxMax;
+  WlzCMeshCell3D *cell;
+  WlzCMeshCellElm3D *cElm;
+  const double	eps = 0.001;
 
+  /* Search within a range of cells because the vertex may be on the
+   * edge of a cell. */
+  delta = eps * mesh->cGrid.cellSz;
+  pos0.vtX = pos.vtX - delta;
+  pos0.vtY = pos.vtY - delta;
+  pos0.vtZ = pos.vtZ - delta;
+  idxMin = WlzCMeshCellIdxVtx3D(mesh, pos0);
+  pos0.vtX = pos.vtX + delta;
+  pos0.vtY = pos.vtY + delta;
+  pos0.vtZ = pos.vtZ + delta;
+  idxMax = WlzCMeshCellIdxVtx3D(mesh, pos0);
+  for(idx.vtZ = idxMin.vtZ; idx.vtZ <= idxMax.vtZ; ++idx.vtZ)
+  {
+    for(idx.vtY = idxMin.vtY; idx.vtY <= idxMax.vtY; ++idx.vtY)
+    {
+      for(idx.vtX = idxMin.vtX; idx.vtX <= idxMax.vtX; ++idx.vtX)
+      {
+	cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+	cElm = cell->cElm;
+	while(cElm)
+	{
+	  if(WlzCMeshElmEnclosesPos3D(cElm->elm, pos))
+	  {
+	    elmIdx = cElm->elm->idx;
+	    goto FOUND;
+	  }
+	  cElm = cElm->next;
+	}
+      }
+    }
+  }
+FOUND:
   if(dstCloseNod)
   {
-    *dstCloseNod = -1;
-    minDstSq = DBL_MAX;
+    *dstCloseNod = WlzCMeshClosestNod3D(mesh, pos);
   }
-  d0 = ALG_MAX3(mesh->bGrid.bSz.vtX, mesh->bGrid.bSz.vtY,
-                mesh->bGrid.bSz.vtZ) * ALG_M_SQRT3;
-  /* Find the grid bucket which contains the position. */
-  spiralCnt = 1;
-  idB = idC = WlzCMeshBucketIdxVtx3D(mesh, gPos);
-  do
+  return(elmIdx);
+}
+
+/*!
+* \return	Index of the closest node or a negative number on error.
+* \ingroup	WlzMesh
+* \brief	Finds the index of the closest node to the given position.
+* 		
+* 		Finds the index of the closest node to the given position
+* 		by spiraling out from the cell containing the given
+* 		position.
+* \param	mesh			Given mesh.
+* \param	pos			Given position.
+*/
+int		WlzCMeshClosestNod2D(WlzCMesh2D *mesh, WlzDVertex2 pos)
+{
+  int		ring = 0,
+		firstRing = -1,
+     		closeNod = -1,
+		spiralCnt = 0;
+  double	d0,
+		minDstSq = DBL_MAX;
+  WlzDVertex2	del;
+  WlzIVertex2	idx,
+  		idx0,
+  		idx1;
+  WlzCMeshNod2D	*nod;
+  WlzCMeshCell2D *cell;
+
+  if(mesh->res.nod.numEnt > 0)
   {
-    if((idB.vtX < 0) ||
-       (idB.vtY < 0) ||
-       (idB.vtZ < 0) ||
-       (idB.vtX >= mesh->bGrid.nB.vtX) ||
-       (idB.vtY >= mesh->bGrid.nB.vtY) ||
-       (idB.vtZ >= mesh->bGrid.nB.vtZ))
+    idx1.vtX = idx1.vtY = 0;
+    /* Find grid cell containing the given position. */
+    idx0 = WlzCMeshCellIdxVtx2D(mesh, pos);
+    do
     {
-      nod = NULL;
-    }
-    else
-    {
-      bktP = *(*(mesh->bGrid.buckets + idB.vtZ) + idB.vtY) + idB.vtX;
-      /* For each node in the grid bucket. */
-      nod = *bktP;
-      while(nod)
+      WLZ_VTX_2_ADD(idx, idx0, idx1);
+      if((idx.vtX >= 0) &&
+	 (idx.vtY >= 0) &&
+	 (idx.vtX < mesh->cGrid.nCells.vtX) &&
+	 (idx.vtY < mesh->cGrid.nCells.vtY))
       {
-	if(dstCloseNod)
+	/* Look for closest node in this cell. */
+	cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
+	nod = cell->nod;
+	while(nod)
 	{
-	  WLZ_VTX_2_SUB(del, gPos, nod->pos);
+	  WLZ_VTX_2_SUB(del, pos, nod->pos);
 	  d0 = WLZ_VTX_2_SQRLEN(del);
 	  if(d0 < minDstSq)
 	  {
-	    *dstCloseNod = nod->idx;
+	    closeNod = nod->idx;
+	    minDstSq = d0;
+	    if(firstRing < 0)
+	    {
+	      firstRing = ring;
+	    }
 	  }
+	  nod = nod->next;
 	}
-	edu = nod->edu;
-	do
-	{
-	  if(WlzCMeshElmEnclosesPos3D(edu->face->elm, gPos))
-	  {
-	    elmIdx = edu->face->elm->idx;
-	    goto FOUND;
-	  }
-	  if(edu->face->opp &&
-	     WlzCMeshElmEnclosesPos3D(edu->face->opp->elm, gPos))
-	  {
-	    elmIdx = edu->face->opp->elm->idx;
-	    goto FOUND;
-	  }
-	  edu = edu->nnxt;
-	}
-	while(edu != nod->edu);
-	nod = nod->next;
       }
-    }
-    /* Spiral out from the initial grid bucket. */
-    spiralCnt = WlzGeomItrSpiral3I(spiralCnt,
-                                   &(idS.vtX), &(idS.vtY), &(idS.vtZ));
-    WLZ_VTX_3_ADD(idB, idC, idS);
-    /* Compute squared distance from the position to the closest vertex
-     * of the grid bucket's cell, then subtract the extra distance to
-     * account for search in circle rather than rectangle.  If the
-     * resulting squared distance is greater than the maximum square
-     * edge length then stop searching. */
-    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 0));
-    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 0));
-    bPos.vtZ = mesh->bBox.zMin + (mesh->bGrid.bSz.vtZ * (idB.vtZ + 0));
-    dstSq = WlzGeomDistSq3D(gPos, bPos);
-    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 1));
-    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 0));
-    bPos.vtZ = mesh->bBox.zMin + (mesh->bGrid.bSz.vtZ * (idB.vtZ + 0));
-    d1 = WlzGeomDistSq3D(gPos, bPos);
-    if(d1 < dstSq)
-    {
-      dstSq = d1;
-    }
-    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 0));
-    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 1));
-    bPos.vtZ = mesh->bBox.zMin + (mesh->bGrid.bSz.vtZ * (idB.vtZ + 1));
-    d1 = WlzGeomDistSq3D(gPos, bPos);
-    if(d1 < dstSq)
-    {
-      dstSq = d1;
-    }
-    bPos.vtX = mesh->bBox.xMin + (mesh->bGrid.bSz.vtX * (idB.vtX + 1));
-    bPos.vtY = mesh->bBox.yMin + (mesh->bGrid.bSz.vtY * (idB.vtY + 1));
-    bPos.vtZ = mesh->bBox.zMin + (mesh->bGrid.bSz.vtZ * (idB.vtZ + 1));
-    d1 = WlzGeomDistSq3D(gPos, bPos);
-    if(d1 < dstSq)
-    {
-      dstSq = d1;
-    }
-  } while(dstSq < (mesh->maxSqEdgLen + d0));
-FOUND:
-  return(elmIdx);
+      /* Spiral out from the initial grid cell. */
+      spiralCnt = WlzGeomItrSpiral2I(spiralCnt, &(idx1.vtX), &(idx1.vtY));
+      ring = WlzGeomItrSpiralRing(spiralCnt);
+      /* Stop spiraling out when the ring after the first in which a node
+       * was found has been searched. */
+    } while(ring - firstRing < 2);
+  }
+  return(closeNod);
 }
+
+/*!
+* \return	Index of the closest node or a negative number on error.
+* \ingroup	WlzMesh
+* \brief	Finds the index of the closest node to the given position.
+* 		
+* 		Finds the index of the closest node to the given position
+* 		by spiraling out from the cell containing the given
+* 		position.
+* \param	mesh			Given mesh.
+* \param	pos			Given position.
+*/
+int		WlzCMeshClosestNod3D(WlzCMesh3D *mesh, WlzDVertex3 pos)
+{
+  int		ring = 0,
+		firstRing = -1,
+     		closeNod = -1,
+		spiralCnt = 0;
+  double	d0,
+		minDstSq = DBL_MAX;
+  WlzDVertex3	del;
+  WlzIVertex3	idx,
+  		idx0,
+  		idx1;
+  WlzCMeshNod3D	*nod;
+  WlzCMeshCell3D *cell;
+
+  if(mesh->res.nod.numEnt > 0)
+  {
+    idx1.vtX = idx1.vtY = 0;
+    /* Find grid cell containing the given position. */
+    idx0 = WlzCMeshCellIdxVtx3D(mesh, pos);
+    do
+    {
+      WLZ_VTX_3_ADD(idx, idx0, idx1);
+      if((idx.vtX >= 0) &&
+	 (idx.vtY >= 0) &&
+	 (idx.vtZ >= 0) &&
+	 (idx.vtX < mesh->cGrid.nCells.vtX) &&
+	 (idx.vtY < mesh->cGrid.nCells.vtY) &&
+	 (idx.vtZ < mesh->cGrid.nCells.vtZ))
+      {
+	/* Look for closest node in this cell. */
+	cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+	nod = cell->nod;
+	while(nod)
+	{
+	  WLZ_VTX_3_SUB(del, pos, nod->pos);
+	  d0 = WLZ_VTX_3_SQRLEN(del);
+	  if(d0 < minDstSq)
+	  {
+	    closeNod = nod->idx;
+	    minDstSq = d0;
+	    if(firstRing < 0)
+	    {
+	      firstRing = ring;
+	    }
+	  }
+	  nod = nod->next;
+	}
+      }
+      /* Spiral out from the initial grid cell. */
+      spiralCnt = WlzGeomItrSpiral3I(spiralCnt,
+                                     &(idx1.vtX), &(idx1.vtY), &(idx1.vtZ));
+      ring = WlzGeomItrSpiralRing(spiralCnt);
+      /* Stop spiraling out when the ring after the first in which a node
+       * was found has been searched. */
+    } while(ring - firstRing < 2);
+  }
+  return(closeNod);
+}
+
 
 /*!
 * \return	Non zero if the given vertex is in the given mesh element.
@@ -3950,6 +4807,9 @@ int		WlzCMeshElmEnclosesPos2D(WlzCMeshElm2D *elm, WlzDVertex2 gPos)
 
   if(elm)
   {
+#ifdef WLZ_CMESH_DEBUG_LOCATION
+    ++elmQueryCnt;
+#endif /* WLZ_CMESH_DEBUG_LOCATION */
     inside = WlzGeomVxInTriangle2D(elm->edu[0].nod->pos, elm->edu[1].nod->pos,
 				   elm->edu[2].nod->pos, gPos) >= 0;
   }
@@ -3971,6 +4831,9 @@ int		WlzCMeshElmEnclosesPos3D(WlzCMeshElm3D *elm, WlzDVertex3 gPos)
 
   if(elm)
   {
+#ifdef WLZ_CMESH_DEBUG_LOCATION
+    ++elmQueryCnt;
+#endif /* WLZ_CMESH_DEBUG_LOCATION */
     WlzCMeshElmGetNodes3D(elm, nod + 0, nod + 1, nod + 2, nod + 3);
     inside = WlzGeomVxInTetrahedron(nod[0]->pos, nod[1]->pos,
     				    nod[2]->pos, nod[3]->pos, gPos) >= 0;
@@ -4176,7 +5039,7 @@ WlzCMesh2D	*WlzCMeshFromObj2D(WlzObject *obj,
   {
     WlzCMeshUpdateBBox2D(mesh);
     WlzCMeshUpdateMaxSqEdgLen2D(mesh);
-    errNum = WlzCMeshReassignBuckets2D(mesh, 0);
+    errNum = WlzCMeshReassignGridCells2D(mesh, 0);
   }
   if((errNum == WLZ_ERR_NONE) && dstDilObj)
   {
@@ -4251,7 +5114,7 @@ WlzCMesh3D	*WlzCMeshFromObj3D(WlzObject *obj,
       minElmSz = 1.0;
     }
     scale = (int )ceil(minElmSz);
-    dilation = (scale  + 1) / 2.0;
+    dilation = scale  + 1;
     maxLBTNdSz = (int )ceil(maxElmSz / minElmSz);
     if(maxLBTNdSz < 1)
     {
@@ -4323,7 +5186,7 @@ WlzCMesh3D	*WlzCMeshFromObj3D(WlzObject *obj,
   {
     WlzCMeshUpdateBBox3D(mesh);
     WlzCMeshUpdateMaxSqEdgLen3D(mesh);
-    errNum = WlzCMeshReassignBuckets3D(mesh, 0);
+    errNum = WlzCMeshReassignGridCells3D(mesh, 0);
   }
   if(dstErr)
   {
@@ -4372,17 +5235,17 @@ WlzCMesh2D	*WlzCMeshFromBalLBTDom2D(WlzLBTDomain2D *lDom, WlzObject *iObj,
     mesh->bBox.yMin = lDom->line1;
     mesh->bBox.xMax = lDom->lastkl;
     mesh->bBox.yMax = lDom->lastln;
-    bSz.vtX = (int )ceil(mesh->bBox.xMax - mesh->bBox.xMin + 1.0);
-    bSz.vtY = (int )ceil(mesh->bBox.yMax - mesh->bBox.yMin + 1.0);
-    if((lDom->nNodes <= 0) || (bSz.vtX <= 0) || (bSz.vtY <= 0))
+    bSz.vtX = mesh->bBox.xMax - mesh->bBox.xMin;
+    bSz.vtY = mesh->bBox.yMax - mesh->bBox.yMin;
+    if((lDom->nNodes <= 0) || (bSz.vtX < 1.0) || (bSz.vtY < 1.0))
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
   }
-  /* Create an initial grid of buckets. */
+  /* Create an initial grid of cells. */
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshReassignBuckets2D(mesh, lDom->nNodes * 4);
+    errNum = WlzCMeshReassignGridCells2D(mesh, lDom->nNodes * 4);
   }
   /* Add the LBT nodes to the mesh. */
   if(errNum == WLZ_ERR_NONE)
@@ -4604,19 +5467,19 @@ WlzCMesh3D	*WlzCMeshFromBalLBTDom3D(WlzLBTDomain3D *lDom, WlzObject *iObj,
     mesh->bBox.xMax = lDom->lastkl;
     mesh->bBox.yMax = lDom->lastln;
     mesh->bBox.zMax = lDom->lastpl;
-    bSz.vtX = (int )ceil(mesh->bBox.xMax - mesh->bBox.xMin + 1.0);
-    bSz.vtY = (int )ceil(mesh->bBox.yMax - mesh->bBox.yMin + 1.0);
-    bSz.vtZ = (int )(ceil )(mesh->bBox.zMax - mesh->bBox.zMin + 1.0);
+    bSz.vtX = mesh->bBox.xMax - mesh->bBox.xMin;
+    bSz.vtY = mesh->bBox.yMax - mesh->bBox.yMin;
+    bSz.vtZ = mesh->bBox.zMax - mesh->bBox.zMin;
     if((lDom->nNodes <= 0) ||
-       (bSz.vtX <= 0) || (bSz.vtY <= 0) || (bSz.vtZ <= 0))
+       (bSz.vtX < 1.0) || (bSz.vtY < 1.0) || (bSz.vtZ < 1.0))
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
   }
-  /* Create an initial grid of buckets. */
+  /* Create an initial grid of cells. */
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshReassignBuckets3D(mesh, lDom->nNodes * 4);
+    errNum = WlzCMeshReassignGridCells3D(mesh, lDom->nNodes * 4);
   }
   /* Add the LBT nodes to the mesh. */
   if(errNum == WLZ_ERR_NONE)
