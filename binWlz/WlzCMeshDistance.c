@@ -49,7 +49,7 @@ static char _WlzMeshGen_c[] = "MRC HGU $Id$";
 \ingroup BinWlz
 \defgroup wlzcmeshdistance WlzCMeshDistance
 \par Name
-WlzDistanceTransform - computes distances within conforming meshes.
+WlzCMeshDistance - computes distances within conforming meshes.
 \par Synopsis
 \verbatim
 WlzCMeshDistance [-b] [-h] [-o<out obj file>] [-r<ref obj file>] [-s #,#,#]
@@ -393,6 +393,7 @@ int		main(int argc, char *argv[])
 	  idN = 1;
 	  seeds.d3->vtX = seed.d3.vtX;
 	  seeds.d3->vtY = seed.d3.vtY;
+	  seeds.d3->vtZ = seed.d3.vtZ;
 	}
 	if(boundFlg)
 	{
