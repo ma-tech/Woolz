@@ -3022,7 +3022,7 @@ typedef struct _WlzCMeshNod3D
   int           idx;                    /*!< The node index. */
   unsigned int  flags;                  /*!< Bitwise description of node. */
   WlzDVertex3   pos;                    /*!< Node position. */
-  struct _WlzCMeshEdgU3D *edu;        /*!< One of many edge uses which is
+  struct _WlzCMeshEdgU3D *edu;          /*!< One of many edge uses which is
                                              directed from the node. A
                                              node is shared by many parents. */
   struct _WlzCMeshNod3D *next;          /*!< Next node in bucket. */
@@ -3113,7 +3113,10 @@ typedef struct _WlzCMeshElm2D
 {
   int           idx;                    /*!< The element index. */
   unsigned int  flags;                  /*!< Element flags. */
-  struct _WlzCMeshEdgU2D edu[3];      /*!< Edges of the mesh element. */
+  struct _WlzCMeshEdgU2D edu[3];        /*!< Edges of the mesh element. */
+  struct _WlzCMeshCellElm2D *cElm;	/*!< First cell element from which
+                                             all other cell elements can be
+					     reached using the next pointer. */
   void		*prop;      		/*!< Element properties. */
 } WlzCMeshElm2D;
 
@@ -3228,6 +3231,9 @@ typedef struct _WlzCMeshElm3D
   int           idx;                    /*!< The element index. */
   unsigned int  flags;                  /*!< Element flags. */
   struct _WlzCMeshFace face[4];         /*!< Faces of the mesh element. */
+  struct _WlzCMeshCellElm3D *cElm;	/*!< First cell element from which
+                                             all other cell elements can be
+					     reached using the next pointer. */
   void		*prop;      		/*!< Element properties. */
 } WlzCMeshElm3D;
 
@@ -3245,36 +3251,112 @@ typedef union _WlzCMeshElmP
 } WlzCMeshElmP;
 
 /*!
-* \struct       _WlzCMeshBucketGrid2D
+* \struct	_WlzCMeshCellElm2D
 * \ingroup      WlzMesh
-* \brief        A spatial grid or array of buckets with each bucket holding
-*               a linked list of the 2D mesh nodes that fall within the
-*               bucket.
-*               Typedef: ::WlzCMeshBucketGrid2D.
+* \brief	Data structure which is used to link lists of 2D elements
+* 		with the grid cells that they intersect.
+*		Typedef: ::WlzCMeshCell2D.
 */
-typedef struct  _WlzCMeshBucketGrid2D
+typedef struct _WlzCMeshCellElm2D
 {
-  WlzIVertex2   nB;                     /*!< Dimensions of the bucket array in
-                                             terms of the number of buckets. */
-  WlzDVertex2   bSz;                    /*!< Size of each bucket. */
-  WlzCMeshNod2D ***buckets;             /*!< The mesh node buckets. */
-} WlzCMeshBucketGrid2D;
+  struct _WlzCMeshElm2D *elm;		/*! The element. */
+  struct _WlzCMeshCell2D *cell;		/*! The cell. */
+  struct _WlzCMeshCellElm2D *next;	/*! Next element intersecting cell or
+  					    next cell element in the free
+					    list. */
+  struct _WlzCMeshCellElm2D *nextCell;	/*! Next cell which this element
+  					    intersects. */
+} WlzCMeshCellElm2D;
 
 /*!
-* \struct       _WlzCMeshBucketGrid3D
+* \struct	_WlzCMeshCellElm3D
 * \ingroup      WlzMesh
-* \brief        A spatial grid or array of buckets with each bucket holding
-*               a linked list of the 3D mesh nodes that fall within the
-*               bucket.
-*               Typedef: ::WlzCMeshBucketGrid3D.
+* \brief	Data structure which is used to link lists of 3D elements
+* 		with the grid cells that they intersect.
+*		Typedef: ::WlzCMeshCell3D.
 */
-typedef struct  _WlzCMeshBucketGrid3D
+typedef struct _WlzCMeshCellElm3D
 {
-  WlzIVertex3   nB;                     /*!< Dimensions of the bucket array in
-                                             terms of the number of buckets. */
-  WlzDVertex3   bSz;                    /*!< Size of each bucket. */
-  WlzCMeshNod3D ****buckets;            /*!< The mesh node buckets. */
-} WlzCMeshBucketGrid3D;
+  struct _WlzCMeshElm3D *elm;		/*! The element. */
+  struct _WlzCMeshCell3D *cell;		/*! The cell. */
+  struct _WlzCMeshCellElm3D *next;	/*! Next element intersecting cell or
+  				            next cell element in the free
+					    list. */
+  struct _WlzCMeshCellElm3D *nextCell;	/*! Next cell which this element
+  					    intersects. */
+} WlzCMeshCellElm3D;
+
+/*!
+* \struct 	_WlzCMeshCell2D
+* \ingroup	WlzMesh
+* \brief	A single cell of a spatial grid or array of 2D cells.
+*		Typedef: ::WlzCMeshCell2D.
+*/
+typedef struct _WlzCMeshCell2D
+{
+  struct _WlzCMeshNod2D *nod;		/*! Head of a linked list of nodes
+  					    which are located within the
+					    cell. */
+  struct _WlzCMeshCellElm2D *cElm;	/*! Cell element data structure for
+  					    an element which intersects this
+					    cell. */
+} WlzCMeshCell2D;
+
+/*!
+* \struct 	_WlzCMeshCell3D
+* \ingroup	WlzMesh
+* \brief	A single cell of a spatial grid or array of 3D cells.
+*		Typedef: ::WlzCMeshCell3D.
+*/
+typedef struct _WlzCMeshCell3D
+{
+  struct _WlzCMeshNod3D *nod;		/*! Head of a linked list of nodes
+  					    which are located within the
+					    cell. */
+  struct _WlzCMeshCellElm3D *cElm;	/*! Cell element data structure for
+  					    an element which intersects this
+					    cell. */
+} WlzCMeshCell3D;
+
+/*!
+* \struct       _WlzCMeshCellGrid2D
+* \ingroup      WlzMesh
+* \brief        A spatial grid or array of square 2D cells that are used for
+* 		fast node and element location queries.
+*               Typedef: ::WlzCMeshCellGrid2D.
+*/
+typedef struct _WlzCMeshCellGrid2D
+{
+  WlzIVertex2	nCells;			/*! Dimensions of the cell grid
+  					    array in terms of the number of
+					    cells. */
+  double	cellSz;			/*! Each cell is an axis aligned
+  					    square with this side length. */
+  struct _WlzCMeshCell2D **cells;	/*! Array of cells. */
+  WlzCMeshCellElm2D *freeCE;	        /*! List of free cell elements for
+                                            re/use. */
+  AlcBlockStack	*allCE;                 /*! Allocated cell elements. */
+} WlzCMeshCellGrid2D;
+
+/*!
+* \struct       _WlzCMeshCellGrid3D
+* \ingroup      WlzMesh
+* \brief        A spatial grid or array of square 3D cells that are used for
+* 		fast node and element location queries.
+*               Typedef: ::WlzCMeshCellGrid3D.
+*/
+typedef struct _WlzCMeshCellGrid3D
+{
+  WlzIVertex3	nCells;			/*! Dimensions of the cell grid
+  					    array in terms of the number of
+					    cells. */
+  double	cellSz;			/*! Each cell is an axis aligned
+  					    square with this side length. */
+  struct _WlzCMeshCell3D ***cells;	/*! Array of cells. */
+  WlzCMeshCellElm3D *freeCE;	        /*! List of free cell elements for
+                                            re/use. */
+  AlcBlockStack	*allCE;                 /*! Allocated cell elements. */
+} WlzCMeshCellGrid3D;
 
 #ifndef WLZ_EXT_BIND
 /*!
@@ -3333,8 +3415,8 @@ typedef struct _WlzCMeshEntRes
 */
 typedef struct _WlzCMeshRes
 {
-  struct _WlzCMeshEntRes        nod;            /*!< Node resources. */
-  struct _WlzCMeshEntRes        elm;            /*!< Element resources. */
+  struct _WlzCMeshEntRes nod;            /*!< Node resources. */
+  struct _WlzCMeshEntRes elm;            /*!< Element resources. */
 } WlzCMeshRes;
 
 /*!
@@ -3360,7 +3442,8 @@ typedef struct _WlzCMesh2D
 					     than an upper limit. */
   WlzDBox2      bBox;                   /*!< Axis aligned bounding box of
                                              the mesh. */
-  WlzCMeshBucketGrid2D bGrid;           /*!< Mesh grid of buckets. */
+  WlzCMeshCellGrid2D cGrid;		/*!< Cell grid for fast node and
+  					     element location queries. */
   struct _WlzCMeshRes res;              /*!< Mesh resources. */
 
 } WlzCMesh2D;
@@ -3388,7 +3471,8 @@ typedef struct _WlzCMesh3D
 					     than an upper limit. */
   WlzDBox3      bBox;                   /*!< Axis aligned bounding box of
                                              the mesh. */
-  WlzCMeshBucketGrid3D bGrid;           /*!< Mesh grid of buckets. */
+  WlzCMeshCellGrid3D cGrid;		/*!< Cell grid for fast node and
+  					     element location queries. */
   struct _WlzCMeshRes res;              /*!< Mesh resources. */
 
 } WlzCMesh3D;
@@ -3486,7 +3570,10 @@ typedef struct _WlzBasisFn
 					     functions. Must be allocated
 					     in a single block to allow
 					     the parameters to be freed
-					     by AlcFree(). */
+					     by AlcFree().
+					     For the MQ this is actually
+					     \f$(\delta r)^2\f$, where \f$r\f$
+					     is the range of the landmarks. */
 #ifdef WLZ_EXT_BIND
   void		*evalFn;
 #else
