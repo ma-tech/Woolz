@@ -580,7 +580,7 @@ static WlzErrorNum WlzCMeshTransformInvert2D(WlzCMeshTransform *mTr)
   }
   WlzCMeshUpdateBBox2D(mTr->mesh.m2);
   WlzCMeshUpdateMaxSqEdgLen2D(mTr->mesh.m2);
-  errNum = WlzCMeshReassignBuckets2D(mTr->mesh.m2,
+  errNum = WlzCMeshReassignGridCells2D(mTr->mesh.m2,
                                      mTr->mesh.m2->res.nod.numEnt);
   return(errNum);
 }
@@ -622,7 +622,7 @@ static WlzErrorNum WlzCMeshTransformInvert3D(WlzCMeshTransform *mTr)
   }
   WlzCMeshUpdateBBox3D(mTr->mesh.m3);
   WlzCMeshUpdateMaxSqEdgLen3D(mTr->mesh.m3);
-  errNum = WlzCMeshReassignBuckets3D(mTr->mesh.m3,
+  errNum = WlzCMeshReassignGridCells3D(mTr->mesh.m3,
                                      mTr->mesh.m3->res.nod.numEnt);
   return(errNum);
 }
@@ -728,7 +728,7 @@ WlzErrorNum	WlzCMeshTransformVtxAry2I(WlzCMeshTransform *mTr,
   {
     if(((sE.idx = WlzCMeshElmEnclosingPos2D(mTr->mesh.m2, lastElmIdx,
 			(double )(vtx[idN].vtX), (double )(vtx[idN].vtY),
-		        &nearNod)) < 0) && (nearNod < 0))
+		        0, &nearNod)) < 0) && (nearNod < 0))
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
       break;
@@ -789,7 +789,7 @@ WlzErrorNum	WlzCMeshTransformVtxAry2F(WlzCMeshTransform *mTr,
   {
     if(((sE.idx = WlzCMeshElmEnclosingPos2D(mTr->mesh.m2, lastElmIdx,
     			vtx[idN].vtX, vtx[idN].vtY,
-			&nearNod)) < 0) && (nearNod < 0))
+			0, &nearNod)) < 0) && (nearNod < 0))
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
       break;
@@ -849,7 +849,7 @@ WlzErrorNum	WlzCMeshTransformVtxAry2D(WlzCMeshTransform *mTr,
   {
     if(((sE.idx = WlzCMeshElmEnclosingPos2D(mTr->mesh.m2, lastElmIdx,
     			vtx[idN].vtX, vtx[idN].vtY,
-			&nearNod)) < 0) && (nearNod < 0))
+			0, &nearNod)) < 0) && (nearNod < 0))
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
       break;
@@ -3261,11 +3261,14 @@ static WlzObject *WlzCMeshTransformObjV3D(WlzObject *srcObj,
 				     WlzErrorNum *dstErr)
 {
   WlzPixelV	bgdV;
+  WlzGreyType	gType;
+  WlzObjectType gTType;
   WlzObject	*dstObj = NULL;
   WlzValues	dstValues;
   WlzCMeshScanWSp3D *mSWSp = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  gType = WlzGreyTypeFromObj(srcObj, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     bgdV = WlzGetBackground(srcObj, &errNum);
@@ -3284,7 +3287,8 @@ static WlzObject *WlzCMeshTransformObjV3D(WlzObject *srcObj,
   /* Make a voxel value table for the new domain. */
   if(errNum == WLZ_ERR_NONE)
   {
-    dstValues.vox = WlzNewValuesVox(dstObj, srcObj->values.vox->type, bgdV, &errNum);
+    gTType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
+    dstValues.vox = WlzNewValuesVox(dstObj, gTType, bgdV, &errNum);
   }
   /* Scan through the sorted intervals again setting object values. */
   if(errNum == WLZ_ERR_NONE)
@@ -3439,7 +3443,7 @@ static WlzErrorNum WlzCMeshVerifyWSp3D(WlzObject *srcObj,
 	      /* Find element C mesh which encloses the voxel. */
 	      idN = WlzCMeshElmEnclosingPos3D(mSWSp->mTr->mesh.m3, -1,
 	      				      sPos.vtX, sPos.vtY, sPos.vtZ,
-					      NULL);
+					      0, NULL);
 	      /* Output message. */
 	      (void )fprintf(stderr, "WlzCMeshVerifyWSp3D() %d %d %d n %d\n",
 	                     sPos.vtX, sPos.vtY, sPos.vtZ, idN - 1);
@@ -3482,8 +3486,8 @@ static WlzObject *WlzCMeshScanObjPDomain3D(WlzObject *srcObj,
 {
   int		idI,
 		kol,
-		itvLnCnt,
-		itvPlCnt,
+		itvLnCnt = 0,
+		itvPlCnt = 0,
 		itvLnWidth,
 		itvLnByteWidth;
   WlzIVertex3	dPos,
@@ -3683,7 +3687,7 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
   		sPos;
   WlzDVertex3	tV,
   		sPosD;
-  WlzCMeshScanElm3D *sElm;
+  WlzCMeshScanElm3D *sE;
   WlzCMeshScanItv3D *mItv0,
   		*mItv1,
 		*mItv2;
@@ -3794,13 +3798,17 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		     mItv1->lftI, mItv1->rgtI, mItv1->line, mItv1->plane);
 #endif
 	      /* Update mesh scanning. */
-	      sElm = mSWSp->dElm + mItv1->elmIdx;
-	      tV.vtX = (sElm->tr[ 1] * dPos.vtY) + (sElm->tr[ 2] * dPos.vtZ) +
-		       sElm->tr[ 3];
-	      tV.vtY = (sElm->tr[ 5] * dPos.vtY) + (sElm->tr[ 6] * dPos.vtZ) +
-		       sElm->tr[ 7];
-	      tV.vtZ = (sElm->tr[ 9] * dPos.vtY) + (sElm->tr[10] * dPos.vtZ) +
-		       sElm->tr[11];
+	      sE = mSWSp->dElm + mItv1->elmIdx;
+	      if((sE->flags & WLZ_CMESH_SCANELM_REV) == 0)
+	      {
+	         WlzCMeshUpdateScanElm3D(mSWSp->mTr, sE, 0);
+	      }
+	      tV.vtX = (sE->tr[ 1] * dPos.vtY) + (sE->tr[ 2] * dPos.vtZ) +
+		       sE->tr[ 3];
+	      tV.vtY = (sE->tr[ 5] * dPos.vtY) + (sE->tr[ 6] * dPos.vtZ) +
+		       sE->tr[ 7];
+	      tV.vtZ = (sE->tr[ 9] * dPos.vtY) + (sE->tr[10] * dPos.vtZ) +
+		       sE->tr[11];
 	      /* Find length of intersection and set the grey pointer. */
 	      iLft = ALG_MAX(mItv1->lftI, iWSp.lftpos);
 	      iRgt = ALG_MIN(mItv1->rgtI, iWSp.rgtpos);
@@ -3814,9 +3822,9 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		      while(dPos.vtX <= iRgt)
 		      {
 			idI = dPos.vtX - iWSp.lftpos;
-			sPosD.vtX = (sElm->tr[ 0] * dPos.vtX) + tV.vtX;
-			sPosD.vtY = (sElm->tr[ 4] * dPos.vtX) + tV.vtY;
-			sPosD.vtZ = (sElm->tr[ 8] * dPos.vtX) + tV.vtZ;
+			sPosD.vtX = (sE->tr[ 0] * dPos.vtX) + tV.vtX;
+			sPosD.vtY = (sE->tr[ 4] * dPos.vtX) + tV.vtY;
+			sPosD.vtZ = (sE->tr[ 8] * dPos.vtX) + tV.vtZ;
 			sPos.vtX = WLZ_NINT(sPosD.vtX);
 			sPos.vtY = WLZ_NINT(sPosD.vtY);
 			sPos.vtZ = WLZ_NINT(sPosD.vtZ);
@@ -3834,9 +3842,9 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		      while(dPos.vtX <= iRgt)
 		      {
 			idI = dPos.vtX - iWSp.lftpos;
-			sPosD.vtX = (sElm->tr[ 0] * dPos.vtX) + tV.vtX;
-			sPosD.vtY = (sElm->tr[ 4] * dPos.vtX) + tV.vtY;
-			sPosD.vtZ = (sElm->tr[ 8] * dPos.vtX) + tV.vtZ;
+			sPosD.vtX = (sE->tr[ 0] * dPos.vtX) + tV.vtX;
+			sPosD.vtY = (sE->tr[ 4] * dPos.vtX) + tV.vtY;
+			sPosD.vtZ = (sE->tr[ 8] * dPos.vtX) + tV.vtZ;
 			sPos.vtX = WLZ_NINT(sPosD.vtX);
 			sPos.vtY = WLZ_NINT(sPosD.vtY);
 			sPos.vtZ = WLZ_NINT(sPosD.vtZ);
@@ -3854,9 +3862,9 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		      while(dPos.vtX <= iRgt)
 		      {
 			idI = dPos.vtX - iWSp.lftpos;
-			sPosD.vtX = (sElm->tr[ 0] * dPos.vtX) + tV.vtX;
-			sPosD.vtY = (sElm->tr[ 4] * dPos.vtX) + tV.vtY;
-			sPosD.vtZ = (sElm->tr[ 8] * dPos.vtX) + tV.vtZ;
+			sPosD.vtX = (sE->tr[ 0] * dPos.vtX) + tV.vtX;
+			sPosD.vtY = (sE->tr[ 4] * dPos.vtX) + tV.vtY;
+			sPosD.vtZ = (sE->tr[ 8] * dPos.vtX) + tV.vtZ;
 			sPos.vtX = WLZ_NINT(sPosD.vtX);
 			sPos.vtY = WLZ_NINT(sPosD.vtY);
 			sPos.vtZ = WLZ_NINT(sPosD.vtZ);
@@ -3874,9 +3882,9 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		      while(dPos.vtX <= iRgt)
 		      {
 			idI = dPos.vtX - iWSp.lftpos;
-			sPosD.vtX = (sElm->tr[ 0] * dPos.vtX) + tV.vtX;
-			sPosD.vtY = (sElm->tr[ 4] * dPos.vtX) + tV.vtY;
-			sPosD.vtZ = (sElm->tr[ 8] * dPos.vtX) + tV.vtZ;
+			sPosD.vtX = (sE->tr[ 0] * dPos.vtX) + tV.vtX;
+			sPosD.vtY = (sE->tr[ 4] * dPos.vtX) + tV.vtY;
+			sPosD.vtZ = (sE->tr[ 8] * dPos.vtX) + tV.vtZ;
 			sPos.vtX = WLZ_NINT(sPosD.vtX);
 			sPos.vtY = WLZ_NINT(sPosD.vtY);
 			sPos.vtZ = WLZ_NINT(sPosD.vtZ);
@@ -3894,9 +3902,9 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		      while(dPos.vtX <= iRgt)
 		      {
 			idI = dPos.vtX - iWSp.lftpos;
-			sPosD.vtX = (sElm->tr[ 0] * dPos.vtX) + tV.vtX;
-			sPosD.vtY = (sElm->tr[ 4] * dPos.vtX) + tV.vtY;
-			sPosD.vtZ = (sElm->tr[ 8] * dPos.vtX) + tV.vtZ;
+			sPosD.vtX = (sE->tr[ 0] * dPos.vtX) + tV.vtX;
+			sPosD.vtY = (sE->tr[ 4] * dPos.vtX) + tV.vtY;
+			sPosD.vtZ = (sE->tr[ 8] * dPos.vtX) + tV.vtZ;
 			sPos.vtX = WLZ_NINT(sPosD.vtX);
 			sPos.vtY = WLZ_NINT(sPosD.vtY);
 			sPos.vtZ = WLZ_NINT(sPosD.vtZ);
@@ -3914,9 +3922,9 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		      while(dPos.vtX <= iRgt)
 		      {
 			idI = dPos.vtX - iWSp.lftpos;
-			sPosD.vtX = (sElm->tr[ 0] * dPos.vtX) + tV.vtX;
-			sPosD.vtY = (sElm->tr[ 4] * dPos.vtX) + tV.vtY;
-			sPosD.vtZ = (sElm->tr[ 8] * dPos.vtX) + tV.vtZ;
+			sPosD.vtX = (sE->tr[ 0] * dPos.vtX) + tV.vtX;
+			sPosD.vtY = (sE->tr[ 4] * dPos.vtX) + tV.vtY;
+			sPosD.vtZ = (sE->tr[ 8] * dPos.vtX) + tV.vtZ;
 			sPos.vtX = WLZ_NINT(sPosD.vtX);
 			sPos.vtY = WLZ_NINT(sPosD.vtY);
 			sPos.vtZ = WLZ_NINT(sPosD.vtZ);
@@ -3949,9 +3957,9 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		      while(dPos.vtX <= iRgt)
 		      {
 			idI = dPos.vtX - iWSp.lftpos;
-			sPosD.vtX = (sElm->tr[ 0] * dPos.vtX) + tV.vtX;
-			sPosD.vtY = (sElm->tr[ 4] * dPos.vtX) + tV.vtY;
-			sPosD.vtZ = (sElm->tr[ 8] * dPos.vtX) + tV.vtZ;
+			sPosD.vtX = (sE->tr[ 0] * dPos.vtX) + tV.vtX;
+			sPosD.vtY = (sE->tr[ 4] * dPos.vtX) + tV.vtY;
+			sPosD.vtZ = (sE->tr[ 8] * dPos.vtX) + tV.vtZ;
 			WlzGreyValueGetCon(gVWSp, sPosD.vtZ, sPosD.vtY,
 					   sPosD.vtX);
 			if(gVWSp->bkdFlag == 0)
@@ -3990,9 +3998,9 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		      while(dPos.vtX <= iRgt)
 		      {
 			idI = dPos.vtX - iWSp.lftpos;
-			sPosD.vtX = (sElm->tr[ 0] * dPos.vtX) + tV.vtX;
-			sPosD.vtY = (sElm->tr[ 4] * dPos.vtX) + tV.vtY;
-			sPosD.vtZ = (sElm->tr[ 8] * dPos.vtX) + tV.vtZ;
+			sPosD.vtX = (sE->tr[ 0] * dPos.vtX) + tV.vtX;
+			sPosD.vtY = (sE->tr[ 4] * dPos.vtX) + tV.vtY;
+			sPosD.vtZ = (sE->tr[ 8] * dPos.vtX) + tV.vtZ;
 			WlzGreyValueGetCon(gVWSp, sPosD.vtZ, sPosD.vtY,
 					   sPosD.vtX);
 			if(gVWSp->bkdFlag == 0)
@@ -4030,9 +4038,9 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		      while(dPos.vtX <= iRgt)
 		      {
 			idI = dPos.vtX - iWSp.lftpos;
-			sPosD.vtX = (sElm->tr[ 0] * dPos.vtX) + tV.vtX;
-			sPosD.vtY = (sElm->tr[ 4] * dPos.vtX) + tV.vtY;
-			sPosD.vtZ = (sElm->tr[ 8] * dPos.vtX) + tV.vtZ;
+			sPosD.vtX = (sE->tr[ 0] * dPos.vtX) + tV.vtX;
+			sPosD.vtY = (sE->tr[ 4] * dPos.vtX) + tV.vtY;
+			sPosD.vtZ = (sE->tr[ 8] * dPos.vtX) + tV.vtZ;
 			WlzGreyValueGetCon(gVWSp, sPosD.vtZ, sPosD.vtY,
 					   sPosD.vtX);
 			if(gVWSp->bkdFlag == 0)
@@ -4071,9 +4079,9 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		      while(dPos.vtX <= iRgt)
 		      {
 			idI = dPos.vtX - iWSp.lftpos;
-			sPosD.vtX = (sElm->tr[ 0] * dPos.vtX) + tV.vtX;
-			sPosD.vtY = (sElm->tr[ 4] * dPos.vtX) + tV.vtY;
-			sPosD.vtZ = (sElm->tr[ 8] * dPos.vtX) + tV.vtZ;
+			sPosD.vtX = (sE->tr[ 0] * dPos.vtX) + tV.vtX;
+			sPosD.vtY = (sE->tr[ 4] * dPos.vtX) + tV.vtY;
+			sPosD.vtZ = (sE->tr[ 8] * dPos.vtX) + tV.vtZ;
 			WlzGreyValueGetCon(gVWSp, sPosD.vtZ, sPosD.vtY,
 					   sPosD.vtX);
 			if(gVWSp->bkdFlag == 0)
@@ -4112,9 +4120,9 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		      while(dPos.vtX <= iRgt)
 		      {
 			idI = dPos.vtX - iWSp.lftpos;
-			sPosD.vtX = (sElm->tr[ 0] * dPos.vtX) + tV.vtX;
-			sPosD.vtY = (sElm->tr[ 4] * dPos.vtX) + tV.vtY;
-			sPosD.vtZ = (sElm->tr[ 8] * dPos.vtX) + tV.vtZ;
+			sPosD.vtX = (sE->tr[ 0] * dPos.vtX) + tV.vtX;
+			sPosD.vtY = (sE->tr[ 4] * dPos.vtX) + tV.vtY;
+			sPosD.vtZ = (sE->tr[ 8] * dPos.vtX) + tV.vtZ;
 			WlzGreyValueGetCon(gVWSp, sPosD.vtZ, sPosD.vtY,
 					   sPosD.vtX);
 			if(gVWSp->bkdFlag == 0)
@@ -4153,9 +4161,9 @@ static WlzErrorNum WlzCMeshScanObjValues3D(WlzObject *dstObj,
 		      while(dPos.vtX <= iRgt)
 		      {
 			idI = dPos.vtX - iWSp.lftpos;
-			sPosD.vtX = (sElm->tr[ 0] * dPos.vtX) + tV.vtX;
-			sPosD.vtY = (sElm->tr[ 4] * dPos.vtX) + tV.vtY;
-			sPosD.vtZ = (sElm->tr[ 8] * dPos.vtX) + tV.vtZ;
+			sPosD.vtX = (sE->tr[ 0] * dPos.vtX) + tV.vtX;
+			sPosD.vtY = (sE->tr[ 4] * dPos.vtX) + tV.vtY;
+			sPosD.vtZ = (sE->tr[ 8] * dPos.vtX) + tV.vtZ;
 			WlzGreyValueGetCon(gVWSp, sPosD.vtZ, sPosD.vtY,
 					   sPosD.vtX);
 			if(gVWSp->bkdFlag == 0)

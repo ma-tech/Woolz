@@ -88,7 +88,7 @@ void     	WlzCMeshUpdateMaxSqEdgLen2D(WlzCMesh2D *mesh)
   double        dSq;
   WlzCMeshElm2D *elm;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  if((mesh != NULL) && (mesh->type == WLZ_CMESH_TRI2D))
   {
     mesh->maxSqEdgLen = 0.0;
     for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
@@ -134,11 +134,13 @@ void     	WlzCMeshUpdateMaxSqEdgLen2D(WlzCMesh2D *mesh)
 void            WlzCMeshUpdateMaxSqEdgLen3D(WlzCMesh3D *mesh)
 {
   int           idE,
-                idF;
+                idM,
+		idN;
   double        dSq;
   WlzCMeshElm3D *elm;
+  WlzCMeshNod3D	*nodes[4];
 
-  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  if((mesh != NULL) && (mesh->type == WLZ_CMESH_TET3D))
   {
     mesh->maxSqEdgLen = 0.0;
     for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
@@ -147,26 +149,16 @@ void            WlzCMeshUpdateMaxSqEdgLen3D(WlzCMesh3D *mesh)
       					      idE);
       if(elm->idx >= 0)
       {
-	for(idF = 0; idF < 3; ++idF) /* Only need to check 3 faces
-	                                for all edges. */
+	WlzCMeshElmGetNodes3D(elm, nodes + 0, nodes + 1, nodes + 2, nodes + 3);
+	for(idM = 0; idM < 3; ++idM)
 	{
-	  dSq = WlzGeomDistSq3D(elm->face[idF].edu[0].nod->pos,
-				elm->face[idF].edu[1].nod->pos);
-	  if(dSq > mesh->maxSqEdgLen)
+	  for(idN = idM + 1; idN < 4; ++idN)
 	  {
-	    mesh->maxSqEdgLen = dSq;
-	  }
-	  dSq = WlzGeomDistSq3D(elm->face[idF].edu[1].nod->pos,
-				elm->face[idF].edu[2].nod->pos);
-	  if(dSq > mesh->maxSqEdgLen)
-	  {
-	    mesh->maxSqEdgLen = dSq;
-	  }
-	  dSq = WlzGeomDistSq3D(elm->face[idF].edu[2].nod->pos,
-				elm->face[idF].edu[0].nod->pos);
-	  if(dSq > mesh->maxSqEdgLen)
-	  {
-	    mesh->maxSqEdgLen = dSq;
+	    dSq = WlzGeomDistSq3D(nodes[idM]->pos, nodes[idN]->pos);
+	    if(dSq > mesh->maxSqEdgLen)
+	    {
+	      mesh->maxSqEdgLen = dSq;
+	    }
 	  }
 	}
       }
@@ -1016,7 +1008,7 @@ WlzErrorNum	WlzCMeshLaplacianSmooth2D(WlzCMesh2D *mesh,
     {
       WlzCMeshUpdateBBox2D(mesh);
       WlzCMeshUpdateMaxSqEdgLen2D(mesh);
-      errNum = WlzCMeshReassignBuckets2D(mesh, 0);
+      errNum = WlzCMeshReassignGridCells2D(mesh, 0);
     }
   }
   return(errNum);
@@ -1090,7 +1082,7 @@ WlzErrorNum	WlzCMeshLaplacianSmooth3D(WlzCMesh3D *mesh,
     {
       WlzCMeshUpdateBBox3D(mesh);
       WlzCMeshUpdateMaxSqEdgLen3D(mesh);
-      errNum = WlzCMeshReassignBuckets3D(mesh, 0);
+      errNum = WlzCMeshReassignGridCells3D(mesh, 0);
     }
   }
   return(errNum);
@@ -1153,12 +1145,12 @@ WlzErrorNum	WlzCMeshLPFilter(WlzCMeshP mesh,
         case WLZ_CMESH_TRI2D:
 	  WlzCMeshUpdateBBox2D(mesh.m2);
 	  WlzCMeshUpdateMaxSqEdgLen2D(mesh.m2);
-	  errNum = WlzCMeshReassignBuckets2D(mesh.m2, 0);
+	  errNum = WlzCMeshReassignGridCells2D(mesh.m2, 0);
 	  break;
         case WLZ_CMESH_TET3D:
 	  WlzCMeshUpdateBBox3D(mesh.m3);
 	  WlzCMeshUpdateMaxSqEdgLen3D(mesh.m3);
-	  errNum = WlzCMeshReassignBuckets3D(mesh.m3, 0);
+	  errNum = WlzCMeshReassignGridCells3D(mesh.m3, 0);
 	  break;
       }
     }
@@ -1332,7 +1324,7 @@ void		WlzCMeshSetVertices2D(WlzCMesh2D *mesh, WlzDVertex2 *vtxBuf,
   {
     WlzCMeshUpdateBBox2D(mesh);
     WlzCMeshUpdateMaxSqEdgLen2D(mesh);
-    (void )WlzCMeshReassignBuckets2D(mesh, 0);
+    (void )WlzCMeshReassignGridCells2D(mesh, 0);
   }
 }
 
@@ -1371,7 +1363,7 @@ void		WlzCMeshSetVertices3D(WlzCMesh3D *mesh, WlzDVertex3 *vtxBuf,
   {
     WlzCMeshUpdateBBox3D(mesh);
     WlzCMeshUpdateMaxSqEdgLen3D(mesh);
-    (void )WlzCMeshReassignBuckets3D(mesh, 0);
+    (void )WlzCMeshReassignGridCells3D(mesh, 0);
   }
 }
 
@@ -1454,6 +1446,8 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
   		*edu1;
   WlzCMeshElm2D	*elm;
   WlzCMeshNod2D	*nod;
+  WlzCMeshCell2D *cell;
+  WlzIVertex2	idx;
   WlzErrorNum	errNum0,
   		errNum1 = WLZ_ERR_NONE;
   const int	nnxtLimit = 1000;
@@ -1467,7 +1461,40 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
   {
     errNum1 = WLZ_ERR_DOMAIN_TYPE;
   }
-  else
+  if(errNum1 == WLZ_ERR_NONE)
+  {
+    /* Verify the grid of cells has reasonable linked lists. */
+    idx.vtY = 0;
+    while(((allErr == 0)  || (errNum1 == WLZ_ERR_NONE)) &&
+          (idx.vtY < mesh->cGrid.nCells.vtY))
+    {
+      idx.vtX = 0;
+      while(((allErr == 0)  || (errNum1 == WLZ_ERR_NONE)) &&
+            (idx.vtX < mesh->cGrid.nCells.vtX))
+      {
+        /* Verify node linked list. */
+	cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
+	cnt0 = 0;
+	nod = cell->nod;
+	while((nod != NULL) && (cnt0 < nnxtLimit))
+	{
+	  nod = nod->next;
+	  ++cnt0;
+	}
+	if(cnt0 >= nnxtLimit)
+	{
+	  errNum0 = WLZ_ERR_DOMAIN_DATA;
+	  (void )sprintf(msgBuf,
+			 "cell[%d][%d].nod->next cycle > %d",
+			 idx.vtY, idx.vtX, nnxtLimit);
+	}
+	/* Verify element linked lists - not written yet. */
+        ++idx.vtX; 
+      }
+      ++idx.vtY;
+    }
+  }
+  if(errNum1 == WLZ_ERR_NONE)
   {
     idE0 = 0;
     while((idE0 < mesh->res.elm.maxEnt) &&
@@ -1687,7 +1714,20 @@ WlzErrorNum 	WlzCMeshVerify3D(WlzCMesh3D *mesh, WlzCMeshElm3D **dstElm,
 	                   "elm[%d]->face[%d].elm != &(elm[%d])",
 			   idE, idF, idE);
 	  }
-	  if(errNum0 == WLZ_ERR_NONE)
+	  if((allErr == 0)  || (errNum0 == WLZ_ERR_NONE))
+	  {
+	    if(fce->opp != NULL)
+	    {
+	      if(fce->opp->opp->elm->idx != elm->idx)
+	      {
+	        errNum0 = WLZ_ERR_DOMAIN_DATA;
+		(void )sprintf(msgBuf,
+		"elm[%d]->face[%d]->opp->opp->elm->idx != elm[%d]->idx\n",
+		idE, idF, idE);
+	      }
+	    }
+	  }
+	  if((allErr == 0)  || (errNum0 == WLZ_ERR_NONE))
 	  {
 	    for(idN = 0; idN < 3; ++idN)
 	    {
@@ -2195,6 +2235,24 @@ double          WlzCMeshElmSnVolume63D(WlzCMeshElm3D *elm)
 
 /*!
 * \ingroup	WlzMesh
+* \brief	Gets the three nodes of a 2D element.
+* \param	elm			Given mesh element.
+* \param	dstNod0			First destination pointer for node.
+* \param	dstNod1			Second destination pointer for node.
+* \param	dstNod2			Third destination pointer for node.
+*/
+void		WlzCMeshElmGetNodes2D(WlzCMeshElm2D *elm,
+				      WlzCMeshNod2D **dstNod0,
+				      WlzCMeshNod2D **dstNod1,
+				      WlzCMeshNod2D **dstNod2)
+{
+  *dstNod0 = elm->edu[0].nod;
+  *dstNod1 = elm->edu[1].nod;
+  *dstNod2 = elm->edu[2].nod;
+}
+
+/*!
+* \ingroup	WlzMesh
 * \brief	Gets the four nodes of a 3D element.
 * \param	elm			Given mesh element.
 * \param	dstNod0			First destination pointer for node.
@@ -2216,20 +2274,85 @@ void		WlzCMeshElmGetNodes3D(WlzCMeshElm3D *elm,
 
 /*!
 * \ingroup	WlzMesh
-* \brief	Gets the three nodes of a 2D element.
+* \brief	Gets the axis aligned bounding box of a 2D element.
 * \param	elm			Given mesh element.
-* \param	dstNod0			First destination pointer for node.
-* \param	dstNod1			Second destination pointer for node.
-* \param	dstNod2			Third destination pointer for node.
 */
-void		WlzCMeshElmGetNodes2D(WlzCMeshElm2D *elm,
-				      WlzCMeshNod2D **dstNod0,
-				      WlzCMeshNod2D **dstNod1,
-				      WlzCMeshNod2D **dstNod2)
+WlzDBox2	WlzCMeshElmBBox2D(WlzCMeshElm2D *elm)
 {
-  *dstNod0 = elm->edu[0].nod;
-  *dstNod1 = elm->edu[1].nod;
-  *dstNod2 = elm->edu[2].nod;
+  int		idx;
+  WlzCMeshNod2D	*nod;
+  WlzDBox2	bBox;
+
+  nod = elm->edu[0].nod;
+  bBox.xMin = bBox.xMax = nod->pos.vtX;
+  bBox.yMin = bBox.yMax = nod->pos.vtY;
+  for(idx = 1; idx <= 2; ++idx)
+  {
+    nod = elm->edu[idx].nod;
+    if(nod->pos.vtX < bBox.xMin)
+    {
+      bBox.xMin = nod->pos.vtX;
+    }
+    else if(nod->pos.vtX > bBox.xMax)
+    {
+      bBox.xMax = nod->pos.vtX;
+    }
+    if(nod->pos.vtY < bBox.yMin)
+    {
+      bBox.yMin = nod->pos.vtY;
+    }
+    else if(nod->pos.vtY > bBox.yMax)
+    {
+      bBox.yMax = nod->pos.vtY;
+    }
+  }
+  return(bBox);
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Gets the axis aligned bounding box of a 3D element.
+* \param	elm			Given mesh element.
+*/
+WlzDBox3	WlzCMeshElmBBox3D(WlzCMeshElm3D *elm)
+{
+  int		idx;
+  WlzCMeshNod3D	*nod;
+  WlzDBox3	bBox;
+
+  nod = elm->face[1].edu[1].nod;
+  bBox.xMin = bBox.xMax = nod->pos.vtX;
+  bBox.yMin = bBox.yMax = nod->pos.vtY;
+  bBox.zMin = bBox.zMax = nod->pos.vtZ;
+  for(idx = 0; idx <= 2; ++idx)
+  {
+    nod = elm->face[0].edu[idx].nod;
+    if(nod->pos.vtX < bBox.xMin)
+    {
+      bBox.xMin = nod->pos.vtX;
+    }
+    else if(nod->pos.vtX > bBox.xMax)
+    {
+      bBox.xMax = nod->pos.vtX;
+    }
+    if(nod->pos.vtY < bBox.yMin)
+    {
+      bBox.yMin = nod->pos.vtY;
+    }
+    else if(nod->pos.vtY > bBox.yMax)
+    {
+      bBox.yMax = nod->pos.vtY;
+    }
+    if(nod->pos.vtZ < bBox.zMin)
+    {
+      bBox.zMin = nod->pos.vtZ;
+    }
+    else if(nod->pos.vtZ > bBox.zMax)
+    {
+      bBox.zMax = nod->pos.vtZ;
+    }
+  }
+  return(bBox);
 }
 
 /*!
@@ -2533,7 +2656,7 @@ WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, size_t datSz,
     if(errNum == WLZ_ERR_NONE)
     {
       newMesh->bBox = gvnMesh->bBox;
-      errNum = WlzCMeshReassignBuckets2D(newMesh, gvnMesh->res.nod.numEnt);
+      errNum = WlzCMeshReassignGridCells2D(newMesh, gvnMesh->res.nod.numEnt);
     }
     while((errNum == WLZ_ERR_NONE) && (idE < gvnMesh->res.elm.maxEnt))
     {
@@ -2547,7 +2670,7 @@ WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, size_t datSz,
 	do
 	{
 	  if(WlzCMeshLocateNod2D(newMesh, gvnNodes[idN]->pos,
-	                         &dumGrdPos, &dumNod, newNodes + idN) == 0)
+	                         newNodes + idN) == 0)
 
 	  {
 	    newNodes[idN] = WlzCMeshNewNod2D(newMesh, gvnNodes[idN]->pos,
@@ -2660,7 +2783,7 @@ WlzCMesh3D	*WlzCMeshCopy3D(WlzCMesh3D *gvnMesh, size_t datSz,
     if(errNum == WLZ_ERR_NONE)
     {
       newMesh->bBox = gvnMesh->bBox;
-      errNum = WlzCMeshReassignBuckets3D(newMesh, gvnMesh->res.nod.numEnt);
+      errNum = WlzCMeshReassignGridCells3D(newMesh, gvnMesh->res.nod.numEnt);
     }
     while((errNum == WLZ_ERR_NONE) && (idE < gvnMesh->res.elm.maxEnt))
     {

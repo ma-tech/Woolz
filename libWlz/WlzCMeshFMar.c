@@ -46,6 +46,7 @@ static char _WlzCMeshFMar_c[] = "MRC HGU $Id$";
 #include <Wlz.h>
 
 /* #define WLZ_CMESH_FMAR_DEBUG */
+/* #define WLZ_CMESH_DEBUG_LOCATION */
 
 /*!
 * \struct	_WlzCMeshFMarQEnt
@@ -181,6 +182,12 @@ static WlzErrorNum 		WlzCMeshFMarElmQInit2D(
 static WlzErrorNum 		WlzCMeshFMarElmQInit3D(
 				  AlcHeap *queue,
 				  WlzCMeshNod3D *nod);
+#ifdef WLZ_CMESH_DEBUG_LOCATION
+extern	void  			WlzCMeshDebugResetNElmQuery(
+				  void);
+extern void			WlzCMeshDebugReportNElmQuery(
+				  void);
+#endif /* WLZ_CMESH_DEBUG_LOCATION */
 
 /*!
 * \return	A 2D domain object, an empty object if the mesh has
@@ -282,7 +289,8 @@ WlzObject	*WlzCMeshDistance2D(WlzCMesh2D *mesh,
 	{
 	  pos.vtX = idK;
 	  if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE,
-	                                      pos.vtX, pos.vtY, &idN)) >= 0)
+	                                      pos.vtX, pos.vtY,
+					      0, &idN)) >= 0)
 	  {
 	    elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
 	    nod[0] = elm->edu[0].nod;
@@ -440,7 +448,7 @@ WlzObject	*WlzCMeshDistance3D(WlzCMesh3D *mesh,
 	    pos.vtX = idK;
 	    if((idE = WlzCMeshElmEnclosingPos3D(mesh, idE,
 						pos.vtX, pos.vtY, pos.vtZ,
-						&idN)) >= 0)
+						0, &idN)) >= 0)
 	    {
 	      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
 	      WlzCMeshElmGetNodes3D(elm, nod + 0, nod + 1, nod + 2, nod + 3);
@@ -741,6 +749,9 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+#ifdef WLZ_CMESH_DEBUG_LOCATION
+    WlzCMeshDebugResetNElmQuery();
+#endif /* WLZ_CMESH_DEBUG_LOCATION */
     if(nSeeds > 0)
     {
       errNum = WlzCMeshFMarAddSeeds3D(nodQ, mesh, cnt + 1,
@@ -840,6 +851,12 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
       AlcHeapAllEntFree(elmQ, 0);
     }
   }
+#ifdef WLZ_CMESH_DEBUG_LOCATION
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzCMeshDebugReportNElmQuery();
+  }
+#endif /* WLZ_CMESH_DEBUG_LOCATION */
   /* Clear up. */
   AlcHeapFree(elmQ);
   AlcHeapFree(nodQ);
@@ -995,7 +1012,7 @@ static double	WlzCMeshFMarQSElmPriority3D(WlzCMeshElm3D *elm,
 static int	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
 				WlzCMeshNod2D *nod1, WlzCMeshNod2D *nod2, 
 				double *distances, WlzCMeshElm2D *elm)
-#define NEW_CODE_HACK
+/* #define NEW_CODE_HACK */
 #ifdef NEW_CODE_HACK
 {
   int		idN,
@@ -1808,29 +1825,33 @@ static WlzErrorNum WlzCMeshFMarAddSeeds3D(AlcHeap *nodQ,
       if(distances[idN] < DBL_MAX / 2.0)
       {
         nod0 = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
-	nod0->flags |= WLZ_CMESH_NOD_FLAG_KNOWN;
-	edu1 = edu0 = nod0->edu;
-	hit = 0;
-	do
+	if(nod0->idx >= 0)
 	{
-	  nod1 = edu1->next->nod;
-	  if(distances[nod1->idx] > DBL_MAX / 2.0)
+	  nod0->flags |= WLZ_CMESH_NOD_FLAG_KNOWN;
+	  edu1 = edu0 = nod0->edu;
+	  hit = 0;
+	  do
 	  {
-	    hit = 1;
-	    break;
+	    nod1 = edu1->next->nod;
+	    if(distances[nod1->idx] > DBL_MAX / 2.0)
+	    {
+	      hit = 1;
+	      break;
+	    }
+	    edu1 = edu1->nnxt;
+	  } while(edu1 != edu0);
+	  if(hit == 0)
+	  {
+	    nod0->flags |= WLZ_CMESH_NOD_FLAG_KNOWN |
+	                   WLZ_CMESH_NOD_FLAG_UPWIND;
 	  }
-	  edu1 = edu1->nnxt;
-	} while(edu1 != edu0);
-	if(hit == 0)
-	{
-	  nod0->flags |= WLZ_CMESH_NOD_FLAG_KNOWN | WLZ_CMESH_NOD_FLAG_UPWIND;
-	}
-	else
-	{
-          if((errNum = WlzCMeshFMarQInsertNod3D(nodQ, nod0,
-					distances[nod0->idx])) != WLZ_ERR_NONE)
+	  else
 	  {
-	    break;
+	    if((errNum = WlzCMeshFMarQInsertNod3D(nodQ, nod0,
+					distances[nod0->idx])) != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
 	  }
 	}
       }
@@ -1878,7 +1899,7 @@ static WlzErrorNum WlzCMeshFMarAddSeed2D(AlcHeap  *sElmQ,
 
   /* Find any element which encloses the seed (there may be more than one
    * if the seed is on an element's edge or at a node. */
-  idM = WlzCMeshElmEnclosingPos2D(mesh, -1, seed.vtX, seed.vtY, NULL);
+  idM = WlzCMeshElmEnclosingPos2D(mesh, -1, seed.vtX, seed.vtY, 0, NULL);
   if(idM < 0)
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
@@ -2061,7 +2082,7 @@ static WlzErrorNum WlzCMeshFMarAddSeed3D(AlcHeap  *sElmQ,
   /* Find any element which encloses the seed (there may be more than one
    * if the seed is on an element's edge or at a node. */
   idM = WlzCMeshElmEnclosingPos3D(mesh, -1, seed.vtX, seed.vtY, seed.vtZ,
-  			          NULL);
+  			          0, NULL);
   if(idM < 0)
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
