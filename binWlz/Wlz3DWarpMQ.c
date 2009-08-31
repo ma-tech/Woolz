@@ -558,7 +558,8 @@ int main(int	argc,
                      printf("cannot open the input tie point data file.\n");
                      exit(1);
               }
-              errNum = read_WlzTiePoints(inFile, &nTiePP, &vxVec0, &vxVec1, ReadDisplacement);
+              errNum = read_WlzTiePoints(inFile, &nTiePP, &vxVec0, &vxVec1,
+	                                 ReadDisplacement);
               if(inFile)
               {
                  fclose(inFile);
@@ -566,9 +567,10 @@ int main(int	argc,
               }
 	      
               /* get the basis transform */
-              basisTr = WlzBasisFnTrFromCPts3( basisFnType, basisFnPolyOrder,
+              basisTr = WlzBasisFnTrFromCPts3D( basisFnType, basisFnPolyOrder,
     			                nTiePP, vxVec0,
-				        nTiePP, vxVec1, &errNum );
+				        nTiePP, vxVec1,
+					NULL, &errNum );
               /* get the mesh transformation  */
               { /* need consistency with 2D format */
                 if( WlzGetTransformedMesh(wmt3D, basisTr) != WLZ_ERR_NONE )
