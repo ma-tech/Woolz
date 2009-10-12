@@ -50,7 +50,6 @@ static char _WlzMeshGen_c[] = "MRC HGU $Id$";
 #include <string.h>
 #include <Wlz.h>
 
-/* #define WLZ_CMESH_DEBUG_LOCATION */
 
 /*!
 * \enum		_WlzCMeshConformAction
@@ -333,28 +332,6 @@ static WlzCMeshEdgU2D 		*WlzCMeshEdgUseFindOpp2D(
 				  WlzCMeshEdgU2D *gEdu);
 static WlzCMeshFace 		*WlzCMeshFindOppFce(
 				  WlzCMeshFace *gFce);
-
-#ifdef WLZ_CMESH_DEBUG_LOCATION
-static int	elmQueryCnt = 0,
-		nElmQuery = 0,
-		nElmQuerySum = 0,
-		nElmQueryMax = 0;
-
-void		WlzCMeshDebugResetNElmQuery(void)
-{
-  nElmQuery = 0;
-  nElmQuerySum = 0;
-  nElmQueryMax = 0;
-}
-
-void		WlzCMeshDebugReportNElmQuery(void)
-{
-  (void )fprintf(stderr,
-  "WlzCMeshDebugPrintNElmQuery() mean = %d, max = %d\n",
-  (nElmQuery > 0)? nElmQuerySum / nElmQuery: 0,
-  nElmQueryMax);
-}
-#endif /* WLZ_CMESH_DEBUG_LOCATION */
 
 /*!
 * \return	New 2D mesh.
@@ -2305,7 +2282,9 @@ WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
     elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
     if(elm->idx >= 0)
     {
-      WlzCMeshElmGetNodes2D(elm, nodes + 0, nodes + 1, nodes + 2);
+      nodes[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+      nodes[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+      nodes[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
       /* Set mask depending on whether nodes are inside or outside the
        * domain. */
       iMsk = 0;
@@ -2380,7 +2359,9 @@ WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
       if((elm->idx >= 0) &&
          (elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) != 0)
       {
-	WlzCMeshElmGetNodes2D(elm, nodes + 0, nodes + 1, nodes + 2);
+	nodes[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+	nodes[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+	nodes[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
 	/* Set mask depending on whether nodes are inside or outside the
 	 * domain. */
 	iMsk = 0;
@@ -2455,8 +2436,10 @@ WlzErrorNum 	WlzCMeshBoundConform3D(WlzCMesh3D *mesh,
     elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
     if(elm->idx >= 0)
     {
-      WlzCMeshElmGetNodes3D(elm,
-			    nodes + 0, nodes + 1, nodes + 2, nodes + 3);
+      nodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+      nodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+      nodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+      nodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
       /* Set mask depending on whether nodes are inside or outside the
        * domain. */
       iMsk = 0;
@@ -2563,8 +2546,10 @@ WlzErrorNum 	WlzCMeshBoundConform3D(WlzCMesh3D *mesh,
       if((elm->idx >= 0) &&
          (elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) != 0)
       {
-	WlzCMeshElmGetNodes3D(elm,
-			      nodes + 0, nodes + 1, nodes + 2, nodes + 3);
+	nodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+	nodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+	nodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+	nodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
 	/* Set mask depending on whether nodes are inside or outside the
 	 * domain. */
 	iMsk = 0;
@@ -2628,7 +2613,7 @@ static WlzCMeshNod2D *WlzCMeshComputeBoundNod2D(WlzCMesh2D *mesh,
 
   pos0 = nod0->pos;
   pos1 = nod1->pos;
-  tolSq = (tol * tol) + DBL_EPSILON;
+  tolSq = (tol * tol) + WLZ_MESH_TOLERANCE_SQ;
   pos = WlzGeomObjLineSegIntersect2D(obj, pos0, pos1, tol, 0, NULL);
   if(WlzGeomDistSq2D(pos, pos0) < tolSq)
   {
@@ -2686,7 +2671,7 @@ static WlzCMeshNod3D *WlzCMeshComputeBoundNod3D(WlzCMesh3D *mesh,
 
   pos0 = nod0->pos;
   pos1 = nod1->pos;
-  tolSq = (tol * tol) + DBL_EPSILON;
+  tolSq = (tol * tol) + WLZ_MESH_TOLERANCE_SQ;
   pos = WlzGeomObjLineSegIntersect3D(obj, pos0, pos1, tol, 0, NULL);
   if(WlzGeomDistSq3D(pos, pos0) < tolSq)
   {
@@ -3488,7 +3473,10 @@ double 		WlzCMeshElmMinEdgLnSq3D(WlzCMeshElm3D *elm)
   if(elm && (elm->idx >= 0))
   {
     /* Collect the nodes of the element. */
-    WlzCMeshElmGetNodes3D(elm, nodBuf + 0, nodBuf + 1, nodBuf + 2, nodBuf + 3);
+    nodBuf[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+    nodBuf[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+    nodBuf[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+    nodBuf[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
     /* Compute and compare edge lengths. */
     WLZ_VTX_3_SUB(p0, nodBuf[0]->pos, nodBuf[1]->pos);
     minLenSq = WLZ_VTX_3_SQRLEN(p0);
@@ -4217,9 +4205,6 @@ int             WlzCMeshElmEnclosingPos2D(WlzCMesh2D *mesh,
   WlzDVertex2	gPos;
   int           elmIdx = -1;
 
-#ifdef WLZ_CMESH_DEBUG_LOCATION
-  elmQueryCnt = 0;
-#endif /* WLZ_CMESH_DEBUG_LOCATION */
   gPos.vtX = pX;
   gPos.vtY = pY;
   if(exhaustive)
@@ -4237,14 +4222,6 @@ int             WlzCMeshElmEnclosingPos2D(WlzCMesh2D *mesh,
       elmIdx = WlzCMeshElmJumpPos2D(mesh, gPos, dstCloseNod);
     }
   }
-#ifdef WLZ_CMESH_DEBUG_LOCATION
-  ++nElmQuery;
-  nElmQuerySum += elmQueryCnt;
-  if(nElmQueryMax < elmQueryCnt)
-  {
-    nElmQueryMax = elmQueryCnt;
-  }
-#endif /* WLZ_CMESH_DEBUG_LOCATION */
   return(elmIdx);
 }
 
@@ -4287,9 +4264,6 @@ int             WlzCMeshElmEnclosingPos3D(WlzCMesh3D *mesh,
   WlzDVertex3	gPos;
   int           elmIdx = -1;
 
-#ifdef WLZ_CMESH_DEBUG_LOCATION
-  elmQueryCnt = 0;
-#endif /* WLZ_CMESH_DEBUG_LOCATION */
   gPos.vtX = pX;
   gPos.vtY = pY;
   gPos.vtZ = pZ;
@@ -4308,14 +4282,6 @@ int             WlzCMeshElmEnclosingPos3D(WlzCMesh3D *mesh,
       elmIdx = WlzCMeshElmJumpPos3D(mesh, gPos, dstCloseNod);
     }
   }
-#ifdef WLZ_CMESH_DEBUG_LOCATION
-  ++nElmQuery;
-  nElmQuerySum += elmQueryCnt;
-  if(nElmQueryMax < elmQueryCnt)
-  {
-    nElmQueryMax = elmQueryCnt;
-  }
-#endif /* WLZ_CMESH_DEBUG_LOCATION */
   return(elmIdx);
 }
 
@@ -4807,9 +4773,6 @@ int		WlzCMeshElmEnclosesPos2D(WlzCMeshElm2D *elm, WlzDVertex2 gPos)
 
   if(elm)
   {
-#ifdef WLZ_CMESH_DEBUG_LOCATION
-    ++elmQueryCnt;
-#endif /* WLZ_CMESH_DEBUG_LOCATION */
     inside = WlzGeomVxInTriangle2D(elm->edu[0].nod->pos, elm->edu[1].nod->pos,
 				   elm->edu[2].nod->pos, gPos) >= 0;
   }
@@ -4831,10 +4794,10 @@ int		WlzCMeshElmEnclosesPos3D(WlzCMeshElm3D *elm, WlzDVertex3 gPos)
 
   if(elm)
   {
-#ifdef WLZ_CMESH_DEBUG_LOCATION
-    ++elmQueryCnt;
-#endif /* WLZ_CMESH_DEBUG_LOCATION */
-    WlzCMeshElmGetNodes3D(elm, nod + 0, nod + 1, nod + 2, nod + 3);
+    nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+    nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+    nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+    nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
     inside = WlzGeomVxInTetrahedron(nod[0]->pos, nod[1]->pos,
     				    nod[2]->pos, nod[3]->pos, gPos) >= 0;
   }
