@@ -197,6 +197,7 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2DParam(WlzFnType type,
   WlzBasisFnTransform *basisTr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const double	deltaMQ = 0.001,
+		deltaIMQ = 0.300,
   		paramGauss = 0.9;
 
   if((nDPts != nSPts) || (nDPts <= 0))
@@ -237,6 +238,13 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2DParam(WlzFnType type,
 	basisTr->basisFn = WlzBasisFnPoly2DFromCPts(nDPts,
 					 order, dPts, sPts,
 				         &errNum);
+	break;
+      case WLZ_FN_BASIS_2DIMQ:
+	basisTr->basisFn = WlzBasisFnIMQ2DFromCPts(nDPts,
+					dPts, sPts,
+					((nParam > 0) && (param != NULL))?
+					*param: deltaIMQ,
+					NULL, mesh, &errNum);
 	break;
       case WLZ_FN_BASIS_2DMQ:
 	basisTr->basisFn = WlzBasisFnMQ2DFromCPts(nDPts,
@@ -321,7 +329,8 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts3DParam(WlzFnType type,
 {
   WlzBasisFnTransform *basisTr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	deltaMQ = 0.001;
+  const double	deltaMQ = 0.001,
+		deltaIMQ = 0.100;
 
   if((nDPts != nSPts) || (nDPts <= 0))
   {
@@ -350,6 +359,13 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts3DParam(WlzFnType type,
     basisTr->type = WLZ_TRANSFORM_3D_BASISFN;
     switch(type)
     {
+      case WLZ_FN_BASIS_3DIMQ:
+	basisTr->basisFn = WlzBasisFnIMQ3DFromCPts(nDPts,
+					dPts, sPts,
+					((nParam > 0) && (param != NULL))?
+					*param: deltaIMQ,
+					NULL, mesh, &errNum);
+	break;
       case WLZ_FN_BASIS_3DMQ:
 	basisTr->basisFn = WlzBasisFnMQ3DFromCPts(nDPts,
 					dPts, sPts,
@@ -448,7 +464,8 @@ WlzErrorNum	WlzBasisFnTPS2DChangeCPtsParam(WlzBasisFnTransform *basisTr,
   WlzBasisFn    *newBasisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const double	deltaMQ = 0.001,
-  		paramGauss = 0.9;
+		deltaIMQ = 0.300,
+  		paramGauss = 0.900;
 
   if((nDPts != nSPts) || (nDPts <= 0))
   {
@@ -481,6 +498,12 @@ WlzErrorNum	WlzBasisFnTPS2DChangeCPtsParam(WlzBasisFnTransform *basisTr,
 	newBasisFn = WlzBasisFnGauss2DFromCPts(nDPts, dPts, sPts,
 			  ((nParam > 0) && (param != NULL))?
 			  *param: paramGauss, basisTr->basisFn,
+			  basisTr->basisFn->mesh.m2, &errNum);
+	break;
+      case WLZ_FN_BASIS_2DIMQ:
+	newBasisFn = WlzBasisFnIMQ2DFromCPts(nDPts, dPts, sPts,
+			  ((nParam > 0) && (param != NULL))?
+			  *param: deltaIMQ, basisTr->basisFn,
 			  basisTr->basisFn->mesh.m2, &errNum);
 	break;
       case WLZ_FN_BASIS_2DMQ:
@@ -609,6 +632,14 @@ WlzErrorNum    	WlzBasisFnSetMesh(WlzMeshTransform *mesh,
 	  ++nod;
 	}
 	break;
+      case WLZ_FN_BASIS_2DIMQ:
+	while(nodCnt-- > 0)
+	{
+	  nod->displacement = WlzBasisFnValueIMQ2D(basisTr->basisFn,
+	  				nod->position);
+	  ++nod;
+	}
+	break;
       case WLZ_FN_BASIS_2DMQ:
 	while(nodCnt-- > 0)
 	{
@@ -719,6 +750,9 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzCMeshTransform *meshTr,
 	  case WLZ_FN_BASIS_2DGAUSS:
 	    *dspP = WlzBasisFnValueGauss2D(basisTr->basisFn, nod->pos);
 	    break;
+	  case WLZ_FN_BASIS_2DIMQ:
+	    *dspP = WlzBasisFnValueIMQ2D(basisTr->basisFn, nod->pos);
+	    break;
 	  case WLZ_FN_BASIS_2DMQ:
 	    *dspP = WlzBasisFnValueMQ2D(basisTr->basisFn, nod->pos);
 	    break;
@@ -775,6 +809,9 @@ WlzErrorNum    	WlzBasisFnSetCMesh3D(WlzCMeshTransform *meshTr,
         dspP = (WlzDVertex3 *)AlcVectorItemGet(meshTr->dspVec, idN);
 	switch(basisTr->basisFn->type)
 	{
+	    break;
+	  case WLZ_FN_BASIS_3DIMQ:
+	    *dspP = WlzBasisFnValueIMQ3D(basisTr->basisFn, nod->pos);
 	    break;
 	  case WLZ_FN_BASIS_3DMQ:
 	    *dspP = WlzBasisFnValueMQ3D(basisTr->basisFn, nod->pos);
@@ -1487,6 +1524,11 @@ WlzDVertex2	WlzBasisFnTransformVertexD(WlzBasisFnTransform *basisTr,
 	break;
       case WLZ_FN_BASIS_2DPOLY:
 	dstVx = WlzBasisFnValuePoly2D(basisTr->basisFn, srcVx);
+	dstVx.vtX += srcVx.vtX;
+	dstVx.vtY += srcVx.vtY;
+	break;
+      case WLZ_FN_BASIS_2DIMQ:
+	dstVx = WlzBasisFnValueIMQ2D(basisTr->basisFn, srcVx);
 	dstVx.vtX += srcVx.vtX;
 	dstVx.vtY += srcVx.vtY;
 	break;
