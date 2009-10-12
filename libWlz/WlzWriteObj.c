@@ -2747,7 +2747,9 @@ static WlzErrorNum	WlzWriteCMeshTransform2D(
       elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
-	WlzCMeshElmGetNodes2D(elm, nodes + 0, nodes + 1, nodes + 2);
+	nodes[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+	nodes[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+	nodes[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
 	putword(elm->flags, fP);
 	putword(nodTbl[nodes[0]->idx], fP);
 	putword(nodTbl[nodes[1]->idx], fP);
@@ -2936,8 +2938,9 @@ static WlzErrorNum WlzWriteCMesh2D(FILE *fP, int **dstNodTbl,
       elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
-	WlzCMeshElmGetNodes2D(elm, nodes + 0, nodes + 1,
-	                           nodes + 2);
+	nodes[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+	nodes[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+	nodes[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
 	putword(elm->flags, fP);
 	putword(nodTbl[nodes[0]->idx], fP);
 	putword(nodTbl[nodes[1]->idx], fP);
@@ -3075,8 +3078,10 @@ static WlzErrorNum WlzWriteCMesh3D(FILE *fP, int **dstNodTbl,
       elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
-	WlzCMeshElmGetNodes3D(elm, nodes + 0, nodes + 1,
-	                           nodes + 2, nodes + 3);
+	nodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+	nodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+	nodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+	nodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
 	putword(elm->flags, fP);
 	putword(nodTbl[nodes[0]->idx], fP);
 	putword(nodTbl[nodes[1]->idx], fP);
