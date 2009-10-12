@@ -285,6 +285,17 @@ extern "C" {
 		 (fabs((U).vtY - (V).vtY) < (T)) && \
 		 (fabs((U).vtZ - (V).vtZ) < (T)))
 
+/************************************************************************
+* CMesh node access
+************************************************************************/
+#define WLZ_CMESH_ELM2D_GET_NODE_0(e)	((e)->edu[0].nod)
+#define WLZ_CMESH_ELM2D_GET_NODE_1(e)	((e)->edu[1].nod)
+#define WLZ_CMESH_ELM2D_GET_NODE_2(e)	((e)->edu[2].nod)
+#define WLZ_CMESH_ELM3D_GET_NODE_0(e)	((e)->face[0].edu[0].nod)
+#define WLZ_CMESH_ELM3D_GET_NODE_1(e)	((e)->face[0].edu[1].nod)
+#define WLZ_CMESH_ELM3D_GET_NODE_2(e)	((e)->face[0].edu[2].nod)
+#define WLZ_CMESH_ELM3D_GET_NODE_3(e)	((e)->face[1].edu[1].nod)
+
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
