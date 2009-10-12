@@ -72,7 +72,6 @@ static WlzDVertex3 		WlzCMeshFilterLPLDelta3D(
 				  int doBnd);
 
 /*!
-* \return       void
 * \ingroup      WlzMesh
 * \brief        Computes the mesh maximum edge length which is used to
 *               terminate vertex location. This should not be allowed
@@ -121,7 +120,6 @@ void     	WlzCMeshUpdateMaxSqEdgLen2D(WlzCMesh2D *mesh)
 }
 
 /*!
-* \return       void
 * \ingroup      WlzMesh
 * \brief        Computes the mesh maximum edge length which is used to
 *               terminate vertex location. This should not be allowed
@@ -149,7 +147,10 @@ void            WlzCMeshUpdateMaxSqEdgLen3D(WlzCMesh3D *mesh)
       					      idE);
       if(elm->idx >= 0)
       {
-	WlzCMeshElmGetNodes3D(elm, nodes + 0, nodes + 1, nodes + 2, nodes + 3);
+	nodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+	nodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+	nodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+	nodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
 	for(idM = 0; idM < 3; ++idM)
 	{
 	  for(idN = idM + 1; idN < 4; ++idN)
@@ -167,7 +168,6 @@ void            WlzCMeshUpdateMaxSqEdgLen3D(WlzCMesh3D *mesh)
 }
 
 /*!
-* \return       void
 * \ingroup      WlzMesh
 * \brief        Updates the bounding box of the 2D conforming mesh.
 * \param        mesh                    The mesh.
@@ -223,7 +223,6 @@ void     	WlzCMeshUpdateBBox2D(WlzCMesh2D *mesh)
 }
 
 /*!
-* \return       void
 * \ingroup      WlzMesh
 * \brief        Updates the bounding box of the 3D conforming mesh.
 * \param        mesh                    The mesh.
@@ -690,104 +689,7 @@ int		WlzCMeshSetBoundElmFlags3D(WlzCMesh3D *mesh)
 }
 
 /*!
-* \return	Woolz error code.
-* \ingroup	WlzMesh
-* \brief
-* \param	mesh			Given 3D mesh.
-* \param	dstNBndElm		Destination pointer for the number
-*					of boundary elements.
-* \param	dstBndVec		Destination pointer for a vector
-*					of boundary element indices.
-* \param	trustNndFlags		If non-zero the element boundary
-*					flags can be trusted.
-*/
-WlzErrorNum	WlzCMeshGetBndElm3D(WlzCMesh3D *mesh,
-				    int *dstNBndElm,  AlcVector **dstBndVec,
-				    int trustNndFlags)
-{
-  int		idB,
-  		idE,
-		idF,
-		isBnd;
-  int		*idxP;
-  AlcVector	*bndElm = NULL;
-  WlzCMeshElm3D	*elm;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if(mesh == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if (mesh->type != WLZ_CMESH_TET3D)
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if((bndElm = AlcVectorNew(1, sizeof(int),
-                              mesh->res.elm.vec->blkSz, NULL)) == NULL)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    idE = 0;
-    idB = 0;
-    while(idE < mesh->res.elm.maxEnt)
-    {
-      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-      if(elm->idx >= 0)
-      {
-	/* Establish whether the element is a boundary element. */
-	isBnd = 0;
-	if(trustNndFlags)
-	{
-	  isBnd = elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY;
-	}
-	else
-	{
-	  for(idF = 0; idF < 4; ++idF)
-	  {
-            if((elm->face[idF].opp == NULL) ||
-	       (elm->face[idF].opp == &(elm->face[idF])))
-	    {
-	      isBnd = 1;
-	      break;
-	    }
-	  }
-	}
-	/* If element is a boundary element then record it's index in the
-	 * vector of boundary elements. */
-	if(isBnd)
-	{
-	  if((idxP = (int *)AlcVectorExtendAndGet(bndElm, idB)) == NULL)
-	  {
-	    errNum = WLZ_ERR_MEM_ALLOC;
-	    break;
-	  }
-	  *idxP = elm->idx;
-	  ++idB;
-	}
-      }
-      ++idE;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    *dstNBndElm = idB;
-    *dstBndVec = bndElm;
-  }
-  else
-  {
-    (void )AlcVectorFree(bndElm);
-  }
-  return(errNum);
-}
-
-/*!
-* \return				Non-zero if the node is a boundary
-* 					node.
+* \return	Non-zero if the node is a boundary node.
 * \ingroup	WlzMesh
 * \brief	Checks whether the node is a boundary node by examining
 * 		the edges which use the node. If one of these edges does
@@ -818,8 +720,7 @@ int		WlzCMeshNodIsBoundary2D(WlzCMeshNod2D *nod)
 }
 
 /*!
-* \return				Non-zero if the node is a boundary
-* 					node.
+* \return	Non-zero if the node is a boundary node.
 * \ingroup	WlzMesh
 * \brief	Checks whether the node is a boundary node by examining
 * 		the faces which use the node. If one of these faces does
@@ -852,8 +753,7 @@ int		WlzCMeshNodIsBoundary3D(WlzCMeshNod3D *nod)
 }
 
 /*!
-* \return				Non-zero if the element is a boundary
-* 					element.
+* \return	Non-zero if the element is a boundary element.
 * \ingroup	WlzMesh
 * \brief	Checks whether the element is a boundary node by examining
 * 		the edges for opposite edges.
@@ -870,8 +770,7 @@ int		WlzCMeshElmIsBoundary2D(WlzCMeshElm2D *elm)
 }
 
 /*!
-* \return				Non-zero if the element is a boundary
-* 					element.
+* \return	Non-zero if the element is a boundary element.
 * \ingroup	WlzMesh
 * \brief	Checks whether the element is a boundary node by examining
 * 		the faces for opposite faces.
@@ -1162,7 +1061,8 @@ WlzErrorNum	WlzCMeshLPFilter(WlzCMeshP mesh,
 * \return	Woolz error code.
 * \ingroup	WlzMesh
 * \brief	Applies a low pass filter to the geometry of the given
-*		mesh. See WlzGMFilterGeomLPLM().
+*		mesh. See WlzGMFilterGeomLPLM(). This will change the
+*		boundary node/element flags.
 * \param	mesh			Given mesh.
 * \param	lambda			Positive filter parameter.
 * \param	mu			Negative filter parameter.
@@ -1197,6 +1097,7 @@ WlzErrorNum	WlzCMeshLPFilterLM(WlzCMeshP mesh,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    (void )WlzCMeshSetBoundNodFlags(mesh);
     switch(mesh.m2->type)
     {
       case WLZ_CMESH_TRI2D:
@@ -2021,12 +1922,12 @@ WlzErrorNum 	WlzCMeshCmpElmFeat2D(WlzCMesh2D *mesh, int *dstNElm,
 	if(minLen)
 	{
 	  AlgRankSelectD(len, 3, 0);
-	  *(minLen + idV) = (len[0] < DBL_EPSILON)? 0.0: sqrt(len[0]);
+	  *(minLen + idV) = (len[0] < WLZ_MESH_TOLERANCE)? 0.0: sqrt(len[0]);
 	}
 	if(maxLen)
 	{
 	  AlgRankSelectD(len, 3, 2);
-	  *(maxLen + idV) = (len[2] < DBL_EPSILON)? 0.0: sqrt(len[2]);
+	  *(maxLen + idV) = (len[2] < WLZ_MESH_TOLERANCE)? 0.0: sqrt(len[2]);
 	}
         ++idV;
       }
@@ -2132,7 +2033,10 @@ WlzErrorNum 	WlzCMeshCmpElmFeat3D(WlzCMesh3D *mesh, int *dstNElm,
       elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
-	WlzCMeshElmGetNodes3D(elm, nod + 0, nod + 1, nod + 2, nod + 3);
+	nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+	nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+	nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+	nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
 	if(idx)
 	{
 	  *(idx + idV) = elm->idx;
@@ -2160,12 +2064,12 @@ WlzErrorNum 	WlzCMeshCmpElmFeat3D(WlzCMesh3D *mesh, int *dstNElm,
 	if(minLen)
 	{
 	  AlgRankSelectD(len, 6, 0);
-	  *(minLen + idV) = (len[0] < DBL_EPSILON)? 0.0: sqrt(len[0]);
+	  *(minLen + idV) = (len[0] < WLZ_MESH_TOLERANCE)? 0.0: sqrt(len[0]);
 	}
 	if(maxLen)
 	{
 	  AlgRankSelectD(len, 6, 5);
-	  *(maxLen + idV) = (len[5] < DBL_EPSILON)? 0.0: sqrt(len[5]);
+	  *(maxLen + idV) = (len[5] < WLZ_MESH_TOLERANCE)? 0.0: sqrt(len[5]);
 	}
         ++idV;
       }
@@ -2225,7 +2129,10 @@ double          WlzCMeshElmSnVolume63D(WlzCMeshElm3D *elm)
   double        vol;
   WlzCMeshNod3D	*nod[4];
 
-  WlzCMeshElmGetNodes3D(elm, nod + 0, nod + 1, nod + 2, nod + 3);
+  nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+  nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+  nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+  nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
   vol = WlzGeomTetraSnVolume6(nod[0]->pos,
                               nod[1]->pos,
                               nod[2]->pos,
@@ -2246,9 +2153,9 @@ void		WlzCMeshElmGetNodes2D(WlzCMeshElm2D *elm,
 				      WlzCMeshNod2D **dstNod1,
 				      WlzCMeshNod2D **dstNod2)
 {
-  *dstNod0 = elm->edu[0].nod;
-  *dstNod1 = elm->edu[1].nod;
-  *dstNod2 = elm->edu[2].nod;
+  *dstNod0 = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+  *dstNod1 = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+  *dstNod2 = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
 }
 
 /*!
@@ -2266,10 +2173,10 @@ void		WlzCMeshElmGetNodes3D(WlzCMeshElm3D *elm,
 				      WlzCMeshNod3D **dstNod2,
 				      WlzCMeshNod3D **dstNod3)
 {
-  *dstNod0 = elm->face[0].edu[0].nod;
-  *dstNod1 = elm->face[0].edu[1].nod;
-  *dstNod2 = elm->face[0].edu[2].nod;
-  *dstNod3 = elm->face[1].edu[1].nod;
+  *dstNod0 = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+  *dstNod1 = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+  *dstNod2 = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+  *dstNod3 = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
 }
 
 /*!
@@ -2356,7 +2263,6 @@ WlzDBox3	WlzCMeshElmBBox3D(WlzCMeshElm3D *elm)
 }
 
 /*!
-* \return       void
 * \ingroup      WlzMesh
 * \brief        Filters the geometry of the verticies in a 2D mesh using
 *               the given input and output buffers for the mesh node
@@ -2399,7 +2305,6 @@ static void	WlzCMeshFilterLPL2D(WlzCMesh2D *mesh,
 }
 
 /*!
-* \return       void
 * \ingroup      WlzMesh
 * \brief        Filters the geometry of the verticies in a 3D mesh using
 *               the given input and output buffers for the mesh node
@@ -2625,8 +2530,6 @@ WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, size_t datSz,
   		idN;
   void		*ascP;
   AlcVector	*prvDat = NULL;
-  WlzIVertex2	dumGrdPos;
-  WlzCMeshNod2D	*dumNod;
   WlzCMeshNod2D	*gvnNodes[3],
   		*newNodes[3];
   WlzCMeshElm2D	*gvnElm;
@@ -2664,8 +2567,9 @@ WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, size_t datSz,
       if(gvnElm->idx >= 0)
       {
 	/* Copy Nodes. */
-        WlzCMeshElmGetNodes2D(gvnElm, gvnNodes + 0, gvnNodes + 1,
-	                      gvnNodes + 2);
+	gvnNodes[0] = WLZ_CMESH_ELM2D_GET_NODE_0(gvnElm);
+	gvnNodes[1] = WLZ_CMESH_ELM2D_GET_NODE_1(gvnElm);
+	gvnNodes[2] = WLZ_CMESH_ELM2D_GET_NODE_2(gvnElm);
 	idN = 0;
 	do
 	{
@@ -2791,8 +2695,10 @@ WlzCMesh3D	*WlzCMeshCopy3D(WlzCMesh3D *gvnMesh, size_t datSz,
       if(gvnElm->idx >= 0)
       {
 	/* Copy Nodes. */
-        WlzCMeshElmGetNodes3D(gvnElm, gvnNodes + 0, gvnNodes + 1,
-	                      gvnNodes + 2, gvnNodes + 3);
+	gvnNodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(gvnElm);
+	gvnNodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(gvnElm);
+	gvnNodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(gvnElm);
+	gvnNodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(gvnElm);
 	idN = 0;
 	do
 	{
@@ -2919,7 +2825,9 @@ WlzErrorNum     WlzCMeshFixNegativeElms2D(WlzCMesh2D *mesh)
       elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
-	WlzCMeshElmGetNodes2D(elm, nod + 0, nod + 1, nod + 2);
+	nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+	nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+	nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
 	sA2 = WlzGeomTriangleSnArea2(nod[0]->pos, nod[1]->pos, nod[2]->pos);
 	if(fabs(sA2) < WLZ_MESH_TOLERANCE_SQ)
 	{
@@ -3002,7 +2910,10 @@ WlzErrorNum     WlzCMeshFixNegativeElms3D(WlzCMesh3D *mesh)
       elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
-	WlzCMeshElmGetNodes3D(elm, nod + 0, nod + 1, nod + 2, nod + 3);
+	nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+	nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+	nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+	nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
 	sV6 = WlzGeomTetraSnVolume6(nod[0]->pos, nod[1]->pos, nod[2]->pos,
 				    nod[3]->pos);
 	if(fabs(sV6) < WLZ_MESH_TOLERANCE_SQ)
@@ -3053,4 +2964,225 @@ WlzErrorNum     WlzCMeshFixNegativeElms3D(WlzCMesh3D *mesh)
     }
   }
   return(errNum);
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Computes simple mesh node and element grid cell location 
+*		statistics.
+*		This function is probably only useful for optimising the
+*		number of location cells allocated.
+* \param	mesh			Given mesh.
+* \param	dstMinNodPerCell	Destination pointer for the
+* 					minimum number of nodes per cell.
+* \param	dstMaxNodPerCell	Destination pointer for the
+* 					maximum number of nodes per cell.
+* \param	dstMeanNodPerCell	Destination pointer for the
+* 					mean number of nodes per cell.
+* \param	dstMinElmPerCell	Destination pointer for the
+* 					minimum number of nodes per cell.
+* \param	dstMaxElmPerCell	Destination pointer for the
+* 					maximum number of nodes per cell.
+* \param	dstMeanElmPerCell	Destination pointer for the
+* 					mean number of nodes per cell.
+*/
+void	 	WlzCMeshGetCellStats(WlzCMeshP mesh,
+				     int *dstMinNodPerCell,
+				     int *dstMaxNodPerCell,
+				     double *dstMeanNodPerCell,
+				     int *dstMinElmPerCell,
+				     int *dstMaxElmPerCell,
+				     double *dstMeanElmPerCell)
+{
+  if(mesh.v != NULL)
+  {
+    switch(mesh.m2->type)
+    {
+      case WLZ_CMESH_TRI2D:
+        WlzCMeshGetCellStats2D(mesh.m2,
+			dstMinNodPerCell, dstMaxNodPerCell, dstMeanNodPerCell,
+			dstMinElmPerCell, dstMaxElmPerCell, dstMeanElmPerCell);
+        break;
+      case WLZ_CMESH_TET3D:
+        WlzCMeshGetCellStats3D(mesh.m3,
+			dstMinNodPerCell, dstMaxNodPerCell, dstMeanNodPerCell,
+			dstMinElmPerCell, dstMaxElmPerCell, dstMeanElmPerCell);
+        break;
+      default:
+	break;
+    }
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Computes simple 2D mesh node and element grid cell location 
+*		statistics.
+*		This function is probably only useful for optimising the
+*		number of location cells allocated.
+* \param	mesh			Given mesh.
+* \param	dstMinNodPerCell	Destination pointer for the
+* 					minimum number of nodes per cell.
+* \param	dstMaxNodPerCell	Destination pointer for the
+* 					maximum number of nodes per cell.
+* \param	dstMeanNodPerCell	Destination pointer for the
+* 					mean number of nodes per cell.
+* \param	dstMinElmPerCell	Destination pointer for the
+* 					minimum number of nodes per cell.
+* \param	dstMaxElmPerCell	Destination pointer for the
+* 					maximum number of nodes per cell.
+* \param	dstMeanElmPerCell	Destination pointer for the
+* 					mean number of nodes per cell.
+*/
+void	 	WlzCMeshGetCellStats2D(WlzCMesh2D *mesh,
+				       int *dstMinNodPerCell,
+				       int *dstMaxNodPerCell,
+				       double *dstMeanNodPerCell,
+				       int *dstMinElmPerCell,
+				       int *dstMaxElmPerCell,
+				       double *dstMeanElmPerCell)
+{
+  /* TODO HACK */
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Computes simple 3D mesh node and element grid cell location 
+*		statistics.
+*		This function is probably only useful for optimising the
+*		number of location cells allocated.
+* \param	mesh			Given mesh.
+* \param	dstMinNodPerCell	Destination pointer for the
+* 					minimum number of nodes per cell.
+* \param	dstMaxNodPerCell	Destination pointer for the
+* 					maximum number of nodes per cell.
+* \param	dstMeanNodPerCell	Destination pointer for the
+* 					mean number of nodes per cell.
+* \param	dstMinElmPerCell	Destination pointer for the
+* 					minimum number of nodes per cell.
+* \param	dstMaxElmPerCell	Destination pointer for the
+* 					maximum number of nodes per cell.
+* \param	dstMeanElmPerCell	Destination pointer for the
+* 					mean number of nodes per cell.
+*/
+void	 	WlzCMeshGetCellStats3D(WlzCMesh3D *mesh,
+				       int *dstMinNodPerCell,
+				       int *dstMaxNodPerCell,
+				       double *dstMeanNodPerCell,
+				       int *dstMinElmPerCell,
+				       int *dstMaxElmPerCell,
+				       double *dstMeanElmPerCell)
+{
+  int		cntNPC,
+  		nNPC,
+  		minNPC,
+  		maxNPC,
+		sumNPC,
+     		cntEPC,
+		nEPC,
+  		minEPC,
+  		maxEPC,
+		sumEPC;
+  WlzIVertex3	idx,
+		nCells;
+  WlzCMeshNod3D	*nod;
+  WlzCMeshCellElm3D *cElm;
+  WlzCMeshCell3D *cell;
+
+  cntNPC = cntEPC = 0;
+  nCells = mesh->cGrid.nCells;
+  for(idx.vtZ = 0; idx.vtZ < nCells.vtZ; ++idx.vtZ)
+  {
+    for(idx.vtY = 0; idx.vtY < nCells.vtY; ++idx.vtY)
+    {
+      for(idx.vtX = 0; idx.vtX < nCells.vtX; ++idx.vtX)
+      {
+	nNPC = 0;
+	nod = cell->nod;
+	cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+	if(nod != NULL)
+	{
+	  ++cntNPC;
+	  do
+	  {
+	    ++nNPC;
+	    nod = nod->next;
+	  } while((nod != NULL) && (nod != cell->nod));
+	}
+	nEPC = 0;
+	cElm = cell->cElm;
+	if(cElm != NULL)
+	{
+	  ++cntEPC;
+	  do
+	  {
+	    ++nEPC;
+	    cElm = cElm->nextCell;
+	  } while((cElm != NULL) && (cElm != cell->cElm));
+	}
+	if(cntNPC > 0)
+	{
+	  if(cntNPC == 1)
+	  {
+	    minNPC = maxNPC = sumNPC = nNPC;
+	  }
+	  else
+	  {
+	    if(nNPC < minNPC)
+	    {
+	      minNPC = nNPC;
+	    }
+	    else if(nNPC > maxNPC)
+	    {
+	      maxNPC = nNPC;
+	    }
+	    sumNPC += nNPC;
+	  }
+	}
+	if(cntEPC > 0)
+	{
+	  if(cntEPC == 1)
+	  {
+	    minEPC = maxEPC = sumEPC = nEPC;
+	  }
+	  else
+	  {
+	    if(nEPC < minEPC)
+	    {
+	      minEPC = nEPC;
+	    }
+	    else if(nEPC > maxEPC)
+	    {
+	      maxEPC = nEPC;
+	    }
+	    sumEPC += nEPC;
+	  }
+	}
+      }
+    }
+  }
+  if(cntNPC > 0)
+  {
+    *dstMinNodPerCell = minNPC;
+    *dstMaxNodPerCell = maxNPC;
+    *dstMeanNodPerCell = (double )sumNPC / (double )cntNPC;
+  }
+  else
+  {
+    *dstMinNodPerCell = 0;
+    *dstMaxNodPerCell = 0;
+    *dstMeanNodPerCell = 0.0;
+  }
+  if(cntEPC > 0)
+  {
+    *dstMinElmPerCell = minEPC;
+    *dstMaxElmPerCell = maxEPC;
+    *dstMeanElmPerCell = (double )sumEPC / (double )cntEPC;
+  }
+  else
+  {
+    *dstMinElmPerCell = 0;
+    *dstMaxElmPerCell = 0;
+    *dstMeanElmPerCell = 0.0;
+  }
 }
