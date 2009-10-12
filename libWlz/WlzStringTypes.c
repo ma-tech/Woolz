@@ -989,6 +989,8 @@ WlzFnType	WlzStringToFnType(const char *tStr,
   if(WlzStringMatchValue(&tI0, tStr,
 		       "WLZ_FN_BASIS_2DGAUSS", WLZ_FN_BASIS_2DGAUSS,
 		       "WLZ_FN_BASIS_3DGAUSS", WLZ_FN_BASIS_3DGAUSS,
+		       "WLZ_FN_BASIS_2DIMQ", WLZ_FN_BASIS_2DIMQ,
+		       "WLZ_FN_BASIS_3DIMQ", WLZ_FN_BASIS_3DIMQ,
 		       "WLZ_FN_BASIS_2DPOLY", WLZ_FN_BASIS_2DPOLY,
 		       "WLZ_FN_BASIS_3DPOLY", WLZ_FN_BASIS_3DPOLY,
 		       "WLZ_FN_BASIS_2DMQ", WLZ_FN_BASIS_2DMQ,
@@ -1032,6 +1034,12 @@ const char	*WlzStringFromFnType(WlzFnType fn,
       break;
     case WLZ_FN_BASIS_3DGAUSS:
       tStr = "WLZ_FN_BASIS_3DGAUSS";
+      break;
+    case WLZ_FN_BASIS_2DIMQ:
+      tStr = "WLZ_FN_BASIS_2DIMQ";
+      break;
+    case WLZ_FN_BASIS_3DIMQ:
+      tStr = "WLZ_FN_BASIS_3DIMQ";
       break;
     case WLZ_FN_BASIS_2DPOLY:
       tStr = "WLZ_FN_BASIS_2DPOLY";

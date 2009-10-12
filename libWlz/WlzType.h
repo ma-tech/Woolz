@@ -3501,16 +3501,19 @@ typedef union _WlzCMeshP
 */
 typedef enum _WlzFnType
 {
-  WLZ_FN_BASIS_2DGAUSS,        		/*!< Gaussian basis function */
+  WLZ_FN_BASIS_2DGAUSS,        		/*!< Gaussian basis function. */
   WLZ_FN_BASIS_3DGAUSS,
-  WLZ_FN_BASIS_2DPOLY,                   /*!< Polynomial basis function */
+  WLZ_FN_BASIS_2DIMQ,			/*!< Inverse multiquadric basis
+  				             function. */
+  WLZ_FN_BASIS_3DIMQ,
+  WLZ_FN_BASIS_2DPOLY,                   /*!< Polynomial basis function. */
   WLZ_FN_BASIS_3DPOLY,
-  WLZ_FN_BASIS_2DMQ,			/*!< Multiquadric basis function */
+  WLZ_FN_BASIS_2DMQ,			/*!< Multiquadric basis function. */
   WLZ_FN_BASIS_3DMQ,
-  WLZ_FN_BASIS_2DTPS,              	/*!< Thin plate spline basis function */
+  WLZ_FN_BASIS_2DTPS,              	/*!< Thin plate spline basis fn. */
   WLZ_FN_BASIS_3DTPS,
   WLZ_FN_BASIS_2DCONF_POLY,		/*!< 2D Conformal polynomial basis
-  					     function */
+  					     function. */
   WLZ_FN_BASIS_3DCONF_POLY,
   WLZ_FN_BASIS_3DMOS,			/*!< 3D Multi-order spline. */
   WLZ_FN_BASIS_SCALAR_3DMOS,		/*!< 3D Multi-order spline with scalar
