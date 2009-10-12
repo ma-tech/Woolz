@@ -1227,7 +1227,10 @@ static void 	WlzCMeshUpdateScanElm3D(WlzCMeshTransform *mTr,
   }
   else
   {
-    WlzCMeshElmGetNodes3D(elm, nod + 0, nod + 1, nod + 2, nod + 3);
+    nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+    nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+    nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+    nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
     vec = mTr->dspVec;
     if(vec == NULL)
     {
@@ -2004,8 +2007,10 @@ static WlzCMeshScanWSp3D *WlzCMeshScanWSpInit3D(WlzCMeshTransform *mTr,
       elm = (WlzCMeshElm3D *)AlcVectorItemGet(elmVec, (size_t )idE);
       if(elm->idx >= 0)
       {
-        WlzCMeshElmGetNodes3D(elm, nodBuf + 0, nodBuf + 1,
-	                      nodBuf + 2, nodBuf + 3);
+	nodBuf[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+	nodBuf[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+	nodBuf[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+	nodBuf[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
         for(idN = 0; idN < 4; ++idN)
 	{
 	  if(mTr->dspVec == NULL)
@@ -2339,7 +2344,7 @@ static int	WlzCMeshScanTriElm2D(WlzCMeshScanWSp2D *mSWSp,
     /* Possible single horizontal interval
      * *-*-* */
     lineI = WLZ_NINT(sNd[0].vtY);
-    if(fabs((double )lineI - sNd[0].vtY) <= DBL_EPSILON)
+    if(fabs((double )lineI - sNd[0].vtY) <= WLZ_MESH_TOLERANCE)
     {
       if(sNd[0].vtX <= sNd[1].vtX)
       {
@@ -2367,13 +2372,13 @@ static int	WlzCMeshScanTriElm2D(WlzCMeshScanWSp2D *mSWSp,
 	  tD1 = WLZ_MAX(sNd[2].vtX, sNd[0].vtX);
 	}
       }
-      kolI0 = (int )floor(tD0 + DBL_EPSILON);
+      kolI0 = (int )floor(tD0 + WLZ_MESH_TOLERANCE);
       if(kolI0 < tD1)
       {
 	itv->elmIdx = elm->idx;
 	itv->line = lineI;
 	itv->lftI = itv->rgtI = kolI0;
-	itv->rgtI = (int )floor(tD1 + DBL_EPSILON);
+	itv->rgtI = (int )floor(tD1 + WLZ_MESH_TOLERANCE);
 	iCnt = 1;
       }
     }
@@ -2388,9 +2393,9 @@ static int	WlzCMeshScanTriElm2D(WlzCMeshScanWSp2D *mSWSp,
      * |
      * 2 */
     kolI0 = WLZ_NINT(sNd[0].vtX);
-    if(fabs(kolI0 - sNd[0].vtX) <= DBL_EPSILON)
+    if(fabs(kolI0 - sNd[0].vtX) <= WLZ_MESH_TOLERANCE)
     {
-      lineI = (int )ceil(sNd[0].vtY - DBL_EPSILON);
+      lineI = (int )ceil(sNd[0].vtY - WLZ_MESH_TOLERANCE);
       while(lineI < sNd[2].vtY)
       {
 	itv->elmIdx = elm->idx;
@@ -2407,10 +2412,13 @@ static int	WlzCMeshScanTriElm2D(WlzCMeshScanWSp2D *mSWSp,
   {
     /* General case for triangles with non-zero area. */
     itv = mSWSp->itvs + iIdx;
-    lineI = (int )ceil(sNd[0].vtY - DBL_EPSILON);
-    inc[0] = (fabs(dNd[0].vtY) > DBL_EPSILON)? dNd[0].vtX / dNd[0].vtY: 0.0;
-    inc[1] = (fabs(dNd[1].vtY) > DBL_EPSILON)? dNd[1].vtX / dNd[1].vtY: 0.0;
-    inc[2] = (fabs(dNd[2].vtY) > DBL_EPSILON)? dNd[2].vtX / dNd[2].vtY: 0.0;
+    lineI = (int )ceil(sNd[0].vtY - WLZ_MESH_TOLERANCE);
+    inc[0] = (fabs(dNd[0].vtY) > WLZ_MESH_TOLERANCE)?
+             dNd[0].vtX / dNd[0].vtY: 0.0;
+    inc[1] = (fabs(dNd[1].vtY) > WLZ_MESH_TOLERANCE)?
+             dNd[1].vtX / dNd[1].vtY: 0.0;
+    inc[2] = (fabs(dNd[2].vtY) > WLZ_MESH_TOLERANCE)?
+             dNd[2].vtX / dNd[2].vtY: 0.0;
     while(lineI < sNd[2].vtY)
     {
       x0 = sNd[0].vtX + inc[2] * (lineI - sNd[0].vtY);
@@ -2420,8 +2428,8 @@ static int	WlzCMeshScanTriElm2D(WlzCMeshScanWSp2D *mSWSp,
       {
         tD0 = x0; x0 = x1; x1 = tD0;
       }
-      kolI0 = (int )floor(x0 + DBL_EPSILON);
-      kolI1 = (int )floor(x1 + DBL_EPSILON);
+      kolI0 = (int )floor(x0 + WLZ_MESH_TOLERANCE);
+      kolI1 = (int )floor(x1 + WLZ_MESH_TOLERANCE);
       if((kolI0 < x1) && (kolI1 > x0))
       {
 	itv->elmIdx = elm->idx;
@@ -2488,7 +2496,7 @@ static WlzErrorNum WlzCMeshTetElmItv3D(AlcVector *itvVec, int *idI,
 #endif
   /* Sweep through the tetrahedron. */
   pl = ceil(vtx[0].vtZ);
-  if(pl < vtx[3].vtZ + DBL_EPSILON)
+  if(pl < vtx[3].vtZ + WLZ_MESH_TOLERANCE)
   {
     WLZ_VTX_3_SUB(del10, vtx[1], vtx[0]);
     WLZ_VTX_3_SUB(del20, vtx[2], vtx[0]);
@@ -2514,8 +2522,8 @@ static WlzErrorNum WlzCMeshTetElmItv3D(AlcVector *itvVec, int *idI,
 	else
 	{
 	  if((del10.vtZ > tol) &&
-	     ((a = (pl - vtx[0].vtZ) / del10.vtZ) > DBL_EPSILON) &&
-	     (a < 1.0 - DBL_EPSILON))
+	     ((a = (pl - vtx[0].vtZ) / del10.vtZ) > WLZ_MESH_TOLERANCE) &&
+	     (a < 1.0 - WLZ_MESH_TOLERANCE))
 	  {
 	    isn[isnCnt].vtX = vtx[0].vtX + (a * del10.vtX);
 	    isn[isnCnt].vtY = vtx[0].vtY + (a * del10.vtY);
@@ -2532,16 +2540,16 @@ static WlzErrorNum WlzCMeshTetElmItv3D(AlcVector *itvVec, int *idI,
 	else
 	{
 	  if((del20.vtZ > tol) &&
-	     ((a = (pl - vtx[0].vtZ) / del20.vtZ) > DBL_EPSILON) &&
-	     (a < 1.0 - DBL_EPSILON))
+	     ((a = (pl - vtx[0].vtZ) / del20.vtZ) > WLZ_MESH_TOLERANCE) &&
+	     (a < 1.0 - WLZ_MESH_TOLERANCE))
 	  {
 	    isn[isnCnt].vtX = vtx[0].vtX + (a * del20.vtX);
 	    isn[isnCnt].vtY = vtx[0].vtY + (a * del20.vtY);
 	    isn[isnCnt++].vtZ = pl;
 	  }
 	  if((del21.vtZ > tol) &&
-	     ((a = (pl - vtx[1].vtZ) / del21.vtZ) > DBL_EPSILON) &&
-	     (a < 1.0 - DBL_EPSILON))
+	     ((a = (pl - vtx[1].vtZ) / del21.vtZ) > WLZ_MESH_TOLERANCE) &&
+	     (a < 1.0 - WLZ_MESH_TOLERANCE))
 	  {
 	    isn[isnCnt].vtX = vtx[1].vtX + (a * del21.vtX);
 	    isn[isnCnt].vtY = vtx[1].vtY + (a * del21.vtY);
@@ -2558,24 +2566,24 @@ static WlzErrorNum WlzCMeshTetElmItv3D(AlcVector *itvVec, int *idI,
 	else
 	{
 	  if((del30.vtZ > tol) &&
-	     ((a = (pl - vtx[0].vtZ) / del30.vtZ) > DBL_EPSILON) &&
-	     (a < 1.0 - DBL_EPSILON))
+	     ((a = (pl - vtx[0].vtZ) / del30.vtZ) > WLZ_MESH_TOLERANCE) &&
+	     (a < 1.0 - WLZ_MESH_TOLERANCE))
 	  {
 	    isn[isnCnt].vtX = vtx[0].vtX + (a * del30.vtX);
 	    isn[isnCnt].vtY = vtx[0].vtY + (a * del30.vtY);
 	    isn[isnCnt++].vtZ = pl;
 	  }
 	  if((del31.vtZ > tol) &&
-	     ((a = (pl - vtx[1].vtZ) / del31.vtZ) > DBL_EPSILON) &&
-	     (a < 1.0 - DBL_EPSILON))
+	     ((a = (pl - vtx[1].vtZ) / del31.vtZ) > WLZ_MESH_TOLERANCE) &&
+	     (a < 1.0 - WLZ_MESH_TOLERANCE))
 	  {
 	    isn[isnCnt].vtX = vtx[1].vtX + (a * del31.vtX);
 	    isn[isnCnt].vtY = vtx[1].vtY + (a * del31.vtY);
 	    isn[isnCnt++].vtZ = pl;
 	  }
 	  if((del32.vtZ > tol) &&
-	     ((a = (pl - vtx[2].vtZ) / del32.vtZ) > DBL_EPSILON) &&
-	     (a < 1.0 - DBL_EPSILON))
+	     ((a = (pl - vtx[2].vtZ) / del32.vtZ) > WLZ_MESH_TOLERANCE) &&
+	     (a < 1.0 - WLZ_MESH_TOLERANCE))
 	  {
 	    isn[isnCnt].vtX = vtx[2].vtX + (a * del32.vtX);
 	    isn[isnCnt].vtY = vtx[2].vtY + (a * del32.vtY);
@@ -2601,7 +2609,8 @@ static WlzErrorNum WlzCMeshTetElmItv3D(AlcVector *itvVec, int *idI,
 	  break;
       }
       pl += 1.0;
-    } while((errNum == WLZ_ERR_NONE) && (pl < vtx[3].vtZ + DBL_EPSILON));
+    } while((errNum == WLZ_ERR_NONE) &&
+            (pl < vtx[3].vtZ + WLZ_MESH_TOLERANCE));
   }
   return(errNum);
 }

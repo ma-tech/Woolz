@@ -46,7 +46,6 @@ static char _WlzCMeshFMar_c[] = "MRC HGU $Id$";
 #include <Wlz.h>
 
 /* #define WLZ_CMESH_FMAR_DEBUG */
-/* #define WLZ_CMESH_DEBUG_LOCATION */
 
 /*!
 * \struct	_WlzCMeshFMarQEnt
@@ -182,12 +181,6 @@ static WlzErrorNum 		WlzCMeshFMarElmQInit2D(
 static WlzErrorNum 		WlzCMeshFMarElmQInit3D(
 				  AlcHeap *queue,
 				  WlzCMeshNod3D *nod);
-#ifdef WLZ_CMESH_DEBUG_LOCATION
-extern	void  			WlzCMeshDebugResetNElmQuery(
-				  void);
-extern void			WlzCMeshDebugReportNElmQuery(
-				  void);
-#endif /* WLZ_CMESH_DEBUG_LOCATION */
 
 /*!
 * \return	A 2D domain object, an empty object if the mesh has
@@ -451,7 +444,10 @@ WlzObject	*WlzCMeshDistance3D(WlzCMesh3D *mesh,
 						0, &idN)) >= 0)
 	    {
 	      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-	      WlzCMeshElmGetNodes3D(elm, nod + 0, nod + 1, nod + 2, nod + 3);
+	      nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+	      nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+	      nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+	      nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
 	      d = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
 	                                  nod[2]->pos, nod[3]->pos,
 					  distances[nod[0]->idx],
@@ -749,9 +745,6 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-#ifdef WLZ_CMESH_DEBUG_LOCATION
-    WlzCMeshDebugResetNElmQuery();
-#endif /* WLZ_CMESH_DEBUG_LOCATION */
     if(nSeeds > 0)
     {
       errNum = WlzCMeshFMarAddSeeds3D(nodQ, mesh, cnt + 1,
@@ -815,8 +808,10 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
 	  AlcHeapEntFree(elmQ);
 	  /* Compute distances: Find the elements nodes, sort them by
 	   * distance and then compute the unknown node distances. */
-	  WlzCMeshElmGetNodes3D(elm, nodes + 0, nodes + 1,
-	                             nodes + 2, nodes + 3);
+	  nodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+	  nodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+	  nodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+	  nodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
 	  for(idM = 0; idM < 3; ++idM)
 	  {
 	    idP = idM;
@@ -851,12 +846,6 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
       AlcHeapAllEntFree(elmQ, 0);
     }
   }
-#ifdef WLZ_CMESH_DEBUG_LOCATION
-  if(errNum == WLZ_ERR_NONE)
-  {
-    WlzCMeshDebugReportNElmQuery();
-  }
-#endif /* WLZ_CMESH_DEBUG_LOCATION */
   /* Clear up. */
   AlcHeapFree(elmQ);
   AlcHeapFree(nodQ);
@@ -966,7 +955,10 @@ static double	WlzCMeshFMarQSElmPriority3D(WlzCMeshElm3D *elm,
   double	d = 0.0;
   WlzCMeshNod3D	*nodes[4];
 
-  WlzCMeshElmGetNodes3D(elm, nodes + 0, nodes + 1, nodes + 2, nodes + 3 );
+  nodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+  nodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+  nodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+  nodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
   for(idN = 0; idN < 4; ++idN)
   {
     if(dst[nodes[idN]->idx] > DBL_MAX / 2.0)
@@ -1116,7 +1108,7 @@ static int	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
     WLZ_VTX_2_SUB(del, nod0->pos, nod1->pos);
     lenSq[2] = WLZ_VTX_2_SQRLEN(del);
     len[2] = sqrt(lenSq[2]);
-    if(len[2] < DBL_EPSILON)
+    if(len[2] < WLZ_MESH_TOLERANCE)
     {
       /* Element is degenerate so just use edge length to compute distance. */
       dist[2] = *(distances + nod0->idx) + len[1];
@@ -1217,7 +1209,7 @@ static double 	WlzCMeshFMarSolve2D2(WlzDVertex2 p0, WlzDVertex2 p1,
   WLZ_VTX_2_SUB(del, p0, p1);
   lenSq[2] = WLZ_VTX_2_SQRLEN(del);
   len[2] = sqrt(lenSq[2]);
-  if(len[2] < DBL_EPSILON)
+  if(len[2] < WLZ_MESH_TOLERANCE)
   {
     /* Element is degenerate so just use edge length to compute distance. */
     d2 = d0 + len[1];
@@ -2102,7 +2094,10 @@ static WlzErrorNum WlzCMeshFMarAddSeed3D(AlcHeap  *sElmQ,
     /* Compute the distances of this element's nodes from the seed and
      * update the minimum distances, then initialize the face queue
      * using this elements faces. */
-    WlzCMeshElmGetNodes3D(elm0, nodes + 0, nodes + 1, nodes + 2, nodes + 3);
+    nodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm0);
+    nodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm0);
+    nodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm0);
+    nodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm0);
     for(idN = 0; idN < 4; ++idN)
     {
       nod0 = nodes[idN];
@@ -2134,7 +2129,10 @@ static WlzErrorNum WlzCMeshFMarAddSeed3D(AlcHeap  *sElmQ,
     ilos = 0;
     elm0 = (WlzCMeshElm3D *)(sElmQEnt->entity);
     AlcHeapEntFree(sElmQ);
-    WlzCMeshElmGetNodes3D(elm0, nodes + 0, nodes + 1, nodes + 2, nodes + 3);
+    nodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm0);
+    nodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm0);
+    nodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm0);
+    nodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm0);
     /* Find node with unknown distance for the element. */
     for(idN = 0; idN < 4; ++idN)
     {
