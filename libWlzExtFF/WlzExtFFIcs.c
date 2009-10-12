@@ -91,7 +91,7 @@ WlzErrorNum	WlzEffIcsFileNames(char **fileBody,
 /*!
 * \return	Object read from file.
 * \ingroup	WlzExtFF
-* \brief	Reads a Woolz object from the given stream using the ICS
+* \brief	Reads a Woolz object from a pair of files using the ICS
 *		format. The given file name is used to generate the '.ics' and
 *		'.ids' filenames.
 * \param	gvnFileName		Given file name.
@@ -135,15 +135,15 @@ WlzObject	*WlzEffReadObjIcs(const char *gvnFileName, WlzErrorNum *dstErr)
     {
       errNum = WLZ_ERR_READ_EOF;
     }
-
-	  #ifdef _WIN32
-  if (fP != NULL){
-	if(_setmode(_fileno(fP), 0x8000) == -1)
-	{
-		errNum = WLZ_ERR_READ_EOF;
-	}
-  }
-  #endif
+#ifdef _WIN32
+    if(fP != NULL)
+    {
+      if(_setmode(_fileno(fP), 0x8000) == -1)
+      {
+	errNum = WLZ_ERR_READ_EOF;
+      }
+    }
+#endif
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -514,7 +514,7 @@ WlzObject	*WlzEffReadObjIcs(const char *gvnFileName, WlzErrorNum *dstErr)
 /*!
 * \return	Woolz error number.
 * \ingroup	WlzExtFF
-* \brief	Writes the given Woolz object to the given stream
+* \brief	Writes the given Woolz object to a pair of files
 *		using the ICS format. The given file name is used to generate
 *		the '.ics' and '.ids' filenames.
 * \param	gvnFileName		Given file name with .ics, .ids or
