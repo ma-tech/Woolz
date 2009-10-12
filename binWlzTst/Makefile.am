@@ -45,6 +45,7 @@ LDADD 			= -L$(top_srcdir)/libWlz/.libs -lWlz \
 
 bin_PROGRAMS		= \
 			  WlzTstAlgCrossCorr \
+			  WlzTstCMeshCellStats \
 			  WlzTstCMeshDist \
 			  WlzTstCMeshGen \
 			  WlzTstCMeshTransformObj \
@@ -63,6 +64,14 @@ bin_PROGRAMS		= \
 
 WlzTstAlgCrossCorr_LDADD		= $(LDADD)
 WlzTstAlgCrossCorr_LDFLAGS		= $(AM_LFLAGS)
+
+WlzTstCMeshCellStats_SOURCES		= WlzTstCMeshCellStats.c
+WlzTstCMeshCellStats_LDADD		= $(LDADD)
+WlzTstCMeshCellStats_LDFLAGS		= $(AM_LFLAGS)
+
+WlzTstCMeshDist_SOURCES			= WlzTstCMeshDist.c
+WlzTstCMeshDist_LDADD			= $(LDADD)
+WlzTstCMeshDist_LDFLAGS			= $(AM_LFLAGS)
 
 WlzTstCMeshGen_SOURCES			= WlzTstCMeshGen.c
 WlzTstCMeshGen_LDADD			= $(LDADD)
