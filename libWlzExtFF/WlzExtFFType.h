@@ -48,6 +48,12 @@ static char _WlzExtFFType_h[] = "MRC HGU $Id$";
 extern "C" {
 #endif /* __cplusplus */
 
+/*
+* Can be used to initialise any WlzExtFF enumaerated type to an invalid
+* value.
+*/
+#define WLZEFF_INVALID -1
+
 /*!
 * \enum		_WlzEffFormat
 * \ingroup	WlzExtFF
@@ -73,6 +79,9 @@ typedef enum _WlzEffFormat
   WLZEFF_FORMAT_JPEG,		/*!< Jpeg. */
   WLZEFF_FORMAT_ANL,		/*!< Analyze 7.5. */
   WLZEFF_FORMAT_GIF,		/*!< Graphics Interchange Format. */
+  WLZEFF_FORMAT_MESH,           /*!< NETGEN tetrahedral mesh format. */
+  WLZEFF_FORMAT_NODEELE,        /*!< Jonathan Shewchuk's mesh format. */
+  WLZEFF_FORMAT_VMESH,          /*!< GRUMMP tetrahedral mesh format. */
   WLZEFF_FORMAT_COUNT 		/*!< Keep last: Number of formats */
 } WlzEffFormat;
 
@@ -400,6 +409,17 @@ typedef enum _WlzEffVtkPolyDataType
   WLZEFF_VTK_POLYDATATYPE_POLYGONS,
   WLZEFF_VTK_POLYDATATYPE_TRIANGLE_STRIPS
 } WlzEffVtkPolyDataType;
+
+typedef enum _WlzEffVtkUnstructuredGridType
+{
+  WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_CELLS,
+  WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_CELL_TYPES,
+  WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_LOOKUP_TABLE,
+  WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_POINT_DATA,
+  WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_POINTS,
+  WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_SCALARS,
+  WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_VECTORS
+} WlzEffVtkUnstructuredGridType;
 
 typedef struct _WlzEffVtkHeader
 {
