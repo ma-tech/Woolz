@@ -56,12 +56,15 @@ libWlzExtFF_la_SOURCES 	= \
 			  WlzExtFFIcs.c \
 			  WlzExtFFIPL.c \
 			  WlzExtFFJpeg.c \
+			  WlzExtFFMesh.c \
+			  WlzExtFFNodeEle.c \
 			  WlzExtFFPic.c \
 			  WlzExtFFPnm.c \
 			  WlzExtFFSlc.c \
 			  WlzExtFFStack.c \
 			  WlzExtFFTiff.c \
 			  WlzExtFFVff.c \
+			  WlzExtFFVMesh.c \
 			  WlzExtFFVtk.c
 
 #			  WlzExtFFRaw.c 
