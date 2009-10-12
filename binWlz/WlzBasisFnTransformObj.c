@@ -56,7 +56,7 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
 		       [-m<min mesh dist>] [-M<max mesh dist>]
 		       [-b<basis fn transform>] [-Y<order of polynomial>]
 		       [-D<flags>]
-		       [-d] [-g] [-h] [-q] [-s] [-t] [-y]
+		       [-d] [-g] [-h] [-q] [-Q] [-s] [-t] [-y]
 		       [-B] [-C] [-G] [-L] [-N] [-T]
 		       [<in object>]
 \endverbatim
@@ -147,6 +147,10 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
   <tr> 
     <td><b>-q</b></td>
     <td>Use multi-quadric basis function if tie points are given.</td>
+  </tr>
+  <tr> 
+    <td><b>-Q</b></td>
+    <td>Use inverse-multi-quadric basis function if tie points are given.</td>
   </tr>
   <tr> 
     <td><b>-s</b></td>
@@ -288,7 +292,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   const int	delOut = 1;
   const char    *errMsg;
-  static char	optList[] = "b:m:o:p:t:D:M:Y:cdghqsyBCGLNRTU",
+  static char	optList[] = "b:m:o:p:t:D:M:Y:cdghqsyBCGLNQRTU",
   		inObjFileStrDef[] = "-",
 		outObjFileStrDef[] = "-";
 
@@ -356,6 +360,9 @@ int             main(int argc, char **argv)
 	break;
       case 'q':
         basisFnType = WLZ_FN_BASIS_2DMQ;
+	break;
+      case 'Q':
+        basisFnType = WLZ_FN_BASIS_2DIMQ;
 	break;
       case 'R':
         restrictToBasisFn = 1;
@@ -618,6 +625,9 @@ int             main(int argc, char **argv)
       /* Promote basis function type from 2D to 3D. */
       switch(basisFnType)
       {
+        case WLZ_FN_BASIS_2DIMQ:
+          basisFnType = WLZ_FN_BASIS_3DIMQ;
+	  break;
         case WLZ_FN_BASIS_2DMQ:
           basisFnType = WLZ_FN_BASIS_3DMQ;
 	  break;
@@ -823,6 +833,8 @@ int             main(int argc, char **argv)
       }
     }
   }
+  AlcFree(vxA0.v);
+  AlcFree(vxA1.v);
   (void )WlzCMeshFree(tarMesh);
   if(cMesh)
   {
@@ -876,6 +888,7 @@ int             main(int argc, char **argv)
     "  -g  Use Gaussian basis function if tie points are given.\n"
     "  -h  Help, prints this usage message.\n"
     "  -q  Use multi-quadric basis function if tie points are given.\n"
+    "  -Q  Use inverse-multi-quadric basis function if tie points are given.\n"
     "  -s  Use thin plate spline basis function (default) if tie points\n"
     "      are given.\n"
     "  -t  Target mesh. Only valid for conforming meshes. If given then the\n"

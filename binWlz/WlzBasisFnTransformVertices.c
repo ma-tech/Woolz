@@ -55,8 +55,8 @@ WlzBasisFnTransformVertices  -  applies a basis function to vertices.
 WlzBasisFnTransformVertices [-o<out object>] [-p<tie points file>]
                             [-m<min mesh dist>] [-M<max mesh dist>]
 			    [-t<basis fn transform>] [-Y<order of polynomial>]
-			    [-g] [-h] [-q] [-s] [-y] [-B] [-D] [-G] [-L] [-T]
-			    [<in object>]
+			    [-g] [-h] [-q] [-Q] [-s] [-y] [-B] [-D] [-G]
+			    [-L] [-T] [<in object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -87,6 +87,10 @@ WlzBasisFnTransformVertices [-o<out object>] [-p<tie points file>]
   <tr> 
     <td><b>-q</b></td>
     <td>Use multi-quadric basis function if tie points are given.</td>
+  </tr>
+  <tr> 
+    <td><b>-Q</b></td>
+    <td>Use inverse-multi-quadric basis function if tie points are given.</td>
   </tr>
   <tr> 
     <td><b>-s</b></td>
@@ -204,6 +208,9 @@ int             main(int argc, char **argv)
 	break;
       case 'q':
         basisFnType = WLZ_FN_BASIS_2DMQ;
+	break;
+      case 'Q':
+        basisFnType = WLZ_FN_BASIS_2DIMQ;
 	break;
       case 's':
         basisFnType = WLZ_FN_BASIS_2DTPS;
@@ -481,8 +488,8 @@ int             main(int argc, char **argv)
     " [-o<out object>] [-p<tie points file>]\n"
     "                  [-m<min mesh dist>] [-M<max mesh dist>]\n"
     "                  [-t<basis fn transform>] [-Y<order of polynomial>]\n"
-    "                  [-g] [-h] [-q] [-s] [-y] [-B] [-D] [-G] [-L] [-T]\n"
-    "                  [<in object>]\n"
+    "                  [-g] [-h] [-q] [-Q] [-s] [-y] [-B] [-D] [-G] [-L]\n"
+    "                  [-T] [<in object>]\n"
     "Options:\n"
     "  -o  Output vertices file name.\n"
     "  -p  Tie point file.\n"
@@ -491,6 +498,7 @@ int             main(int argc, char **argv)
     "  -g  Use Gaussian basis function if tie points are given.\n"
     "  -h  Help, prints this usage message.\n"
     "  -q  Use multi-quadric basis function if tie points are given.\n"
+    "  -Q  Use inverse-multi-quadric basis function if tie points are given.\n"
     "  -s  Use thin plate spline basis function (default) if tie points\n"
     "      are given.\n"
     "  -y  Use polynomianl basis function if tie points are given.\n"
