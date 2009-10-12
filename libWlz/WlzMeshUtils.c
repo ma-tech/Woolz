@@ -85,9 +85,6 @@ static void	WlzMeshElemFindVxForce(WlzMeshTransform *, WlzDVertex2,
 				WlzDVertex2, unsigned int),
 		WlzMeshElemReplace1With3(WlzMeshTransform *, int,
 				WlzDVertex2, unsigned int),
-#ifdef WLZ_UNUSED_FUNCTIONS
-		WlzMeshElemUnlink(WlzMeshTransform *, int),
-#endif /* WLZ_UNUSED_FUNCTIONS */
 		WlzMeshEarPowerSet(WlzMeshTransform *, WlzMeshEar *, int),
 		WlzMeshEarMatchElm(WlzMeshTransform *, WlzMeshEar *,
 				WlzMeshIntVec *, int *),
@@ -2799,7 +2796,7 @@ static WlzErrorNum WlzMeshNodeDelVecBuild(WlzMeshIntVec *elmVec,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzTransform
-* \brief	Adds an into to a vector of int's expanding the vector as
+* \brief	Adds an int to a vector of int's expanding the vector as
 *		required.
 * \param	vec			Given int vector.
 * \param	val			Value to add to vector.
@@ -3193,46 +3190,6 @@ static void	WlzMeshEarMatchElm(WlzMeshTransform *mesh,
     *elmVecIdP = elmVecId0;
   }
 }
-
-#ifdef WLZ_UNUSED_FUNCTIONS
-/*!
-* \return	void
-* \ingroup	WlzTransform
-* \brief	Unlinks the element with the given index from it's neighbours
-*		in the mesh.
-* \param	mesh			Given mesh transform.
-* \param	eId			Index of element to be unlinked.
-*/
-static void	WlzMeshElemUnlink(WlzMeshTransform *mesh, int eId)
-{
-  int		eNId,
-  		eNNId;
-  WlzMeshElem	*elm,
-  		*nElm;
-  const unsigned int nbrFlgTbl[3] = {WLZ_MESH_ELEM_FLAGS_NBR_0,
-				     WLZ_MESH_ELEM_FLAGS_NBR_1,
-				     WLZ_MESH_ELEM_FLAGS_NBR_2};
-
-  elm = mesh->elements + eId;
-  for(eNId = 0; eNId < 3; ++eNId)	  /* Check each neighbour of element */
-  {
-    if((elm->flags & nbrFlgTbl[eNId]) != 0)
-    {
-      eNNId = 0;
-      nElm = mesh->elements + elm->neighbours[eNId];
-      for(eNNId = 0; eNNId < 3; ++eNNId)
-      {
-        if(((nElm->flags & nbrFlgTbl[eNNId]) != 0) &&
-	   (nElm->neighbours[eNNId] = eId))
-        {
-	  nElm->flags = nElm->flags & ~(nbrFlgTbl[eNNId]);
-	  eNNId = 3; 	      /* Can only be a neighbour once, so break loop */
-	}
-      }
-    }
-  }
-}
-#endif /* WLZ_UNUSED_FUNCTIONS */
 
 /*!
 * \return	Woolz error code.
