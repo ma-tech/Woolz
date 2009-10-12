@@ -55,9 +55,19 @@ static WlzErrorNum 		WlzEffWriteCtrVtk(
 static WlzErrorNum 		WlzEffWriteGMModelVtk(
 				  FILE *fP,
 				  WlzGMModel *model);
+static WlzErrorNum 		WlzEffWriteCMesh2DVtk(
+				  FILE *fP,
+				  WlzCMesh2D *mesh);
+static WlzErrorNum 		WlzEffWriteCMesh3DVtk(
+				  FILE *fP,
+				  WlzCMesh3D *mesh);
 static WlzErrorNum		WlzEffHeadReadVtk(
 				  WlzEffVtkHeader *header,
 				  FILE *fP);
+static WlzObject		*WlzEffReadCMeshVtk(
+				  FILE *fP,
+				  WlzEffVtkHeader *header,
+				  WlzErrorNum *dstErr);
 static WlzObject		*WlzEffReadCtrVtk(
 				  FILE *fP,
 				  WlzEffVtkHeader *header,
@@ -107,8 +117,10 @@ WlzObject	*WlzEffReadObjVtk(FILE *fP, WlzErrorNum *dstErr)
       case WLZEFF_VTK_TYPE_POLYDATA:
 	obj = WlzEffReadCtrVtk(fP, &header, &errNum);
         break;
+      case WLZEFF_VTK_TYPE_UNSTRUCTURED_GRID:
+        obj = WlzEffReadCMeshVtk(fP, &header, &errNum);
+	break;
       case WLZEFF_VTK_TYPE_STRUCTURED_GRID:   /* FALLTHROUGH */
-      case WLZEFF_VTK_TYPE_UNSTRUCTURED_GRID: /* FALLTHROUGH */
       case WLZEFF_VTK_TYPE_RECTILNEAR_GRID:   /* FALLTHROUGH */
       default:
         errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -156,6 +168,12 @@ WlzErrorNum	WlzEffWriteObjVtk(FILE *fP, WlzObject *obj)
       case WLZ_CONTOUR:
         errNum = WlzEffWriteCtrVtk(fP, obj->domain.ctr);
 	break;
+      case WLZ_CMESH_2D:
+        errNum = WlzEffWriteCMesh2DVtk(fP, obj->domain.cm2);
+        break;
+      case WLZ_CMESH_3D:
+        errNum = WlzEffWriteCMesh3DVtk(fP, obj->domain.cm3);
+        break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
 	break;
@@ -455,6 +473,267 @@ static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
 /*!
 * \return	Woolz error number.
 * \ingroup	WlzExtFF
+* \brief	Writes the given Woolz 2D constrained mesh to the
+*		given stream using the Visualization Toolkit
+*		unstructured grid file format with triangular elements.
+* \param	fP			Output file stream.
+* \param	model			Given gemetric model.
+*/
+static WlzErrorNum WlzEffWriteCMesh2DVtk(FILE *fP, WlzCMesh2D *mesh)
+{
+
+  int		cnt,
+		idE,
+		idN,
+  		nElm,
+  		nNod;
+  WlzCMeshElm2D	*elm;
+  WlzCMeshNod2D	*nod[3];
+  int		*nodTbl = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_TRI2D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if(((nNod = mesh->res.nod.numEnt) < 3) ||
+          ((nElm = mesh->res.elm.numEnt) < 1))
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Allocate a node table to avoid deleted nodes. */
+    if((nodTbl = (int *)AlcMalloc(sizeof(int) *
+                                  mesh->res.nod.maxEnt)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the file header. */
+    if(fprintf(fP,
+	       "# vtk DataFile Version 1.0\n"
+	       "Written by WlzEffWriteCMesh2DVtk().\n"
+	       "ASCII\n"
+	       "DATASET UNSTRUCTURED_GRID\n"
+	       "POINTS %d float\n",
+	       nNod) <= 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the node positions while building a table of valid nodes. */
+    cnt = 0;
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod[0] = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod[0]->idx >= 0)
+      {
+        if(fprintf(fP, "%g %g 0.0\n",
+	               nod[0]->pos.vtX, nod[0]->pos.vtY) <= 0)
+        {
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  break;
+	}
+	nodTbl[idN] = cnt++;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the element node indices. */
+    if(fprintf(fP,
+               "CELLS %d %d\n", nElm, 4 * nElm) <= 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+	nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+	nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
+        if(fprintf(fP, "3 %d %d %d\n",
+	           nodTbl[nod[0]->idx], nodTbl[nod[2]->idx],
+	           nodTbl[nod[1]->idx]) <= 0)
+        {
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  break;
+	}
+      }
+    }
+  }
+  AlcFree(nodTbl);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the element cell types (all tetrahedra). */
+    if(fprintf(fP,
+               "CELL_TYPES %d\n", nElm) <= 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < nElm; ++idE)
+    {
+      if(fprintf(fP, "5\n") <= 0)
+      {
+        errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	break;
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz 3D constrained mesh to the
+*		given stream using the Visualization Toolkit
+*		unstructured grid file format with tetrahedral elements.
+* \param	fP			Output file stream.
+* \param	model			Given gemetric model.
+*/
+static WlzErrorNum WlzEffWriteCMesh3DVtk(FILE *fP, WlzCMesh3D *mesh)
+{
+
+  int		cnt,
+		idE,
+		idN,
+  		nElm,
+  		nNod;
+  WlzCMeshElm3D	*elm;
+  WlzCMeshNod3D	*nod[4];
+  int		*nodTbl = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_TET3D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if(((nNod = mesh->res.nod.numEnt) < 4) ||
+          ((nElm = mesh->res.elm.numEnt) < 1))
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Allocate a node table to avoid deleted nodes. */
+    if((nodTbl = (int *)AlcMalloc(sizeof(int) *
+                                  mesh->res.nod.maxEnt)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the file header. */
+    if(fprintf(fP,
+	       "# vtk DataFile Version 1.0\n"
+	       "Written by WlzEffWriteCMesh3DVtk().\n"
+	       "ASCII\n"
+	       "DATASET UNSTRUCTURED_GRID\n"
+	       "POINTS %d float\n",
+	       nNod) <= 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the node positions while building a table of valid nodes. */
+    cnt = 0;
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod[0] = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod[0]->idx >= 0)
+      {
+        if(fprintf(fP, "%g %g %g\n",
+	               nod[0]->pos.vtX, nod[0]->pos.vtY, nod[0]->pos.vtZ) <= 0)
+        {
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  break;
+	}
+	nodTbl[idN] = cnt++;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the element node indices. */
+    if(fprintf(fP,
+               "CELLS %d %d\n", nElm, 5 * nElm) <= 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+	nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+	nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+	nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
+        if(fprintf(fP, "4 %d %d %d %d\n",
+	           nodTbl[nod[0]->idx], nodTbl[nod[1]->idx],
+	           nodTbl[nod[3]->idx], nodTbl[nod[2]->idx]) <= 0)
+        {
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  break;
+	}
+      }
+    }
+  }
+  AlcFree(nodTbl);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the element cell types (all tetrahedra). */
+    if(fprintf(fP,
+               "CELL_TYPES %d\n", nElm) <= 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < nElm; ++idE)
+    {
+      if(fprintf(fP, "10\n") <= 0)
+      {
+        errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	break;
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
 * \brief	Reads the VTK file header which is:
 *		<ul>
 *		  <li> ident\n
@@ -495,6 +774,7 @@ static WlzErrorNum WlzEffHeadReadVtk(WlzEffVtkHeader *header, FILE *fP)
     {
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
+    /* Discard the version because we can probably read it anyway. */
   }
   /* Read the title. */
   if(errNum == WLZ_ERR_NONE)
@@ -511,63 +791,66 @@ static WlzErrorNum WlzEffHeadReadVtk(WlzEffVtkHeader *header, FILE *fP)
   /* Read and parse the data type. */
   if(errNum == WLZ_ERR_NONE)
   {
-    if(fgets(buf, 256, fP) == NULL)
+    valI = WLZEFF_INVALID;
+    do
     {
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-    }
-    else
-    {
+      if(fgets(buf, 256, fP) == NULL)
+      {
+	errNum = WLZ_ERR_READ_INCOMPLETE;
+	break;
+      }
       buf[255] = '\0';
       valS = strtok(buf, " \t\n\r\f\v");
-      if((valS == NULL) ||
-         (WlzStringMatchValue(&valI, valS,
-      			      "ASCII", WLZEFF_VTK_DATATYPE_ASCII,
-			      "BINARY", WLZEFF_VTK_DATATYPE_BINARY,
-			      NULL) == 0))
+      if((valS != NULL) && (*valS != '#'))
       {
-        errNum = WLZ_ERR_READ_INCOMPLETE;
+	if(WlzStringMatchValue(&valI, valS,
+			       "ASCII", WLZEFF_VTK_DATATYPE_ASCII,
+			       "BINARY", WLZEFF_VTK_DATATYPE_BINARY,
+			       NULL) == 0)
+	{
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	  break;
+	}
+	header->dataType = valI;
       }
-      else
-      {
-        header->dataType = valI;
-      }
-    }
+    } while(valI == WLZEFF_INVALID);
   }
   /* Read and parse the type. */
   if(errNum == WLZ_ERR_NONE)
   {
-    if(fgets(buf, 256, fP) == NULL)
+    valI = WLZEFF_INVALID;
+    do
     {
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-    }
-    else
-    {
+      if(fgets(buf, 256, fP) == NULL)
+      {
+	errNum = WLZ_ERR_READ_INCOMPLETE;
+	break;
+      }
       buf[255] = '\0';
       valS = strtok(buf, " \t\n\r\f\v");
-      if((valS == NULL) || strcmp(valS, "DATASET"))
+      if((valS != NULL) && (*valS != '#'))
       {
-        errNum = WLZ_ERR_READ_INCOMPLETE;
-      }
-      else
-      {
-        valS = strtok(NULL, " \t\n\r\f\v");
+	if(strcmp(valS, "DATASET"))
+	{
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	  break;
+	}
+	valS = strtok(NULL, " \t\n\r\f\v");
 	if((valS == NULL) ||
 	   (WlzStringMatchValue(&valI, valS,
-	    	"STRUCTURED_POINTS", WLZEFF_VTK_TYPE_STRUCTURED_POINTS,
-	    	"STRUCTURED_GRID", WLZEFF_VTK_TYPE_STRUCTURED_GRID,
-	    	"UNSTRUCTURED_GRID", WLZEFF_VTK_TYPE_UNSTRUCTURED_GRID,
-	    	"POLYDATA", WLZEFF_VTK_TYPE_POLYDATA,
-	    	"RECTILNEAR_GRID", WLZEFF_VTK_TYPE_RECTILNEAR_GRID,
+		"STRUCTURED_POINTS", WLZEFF_VTK_TYPE_STRUCTURED_POINTS,
+		"STRUCTURED_GRID", WLZEFF_VTK_TYPE_STRUCTURED_GRID,
+		"UNSTRUCTURED_GRID", WLZEFF_VTK_TYPE_UNSTRUCTURED_GRID,
+		"POLYDATA", WLZEFF_VTK_TYPE_POLYDATA,
+		"RECTILNEAR_GRID", WLZEFF_VTK_TYPE_RECTILNEAR_GRID,
 		NULL) == 0))
 	{
 	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	  break;
 	}
-	else
-	{
-          header->type = valI;
-	}
+	header->type = valI;
       }
-    }
+    } while(valI == WLZEFF_INVALID);
   }
   return(errNum);
 }
@@ -604,6 +887,440 @@ WlzObject	*WlzEffReadCtrVtk(FILE *fP, WlzEffVtkHeader *header,
     {
       WlzFreeContour(ctr);
       ctr = NULL;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(obj);
+}
+
+/*!
+* \return	Object read from file.
+* \ingroup	WlzExtFF
+* \brief	Reads a Woolz CMESH object from the given stream using
+*		the Visualization Toolkit (unstructured grid) file format.
+* \param	fP			Input file stream.
+* \param	header			Header data structure.
+* \param	dstErr			Destination error number ptr, may be
+* 					NULL.
+*/
+WlzObject	*WlzEffReadCMeshVtk(FILE *fP, WlzEffVtkHeader *header,
+				  WlzErrorNum *dstErr)
+{
+  int		cnt,
+		idE,
+		idN,
+		dim,
+  		valI,
+		nElm = 0,
+		nNod = 0;
+  double	vol;
+  char 		*valS0,
+  		*valS1;
+  WlzDBox3	bBox;
+  WlzCMeshP	mesh;
+  WlzEffVtkUnstructuredGridType prim;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  WlzDVertex2	pos2D;
+  WlzDVertex3	*vBuf = NULL;
+  WlzCMeshNod2D	*nBuf2[3];
+  WlzCMeshNod3D	*nBuf3[4];
+  WlzDomain	dom;
+  WlzValues	val;
+  WlzObject	*obj = NULL;
+  int		eBuf[4];
+  char		buf[256];
+
+  mesh.v = NULL;
+  dom.core = NULL;
+  val.core = NULL;
+  if(header->dataType != WLZEFF_VTK_DATATYPE_ASCII)
+  {
+    /* Can only read ascii meshes. */
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    do
+    {
+      /* Read line containing token. */
+      valS0 = NULL;
+      if(fgets(buf, 256, fP) == NULL)
+      {
+	if(mesh.v == NULL)
+	{
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+        break;
+      }
+      buf[255] = '\0';
+      valS0 = strtok(buf, " \t\n\r\f\v");
+      if(valS0)
+      {
+	/* Any other tokens apart from these are ignored. */
+	if((WlzStringMatchValue(&valI, valS0,
+		"POINTS", WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_POINTS,
+		"CELLS", WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_CELLS,
+		"CELL_TYPES", WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_CELL_TYPES,
+		"POINT_DATA", WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_POINT_DATA,
+		"VECTORS", WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_VECTORS,
+		"SCALARS", WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_SCALARS,
+		"LOOKUP_TABLE", WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_LOOKUP_TABLE,
+		NULL) != 0))
+	{
+	  prim = valI;
+	  switch(prim)
+	  {
+	    case WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_POINTS:
+	      if(nNod != 0)
+	      {
+		errNum = WLZ_ERR_READ_INCOMPLETE;
+	      }
+	      else
+	      {
+		valS0 = strtok(NULL, " \t\n\r\f\v");
+		if((valS0 == NULL) || (sscanf(valS0, "%d", &nNod) != 1) ||
+		    (nNod <= 0))
+		{
+		  errNum = WLZ_ERR_READ_INCOMPLETE;
+		}
+		else
+		{
+		  valS0 = strtok(NULL, " \t\n\r\f\v");
+		  if((valS0 == NULL) || strcmp(valS0, "float"))
+		  {
+		    errNum = WLZ_ERR_READ_INCOMPLETE;
+		  }
+		}
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  /* Allocate a 3D vertex buffer. 3D vertices are used even
+		   * for 2D meshes. */
+		  if((vBuf = AlcMalloc(sizeof(WlzDVertex3) * nNod)) == NULL)
+		  {
+		    errNum = WLZ_ERR_MEM_ALLOC;
+		  }
+		}
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  /* Read nNod 3D verticies into the 3D vertex buffer. */
+		  for(idN = 0; idN < nNod; ++idN)
+		  {
+		    if((fscanf(fP, "%lg", &(vBuf[idN].vtX)) != 1) ||
+		       (fscanf(fP, "%lg", &(vBuf[idN].vtY)) != 1) ||
+		       (fscanf(fP, "%lg", &(vBuf[idN].vtZ)) != 1))
+		    {
+		      errNum = WLZ_ERR_READ_INCOMPLETE;
+		      break;
+		    }
+		    if(idN == 0)
+		    {
+		      bBox.xMin = bBox.xMax = vBuf[idN].vtX;
+		      bBox.yMin = bBox.yMax = vBuf[idN].vtY;
+		      bBox.zMin = bBox.zMax = vBuf[idN].vtZ;
+		    }
+		    else
+		    {
+		      if(vBuf[idN].vtX < bBox.xMin)
+		      {
+			bBox.xMin = vBuf[idN].vtX;
+		      }
+		      else if(vBuf[idN].vtX > bBox.xMax)
+		      {
+			bBox.xMax = vBuf[idN].vtX;
+		      }
+		      if(vBuf[idN].vtY < bBox.yMin)
+		      {
+			bBox.yMin = vBuf[idN].vtY;
+		      }
+		      else if(vBuf[idN].vtY > bBox.yMax)
+		      {
+			bBox.yMax = vBuf[idN].vtY;
+		      }
+		      if(vBuf[idN].vtZ < bBox.zMin)
+		      {
+			bBox.zMin = vBuf[idN].vtZ;
+		      }
+		      else if(vBuf[idN].vtZ > bBox.zMax)
+		      {
+			bBox.zMax = vBuf[idN].vtZ;
+		      }
+		    }
+		  }
+		}
+		break;
+	      case WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_CELLS:
+		if(nNod <= 0)
+		{
+		  errNum = WLZ_ERR_READ_INCOMPLETE;
+		}
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  valS0 = strtok(NULL, " \t\n\r\f\v");
+		  valS1 = strtok(NULL, " \t\n\r\f\v");
+		  if((valS0 == NULL) || (valS1 == NULL) ||
+		      (sscanf(valS0, "%d", &nElm) != 1) ||
+		      (sscanf(valS1, "%d", &cnt) != 1) ||
+		      (nElm < 0) || (cnt <= nElm))
+		  {
+		    errNum = WLZ_ERR_READ_INCOMPLETE;
+		  }
+		}
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  /* Assume that there will only be triangular or tetrhedral
+		   * mesh elements with either (3 + 1) or (4 + 1) fields
+		   * per record for 2D and 3D. If this isn't the case can
+		   * return an error later. */
+		  dim = (cnt / nElm) - 2;
+		  switch(dim)
+		  {
+		    case 2:
+		      if(errNum == WLZ_ERR_NONE)
+		      {
+			mesh.m2 = WlzCMeshNew2D(&errNum);
+		      }
+		      if(AlcVectorExtendAndGet(mesh.m2->res.nod.vec,
+		                               nNod) == NULL)
+		      {
+		        errNum = WLZ_ERR_MEM_ALLOC;
+		      }
+		      if(errNum == WLZ_ERR_NONE)
+		      {
+			mesh.m2->bBox.xMin = bBox.xMin;
+			mesh.m2->bBox.yMin = bBox.yMin;
+			mesh.m2->bBox.xMax = bBox.xMax;
+			mesh.m2->bBox.yMax = bBox.yMax;
+			errNum = WlzCMeshReassignGridCells2D(mesh.m2, nNod);
+		      }
+		      if(errNum == WLZ_ERR_NONE)
+		      {
+			for(idN = 0; idN < nNod; ++idN)
+			{
+			  pos2D.vtX = vBuf[idN].vtX;
+			  pos2D.vtY = vBuf[idN].vtY;
+			  nBuf2[0] = WlzCMeshNewNod2D(mesh.m2, pos2D, NULL);
+			  nBuf2[0]->flags = 0;
+			}
+			for(idE = 0; idE < nElm; ++idE)
+			{
+			  if((fscanf(fP, "%d", &valI) != 1) || (valI != 3) ||
+			      (fscanf(fP, "%d %d %d",
+				      eBuf + 0, eBuf + 1, eBuf + 2) != 3) ||
+			      (eBuf[0] < 0) || (eBuf[0] >= nNod) ||
+			      (eBuf[1] < 0) || (eBuf[1] >= nNod) ||
+			      (eBuf[2] < 0) || (eBuf[2] >= nNod))
+			  {
+			    errNum = WLZ_ERR_READ_INCOMPLETE;
+			    break;
+			  }
+			  for(idN = 0; idN < 3; ++idN)
+			  {
+			    nBuf2[idN] = (WlzCMeshNod2D *)
+			                 AlcVectorItemGet(mesh.m2->res.nod.vec,
+				                          eBuf[idN]);
+			  }
+			  /* Add triangle to the mesh. It's possible that the
+			   * orienation will be wrong so try both. */
+			  vol = WlzGeomTriangleSnArea2(nBuf2[0]->pos,
+					    nBuf2[1]->pos, nBuf2[2]->pos);
+			  if(vol < 0)
+			  {
+			    (void )WlzCMeshNewElm2D(mesh.m2,
+			                            nBuf2[0], nBuf2[2],
+						    nBuf2[1], &errNum);
+			  }
+			  else
+			  {
+			    (void )WlzCMeshNewElm2D(mesh.m2,
+			                            nBuf2[0], nBuf2[1],
+						    nBuf2[2], &errNum);
+			  }
+			}
+		      }
+		      if(errNum == WLZ_ERR_NONE)
+		      {
+			WlzCMeshUpdateMaxSqEdgLen2D(mesh.m2);
+		      }
+		      break;
+		    case 3:
+		      if(errNum == WLZ_ERR_NONE)
+		      {
+			mesh.m3 = WlzCMeshNew3D(&errNum);
+		      }
+		      if(AlcVectorExtendAndGet(mesh.m3->res.nod.vec,
+		                               nNod) == NULL)
+		      {
+		        errNum = WLZ_ERR_MEM_ALLOC;
+		      }
+		      if(errNum == WLZ_ERR_NONE)
+		      {
+			mesh.m3->bBox = bBox;
+			errNum = WlzCMeshReassignGridCells3D(mesh.m3, nNod);
+		      }
+		      if(errNum == WLZ_ERR_NONE)
+		      {
+			for(idN = 0; idN < nNod; ++idN)
+			{
+			  nBuf3[0] = WlzCMeshNewNod3D(mesh.m3, vBuf[idN],
+			                              NULL);
+			  nBuf3[0]->flags = 0;
+			}
+			for(idE = 0; idE < nElm; ++idE)
+			{
+			  if((fscanf(fP, "%d", &valI) != 1) || (valI != 4) ||
+			      (fscanf(fP, "%d %d %d %d",
+				      eBuf + 0, eBuf + 1,
+				      eBuf + 2, eBuf + 3) != 4) ||
+			      (eBuf[0] < 0) || (eBuf[0] >= nNod) ||
+			      (eBuf[1] < 0) || (eBuf[1] >= nNod) ||
+			      (eBuf[2] < 0) || (eBuf[2] >= nNod) ||
+			      (eBuf[3] < 0) || (eBuf[3] >= nNod))
+			  {
+			    errNum = WLZ_ERR_READ_INCOMPLETE;
+			    break;
+			  }
+			  for(idN = 0; idN < 4; ++idN)
+			  {
+			    nBuf3[idN] = (WlzCMeshNod3D *)
+			                 AlcVectorItemGet(mesh.m3->res.nod.vec,
+				                          eBuf[idN]);
+			  }
+			  /* Add tetrahedron to the mesh. It's possible that
+			   * the orienation will be wrong so try both. */
+			  vol = WlzGeomTetraSnVolume6(nBuf3[0]->pos,
+					    nBuf3[1]->pos, nBuf3[2]->pos,
+					    nBuf3[3]->pos);
+			  if(vol < 0)
+			  {
+			    (void )WlzCMeshNewElm3D(mesh.m3, nBuf3[0], nBuf3[1],
+						    nBuf3[3], nBuf3[2],
+						    &errNum);
+			  }
+			  else
+			  {
+			    (void )WlzCMeshNewElm3D(mesh.m3, nBuf3[0], nBuf3[1],
+						    nBuf3[2], nBuf3[3],
+						    &errNum);
+			  }
+			}
+		      }
+		      if(errNum == WLZ_ERR_NONE)
+		      {
+			WlzCMeshUpdateMaxSqEdgLen3D(mesh.m3);
+		      }
+		      break;
+		    default:
+		      errNum = WLZ_ERR_READ_INCOMPLETE;
+		      break;
+		  }
+		}
+	      }
+	      break;
+	    case WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_CELL_TYPES:
+	      if(mesh.v == NULL)
+	      {
+	        errNum = WLZ_ERR_READ_INCOMPLETE;
+	      }
+	      else
+	      {
+		valS0 = strtok(NULL, " \t\n\r\f\v");
+		if((valS0 == NULL) || (sscanf(valS0, "%d", &cnt) != 1))
+		{
+		  errNum = WLZ_ERR_READ_INCOMPLETE;
+		}
+	      }
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+	        switch(mesh.m2->type)
+		{
+		  case WLZ_CMESH_TRI2D:
+		    /* Read cell types, just make sure that they are all
+		     * triangles (type 5).  */
+		    for(idE = 0; idE < cnt; ++idE)
+		    {
+		      if((fscanf(fP, "%d", &valI) != 1) || (valI != 5))
+		      {
+			errNum = WLZ_ERR_READ_INCOMPLETE;
+			break;
+		      }
+		    }
+		    break;
+		  case WLZ_CMESH_TET3D:
+		    /* Read cell types, just make sure that they are all
+		     * tetrahedra (type 10).  */
+		    for(idE = 0; idE < cnt; ++idE)
+		    {
+		      if((fscanf(fP, "%d", &valI) != 1) || (valI != 10))
+		      {
+			errNum = WLZ_ERR_READ_INCOMPLETE;
+			break;
+		      }
+		    }
+		    break;
+		  default:
+		    errNum = WLZ_ERR_READ_INCOMPLETE;
+		    break;
+		}
+	      }
+	      break;
+	    case WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_POINT_DATA:
+	      /* TODO: Point data not handled yet. */
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	      break;
+	    case WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_VECTORS:
+	      /* TODO: Point vector data not handled yet. */
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	      break;
+	    case WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_SCALARS:
+	      /* TODO: Point scalar data not handled yet. */
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	      break;
+	    case WLZEFF_VTK_UNSTRUCTUREDGRIDTYPE_LOOKUP_TABLE:
+	      /* TODO: Point LUT data not handled yet. */
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	      break;
+	    default:
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	      break;
+	  }
+	}
+      }
+    }
+    while(errNum == WLZ_ERR_NONE);
+  }
+  AlcFree(vBuf);
+  if((errNum == WLZ_ERR_NONE) && (mesh.v != NULL))
+  {
+    switch(mesh.m2->type)
+    {
+      case WLZ_CMESH_TRI2D:
+	WlzCMeshUpdateMaxSqEdgLen2D(mesh.m2);
+	dom.cm2 = mesh.m2;
+	obj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
+	break;
+      case WLZ_CMESH_TET3D:
+	WlzCMeshUpdateMaxSqEdgLen3D(mesh.m3);
+	dom.cm3 = mesh.m3;
+	obj = WlzMakeMain(WLZ_CMESH_3D, dom, val, NULL, NULL, &errNum);
+	break;
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(mesh.v != NULL)
+    {
+      switch(mesh.m2->type)
+      {
+	case  WLZ_CMESH_TRI2D:
+	  (void )WlzCMeshFree2D(mesh.m2);
+	  break;
+	case WLZ_CMESH_TET3D:
+	  (void )WlzCMeshFree3D(mesh.m3);
+	  break;
+      }
     }
   }
   if(dstErr)
@@ -779,11 +1496,11 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      }
 	      break;
 	    case WLZEFF_VTK_POLYDATATYPE_TRIANGLE_STRIPS:
-	      /* TODO Read triangle strip polydata. */
+	      /* Read triangle strip polydata. */
 	      errNum = WLZ_ERR_READ_INCOMPLETE;
 	      break;
 	    case WLZEFF_VTK_POLYDATATYPE_VERTICIES: /* FALLTHROUGH */
-	      /* TODO Read triangle strip polydata. */
+	      /* Read triangle strip polydata. */
 	      errNum = WLZ_ERR_READ_INCOMPLETE;
 	      break;
 	    case WLZEFF_VTK_POLYDATATYPE_LINES:     /* FALLTHROUGH */
@@ -887,7 +1604,7 @@ WlzObject	*WlzEffReadImgVtk(FILE *fP, WlzEffVtkHeader *header,
   WlzObject	*obj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* TODO Read VTK images. */
+  /* TODO: Read VTK images. */
   errNum = WLZ_ERR_UNIMPLEMENTED;
 
   if(dstErr)
