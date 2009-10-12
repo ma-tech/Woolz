@@ -964,6 +964,12 @@ extern WlzErrorNum		WlzBasisFnFree(
 extern WlzDVertex2		WlzBasisFnValueGauss2D(
 				  WlzBasisFn *basisFn,
 				  WlzDVertex2 srcVx);
+extern WlzDVertex2		WlzBasisFnValueIMQ2D(
+				  WlzBasisFn *basisFn,
+				  WlzDVertex2 srcVx);
+extern WlzDVertex3		WlzBasisFnValueIMQ3D(
+				  WlzBasisFn *basisFn,
+				  WlzDVertex3 srcVx);
 extern WlzDVertex2		WlzBasisFnValuePoly2D(
 				  WlzBasisFn *basisFn,
 				  WlzDVertex2 srcVx);
@@ -1009,6 +1015,22 @@ extern WlzBasisFn 		*WlzBasisFnConf2DFromCPts(
 				  int order,
 				  WlzDVertex2 *dPts,
 				  WlzDVertex2 *sPts,
+				  WlzErrorNum *dstErr);
+extern WlzBasisFn		*WlzBasisFnIMQ2DFromCPts(
+				  int nPts,
+				  WlzDVertex2 *dPts,
+				  WlzDVertex2 *sPts,
+				  double delta,
+				  WlzBasisFn *prvBasisFn,
+				  WlzCMesh2D *mesh,
+				  WlzErrorNum *dstErr);
+extern WlzBasisFn		*WlzBasisFnIMQ3DFromCPts(
+				  int nPts,
+				  WlzDVertex3 *dPts,
+				  WlzDVertex3 *sPts,
+				  double delta,
+				  WlzBasisFn *prvBasisFn,
+				  WlzCMesh3D *mesh,
 				  WlzErrorNum *dstErr);
 extern WlzBasisFn		*WlzBasisFnMQ2DFromCPts(
 				  int nPts,
@@ -1474,11 +1496,6 @@ extern double                   WlzCMeshElmSnArea22D(
                                   WlzCMeshElm2D *elm);
 extern double                   WlzCMeshElmSnVolume63D(
                                   WlzCMeshElm3D *elm);
-extern WlzErrorNum		WlzCMeshGetBndElm3D(
-				  WlzCMesh3D *mesh,
-                                  int *dstNBndElm,
-				  AlcVector **dstBndVec,
-				  int trustNndFlags);
 extern WlzErrorNum		WlzCMeshLaplacianSmooth(
 				  WlzCMeshP mesh,
 				  int itr,
@@ -1585,6 +1602,30 @@ extern WlzCMesh3D		*WlzCMeshCopy3D(
 				  AlcVector **newDat,
 				  AlcVector *gvnDat,
 				  WlzErrorNum *dstErr);
+extern void			WlzCMeshGetCellStats(
+				  WlzCMeshP mesh,
+				  int *dstMinNodPerCell,
+				  int *dstMaxNodPerCell,
+				  double *dstMeanNodPerCell,
+				  int *dstMinElmPerCell,
+				  int *dstMaxElmPerCell,
+				  double *dstMeanElmPerCell);
+extern void			WlzCMeshGetCellStats2D(
+				  WlzCMesh2D *mesh,
+				  int *dstMinNodPerCell,
+				  int *dstMaxNodPerCell,
+				  double *dstMeanNodPerCell,
+				  int *dstMinElmPerCell,
+				  int *dstMaxElmPerCell,
+				  double *dstMeanElmPerCell);
+extern void			WlzCMeshGetCellStats3D(
+				  WlzCMesh3D *mesh,
+				  int *dstMinNodPerCell,
+				  int *dstMaxNodPerCell,
+				  double *dstMeanNodPerCell,
+				  int *dstMinElmPerCell,
+				  int *dstMaxElmPerCell,
+				  double *dstMeanElmPerCell);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
