@@ -189,7 +189,7 @@ void     	AlcHeapEntFree(AlcHeap *heap)
       }
       ent0 = (void *)((char *)(heap->entries) + (id0 * heap->entSz));
       ent1 = (void *)((char *)(heap->entries) + (heap->nEnt * heap->entSz));
-      (void )memcpy(ent0, ent1, heap->entSz);
+      (void )memmove(ent0, ent1, heap->entSz);
     }
   }
 #ifdef ALC_HEAP_DEBUG
