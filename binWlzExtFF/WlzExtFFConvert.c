@@ -116,51 +116,24 @@ The valid file formats are:
   <tr>
   <td><b>Description</b></td> <td><b>Format</b></td> <td><b>Extension</b></td>
   </tr>
-  <tr>
-  <td>Amira Lattice</td> <td>am</td> <td>.am</td>
-  </tr>
-  <tr>
-  <td>Analyze</td> <td>anl</td> <td>.hdr/.img</td>
-  </tr>
-  <tr>
-  <td>Microsoft Bitmap</td> <td>bmp</td> <td>.bmp</td>
-  </tr>
-  <tr>
-  <td>Stanford Density</td> <td>den</td> <td>.den</td>
-  </tr>
-  <tr>
-  <td>ICS</td> <td>ics</td> <td>.ics/.ids</td>
-  </tr>
-  <tr>
-  <td>PNM</td> <td>pnm</td> <td>.pgm</td>
-  </tr>
-  <tr>
-  <td>BioRad Confocal</td> <td>pic</td> <td>.pic</td>
-  </tr>
-  <tr>
-  <td>SLC</td> <td>slc</td> <td>.slc</td>
-  </tr>
-  <tr>
-  <td>Sunvision VFF</td> <td>vff</td> <td>.vff</td>
-  </tr>
-  <tr>
-  <td>Visualization Toolkit</td> <td>vtk</td> <td>.vtk</td>
-  </tr>
-  <tr>
-  <td>IPLab</td> <td>ipl</td> <td>.ipl</td>
-  </tr>
-  <tr>
-  <td>TIFF</td> <td>tif</td> <td>.tif</td>
-  </tr>
-  <tr>
-  <td>JPEG</td> <td>jpg</td> <td>.jpg</td>
-  </tr>
-  <tr>
-  <td>GIF</td> <td>gif</td> <td>.gif</td>
-  </tr>
-  <tr>
-  <td>MRC HGU Woolz</td> <td>wlz</td> <td>.wlz</td>
-  </tr>
+  <tr> <td>Amira Lattice</td> <td>am</td> <td>.am</td> </tr>
+  <tr> <td>Analyze</td> <td>anl</td> <td>.hdr/.img</td> </tr>
+  <tr> <td>BioRad Confocal</td> <td>pic</td> <td>.pic</td> </tr>
+  <tr> <td>Graphics Interchange Format</td> <td>gif</td> <td>.gif</td> </tr>
+  <tr> <td>GRUMMP VMESH</td> <td>vmesh</td> <td>.vmesh</td> </tr>
+  <tr> <td>ICS</td> <td>ics</td> <td>.ics/.ids</td> </tr>
+  <tr> <td>IPLab</td> <td>ipl</td> <td>.ipl</td> </tr>
+  <tr> <td>Jonathan Shewchuk's mesh format</td> <td>node</td> <td>.node</td> </tr>
+  <tr> <td>JPEG</td> <td>jpg</td> <td>.jpg</td> </tr>
+  <tr> <td>Microsoft Bitmap</td> <td>bmp</td> <td>.bmp</td> </tr>
+  <tr> <td>NETGEN tetrahedral mesh</td> <td>mesh</td> <td>.mesh</td> </tr>
+  <tr> <td>PNM</td> <td>pnm</td> <td>.pgm</td> </tr>
+  <tr> <td>SLC</td> <td>slc</td> <td>.slc</td> </tr>
+  <tr> <td>Stanford Density</td> <td>den</td> <td>.den</td> </tr>
+  <tr> <td>Sunvision VFF</td> <td>vff</td> <td>.vff</td> </tr>
+  <tr> <td>TIFF</td> <td>tif</td> <td>.tif</td> </tr>
+  <tr> <td>Visualization Toolkit VTK</td> <td>vtk</td> <td>.vtk</td> </tr>
+  <tr> <td>MRC HGU Woolz</td> <td>wlz</td> <td>.wlz</td> </tr>
 </table>
 
 The TIFF file format must be read/written from/to a file
@@ -397,8 +370,8 @@ int             main(int argc, char **argv)
       fStr = inObjFileStr;
     }
     errNum = WLZ_ERR_READ_EOF;
-    if((inObj= WlzAssignObject(WlzEffReadObj(fP, fStr, inFmt, split,
-    					     &errNum), NULL)) == NULL)
+    if((inObj = WlzAssignObject(WlzEffReadObj(fP, fStr, inFmt, split,
+    					      &errNum), NULL)) == NULL)
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
@@ -530,23 +503,26 @@ int             main(int argc, char **argv)
 	"  -y#   Y voxel/pixel size.\n"
 	"  -z#   Z voxel/pixel size.\n"
 	"Valid formats are:\n"
-	"  Description                 Fmt     Extension\n"
-	"  ***********                 ***     *********\n"
-	"  Amira Lattice               am      .am\n"
-	"  Analyze                     anl     .hdr/.img\n"
-	"  Microsoft Bitmap            bmp     .bmp\n"
-	"  Stanford Density            den     .den\n"
-	"  ICS                         ics     .ics/.ids\n"
-	"  PNM                         pnm     .pgm\n"
-	"  BioRad Confocal             pic     .pic\n"
-	"  SLC                         slc     .slc\n"
-	"  Sunvision VFF               vff     .vff\n"
-	"  Visualization Toolkit VTK   vtk     .vtk\n"
-	"  IPLab                       ipl     .ipl\n"
-	"  TIFF                        tif     .tif\n"
-	"  JPEG                        jpg     .jpg\n"
-	"  GIF                         gif     .gif\n"
-	"  MRC HGU Woolz               wlz     .wlz\n",
+	"  Description                      Fmt     Extension\n"
+	"  ***********                      ***     *********\n"
+	"  Amira Lattice                    am      .am\n"
+	"  Analyze                          anl     .hdr/.img\n"
+	"  BioRad Confocal                  pic     .pic\n"
+	"  Graphics Interchange Format      gif     .gif\n"
+	"  GRUMMP VMESH                     vmesh   .vmesh\n"
+	"  ICS                              ics     .ics/.ids\n"
+	"  IPLab                            ipl     .ipl\n"
+	"  Jonathan Shewchuk's mesh format  node    .node\n"
+	"  JPEG                             jpg     .jpg\n"
+	"  Microsoft Bitmap                 bmp     .bmp\n"
+	"  NETGEN tetrahedral mesh          mesh    .mesh\n"
+	"  PNM                              pnm     .pgm\n"
+	"  SLC                              slc     .slc\n"
+	"  Stanford Density                 den     .den\n"
+	"  Sunvision VFF                    vff     .vff\n"
+	"  TIFF                             tif     .tif\n"
+	"  Visualization Toolkit VTK        vtk     .vtk\n"
+	"  MRC HGU Woolz                    wlz     .wlz\n",
 	"Simple example:\n  ",
 	*argv,
 	" -f wlz -F slc <in.wlz >out.slc\n"
