@@ -3098,8 +3098,8 @@ void	 	WlzCMeshGetCellStats3D(WlzCMesh3D *mesh,
       for(idx.vtX = 0; idx.vtX < nCells.vtX; ++idx.vtX)
       {
 	nNPC = 0;
-	nod = cell->nod;
 	cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+	nod = cell->nod;
 	if(nod != NULL)
 	{
 	  ++cntNPC;

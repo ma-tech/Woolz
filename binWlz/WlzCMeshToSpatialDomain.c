@@ -239,7 +239,6 @@ int		main(int argc, char *argv[])
       (void )fclose(fP); fP = NULL;
     }
   }
-  WlzFreeObj(outObj);
   (void )WlzFreeObj(outObj);
   if(usage)
   {
