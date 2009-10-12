@@ -57,26 +57,29 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
   unsigned int	fileFmt;
 
   if(WlzStringMatchValue((int *)&fileFmt, extStr,
-			 "am",  WLZEFF_FORMAT_AM,
-			 "bmp", WLZEFF_FORMAT_BMP,
-			 "den", WLZEFF_FORMAT_DEN,
-			 "gif", WLZEFF_FORMAT_GIF,
-			 "hdr", WLZEFF_FORMAT_ANL,
-			 "ics", WLZEFF_FORMAT_ICS,
-			 "ids", WLZEFF_FORMAT_ICS,
-			 "img", WLZEFF_FORMAT_ANL,
-			 "ipl", WLZEFF_FORMAT_IPL,
-			 "jpeg", WLZEFF_FORMAT_JPEG,
-			 "jpg", WLZEFF_FORMAT_JPEG,
-			 "pgm", WLZEFF_FORMAT_PNM,
-			 "pic", WLZEFF_FORMAT_PIC,
-			 "pnm", WLZEFF_FORMAT_PNM,
-			 "raw", WLZEFF_FORMAT_RAW,
-			 "slc", WLZEFF_FORMAT_SLC,
-			 "tif", WLZEFF_FORMAT_TIFF,
-			 "vff", WLZEFF_FORMAT_VFF,
-			 "vtk", WLZEFF_FORMAT_VTK,
-			 "wlz", WLZEFF_FORMAT_WLZ,
+			 "am",    WLZEFF_FORMAT_AM,
+			 "bmp",   WLZEFF_FORMAT_BMP,
+			 "den",   WLZEFF_FORMAT_DEN,
+			 "gif",   WLZEFF_FORMAT_GIF,
+			 "hdr",   WLZEFF_FORMAT_ANL,
+			 "ics",   WLZEFF_FORMAT_ICS,
+			 "ids",   WLZEFF_FORMAT_ICS,
+			 "img",   WLZEFF_FORMAT_ANL,
+			 "ipl",   WLZEFF_FORMAT_IPL,
+			 "jpeg",  WLZEFF_FORMAT_JPEG,
+			 "jpg",   WLZEFF_FORMAT_JPEG,
+			 "mesh",  WLZEFF_FORMAT_MESH,
+			 "node",  WLZEFF_FORMAT_NODEELE,
+			 "pgm",   WLZEFF_FORMAT_PNM,
+			 "pic",   WLZEFF_FORMAT_PIC,
+			 "pnm",   WLZEFF_FORMAT_PNM,
+			 "raw",   WLZEFF_FORMAT_RAW,
+			 "slc",   WLZEFF_FORMAT_SLC,
+			 "tif",   WLZEFF_FORMAT_TIFF,
+			 "vmesh", WLZEFF_FORMAT_VMESH,
+			 "vff",   WLZEFF_FORMAT_VFF,
+			 "vtk",   WLZEFF_FORMAT_VTK,
+			 "wlz",   WLZEFF_FORMAT_WLZ,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -95,23 +98,26 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
   unsigned int	fileFmt;
 
   if(WlzStringMatchValue((int *)&fileFmt, fmtStr,
-			 "Amira Lattice", WLZEFF_FORMAT_AM,
-			 "ANALYZE 7.5", WLZEFF_FORMAT_ANL,
-			 "BioRad Confocal", WLZEFF_FORMAT_PIC,
-			 "Graphics Interchange Format", WLZEFF_FORMAT_GIF,
-			 "ICS", WLZEFF_FORMAT_ICS,
-			 "IPLab", WLZEFF_FORMAT_IPL,
-			 "JPEG", WLZEFF_FORMAT_JPEG,
-			 "Microsoft Bitmap", WLZEFF_FORMAT_BMP,
-			 "PNM", WLZEFF_FORMAT_PNM,
-			 "Raw", WLZEFF_FORMAT_RAW,
-			 "SLC", WLZEFF_FORMAT_SLC,
-			 "Stanford Density", WLZEFF_FORMAT_DEN,
-			 "Sunvision VFF", WLZEFF_FORMAT_VFF,
-			 "Tiff", WLZEFF_FORMAT_TIFF,
-			 "Visualization Toolkit VTK", WLZEFF_FORMAT_VTK,
-			 "Woolz", WLZEFF_FORMAT_WLZ,
-			 NULL) == 0)
+		     "Amira Lattice", WLZEFF_FORMAT_AM,
+		     "ANALYZE 7.5", WLZEFF_FORMAT_ANL,
+		     "BioRad Confocal", WLZEFF_FORMAT_PIC,
+		     "Graphics Interchange Format", WLZEFF_FORMAT_GIF,
+		     "GRUMMP VMESH", WLZEFF_FORMAT_VMESH,
+		     "ICS", WLZEFF_FORMAT_ICS,
+		     "IPLab", WLZEFF_FORMAT_IPL,
+		     "JPEG", WLZEFF_FORMAT_JPEG,
+		     "Microsoft Bitmap", WLZEFF_FORMAT_BMP,
+		     "NETGEN tetrahedral mesh", WLZEFF_FORMAT_MESH,
+		     "Jonathan Shewchuk's mesh format", WLZEFF_FORMAT_NODEELE,
+		     "PNM", WLZEFF_FORMAT_PNM,
+		     "Raw", WLZEFF_FORMAT_RAW,
+		     "SLC", WLZEFF_FORMAT_SLC,
+		     "Stanford Density", WLZEFF_FORMAT_DEN,
+		     "Sunvision VFF", WLZEFF_FORMAT_VFF,
+		     "Tiff", WLZEFF_FORMAT_TIFF,
+		     "Visualization Toolkit VTK", WLZEFF_FORMAT_VTK,
+		     "Woolz", WLZEFF_FORMAT_WLZ,
+		     NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
   }
@@ -163,7 +169,13 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*extJpegStr  = "jpg",
 		*fmtJpegStr  = "JPEG",
 		*extAnlStr = "hdr",
-		*fmtAnlStr = "HDR";
+		*fmtAnlStr = "HDR",
+		*extNodeEleStr = "node",
+		*fmtNodeEleStr = "Jonathan Shewchuk's mesh format",
+		*extMeshStr = "mesh",
+		*fmtMeshStr = " NETGEN tetrahedral mesh",
+		*extVMeshStr = "vmesh",
+		*fmtVMeshStr = "GRUMMP VMESH";
 
   switch(fileFmt)
   {
@@ -230,6 +242,18 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     case WLZEFF_FORMAT_ANL:
       fmtStr = fmtAnlStr;
       extStr = extAnlStr;
+      break;
+    case WLZEFF_FORMAT_NODEELE:
+      fmtStr = fmtNodeEleStr;
+      extStr = extNodeEleStr;
+      break;
+    case WLZEFF_FORMAT_MESH:
+      fmtStr = fmtMeshStr;
+      extStr = extMeshStr;
+      break;
+    case WLZEFF_FORMAT_VMESH:
+      fmtStr = fmtVMeshStr;
+      extStr = extVMeshStr;
       break;
     default:
       break;
@@ -316,10 +340,11 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
   {
     switch(fFmt)
     {
-      case WLZEFF_FORMAT_ANL: /* FALLTHROUGH */
-      case WLZEFF_FORMAT_BMP: /* FALLTHROUGH */
-      case WLZEFF_FORMAT_ICS: /* FALLTHROUGH */
-      case WLZEFF_FORMAT_PNM: /* FALLTHROUGH */
+      case WLZEFF_FORMAT_ANL:     /* FALLTHROUGH */
+      case WLZEFF_FORMAT_BMP:     /* FALLTHROUGH */
+      case WLZEFF_FORMAT_ICS:     /* FALLTHROUGH */
+      case WLZEFF_FORMAT_NODEELE: /* FALLTHROUGH */
+      case WLZEFF_FORMAT_PNM:     /* FALLTHROUGH */
       case WLZEFF_FORMAT_TIFF:
         break;
       default:
@@ -361,6 +386,15 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
 	break;
       case WLZEFF_FORMAT_VFF:
 	obj = WlzEffReadObjVff(fP, &errNum);
+	break;
+      case WLZEFF_FORMAT_NODEELE:
+	obj = WlzEffReadObjNodeEle(fName, &errNum);
+	break;
+      case WLZEFF_FORMAT_MESH:
+	obj = WlzEffReadObjMesh(fP, &errNum);
+	break;
+      case WLZEFF_FORMAT_VMESH:
+	obj = WlzEffReadObjVMesh(fP, &errNum);
 	break;
       case WLZEFF_FORMAT_VTK:
 	obj = WlzEffReadObjVtk(fP, &errNum);
@@ -424,10 +458,11 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
   {
     switch(fFmt)
     {
-      case WLZEFF_FORMAT_ANL: /* FALLTHROUGH */
-      case WLZEFF_FORMAT_BMP: /* FALLTHROUGH */
-      case WLZEFF_FORMAT_ICS: /* FALLTHROUGH */
-      case WLZEFF_FORMAT_PNM: /* FALLTHROUGH */
+      case WLZEFF_FORMAT_ANL:     /* FALLTHROUGH */
+      case WLZEFF_FORMAT_BMP:     /* FALLTHROUGH */
+      case WLZEFF_FORMAT_ICS:     /* FALLTHROUGH */
+      case WLZEFF_FORMAT_PNM:     /* FALLTHROUGH */
+      case WLZEFF_FORMAT_NODEELE: /* FALLTHROUGH */
       case WLZEFF_FORMAT_TIFF:
         break;
       default:
@@ -478,6 +513,15 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 	break;
       case WLZEFF_FORMAT_VFF:
 	errNum = WlzEffWriteObjVff(fP, obj);
+	break;
+      case WLZEFF_FORMAT_NODEELE:
+	errNum = WlzEffWriteObjNodeEle(fName, obj);
+	break;
+      case WLZEFF_FORMAT_MESH:
+	errNum = WlzEffWriteObjMesh(fP, obj);
+	break;
+      case WLZEFF_FORMAT_VMESH:
+	errNum = WlzEffWriteObjVMesh(fP, obj);
 	break;
       case WLZEFF_FORMAT_VTK:
 	errNum = WlzEffWriteObjVtk(fP, obj);

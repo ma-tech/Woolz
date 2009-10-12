@@ -137,6 +137,27 @@ extern WlzObject 		*WlzEffReadObjIcs(
 				  const char *gvnFileName,
 				  WlzErrorNum *dstErr);
 
+/* From WlzExtFFNodeEle.c */
+extern WlzErrorNum 		WlzEffNodeEleFileNames(
+				  char **fileBody,
+				  char **nodeFileName,
+				  char **eleFileName,
+				  const char *gvnFileName);
+extern WlzObject 		*WlzEffReadObjNodeEle(
+				  const char *gvnFileName,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum 		WlzEffWriteObjNodeEle(
+				  const char *gvnFileName,
+				  WlzObject *obj);
+
+/* From WlzExtFFMesh.c */
+extern WlzObject 		*WlzEffReadObjMesh(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum 		WlzEffWriteObjMesh(
+				  FILE *fP,
+				  WlzObject *obj);
+
 /* From WlzExtFFPic.c */
 extern WlzObject 		*WlzEffReadObjPic(
 				  FILE *fP,
@@ -177,6 +198,14 @@ extern WlzObject 		*WlzEffReadObjVff(
 				  FILE *fP,
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum 		WlzEffWriteObjVff(
+				  FILE *fP,
+				  WlzObject *obj);
+
+/* From WlzExtFFVMesh.c */
+extern WlzObject 		*WlzEffReadObjVMesh(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum 		WlzEffWriteObjVMesh(
 				  FILE *fP,
 				  WlzObject *obj);
 
