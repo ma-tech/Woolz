@@ -152,7 +152,7 @@ static void usage(char *proc_str)
 	  "\tselected to hold the data if possible - unsigned int\n"
 	  "\tmay result in loss of data\n"
 	  "\tOptions are:\n"
-	  "\t  -b                big-endian byte ordering (default)\n"
+	  "\t  -b                little-endian byte ordering (default big-endian)\n"
 	  "\t  -d<dimensions>    image dimensions (2 or 3)(default 2)\n"
 	  "\t                    If d=3 then planes must be specified\n"
 	  "\t  -l                little-endian byte ordering\n"
@@ -183,7 +183,7 @@ int main(int	argc,
   char 		optList[] = "bd:lo:t:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  int		byteOrderFlg=0;
+  int		byteOrderFlg=1;
   WlzGreyType	newpixtype;
   int		verboseFlg=0;
   int		width, height, type, depth, wlzDepth;
