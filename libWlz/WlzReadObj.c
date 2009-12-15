@@ -46,6 +46,7 @@ static char _WlzReadObj_c[] = "MRC HGU $Id$";
 #include <Wlz.h>
 
 /* #define WLZ_DEBUG_READOBJ */
+#define WLZ_OLD_CMESH_TRANS_SUPPORT
 
 #if defined(_WIN32) && !defined(__x86)
 #define __x86
@@ -127,6 +128,40 @@ static WlzErrorNum 		WlzReadVertex3D(
 				  FILE *fP,
 				  WlzDVertex3 *vP,
 				  int nV);
+static WlzErrorNum 		WlzReadStr(
+				  FILE *fP,
+				  char **dstStr);
+static WlzErrorNum 		WlzReadPixelV(FILE *fP,
+				  WlzPixelV *pV,
+				  int nPV);
+static WlzErrorNum 		WlzReadGreyV(FILE *fP,
+				  WlzGreyType type,
+				  WlzGreyV *gV,
+				  int nGV);
+static WlzMeshTransform         *WlzReadMeshTransform2D(
+				  FILE *fp,
+				  WlzErrorNum *);
+static WlzCMesh2D		*WlzReadCMesh2D(
+				  FILE *fp,
+				  WlzErrorNum *dstErr);
+static WlzCMesh3D		*WlzReadCMesh3D(
+				  FILE *fp,
+				  WlzErrorNum *dstErr);
+static WlzErrorNum 		WlzReadIndexedvValues(
+				  FILE *fP,
+				  WlzObject *obj);
+#ifdef WLZ_OLD_CMESH_TRANS_SUPPORT
+static WlzObject 		*WlzReadOldCMeshTransform(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzReadOldCMeshTransform2D(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzReadOldCMeshTransform3D(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_OLD_CMESH_TRANS_SUPPORT */
+
 #ifdef WLZ_UNUSED_FUNCTIONS
 static WlzErrorNum 		WlzReadBox2I(
 				  FILE *fP,
@@ -145,34 +180,6 @@ static WlzErrorNum 		WlzReadBox3D(
 				  WlzDBox3 *bP,
 				  int nB);
 #endif /* WLZ_UNUSED_FUNCTIONS */
-static WlzErrorNum 		WlzReadStr(
-				  FILE *fP,
-				  char **dstStr);
-static WlzErrorNum 		WlzReadPixelV(FILE *fP,
-				  WlzPixelV *pV,
-				  int nPV);
-static WlzErrorNum 		WlzReadGreyV(FILE *fP,
-				  WlzGreyType type,
-				  WlzGreyV *gV,
-				  int nGV);
-static WlzMeshTransform         *WlzReadMeshTransform2D(
-				  FILE *fp,
-				  WlzErrorNum *);
-static WlzCMeshTransform	*WlzReadCMeshTransform(
-				  FILE *fp,
-				  WlzErrorNum *);
-static WlzCMeshTransform	*WlzReadCMeshTransform2D(
-				  FILE *fp,
-				  WlzErrorNum *);
-static WlzCMeshTransform	*WlzReadCMeshTransform3D(
-				  FILE *fp,
-				  WlzErrorNum *);
-static WlzCMesh2D		*WlzReadCMesh2D(
-				  FILE *fp,
-				  WlzErrorNum *dstErr);
-static WlzCMesh3D		*WlzReadCMesh3D(
-				  FILE *fp,
-				  WlzErrorNum *dstErr);
 
 #ifdef _OPENMP
 #define getc(S)	getc_unlocked(S)
@@ -467,14 +474,24 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
       break;
 
     case WLZ_CMESH_2D:
-      if((domain.cm2 = WlzReadCMesh2D(fp, &errNum)) != NULL){
-	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+      if(((domain.cm2 = WlzReadCMesh2D(fp, &errNum)) != NULL) &&
+         ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
+	                     &errNum)) != NULL)){
+        if((errNum = WlzReadIndexedvValues(fp, obj)) == WLZ_ERR_NONE){
+	  obj->plist = WlzAssignPropertyList(
+	               WlzReadPropertyList(fp, NULL), NULL);
+	}
       }
       break;
 
     case WLZ_CMESH_3D:
-      if((domain.cm3 = WlzReadCMesh3D(fp, &errNum)) != NULL){
-	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+      if(((domain.cm3 = WlzReadCMesh3D(fp, &errNum)) != NULL) &&
+         ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
+	                     &errNum)) != NULL)){
+        if((errNum = WlzReadIndexedvValues(fp, obj)) == WLZ_ERR_NONE){
+	  obj->plist = WlzAssignPropertyList(
+	               WlzReadPropertyList(fp, NULL), NULL);
+	}
       }
       break;
 
@@ -494,6 +511,12 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
       obj = (WlzObject *) WlzReadWarpTrans(fp, &errNum);
       break;
 
+#ifdef WLZ_OLD_CMESH_TRANS_SUPPORT
+    case WLZ_CMESH_TRANS:
+      obj = WlzReadOldCMeshTransform(fp, &errNum);
+      break;
+#endif
+
     case WLZ_FMATCHOBJ:
       obj = (WlzObject *) WlzReadFMatchObj(fp, &errNum);
       break;
@@ -509,11 +532,6 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
       break;
     case WLZ_MESH_TRANS:
       if((domain.mt = WlzReadMeshTransform2D(fp, &errNum)) != NULL){
-	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
-      }
-      break;
-    case WLZ_CMESH_TRANS:
-      if((domain.cmt = WlzReadCMeshTransform(fp, &errNum)) != NULL){
 	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
       }
       break;
@@ -3448,198 +3466,6 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
 }
 
 /*!
-* \return	Conforming Mesh Transform.
-* \ingroup	WlzIO
-* \brief	Reads a conforming mesh transform from the input file.
-* \param	fP			Given file.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-static WlzCMeshTransform *WlzReadCMeshTransform(FILE *fp,
-					WlzErrorNum *dstErr)
-{
-  WlzTransformType type;
-  WlzCMeshTransform *cmt = NULL;
-  WlzErrorNum errNum = WLZ_ERR_NONE;
-
-  type = (WlzTransformType )getword(fp);
-  if(feof(fp) != 0)
-  {
-    errNum = WLZ_ERR_READ_INCOMPLETE;
-  }
-  else
-  {
-    switch(type)
-    {
-      case WLZ_TRANSFORM_2D_CMESH:
-	cmt = WlzReadCMeshTransform2D(fp, &errNum);
-	break;
-      case WLZ_TRANSFORM_3D_CMESH:
-	cmt = WlzReadCMeshTransform3D(fp, &errNum);
-	break;
-      default:
-	errNum = WLZ_ERR_TRANSFORM_TYPE;
-	break;
-    }
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(cmt);
-}
-
-/*!
-* \return	Conforming Mesh Transform.
-* \ingroup	WlzIO
-* \brief	Reads a 2D conforming mesh transform from the input file.
-* \param	fP			Given file.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-static WlzCMeshTransform *WlzReadCMeshTransform2D(FILE *fp,
-					WlzErrorNum *dstErr)
-{
-  int		idD,
-  		nDsp;
-  WlzDVertex2	dsp;
-  WlzCMeshTransform *cmt = NULL;
-  WlzErrorNum errNum = WLZ_ERR_NONE;
-
-  cmt = WlzMakeCMeshTransform(WLZ_TRANSFORM_2D_CMESH, &errNum);
-  if(errNum == WLZ_ERR_NONE)
-  {
-    cmt->mesh.m2 = WlzReadCMesh2D(fp, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if((nDsp = cmt->mesh.m2->res.nod.maxEnt) < 0)
-    {
-      errNum = WLZ_ERR_PARAM_DATA;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if(((cmt->dspVec = AlcVectorNew(1, sizeof(WlzDVertex2),
-				   cmt->mesh.m2->res.nod.vec->blkSz,
-				    NULL)) == NULL) ||
-       (AlcVectorExtendAndGet(cmt->dspVec, nDsp) == NULL))				        
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-  }
-  /* Read displacements. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    for(idD = 0; idD < nDsp; ++idD)
-    {
-      dsp.vtX = getdouble(fp);
-      dsp.vtY = getdouble(fp);
-#ifdef WLZ_DEBUG_READOBJ
-      (void )fprintf(stderr,
-                     "WlzReadCMeshTransform2D() "
-		     "% 8d % 8g % 8g\n",
-		     idD, dsp.vtX, dsp.vtY);
-#endif /* WLZ_DEBUG_READOBJ */
-      if(feof(fp) != 0)
-      {
-        errNum = WLZ_ERR_READ_INCOMPLETE;
-	break;
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	*(WlzDVertex2 *)AlcVectorItemGet(cmt->dspVec, idD) = dsp;
-      }
-    }
-  }
-  /* Clean up if errors. */
-  if(errNum != WLZ_ERR_NONE)
-  {
-    (void )WlzFreeCMeshTransform(cmt);
-    cmt = NULL;
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(cmt);
-}
-
-/*!
-* \return	Conforming Mesh Transform.
-* \ingroup	WlzIO
-* \brief	Reads a 3D conforming mesh transform from the input file.
-* \param	fP			Given file.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-static WlzCMeshTransform *WlzReadCMeshTransform3D(FILE *fp,
-					WlzErrorNum *dstErr)
-{
-  int		idD,
-  		nDsp;
-  WlzDVertex3	dsp;
-  WlzCMeshTransform *cmt = NULL;
-  WlzErrorNum errNum = WLZ_ERR_NONE;
-
-  cmt = WlzMakeCMeshTransform(WLZ_TRANSFORM_3D_CMESH, &errNum);
-  if(errNum == WLZ_ERR_NONE)
-  {
-    cmt->mesh.m3 = WlzReadCMesh3D(fp, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if((nDsp = cmt->mesh.m3->res.nod.maxEnt) < 0)
-    {
-      errNum = WLZ_ERR_PARAM_DATA;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if(((cmt->dspVec = AlcVectorNew(1, sizeof(WlzDVertex3),
-				   cmt->mesh.m3->res.nod.vec->blkSz,
-				    NULL)) == NULL) ||
-       (AlcVectorExtendAndGet(cmt->dspVec, nDsp) == NULL))				        
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-  }
-  /* Read displacements. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    for(idD = 0; idD < nDsp; ++idD)
-    {
-      dsp.vtX = getdouble(fp);
-      dsp.vtY = getdouble(fp);
-      dsp.vtZ = getdouble(fp);
-#ifdef WLZ_DEBUG_READOBJ
-      (void )fprintf(stderr,
-                     "WlzReadCMeshTransform3D() "
-		     "% 8d % 8g % 8g % 8g\n",
-		     idD, dsp.vtX, dsp.vtY, dsp.vtZ);
-#endif /* WLZ_DEBUG_READOBJ */
-      if(feof(fp) != 0)
-      {
-        errNum = WLZ_ERR_READ_INCOMPLETE;
-	break;
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	*(WlzDVertex3 *)AlcVectorItemGet(cmt->dspVec, idD) = dsp;
-      }
-    }
-  }
-  /* Clean up if errors. */
-  if(errNum != WLZ_ERR_NONE)
-  {
-    (void )WlzFreeCMeshTransform(cmt);
-    cmt = NULL;
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(cmt);
-}
-
-/*!
 * \return	New 2D constrained mesh.
 * \ingroup	WlzIO
 * \brief	reads a 2D constrained mesh using the given file pointer.
@@ -3997,3 +3823,367 @@ static WlzCMesh3D *WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
   }
   return(mesh);
 }
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Reads an indexed value table.
+* 		Watch out that this function assumes that the given object
+* 		has NULL values, which is true in it's current use.
+* \param	fP			File pointer.
+* \param	obj			Object that the indexed value table
+* 					will be attached to.
+*/
+static WlzErrorNum WlzReadIndexedvValues(FILE *fP, WlzObject *obj)
+{
+  int		idX,
+  		idV,
+		rank,
+  		nValues,
+		vCount;
+  WlzObjectType	type;
+  WlzGreyType	vType;
+  WlzValueAttach vAttach;
+  int		*dim = NULL;
+  WlzGreyP	gP;
+  WlzValues 	values;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  
+  values.core = NULL;
+  type = (WlzObjectType )getc(fP);
+  switch(type)
+  {
+    case WLZ_INDEXED_VALUES:
+      break;
+    case WLZ_NULL:
+      errNum = WLZ_ERR_EOO;
+      break;
+    default:
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+      break;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rank = getword(fP);
+    if(rank < 0)
+    {
+      errNum = WLZ_ERR_VALUES_DATA;
+    }
+    else if((dim = (int *)AlcMalloc((sizeof(int) * rank))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idX = 0; idX < rank; ++idX)
+    {
+      dim[idX] = getword(fP);
+    }
+    vType = (WlzGreyType )getc(fP);
+    vAttach = (WlzValueAttach )getc(fP);
+    nValues = getword(fP);
+    if(feof(fP))
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    values.x = WlzMakeIndexedValues(obj, rank, dim, vType, vAttach, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(AlcVectorExtendAndGet(values.x->values, nValues) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    vCount = 1;
+    if(rank > 0)
+    {
+      for(idX = 0; idX < rank; ++idX)
+      {
+        vCount *= dim[idX];
+      }
+    }
+    for(idX = 0; idX < nValues; ++idX)
+    {
+      gP.v = WlzIndexedValueGet(values.x, idX);
+      for(idV = 0; idV < vCount; ++idV)
+      {
+	switch(vType)
+	{
+	  case WLZ_GREY_INT:
+	    gP.inp[idV] = getword(fP);
+	    break;
+	  case WLZ_GREY_SHORT:
+	    gP.shp[idV] = getshort(fP);
+	    break;
+	  case WLZ_GREY_UBYTE:
+	    gP.ubp[idV] = getc(fP);
+	    break;
+	  case WLZ_GREY_FLOAT:
+	    gP.flp[idV] = getfloat(fP);
+	    break;
+	  case WLZ_GREY_DOUBLE:
+	    gP.dbp[idV] = getdouble(fP);
+	    break;
+	  case WLZ_GREY_RGBA:
+	    gP.rgbp[idV] = getword(fP);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
+	    break;
+	}
+	if(feof(fP))
+	{
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	  break;
+	}
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    obj->values = WlzAssignValues(values, NULL);
+  }
+  else
+  {
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;                        /* No values is allowed. */
+    }
+    else
+    {
+      (void )WlzFreeIndexedValues(values.x);
+      values.x = NULL;
+    }
+  }
+  return(errNum);
+}
+
+#ifdef WLZ_OLD_CMESH_TRANS_SUPPORT
+/*!
+* \return	New Woolz constrained mesh object.
+* \ingroup	WlzIO
+* \brief	Reads an old format constrained mesh transform into the
+* 		new constrained mesh data structures. Only the object
+* 		type will have already been read from the input file.
+* \param	fP			File pointer for input.
+* \param	dstErr			destination error pointer may be NULL.
+*/
+static WlzObject *WlzReadOldCMeshTransform(FILE *fP, WlzErrorNum *dstErr)
+{
+  WlzTransformType tType;
+  WlzObject	*obj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  tType = (WlzTransformType )getword(fP);
+  if(feof(fP) != 0)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else
+  {
+    switch(tType)
+    {
+      case WLZ_TRANSFORM_2D_CMESH:
+	obj = WlzReadOldCMeshTransform2D(fP, &errNum);
+	break;
+      case WLZ_TRANSFORM_3D_CMESH:
+	obj = WlzReadOldCMeshTransform3D(fP, &errNum);
+	break;
+      default:
+        errNum = WLZ_ERR_TRANSFORM_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(obj);
+}
+
+/*!
+* \return	New Woolz constrained mesh object.
+* \ingroup	WlzIO
+* \brief	Reads an old format 2D constrained mesh transform into the
+* 		new constrained mesh data structures. Only the object
+* 		and transform types will have already been read from the
+* 		input file.
+* \param	fP			File pointer for input.
+* \param	dstErr			destination error pointer may be NULL.
+*/
+static WlzObject *WlzReadOldCMeshTransform2D(FILE *fP, WlzErrorNum *dstErr)
+{
+  int		idX,
+  		dim,
+  		nDsp;
+  WlzDomain	dom;
+  WlzValues	val;
+  WlzGreyP	gP;
+  WlzObject	*obj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  val.core = NULL;
+  dom.cm2 = WlzReadCMesh2D(fP, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((nDsp = dom.cm2->res.nod.maxEnt) < 0)
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    obj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dim = 2;
+    val.x = WlzMakeIndexedValues(obj, 1, &dim,
+                                 WLZ_GREY_DOUBLE, WLZ_VALUE_ATTACH_NOD,
+				 &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(AlcVectorExtendAndGet(val.x->values, nDsp) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idX = 0; idX < nDsp; ++idX)
+    {
+      gP.v = WlzIndexedValueGet(val.x, idX);
+      gP.dbp[0] = getdouble(fP);
+      gP.dbp[1] = getdouble(fP);
+      if(feof(fP))
+      {
+	errNum = WLZ_ERR_READ_INCOMPLETE;
+	break;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    obj->values = WlzAssignValues(val, NULL);
+  }
+  else
+  {
+    if(obj)
+    {
+      (void )WlzFreeObj(obj);
+      obj = NULL;
+    }
+    else
+    {
+      (void )WlzFreeDomain(dom);
+      if(val.core)
+      {
+        (void )WlzFreeIndexedValues(val.x);
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(obj);
+}
+
+/*!
+* \return	New Woolz constrained mesh object.
+* \ingroup	WlzIO
+* \brief	Reads an old format 3D constrained mesh transform into the
+* 		new constrained mesh data structures. Only the object
+* 		and transform types will have already been read from the
+* 		input file.
+* \param	fP			File pointer for input.
+* \param	dstErr			destination error pointer may be NULL.
+*/
+static WlzObject *WlzReadOldCMeshTransform3D(FILE *fP, WlzErrorNum *dstErr)
+{
+  int		idX,
+  		dim,
+  		nDsp;
+  WlzDomain	dom;
+  WlzValues	val;
+  WlzGreyP	gP;
+  WlzObject	*obj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  val.core = NULL;
+  dom.cm3 = WlzReadCMesh3D(fP, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((nDsp = dom.cm3->res.nod.maxEnt) < 0)
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    obj = WlzMakeMain(WLZ_CMESH_3D, dom, val, NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dim = 3;
+    val.x = WlzMakeIndexedValues(obj, 1, &dim,
+                                 WLZ_GREY_DOUBLE, WLZ_VALUE_ATTACH_NOD,
+				 &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(AlcVectorExtendAndGet(val.x->values, nDsp) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idX = 0; idX < nDsp; ++idX)
+    {
+      gP.v = WlzIndexedValueGet(val.x, idX);
+      gP.dbp[0] = getdouble(fP);
+      gP.dbp[1] = getdouble(fP);
+      gP.dbp[2] = getdouble(fP);
+      if(feof(fP))
+      {
+	errNum = WLZ_ERR_READ_INCOMPLETE;
+	break;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    obj->values = WlzAssignValues(val, NULL);
+  }
+  else
+  {
+    if(obj)
+    {
+      (void )WlzFreeObj(obj);
+      obj = NULL;
+    }
+    else
+    {
+      (void )WlzFreeDomain(dom);
+      if(val.core)
+      {
+        (void )WlzFreeIndexedValues(val.x);
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(obj);
+}
+#endif
