@@ -81,10 +81,6 @@ WlzErrorNum	WlzFreeTransform(WlzTransform tr)
       case WLZ_TRANSFORM_2D_MESH:	/* FALLTHROUGH */
 	errNum = WlzMeshFreeTransform(tr.mesh);
         break;
-      case WLZ_TRANSFORM_2D_CMESH:	/* FALLTHROUGH */
-      case WLZ_TRANSFORM_3D_CMESH:
-	errNum = WlzFreeCMeshTransform(tr.cMesh);
-        break;
       case WLZ_TRANSFORM_2D5_MESH:	/* FALLTHROUGH */
       case WLZ_TRANSFORM_3D_MESH:
 	errNum = WLZ_ERR_UNIMPLEMENTED;
