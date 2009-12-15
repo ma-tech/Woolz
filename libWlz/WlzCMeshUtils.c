@@ -3042,7 +3042,115 @@ void	 	WlzCMeshGetCellStats2D(WlzCMesh2D *mesh,
 				       int *dstMaxElmPerCell,
 				       double *dstMeanElmPerCell)
 {
-  /* TODO HACK */
+  int		cntNPC,
+  		nNPC,
+  		minNPC,
+  		maxNPC,
+		sumNPC,
+     		cntEPC,
+		nEPC,
+  		minEPC,
+  		maxEPC,
+		sumEPC;
+  WlzIVertex2	idx,
+		nCells;
+  WlzCMeshNod2D	*nod;
+  WlzCMeshCellElm2D *cElm;
+  WlzCMeshCell2D *cell;
+
+  cntNPC = cntEPC = 0;
+  nCells = mesh->cGrid.nCells;
+  for(idx.vtY = 0; idx.vtY < nCells.vtY; ++idx.vtY)
+  {
+    for(idx.vtX = 0; idx.vtX < nCells.vtX; ++idx.vtX)
+    {
+      nNPC = 0;
+      cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
+      nod = cell->nod;
+      if(nod != NULL)
+      {
+	++cntNPC;
+	do
+	{
+	  ++nNPC;
+	  nod = nod->next;
+	} while((nod != NULL) && (nod != cell->nod));
+      }
+      nEPC = 0;
+      cElm = cell->cElm;
+      if(cElm != NULL)
+      {
+	++cntEPC;
+	do
+	{
+	  ++nEPC;
+	  cElm = cElm->nextCell;
+	} while((cElm != NULL) && (cElm != cell->cElm));
+      }
+      if(cntNPC > 0)
+      {
+	if(cntNPC == 1)
+	{
+	  minNPC = maxNPC = sumNPC = nNPC;
+	}
+	else
+	{
+	  if(nNPC < minNPC)
+	  {
+	    minNPC = nNPC;
+	  }
+	  else if(nNPC > maxNPC)
+	  {
+	    maxNPC = nNPC;
+	  }
+	  sumNPC += nNPC;
+	}
+      }
+      if(cntEPC > 0)
+      {
+	if(cntEPC == 1)
+	{
+	  minEPC = maxEPC = sumEPC = nEPC;
+	}
+	else
+	{
+	  if(nEPC < minEPC)
+	  {
+	    minEPC = nEPC;
+	  }
+	  else if(nEPC > maxEPC)
+	  {
+	    maxEPC = nEPC;
+	  }
+	  sumEPC += nEPC;
+	}
+      }
+    }
+  }
+  if(cntNPC > 0)
+  {
+    *dstMinNodPerCell = minNPC;
+    *dstMaxNodPerCell = maxNPC;
+    *dstMeanNodPerCell = (double )sumNPC / (double )cntNPC;
+  }
+  else
+  {
+    *dstMinNodPerCell = 0;
+    *dstMaxNodPerCell = 0;
+    *dstMeanNodPerCell = 0.0;
+  }
+  if(cntEPC > 0)
+  {
+    *dstMinElmPerCell = minEPC;
+    *dstMaxElmPerCell = maxEPC;
+    *dstMeanElmPerCell = (double )sumEPC / (double )cntEPC;
+  }
+  else
+  {
+    *dstMinElmPerCell = 0;
+    *dstMaxElmPerCell = 0;
+    *dstMeanElmPerCell = 0.0;
+  }
 }
 
 /*!

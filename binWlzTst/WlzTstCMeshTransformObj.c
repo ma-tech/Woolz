@@ -51,9 +51,9 @@ static char _WlzBasisFnTransformObj_c[] = "MRC HGU $Id$";
 extern int      getopt(int argc, char * const *argv, const char *optstring);
  
 static WlzErrorNum 		WlzTstCMeshSetDsp(
-				  WlzCMeshTransform *cMesh);
+				  WlzObject *mObj);
 static WlzErrorNum 		WlzTstCMeshSetDsp3D(
-				  WlzCMeshTransform *cMesh);
+				  WlzObject *mObj);
 static WlzDVertex3 		WlzTstCMeshCompDsp3D(
 				  WlzDBox3 bBox,
 				  WlzDVertex3 pos);
@@ -73,8 +73,9 @@ int             main(int argc, char **argv)
   		maxElmSz = 8.0;
   WlzObject	*inObj = NULL,
 		*outObj = NULL,
-		*dilObj = NULL;
-  WlzCMeshTransform *cMesh = NULL;
+		*dilObj = NULL,
+		*mObj = NULL;
+  WlzCMeshP	meshP;
   WlzMeshGenMethod meshGenMth = WLZ_MESH_GENMETHOD_CONFORM;
   WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   FILE		*fP = NULL;
@@ -166,9 +167,8 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    cMesh = WlzCMeshTransformFromObj(inObj,
-			  meshGenMth, minElmSz, maxElmSz,
-			  &dilObj, 1, &errNum);
+    mObj = WlzCMeshTransformFromObj(inObj, meshGenMth, minElmSz, maxElmSz,
+			  	    &dilObj, 1, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -190,7 +190,8 @@ int             main(int argc, char **argv)
     }
     if(ok)
     {
-      WlzCMeshDbgOutVTK(fP, cMesh->mesh);
+      meshP.v = (void *)(mObj->domain.core);
+      WlzCMeshDbgOutVTK(fP, meshP);
     }
     if(fP && strcmp(outVTKFileStr, "-"))
     {
@@ -199,11 +200,11 @@ int             main(int argc, char **argv)
   }
   if(ok && deform)
   {
-    errNum = WlzTstCMeshSetDsp(cMesh);
+    errNum = WlzTstCMeshSetDsp(mObj);
   }
   if(ok)
   {
-    outObj = WlzCMeshTransformObj(inObj, cMesh, interp, &errNum);
+    outObj = WlzCMeshTransformObj(inObj, mObj, interp, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -232,7 +233,7 @@ int             main(int argc, char **argv)
       fclose(fP);
     }
   }
-  (void )WlzFreeCMeshTransform(cMesh);
+  (void )WlzFreeObj(mObj);
   (void )WlzFreeObj(inObj);
   (void )WlzFreeObj(outObj);
   (void )WlzFreeObj(dilObj);
@@ -255,17 +256,17 @@ int             main(int argc, char **argv)
   return(!ok);
 }
 
-static WlzErrorNum WlzTstCMeshSetDsp(WlzCMeshTransform *cMesh)
+static WlzErrorNum WlzTstCMeshSetDsp(WlzObject *mObj)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  switch(cMesh->type)
+  switch(mObj->type)
   {
-    case WLZ_TRANSFORM_2D_CMESH:
+    case WLZ_CMESH_2D:
       errNum = WLZ_ERR_UNIMPLEMENTED;
       break;
-    case WLZ_TRANSFORM_3D_CMESH:
-      errNum = WlzTstCMeshSetDsp3D(cMesh);
+    case WLZ_CMESH_3D:
+      errNum = WlzTstCMeshSetDsp3D(mObj);
       break;
     default:
       errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -274,31 +275,49 @@ static WlzErrorNum WlzTstCMeshSetDsp(WlzCMeshTransform *cMesh)
   return(errNum);
 }
 
-static WlzErrorNum WlzTstCMeshSetDsp3D(WlzCMeshTransform *cMesh)
+static WlzErrorNum WlzTstCMeshSetDsp3D(WlzObject *mObj)
 {
   int		idN,
-  		nNod;
+		nNod,
+		dim = 3;
+  double	*dsp;
+  WlzDVertex3	dspV;
   WlzDBox3	bBox;
-  AlcVector	*dVec,
-  		*nVec;
+  AlcVector	*nVec;
   WlzCMeshNod3D	*nod;
-  WlzDVertex3	*dsp;
+  WlzCMesh3D	*mesh;
+  WlzValues	values;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  bBox = cMesh->mesh.m3->bBox;
-  nNod = cMesh->mesh.m3->res.nod.maxEnt;
-  dVec = cMesh->dspVec;
-  nVec = cMesh->mesh.m3->res.nod.vec;
-  for(idN = 0; idN < nNod; ++idN)
+  values.x = WlzMakeIndexedValues(mObj, 1, &dim, WLZ_GREY_DOUBLE,
+  				  WLZ_VALUE_ATTACH_NOD, &errNum);
+  if(errNum == WLZ_ERR_NONE)
   {
-    nod = (WlzCMeshNod3D *)AlcVectorItemGet(nVec, (size_t )idN);
-    if(nod->idx >= 0)
+    mesh = mObj->domain.cm3;
+    bBox = mesh->bBox;
+    nNod = mesh->res.nod.maxEnt;
+    if(WlzIndexedValueExtGet(values.x, nNod) == NULL)
     {
-      dsp = (WlzDVertex3 *)AlcVectorItemGet(dVec, nod->idx);
-      *dsp = WlzTstCMeshCompDsp3D(bBox, nod->pos);
+      errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
-
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nVec = mesh->res.nod.vec;
+    mObj->values = WlzAssignValues(values, NULL);
+    for(idN = 0; idN < nNod; ++idN)
+    {
+      nod = (WlzCMeshNod3D *)AlcVectorItemGet(nVec, (size_t )idN);
+      if(nod->idx >= 0)
+      {
+	dsp = (double *)WlzIndexedValueGet(values.x, nod->idx);
+	dspV = WlzTstCMeshCompDsp3D(bBox, nod->pos);
+	dsp[0] = dspV.vtX;
+	dsp[1] = dspV.vtY;
+	dsp[2] = dspV.vtZ;
+      }
+    }
+  }
   return(errNum);
 }
 

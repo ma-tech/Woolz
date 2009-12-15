@@ -218,7 +218,7 @@ is then written to tied.wlz.
 static void			WlzMeshOutputPS(
 				  WlzMeshTransform *meshTr);
 static void			WlzCMeshOutputPS(
-				  WlzCMeshTransform *meshTr,
+				  WlzObject *mObj,
 				  WlzObject *sObj,
 				  WlzObject *dilObj,
 				  WlzObject *outObj);
@@ -473,7 +473,7 @@ int             main(int argc, char **argv)
     {
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
-		     "%s: failed to read object from file %s (%s)\n",
+		     "%s: Failed to read object from file %s (%s)\n",
 		     *argv, inObjFileStr, errMsg);
     }
   }
@@ -564,8 +564,8 @@ int             main(int argc, char **argv)
       {
 	(void )WlzStringFromErrorNum(errNum, &errMsg);
 	(void )fprintf(stderr,
-		 "%s: failed to read target mesh object from file %s (%s).\n",
-		       *argv, inObjFileStr, errMsg);
+		 "%s: Failed to read target mesh object from file %s (%s).\n",
+		       *argv, tarMeshFileStr, errMsg);
       }
     }
   }
@@ -591,7 +591,7 @@ int             main(int argc, char **argv)
 	errNum = WLZ_ERR_READ_EOF;
 	(void )WlzStringFromErrorNum(errNum, &errMsg);
 	(void )fprintf(stderr,
-		       "%s: failed to open tie points file %s (%s).\n",
+		       "%s: Failed to open tie points file %s (%s).\n",
 		       *argv, tiePtFileStr, errMsg);
       }
       else
@@ -649,7 +649,7 @@ int             main(int argc, char **argv)
       {
 	if(tarMesh.v == NULL)
 	{
-	  meshTr.cMesh = WlzCMeshTransformFromObj(inObj,
+	  meshTr.obj = WlzCMeshTransformFromObj(inObj,
 				meshGenMth, meshMinDist, meshMaxDist,
 				&dilObj, delOut, &errNum);
         }
@@ -666,7 +666,7 @@ int             main(int argc, char **argv)
 	ok = 0;
 	(void )WlzStringFromErrorNum(errNum, &errMsg);
 	(void )fprintf(stderr,
-		       "%s: failed to compute a mesh for the object (%s).\n",
+		       "%s: Failed to compute a mesh for the object (%s).\n",
 		       *argv, errMsg);
       }
       if(errNum == WLZ_ERR_NONE)
@@ -676,16 +676,16 @@ int             main(int argc, char **argv)
 	  if(dim == 2)
 	  {
 	    basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
-					     nTiePP, vxA0.d2, nTiePP, vxA1.d2,
-					     (cdt)? meshTr.cMesh->mesh.m2: NULL,
-					     &errNum);
+					   nTiePP, vxA0.d2, nTiePP, vxA1.d2,
+					   (cdt)? meshTr.obj->domain.cm2: NULL,
+					   &errNum);
 	  }
 	  else /* dim == 3 */
 	  {
 	    basisTr = WlzBasisFnTrFromCPts3D(basisFnType, basisFnPolyOrder,
-					     nTiePP, vxA0.d3, nTiePP, vxA1.d3,
-					     (cdt)? meshTr.cMesh->mesh.m3: NULL,
-					     &errNum);
+					   nTiePP, vxA0.d3, nTiePP, vxA1.d3,
+					   (cdt)? meshTr.obj->domain.cm3: NULL,
+					   &errNum);
 	  }
 	}
 	else
@@ -708,7 +708,7 @@ int             main(int argc, char **argv)
 	  ok = 0;
 	  (void )WlzStringFromErrorNum(errNum, &errMsg);
 	  (void )fprintf(stderr,
-		   "%s: failed to compute basis function transform (%s).\n",
+		   "%s: Failed to compute basis function transform (%s).\n",
 		       *argv, errMsg);
 	}
       }
@@ -724,16 +724,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    if(outMeshTrFlag)
-    {
-      errNum = WLZ_ERR_UNIMPLEMENTED;
-      ok = 0;
-      (void )fprintf(stderr,
-      		     "%s: Writing mesh transforms has not been\n"
-		     "implemented yet\n",
-		     *argv);
-    }
-    else if(outBasisTrFlag)
+    if(outBasisTrFlag)
     {
       errNum = WLZ_ERR_UNIMPLEMENTED;
       ok = 0;
@@ -752,11 +743,11 @@ int             main(int argc, char **argv)
 	  {
 	    if(tarMesh.v == NULL)
 	    {
-	      errNum = WlzBasisFnSetCMesh(meshTr.cMesh, basisTr);
+	      errNum = WlzBasisFnSetCMesh(meshTr.obj, basisTr);
 	    }
 	    else
 	    {
-	       meshTr.cMesh = WlzBasisFnInvertAndSetCMesh(basisTr, tarMesh,
+	       meshTr.obj = WlzBasisFnInvertAndSetCMesh(basisTr, tarMesh,
 	       				&errNum);
 	    }
 	  }
@@ -769,24 +760,58 @@ int             main(int argc, char **argv)
 	    ok = 0;
 	    (void )WlzStringFromErrorNum(errNum, &errMsg);
 	    (void )fprintf(stderr,
-			   "%s: failed to set the mesh displacements (%s).\n",
+			   "%s: Failed to set the mesh displacements (%s).\n",
 			   *argv, errMsg);
 	  }
 	}
       }
       if(errNum == WLZ_ERR_NONE)
       {
-	if(noTrObj == 0)
+	if(outMeshTrFlag)
 	{
 	  if(cMesh)
 	  {
-	    outObj = WlzCMeshTransformObj(inObj, meshTr.cMesh, interp,
-	    			          &errNum);
+	    errNum = WLZ_ERR_WRITE_EOF;
+	    if(((fP = (strcmp(outObjFileStr, "-")?
+		      fopen(outObjFileStr, "w"):
+		      stdout)) == NULL) ||
+	       ((errNum = WlzWriteObj(fP, meshTr.obj)) != WLZ_ERR_NONE))
+	    {
+	      ok = 0;
+	      (void )WlzStringFromErrorNum(errNum, &errMsg);
+	      (void )fprintf(stderr,
+			     "%s: Failed to write CMesh object (%s).\n",
+			     *argv, errMsg);
+	    }
+	    if(fP && strcmp(outObjFileStr, "-"))
+	    {
+	      fclose(fP);
+	    }
 	  }
 	  else
 	  {
-	    outObj = WlzMeshTransformObj(inObj, meshTr.mesh, interp,
-	    				 &errNum);
+	    errNum = WLZ_ERR_UNIMPLEMENTED;
+	    ok = 0;
+	    (void )fprintf(stderr,
+			   "%s: Writing mesh transforms has not been\n"
+			   "implemented yet\n",
+			   *argv);
+	  }
+	}
+	else
+	{
+	  if(noTrObj == 0)
+	  {
+	    if(cMesh)
+	    {
+	      outObj = WlzCMeshTransformObj(inObj, meshTr.obj, interp,
+					    &errNum);
+	    }
+	    else
+	    {
+	      outObj = WlzMeshTransformObj(inObj, meshTr.mesh, interp,
+					   &errNum);
+	    }
 	  }
 	}
       }
@@ -796,7 +821,7 @@ int             main(int argc, char **argv)
 	{
 	  if(cMesh)
 	  {
-	    WlzCMeshOutputPS(meshTr.cMesh, inObj, dilObj, outObj);
+	    WlzCMeshOutputPS(meshTr.obj, inObj, dilObj, outObj);
 	  }
 	  else
 	  {
@@ -809,10 +834,11 @@ int             main(int argc, char **argv)
 	ok = 0;
 	(void )WlzStringFromErrorNum(errNum, &errMsg);
 	(void )fprintf(stderr,
-		       "%s: failed to transform object (%s).\n",
+		       "%s: Failed to transform object (%s).\n",
 		       *argv, errMsg);
       }
-      if(errNum == WLZ_ERR_NONE)
+      if((errNum == WLZ_ERR_NONE) && (noTrObj == 0) &&
+         (outBasisTrFlag == 0) && (outMeshTrFlag == 0))
       {
 	errNum = WLZ_ERR_WRITE_EOF;
 	if(((fP = (strcmp(outObjFileStr, "-")?
@@ -823,7 +849,7 @@ int             main(int argc, char **argv)
 	  ok = 0;
 	  (void )WlzStringFromErrorNum(errNum, &errMsg);
 	  (void )fprintf(stderr,
-			 "%s: failed to write output object (%s).\n",
+			 "%s: Failed to write output object (%s).\n",
 			 *argv, errMsg);
 	}
 	if(fP && strcmp(outObjFileStr, "-"))
@@ -838,7 +864,7 @@ int             main(int argc, char **argv)
   (void )WlzCMeshFree(tarMesh);
   if(cMesh)
   {
-    (void )WlzFreeCMeshTransform(meshTr.cMesh);
+    (void )WlzFreeObj(meshTr.obj);
   }
   else
   {
@@ -1023,7 +1049,7 @@ static WlzErrorNum WlzBFTOGetVertices2D(int *dstNVx,
   {
     (void )WlzStringFromErrorNum(errNum, &errMsg);
     (void )fprintf(stderr,
-	"%s: failed to read tie points file %s (%s).\n",
+	"%s: Failed to read tie points file %s (%s).\n",
 	prog, fStr, errMsg);
   }
   return(errNum);
@@ -1136,7 +1162,7 @@ static WlzErrorNum WlzBFTOGetVertices3D(int *dstNVx,
   {
     (void )WlzStringFromErrorNum(errNum, &errMsg);
     (void )fprintf(stderr,
-	"%s: failed to read tie points file %s (%s).\n",
+	"%s: Failed to read tie points file %s (%s).\n",
 	prog, fStr, errMsg);
   }
   return(errNum);
@@ -1285,12 +1311,12 @@ static void	WlzMeshOutputPS(WlzMeshTransform *meshTr)
 * \return	void
 * \brief	Outputs the mesh and displaced mesh of the given mesh
 *		transform as Postscript to the standard error output.
-* \param	meshTr			Given mesh transform.
+* \param	mObj			Given mesh transform object.
 * \param	sObj			Source object.
 * \param	dilObj			Dilated object.
 * \param	outObj			Transformed object.
 */
-static void	WlzCMeshOutputPS(WlzCMeshTransform *meshTr,
+static void	WlzCMeshOutputPS(WlzObject *mObj,
 				 WlzObject *sObj, WlzObject *dilObj,
 				 WlzObject *outObj)
 {
@@ -1298,14 +1324,15 @@ static void	WlzCMeshOutputPS(WlzCMeshTransform *meshTr,
   		idN,
 		useElm;
   double	scale;
+  double	*dsp;
   WlzDVertex2	pos,
   		offset;
-  WlzDVertex2	*dsp;
   WlzDVertex2	elmVx[3];
   WlzDBox2	bBox;
   WlzCMeshNod2D	*nod;
   WlzCMeshElm2D *elm;
   WlzCMesh2D	*mesh;
+  WlzIndexedValues *ixv;
   WlzObject	*bObj = NULL;
   char		buf[100];
 
@@ -1316,10 +1343,9 @@ static void	WlzCMeshOutputPS(WlzCMeshTransform *meshTr,
   			 "1 setlinecap\n"
 			 "1 setlinejoin\n"
 			 "0.01 setlinewidth\n");
-  if((meshTr != NULL) &&
-     (meshTr->type == WLZ_TRANSFORM_2D_CMESH) &&
-     ((mesh = meshTr->mesh.m2) != NULL) &&
-     (meshTr->dspVec != NULL))
+  if((mObj != NULL) && (mObj->type == WLZ_CMESH_2D) &&
+     ((mesh = mObj->domain.cm2) != NULL) &&
+     ((ixv = mObj->values.x) != NULL))
   {
     /* Compute the bounding box of the mesh transform. */
     bBox.xMin = bBox.yMin = DBL_MAX;
@@ -1345,8 +1371,9 @@ static void	WlzCMeshOutputPS(WlzCMeshTransform *meshTr,
 	{
 	  bBox.yMax = nod->pos.vtY;
 	}
-        dsp = (WlzDVertex2 *)AlcVectorItemGet(meshTr->dspVec, idN);
-	WLZ_VTX_2_ADD(pos, nod->pos, *dsp);
+        dsp = (double *)WlzIndexedValueGet(ixv, idN);
+	pos.vtX = nod->pos.vtX + dsp[0];
+	pos.vtY = nod->pos.vtY + dsp[1];
 	if(pos.vtX < bBox.xMin)
 	{
 	  bBox.xMin = pos.vtX;
@@ -1429,9 +1456,9 @@ static void	WlzCMeshOutputPS(WlzCMeshTransform *meshTr,
 	    for(idN = 0; idN < 3; ++idN)
 	    {
 	      pos = elm->edu[idN].nod->pos;
-	      dsp = (WlzDVertex2 *)AlcVectorItemGet(meshTr->dspVec,
-						    elm->edu[idN].nod->idx);
-	      WLZ_VTX_2_ADD(pos, pos, *dsp);
+	      dsp = (double *)WlzIndexedValueGet(ixv, elm->edu[idN].nod->idx);
+	      pos.vtX += dsp[0];
+	      pos.vtY += dsp[1];
 	      elmVx[idN].vtX = (pos.vtX * scale) - offset.vtX;
 	      elmVx[idN].vtY = (pos.vtY * -scale) - offset.vtY;
 	    }

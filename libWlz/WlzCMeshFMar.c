@@ -186,9 +186,11 @@ static WlzErrorNum 		WlzCMeshFMarElmQInit3D(
 * \return	A 2D domain object, an empty object if the mesh has
 * 		no elements or NULL on error.
 * \ingroup	WlzMesh
-* \brief	Computes a new 2D domain object with values that are the
+* \brief	Computes a new 2D object with values that are the
 * 		distance from the given seeds within the given mesh.
-* \param	mesh			Given mesh.
+* \param	objG			Given mesh object.
+* \param	rObjType		Return object type must either be
+* 					WLZ_CMESH_2D or WLZ_2D_DOMAINOBJ.
 * \param	nSeeds			Number of seed nodes, if \f$<\f$ 1
 * 					then all boundary nodes of the
 * 					given mesh are used as seed nodes.
@@ -198,7 +200,8 @@ static WlzErrorNum 		WlzCMeshFMarElmQInit3D(
 *					are not within the mesh.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject	*WlzCMeshDistance2D(WlzCMesh2D *mesh,
+WlzObject	*WlzCMeshDistance2D(WlzObject *objG,
+                                WlzObjectType rObjType,
 				int nSeeds, WlzDVertex2 *seeds,
 				WlzErrorNum *dstErr)
 {
@@ -208,23 +211,31 @@ WlzObject	*WlzCMeshDistance2D(WlzCMesh2D *mesh,
   double	d;
   double	*distances = NULL,
   		*dst;
-  WlzObject	*obj0 = NULL,
-  		*obj1 = NULL;
+  WlzObject	*objM = NULL,
+		*objR = NULL,
+		*objT = NULL;
   WlzCMeshElm2D	*elm;
   WlzCMeshNod2D	*nod[3];
-  WlzCMeshTransform *mTr = NULL;
+  WlzCMesh2D 	*mesh;
   WlzObjectType	vTT;
-  WlzValues	val;
+  WlzValues	valD,
+  		valI;
   WlzPixelV	bgdV;
   WlzDVertex2	pos;
   WlzGreyWSpace gWsp;
   WlzIntervalWSpace iWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  bgdV.type = WLZ_GREY_DOUBLE;
-  bgdV.v.dbv = DBL_MAX;
-  vTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
-  if(mesh == NULL)
+  valD.core = valI.core = NULL;
+  if(objG == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(objG->type != WLZ_CMESH_2D)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if((mesh = objG->domain.cm2) == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
@@ -232,15 +243,34 @@ WlzObject	*WlzCMeshDistance2D(WlzCMesh2D *mesh,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
+  else if((rObjType != WLZ_2D_DOMAINOBJ) && (rObjType != WLZ_CMESH_2D))
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
   else if(mesh->res.elm.numEnt == 0)
   {
-    obj1 = WlzMakeEmpty(&errNum);
+    /* If given mesh has no elements then can't find distances so create an
+     * empty object for return. */
+    objR = WlzMakeEmpty(&errNum);
   }
   else
   {
-    if((distances = AlcMalloc(sizeof(double) * mesh->res.nod.maxEnt)) == NULL)
+    /* Create a CMesh object with scalar double values for the distances. */
+    valI.x = WlzMakeIndexedValues(objG, 0, NULL, WLZ_GREY_DOUBLE,
+                                 WLZ_VALUE_ATTACH_NOD, &errNum);
+    if(errNum == WLZ_ERR_NONE)
     {
-      errNum = WLZ_ERR_MEM_ALLOC;
+      if(WlzIndexedValueExtGet(valI.x, mesh->res.nod.maxEnt) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if((distances = AlcMalloc(sizeof(double) * mesh->res.nod.maxEnt)) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
     }
     if(errNum == WLZ_ERR_NONE)
     {
@@ -248,91 +278,105 @@ WlzObject	*WlzCMeshDistance2D(WlzCMesh2D *mesh,
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      mTr = WlzMakeCMeshTransform(WLZ_TRANSFORM_2D_CMESH, &errNum);
+      objM = WlzMakeMain(WLZ_CMESH_2D, objG->domain, valI, NULL, NULL,
+                         &errNum);
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      mTr->mesh.m2 = mesh;
-      obj0 = WlzCMeshToDomObj(mTr, 0, &errNum);
-    }
-    if(mTr)
-    {
-      mTr->mesh.m2 = NULL;
-      (void )WlzFreeCMeshTransform(mTr);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      val.v = WlzNewValueTb(obj0, vTT, bgdV, &errNum);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-			 obj0->domain, val, NULL, NULL, &errNum);
-    }
-    (void )WlzFreeObj(obj0);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzInitGreyScan(obj1, &iWsp, &gWsp);
-      while((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE)
+      for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
       {
-        dst = gWsp.u_grintptr.dbp;
-	pos.vtY = iWsp.linpos;
-	idE = -1;
-	for(idK = iWsp.lftpos; idK <= iWsp.rgtpos; ++idK)
+        *(double *)WlzIndexedValueGet(valI.x, idN) = distances[idN];
+      }
+    }
+    AlcFree(distances); distances = NULL;
+    /* If the required object type is a domain object then create it and
+     * set it's values using linear interpolation within the mesh elements. */
+    if(rObjType == WLZ_CMESH_2D)
+    {
+      objR = objM; objM = NULL;
+    }
+    else
+    {
+      bgdV.v.dbv = DBL_MAX;
+      bgdV.type = WLZ_GREY_DOUBLE;
+      vTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
+      objT = WlzCMeshToDomObj(objM, 0, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	valD.v = WlzNewValueTb(objT, vTT, bgdV, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	objR = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+			   objT->domain, valD, NULL, NULL, &errNum);
+      }
+      (void )WlzFreeObj(objT); objT = NULL;
+      if(errNum == WLZ_ERR_NONE)
+      {
+	errNum = WlzInitGreyScan(objR, &iWsp, &gWsp);
+	while((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE)
 	{
-	  pos.vtX = idK;
-	  if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE,
-	                                      pos.vtX, pos.vtY,
-					      0, &idN)) >= 0)
+	  dst = gWsp.u_grintptr.dbp;
+	  pos.vtY = iWsp.linpos;
+	  idE = -1;
+	  for(idK = iWsp.lftpos; idK <= iWsp.rgtpos; ++idK)
 	  {
-	    elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-	    nod[0] = elm->edu[0].nod;
-	    nod[1] = elm->edu[1].nod;
-	    nod[2] = elm->edu[2].nod;
-	    d = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos, nod[2]->pos,
-	        		        distances[nod[0]->idx],
-					distances[nod[1]->idx],
-					distances[nod[2]->idx],
-					pos);
+	    pos.vtX = idK;
+	    if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE,
+						pos.vtX, pos.vtY,
+						0, &idN)) >= 0)
+	    {
+	      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+	      nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+	      nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+	      nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
+	      d = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
+	                    nod[2]->pos,
+			    *(double *)WlzIndexedValueGet(valI.x, nod[0]->idx),
+			    *(double *)WlzIndexedValueGet(valI.x, nod[1]->idx),
+			    *(double *)WlzIndexedValueGet(valI.x, nod[2]->idx),
+			    pos);
+	    }
+	    else if((idN >= 0) && (idN < mesh->res.nod.maxEnt))
+	    {
+	      d = *(double *)WlzIndexedValueGet(valI.x, idN);
+	    }
+	    else
+	    {
+	      d = DBL_MAX;
+	    }
+	    *dst++ = d;
 	  }
-	  else if((idN >= 0) && (idN < mesh->res.nod.maxEnt))
-	  {
-	    d = distances[idN];
-	  }
-	  else
-	  {
-	    d = DBL_MAX;
-	  }
-	  *dst++ = d;
+	}
+	if(errNum == WLZ_ERR_EOO)
+	{
+	  errNum = WLZ_ERR_NONE;
 	}
       }
-      if(errNum == WLZ_ERR_EOO)
-      {
-        errNum = WLZ_ERR_NONE;
-      }
+      WlzFreeObj(objM); objM = NULL;
     }
   }
-  AlcFree(distances);
   if(errNum != WLZ_ERR_NONE)
   {
-    (void )WlzFreeObj(obj1);
-    obj1 = NULL;
+    (void )WlzFreeObj(objR);
+    objR = NULL;
   }
   if(dstErr != NULL)
   {
     *dstErr = errNum;
   }
-  return(obj1);
+  return(objR);
 }
-
 
 /*!
 * \return	A 3D domain object, an empty object if the mesh has
 * 		no elements or NULL on error.
 * \ingroup	WlzMesh
-* \brief	Computes a new 3D domain object with values that are the
+* \brief	Computes a new 3D object with values that are the
 * 		distance from the given seeds within the given mesh.
-* \param	mesh			Given mesh.
+* \param	objG			Given mesh object.
+* \param	rObjType		Return object type must either be
+* 					WLZ_CMESH_2D or WLZ_2D_DOMAINOBJ.
 * \param	nSeeds			Number of seed nodes, if \f$<\f$ 1
 * 					then all boundary nodes of the
 * 					given mesh are used as seed nodes.
@@ -342,7 +386,8 @@ WlzObject	*WlzCMeshDistance2D(WlzCMesh2D *mesh,
 *					are not within the mesh.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject	*WlzCMeshDistance3D(WlzCMesh3D *mesh,
+WlzObject	*WlzCMeshDistance3D(WlzObject *objG,
+				WlzObjectType rObjType,
 				int nSeeds, WlzDVertex3 *seeds,
 				WlzErrorNum *dstErr)
 {
@@ -354,24 +399,31 @@ WlzObject	*WlzCMeshDistance3D(WlzCMesh3D *mesh,
   double	d;
   double	*distances = NULL,
   		*dst;
-  WlzObject	*obj0 = NULL,
-  		*obj1 = NULL,
-		*obj2 = NULL;
+  WlzObject	*objM = NULL,
+		*objR = NULL,
+		*objT = NULL;
   WlzCMeshElm3D	*elm;
   WlzCMeshNod3D	*nod[3];
-  WlzCMeshTransform *mTr = NULL;
+  WlzCMesh3D  	*mesh;
   WlzObjectType	vTT;
-  WlzValues	val;
+  WlzValues	valD,
+  		valI;
   WlzPixelV	bgdV;
   WlzDVertex3	pos;
   WlzGreyWSpace gWsp;
   WlzIntervalWSpace iWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  bgdV.type = WLZ_GREY_DOUBLE;
-  bgdV.v.dbv = DBL_MAX;
-  vTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
-  if(mesh == NULL)
+  valD.core = valI.core = NULL;
+  if(objG == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(objG->type != WLZ_CMESH_3D)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if((mesh = objG->domain.cm3) == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
@@ -379,15 +431,34 @@ WlzObject	*WlzCMeshDistance3D(WlzCMesh3D *mesh,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
+  else if((rObjType != WLZ_3D_DOMAINOBJ) && (rObjType != WLZ_CMESH_3D))
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
   else if(mesh->res.elm.numEnt == 0)
   {
-    obj1 = WlzMakeEmpty(&errNum);
+    /* If given mesh has no elements then can't find distances so create an
+     * empty object for return. */
+    objR = WlzMakeEmpty(&errNum);
   }
   else
   {
-    if((distances = AlcMalloc(sizeof(double) * mesh->res.nod.maxEnt)) == NULL)
+    /* Create a CMesh object with scalar double values for the distances. */
+    valI.x = WlzMakeIndexedValues(objG, 0, NULL, WLZ_GREY_DOUBLE,
+                                 WLZ_VALUE_ATTACH_NOD, &errNum);
+    if(errNum == WLZ_ERR_NONE)
     {
-      errNum = WLZ_ERR_MEM_ALLOC;
+      if(WlzIndexedValueExtGet(valI.x, mesh->res.nod.maxEnt) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if((distances = AlcMalloc(sizeof(double) * mesh->res.nod.maxEnt)) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
     }
     if(errNum == WLZ_ERR_NONE)
     {
@@ -395,101 +466,114 @@ WlzObject	*WlzCMeshDistance3D(WlzCMesh3D *mesh,
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      mTr = WlzMakeCMeshTransform(WLZ_TRANSFORM_3D_CMESH, &errNum);
+      objM = WlzMakeMain(WLZ_CMESH_3D, objG->domain, valI, NULL, NULL,
+                         &errNum);
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      mTr->mesh.m3 = mesh;
-      obj0 = WlzCMeshToDomObj(mTr, 0, &errNum);
-    }
-    if(mTr)
-    {
-      mTr->mesh.m3 = NULL;
-      (void )WlzFreeCMeshTransform(mTr);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      val.vox = WlzNewValuesVox(obj0, vTT, bgdV, &errNum);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      obj1 = WlzMakeMain(WLZ_3D_DOMAINOBJ,
-			 obj0->domain, val, NULL, NULL, &errNum);
-    }
-    (void )WlzFreeObj(obj0);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      pCnt = obj1->domain.p->lastpl - obj1->domain.p->plane1 + 1;
-      for(idP = 0; idP < pCnt; ++idP)
+      for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
       {
-        obj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-	                   *(obj1->domain.p->domains + idP),
-			   *(obj1->values.vox->values + idP),
-			   NULL, NULL, &errNum);
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  pos.vtZ = obj1->domain.p->plane1 + idP;
-          errNum = WlzInitGreyScan(obj2, &iWsp, &gWsp);
-	}
-	while((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE)
-	{
-	  dst = gWsp.u_grintptr.dbp;
-	  pos.vtY = iWsp.linpos;
-	  idE = -1;
-	  for(idK = iWsp.lftpos; idK <= iWsp.rgtpos; ++idK)
-	  {
-	    pos.vtX = idK;
-	    if((idE = WlzCMeshElmEnclosingPos3D(mesh, idE,
-						pos.vtX, pos.vtY, pos.vtZ,
-						0, &idN)) >= 0)
-	    {
-	      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-	      nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
-	      nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
-	      nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
-	      nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
-	      d = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
-	                                  nod[2]->pos, nod[3]->pos,
-					  distances[nod[0]->idx],
-					  distances[nod[1]->idx],
-					  distances[nod[2]->idx],
-					  distances[nod[3]->idx],
-					  pos);
-	    }
-	    else if((idN >= 0) && (idN < mesh->res.nod.maxEnt))
-	    {
-	      d = distances[idN];
-	    }
-	    else
-	    {
-	      d = DBL_MAX;
-	    }
-	    *dst++ = d;
-	  }
-	}
-        (void )WlzFreeObj(obj2);
-	if(errNum == WLZ_ERR_EOO)
-	{
-	  errNum = WLZ_ERR_NONE;
-	}
-	else if(errNum != WLZ_ERR_NONE)
-	{
-	  break;
-	}
+        *(double *)WlzIndexedValueGet(valI.x, idN) = distances[idN];
       }
     }
+    AlcFree(distances); distances = NULL;
+    /* If the required object type is a domain object then create it and
+     * set it's values using linear interpolation within the mesh elements. */
+    if(rObjType == WLZ_CMESH_3D)
+    {
+      objR = objM; objM = NULL;
+    }
+    else
+    {
+      bgdV.v.dbv = DBL_MAX;
+      bgdV.type = WLZ_GREY_DOUBLE;
+      vTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
+      objT = WlzCMeshToDomObj(objM, 0, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	valD.vox = WlzNewValuesVox(objT, vTT, bgdV, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	objR = WlzMakeMain(WLZ_3D_DOMAINOBJ,
+			   objT->domain, valD, NULL, NULL, &errNum);
+      }
+      (void )WlzFreeObj(objT); objT = NULL;
+      if(errNum == WLZ_ERR_NONE)
+      {
+	pCnt = objR->domain.p->lastpl - objR->domain.p->plane1 + 1;
+	for(idP = 0; idP < pCnt; ++idP)
+	{
+	  objT = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+			     *(objR->domain.p->domains + idP),
+			     *(objR->values.vox->values + idP),
+			     NULL, NULL, &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    pos.vtZ = objR->domain.p->plane1 + idP;
+	    errNum = WlzInitGreyScan(objT, &iWsp, &gWsp);
+	  }
+	  while((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE)
+	  {
+	    dst = gWsp.u_grintptr.dbp;
+	    pos.vtY = iWsp.linpos;
+	    idE = -1;
+	    for(idK = iWsp.lftpos; idK <= iWsp.rgtpos; ++idK)
+	    {
+	      pos.vtX = idK;
+	      if((idE = WlzCMeshElmEnclosingPos3D(mesh, idE,
+						  pos.vtX, pos.vtY, pos.vtZ,
+						  0, &idN)) >= 0)
+	      {
+		elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec,
+		                                        idE);
+		nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+		nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+		nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+		nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
+		d = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
+			    nod[2]->pos, nod[3]->pos,
+			    *(double *)WlzIndexedValueGet(valI.x, nod[0]->idx),
+			    *(double *)WlzIndexedValueGet(valI.x, nod[1]->idx),
+			    *(double *)WlzIndexedValueGet(valI.x, nod[2]->idx),
+			    *(double *)WlzIndexedValueGet(valI.x, nod[3]->idx),
+			    pos);
+	      }
+	      else if((idN >= 0) && (idN < mesh->res.nod.maxEnt))
+	      {
+		d = *(double *)WlzIndexedValueGet(valI.x, idN);
+	      }
+	      else
+	      {
+		d = DBL_MAX;
+	      }
+	      *dst++ = d;
+	    }
+	  }
+	  (void )WlzFreeObj(objT); objT = NULL;
+	  if(errNum == WLZ_ERR_EOO)
+	  {
+	    errNum = WLZ_ERR_NONE;
+	  }
+	  else if(errNum != WLZ_ERR_NONE)
+	  {
+	    break;
+	  }
+	}
+      }
+      WlzFreeObj(objM); objM = NULL;
+    }
   }
-  AlcFree(distances);
   if(errNum != WLZ_ERR_NONE)
   {
-    (void )WlzFreeObj(obj1);
-    obj1 = NULL;
+    (void )WlzFreeObj(objR);
+    objR = NULL;
   }
   if(dstErr != NULL)
   {
     *dstErr = errNum;
   }
-  return(obj1);
+  return(objR);
 }
 
 /*!

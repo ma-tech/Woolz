@@ -138,7 +138,7 @@ int		main(int argc, char *argv[])
   const char	*errMsgStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*outObj = NULL,
-		*meshObj = NULL,
+		*mshObj = NULL,
   		*refObj = NULL;
   WlzCMeshP 	mesh;
   WlzCMeshNodP	nod;
@@ -223,7 +223,7 @@ int		main(int argc, char *argv[])
   {
     if(((fP = (strcmp(meshFileStr, "-")?
               fopen(meshFileStr, "r"): stdin)) == NULL) ||
-       ((meshObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
+       ((mshObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
        (errNum != WLZ_ERR_NONE))
     {
       ok = 0;
@@ -238,13 +238,13 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    switch(meshObj->type)
+    switch(mshObj->type)
     {
       case WLZ_CMESH_2D:
-	mesh.m2 = meshObj->domain.cm2;
+	mesh.m2 = mshObj->domain.cm2;
 	break;
       case WLZ_CMESH_3D:
-	mesh.m3 = meshObj->domain.cm3;
+	mesh.m3 = mshObj->domain.cm3;
 	break;
       default:
         ok = 0;
@@ -257,9 +257,9 @@ int		main(int argc, char *argv[])
 	break;
     }
   }
-  if(ok && meshObj)
+  if(ok && mshObj)
   {
-    switch(meshObj->type)
+    switch(mshObj->type)
     {
       case WLZ_CMESH_2D:
 	vtxType = WLZ_VERTEX_D2;
@@ -337,7 +337,7 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    switch(meshObj->type)
+    switch(mshObj->type)
     {
       case WLZ_CMESH_2D:
 	idN = 0;
@@ -383,7 +383,8 @@ int		main(int argc, char *argv[])
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  outObj = WlzCMeshDistance2D(mesh.m2, nSeeds, seeds.d2, &errNum);
+	  outObj = WlzCMeshDistance2D(mshObj, WLZ_2D_DOMAINOBJ,
+	                              nSeeds, seeds.d2, &errNum);
 	}
 	break;
       case WLZ_CMESH_3D:
@@ -431,7 +432,8 @@ int		main(int argc, char *argv[])
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  outObj = WlzCMeshDistance3D(mesh.m3, nSeeds, seeds.d3, &errNum);
+	  outObj = WlzCMeshDistance3D(mshObj, WLZ_3D_DOMAINOBJ,
+	  	                      nSeeds, seeds.d3, &errNum);
 	}
 	break;
 	break;
@@ -451,7 +453,7 @@ int		main(int argc, char *argv[])
   AlcFree(seeds.v);
   AlcFree(bndSeeds.v);
   WlzFreeObj(refObj);
-  WlzFreeObj(meshObj);
+  WlzFreeObj(mshObj);
   if(ok)
   {
     errNum = WLZ_ERR_WRITE_EOF;

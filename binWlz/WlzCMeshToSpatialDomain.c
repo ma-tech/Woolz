@@ -114,7 +114,6 @@ int		main(int argc, char *argv[])
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
-  WlzCMeshTransform *mTr;
   static char   optList[] = "ho:";
   const char    inObjFileStrDef[] = "-",
   	        outObjFileStrDef[] = "-";
@@ -176,26 +175,10 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    mTr = WlzMakeCMeshTransform(WLZ_TRANSFORM_2D_CMESH, &errNum);
-    if(errNum != WLZ_ERR_NONE)
-    {
-      ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-      (void )fprintf(stderr,
-	       "%s: Failed to allocate mesh transform (%s),\n",
-	       argv[0],
-	       errMsgStr);
-    }
-  }
-  if(ok)
-  {
     switch(inObj->type)
     {
-      case WLZ_CMESH_2D:
-	mTr->mesh.m2 = inObj->domain.cm2;
-	break;
+      case WLZ_CMESH_2D: /* FALLTROUGH */
       case WLZ_CMESH_3D:
-	mTr->mesh.m3 = inObj->domain.cm3;
 	break;
       default:
         ok = 0;
@@ -210,7 +193,7 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    outObj = WlzCMeshToDomObj(mTr, 0, &errNum);
+    outObj = WlzCMeshToDomObj(inObj, 0, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;

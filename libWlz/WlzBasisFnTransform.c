@@ -49,15 +49,6 @@ static char _WlzBasisFnTransform_c[] = "MRC HGU $Id$";
 #include <float.h>
 #include <Wlz.h>
 
-static WlzCMeshTransform 	*WlzBasisFnInvertAndSetCMesh2D(
-				  WlzBasisFnTransform *basisTr,
-				  WlzCMesh2D *mesh,
-				  WlzErrorNum *dstErr);
-static WlzCMeshTransform 	*WlzBasisFnInvertAndSetCMesh3D(
-				  WlzBasisFnTransform *basisTr,
-				  WlzCMesh3D *mesh,
-				  WlzErrorNum *dstErr);
-
 /*!
 * \return	New Basis function transform.
 * \ingroup	WlzTransform
@@ -677,27 +668,34 @@ WlzErrorNum    	WlzBasisFnSetMesh(WlzMeshTransform *mesh,
 * \ingroup	WlzTransform
 * \brief	Sets the displacements of the given conforming mesh
 *		transform according to the basis function transform.
-* \param	meshTr			Given conforming mesh transform.
+*		This function just calls either WlzBasisFnSetCMesh2D()
+*		or WlzBasisFnSetCMesh3D() see these functions for their
+*		conforming mesh transform object requirements.
+* \param	mObj			Given conforming mesh transform object.
 * \param	basisTr			Given basis function transform.
 */
-WlzErrorNum    	WlzBasisFnSetCMesh(WlzCMeshTransform *meshTr,
+WlzErrorNum    	WlzBasisFnSetCMesh(WlzObject *mObj,
 				   WlzBasisFnTransform *basisTr)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((meshTr == NULL) || (basisTr == NULL))
+  if(mObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((mObj->domain.core == NULL) || (basisTr == NULL))
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
   else
   {
-    switch(meshTr->type)
+    switch(mObj->type)
     {
-      case WLZ_TRANSFORM_2D_CMESH:
-        errNum = WlzBasisFnSetCMesh2D(meshTr, basisTr);
+      case WLZ_CMESH_2D:
+        errNum = WlzBasisFnSetCMesh2D(mObj, basisTr);
 	break;
-      case WLZ_TRANSFORM_3D_CMESH:
-        errNum = WlzBasisFnSetCMesh3D(meshTr, basisTr);
+      case WLZ_CMESH_3D:
+        errNum = WlzBasisFnSetCMesh3D(mObj, basisTr);
 	break;
       default:
         errNum = WLZ_ERR_TRANSFORM_TYPE;
@@ -711,61 +709,92 @@ WlzErrorNum    	WlzBasisFnSetCMesh(WlzCMeshTransform *meshTr,
 * \return	Error number.
 * \ingroup	WlzTransform
 * \brief	Sets the displacements of the given 2D conforming mesh
-*		transform according to the basis function transform.
-* \param	meshTr			Given mesh transform.
+*		transform object according to the basis function transform.
+*		The conforming mesh object must have a valid 2D conforming
+*		mesh and indexed values. The indexed values will be expanded
+*		to cover the nodes of the mesh if required, but they must
+*		have a rank of 1, a dimension of >= 2 and be of type double.
+* \param	mObj			Given mesh transform object.
 * \param	basisTr			Given basis function transform.
 */
-WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzCMeshTransform *meshTr,
+WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzObject *mObj,
 				     WlzBasisFnTransform *basisTr)
 {
-  int		idN;
-  WlzDVertex2	*dspP;
+  int		idN,
+  		maxNodIdx;
+  double	*dsp;
+  WlzDVertex2	dspV;
   WlzCMeshNod2D	*nod;
   WlzCMesh2D	*mesh;
+  WlzIndexedValues *ixv;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((meshTr == NULL) || (basisTr == NULL))
+  if(mObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
   }
-  else if((meshTr->type != WLZ_TRANSFORM_2D_CMESH) ||
-	  (basisTr->type != WLZ_TRANSFORM_2D_BASISFN))
-  {
-    errNum = WLZ_ERR_TRANSFORM_TYPE;
-  }
-  else if((mesh = meshTr->mesh.m2) == NULL)
+  else if((basisTr == NULL) || ((mesh = mObj->domain.cm2) == NULL))
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
+  else if(basisTr->type != WLZ_TRANSFORM_2D_BASISFN)
+  {
+    errNum = WLZ_ERR_TRANSFORM_TYPE;
+  }
+  else if((ixv = mObj->values.x) == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(ixv->type != WLZ_INDEXED_VALUES)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else if((ixv->rank != 1) || (ixv->dim[0] < 2) ||
+          (ixv->vType != WLZ_GREY_DOUBLE))
+  {
+    errNum = WLZ_ERR_VALUES_DATA;
+  }
   else
   {
-    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    maxNodIdx = mesh->res.nod.maxEnt;
+    ixv->attach = WLZ_VALUE_ATTACH_NOD;
+    if(WlzIndexedValueExtGet(ixv, maxNodIdx) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < maxNodIdx; ++idN)
     {
       nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
       if(nod->idx >= 0)
       {
-        dspP = (WlzDVertex2 *)AlcVectorItemGet(meshTr->dspVec, idN);
+        dsp = (double *)WlzIndexedValueGet(ixv, idN);
 	switch(basisTr->basisFn->type)
 	{
 	  case WLZ_FN_BASIS_2DGAUSS:
-	    *dspP = WlzBasisFnValueGauss2D(basisTr->basisFn, nod->pos);
+	    dspV = WlzBasisFnValueGauss2D(basisTr->basisFn, nod->pos);
 	    break;
 	  case WLZ_FN_BASIS_2DIMQ:
-	    *dspP = WlzBasisFnValueIMQ2D(basisTr->basisFn, nod->pos);
+	    dspV = WlzBasisFnValueIMQ2D(basisTr->basisFn, nod->pos);
 	    break;
 	  case WLZ_FN_BASIS_2DMQ:
-	    *dspP = WlzBasisFnValueMQ2D(basisTr->basisFn, nod->pos);
+	    dspV = WlzBasisFnValueMQ2D(basisTr->basisFn, nod->pos);
 	    break;
 	  case WLZ_FN_BASIS_2DTPS:
-	    *dspP = WlzBasisFnValueTPS2D(basisTr->basisFn, nod->pos);
+	    dspV = WlzBasisFnValueTPS2D(basisTr->basisFn, nod->pos);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_TRANSFORM_TYPE;
-	    break;
+	    goto RETURN;
 	}
+	dsp[0] = dspV.vtX;
+	dsp[1] = dspV.vtY;
       }
     }
   }
+RETURN:
   return(errNum);
 }
 
@@ -773,74 +802,108 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzCMeshTransform *meshTr,
 * \return	Error number.
 * \ingroup	WlzTransform
 * \brief	Sets the displacements of the given 3D conforming mesh
-*		transform according to the basis function transform.
-* \param	meshTr			Given mesh transform.
+*		transform object according to the basis function transform.
+*		The conforming mesh object must have a valid 3D conforming
+*		mesh and indexed values. The indexed values will be expanded
+*		to cover the nodes of the mesh if required, but they must
+*		have a rank of 1, a dimension of >= 3 and be of type double.
+* \param	mObj			Given mesh transform object.
 * \param	basisTr			Given basis function transform.
 */
-WlzErrorNum    	WlzBasisFnSetCMesh3D(WlzCMeshTransform *meshTr,
+WlzErrorNum    	WlzBasisFnSetCMesh3D(WlzObject *mObj,
 				     WlzBasisFnTransform *basisTr)
 {
-  int		idN;
-  WlzDVertex3	*dspP;
+  int		idN,
+  		maxNodIdx;
+  double	*dsp;
+  WlzDVertex3	dspV;
   WlzCMeshNod3D	*nod;
   WlzCMesh3D	*mesh;
+  WlzIndexedValues *ixv;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((meshTr == NULL) || (basisTr == NULL))
+  if(mObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
   }
-  else if((meshTr->type != WLZ_TRANSFORM_3D_CMESH) ||
-	  (basisTr->type != WLZ_TRANSFORM_3D_BASISFN))
-  {
-    errNum = WLZ_ERR_TRANSFORM_TYPE;
-  }
-  else if((mesh = meshTr->mesh.m3) == NULL)
+  else if((basisTr == NULL) || ((mesh = mObj->domain.cm3) == NULL))
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
+  else if(basisTr->type != WLZ_TRANSFORM_3D_BASISFN)
+  {
+    errNum = WLZ_ERR_TRANSFORM_TYPE;
+  }
+  else if((ixv = mObj->values.x) == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(ixv->type != WLZ_INDEXED_VALUES)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else if((ixv->rank != 1) || (ixv->dim[0] < 3) ||
+          (ixv->vType != WLZ_GREY_DOUBLE))
+  {
+    errNum = WLZ_ERR_VALUES_DATA;
+  }
   else
   {
-    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    maxNodIdx = mesh->res.nod.maxEnt;
+    ixv->attach = WLZ_VALUE_ATTACH_NOD;
+    if(WlzIndexedValueExtGet(ixv, maxNodIdx) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < maxNodIdx; ++idN)
     {
       nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
       if(nod->idx >= 0)
       {
-        dspP = (WlzDVertex3 *)AlcVectorItemGet(meshTr->dspVec, idN);
+        dsp = (double *)WlzIndexedValueGet(ixv, idN);
 	switch(basisTr->basisFn->type)
 	{
-	    break;
 	  case WLZ_FN_BASIS_3DIMQ:
-	    *dspP = WlzBasisFnValueIMQ3D(basisTr->basisFn, nod->pos);
+	    dspV = WlzBasisFnValueIMQ3D(basisTr->basisFn, nod->pos);
 	    break;
 	  case WLZ_FN_BASIS_3DMQ:
-	    *dspP = WlzBasisFnValueMQ3D(basisTr->basisFn, nod->pos);
+	    dspV = WlzBasisFnValueMQ3D(basisTr->basisFn, nod->pos);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_TRANSFORM_TYPE;
-	    break;
+	    goto RETURN;
 	}
+	dsp[0] = dspV.vtX;
+	dsp[1] = dspV.vtY;
+	dsp[2] = dspV.vtZ;
       }
     }
   }
+RETURN:
   return(errNum);
 }
 
 /*!
-* \return	New constrained mesh transform.
+* \return	New constrained mesh transform object.
 * \ingroup	WlzTransform
 * \brief	Uses the given target mesh to create a mesh transform
-* 		which transforms the source to target.
+* 		object which transforms the source to target. See the
+* 		functions WlzBasisFnInvertAndSetCMesh2D() and
+* 		WlzBasisFnInvertAndSetCMesh3D() for details of the
+* 		returned objects.
 * \param	basisTr			Given basis function transform
 * 					which transforms target to source.
 * \param	mesh			Given conforming mesh for target.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzCMeshTransform *WlzBasisFnInvertAndSetCMesh(WlzBasisFnTransform *basisTr,
-				      WlzCMeshP mesh,
-				      WlzErrorNum *dstErr)
+WlzObject 	*WlzBasisFnInvertAndSetCMesh(WlzBasisFnTransform *basisTr,
+					WlzCMeshP mesh,
+				      	WlzErrorNum *dstErr)
 {
-  WlzCMeshTransform *meshTr = NULL;
+  WlzObject	*mObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((basisTr == NULL) || (mesh.v == NULL))
@@ -852,10 +915,24 @@ WlzCMeshTransform *WlzBasisFnInvertAndSetCMesh(WlzBasisFnTransform *basisTr,
     switch(basisTr->type)
     {
       case WLZ_TRANSFORM_2D_BASISFN:
-        meshTr = WlzBasisFnInvertAndSetCMesh2D(basisTr, mesh.m2, &errNum);
+	if(mesh.m2->type != WLZ_CMESH_TRI2D)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+	else
+	{
+          mObj = WlzBasisFnInvertAndSetCMesh2D(basisTr, mesh.m2, &errNum);
+	}
 	break;
       case WLZ_TRANSFORM_3D_BASISFN:
-        meshTr = WlzBasisFnInvertAndSetCMesh3D(basisTr, mesh.m3, &errNum);
+	if(mesh.m3->type != WLZ_CMESH_TET3D)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+	else
+	{
+          mObj = WlzBasisFnInvertAndSetCMesh3D(basisTr, mesh.m3, &errNum);
+	}
 	break;
       default:
         errNum = WLZ_ERR_TRANSFORM_TYPE;
@@ -866,93 +943,120 @@ WlzCMeshTransform *WlzBasisFnInvertAndSetCMesh(WlzBasisFnTransform *basisTr,
   {
     *dstErr = errNum;
   }
-  return(meshTr);
+  return(mObj);
 }
 
 /*!
-* \return	New constrained mesh transform.
+* \return	New constrained mesh transform object.
 * \ingroup	WlzTransform
 * \brief	Uses the given 2D target mesh to create a 2D mesh transform
-* 		which transforms the source to target.
+* 		which transforms the source to target. unlike
+* 		WlzBasisFnInvertAndSetCMesh() this function does not check
+* 		it's given parameters. The new object's indexed values
+* 		have; rank = 1, dim = 2, attach = WLZ_VALUE_ATTACH_NOD
+* 		and double values.
 * \param	basisTr			Given basis function transform
 * 					which transforms target to source.
 * \param	mesh			Given conforming mesh for target.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static WlzCMeshTransform *WlzBasisFnInvertAndSetCMesh2D(
+WlzObject 	*WlzBasisFnInvertAndSetCMesh2D(
 					WlzBasisFnTransform *basisTr,
 				        WlzCMesh2D *mesh,
 				        WlzErrorNum *dstErr)
 {
-  WlzCMesh2D	*invMesh;
-  WlzCMeshTransform *meshTr = NULL;
+  int		dim = 2;
+  WlzObject	*mObj = NULL;
+  WlzDomain	dom;
+  WlzValues	val;
+  WlzCMeshP	invMesh;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  invMesh = WlzCMeshCopy2D(mesh, 0, NULL, NULL, &errNum);
+  val.core = NULL;
+  invMesh.m2 = dom.cm2 = WlzCMeshCopy2D(mesh, 0, NULL, NULL, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    meshTr = WlzMakeCMeshTransform2D(invMesh, &errNum);
+    mObj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzBasisFnSetCMesh2D(meshTr, basisTr);
+    val.x = WlzMakeIndexedValues(mObj, 1, &dim, WLZ_GREY_DOUBLE,
+				    WLZ_VALUE_ATTACH_NOD, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshTransformInvert(meshTr);
+    mObj->values = WlzAssignValues(val, NULL);
+    errNum = WlzBasisFnSetCMesh2D(mObj, basisTr);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshFixNegativeElms(meshTr->mesh);
+    errNum = WlzCMeshTransformInvert(mObj);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshFixNegativeElms2D(dom.cm2);
   }
   if(dstErr != NULL)
   {
     *dstErr = errNum;
   }
-  return(meshTr);
+  return(mObj);
 }
 
 /*!
-* \return	New constrained mesh transform.
+* \return	New constrained mesh transform object.
 * \ingroup	WlzTransform
 * \brief	Uses the given 3D target mesh to create a 3D mesh transform
-* 		which transforms the source to target.
+* 		which transforms the source to target. unlike
+* 		WlzBasisFnInvertAndSetCMesh() this function does not check
+* 		it's given parameters. The new object's indexed values
+* 		have; rank = 1, dim = 3, attach = WLZ_VALUE_ATTACH_NOD
+* 		and double values.
 * \param	basisTr			Given basis function transform
 * 					which transforms target to source.
 * \param	mesh			Given conforming mesh for target.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static WlzCMeshTransform *WlzBasisFnInvertAndSetCMesh3D(
+WlzObject 	*WlzBasisFnInvertAndSetCMesh3D(
 					WlzBasisFnTransform *basisTr,
 				        WlzCMesh3D *mesh,
 				        WlzErrorNum *dstErr)
 {
-  WlzCMesh3D	*invMesh;
-  WlzCMeshTransform *meshTr = NULL;
+  int		dim = 3;
+  WlzObject	*mObj = NULL;
+  WlzDomain	dom;
+  WlzValues	val;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  invMesh = WlzCMeshCopy3D(mesh, 0, NULL, NULL, &errNum);
+  val.core = NULL;
+  dom.cm3 = WlzCMeshCopy3D(mesh, 0, NULL, NULL, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    meshTr = WlzMakeCMeshTransform3D(invMesh, &errNum);
+    mObj = WlzMakeMain(WLZ_CMESH_3D, dom, val, NULL, NULL, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzBasisFnSetCMesh3D(meshTr, basisTr);
+    val.x = WlzMakeIndexedValues(mObj, 1, &dim, WLZ_GREY_DOUBLE,
+				    WLZ_VALUE_ATTACH_NOD, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshTransformInvert(meshTr);
+    mObj->values = WlzAssignValues(val, NULL);
+    errNum = WlzBasisFnSetCMesh3D(mObj, basisTr);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshFixNegativeElms(meshTr->mesh);
+    errNum = WlzCMeshTransformInvert(mObj);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshFixNegativeElms3D(dom.cm3);
   }
   if(dstErr != NULL)
   {
     *dstErr = errNum;
   }
-  return(meshTr);
+  return(mObj);
 }
 
 /*!
