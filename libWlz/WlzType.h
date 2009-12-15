@@ -3715,10 +3715,7 @@ typedef union _WlzTransform
   struct _WlzAffineTransform *affine;	/*!< Affine transforms, 2D or 3D. */
   struct _WlzBasisFnTransform *basis;	/*!< Any basis function transform. */
   struct _WlzMeshTransform *mesh;	/*!< Any convex mesh transform. */
-<<<<<<< WlzType.h
-=======
   struct _WlzObject *obj;               /*!< Some transforms are objects						     with a domain and values. */
->>>>>>> 1.85
 } WlzTransform;
 
 /*!
