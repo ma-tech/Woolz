@@ -47,6 +47,52 @@ static char _WlzGreyStats_c[] = "MRC HGU $Id$";
 #include <Wlz.h>
 
 /*!
+* \return	Number of bytes required to store a single grey value or zero
+* 		on error (invalid grey type).
+* \ingroup	WlzFeatures
+* \brief	Given a grey type, computes the number of bytes required to
+* 		to store a single grey value of that type. Note the grey
+* 		type WLZ_GREY_BIT is able to store multiple values in a
+* 		single byte but one byte is required to store a single bit.
+* \param	gType			Given grey type.
+*/
+size_t		WlzGreySize(WlzGreyType gType)
+{
+  size_t	sz = 0;
+
+  switch(gType)
+  {
+    case WLZ_GREY_LONG:
+      sz = sizeof(long);
+      break;
+    case WLZ_GREY_INT:
+      sz = sizeof(int);
+      break;
+    case WLZ_GREY_SHORT:
+      sz = sizeof(short);
+      break;
+    case WLZ_GREY_UBYTE:
+      sz = sizeof(WlzUByte);
+      break;
+    case WLZ_GREY_FLOAT:
+      sz = sizeof(float);
+      break;
+    case WLZ_GREY_DOUBLE:
+      sz = sizeof(double);
+      break;
+    case WLZ_GREY_BIT:
+      sz = sizeof(WlzUByte);
+      break;
+    case WLZ_GREY_RGBA:
+      sz = sizeof(WlzUInt);
+      break;
+    default:
+      break;
+  }
+  return(sz);
+}
+
+/*!
 * \return	Object area or -1 on error.
 * \ingroup	WlzFeatures
 * \brief	Calculates simple quick statistics for the given
