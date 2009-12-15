@@ -37,7 +37,7 @@ static char _WlzReadObj_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Reads a Woolz object from a file stream.
 * \ingroup	WlzIO
-* \todo         -
+* \todo         - 
 * \bug          None known.
 */
 
