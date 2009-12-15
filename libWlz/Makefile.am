@@ -72,8 +72,11 @@ libWlz_la_SOURCES 	= \
 			  WlzCentreOfMass.c \
 			  WlzClipObjToBox.c \
 			  WlzCMeshFMar.c \
+			  WlzCMeshScan.c \
 			  WlzCMeshTransform.c \
 			  WlzCMeshUtils.c \
+			  WlzCompDispIncGrey.c \
+			  WlzCompoundArrayToScalar.c \
 			  WlzCompThresh.c \
 			  WlzConstruct3D.c \
 			  WlzContour.c \
@@ -118,6 +121,7 @@ libWlz_la_SOURCES 	= \
 			  WlzGreyScan.c \
 			  WlzGreySetRange.c \
 			  WlzGreySetRangeLut.c \
+			  WlzGreySetIncValues.c \
 			  WlzGreySetValue.c \
 			  WlzGreyStats.c \
 			  WlzGreyTemplate.c \
