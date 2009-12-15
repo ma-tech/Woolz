@@ -196,6 +196,7 @@ typedef enum _WlzObjectType
   WLZ_GREY_TAB_RECT		= 1,	/*!< Base rectangular grey value
   					     table. */
   WLZ_GREY_TAB_INTL		= 2,	/*!< Base interval grey value table. */
+  WLZ_INDEXED_VALUES		= 4,	/*!< Indexed value table. */
   WLZ_FEAT_TAB_RAGR		= 5,	/*!< Base ragged rectangle feature
   					     table. */
   WLZ_FEAT_TAB_RECT 		= 6,	/*!< Base rectangular feature table. */
@@ -2048,6 +2049,7 @@ typedef union _WlzValues
   struct _WlzObject	    *obj;
   struct _WlzFeatValues     *fv;
   struct _WlzRectFeatValues *rfv;
+  struct _WlzIndexedValues  *x;
 } WlzValues;
 
 /*!
@@ -2074,7 +2076,6 @@ typedef union _WlzDomain
   struct _WlzLBTDomain3D     *l3;
   struct _WlzCMesh2D	     *cm2;
   struct _WlzCMesh3D	     *cm3;
-  struct _WlzCMeshTransform  *cmt;
   struct _WlzPoints	     *pts;
 } WlzDomain;
 
@@ -2466,7 +2467,7 @@ typedef struct _WlzPartialItv3D
 } WlzPartialItv3D;
 
 /************************************************************************
-* Grey value tables.
+* Value tables.
 ************************************************************************/
 
 /*!
@@ -2608,6 +2609,52 @@ typedef struct _WlzVoxelValues
   WlzValues     *values;   		/*!< Array of pointers to value
   					     tables. */
 } WlzVoxelValues;
+
+/*!
+* \struct       _WlzValueAttach
+* \ingroup      WlzType
+* \brief        Specifies what values (for example thoose in an indexed
+                value table) are attached to.
+*               Enum: ::WlzValueAttach
+*/
+typedef enum _WlzValueAttach
+{
+  WLZ_VALUE_ATTACH_NONE,                /*!< No attachment. */
+  WLZ_VALUE_ATTACH_NOD,                 /*!< Attached to mesh nodes. */
+  WLZ_VALUE_ATTACH_ELM                  /*!< Attached to mesh elements. */
+} WlzValueAttach;
+
+/*!
+* \struct       _WlzIndexedValues
+* \ingroup      WlzType
+* \brief        In indexed value table.
+*               Typedef: ::WlzIndexedValues.
+*/
+typedef struct _WlzIndexedValues
+{
+  WlzObjectType type;                   /*!< From WlzCoreValues. */
+  int           linkcount;              /*!< From WlzCoreValues. */
+  void          *freeptr;		/*!< From WlzCoreValues, although
+  					     this won't free the values
+					     themselves. */
+  int           rank;                   /*!< The rank of the individual values.
+                                             Here the rank for a scalar is 0,
+                                             for a 1D array it is 1 and for
+                                             and for individual values that
+                                             are nD arrays the rank is n. */
+  int           *dim;                   /*!< The dimensions of individual
+                                             indexed values. The dimensions
+                                             are a 1D array with the number
+                                             of entries equal to the rank.
+					     A dimension array is only
+					     allocated if the rank > 0,
+					     for rank == 0 dim is NULL. */
+  WlzGreyType   vType;                  /*!< The type of the data in the
+                                             individual values. */
+  WlzValueAttach attach;                /*!< Specifies what the values are
+                                             attached to. */
+  AlcVector     *values;                /*!< The indexed values. */
+} WlzIndexedValues;
 
 /************************************************************************
 * Point domains.						
@@ -3420,6 +3467,21 @@ typedef struct _WlzCMeshRes
 } WlzCMeshRes;
 
 /*!
+* \union	_WlzCMeshEntP
+* \ingroup	WlzMesh
+* \brief	Union of pointers to top level mesh entities.
+* 		Typedef: ::WlzCMeshEntP
+*/
+typedef union _WlzCMeshEntP
+{
+  void			*v;		/*! Generic pointer. */
+  struct _WlzCMeshNod2D *n2;		/*!< 2D node pointer. */
+  struct _WlzCMeshNod3D *n3;		/*!< 3D node pointer. */
+  struct _WlzCMeshElm2D	*e2;		/*!< 2D element pointer. */
+  struct _WlzCMeshElm3D	*e3;		/*!< 3D element pointer. */
+} WlzCMeshEntP;
+
+/*!
 * \struct       _WlzCMesh2D
 * \ingroup      WlzMesh
 * \brief        A graph based mesh model for 2D boundary conforming
@@ -3653,7 +3715,7 @@ typedef union _WlzTransform
   struct _WlzAffineTransform *affine;	/*!< Affine transforms, 2D or 3D. */
   struct _WlzBasisFnTransform *basis;	/*!< Any basis function transform. */
   struct _WlzMeshTransform *mesh;	/*!< Any convex mesh transform. */
-  struct _WlzCMeshTransform *cMesh;	/*!< Any conforming mesh transform. */
+  struct _WlzObject *obj;               /*!< Some transforms are objects						     with a domain and values. */
 } WlzTransform;
 
 /*!
@@ -3887,22 +3949,6 @@ typedef struct _WlzMeshTransform2D5
   WlzMeshElem           *elements;     	/*!< Mesh elements */
   WlzMeshNode2D5 	*nodes;		/*!< Mesh nodes */
 } WlzMeshTransform2D5;
-
-/*!
-* \struct       _WlzCMeshTransform
-* \ingroup      WlzTransform
-* \brief        A conforming mesh transform. This data structure is valid
-*		for conforming mesh transforms regardless of their dimension.
-*               typedef: ::WlzCMeshTransform.
-*/
-typedef struct _WlzCMeshTransform
-{
-  WlzTransformType type;                /*!< Type of transform. */
-  int           linkcount;              /*!< Core. */
-  void          *freeptr;               /*!< Core. */
-  WlzCMeshP     mesh;                   /*!< The conforming mesh. */
-  AlcVector     *dspVec;                /*!< Vector for displacements. */
-} WlzCMeshTransform;
 
 /************************************************************************
 * User weighting functions and callback data structures for ICP based
