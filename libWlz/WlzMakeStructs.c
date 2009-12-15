@@ -1140,7 +1140,7 @@ WlzObject	*WlzMakeCuboid(int plane1, int lastpl,
   val.core = NULL;
   dom2D.core = NULL;
   val2D.core = NULL;
-  if((arElmSz = WlzValueSize(pixType)) == 0)
+  if((arElmSz = WlzGreySize(pixType)) == 0)
   {
     errNum = WLZ_ERR_GREY_TYPE;
   }
@@ -1901,4 +1901,160 @@ WlzContour	*WlzMakeContour(WlzErrorNum *dstErr)
     *dstErr = errNum;
   }
   return(ctr);
+}
+
+/*!
+* \return	New index value table or NULL on error.
+* \ingroup	WlzAllocation
+* \brief	Makes a new indexed value table.
+* \param	obj			Given object, the domain of which is
+* 					used to determine the value allocation.
+* \param	rank			The rank of the individual values.
+* \param	dim			The dimensions of individual indexed
+* 					values.
+* \param	vType			The type of the data in the individual
+* 					values.
+* \param	attach			Specifies what the values are to be
+* 					attached to.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzIndexedValues *WlzMakeIndexedValues(WlzObject *obj,
+                                    int rank, int *dim, WlzGreyType vType,
+				    WlzValueAttach attach,
+				    WlzErrorNum *dstErr)
+{
+  int		idx;
+  size_t	bSz = 0,	                    /* AlcVector block size. */
+		bCnt = 0,		           /* AlcVector block count. */
+  		gSz = 0, 	        /* Size of data in individual value. */
+                vSz = 0,                     /* Size of an individual value. */
+		nDat = 0;	   /* Number of data in an individual value. */
+  WlzIndexedValues *ixv = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Check parameters and compute AlcVector allocation unit sizes. */
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(rank < 0)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if(rank == 0)
+  {
+    nDat = 1;
+  }
+  else
+  {
+    if(dim[0] < 1)
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+    else
+    {
+      nDat = dim[0];
+      for(idx = 1; idx < rank; ++idx)
+      {
+	if(dim[idx] < 1)
+	{
+	  errNum = WLZ_ERR_PARAM_DATA;
+	  break;
+	}
+	nDat *= dim[idx];
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(obj->domain.core->type)
+    {
+      case WLZ_CMESH_TRI2D:
+	switch(attach)
+	{
+	  case WLZ_VALUE_ATTACH_NOD:
+	    bSz = obj->domain.cm2->res.nod.vec->blkSz;
+	    bCnt= obj->domain.cm2->res.nod.vec->blkCnt;
+	    break;
+	  case WLZ_VALUE_ATTACH_ELM:
+	    bSz = obj->domain.cm2->res.elm.vec->blkSz;
+	    bCnt= obj->domain.cm2->res.elm.vec->blkCnt;
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+        break;
+      case WLZ_CMESH_TET3D:
+	switch(attach)
+	{
+	  case WLZ_VALUE_ATTACH_NOD:
+	    bSz = obj->domain.cm3->res.nod.vec->blkSz;
+	    bCnt= obj->domain.cm3->res.nod.vec->blkCnt;
+	    break;
+	  case WLZ_VALUE_ATTACH_ELM:
+	    bSz = obj->domain.cm3->res.elm.vec->blkSz;
+	    bCnt= obj->domain.cm3->res.elm.vec->blkCnt;
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  /* Compute value size. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((vType == WLZ_GREY_BIT) ||
+       ((gSz = WlzGreySize(vType)) == 0))
+    {
+      errNum = WLZ_ERR_GREY_TYPE;
+    }
+  }
+  /* Allocate the indexed value table. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    vSz = gSz * nDat;
+    /* No dimension array allocated if rank == 0. */
+    if(((ixv = (WlzIndexedValues *)
+              AlcCalloc(1, sizeof(WlzIndexedValues))) == NULL) ||
+       ((ixv->values = AlcVectorNew(bSz * bCnt, vSz, bSz, NULL)) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else if((rank > 0) &&
+            ((ixv->dim = (int *)AlcMalloc(rank * sizeof(int))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    ixv->type = WLZ_INDEXED_VALUES;
+    ixv->rank = rank;
+    ixv->vType = vType;
+    ixv->attach = attach;
+    for(idx = 0; idx < rank; ++idx)
+    {
+      ixv->dim[idx] = dim[idx];
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeIndexedValues(ixv);
+    ixv = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ixv);
 }

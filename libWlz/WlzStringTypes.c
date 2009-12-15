@@ -478,46 +478,55 @@ const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
   }
   else
   {
-    valType = WlzGreyTableTypeToTableType(obj->values.core->type, &errNum);
-    if(errNum == WLZ_ERR_NONE)
+    switch(obj->values.core->type)
     {
-      switch(obj->type)
-      {
-	case WLZ_2D_DOMAINOBJ:
-	  switch(valType)
+      case WLZ_INDEXED_VALUES:
+	oValTypeStr = "WLZ_INDEXED_VALUES";
+        break;
+      default:
+        /* Other values are a composite of the table and grey type. */
+	valType = WlzGreyTableTypeToTableType(obj->values.core->type, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  switch(obj->type)
 	  {
-	    case WLZ_GREY_TAB_RAGR:
-	      oValTypeStr = "WLZ_GREY_TAB_RAGR";
+	    case WLZ_2D_DOMAINOBJ:
+	      switch(valType)
+	      {
+		case WLZ_GREY_TAB_RAGR:
+		  oValTypeStr = "WLZ_GREY_TAB_RAGR";
+		  break;
+		case WLZ_GREY_TAB_RECT:
+		  oValTypeStr = "WLZ_GREY_TAB_RECT";
+		  break;
+		case WLZ_GREY_TAB_INTL:
+		  oValTypeStr = "WLZ_GREY_TAB_INTL";
+		  break;
+		default:
+		  errNum = WLZ_ERR_VALUES_TYPE;
+		  break;
+	      }
 	      break;
-	    case WLZ_GREY_TAB_RECT:
-	      oValTypeStr = "WLZ_GREY_TAB_RECT";
+	    case WLZ_3D_DOMAINOBJ:
+	      switch(obj->values.core->type)
+	      {
+		case WLZ_VOXELVALUETABLE_GREY:
+		  oValTypeStr = "WLZ_VOXELVALUETABLE_GREY";
+		  break;
+		default:
+		  errNum = WLZ_ERR_VOXELVALUES_TYPE;
+		  break;
+	      }
 	      break;
-	    case WLZ_GREY_TAB_INTL:
-	      oValTypeStr = "WLZ_GREY_TAB_INTL";
+	    case WLZ_TRANS_OBJ:
+	      oValTypeStr = WlzStringFromObjType(obj->values.obj, &errNum);
 	      break;
 	    default:
-	      errNum = WLZ_ERR_VALUES_TYPE;
+	      errNum = WLZ_ERR_OBJECT_TYPE;
 	      break;
 	  }
-	  break;
-	case WLZ_3D_DOMAINOBJ:
-	  switch(obj->values.core->type)
-	  {
-	    case WLZ_VOXELVALUETABLE_GREY:
-	      oValTypeStr = "WLZ_VOXELVALUETABLE_GREY";
-	      break;
-	    default:
-	      errNum = WLZ_ERR_VOXELVALUES_TYPE;
-	      break;
-	  }
-	  break;
-	case WLZ_TRANS_OBJ:
-	  oValTypeStr = WlzStringFromObjType(obj->values.obj, &errNum);
-	  break;
-	default:
-	  errNum = WLZ_ERR_OBJECT_TYPE;
-	  break;
-      }
+	}
+	break;
     }
   }
   if(dstErr)
@@ -1311,6 +1320,74 @@ WlzInterpolationType WlzStringToInterpolationType(const char *iStr,
     *dstErr = errNum;
   }
   return(iType);
+}
+
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
+* \brief	Finds a string for the given values attachment type.
+* \param	iType			Given values attachment type.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+const char	*WlzStringFromValueAttachType(WlzValueAttach at,
+				              WlzErrorNum *dstErr)
+{
+  const char	*aStr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(at)
+  {
+    case WLZ_VALUE_ATTACH_NONE:
+      aStr = "WLZ_VALUE_ATTACH_NONE";
+      break;
+    case WLZ_VALUE_ATTACH_NOD:
+      aStr = "WLZ_VALUE_ATTACH_NOD";
+      break;
+    case WLZ_VALUE_ATTACH_ELM:
+      aStr = "WLZ_VALUE_ATTACH_ELM";
+      break;
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(aStr);
+}
+
+/*!
+* \return	Woolz values attachment type.
+* \ingroup      WlzStrings
+* \brief	Finds an enumerated type for the given values attachment
+* 		type string.
+* \param	iStr			Given values attachment type string.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+WlzValueAttach WlzStringToValuesAttachType(const char *aStr,
+				    WlzErrorNum *dstErr)
+{
+  int		tI0;
+  WlzValueAttach at = WLZ_VALUE_ATTACH_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_PARAM_DATA;
+
+  if(WlzStringMatchValue(&tI0, aStr,
+		 "WLZ_VALUE_ATTACH_NONE", WLZ_VALUE_ATTACH_NONE,
+		 "WLZ_VALUE_ATTACH_NOD", WLZ_VALUE_ATTACH_NOD,
+		 "WLZ_VALUE_ATTACH_ELM", WLZ_VALUE_ATTACH_ELM,
+		 NULL))
+  {
+    at = (WlzValueAttach )tI0;
+    errNum = WLZ_ERR_NONE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(at);
 }
 
 /*!
