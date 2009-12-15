@@ -159,6 +159,56 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
       }
       break;
 
+    case WLZ_CMESH_2D:
+      WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
+      	      ("WlzFreeObj 03 0x%lx WLZ_CMESH_2D 0x%lx, "
+	       "%d 0x%lx %d 0x%lx\n",
+	       (unsigned long )obj,
+	       (unsigned long )(obj->domain.cm2),
+	       ((obj->domain.cm2)?(obj->domain.cm2)->linkcount: 0),
+	       (unsigned long )(obj->values.x),
+	       ((obj->values.x)?(obj->values.x)->linkcount: 0),
+	       (unsigned long )(obj->plist)));
+      errNum = WlzCMeshFree2D(obj->domain.cm2);
+      if((errNum == WLZ_ERR_NONE) && (obj->values.core != NULL))
+      {
+	errNum = WlzFreeIndexedValues(obj->values.x);
+      }
+      if((errNum == WLZ_ERR_NONE) && (obj->plist != NULL))
+      {
+	errNum = WlzFreePropertyList(obj->plist);
+      }
+      if((errNum == WLZ_ERR_NONE) && (obj->assoc != NULL))
+      {
+	errNum = WlzFreeObj(obj->assoc);
+      }
+      break;
+
+    case WLZ_CMESH_3D:
+      WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
+      	      ("WlzFreeObj 03 0x%lx WLZ_CMESH_3D 0x%lx, "
+	       "%d 0x%lx %d 0x%lx\n",
+	       (unsigned long )obj,
+	       (unsigned long )(obj->domain.cm3),
+	       ((obj->domain.cm3)?(obj->domain.cm3)->linkcount: 0),
+	       (unsigned long )(obj->values.x),
+	       ((obj->values.x)?(obj->values.x)->linkcount: 0),
+	       (unsigned long )(obj->plist)));
+      errNum = WlzCMeshFree3D(obj->domain.cm3);
+      if((errNum == WLZ_ERR_NONE) && (obj->values.core != NULL))
+      {
+	errNum = WlzFreeIndexedValues(obj->values.x);
+      }
+      if((errNum == WLZ_ERR_NONE) && (obj->plist != NULL))
+      {
+	errNum = WlzFreePropertyList(obj->plist);
+      }
+      if((errNum == WLZ_ERR_NONE) && (obj->assoc != NULL))
+      {
+	errNum = WlzFreeObj(obj->assoc);
+      }
+      break;
+
     case WLZ_HISTOGRAM:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
       	      ("WlzFreeObj 08 0x%lx WLZ_CONV_HULL 0x%lx\n",
@@ -269,41 +319,49 @@ WlzErrorNum WlzFreeHistogramDomain(WlzHistogramDomain *hist)
   return( WlzFreeDomain(domain) );
 }
 
-/* function:     WlzFreeDomain    */
 /*! 
+* \return       Woolz error code.
 * \ingroup      WlzAllocation
 * \brief        Free a domain structure of any type. All domain
-structures must have a type, linkcount and freeptr by
-which, if set, all allocated space can be freed.
-*
-* \return       Error number, values: WLZ_ERR_NONE, WLZ_ERR_MEM_FREE.
-* \param    domain	Domain union to be freed.
-* \par      Source:
-*                WlzFreeSpace.c
+*		structures must have a type and linkcount. Most
+*		also have a freeptr by which, if set, all the space
+*		allocated can be freed, however there are some special
+*		cases.
+* \param    domain			Domain to be freed.
 */
 WlzErrorNum WlzFreeDomain(WlzDomain domain)
 {
-  WlzErrorNum errNum=WLZ_ERR_NONE;
-  AlcErrno		alcErrNum=ALC_ER_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  AlcErrno	alcErrNum = ALC_ER_NONE;
 
-  /* check the object pointer and linkcount */
-  if (domain.core == NULL){
-    return( WLZ_ERR_NONE );
-  }
-
-  if( WlzUnlink(&(domain.core->linkcount), &errNum) ){
-
-    if (domain.core->freeptr != NULL){
-      alcErrNum = AlcFreeStackFree(domain.core->freeptr);
+  if(domain.core != NULL)
+  {
+    if(WlzUnlink(&(domain.core->linkcount), &errNum))
+    {
+      switch(domain.core->type)
+      {
+	case WLZ_CMESH_TRI2D:
+	  errNum = WlzCMeshFree2D(domain.cm2);
+	  break;
+	case WLZ_CMESH_TET3D:
+	  errNum = WlzCMeshFree3D(domain.cm3);
+	  break;
+	default:
+	  /* Most domains are are freed in the same way. */
+	  if(domain.core->freeptr != NULL)
+	  {
+	    alcErrNum = AlcFreeStackFree(domain.core->freeptr);
+	  }
+	  AlcFree((void *)domain.core);
+	  if(alcErrNum != ALC_ER_NONE)
+	  {
+	    errNum = WLZ_ERR_MEM_FREE;
+	  }
+	  break;
+      }
     }
-
-    AlcFree((void *) domain.core);
   }
-
-  if( alcErrNum != ALC_ER_NONE ){
-    errNum = WLZ_ERR_MEM_FREE;
-  }
-  return errNum;
+  return(errNum);
 }
 
 /* function:     WlzFreePlaneDomain    */
@@ -611,7 +669,7 @@ WlzErrorNum	WlzFree3DWarpTrans(Wlz3DWarpTrans *obj)
 * \brief        Free's a WlzContour data structure.
 *
 * \return       Error number, values: WLZ_ERR_NONE, WLZ_ERR_DOMAIN_NULL, WLZ_ERR_DOMAIN_TYPE and from WlzUnlink().
-* \param    ctr	Contour to be freed.
+* \param    ctr				Contour to be freed.
 * \par      Source:
 *                WlzFreeSpace.c
 */
@@ -641,3 +699,32 @@ WlzErrorNum	WlzFreeContour(WlzContour *ctr)
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Frees an indexed valuetable.
+* \param	ixv			Given indexed valuetable.
+*/
+WlzErrorNum	WlzFreeIndexedValues(WlzIndexedValues *ixv)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(ixv == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(ixv->type != WLZ_INDEXED_VALUES)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    (void )AlcVectorFree(ixv->values);
+    if(ixv->rank > 0)
+    {
+      AlcFree(ixv->dim);
+    }
+    AlcFree(ixv);
+  }
+  return(errNum);
+}

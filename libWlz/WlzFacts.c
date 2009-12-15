@@ -127,17 +127,22 @@ static WlzErrorNum 		WlzObjFactsGreyV(
 static WlzErrorNum	        WlzObjFactsMeshTrans(
 				  WlzObjFactsData *fData,
 				  WlzMeshTransform *mtrans);		
-static WlzErrorNum 		WlzObjFactsCMesh2D(
+static WlzErrorNum 		WlzObjFactsCMeshDom2D(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
 				  WlzCMesh2D *mesh);
-static WlzErrorNum 		WlzObjFactsCMesh3D(
+static WlzErrorNum 		WlzObjFactsCMeshDom3D(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
 				  WlzCMesh3D *mesh);
-static WlzErrorNum 		WlzObjFactsCMeshTrans(
+static WlzErrorNum 		WlzObjFactsIndexedValues(
 				  WlzObjFactsData *fData,
-				  WlzCMeshTransform *cmt);
+				  WlzObject *obj,
+			          WlzValues val);
+static WlzErrorNum 		WlzFactsIndexedVal(
+				  WlzObjFactsData *fData,
+				  WlzIndexedValues *ixv,
+				  int idx);
 
 /*!
 * \return	Woolz error code.
@@ -335,14 +340,22 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	  }
 	  break;
 	case WLZ_CMESH_2D:
-	  errNum = WlzObjFactsCMesh2D(fData, obj, obj->domain.cm2);
+	  errNum = WlzObjFactsCMeshDom2D(fData, obj, obj->domain.cm2);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsIndexedValues(fData, obj, obj->values);
+	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
 	  }
 	  break;
 	case WLZ_CMESH_3D:
-	  errNum = WlzObjFactsCMesh3D(fData, obj, obj->domain.cm3);
+	  errNum = WlzObjFactsCMeshDom3D(fData, obj, obj->domain.cm3);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsIndexedValues(fData, obj, obj->values);
+	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
@@ -405,13 +418,6 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
 	  }
 	  break;
-	case WLZ_CMESH_TRANS:
-	  errNum = WlzObjFactsCMeshTrans(fData, obj->domain.cmt);
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
-	  }
-	  break;
 	case WLZ_EMPTY_OBJ:
 	  /* no more facts available */
 	  break;
@@ -420,7 +426,8 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	case WLZ_PROPERTY_OBJ:    /* FALLTHROUGH */
 	default:
 	  errNum = WlzObjFactsAppend(fData,
-	  		"Facts not implemented for this object type.\n");
+	  		"Facts not implemented for object %d type.\n",
+			obj->type);
 	  break;
       }
     }
@@ -559,7 +566,7 @@ static WlzErrorNum WlzObjFactsGreyV(WlzObjFactsData *fData,
   switch(gType)
   {
     case WLZ_GREY_LONG:
-      errNum = WlzObjFactsAppend(fData, "%s value: %d.\n",
+      errNum = WlzObjFactsAppend(fData, "%s value: %ld.\n",
 				 prefix, gV.lnv);
       break;
     case WLZ_GREY_INT:
@@ -1715,9 +1722,9 @@ static WlzErrorNum WlzObjFactsMeshTrans(WlzObjFactsData *fData,
 * \param	obj			Object for type.
 * \param	cmt			Given constrained mesh transform.
 */
-static WlzErrorNum WlzObjFactsCMesh2D(WlzObjFactsData *fData,
-				      WlzObject *obj,
-				      WlzCMesh2D *mesh)
+static WlzErrorNum WlzObjFactsCMeshDom2D(WlzObjFactsData *fData,
+				         WlzObject *obj,
+				         WlzCMesh2D *mesh)
 {
   int		idx,
   		nElm,
@@ -1814,9 +1821,9 @@ static WlzErrorNum WlzObjFactsCMesh2D(WlzObjFactsData *fData,
 * \param	obj			Object for type.
 * \param	cmt			Given constrained mesh transform.
 */
-static WlzErrorNum WlzObjFactsCMesh3D(WlzObjFactsData *fData,
-				      WlzObject *obj,
-				      WlzCMesh3D *mesh)
+static WlzErrorNum WlzObjFactsCMeshDom3D(WlzObjFactsData *fData,
+				         WlzObject *obj,
+				         WlzCMesh3D *mesh)
 {
   int		idx,
   		nElm,
@@ -1910,61 +1917,276 @@ static WlzErrorNum WlzObjFactsCMesh3D(WlzObjFactsData *fData,
 /*!
 * \return	Error number.
 * \ingroup      WlzDebug
-* \brief	Produces a text description of a constrained mesh transform.
+* \brief	Produces a text description of an indexed value table.
 * \param	fData			Facts data structure.
-* \param	cmt			Given constrained mesh transform.
+* \param	obj			Object to determine value type.
+* \param	val			values union for the indexed values.
 */
-static WlzErrorNum WlzObjFactsCMeshTrans(WlzObjFactsData *fData,
-				         WlzCMeshTransform *cmt)
+static WlzErrorNum WlzObjFactsIndexedValues(WlzObjFactsData *fData,
+					    WlzObject *obj,
+					    WlzValues val)
 {
-  int		nElm = 0,
-  		nNod = 0;
+  int		idx,
+  		saveIndent;
   const char	*tStr;
+  WlzCMeshP	mesh;
+  WlzCMeshEntP	ent;
+  WlzIndexedValues *ixv;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   ++(fData->indent);
-  tStr = WlzStringFromTransformType(cmt->type, &errNum);
+  tStr = WlzStringFromObjValuesType(obj, &errNum);
   if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
   {
-    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    if(errNum == WLZ_ERR_VALUES_NULL)
     {
-      (void )WlzObjFactsAppend(fData, "Transform NULL.\n");
+      (void )WlzObjFactsAppend(fData, "Values NULL.\n");
+      errNum = WLZ_ERR_NONE;
     }
     else
     {
-      (void )WlzObjFactsAppend(fData, "Transform type invalid.\n");
+      (void )WlzObjFactsAppend(fData, "Values type invalid.\n");
     }
   }
   else
   {
-    errNum = WlzObjFactsAppend(fData, "Transform type: %s.\n", tStr);
+    errNum = WlzObjFactsAppend(fData, "Values type: %s.\n", tStr);
     if(errNum == WLZ_ERR_NONE)
     {
-      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n", cmt->linkcount);
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n",
+      				 val.core->linkcount);
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      switch(cmt->type)
+      if(val.core->type != WLZ_INDEXED_VALUES)
       {
-        case WLZ_TRANSFORM_2D_CMESH:
-	  nElm = cmt->mesh.m2->res.elm.numEnt;
-	  nNod = cmt->mesh.m2->res.nod.numEnt;
-	  break;
-	case WLZ_TRANSFORM_3D_CMESH:
-	  nElm = cmt->mesh.m3->res.elm.numEnt;
-	  nNod = cmt->mesh.m3->res.nod.numEnt;
-	  break;
-	default:
-	  errNum = WLZ_ERR_TRANSFORM_TYPE;
-	  break;
+        errNum = WLZ_ERR_VALUES_TYPE;
       }
-      errNum = WlzObjFactsAppend(fData, "Number of Elements: %d.\n", nElm);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      ixv = val.x;
+      errNum = WlzObjFactsAppend(fData, "Rank: %d.\n", ixv->rank);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzObjFactsAppend(fData, "Dim:");
+      if(ixv->rank < 0)
+      {
+        errNum = WLZ_ERR_VALUES_DATA;
+      }
+      else if(ixv->rank == 0)
+      {
+        errNum = WlzObjFactsAppend(fData, " NULL");
+      }
+      else
+      {
+	saveIndent = fData->indent;
+	fData->indent = 0;
+	for(idx = 0; idx < ixv->rank; ++idx)
+	{
+	  WlzObjFactsAppend(fData, " %d", ixv->dim[idx]);
+	}
+        errNum = WlzObjFactsAppend(fData, "\n");
+	fData->indent = saveIndent;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      tStr = WlzStringFromGreyType(ixv->vType, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "vType: %s.\n", tStr);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      tStr = WlzStringFromValueAttachType(ixv->attach, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Attach: %s.\n", tStr);
+    }
+    if((errNum == WLZ_ERR_NONE) && (fData->verbose != 0))
+    {
       if(errNum == WLZ_ERR_NONE)
       {
-        errNum = WlzObjFactsAppend(fData, "Number of Nodes: %d.\n", nNod);
+        if(obj == NULL)
+	{
+	  errNum = WLZ_ERR_OBJECT_NULL;
+	}
+        else if(obj->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzObjFactsAppend(fData, "Values:\n");
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        ++(fData->indent);
+	switch(obj->domain.core->type)
+	{
+	  case WLZ_CMESH_TRI2D:
+	    mesh.m2 = obj->domain.cm2;
+	    switch(ixv->attach)
+	    {
+	      case WLZ_VALUE_ATTACH_NOD:
+	        for(idx = 0; idx < mesh.m2->res.nod.maxEnt; ++idx)
+		{
+		  ent.v = AlcVectorItemGet(mesh.m2->res.nod.vec, idx);
+		  if(ent.n2->idx >= 0)
+		  {
+		    if((errNum = WlzFactsIndexedVal(fData, ixv,
+		                                    idx)) != WLZ_ERR_NONE)
+		    {
+		      break;
+		    }
+		  }
+		}
+		break;
+	      case WLZ_VALUE_ATTACH_ELM:
+	        for(idx = 0; idx < mesh.m2->res.nod.maxEnt; ++idx)
+		{
+		  ent.v = AlcVectorItemGet(mesh.m2->res.elm.vec, idx);
+		  if(ent.e2->idx >= 0)
+		  {
+		    if((errNum = WlzFactsIndexedVal(fData, ixv,
+		                                    idx)) != WLZ_ERR_NONE)
+		    {
+		      break;
+		    }
+		  }
+		}
+		break;
+	      default:
+	        errNum = WLZ_ERR_VALUES_DATA;
+		break;
+	    }
+	    break;
+	  case WLZ_CMESH_TET3D:
+	    mesh.m3 = obj->domain.cm3;
+	    switch(ixv->attach)
+	    {
+	      case WLZ_VALUE_ATTACH_NOD:
+	        for(idx = 0; idx < mesh.m3->res.nod.maxEnt; ++idx)
+		{
+		  ent.v = AlcVectorItemGet(mesh.m3->res.nod.vec, idx);
+		  if(ent.n3->idx >= 0)
+		  {
+		    if((errNum = WlzFactsIndexedVal(fData, ixv,
+		                                    idx)) != WLZ_ERR_NONE)
+		    {
+		      break;
+		    }
+		  }
+		}
+		break;
+	      case WLZ_VALUE_ATTACH_ELM:
+	        for(idx = 0; idx < mesh.m3->res.nod.maxEnt; ++idx)
+		{
+		  ent.v = AlcVectorItemGet(mesh.m3->res.elm.vec, idx);
+		  if(ent.e3->idx >= 0)
+		  {
+		    if((errNum = WlzFactsIndexedVal(fData, ixv,
+		                                    idx)) != WLZ_ERR_NONE)
+		    {
+		      break;
+		    }
+		  }
+		}
+		break;
+	      default:
+	        errNum = WLZ_ERR_VALUES_DATA;
+		break;
+	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+	--(fData->indent);
       }
     }
   }
   --(fData->indent);
+  return(errNum);
+}
+
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a single indexed value.
+* \param	fData			Facts data structure.
+* \param	ixv			Indexed values.
+* 		idx			Index of the particular value.
+*/
+static WlzErrorNum WlzFactsIndexedVal(WlzObjFactsData *fData,
+					WlzIndexedValues *ixv,
+					int idV)
+{
+  int		idX,
+  		vCnt,
+		saveIndent;
+  WlzGreyP	gP;
+  WlzUByte	rgba[4];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((errNum = WlzObjFactsAppend(fData, "% 8d", idV)) == WLZ_ERR_NONE)
+  {
+    vCnt = 1;
+    if(ixv->rank > 0)
+    {
+      for(idX = 0; idX < ixv->rank; ++idX)
+      {
+	vCnt *= ixv->dim[idX];
+      }
+    }
+    saveIndent = fData->indent;
+    fData->indent = 0;
+    gP.v = WlzIndexedValueGet(ixv, idV);
+    for(idX = 0; idX < vCnt; ++idX)
+    {
+      switch(ixv->vType)
+      {
+	case WLZ_GREY_LONG:
+	  errNum = WlzObjFactsAppend(fData, " %ld", gP.lnp[idX]);
+	  break;
+	case WLZ_GREY_INT:
+	  errNum = WlzObjFactsAppend(fData, " %d", gP.inp[idX]);
+	  break;
+	case WLZ_GREY_SHORT:
+	  errNum = WlzObjFactsAppend(fData, " %d", gP.shp[idX]);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  errNum = WlzObjFactsAppend(fData, " %d", gP.ubp[idX]);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  errNum = WlzObjFactsAppend(fData, " %g", gP.flp[idX]);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  errNum = WlzObjFactsAppend(fData, " %lg", gP.dbp[idX]);
+	  break;
+	case WLZ_GREY_RGBA:
+	  rgba[0] = WLZ_RGBA_RED_GET(gP.rgbp[idX]);
+	  rgba[1] = WLZ_RGBA_GREEN_GET(gP.rgbp[idX]);
+	  rgba[2] = WLZ_RGBA_BLUE_GET(gP.rgbp[idX]);
+	  rgba[3] = WLZ_RGBA_ALPHA_GET(gP.rgbp[idX]);
+	  errNum = WlzObjFactsAppend(fData, " %d,%d,%d,%d\n",
+	  			     rgba[0], rgba[1], rgba[2], rgba[3]);
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "\n");
+    }
+    fData->indent = saveIndent;
+  }
   return(errNum);
 }
