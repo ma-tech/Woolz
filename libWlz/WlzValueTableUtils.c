@@ -42,6 +42,7 @@ static char _WlzValueTableUtils_c[] = "MRC HGU $Id$";
 */
 
 #include <stdlib.h>
+#include <string.h>
 #include <float.h>
 #include <Wlz.h>
 
@@ -389,3 +390,213 @@ WlzDVertex3	WlzVozelSz(WlzObject *obj, WlzErrorNum *dstErr)
   }
   return(sz);
 }
+
+/*!
+* \return	Value pointer which may be null on error.
+* \ingroup	WlzValuesUtils
+* \brief	Gets a pointer to the valuetable entry for the given
+* 		index. If the indexed values are not valid for the
+* 		given index NULL will be returned. See also
+* 		WlzIndexedValueExtGet().
+* \param	ixv			Indexed value table.
+* \param	idx			Given index.
+*/
+void		*WlzIndexedValueGet(WlzIndexedValues *ixv, int idx)
+{
+  void 		*val = NULL;
+
+  if((ixv != NULL) && (idx >= 0))
+  {
+    val = AlcVectorItemGet(ixv->values, idx);
+  }
+  return(val);
+}
+
+/*!
+* \return	Value pointer which may be null on error.
+* \ingroup	WlzValuesUtils
+* \brief	Gets a pointer to the valuetable entry for the given
+* 		index. The value table is extended as required so that
+* 		there should always be a valid entry unless memory
+* 		allocation fails. See also WlzIndexedValueGet().
+* \param	ixv			Indexed value table.
+* \param	idx			Given index.
+*/
+void		*WlzIndexedValueExtGet(WlzIndexedValues *ixv, int idx)
+{
+  void 		*val = NULL;
+
+  if((ixv != NULL) && (idx >= 0))
+  {
+    val = AlcVectorExtendAndGet(ixv->values, idx);
+  }
+  return(val);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValuesUtils
+* \brief	Sets all values covered by the domain in the given object
+* 		to the given value. Ths function calls memcpy() for each
+* 		indexed value using the given value count and pointer.
+* \param	obj			Given object which must be a CMesh
+* 					object with indexed values.
+* \param	cnt			Size of the values to be copied.
+* \param	val			Basic value set for the indexed
+* 					values. Type must be the same as
+* 					the indexed value table value type.
+*/
+WlzErrorNum     WlzIndexedValuesSet(WlzObject *obj, size_t cnt, void *val)
+{
+  int		idx,
+  		max;
+  void		*dst;
+  AlcVector	*vec;
+  WlzCMeshElm2D	*e2;
+  WlzCMeshElm3D	*e3;
+  WlzCMeshNod2D	*n2;
+  WlzCMeshNod3D	*n3;
+  WlzCMeshP	mesh;
+  WlzIndexedValues *ixv;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((ixv = obj->values.x) == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(ixv->type != WLZ_INDEXED_VALUES)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else
+  {
+    switch(obj->type)
+    {
+      case WLZ_CMESH_2D:
+	mesh.m2 = obj->domain.cm2;
+	if(mesh.m2->type != WLZ_CMESH_TRI2D)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+	else
+	{
+	  switch(ixv->attach)
+	  {
+	    case WLZ_VALUE_ATTACH_NOD:
+	      max = mesh.m2->res.nod.maxEnt;
+	      if(WlzIndexedValueExtGet(ixv, max) == NULL)
+	      {
+	        errNum = WLZ_ERR_MEM_ALLOC;
+	      }
+	      else
+	      {
+	        vec = mesh.m2->res.nod.vec;
+		for(idx = 0; idx < max; ++idx)
+		{
+		  n2 = (WlzCMeshNod2D *)AlcVectorItemGet(vec, idx);
+		  if(n2->idx >= 0)
+		  {
+		    dst = WlzIndexedValueGet(ixv, idx);
+		    memcpy(dst, val, cnt);
+		  }
+		}
+	      }
+	      break;
+	    case WLZ_VALUE_ATTACH_ELM:
+	      max = mesh.m2->res.elm.maxEnt;
+	      if(WlzIndexedValueExtGet(ixv, max) == NULL)
+	      {
+	        errNum = WLZ_ERR_MEM_ALLOC;
+	      }
+	      else
+	      {
+	        vec = mesh.m2->res.elm.vec;
+		for(idx = 0; idx < max; ++idx)
+		{
+		  e2 = (WlzCMeshElm2D *)AlcVectorItemGet(vec, idx);
+		  if(e2->idx >= 0)
+		  {
+		    dst = WlzIndexedValueGet(ixv, idx);
+		    memcpy(dst, val, cnt);
+		  }
+		}
+	      }
+	      break;
+	    default:
+	      errNum = WLZ_ERR_VALUES_DATA;
+	      break;
+	  }
+	}
+        break;
+      case WLZ_CMESH_3D:
+	mesh.m3 = obj->domain.cm3;
+	if(mesh.m3->type != WLZ_CMESH_TET3D)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+	else
+	{
+	  switch(ixv->attach)
+	  {
+	    case WLZ_VALUE_ATTACH_NOD:
+	      max = mesh.m3->res.nod.maxEnt;
+	      if(WlzIndexedValueExtGet(ixv, max) == NULL)
+	      {
+	        errNum = WLZ_ERR_MEM_ALLOC;
+	      }
+	      else
+	      {
+	        vec = mesh.m3->res.nod.vec;
+		for(idx = 0; idx < max; ++idx)
+		{
+		  n3 = (WlzCMeshNod3D *)AlcVectorItemGet(vec, idx);
+		  if(n3->idx >= 0)
+		  {
+		    dst = WlzIndexedValueGet(ixv, idx);
+		    memcpy(dst, val, cnt);
+		  }
+		}
+	      }
+	      break;
+	    case WLZ_VALUE_ATTACH_ELM:
+	      max = mesh.m3->res.elm.maxEnt;
+	      if(WlzIndexedValueExtGet(ixv, max) == NULL)
+	      {
+	        errNum = WLZ_ERR_MEM_ALLOC;
+	      }
+	      else
+	      {
+	        vec = mesh.m3->res.elm.vec;
+		for(idx = 0; idx < max; ++idx)
+		{
+		  e3 = (WlzCMeshElm3D *)AlcVectorItemGet(vec, idx);
+		  if(e3->idx >= 0)
+		  {
+		    dst = WlzIndexedValueGet(ixv, idx);
+		    memcpy(dst, val, cnt);
+		  }
+		}
+	      }
+	      break;
+	    default:
+	      errNum = WLZ_ERR_VALUES_DATA;
+	      break;
+	  }
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+        break;
+    }
+  }
+  return(errNum);
+}
+
