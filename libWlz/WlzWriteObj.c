@@ -127,6 +127,32 @@ static WlzErrorNum 		WlzWriteVertex3D(
 				  FILE *fP,
 				  WlzDVertex3 *vP,
 				  int nV);
+static WlzErrorNum		WlzWriteStr(
+				  FILE *fP,
+				  char *str);
+static WlzErrorNum		WlzWritePixelV(
+				  FILE *fP,
+				  WlzPixelV *pV,
+				  int nPV);
+static WlzErrorNum		WlzWriteGreyV(
+				  FILE *fP,
+				  WlzGreyType type,
+				  WlzGreyV *gV,
+				  int nGV);
+static WlzErrorNum		WlzWriteMeshTransform2D(
+				  FILE *fP,
+				  WlzMeshTransform *mTrans);
+static WlzErrorNum		WlzWriteCMesh2D(
+				  FILE *fP,
+				  int **dstNodTbl,
+				  WlzCMesh2D *mesh);
+static WlzErrorNum		WlzWriteCMesh3D(
+				  FILE *fP,
+				  int **dstNodTbl,
+				  WlzCMesh3D *mesh);
+static WlzErrorNum		WlzWriteIndexedValues(
+				  FILE *fP,
+				  WlzObject *obj);
 #ifdef WLZ_UNUSED_FUNCTIONS
 static WlzErrorNum 		WlzWriteBox2I(
 				  FILE *fP,
@@ -145,40 +171,6 @@ static WlzErrorNum 		WlzWriteBox3D(
 				  WlzDBox3 *bP,
 				  int nB);
 #endif /* WLZ_UNUSED_FUNCTIONS */
-static WlzErrorNum		WlzWriteStr(
-				  FILE *fP,
-				  char *str);
-static WlzErrorNum		WlzWritePixelV(
-				  FILE *fP,
-				  WlzPixelV *pV,
-				  int nPV);
-static WlzErrorNum		WlzWriteGreyV(
-				  FILE *fP,
-				  WlzGreyType type,
-				  WlzGreyV *gV,
-				  int nGV);
-static WlzErrorNum		WlzWriteMeshTransform2D(
-				  FILE *fP,
-				  WlzMeshTransform *mTrans);
-static WlzErrorNum		WlzWriteCMeshTransform(
-				  FILE *fP,
-				  WlzCMeshTransform *cmt);
-static WlzErrorNum		WlzWriteCMeshTransform2D(
-				  FILE *fP,
-				  WlzCMesh2D *mesh,
-				  AlcVector *dspVec);
-static WlzErrorNum		WlzWriteCMeshTransform3D(
-				  FILE *fP,
-				  WlzCMesh3D *mesh,
-				  AlcVector *dspVec);
-static WlzErrorNum		WlzWriteCMesh2D(
-				  FILE *fP,
-				  int **dstNodTbl,
-				  WlzCMesh2D *mesh);
-static WlzErrorNum		WlzWriteCMesh3D(
-				  FILE *fP,
-				  int **dstNodTbl,
-				  WlzCMesh3D *mesh);
 
 #ifdef _OPENMP
 #define putc(C,S) putc_unlocked(C,S)
@@ -389,10 +381,20 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
         errNum = WlzWriteContour(fP, obj->domain.ctr);
 	break;
       case WLZ_CMESH_2D:
-        errNum = WlzWriteCMesh2D(fP, NULL, obj->domain.cm2);
+        if(((errNum = WlzWriteCMesh2D(fP, NULL,
+	                              obj->domain.cm2)) == WLZ_ERR_NONE) &&
+           ((errNum = WlzWriteIndexedValues(fP, obj)) == WLZ_ERR_NONE))
+	{
+	  errNum = WlzWritePropertyList(fP, obj->plist);
+	}
 	break;
       case WLZ_CMESH_3D:
-        errNum = WlzWriteCMesh3D(fP, NULL, obj->domain.cm3);
+        if(((errNum = WlzWriteCMesh3D(fP, NULL,
+	                              obj->domain.cm3)) == WLZ_ERR_NONE) &&
+           ((errNum = WlzWriteIndexedValues(fP, obj)) == WLZ_ERR_NONE))
+	{
+	  errNum = WlzWritePropertyList(fP, obj->plist);
+	}
 	break;
       case WLZ_RECTANGLE:
 	errNum = WlzWriteRect(fP, obj->domain.r);
@@ -424,9 +426,6 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
 	break;
       case WLZ_MESH_TRANS:
 	  errNum = WlzWriteMeshTransform2D(fP, obj->domain.mt);
-	break;
-      case WLZ_CMESH_TRANS:
-	  errNum = WlzWriteCMeshTransform(fP, obj->domain.cmt);
 	break;
       /* Orphans and not yet implemented object types for I/O */
       case WLZ_CONVOLVE_INT:    /* FALLTHROUGH */
@@ -2574,270 +2573,12 @@ WlzErrorNum    WlzWriteMeshTransform2D(
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzIO
-* \brief	Writes a conforming mesh transform to the given file.
-* \param	fP			Given file.
-* \param	cmt			Conforming mesh transform.
-*/
-static WlzErrorNum	WlzWriteCMeshTransform(
-				FILE *fP,
-			  	WlzCMeshTransform *cmt)
-{
-  WlzErrorNum errNum = WLZ_ERR_NONE;
-
-  if(cmt == NULL)
-  {
-    errNum = WLZ_ERR_TRANSFORM_NULL;
-  }
-  else
-  {
-    switch(cmt->type)
-    {
-      case WLZ_TRANSFORM_2D_CMESH: /* FALLTHROUGH */
-      case WLZ_TRANSFORM_3D_CMESH:
-	if(putword(cmt->type,  fP) == 0)
-	{
-	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	}
-	else
-	{
-	  switch(cmt->type)
-	  {
-	    case WLZ_TRANSFORM_2D_CMESH:
-	      errNum =  WlzWriteCMeshTransform2D(fP, cmt->mesh.m2,
-	                                         cmt->dspVec);
-	      break;
-	    case WLZ_TRANSFORM_3D_CMESH:
-	      errNum =  WlzWriteCMeshTransform3D(fP, cmt->mesh.m3,
-	                                         cmt->dspVec);
-	      break;
-	    default:
-	      break;
-	  }
-	}
-      default:
-        errNum = WLZ_ERR_TRANSFORM_TYPE;
-	break;
-    }
-  }
-  return(errNum);
-}
-
-/*!
-* \return	Woolz error code.
-* \ingroup	WlzIO
-* \brief	Writes a 2D conforming mesh transform to the given file.
-* \param	fP			Given file.
-* \param	mesh			Conforming mesh (2D).
-* \param	dspVec			Displacement vector.
-*/
-static WlzErrorNum	WlzWriteCMeshTransform2D(
-				FILE *fP,
-				WlzCMesh2D *mesh,
-				AlcVector *dspVec)
-{
-  int		idN,
-  		idE,
-		nDsp,
-		nNod,
-  		nElm;
-  WlzDVertex2	dsp;
-  WlzCMeshNod2D	*nod;
-  WlzCMeshElm2D	*elm;
-  WlzCMeshNod2D	*nodes[3];
-  int		*nodTbl = NULL;
-  WlzErrorNum errNum = WLZ_ERR_NONE;
-
-  if(mesh == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(mesh->type != WLZ_CMESH_TRI2D)
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  /* Generate mesh node index table to avoid deleted nodes and then
-   * write the number of nodes followed by the number of elements
-   * to the file. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if((nodTbl = (int *)AlcMalloc(mesh->res.nod.maxEnt * sizeof(int))) == NULL)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    nNod = 0;
-    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
-    {
-      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
-      if(nod->idx >= 0)
-      {
-	nodTbl[idN] = nNod++;
-      }
-    }
-    nElm = 0;
-    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
-    {
-      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-      if(elm->idx >= 0)
-      {
-	nElm++;
-      }
-    }
-    nDsp = (dspVec != NULL)? nNod: 0;
-    putword(nNod, fP);
-    putword(nElm, fP);
-    putword(nDsp, fP);
-#ifdef WLZ_DEBUG_WRITEOBJ
-        (void )fprintf(stderr,
-	               "WlzWriteCMeshTransform2D() "
-                       "%d %d %d\n",
-		       nNod, nElm, nDsp);
-#endif /* WLZ_DEBUG_WRITEOBJ */
-    if(feof(fP) != 0)
-    {
-      errNum = WLZ_ERR_WRITE_INCOMPLETE;
-    }
-  }
-  /* Write node flags, node position (x then y) and then if the number of
-   * displacements is greater than zero the displacements (x then y). */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
-    {
-      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
-      if(nod->idx >= 0)
-      {
-	putword(nod->flags, fP);
-	putdouble(nod->pos.vtX, fP);
-	putdouble(nod->pos.vtY, fP);
-#ifdef WLZ_DEBUG_WRITEOBJ
-        (void )fprintf(stderr,
-	               "WlzWriteCMeshTransform2D() "
-		       "% 8d % 8d 0x%08x % 8g % 8g\n",
-                       nod->idx, nodTbl[idN], nod->flags,
-		       nod->pos.vtX, nod->pos.vtY);
-#endif /* WLZ_DEBUG_WRITEOBJ */
-	if(nDsp > 0)
-	{
-	  dsp = *(WlzDVertex2 *)AlcVectorItemGet(dspVec, idN);
-	  putdouble(dsp.vtX, fP);
-	  putdouble(dsp.vtY, fP);
-#ifdef WLZ_DEBUG_WRITEOBJ
-        (void )fprintf(stderr,
-	               "WlzWriteCMeshTransform2D() "
-		       "% 8g % 8g\n",
-		       dsp.vtX, dsp.vtY);
-#endif /* WLZ_DEBUG_WRITEOBJ */
-	}
-	if(feof(fP) != 0)
-	{
-	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	  break;
-	}
-      }
-    }
-  }
-  /* Write element flags and node indices. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
-    {
-      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-      if(elm->idx >= 0)
-      {
-	nodes[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
-	nodes[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
-	nodes[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
-	putword(elm->flags, fP);
-	putword(nodTbl[nodes[0]->idx], fP);
-	putword(nodTbl[nodes[1]->idx], fP);
-	putword(nodTbl[nodes[2]->idx], fP);
-#ifdef WLZ_DEBUG_WRITEOBJ
-        (void )fprintf(stderr,
-	               "WlzWriteCMeshTransform2D() "
-                       "% 8d 0x%08x % 8d % 8d % 8d\n",
-		       elm->idx, elm->flags,
-		       nodes[0]->idx, nodes[1]->idx, nodes[2]->idx);
-#endif /* WLZ_DEBUG_WRITEOBJ */
-	if(feof(fP) != 0)
-	{
-	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	  break;
-	}
-      }
-    }
-  }
-  AlcFree(nodTbl);
-  return(errNum);
-}
-
-/*!
-* \return	Woolz error code.
-* \ingroup	WlzIO
-* \brief	Writes a 3D conforming mesh transform to the given file.
-* \param	fP			Given file.
-* \param	mesh			Conforming mesh (3D).
-* \param	dspVec			Displacement vector.
-*/
-static WlzErrorNum	WlzWriteCMeshTransform3D(
-				FILE *fP,
-				WlzCMesh3D *mesh,
-				AlcVector *dspVec)
-{
-  int		idN;
-  WlzDVertex3	dsp;
-  WlzCMeshNod3D	*nod;
-  int		*nodTbl = NULL;
-  WlzErrorNum errNum = WLZ_ERR_NONE;
-
-  if(mesh == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(dspVec == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_DATA;
-  }
-  else
-  {
-    errNum = WlzWriteCMesh3D(fP, &nodTbl, mesh);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
-    {
-      nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
-      if(nod->idx >= 0)
-      {
-	dsp = *(WlzDVertex3 *)AlcVectorItemGet(dspVec, idN);
-	putdouble(dsp.vtX, fP);
-	putdouble(dsp.vtY, fP);
-	putdouble(dsp.vtZ, fP);
-#ifdef WLZ_DEBUG_WRITEOBJ
-        (void )fprintf(stderr,
-	               "WlzWriteCMeshTransform3D() "
-		       "% 8g % 8g % 8g\n",
-		       dsp.vtX, dsp.vtY, dsp.vtZ);
-#endif /* WLZ_DEBUG_WRITEOBJ */
-	if(feof(fP) != 0)
-	{
-	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	  break;
-	}
-      }
-    }
-  }
-  AlcFree(nodTbl);
-  return(errNum);
-}
-
-/*!
-* \return	Woolz error code.
-* \ingroup	WlzIO
 * \brief	Writes a 2D conforming mesh to the given file.
 * \param	fP			Given file.
+* \param	dstNodTbl		If non-null the node table used in
+* 					squeezing out the non-valid nodes is
+* 					returned, otherwise the table is
+* 					freed.
 * \param	mesh			Conforming mesh (3D).
 */
 static WlzErrorNum WlzWriteCMesh2D(FILE *fP, int **dstNodTbl,
@@ -2977,6 +2718,10 @@ static WlzErrorNum WlzWriteCMesh2D(FILE *fP, int **dstNodTbl,
 * \ingroup	WlzIO
 * \brief	Writes a 3D conforming mesh to the given file.
 * \param	fP			Given file.
+* \param	dstNodTbl		If non-null the node table used in
+* 					squeezing out the non-valid nodes is
+* 					returned, otherwise the table is
+* 					freed.
 * \param	mesh			Conforming mesh (3D).
 */
 static WlzErrorNum WlzWriteCMesh3D(FILE *fP, int **dstNodTbl,
@@ -3110,6 +2855,160 @@ static WlzErrorNum WlzWriteCMesh3D(FILE *fP, int **dstNodTbl,
   else
   {
     AlcFree(nodTbl);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes an indexed value table to the given file.
+* \param	fP			Given file pointer.
+* \param	obj			Object with an indexed value table
+* 					that's to be written to the file.
+*/
+static WlzErrorNum WlzWriteIndexedValues(FILE *fP, WlzObject *obj)
+{
+  int		idX,
+		idV,
+		vCount,
+  		nValues = 0;
+  WlzGreyP	gP;
+  WlzCMeshP	mesh;
+  WlzIndexedValues *ixv;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(obj->values.core == NULL)
+  {
+    if(putc(0,fP) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_EOF;
+    }
+  }
+  else
+  {
+    ixv = obj->values.x;
+    if(ixv->type != WLZ_INDEXED_VALUES)
+    {
+      errNum = WLZ_ERR_VALUES_TYPE;
+    }
+    else
+    {
+      switch(obj->domain.core->type)
+      {
+	case WLZ_CMESH_TRI2D:
+	  mesh.m2 = obj->domain.cm2;
+	  switch(ixv->attach)
+	  {
+	    case WLZ_VALUE_ATTACH_NOD:
+	      nValues = mesh.m2->res.nod.numEnt;
+	      break;
+	    case WLZ_VALUE_ATTACH_ELM:
+	      nValues = mesh.m2->res.elm.numEnt;
+	      break;
+	    default:
+	      errNum = WLZ_ERR_VALUES_DATA;
+	      break;
+	  }
+	  break;
+	case WLZ_CMESH_TET3D:
+	  mesh.m3 = obj->domain.cm3;
+	  switch(ixv->attach)
+	  {
+	    case WLZ_VALUE_ATTACH_NOD:
+	      nValues = mesh.m3->res.nod.numEnt;
+	      break;
+	    case WLZ_VALUE_ATTACH_ELM:
+	      nValues = mesh.m3->res.elm.numEnt;
+	      break;
+	    default:
+	      errNum = WLZ_ERR_VALUES_DATA;
+	      break;
+	  }
+	  break;
+	default:
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	  break;
+
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(putc((unsigned int )(ixv->type), fP) == 0)
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )putword(ixv->rank, fP);
+      for(idX = 0; idX < ixv->rank; ++idX)
+      {
+	(void )putword(ixv->dim[idX], fP);
+      }
+      (void )putc((unsigned int )(ixv->vType), fP);
+      (void )putc((unsigned int )(ixv->attach), fP);
+      (void )putword(nValues, fP);
+      if(feof(fP))
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      vCount = 1;
+      if(ixv->rank > 0)
+      {
+	for(idX = 0; idX < ixv->rank; ++idX)
+	{
+	  vCount *= ixv->dim[idX];
+	}
+      }
+      for(idX = 0; idX < nValues; ++idX)
+      {
+	gP.v = WlzIndexedValueGet(ixv, idX);
+	for(idV = 0; idV < vCount; ++idV)
+	{
+	  switch(ixv->vType)
+	  {
+	    case WLZ_GREY_INT:
+	      (void )putword(gP.inp[idV], fP);
+	      break;
+	    case WLZ_GREY_SHORT:
+	      (void )putshort(gP.shp[idV], fP);
+	      break;
+	    case WLZ_GREY_UBYTE:
+	      (void )putc(gP.ubp[idV], fP);
+	      break;
+	    case WLZ_GREY_FLOAT:
+	      (void )putfloat(gP.flp[idV], fP);
+	      break;
+	    case WLZ_GREY_DOUBLE:
+	      (void )putdouble(gP.dbp[idV], fP);
+	      break;
+	    case WLZ_GREY_RGBA:
+	      (void )putword(gP.rgbp[idV], fP);
+	      break;
+	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
+	      break;
+	  }
+	}
+	if(feof(fP))
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  break;
+	}
+      }
+    }
   }
   return(errNum);
 }
