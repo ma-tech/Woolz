@@ -65,7 +65,10 @@ bin_PROGRAMS		= \
 			  WlzCMeshDistance \
 			  WlzCMeshGen \
 			  WlzCMeshToSpatialDomain \
+			  WlzCMeshTransformVtx \
 			  WlzCompound \
+			  WlzCompoundArrayToScalar \
+			  WlzCompDispIncGrey \
 			  WlzCompThresh \
 			  WlzConstruct3D \
 			  WlzContourFlipOrient \
@@ -76,6 +79,7 @@ bin_PROGRAMS		= \
 			  WlzContourSzSelect \
 			  WlzConvertPix \
 			  WlzConvexPoly \
+			  WlzCopyObj \
 			  WlzCreateSpecialSE \
 			  WlzCrossCorValue \
 			  WlzCutObjToBox \
@@ -100,6 +104,7 @@ bin_PROGRAMS		= \
 			  WlzGreyMask \
 			  WlzGreyNormalise \
 			  WlzGreyRange \
+			  WlzGreySetIncValues \
 			  WlzGreySetRange \
 			  WlzGreySetValue \
 			  WlzGreyStats \
@@ -260,6 +265,14 @@ WlzCMeshToSpatialDomain_SOURCES		= WlzCMeshToSpatialDomain.c
 WlzCMeshToSpatialDomain_LDADD		= $(LDADD)
 WlzCMeshToSpatialDomain_LDFLAGS		= $(AM_LFLAGS)
 
+WlzCMeshTransformVtx_SOURCES		= WlzCMeshTransformVtx.c
+WlzCMeshTransformVtx_LDADD		= $(LDADD)
+WlzCMeshTransformVtx_LDFLAGS		= $(AM_LFLAGS)
+
+WlzCompDispIncGrey_SOURCES		= WlzCompDispIncGrey.c
+WlzCompDispIncGrey_LDADD		= $(LDADD)
+WlzCompDispIncGrey_LDFLAGS		= $(AM_LFLAGS)
+
 WlzCompThresh_SOURCES			= WlzCompThresh.c
 WlzCompThresh_LDADD			= $(LDADD)
 WlzCompThresh_LDFLAGS			= $(AM_LFLAGS)
@@ -267,6 +280,10 @@ WlzCompThresh_LDFLAGS			= $(AM_LFLAGS)
 WlzCompound_SOURCES			= WlzCompound.c
 WlzCompound_LDADD			= $(LDADD)
 WlzCompound_LDFLAGS			= $(AM_LFLAGS)
+
+WlzCompoundArrayToScalar_SOURCES	= WlzCompoundArrayToScalar.c
+WlzCompoundArrayToScalar_LDADD		= $(LDADD)
+WlzCompoundArrayToScalar_LDFLAGS	= $(AM_LFLAGS)
 
 WlzConstruct3D_SOURCES			= WlzConstruct3D.c
 WlzConstruct3D_LDADD			= $(LDADD)
@@ -303,6 +320,10 @@ WlzConvertPix_LDFLAGS			= $(AM_LFLAGS)
 WlzConvexPoly_SOURCES			= WlzConvexPoly.c
 WlzConvexPoly_LDADD			= $(LDADD)
 WlzConvexPoly_LDFLAGS			= $(AM_LFLAGS)
+
+WlzCopyObj_SOURCES			= WlzCopyObj.c
+WlzCopyObj_LDADD			= $(LDADD)
+WlzCopyObj_LDFLAGS			= $(AM_LFLAGS)
 
 WlzCreateSpecialSE_SOURCES		= WlzCreateSpecialSE.c
 WlzCreateSpecialSE_LDADD		= $(LDADD)
@@ -399,6 +420,10 @@ WlzGreyNormalise_LDFLAGS		= $(AM_LFLAGS)
 WlzGreyRange_SOURCES			= WlzGreyRange.c
 WlzGreyRange_LDADD			= $(LDADD)
 WlzGreyRange_LDFLAGS			= $(AM_LFLAGS)
+
+WlzGreySetIncValues_SOURCES		= WlzGreySetIncValues.c
+WlzGreySetIncValues_LDADD		= $(LDADD)
+WlzGreySetIncValues_LDFLAGS		= $(AM_LFLAGS)
 
 WlzGreySetRange_SOURCES			= WlzGreySetRange.c
 WlzGreySetRange_LDADD			= $(LDADD)
