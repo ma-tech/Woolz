@@ -165,7 +165,7 @@ static void	AlgQSortPrv(char *a, size_t n, size_t es, void *cData,
   long t, v;
   size_t s;
 
-  if((a - (char *)0 | es) % sizeof(long))
+  if(((a - (char *)0 | es) % sizeof(long)) != 0)
   {
     swaptype = 2;
   }
