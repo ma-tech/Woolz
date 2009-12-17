@@ -509,7 +509,7 @@ WlzObject	*WlzCMeshTransformFromObj(WlzObject *srcObj,
 	dim = 3;
 	domain.cm3 = WlzCMeshFromObj3D(srcObj, minDist, maxDist, dstDilObj,
 				       delOut, &errNum);
-	mObjType = WLZ_CMESH_2D;
+	mObjType = WLZ_CMESH_3D;
         break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
