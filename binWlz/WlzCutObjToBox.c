@@ -355,7 +355,7 @@ int             main(int argc, char **argv)
        (*inObjFileStr == '\0') ||
        ((fP = (strcmp(inObjFileStr, "-")?
 	      fopen(inObjFileStr, "r"): stdin)) == NULL) ||
-       ((inObj= WlzReadObj(fP, &errNum)) == NULL) ||
+       ((inObj = WlzReadObj(fP, &errNum)) == NULL) ||
        (errNum != WLZ_ERR_NONE))
     {
       ok = 0;
@@ -440,20 +440,17 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    if(inObj->values.core == NULL)
-    {
-      ok = 0;
-      (void )fprintf(stderr,
-      		     "%s: invalid object, null valuetable\n",
-		     *argv);
-    }
-  }
-  if(ok)
-  {
     if(dstGreyType == WLZ_GREY_ERROR)
     {
-      dstGreyType = WlzGreyTableTypeToGreyType(inObj->values.core->type,
-      					       NULL);
+      if(inObj->values.core == NULL)
+      {
+        dstGreyType = WLZ_GREY_UBYTE;
+      }
+      else
+      {
+	dstGreyType = WlzGreyTableTypeToGreyType(inObj->values.core->type,
+						 NULL);
+      }
     }
     if(((outObj = WlzCutObjToBox3D(inObj, cutBox, dstGreyType,
     			           noiseFlg, noiseMu, noiseSigma,

@@ -60,9 +60,9 @@ static void			WlzCutObjSetRand(
 * \ingroup	WlzValuesUtils
 * \brief	Cuts a new object with a rectangular value table from
 *		the given woolz object.
-* \param	srcObj			Given source object.
+* \param	sObj			Given source object.
 * \param	cutBox			Rectangle box to cut from the object.
-* \param	dstGreyType		Required grey type for the value table.
+* \param	dGreyType		Required grey type for the value table.
 * \param	bgdNoise		If zero background value is used
 * 					otherwise if non zero the background
 *					is set using gaussian noise.
@@ -72,12 +72,12 @@ static void			WlzCutObjSetRand(
 * \param	dstErrNum		Destination pointer for error number,
 * 					may be NULL if not required.
 */
-WlzObject	*WlzCutObjToBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
-				  WlzGreyType dstGreyType,
+WlzObject	*WlzCutObjToBox2D(WlzObject *sObj, WlzIBox2 cutBox,
+				  WlzGreyType dGreyType,
 				  int bgdNoise, double bgdMu, double bgdSigma,
 				  WlzErrorNum *dstErrNum)
 {
-  return(WlzCutObjToValBox2D(srcObj, cutBox, dstGreyType, NULL,
+  return(WlzCutObjToValBox2D(sObj, cutBox, dGreyType, NULL,
   			     bgdNoise, bgdMu, bgdSigma,
 			     dstErrNum));
 }
@@ -87,10 +87,13 @@ WlzObject	*WlzCutObjToBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 * \ingroup	WlzValuesUtils
 * \brief	Cuts a new object with a rectangular value table from
 *               the given woolz object and allows access to grey table.
-* \param	srcObj			Given source object.
+*               If the source object has no values then the destination
+*               object will always have foreground value 1 and background
+*               value 0, ie the background parameters are ignored.
+* \param	sObj			Given source object.
 * \param	cutBox			Rectangle box to cut from the object.
-* \param	dstGreyType		Required grey type for the value table.
-* \param	valP			If non-NULL allocated space for grey
+* \param	dGreyType		Required grey type for the value table.
+* \param	gValP			If non-NULL allocated space for grey
 * 					values.
 * \param	bgdNoise		If zero background value is used
 * 					otherwise if non zero the background
@@ -101,35 +104,39 @@ WlzObject	*WlzCutObjToBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 * \param	dstErrNum		Destination pointer for error number,
 * 					may be NULL if not required.
 */
-WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
-				  WlzGreyType dstGreyType, void *valP,
+WlzObject	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
+				  WlzGreyType dGreyType, void *gValP,
 				  int bgdNoise, double bgdMu, double bgdSigma,
 				  WlzErrorNum *dstErrNum)
 {
   int		tI0,
-		dstOff,
-		srcOff,
-		dstCount,
-		dstBkgCount,
+		dOff,
+		sOff,
+		dCnt,
+		dBkgCnt,
+		sHasVal = 0,
   		lastFilledOff = -1;
+  size_t	tSz;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzObject	*dstObj = NULL;
-  WlzGreyP	dstValP;
-  WlzPixelV	dstBkgPix,
-  		srcBkgPix;
+  WlzObject	*dObj = NULL;
+  WlzGreyP	dValP;
+  WlzPixelV	dFgdPix,
+  		dBkgPix,
+		sFgdPix,
+  		sBkgPix;
   WlzIVertex2	cutSz;
   WlzIntervalWSpace iWSp;
   WlzGreyWSpace	gWSp;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
 	  ("WlzCutObjToValBox2D FE 0x%lx {%d %d %d %d} %d 0x%lx 0x%lx\n",
-	   (unsigned long )srcObj,
+	   (unsigned long )sObj,
 	   cutBox.xMin, cutBox.yMin, cutBox.xMax, cutBox.yMax,
-	   (int )dstGreyType, (unsigned long )valP,
+	   (int )dGreyType, (unsigned long )gValP,
 	   (unsigned long )dstErrNum));
-  dstBkgPix.type = dstGreyType;
-  dstValP.inp = NULL;
-  if(srcObj == NULL)
+  dBkgPix.type = dGreyType;
+  dValP.inp = NULL;
+  if(sObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
   }
@@ -137,30 +144,42 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
   {
     WLZ_DBG((WLZ_DBG_LVL_2),
     	    ("WlzCutObjToValBox2D 01 %d\n",
-	     (int )(srcObj->type)));
-    switch(srcObj->type)
+	     (int )(sObj->type)));
+    switch(sObj->type)
     {
       case WLZ_EMPTY_OBJ:
-        dstObj = WlzMakeEmpty(&errNum);
+        dObj = WlzMakeEmpty(&errNum);
 	break;
       case WLZ_2D_DOMAINOBJ:
-	if(srcObj->domain.core == NULL)
+	if(sObj->domain.core == NULL)
 	{
 	  errNum = WLZ_ERR_DOMAIN_NULL;
 	}
-	else if(srcObj->values.core == NULL)
-	{
-	  errNum = WLZ_ERR_VALUES_NULL;
-	}
-	else if((srcObj->domain.core->type != WLZ_INTERVALDOMAIN_INTVL) &&
-		(srcObj->domain.core->type != WLZ_INTERVALDOMAIN_RECT))
+	else if((sObj->domain.core->type != WLZ_INTERVALDOMAIN_INTVL) &&
+		(sObj->domain.core->type != WLZ_INTERVALDOMAIN_RECT))
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
 	else
 	{
-	  srcBkgPix = WlzGetBackground(srcObj, NULL);
-	  errNum = WlzValueConvertPixel(&dstBkgPix, srcBkgPix, dstGreyType);
+	  if(sObj->values.core == NULL)
+	  {
+	    sHasVal = 0;
+	    sFgdPix.type = WLZ_GREY_UBYTE;
+	    sBkgPix.type = WLZ_GREY_UBYTE;
+	    sBkgPix.v.ubv = 0;
+	    sFgdPix.v.ubv = 1;
+	    errNum = WlzValueConvertPixel(&dFgdPix, sFgdPix, dGreyType);
+	  }
+	  else
+	  {
+	    sHasVal = 1;
+	    sBkgPix = WlzGetBackground(sObj, &errNum);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzValueConvertPixel(&dBkgPix, sBkgPix, dGreyType);
+	  }
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
@@ -168,165 +187,119 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 	  cutSz.vtY = cutBox.yMax - cutBox.yMin + 1;
 	  if((cutSz.vtX > 0) && (cutSz.vtY > 0))
 	  {
-	    tI0 = cutSz.vtX * cutSz.vtY;
-	    switch(dstGreyType)
+	    tSz = cutSz.vtX * cutSz.vtY * WlzGreySize(dGreyType);
+	    if(tSz == 0)
 	    {
-	      case WLZ_GREY_LONG:
-		if(valP)
-		{
-		  dstValP.lnp = (long *)valP;
-		}
-		else
-		{
-		  if((dstValP.lnp = (long *)AlcMalloc((unsigned long )tI0 *
-						     sizeof(long))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      case WLZ_GREY_INT:
-		if(valP)
-		{
-		  dstValP.inp = (int *)valP;
-		}
-		else
-		{
-		  if((dstValP.inp = (int *)AlcMalloc((unsigned long )tI0 *
-						     sizeof(int))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      case WLZ_GREY_SHORT:
-		if(valP)
-		{
-		  dstValP.shp = (short *)valP;
-		}
-		else
-		{
-		  if((dstValP.shp = (short *)AlcMalloc((unsigned long )tI0 *
-						       sizeof(short))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      case WLZ_GREY_UBYTE:
-		if(valP)
-		{
-		  dstValP.ubp = (WlzUByte *)valP;
-		}
-		else
-		{
-		  if((dstValP.ubp = (WlzUByte *)
-		                    AlcMalloc((unsigned long )tI0 *
-					      sizeof(WlzUByte))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      case WLZ_GREY_FLOAT:
-		if(valP)
-		{
-		  dstValP.flp = (float *)valP;
-		}
-		else
-		{
-		  if((dstValP.flp = (float *)AlcMalloc((unsigned long )tI0 *
-						       sizeof(float))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      case WLZ_GREY_DOUBLE:
-		if(valP)
-		{
-		  dstValP.dbp = (double *)valP;
-		}
-		else
-		{
-		  if((dstValP.dbp = (double *)AlcMalloc((unsigned long )tI0 *
-						      sizeof(double))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      case WLZ_GREY_RGBA:
-		if(valP)
-		{
-		  dstValP.rgbp = (WlzUInt *)valP;
-		}
-		else
-		{
-		  if((dstValP.rgbp = (WlzUInt *)
-		                     AlcMalloc((unsigned long )tI0 *
-					       sizeof(WlzUInt))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      default:
-	        errNum = WLZ_ERR_VALUES_TYPE;
-		break;
+	      errNum = WLZ_ERR_GREY_TYPE;
 	    }
-	    if(errNum == WLZ_ERR_NONE)
+	    else
 	    {
-	      errNum = WlzInitGreyScan(srcObj, &iWSp, &gWSp);
-	    }
-	    if(errNum == WLZ_ERR_NONE)
-	    {
-	      while((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)
+	      if(gValP)
 	      {
-		if((iWSp.linpos >= cutBox.yMin) &&
-		   (iWSp.linpos <= cutBox.yMax) &&
-		   (iWSp.lftpos <= cutBox.xMax) &&
-		   (iWSp.rgtpos >= cutBox.xMin))
+	        dValP.v = gValP;
+	      }
+	      else if((dValP.v = AlcMalloc(tSz)) == NULL)
+	      {
+	        errNum = WLZ_ERR_MEM_ALLOC;
+	      }
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = (sHasVal == 0)?
+	               WlzInitRasterScan(sObj, &iWSp, WLZ_RASTERDIR_ILIC):
+	               WlzInitGreyScan(sObj, &iWSp, &gWSp);
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      if(sHasVal == 0)
+	      {
+	        while((errNum = WlzNextInterval(&iWSp)) == WLZ_ERR_NONE)
 		{
-		  dstOff = (iWSp.linpos - cutBox.yMin) * cutSz.vtX;
-		  if((tI0 = cutBox.xMin - iWSp.lftpos) > 0)
+		  if((iWSp.linpos >= cutBox.yMin) &&
+		     (iWSp.linpos <= cutBox.yMax) &&
+		     (iWSp.lftpos <= cutBox.xMax) &&
+		     (iWSp.rgtpos >= cutBox.xMin))
 		  {
-		    srcOff = tI0;
-		  }
-		  else
-		  {
-		    srcOff = 0;
-		    dstOff -= tI0;
-		  }
-		  dstCount = WLZ_MIN(iWSp.rgtpos, cutBox.xMax) -
-			     WLZ_MAX(iWSp.lftpos, cutBox.xMin) + 1;;
-		  dstBkgCount = dstOff - lastFilledOff + 1;
-		  WLZ_DBG((WLZ_DBG_LVL_3),
-			  ("WlzCutObjToValBox2D 02 %d %d %d %d\n",
-			   lastFilledOff, dstOff, dstCount, dstBkgCount));
-		  if(dstBkgCount > 0)
-		  {
-		    if(bgdNoise)
+		    dOff = (iWSp.linpos - cutBox.yMin) * cutSz.vtX;
+		    if((tI0 = cutBox.xMin - iWSp.lftpos) > 0)
 		    {
-		      WlzCutObjSetRand(dstValP, lastFilledOff + 1,
-				       dstGreyType, dstBkgCount,
-				       bgdMu, bgdSigma);
+		      sOff = tI0;
 		    }
 		    else
 		    {
-		      WlzValueSetGrey(dstValP, lastFilledOff + 1, dstBkgPix.v,
-				      dstGreyType, dstBkgCount);
+		      sOff = 0;
+		      dOff -= tI0;
 		    }
-		    lastFilledOff += dstBkgCount;
+		    dCnt = WLZ_MIN(iWSp.rgtpos, cutBox.xMax) -
+			       WLZ_MAX(iWSp.lftpos, cutBox.xMin) + 1;;
+		    dBkgCnt = dOff - lastFilledOff + 1;
+		    WLZ_DBG((WLZ_DBG_LVL_3),
+			    ("WlzCutObjToValBox2D 02 %d %d %d %d\n",
+			     lastFilledOff, dOff, dCnt, dBkgCnt));
+		    if(dBkgCnt > 0)
+		    {
+		      WlzValueSetGrey(dValP, lastFilledOff + 1,
+				      dBkgPix.v, dGreyType, dBkgCnt);
+		      lastFilledOff += dBkgCnt;
+		    }
+		    if(dCnt > 0)
+		    {
+		      WlzValueSetGrey(dValP, dOff,
+				      dFgdPix.v, dGreyType, dCnt);
+		      lastFilledOff = dOff + dCnt - 1;
+		    }
 		  }
-		  if(dstCount > 0)
+		}
+	      }
+	      else
+	      {
+		while((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)
+		{
+		  if((iWSp.linpos >= cutBox.yMin) &&
+		     (iWSp.linpos <= cutBox.yMax) &&
+		     (iWSp.lftpos <= cutBox.xMax) &&
+		     (iWSp.rgtpos >= cutBox.xMin))
 		  {
-		    WlzValueCopyGreyToGrey(dstValP, dstOff,
-					   dstGreyType,
-					   gWSp.u_grintptr, srcOff,
-					   gWSp.pixeltype,
-					   dstCount);
-		    lastFilledOff = dstOff + dstCount - 1;
+		    dOff = (iWSp.linpos - cutBox.yMin) * cutSz.vtX;
+		    if((tI0 = cutBox.xMin - iWSp.lftpos) > 0)
+		    {
+		      sOff = tI0;
+		    }
+		    else
+		    {
+		      sOff = 0;
+		      dOff -= tI0;
+		    }
+		    dCnt = WLZ_MIN(iWSp.rgtpos, cutBox.xMax) -
+			       WLZ_MAX(iWSp.lftpos, cutBox.xMin) + 1;;
+		    dBkgCnt = dOff - lastFilledOff + 1;
+		    WLZ_DBG((WLZ_DBG_LVL_3),
+			    ("WlzCutObjToValBox2D 03 %d %d %d %d\n",
+			     lastFilledOff, dOff, dCnt, dBkgCnt));
+		    if(dBkgCnt > 0)
+		    {
+		      if(bgdNoise)
+		      {
+			WlzCutObjSetRand(dValP, lastFilledOff + 1,
+					 dGreyType, dBkgCnt,
+					 bgdMu, bgdSigma);
+		      }
+		      else
+		      {
+			WlzValueSetGrey(dValP, lastFilledOff + 1,
+					dBkgPix.v, dGreyType, dBkgCnt);
+		      }
+		      lastFilledOff += dBkgCnt;
+		    }
+		    if(dCnt > 0)
+		    {
+		      WlzValueCopyGreyToGrey(dValP, dOff,
+					     dGreyType,
+					     gWSp.u_grintptr, sOff,
+					     gWSp.pixeltype,
+					     dCnt);
+		      lastFilledOff = dOff + dCnt - 1;
+		    }
 		  }
 		}
 	      }
@@ -337,38 +310,43 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      dstBkgCount = (cutSz.vtX * cutSz.vtY) - (lastFilledOff + 1);
+	      dBkgCnt = (cutSz.vtX * cutSz.vtY) - (lastFilledOff + 1);
 	      WLZ_DBG((WLZ_DBG_LVL_3),
-		      ("WlzCutObjToValBox2D 03 %d %d\n",
-		       lastFilledOff, dstBkgCount));
-	      if(dstBkgCount > 0)
+		      ("WlzCutObjToValBox2D 04 %d %d\n",
+		       lastFilledOff, dBkgCnt));
+	      if(dBkgCnt > 0)
 	      {
-		if(bgdNoise)
+		if(sHasVal == 1)
 		{
-		  WlzCutObjSetRand(dstValP, lastFilledOff + 1,
-				   dstGreyType, dstBkgCount,
-				   bgdMu, bgdSigma);
+		  WlzValueSetGrey(dValP, lastFilledOff + 1, dBkgPix.v,
+				  dGreyType, dBkgCnt);
+		}
+		else if(bgdNoise)
+		{
+		  WlzCutObjSetRand(dValP, lastFilledOff + 1,
+				   dGreyType, dBkgCnt, bgdMu, bgdSigma);
 		}
 		else
 		{
-		  WlzValueSetGrey(dstValP, lastFilledOff + 1, dstBkgPix.v,
-				      dstGreyType, dstBkgCount);
+		  WlzValueSetGrey(dValP, lastFilledOff + 1, dBkgPix.v,
+				      dGreyType, dBkgCnt);
 	        }
 	      }
-	      dstObj = WlzMakeRect(cutBox.yMin, cutBox.yMax,
-				   cutBox.xMin, cutBox.xMax,
-				   dstGreyType, dstValP.inp,
-				   dstBkgPix, NULL, NULL, &errNum);
-	      if( errNum == WLZ_ERR_NONE )
+	      dObj = WlzMakeRect(cutBox.yMin, cutBox.yMax,
+				 cutBox.xMin, cutBox.xMax,
+				 dGreyType, dValP.inp,
+				 dBkgPix, NULL, NULL, &errNum);
+	      if((errNum == WLZ_ERR_NONE ) &&
+	         (gValP == NULL) && (dValP.v != NULL))
 	      {
-		dstObj->values.r->freeptr = AlcFreeStackPush(NULL,
-	         				(void *)(dstValP.inp), NULL);
+		dObj->values.r->freeptr =
+		  AlcFreeStackPush(dObj->values.r->freeptr, dValP.v, NULL);
 	      }
 	    }
 	  }
 	  else   /* No intersection between the cut box and the given domain */
 	  {
-	    dstObj = WlzMakeEmpty(&errNum);
+	    dObj = WlzMakeEmpty(&errNum);
 	  }
 	}
         break;
@@ -379,27 +357,27 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
   }
   if(errNum != WLZ_ERR_NONE)
   {
-    if(valP == NULL)
+    if(gValP == NULL)
     {
-      if(dstValP.inp)
+      if(dValP.inp)
       {
-	AlcFree(dstValP.inp);
+	AlcFree(dValP.inp);
       }
     }
     if(dstErrNum)
     {
       *dstErrNum = errNum;
     }
-    if(dstObj)
+    if(dObj)
     {
-      WlzFreeObj(dstObj);
-      dstObj = NULL;
+      WlzFreeObj(dObj);
+      dObj = NULL;
     }
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
 	  ("WlzCutObjToValBox2D FX 0x%lx\n",
-	   (unsigned long )dstObj));
-  return(dstObj);
+	   (unsigned long )dObj));
+  return(dObj);
 }
 
 
@@ -408,9 +386,12 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 * \ingroup	WlzValuesUtils
 * \brief	Cuts a new object with (a) rectangular value table(s)
 *               from the given woolz object.
-* \param	srcObj			Given source object.
+*               If the source object has no values then the destination
+*               object will always have foreground value 1 and background
+*               value 0, ie the background parameters are ignored.
+* \param	sObj			Given source object.
 * \param	cutBox			Cut box.
-* \param	dstGreyType		Required grey type for the value table.
+* \param	dGreyType		Required grey type for the value table.
 * \param	bgdNoise		If zero background value is used
 * 					otherwise if non zero the background
 *					is set using gaussian noise.
@@ -420,12 +401,12 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *srcObj, WlzIBox2 cutBox,
 * \param	dstErrNum		Destination pointer for error number,
 * 					may be NULL if not required.
 */
-WlzObject	*WlzCutObjToBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
-				  WlzGreyType dstGreyType,
+WlzObject	*WlzCutObjToBox3D(WlzObject *sObj, WlzIBox3 cutBox,
+				  WlzGreyType dGreyType,
 				  int bgdNoise, double bgdMu, double bgdSigma,
 				  WlzErrorNum *dstErrNum)
 {
-  return(WlzCutObjToValBox3D(srcObj, cutBox, dstGreyType, NULL,
+  return(WlzCutObjToValBox3D(sObj, cutBox, dGreyType, NULL,
   			     bgdNoise, bgdMu, bgdSigma,
 			     dstErrNum));
 }
@@ -435,10 +416,13 @@ WlzObject	*WlzCutObjToBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 * \ingroup      WlzValuesUtils
 * \brief	Cuts a new object with (a) rectangular value table(s) from the
 * 		given woolz object.
-* \param	srcObj			Given source object.
+*               If the source object has no values then the destination
+*               object will always have foreground value 1 and background
+*               value 0, ie the background parameters are ignored.
+* \param	sObj			Given source object.
 * \param	cutBox			Cut box.
-* \param	dstGreyType		Required grey type for the value table.
-* \param	valP			If non-NULL allocated space for grey
+* \param	dGreyType		Required grey type for the value table.
+* \param	gValP			If non-NULL allocated space for grey
 * 					values.
 * \param	bgdNoise		If zero background value is used
 * 					otherwise if non zero the background
@@ -449,46 +433,51 @@ WlzObject	*WlzCutObjToBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 * \param	dstErrNum		Destination pointer for error number,
 *                                       may be NULL if not required.
 */
-WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
-				  WlzGreyType dstGreyType, void *valP,
+WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
+				  WlzGreyType dGreyType, void *gValP,
 				  int bgdNoise, double bgdMu, double bgdSigma,
 				  WlzErrorNum *dstErrNum)
 {
-  int		size2D,
-		size3D,
-  		dstPlaneIdx,
-  		srcPlaneIdx,
-		srcPlanePos,
-  		planeCount;
-  WlzObject	*dstObj = NULL,
-  		*srcObj2D = NULL,
-		*dstObj2D = NULL,
-		*dummyObj2D = NULL;
-  WlzDomain	dstDom,
-  		srcDom,
-		srcDom2D,
-		tDom0;
-  WlzValues	dstValues,
-  		srcValues2D,
-		tVal0;
-  WlzGreyP	dstValP,
-  		dstVal2DP;
-  WlzPixelV	dstBkgPix,
-  		srcBkgPix;
+  int		sz2D,
+		sz3D,
+  		dPlIdx,
+  		sPlIdx,
+		sPlPos,
+  		plCnt,
+		sHasVal = 0;
+  size_t	tSz;
+  WlzObject	*sObj2D,
+		*dObj2D,
+		*dObj = NULL;
+  WlzDomain	dom2D,
+  		dDom,
+  		sDom,
+		sDom2D;
+  WlzValues	val2D,
+  		dVal,
+  		sVal2D;
+  WlzGreyP	dValP,
+  		dVal2DP;
+  WlzPixelV	dBkgPix,
+  		sBkgPix;
   WlzIBox2	cutBox2D;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
 	  ("WlzCutObjToValBox3D FE 0x%lx {%d %d %d %d %d %d} %d 0x%lx 0x%lx\n",
-	   (unsigned long )srcObj,
+	   (unsigned long )sObj,
 	   cutBox.xMin, cutBox.yMin, cutBox.zMin, cutBox.xMax,
 	   cutBox.yMax, cutBox.zMax,
-	   (int )dstGreyType, (unsigned long )valP,
+	   (int )dGreyType, (unsigned long )gValP,
 	   (unsigned long )dstErrNum));
-  dstDom.core = NULL;
-  dstValues.core = NULL;
-  dstValP.inp = NULL;
-  if(srcObj == NULL)
+  dDom.core = NULL;
+  dVal.core = NULL;
+  dValP.inp = NULL;
+  cutBox2D.xMin = cutBox.xMin;
+  cutBox2D.xMax = cutBox.xMax;
+  cutBox2D.yMin = cutBox.yMin;
+  cutBox2D.yMax = cutBox.yMax;
+  if(sObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
   }
@@ -496,41 +485,43 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
   {
     WLZ_DBG((WLZ_DBG_LVL_2),
 	    ("WlzCutObjToValBox3D 01 %d\n",
-	     (int )(srcObj->type)));
-    switch(srcObj->type)
+	     (int )(sObj->type)));
+    switch(sObj->type)
     {
       case WLZ_EMPTY_OBJ:
-	dstObj = WlzMakeEmpty(&errNum);
+	dObj = WlzMakeEmpty(&errNum);
         break;
       case WLZ_2D_DOMAINOBJ:
-        cutBox2D.xMin = cutBox.xMin;
-        cutBox2D.xMax = cutBox.xMax;
-        cutBox2D.yMin = cutBox.yMin;
-        cutBox2D.yMax = cutBox.yMax;
-	dstObj = WlzCutObjToValBox2D(srcObj, cutBox2D, dstGreyType,
-				  valP, bgdNoise, bgdMu, bgdSigma,
+	dObj = WlzCutObjToValBox2D(sObj, cutBox2D, dGreyType,
+				  gValP, bgdNoise, bgdMu, bgdSigma,
 				  &errNum);
 	break;
       case WLZ_3D_DOMAINOBJ:
-	if((srcDom = srcObj->domain).core == NULL)
+	if((sDom = sObj->domain).core == NULL)
 	{
 	  errNum = WLZ_ERR_DOMAIN_NULL;
 	}
-	else if(srcDom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
+	else if(sDom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
 	else
 	{
-	    srcBkgPix = WlzGetBackground(srcObj, NULL);
-	    errNum = WlzValueConvertPixel(&dstBkgPix, srcBkgPix,
-					  dstGreyType);
+	  if(sObj->values.core == NULL)
+	  {
+	    sHasVal = 0;
+	    sBkgPix.type = WLZ_GREY_UBYTE;
+	    sBkgPix.v.ubv = 0;
+	  }
+	  else
+	  {
+	    sHasVal = 1;
+	    sBkgPix = WlzGetBackground(sObj, &errNum);
+	  }
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  dummyObj2D = WlzMakeRect(0, 1, 0, 1,
-				   srcBkgPix.type, &(srcBkgPix.v.inv),
-				   srcBkgPix, NULL, NULL, &errNum);
+	  errNum = WlzValueConvertPixel(&dBkgPix, sBkgPix, dGreyType);
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
@@ -538,238 +529,137 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 	     (cutBox.yMin <= cutBox.yMax) &&
 	     (cutBox.zMin <= cutBox.zMax))
  	  {
-	    size2D = (cutBox.xMax - cutBox.xMin + 1) *
-	             (cutBox.yMax - cutBox.yMin + 1);
-	    size3D = size2D * (cutBox.zMax - cutBox.zMin + 1);
-	    switch(dstGreyType)
+	    sz2D = (cutBox.xMax - cutBox.xMin + 1) *
+	           (cutBox.yMax - cutBox.yMin + 1);
+	    sz3D = sz2D * (cutBox.zMax - cutBox.zMin + 1);
+	    tSz = sz3D * WlzGreySize(dGreyType);
+	    if(tSz == 0)
 	    {
-	      case WLZ_GREY_LONG:
-		if(valP)
-		{
-		  dstValP.lnp = (long *)valP;
-		}
-		else
-		{
-		  if((dstValP.lnp = (long *)AlcMalloc((unsigned long )size3D *
-						     sizeof(long))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      case WLZ_GREY_INT:
-		if(valP)
-		{
-		  dstValP.inp = (int *)valP;
-		}
-		else
-		{
-		  if((dstValP.inp = (int *)AlcMalloc((unsigned long )size3D *
-						     sizeof(int))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      case WLZ_GREY_SHORT:
-		if(valP)
-		{
-		  dstValP.shp = (short *)valP;
-		}
-		else
-		{
-		  if((dstValP.shp = (short *)AlcMalloc((unsigned long )size3D *
-						       sizeof(short))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      case WLZ_GREY_UBYTE:
-		if(valP)
-		{
-		  dstValP.ubp = (WlzUByte *)valP;
-		}
-		else
-		{
-		  if((dstValP.ubp = (WlzUByte *)
-		  		    AlcMalloc((unsigned long )size3D *
-					       sizeof(WlzUByte))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      case WLZ_GREY_FLOAT:
-		if(valP)
-		{
-		  dstValP.flp = (float *)valP;
-		}
-		else
-		{
-		  if((dstValP.flp = (float *)AlcMalloc((unsigned long )size3D *
-						       sizeof(float))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      case WLZ_GREY_DOUBLE:
-		if(valP)
-		{
-		  dstValP.dbp = (double *)valP;
-		}
-		else
-		{
-		  if((dstValP.dbp = (double *)AlcMalloc((unsigned long )size3D *
-						      sizeof(double))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      case WLZ_GREY_RGBA:
-		if(valP)
-		{
-		  dstValP.rgbp = (WlzUInt *)valP;
-		}
-		else
-		{
-		  if((dstValP.rgbp = (WlzUInt *)
-		                     AlcMalloc((unsigned long )size3D *
-					       sizeof(WlzUInt))) == NULL)
-		  {
-		    errNum = WLZ_ERR_MEM_ALLOC;
-		  }
-		}
-		break;
-	      default:
-		errNum = WLZ_ERR_VALUES_TYPE;
-		break;
+	      errNum = WLZ_ERR_GREY_TYPE;
 	    }
-	    if(errNum == WLZ_ERR_NONE)
+	    else
 	    {
-	      srcDom2D.core = NULL;
-	      srcValues2D.core = NULL;
-	      cutBox2D.xMin = cutBox.xMin;
-	      cutBox2D.xMax = cutBox.xMax;
-	      cutBox2D.yMin = cutBox.yMin;
-	      cutBox2D.yMax = cutBox.yMax;
-	      dstDom.p = 
-		WlzMakePlaneDomain(srcDom.p->type,
-				   cutBox.zMin, cutBox.zMax,
-				   cutBox.yMin, cutBox.yMax,
-				   cutBox.xMin, cutBox.xMax,
-				   &errNum);
-	    }
-	    if(errNum == WLZ_ERR_NONE)
-	    {
-	      dstValues.vox = 
-		WlzMakeVoxelValueTb(srcObj->values.vox->type,
-				    cutBox.zMin, cutBox.zMax,
-				    dstBkgPix, NULL,
-				    &errNum);
-	    }
-	    if(errNum == WLZ_ERR_NONE)
-	    {
-	      srcObj2D =
-		WlzMakeMain(WLZ_2D_DOMAINOBJ, srcDom2D,
-			    srcValues2D, NULL, NULL, &errNum);
-	    }
-	    if(errNum == WLZ_ERR_NONE)
-	    {
-	      dstPlaneIdx = 0;
-	      srcPlaneIdx = cutBox.zMin - srcDom.p->plane1;
-	      srcPlanePos = cutBox.zMin;
-	      planeCount = cutBox.zMax - cutBox.zMin + 1;
-	      dstVal2DP = dstValP;
-	      while((errNum == WLZ_ERR_NONE) && (planeCount-- > 0))
+	      if(gValP)
 	      {
-		/*
-		 * Use the dummy 2D object to get a background plane if
-		 * the plane is outside of the source objects domain or
-		 * it is an old-style NULL plane.
-		 */
-		if((srcPlanePos < srcDom.p->plane1) ||
-		   (srcPlanePos > srcDom.p->lastpl) ||
-		   ((tDom0 = *(srcObj->domain.p->domains +
-		   	       srcPlaneIdx)).core == NULL) ||
-		   ((tVal0 = *(srcObj->values.vox->values +
-		   	       srcPlaneIdx)).core == NULL))
+	        dValP.v = gValP;
+	      }
+	      else if((dValP.v = AlcMalloc(tSz)) == NULL)
+	      {
+	        errNum = WLZ_ERR_MEM_ALLOC;
+	      }
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      sDom2D.core = NULL;
+	      sVal2D.core = NULL;
+	      dDom.p = WlzMakePlaneDomain(sDom.p->type,
+					  cutBox.zMin, cutBox.zMax,
+					  cutBox.yMin, cutBox.yMax,
+					  cutBox.xMin, cutBox.xMax,
+					  &errNum);
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      dVal.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+					     cutBox.zMin, cutBox.zMax,
+					     dBkgPix, NULL, &errNum);
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      dPlIdx = 0;
+	      sPlIdx = cutBox.zMin - sDom.p->plane1;
+	      sPlPos = cutBox.zMin;
+	      plCnt = cutBox.zMax - cutBox.zMin + 1;
+	      dVal2DP.v = dValP.v;
+	      while((errNum == WLZ_ERR_NONE) && (plCnt-- > 0))
+	      {
+		sObj2D = NULL;
+		if((sPlPos < sDom.p->plane1) ||
+		   (sPlPos > sDom.p->lastpl) ||
+		   ((sObj->domain.p->domains + sPlIdx)->core == NULL))
 		{
-		  srcObj2D->domain = dummyObj2D->domain;
-		  srcObj2D->values = dummyObj2D->values;
+		  dom2D.core = NULL;
+		  val2D.core = NULL;
 		}
 		else
 		{
-		  srcObj2D->domain = tDom0;
-		  srcObj2D->values = tVal0;
+		  dom2D.core = (sObj->domain.p->domains +
+		                sPlIdx)->core;
+		  val2D.core = (sHasVal == 0)?
+		               NULL:
+			       (sObj->values.vox->values + sPlIdx)->core;
 		}
-		if(((dstObj2D = WlzCutObjToValBox2D(srcObj2D, cutBox2D,
-						  dstGreyType,
-						  (void *)(dstVal2DP.inp),
-						  bgdNoise, bgdMu, bgdSigma,
-						  &errNum)) != NULL) &&
-		   (errNum == WLZ_ERR_NONE))
+		if(errNum == WLZ_ERR_NONE)
 		{
-		  dstObj2D->values.r->freeptr = NULL;
-		  *(dstDom.p->domains + dstPlaneIdx) =
-		    WlzAssignDomain(dstObj2D->domain, NULL);
-		  *(dstValues.vox->values + dstPlaneIdx) =
-		    WlzAssignValues(dstObj2D->values, NULL);
-		  ++srcPlanePos;
-		  ++srcPlaneIdx;
-		  ++dstPlaneIdx;
-		  switch(dstGreyType)
+		  sObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom2D, val2D,
+		                       NULL, NULL, &errNum);
+		}
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  dObj2D = WlzCutObjToValBox2D(sObj2D, cutBox2D,
+					       dGreyType, dVal2DP.v,
+					       bgdNoise, bgdMu, bgdSigma,
+					       &errNum);
+		}
+		(void )WlzFreeObj(sObj2D);
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  *(dDom.p->domains + dPlIdx) =
+		    WlzAssignDomain(dObj2D->domain, NULL);
+		  *(dVal.vox->values + dPlIdx) =
+		    WlzAssignValues(dObj2D->values, NULL);
+		  (void )WlzFreeObj(dObj2D);
+		  ++sPlPos;
+		  ++sPlIdx;
+		  ++dPlIdx;
+		  switch(dGreyType)
 		  {
 		    case WLZ_GREY_LONG:
-		      dstVal2DP.lnp += size2D;
+		      dVal2DP.lnp += sz2D;
 		      break;
 		    case WLZ_GREY_INT:
-		      dstVal2DP.inp += size2D;
+		      dVal2DP.inp += sz2D;
 		      break;
 		    case WLZ_GREY_SHORT:
-		      dstVal2DP.shp += size2D;
+		      dVal2DP.shp += sz2D;
 		      break;
 		    case WLZ_GREY_UBYTE:
-		      dstVal2DP.ubp += size2D;
+		      dVal2DP.ubp += sz2D;
 		      break;
 		    case WLZ_GREY_FLOAT:
-		      dstVal2DP.flp += size2D;
+		      dVal2DP.flp += sz2D;
 		      break;
 		    case WLZ_GREY_DOUBLE:
-		      dstVal2DP.dbp += size2D;
+		      dVal2DP.dbp += sz2D;
 		      break;
 		    case WLZ_GREY_RGBA:
-		      dstVal2DP.rgbp += size2D;
+		      dVal2DP.rgbp += sz2D;
 		      break;
 		    default:
 		      errNum = WLZ_ERR_GREY_TYPE;
 		      break;
 		  }
-		  WlzFreeObj(dstObj2D);
 		}
 	      }
-	      srcObj2D->domain.core = NULL;
-	      srcObj2D->values.core = NULL;
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      dstValues.vox->freeptr = AlcFreeStackPush(NULL,
-	      					      (void *)(dstValP.inp),
-						      NULL);
-	      dstDom.p->voxel_size[0] = srcObj->domain.p->voxel_size[0];
-	      dstDom.p->voxel_size[1] = srcObj->domain.p->voxel_size[1];
-	      dstDom.p->voxel_size[2] = srcObj->domain.p->voxel_size[2];
-	      WlzStandardPlaneDomain(dstDom.p, dstValues.vox);
-	      dstObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, dstDom, dstValues,
+	      if((gValP == NULL) && (dValP.v != NULL))
+	      {
+		dVal.vox->freeptr = AlcFreeStackPush(dVal.vox->freeptr,
+						     dValP.v, NULL);
+	      }
+	      dDom.p->voxel_size[0] = sObj->domain.p->voxel_size[0];
+	      dDom.p->voxel_size[1] = sObj->domain.p->voxel_size[1];
+	      dDom.p->voxel_size[2] = sObj->domain.p->voxel_size[2];
+	      WlzStandardPlaneDomain(dDom.p, dVal.vox);
+	      dObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, dDom, dVal,
 				   NULL, NULL, &errNum);
-
 	    }
 	  }
 	  else
 	  {
-	    dstObj = WlzMakeEmpty(&errNum);
+	    dObj = WlzMakeEmpty(&errNum);
 	  }
 	}
 	break;
@@ -778,28 +668,20 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 	break;
     }
   }
-  if(srcObj2D)
-  {
-    AlcFree(srcObj2D);
-  }
-  if(dummyObj2D)
-  {
-    WlzFreeObj(dummyObj2D);
-  }
   if(dstErrNum)
   {
     *dstErrNum = errNum;
   }
   if(errNum != WLZ_ERR_NONE)
   {
-    if(dstObj)
+    if(dObj)
     {
-      WlzFreeObj(dstObj);
-      dstObj = NULL;
+      WlzFreeObj(dObj);
+      dObj = NULL;
     }
-    else if(dstValP.inp && (valP == NULL))
+    else if((dValP.v != NULL) && (gValP == NULL))
     {
-      AlcFree(dstValP.inp);
+      AlcFree(dValP.v);
     }
   }
   WLZ_DBG((WLZ_DBG_LVL_2),
@@ -807,8 +689,8 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *srcObj, WlzIBox3 cutBox,
 	   (int )errNum));
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
   	  ("WlzCutObjToValBox3D FX 0x%lx\n",
-	   (unsigned long )dstObj));
-  return(dstObj);
+	   (unsigned long )dObj));
+  return(dObj);
 }
 
 /*!
