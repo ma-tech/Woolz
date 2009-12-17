@@ -629,17 +629,11 @@ WlzObject 	*WlzSampleObjPoint3D(WlzObject *srcObj, WlzIVertex3 samFac,
     srcBox.yMax = srcDom.p->lastln;
     srcBox.zMin = srcDom.p->plane1;
     srcBox.zMax = srcDom.p->lastpl;
-    dstBox.xMin = (srcBox.xMin < 0) ?
-		  (srcBox.xMin  - samFac.vtX + 1) / samFac.vtX :
-		  (srcBox.xMin  + samFac.vtX - 1) / samFac.vtX;
+    dstBox.xMin = srcBox.xMin / samFac.vtX;
     dstBox.xMax = srcBox.xMax / samFac.vtX;
-    dstBox.yMin = (srcBox.yMin < 0) ?
-		  (srcBox.yMin - samFac.vtY + 1) / samFac.vtY :
-		  (srcBox.yMin + samFac.vtY - 1) / samFac.vtY;
+    dstBox.yMin = srcBox.yMin / samFac.vtY;
     dstBox.yMax = srcBox.yMax / samFac.vtY;
-    dstBox.zMin = (srcBox.zMin < 0) ?
-		  (srcBox.zMin - samFac.vtZ + 1) / samFac.vtZ :
-		  (srcBox.zMin + samFac.vtZ - 1) / samFac.vtZ;
+    dstBox.zMin = srcBox.zMin / samFac.vtZ;
     dstBox.zMax = srcBox.zMax / samFac.vtZ;
     dstDom.p = WlzMakePlaneDomain(srcDom.p->type, dstBox.zMin, dstBox.zMax,
     				  dstBox.yMin, dstBox.yMax,
@@ -795,12 +789,9 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
   srcBox.yMin = srcDom.i->line1;
   srcBox.xMax = srcDom.i->lastkl;
   srcBox.yMax = srcDom.i->lastln;
-  dstBox.xMin = (srcBox.xMin < 0) ?
-		(srcBox.xMin  - samFac.vtX + 1) / samFac.vtX :
-		(srcBox.xMin  + samFac.vtX - 1) / samFac.vtX;
-  dstBox.yMin = (srcBox.yMin < 0) ?
-		(srcBox.yMin - samFac.vtY + 1) / samFac.vtY :
-		(srcBox.yMin + samFac.vtY - 1) / samFac.vtY;
+
+  dstBox.xMin = srcBox.xMin / samFac.vtX;
+  dstBox.yMin = srcBox.yMin / samFac.vtY;
   dstBox.xMax = srcBox.xMax / samFac.vtX;
   dstBox.yMax = srcBox.yMax / samFac.vtY;
   dstWidth = dstBox.xMax - dstBox.xMin + 1;
@@ -865,11 +856,11 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
     {
       if((srcIWsp.linpos % samFac.vtY) == 0)
       {
-	dstInvLeftPos = (srcIWsp.lftpos + samFac.vtX - 1) / samFac.vtX;
+	dstInvLeftPos = srcIWsp.lftpos / samFac.vtX;
 	dstInvRgtPos = srcIWsp.rgtpos / samFac.vtX;
 	srcInvWidth = srcIWsp.rgtpos - srcIWsp.lftpos + 1;
-	dstInvWidth = (srcInvWidth >= (srcIWsp.rgtpos % samFac.vtX)) ?
-		      dstInvRgtPos - dstInvLeftPos + 1 : 0;
+	dstInvWidth = (srcIWsp.rgtpos / samFac.vtX) -
+	              (srcIWsp.lftpos / samFac.vtX) + 1;
 	if(dstInvWidth > 0)
 	{
 	  dstLinePos = srcIWsp.linpos / samFac.vtY;
