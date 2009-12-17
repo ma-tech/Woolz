@@ -340,10 +340,10 @@ WlzErrorNum WlzFreeDomain(WlzDomain domain)
     {
       switch(domain.core->type)
       {
-	case WLZ_CMESH_TRI2D:
+	case WLZ_CMESH_2D:
 	  errNum = WlzCMeshFree2D(domain.cm2);
 	  break;
-	case WLZ_CMESH_TET3D:
+	case WLZ_CMESH_3D:
 	  errNum = WlzCMeshFree3D(domain.cm3);
 	  break;
 	default:
@@ -543,6 +543,7 @@ WlzErrorNum WlzFreeVoxelValueTb(WlzVoxelValues *voxtab)
       errNum |= WlzFreeValues(*values);
       values++;
     }
+    AlcFreeStackFree(voxtab->freeptr);
     AlcFree((char *) voxtab);
   }
 
