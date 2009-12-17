@@ -2598,7 +2598,7 @@ typedef struct _WlzVoxelValues
 {
   WlzObjectType	type;			/*!< From WlzCoreValues. */
   int           linkcount;		/*!< From WlzCoreValues. */
-  void*         freeptr;		/*!< From WlzCoreValues. */
+  void          *freeptr;		/*!< From WlzCoreValues. */
   WlzValues 	original_table;		/*!< If non-NULL, the values table
   					     which owns the raw values we
 					     are using. */
