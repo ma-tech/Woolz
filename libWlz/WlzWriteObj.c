@@ -172,11 +172,6 @@ static WlzErrorNum 		WlzWriteBox3D(
 				  int nB);
 #endif /* WLZ_UNUSED_FUNCTIONS */
 
-#ifdef _OPENMP
-#define putc(C,S) putc_unlocked(C,S)
-#endif
-
-
 /*!
 * \return	Number of bytes written.
 * \ingroup 	WlzIO
@@ -305,10 +300,6 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-#ifdef _OPENMP
-  #pragma omp critical
-  {
-#endif
   if(fP == NULL)
   {
     errNum = WLZ_ERR_PARAM_NULL;
@@ -438,9 +429,6 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
 	break;
     }
   }
-#ifdef _OPENMP
-  }
-#endif
   return(errNum);
 }
 

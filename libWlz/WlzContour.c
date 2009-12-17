@@ -676,35 +676,12 @@ static WlzContour *WlzContourFromPoints3D(WlzObject *dObj,
      * The for loop needs to be very simple for OMP, hence errors are
      * reported but the loop does't terminate until all itterations
      * are completed. */
-#ifdef _OPENMP
-    {
-      WlzErrorNum pvErrNum;
-      #pragma omp parallel for default(shared) private(pvErrNum)
-      for(pnIdx = 0; pnIdx < pnCnt; ++pnIdx)
-      {
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  pnPos = dDom->plane1 + pnIdx;
-	  pvErrNum = WlzContourFromPoints3DPn(*(domP + pnIdx), *(valP + pnIdx),
-					      pnPos, basisFn);
-	  #pragma omp critical
-	  {
-	    if((pvErrNum != WLZ_ERR_NONE) && (errNum == WLZ_ERR_NONE))
-	    {
-	      errNum = pvErrNum;
-	    }
-	  }
-	}
-      }
-    }
-#else
     for(pnIdx = 0; (errNum == WLZ_ERR_NONE) && (pnIdx < pnCnt); ++pnIdx)
     {
       pnPos = dDom->plane1 + pnIdx;
       errNum = WlzContourFromPoints3DPn(*(domP + pnIdx), *(valP + pnIdx),
       				        pnPos, basisFn);
     }
-#endif
 #ifdef WLZ_CONTOURFROMPOINTS_DEBUG
     if(errNum == WLZ_ERR_NONE)
     {

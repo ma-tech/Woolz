@@ -181,10 +181,6 @@ static WlzErrorNum 		WlzReadBox3D(
 				  int nB);
 #endif /* WLZ_UNUSED_FUNCTIONS */
 
-#ifdef _OPENMP
-#define getc(S)	getc_unlocked(S)
-#endif
-
 /*!
 * \return	The word value.
 * \ingroup	WlzIO
@@ -369,10 +365,6 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
   obj = NULL;
   domain.core = NULL;
   values.core = NULL;
-#ifdef _OPENMP
-  #pragma omp critical
-  {
-#endif
   type = WlzReadObjType(fp, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
@@ -552,9 +544,6 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
   if(dstErr){
     *dstErr = errNum;
   }
-#ifdef _OPENMP
-  }
-#endif
   return(obj);
 }
 

@@ -415,30 +415,16 @@ void 		AlgMatrixVectorMul(double *aV,
 				   AlgMatrixType bType, double **bM,
 				   double *cV, size_t nR, size_t nC)
 {
-#ifdef _OPENMP
-  int		id0,
-		id1,
-		oNR;
-#else
   size_t	id0,
   		id1;
-#endif
   double	tD0;
   double	*bRow,
   		*cCol;
 
-#ifdef _OPENMP
-  oNR = nR;
-#endif
   switch(bType)
   {
     case ALG_MATRIX_RECT:
-#ifdef _OPENMP
-      #pragma omp parallel for default(shared) private(id0,id1,tD0,cCol,bRow)
-      for(id0 = 0; id0 < oNR; ++id0)
-#else
       for(id0 = 0; id0 < nR; ++id0)
-#endif
       {
 	tD0 = 0.0;
 	cCol = cV;
@@ -451,12 +437,7 @@ void 		AlgMatrixVectorMul(double *aV,
       }
       break;
     case ALG_MATRIX_SYM:
-#ifdef _OPENMP
-      #pragma omp parallel for default(shared) private(id0,id1,tD0,cCol)
-      for(id0 = 0; id0 < oNR; ++id0)
-#else
       for(id0 = 0; id0 < nR; ++id0)
-#endif
       {
         tD0 = 0.0;
 	cCol = cV;

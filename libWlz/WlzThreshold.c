@@ -667,50 +667,6 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
   }
 
   /* Threshold each plane */
-#ifdef _OPENMP
-  {
-    int		pnIdx;
-    WlzErrorNum pvErrNum;
-    /* (*(ndomains + pnIdx)).core and (*(nvalues + pnIdx)).core are
-     * initialized to NULL by WlzMakePlaneDomain() and WlzMakeVoxelValueTb()
-     * when they are created. */
-    #pragma omp parallel for default(shared) private(pvErrNum,temp,obj1)
-    for(pnIdx = 0; pnIdx < nplanes; ++pnIdx)
-    {
-      if((errNum == WLZ_ERR_NONE) &&
-         (*(domains + pnIdx)).core && (*(values + pnIdx)).core)
-      {
-	temp = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-			   *(domains + pnIdx), *(values + pnIdx),
-			   NULL, NULL, &pvErrNum);
-	obj1 = NULL;
-	if(temp && temp->domain.core)
-	{
-	  obj1 = WlzThreshold(temp, threshV, highlow, &pvErrNum);
-	}
-	if(obj1)
-	{
-	  if( obj1->type == WLZ_2D_DOMAINOBJ ){
-	    *(ndomains + pnIdx) = WlzAssignDomain(obj1->domain, NULL);
-	    *(nvalues + pnIdx) = WlzAssignValues(obj1->values, NULL);
-	  }
-	  else {
-	    (*(ndomains + pnIdx)).core = NULL;
-	    (*(nvalues + pnIdx)).core = NULL;
-	  }
-	  WlzFreeObj(obj1);
-	}
-	#pragma omp critical
-	{
-	  if((pvErrNum != WLZ_ERR_NONE) && (errNum == WLZ_ERR_NONE))
-	  {
-	    errNum = pvErrNum;
-	  }
-	}
-      }
-    }
-  }
-#else
   while( (errNum == WLZ_ERR_NONE) && nplanes-- ){
     if(((*domains).core == NULL) || ((*values).core == NULL)){
       (*ndomains).core = NULL;
@@ -747,7 +703,6 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
     values++;
     nvalues++;
   }
-#endif
   /* standardise the plane domain */
   if((errNum == WLZ_ERR_NONE) &&
      ((errNum = WlzStandardPlaneDomain(npdom, nvoxtab)) != WLZ_ERR_NONE) ){
