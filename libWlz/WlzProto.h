@@ -1428,6 +1428,13 @@ extern WlzErrorNum		WlzCMeshTransformVtxAry3D(
 				  WlzObject *mObj,
 				  int sizeArrayVtx,
 				  WlzDVertex3 *arrayVtx);
+extern WlzErrorNum		WlzScaleCMeshValue(
+                                  double scale,
+                                  WlzObject *obj);
+extern WlzObject*		WlzCopyScaleCMeshValue(
+                                  double scale,
+                                  WlzObject *obj,
+                                  WlzErrorNum* errNumP);
 #ifndef WLZ_EXT_BIND
 extern WlzErrorNum		WlzCMeshGetNodesAndEdges(
 				  WlzObject *mObj,

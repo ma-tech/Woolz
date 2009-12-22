@@ -280,6 +280,12 @@ static WlzCMeshScanWSp3D 	*WlzCMeshMakeScanWSp3D(
 static WlzCMeshScanWSp3D 	*WlzCMeshScanWSpInit3D(
 				  WlzObject *mObj,
 				  WlzErrorNum *dstErr);
+static WlzErrorNum		WlzScaleIndexedVal(double scale,
+                                  WlzIndexedValues *ixv,
+                                  int idV, WlzIndexedValues *ixcSrc);
+static WlzErrorNum		WlzScaleCMeshValueNodOrElem(double scale,
+                                  WlzObject *obj,  WlzIndexedValues *ixcSrc);
+
 #ifdef WLZ_CMESHTRANSFORM_DEBUG
 static WlzErrorNum 		WlzCMeshVerifyWSp3D(
 				  WlzObject *srcObj,
@@ -4843,6 +4849,195 @@ WlzErrorNum     WlzCMeshGetNodesAndEdges(WlzObject *mObj,
 }
 
 /*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Scales index values pointed by ixv.
+                If ixcSrc is NULL then scales the values
+                in place, pointed by ixv. If it not NULL,
+                then copies and scales values of ixvSrc
+* \author	Zsolt Husz
+* \param	scale                   Scale value
+* \param	ixv                     Pointer to the array of values
+* \param	idV                     Lentgh of index valye array
+* \param	ixvSrc                  Pointer to the array of source values.
+*/
+static WlzErrorNum WlzScaleIndexedVal(double scale,
+                                        WlzIndexedValues *ixv,
+                                        int idV, WlzIndexedValues *ixcSrc)
+{
+  int           idX,
+                vCnt;
+  WlzGreyP      gP;
+  WlzGreyP      gPOld;
+  WlzUByte      rgba[4];
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+    vCnt = 1;
+    if(ixv->rank > 0)
+    {
+      for(idX = 0; idX < ixv->rank; ++idX)
+      {
+        vCnt *= ixv->dim[idX];
+      }
+    }
+    gP.v = WlzIndexedValueGet(ixv, idV);
+    if (ixcSrc)
+        gPOld.v = WlzIndexedValueGet(ixcSrc, idV);
+    else
+        gPOld = gP;
+
+    for(idX = 0; idX < vCnt; ++idX)
+    {
+      switch(ixv->vType)
+      {
+        case WLZ_GREY_LONG:
+          gP.lnp[idX] = round(gPOld.lnp[idX] * scale);
+          break;
+        case WLZ_GREY_INT:
+          gP.inp[idX] = round(gPOld.inp[idX] * scale);
+          break;
+        case WLZ_GREY_SHORT:
+          gP.shp[idX] = round(gPOld.shp[idX] * scale);
+          break;
+        case WLZ_GREY_UBYTE:
+          gP.ubp[idX] = round(gPOld.ubp[idX] * scale);
+          break;
+        case WLZ_GREY_FLOAT:
+          gP.flp[idX] = (float)(gPOld.flp[idX] * scale);
+          break;
+        case WLZ_GREY_DOUBLE:
+          gP.dbp[idX] = gPOld.dbp[idX] * scale;
+          break;
+        case WLZ_GREY_RGBA:
+          rgba[0] = WLZ_RGBA_RED_GET(gPOld.rgbp[idX]);
+          rgba[1] = WLZ_RGBA_GREEN_GET(gPOld.rgbp[idX]);
+          rgba[2] = WLZ_RGBA_BLUE_GET(gPOld.rgbp[idX]);
+          rgba[3] = WLZ_RGBA_ALPHA_GET(gPOld.rgbp[idX]);
+          rgba[0] = round(rgba[0] * scale);
+          rgba[1] = round(rgba[1] * scale);
+          rgba[2] = round(rgba[2] * scale);
+          rgba[3] = round(rgba[3] * scale);
+          WLZ_RGBA_RED_SET(gP.rgbp[idX] ,rgba[0]);
+          WLZ_RGBA_GREEN_SET(gP.rgbp[idX] ,rgba[1]);
+          WLZ_RGBA_BLUE_SET(gP.rgbp[idX] ,rgba[2]);
+          WLZ_RGBA_ALPHA_SET(gP.rgbp[idX] ,rgba[3]);
+          break;
+        default:
+          errNum = WLZ_ERR_GREY_TYPE;
+          break;
+      }
+    }
+  return(errNum);
+}
+
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Scales index values pointed of a WoolzObject.
+                If ixcSrc is NULL then scales the values
+                in place. If it not NULL,
+                then copies and scales values of ixvSrc
+* \author	Zsolt Husz
+* \param	scale                   Scale value
+* \param	obj                     Woolz object
+* \param	ixvSrc                  Pointer to the array of source values
+*/
+static WlzErrorNum WlzScaleCMeshValueNodOrElem(double scale,
+                                        WlzObject *obj,  WlzIndexedValues *ixcSrc)
+{
+    WlzCMeshP     mesh;
+    WlzCMeshEntP  ent;
+    WlzIndexedValues *ixv;
+    int           idx;
+    WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+    switch(obj->domain.core->type)
+        {
+          case WLZ_CMESH_TRI2D:
+            mesh.m2 = obj->domain.cm2;
+            ixv = obj->values.x;
+            switch(ixv->attach)
+            {
+              case WLZ_VALUE_ATTACH_NOD:
+                for(idx = 0; idx < mesh.m2->res.nod.maxEnt; ++idx)
+                {
+                  ent.v = AlcVectorItemGet(mesh.m2->res.nod.vec, idx);
+                  if(ent.n2->idx >= 0)
+                  {
+                    if((errNum = WlzScaleIndexedVal(scale, ixv,
+                                                    idx, ixcSrc)) != WLZ_ERR_NONE)
+                    {
+                      break;
+                    }
+                  }
+                }
+                break;
+              case WLZ_VALUE_ATTACH_ELM:
+                for(idx = 0; idx < mesh.m2->res.nod.maxEnt; ++idx)
+                {
+                  ent.v = AlcVectorItemGet(mesh.m2->res.elm.vec, idx);
+                  if(ent.e2->idx >= 0)
+                  {
+                    if((errNum = WlzScaleIndexedVal(scale, ixv,
+                                                    idx, ixcSrc)) != WLZ_ERR_NONE)
+                    {
+                      break;
+                    }
+                  }
+                }
+                break;
+              default:
+                errNum = WLZ_ERR_VALUES_DATA;
+                break;
+            }
+            break;
+          case WLZ_CMESH_TET3D:
+            mesh.m3 = obj->domain.cm3;
+            ixv = obj->values.x;
+            switch(ixv->attach)
+            {
+              case WLZ_VALUE_ATTACH_NOD:
+                for(idx = 0; idx < mesh.m3->res.nod.maxEnt; ++idx)
+                {
+                  ent.v = AlcVectorItemGet(mesh.m3->res.nod.vec, idx);
+                  if(ent.n3->idx >= 0)
+                  {
+                    if((errNum = WlzScaleIndexedVal(scale, ixv,
+                                                    idx, ixcSrc)) != WLZ_ERR_NONE)
+                    {
+                      break;
+                    }
+                  }
+                }
+                break;
+              case WLZ_VALUE_ATTACH_ELM:
+                for(idx = 0; idx < mesh.m3->res.nod.maxEnt; ++idx)
+                {
+                  ent.v = AlcVectorItemGet(mesh.m3->res.elm.vec, idx);
+                  if(ent.e3->idx >= 0)
+                  {
+                    if((errNum = WlzScaleIndexedVal(scale, ixv,
+                                                    idx, ixcSrc)) != WLZ_ERR_NONE)
+                    {
+                      break;
+                    }
+                  }
+                }
+                break;
+              default:
+                errNum = WLZ_ERR_VALUES_DATA;
+                break;
+            }
+            break;
+          default:
+            errNum = WLZ_ERR_DOMAIN_TYPE;
+            break;
+        }
+    return errNum;
+}
+
+/*!
 * \return	The bounding box of the mesh in the mesh transform.
 * \ingroup	WlzTransform
 * \brief	Computes the bounding box of the mesh in the given mesh
@@ -5052,4 +5247,72 @@ WlzDBox3	WlzCMeshTransformGetBBox3D(WlzObject *mObj,
     *dstErr = errNum;
   }
   return(bBox);
+}
+
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Scales index values pointed of a WoolzObject
+                in place.
+* \author	Zsolt Husz
+* \param	scale                   Scale value
+* \param	obj                     Woolz object
+* \param        dstErr                  Destination error pointer, may be NULL
+*/
+WlzErrorNum WlzScaleCMeshValue(double scale, WlzObject *obj)
+{
+    return WlzScaleCMeshValueNodOrElem(scale, obj, NULL);
+}
+
+/*!
+* \return	Copied source object.
+* \ingroup	WlzTransform
+* \brief	Creates an woolz CMesh transform object indentical
+                with the input object, but with value scaled.
+* \author	Zsolt Husz
+* \param	scale                   Scale value
+* \param	obj                     Woolz object
+*/
+WlzObject * WlzCopyScaleCMeshValue(double scale,
+                                        WlzObject *obj, WlzErrorNum* errNumP)
+{
+    WlzIndexedValues *ixcSrc = NULL;
+    WlzErrorNum   errNum = WLZ_ERR_NONE;
+    WlzObject     *scaledObj = NULL;
+    WlzValues     values;
+
+
+    if (!obj) {
+        errNum = WLZ_ERR_OBJECT_NULL;
+    }
+    ixcSrc = obj->values.x;
+    if (!ixcSrc) {
+        errNum = WLZ_ERR_VALUES_NULL;
+    }
+
+    if (errNum==WLZ_ERR_NONE) {
+        values.x = NULL;
+        scaledObj= WlzMakeMain(obj->type, obj->domain, values, NULL, NULL, &errNum);
+    }
+    if (errNum==WLZ_ERR_NONE) {
+
+        values.x = WlzMakeIndexedValues(scaledObj, ixcSrc->rank, ixcSrc->dim, ixcSrc->vType,
+           ixcSrc->attach, &errNum);
+    }
+    if (errNum==WLZ_ERR_NONE) {
+        scaledObj->values = WlzAssignValues(values, NULL);
+    }
+    if (errNum==WLZ_ERR_NONE)
+        errNum=WlzScaleCMeshValueNodOrElem(scale, scaledObj, ixcSrc);
+
+    if (errNum != WLZ_ERR_NONE && scaledObj) {
+        WlzFreeObj(scaledObj);
+        scaledObj = NULL;
+    }
+
+    if (errNumP)
+        *errNumP = errNum;
+
+    return scaledObj;
 }
