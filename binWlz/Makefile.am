@@ -66,6 +66,7 @@ bin_PROGRAMS		= \
 			  WlzCMeshGen \
 			  WlzCMeshToSpatialDomain \
 			  WlzCMeshTransformVtx \
+			  WlzCMeshTransformObj \
 			  WlzCompound \
 			  WlzCompoundArrayToScalar \
 			  WlzCompDispIncGrey \
@@ -268,6 +269,10 @@ WlzCMeshToSpatialDomain_LDFLAGS		= $(AM_LFLAGS)
 WlzCMeshTransformVtx_SOURCES		= WlzCMeshTransformVtx.c
 WlzCMeshTransformVtx_LDADD		= $(LDADD)
 WlzCMeshTransformVtx_LDFLAGS		= $(AM_LFLAGS)
+
+WlzCMeshTransformObj_SOURCES		= WlzCMeshTransformObj.c
+WlzCMeshTransformObj_LDADD		= $(LDADD)
+WlzCMeshTransformObj_LDFLAGS		= $(AM_LFLAGS)
 
 WlzCompDispIncGrey_SOURCES		= WlzCompDispIncGrey.c
 WlzCompDispIncGrey_LDADD		= $(LDADD)
