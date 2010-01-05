@@ -508,9 +508,9 @@ typedef enum _WlzMeshError
 */
 typedef enum _WlzCMeshType
 {
-  WLZ_CMESH_TRI2D,                      /*!< Planar mesh with triangular
+  WLZ_CMESH_TRI2D = WLZ_CMESH_2D,       /*!< Planar mesh with triangular
                                              mesh elements. */
-  WLZ_CMESH_TET3D                       /*!< Volumetric mesh with tetrahedral
+  WLZ_CMESH_TET3D = WLZ_CMESH_3D        /*!< Volumetric mesh with tetrahedral
                                              mesh elements. */
 
 } WlzCMeshType;
