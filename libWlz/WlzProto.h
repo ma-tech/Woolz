@@ -1124,29 +1124,43 @@ extern WlzErrorNum		WlzBasisFnTPS2DChangeCPtsParam(
 				  int nParam,
 				  double *param);
 #ifndef WLZ_EXT_BIND
-extern WlzObject		*WlzBasisFnInvertAndSetCMesh(
+extern WlzObject		*WlzBasisFnMakeCMeshTr(
 				  WlzBasisFnTransform *basisTr,
 				  WlzCMeshP mesh,
 				  WlzErrorNum *dstErr);
 #endif
-extern WlzObject		*WlzBasisFnInvertAndSetCMesh2D(
+extern WlzObject		*WlzBasisFnMakeCMeshTr2D(
 				  WlzBasisFnTransform *basisTr,
 				  WlzCMesh2D *mesh,
 				  WlzErrorNum *dstErr);
-extern WlzObject		*WlzBasisFnInvertAndSetCMesh3D(
+extern WlzObject		*WlzBasisFnMakeCMeshTr3D(
 				  WlzBasisFnTransform *basisTr,
 				  WlzCMesh3D *mesh,
 				  WlzErrorNum *dstErr);
-extern WlzErrorNum		WlzBasisFnSetCMesh(
-				  WlzObject *mObj,
-				  WlzBasisFnTransform *basisTr);
+#ifndef WLZ_EXT_BIND
+extern WlzObject		*WlzBasisFnInvertMakeCMeshTr(
+				  WlzBasisFnTransform *basisTr,
+				  WlzCMeshP mesh,
+				  WlzErrorNum *dstErr);
+#endif
+extern WlzObject		*WlzBasisFnInvertMakeCMeshTr2D(
+				  WlzBasisFnTransform *basisTr,
+				  WlzCMesh2D *mesh,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzBasisFnInvertMakeCMeshTr3D(
+				  WlzBasisFnTransform *basisTr,
+				  WlzCMesh3D *mesh,
+				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzBasisFnSetMesh(
 				  WlzMeshTransform *mesh,
 				  WlzBasisFnTransform *basisTr);
-extern WlzErrorNum     		WlzBasisFnSetCMesh2D(
+extern WlzErrorNum		WlzBasisFnSetCMesh(
 				  WlzObject *mObj,
 				  WlzBasisFnTransform *basisTr);
-extern WlzErrorNum     		WlzBasisFnSetCMesh3D(
+extern WlzErrorNum		WlzBasisFnSetCMesh2D(
+				  WlzObject *mObj,
+				  WlzBasisFnTransform *basisTr);
+extern WlzErrorNum		WlzBasisFnSetCMesh3D(
 				  WlzObject *mObj,
 				  WlzBasisFnTransform *basisTr);
 extern WlzErrorNum 		WlzBasisFnFreeTransform(

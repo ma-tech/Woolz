@@ -747,7 +747,7 @@ int             main(int argc, char **argv)
 	    }
 	    else
 	    {
-	       meshTr.obj = WlzBasisFnInvertAndSetCMesh(basisTr, tarMesh,
+	       meshTr.obj = WlzBasisFnInvertMakeCMeshTr(basisTr, tarMesh,
 	       				&errNum);
 	    }
 	  }

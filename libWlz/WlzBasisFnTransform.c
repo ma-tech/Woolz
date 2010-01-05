@@ -737,7 +737,8 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzObject *mObj,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(basisTr->type != WLZ_TRANSFORM_2D_BASISFN)
+  else if((basisTr->type != WLZ_TRANSFORM_2D_BASISFN) ||
+          (mesh->type != WLZ_CMESH_TRI2D))
   {
     errNum = WLZ_ERR_TRANSFORM_TYPE;
   }
@@ -765,36 +766,65 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzObject *mObj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    for(idN = 0; idN < maxNodIdx; ++idN)
+    switch(basisTr->basisFn->type)
     {
-      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
-      if(nod->idx >= 0)
-      {
-        dsp = (double *)WlzIndexedValueGet(ixv, idN);
-	switch(basisTr->basisFn->type)
+      case WLZ_FN_BASIS_2DGAUSS:
+	for(idN = 0; idN < maxNodIdx; ++idN)
 	{
-	  case WLZ_FN_BASIS_2DGAUSS:
+	  nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	  if(nod->idx >= 0)
+	  {
+	    dsp = (double *)WlzIndexedValueGet(ixv, idN);
 	    dspV = WlzBasisFnValueGauss2D(basisTr->basisFn, nod->pos);
-	    break;
-	  case WLZ_FN_BASIS_2DIMQ:
-	    dspV = WlzBasisFnValueIMQ2D(basisTr->basisFn, nod->pos);
-	    break;
-	  case WLZ_FN_BASIS_2DMQ:
-	    dspV = WlzBasisFnValueMQ2D(basisTr->basisFn, nod->pos);
-	    break;
-	  case WLZ_FN_BASIS_2DTPS:
-	    dspV = WlzBasisFnValueTPS2D(basisTr->basisFn, nod->pos);
-	    break;
-	  default:
-	    errNum = WLZ_ERR_TRANSFORM_TYPE;
-	    goto RETURN;
+	    dsp[0] = dspV.vtX;
+	    dsp[1] = dspV.vtY;
+	  }
 	}
-	dsp[0] = dspV.vtX;
-	dsp[1] = dspV.vtY;
-      }
+        break;
+      case WLZ_FN_BASIS_2DIMQ:
+	for(idN = 0; idN < maxNodIdx; ++idN)
+	{
+	  nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	  if(nod->idx >= 0)
+	  {
+	    dsp = (double *)WlzIndexedValueGet(ixv, idN);
+	    dspV = WlzBasisFnValueIMQ2D(basisTr->basisFn, nod->pos);
+	    dsp[0] = dspV.vtX;
+	    dsp[1] = dspV.vtY;
+	  }
+	}
+        break;
+      case WLZ_FN_BASIS_2DMQ:
+	for(idN = 0; idN < maxNodIdx; ++idN)
+	{
+	  nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	  if(nod->idx >= 0)
+	  {
+	    dsp = (double *)WlzIndexedValueGet(ixv, idN);
+	    dspV = WlzBasisFnValueMQ2D(basisTr->basisFn, nod->pos);
+	    dsp[0] = dspV.vtX;
+	    dsp[1] = dspV.vtY;
+	  }
+	}
+        break;
+      case WLZ_FN_BASIS_2DTPS:
+	for(idN = 0; idN < maxNodIdx; ++idN)
+	{
+	  nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	  if(nod->idx >= 0)
+	  {
+	    dsp = (double *)WlzIndexedValueGet(ixv, idN);
+	    dspV = WlzBasisFnValueTPS2D(basisTr->basisFn, nod->pos);
+	    dsp[0] = dspV.vtX;
+	    dsp[1] = dspV.vtY;
+	  }
+	}
+        break;
+      default:
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+        break;
     }
   }
-RETURN:
   return(errNum);
 }
 
@@ -830,7 +860,8 @@ WlzErrorNum    	WlzBasisFnSetCMesh3D(WlzObject *mObj,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(basisTr->type != WLZ_TRANSFORM_3D_BASISFN)
+  else if((basisTr->type != WLZ_TRANSFORM_3D_BASISFN) ||
+          (mesh->type != WLZ_CMESH_TET3D))
   {
     errNum = WLZ_ERR_TRANSFORM_TYPE;
   }
@@ -858,48 +889,58 @@ WlzErrorNum    	WlzBasisFnSetCMesh3D(WlzObject *mObj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    for(idN = 0; idN < maxNodIdx; ++idN)
+    switch(basisTr->basisFn->type)
     {
-      nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
-      if(nod->idx >= 0)
-      {
-        dsp = (double *)WlzIndexedValueGet(ixv, idN);
-	switch(basisTr->basisFn->type)
+      case WLZ_FN_BASIS_3DIMQ:
+        for(idN = 0; idN < maxNodIdx; ++idN)
 	{
-	  case WLZ_FN_BASIS_3DIMQ:
+	  nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	  if(nod->idx >= 0)
+	  {
+	    dsp = (double *)WlzIndexedValueGet(ixv, idN);
 	    dspV = WlzBasisFnValueIMQ3D(basisTr->basisFn, nod->pos);
-	    break;
-	  case WLZ_FN_BASIS_3DMQ:
-	    dspV = WlzBasisFnValueMQ3D(basisTr->basisFn, nod->pos);
-	    break;
-	  default:
-	    errNum = WLZ_ERR_TRANSFORM_TYPE;
-	    goto RETURN;
+	    dsp[0] = dspV.vtX;
+	    dsp[1] = dspV.vtY;
+	    dsp[2] = dspV.vtZ;
+	  }
 	}
-	dsp[0] = dspV.vtX;
-	dsp[1] = dspV.vtY;
-	dsp[2] = dspV.vtZ;
-      }
+	break;
+      case WLZ_FN_BASIS_3DMQ:
+        for(idN = 0; idN < maxNodIdx; ++idN)
+	{
+	  nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	  if(nod->idx >= 0)
+	  {
+	    dsp = (double *)WlzIndexedValueGet(ixv, idN);
+	    dspV = WlzBasisFnValueMQ3D(basisTr->basisFn, nod->pos);
+	    dsp[0] = dspV.vtX;
+	    dsp[1] = dspV.vtY;
+	    dsp[2] = dspV.vtZ;
+	  }
+	}
+	break;
+      default:
+        errNum = WLZ_ERR_VALUES_TYPE;
+	break;
     }
   }
-RETURN:
   return(errNum);
 }
 
 /*!
 * \return	New constrained mesh transform object.
 * \ingroup	WlzTransform
-* \brief	Uses the given target mesh to create a mesh transform
+* \brief	Uses the given source mesh to create a mesh transform
 * 		object which transforms the source to target. See the
-* 		functions WlzBasisFnInvertAndSetCMesh2D() and
-* 		WlzBasisFnInvertAndSetCMesh3D() for details of the
+* 		functions WlzBasisFnMakeCMeshTr2D() and
+* 		WlzBasisFnMakeCMeshTr3D() for details of the
 * 		returned objects.
 * \param	basisTr			Given basis function transform
 * 					which transforms target to source.
 * \param	mesh			Given conforming mesh for target.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject 	*WlzBasisFnInvertAndSetCMesh(WlzBasisFnTransform *basisTr,
+WlzObject 	*WlzBasisFnMakeCMeshTr(WlzBasisFnTransform *basisTr,
 					WlzCMeshP mesh,
 				      	WlzErrorNum *dstErr)
 {
@@ -921,7 +962,7 @@ WlzObject 	*WlzBasisFnInvertAndSetCMesh(WlzBasisFnTransform *basisTr,
 	}
 	else
 	{
-          mObj = WlzBasisFnInvertAndSetCMesh2D(basisTr, mesh.m2, &errNum);
+          mObj = WlzBasisFnMakeCMeshTr2D(basisTr, mesh.m2, &errNum);
 	}
 	break;
       case WLZ_TRANSFORM_3D_BASISFN:
@@ -931,7 +972,7 @@ WlzObject 	*WlzBasisFnInvertAndSetCMesh(WlzBasisFnTransform *basisTr,
 	}
 	else
 	{
-          mObj = WlzBasisFnInvertAndSetCMesh3D(basisTr, mesh.m3, &errNum);
+          mObj = WlzBasisFnMakeCMeshTr3D(basisTr, mesh.m3, &errNum);
 	}
 	break;
       default:
@@ -950,8 +991,8 @@ WlzObject 	*WlzBasisFnInvertAndSetCMesh(WlzBasisFnTransform *basisTr,
 * \return	New constrained mesh transform object.
 * \ingroup	WlzTransform
 * \brief	Uses the given 2D target mesh to create a 2D mesh transform
-* 		which transforms the source to target. unlike
-* 		WlzBasisFnInvertAndSetCMesh() this function does not check
+* 		which transforms the source to target. Unlike
+* 		WlzBasisFnMakeCMeshTr() this function does not check
 * 		it's given parameters. The new object's indexed values
 * 		have; rank = 1, dim = 2, attach = WLZ_VALUE_ATTACH_NOD
 * 		and double values.
@@ -960,7 +1001,187 @@ WlzObject 	*WlzBasisFnInvertAndSetCMesh(WlzBasisFnTransform *basisTr,
 * \param	mesh			Given conforming mesh for target.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject 	*WlzBasisFnInvertAndSetCMesh2D(
+WlzObject 	*WlzBasisFnMakeCMeshTr2D(WlzBasisFnTransform *basisTr,
+				        WlzCMesh2D *mesh,
+				        WlzErrorNum *dstErr)
+{
+  int		dim = 2;
+  WlzObject	*mObj = NULL;
+  WlzDomain	dom;
+  WlzValues	val;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  val.core = NULL;
+  if(mesh->type != WLZ_CMESH_TRI2D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    dom.cm2 = mesh;
+    val.x = WlzMakeIndexedValues(mObj, 1, &dim, WLZ_GREY_DOUBLE,
+				    WLZ_VALUE_ATTACH_NOD, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    mObj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzBasisFnSetCMesh2D(mObj, basisTr);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(mObj != NULL)
+    {
+      (void )WlzFreeObj(mObj);
+      mObj = NULL;
+    }
+    else
+    {
+      (void )WlzFreeIndexedValues(val.x);
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(mObj);
+}
+
+/*!
+* \return	New constrained mesh transform object.
+* \ingroup	WlzTransform
+* \brief	Uses the given 3D target mesh to create a 3D mesh transform
+* 		which transforms the source to target. Unlike
+* 		WlzBasisFnMakeCMeshTr() this function does not check
+* 		it's given parameters. The new object's indexed values
+* 		have; rank = 1, dim = 3, attach = WLZ_VALUE_ATTACH_NOD
+* 		and double values.
+* \param	basisTr			Given basis function transform
+* 					which transforms target to source.
+* \param	mesh			Given conforming mesh for target.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject 	*WlzBasisFnMakeCMeshTr3D(WlzBasisFnTransform *basisTr,
+				        WlzCMesh3D *mesh,
+				        WlzErrorNum *dstErr)
+{
+  int		dim = 3;
+  WlzObject	*mObj = NULL;
+  WlzDomain	dom;
+  WlzValues	val;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  val.core = NULL;
+  if(mesh->type != WLZ_CMESH_TET3D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    dom.cm3 = mesh;
+    val.x = WlzMakeIndexedValues(mObj, 1, &dim, WLZ_GREY_DOUBLE,
+				    WLZ_VALUE_ATTACH_NOD, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    mObj = WlzMakeMain(WLZ_CMESH_3D, dom, val, NULL, NULL, &errNum);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(mObj != NULL)
+    {
+      (void )WlzFreeObj(mObj);
+      mObj = NULL;
+    }
+    else
+    {
+      (void )WlzFreeIndexedValues(val.x);
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(mObj);
+}
+
+/*!
+* \return	New constrained mesh transform object.
+* \ingroup	WlzTransform
+* \brief	Copies the given target mesh and uses it to create a
+* 		mesh transform object which transforms the source to
+* 		target. See the functions WlzBasisFnInvertMakeCMeshTr2D()
+* 		and WlzBasisFnInvertMakeCMeshTr3D() for details of the
+* 		returned objects.
+* \param	basisTr			Given basis function transform
+* 					which transforms target to source.
+* \param	mesh			Given conforming mesh for target.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject 	*WlzBasisFnInvertMakeCMeshTr(WlzBasisFnTransform *basisTr,
+					WlzCMeshP mesh,
+				      	WlzErrorNum *dstErr)
+{
+  WlzObject	*mObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((basisTr == NULL) || (mesh.v == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(basisTr->type)
+    {
+      case WLZ_TRANSFORM_2D_BASISFN:
+	if(mesh.m2->type != WLZ_CMESH_TRI2D)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+	else
+	{
+          mObj = WlzBasisFnInvertMakeCMeshTr2D(basisTr, mesh.m2, &errNum);
+	}
+	break;
+      case WLZ_TRANSFORM_3D_BASISFN:
+	if(mesh.m3->type != WLZ_CMESH_TET3D)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+	else
+	{
+          mObj = WlzBasisFnInvertMakeCMeshTr3D(basisTr, mesh.m3, &errNum);
+	}
+	break;
+      default:
+        errNum = WLZ_ERR_TRANSFORM_TYPE;
+	break;
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(mObj);
+}
+
+/*!
+* \return	New constrained mesh transform object.
+* \ingroup	WlzTransform
+* \brief	Copies the given 2D target mesh and uses it to create a
+* 		2D mesh transform which transforms the source to target.
+* 		Unlike WlzBasisFnInvertMakeCMeshTr() this function does
+* 		not check it's given parameters. The new object's indexed
+* 		values have; rank = 1, dim = 2, attach = WLZ_VALUE_ATTACH_NOD
+* 		and double values.
+* \param	basisTr			Given basis function transform
+* 					which transforms target to source.
+* \param	mesh			Given conforming mesh for target.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject 	*WlzBasisFnInvertMakeCMeshTr2D(
 					WlzBasisFnTransform *basisTr,
 				        WlzCMesh2D *mesh,
 				        WlzErrorNum *dstErr)
@@ -1006,18 +1227,18 @@ WlzObject 	*WlzBasisFnInvertAndSetCMesh2D(
 /*!
 * \return	New constrained mesh transform object.
 * \ingroup	WlzTransform
-* \brief	Uses the given 3D target mesh to create a 3D mesh transform
-* 		which transforms the source to target. unlike
-* 		WlzBasisFnInvertAndSetCMesh() this function does not check
-* 		it's given parameters. The new object's indexed values
-* 		have; rank = 1, dim = 3, attach = WLZ_VALUE_ATTACH_NOD
+* \brief	Copies the given 3D target mesh and uses to create a
+* 		3D mesh transform which transforms the source to target.
+* 		Unlike WlzBasisFnInvertMakeCMeshTr() this function does
+* 		not check it's given parameters. The new object's indexed
+* 		values have; rank = 1, dim = 3, attach = WLZ_VALUE_ATTACH_NOD
 * 		and double values.
 * \param	basisTr			Given basis function transform
 * 					which transforms target to source.
 * \param	mesh			Given conforming mesh for target.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject 	*WlzBasisFnInvertAndSetCMesh3D(
+WlzObject 	*WlzBasisFnInvertMakeCMeshTr3D(
 					WlzBasisFnTransform *basisTr,
 				        WlzCMesh3D *mesh,
 				        WlzErrorNum *dstErr)
