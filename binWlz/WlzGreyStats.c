@@ -213,12 +213,14 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    if( colFlg ){
+    if(colFlg)
+    {
       area = WlzRGBAGreyStats(inObj, WLZ_RGBA_SPACE_RGB, &gType,	
 			      minA, maxA, sumA, sumSqA, meanA,
 			      stdDevA, &errNum);
     }
-    else {
+    else
+    {
       area = WlzGreyStats(inObj, &gType, &min, &max, &sum, &sumSq, &mean,
 			  &stdDev, &errNum);
     }

@@ -5077,7 +5077,7 @@ WlzCMesh3D	*WlzCMeshFromObj3D(WlzObject *obj,
       minElmSz = 1.0;
     }
     scale = (int )ceil(minElmSz);
-    dilation = scale  + 1;
+    dilation = scale  + 1.0;
     maxLBTNdSz = (int )ceil(maxElmSz / minElmSz);
     if(maxLBTNdSz < 1)
     {
