@@ -233,25 +233,17 @@ int		WlzGreyStats(WlzObject *srcObj,
 			     WlzErrorNum *dstErr)
 {
   int		area = 0,
-  		area2D,
-		planeIdx,
-		planeCount;
+		pIdx,
+		pCnt;
   double	min,
-		min2D,
 		max,
-		max2D,
   		mean = -1.0,
 		stdDev = -1.0,
 		sum = 0.0,
-		sum2D,
-		sumSq = 0.0,
-		sumSq2D;
+		sumSq = 0.0;
   WlzGreyType	gType;
-  WlzDomain	dummyDom;
-  WlzValues	dummyValues;
-  WlzDomain	*srcDomains;
-  WlzValues	*srcValues;
-  WlzObject	*srcObj2D;
+  WlzDomain	*dom;
+  WlzValues	*val;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
     
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
@@ -281,64 +273,84 @@ int		WlzGreyStats(WlzObject *srcObj,
     {
       case WLZ_2D_DOMAINOBJ:
         area = WlzGreyStats2D(srcObj, &gType, &min, &max,
-			     &sum, &sumSq, &errNum);
+			      &sum, &sumSq, &errNum);
         break;
       case WLZ_3D_DOMAINOBJ:
-	dummyDom.core = NULL;
-	dummyValues.core = NULL;
 	if(srcObj->domain.core->type != WLZ_PLANEDOMAIN_DOMAIN)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
-	else if((srcDomains = srcObj->domain.p->domains) == NULL)
+	else if((dom = srcObj->domain.p->domains) == NULL)
 	{
 	  errNum = WLZ_ERR_DOMAIN_DATA;
 	}
-	else if(((srcValues = srcObj->values.vox->values) == NULL))
+	else if(((val = srcObj->values.vox->values) == NULL))
 	{
 	  errNum = WLZ_ERR_VALUES_DATA;
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  planeIdx =  0;
-	  planeCount = srcObj->domain.p->lastpl - srcObj->domain.p->plane1 + 1;
-	  while((errNum == WLZ_ERR_NONE) && (planeCount-- > 0))
+	  pCnt = srcObj->domain.p->lastpl - srcObj->domain.p->plane1 + 1;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+	  for(pIdx =  0; pIdx < pCnt; ++pIdx)
 	  {
-	    if((*(srcDomains + planeIdx)).core &&
-	       (*(srcValues + planeIdx)).core)
+	    if((errNum == WLZ_ERR_NONE) &&
+	       (dom[pIdx].core != NULL) &&
+	       (val[pIdx].core != NULL))
 	    {
-	      srcObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-	      			     *(srcDomains + planeIdx),
-	      			     *(srcValues + planeIdx),
-				     NULL, NULL, &errNum);
+	      int	area2D;
+	      double	min2D,
+			max2D,
+			sum2D,
+			sumSq2D;
+	      WlzObject	*srcObj2D = NULL;
+	      WlzErrorNum errNum2D = WLZ_ERR_NONE;
+
+	      srcObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom[pIdx], val[pIdx],
+				     NULL, NULL, &errNum2D);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 		area2D = WlzGreyStats2D(srcObj2D, &gType,
 					&min2D, &max2D, &sum2D, &sumSq2D,
-					&errNum);
+					&errNum2D);
 	      }
 	      WlzFreeObj(srcObj2D);
-	      if(errNum == WLZ_ERR_NONE)
+#ifdef _OPENMP
+#pragma omp critical
 	      {
-		if(area == 0)
+#endif
+		if(errNum2D == WLZ_ERR_NONE)
 		{
-		  min = min2D;
-		  max = max2D;
-		  area = area2D;
-		  sum = sum2D;
-		  sumSq = sumSq2D;
+		  if(area == 0)
+		  {
+		    min = min2D;
+		    max = max2D;
+		    area = area2D;
+		    sum = sum2D;
+		    sumSq = sumSq2D;
+		  }
+		  else
+		  {
+		    min = (min < min2D)? min: min2D;
+		    max = (max > max2D)? max: max2D;
+		    area += area2D;
+		    sum += sum2D;
+		    sumSq += sumSq2D;
+		  }
 		}
 		else
 		{
-		  min = (min < min2D)? min: min2D;
-		  max = (max > max2D)? max: max2D;
-		  area += area2D;
-		  sum += sum2D;
-		  sumSq += sumSq2D;
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    errNum = errNum2D;
+		  }
 		}
+#ifdef _OPENMP
 	      }
+#endif
 	    }
-	    ++planeIdx;
 	  }
 	}
         break;
