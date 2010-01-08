@@ -277,6 +277,9 @@ int main(int	argc,
 
     WlzFreeObj(obj);
   }
+  if((inFile != NULL) && (inFile != stdin)){
+    (void )fclose(inFile);
+  }
 
   return 0;
 }
