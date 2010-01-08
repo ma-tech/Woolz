@@ -1037,12 +1037,13 @@ WlzObject 	*WlzBasisFnMakeCMeshTr2D(WlzBasisFnTransform *basisTr,
   else
   {
     dom.cm2 = mesh;
-    val.x = WlzMakeIndexedValues(mObj, 1, &dim, WLZ_GREY_DOUBLE,
-				    WLZ_VALUE_ATTACH_NOD, &errNum);
+    mObj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mObj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
+    val.x = WlzMakeIndexedValues(mObj, 1, &dim, WLZ_GREY_DOUBLE,
+				    WLZ_VALUE_ATTACH_NOD, &errNum);
+    mObj->values = WlzAssignValues(val, NULL);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1099,12 +1100,17 @@ WlzObject 	*WlzBasisFnMakeCMeshTr3D(WlzBasisFnTransform *basisTr,
   else
   {
     dom.cm3 = mesh;
-    val.x = WlzMakeIndexedValues(mObj, 1, &dim, WLZ_GREY_DOUBLE,
-				    WLZ_VALUE_ATTACH_NOD, &errNum);
+    mObj = WlzMakeMain(WLZ_CMESH_3D, dom, val, NULL, NULL, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mObj = WlzMakeMain(WLZ_CMESH_3D, dom, val, NULL, NULL, &errNum);
+    val.x = WlzMakeIndexedValues(mObj, 1, &dim, WLZ_GREY_DOUBLE,
+				    WLZ_VALUE_ATTACH_NOD, &errNum);
+    mObj->values = WlzAssignValues(val, NULL);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzBasisFnSetCMesh3D(mObj, basisTr);
   }
   if(errNum != WLZ_ERR_NONE)
   {
@@ -1208,11 +1214,10 @@ WlzObject 	*WlzBasisFnInvertMakeCMeshTr2D(
   WlzObject	*mObj = NULL;
   WlzDomain	dom;
   WlzValues	val;
-  WlzCMeshP	invMesh;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   val.core = NULL;
-  invMesh.m2 = dom.cm2 = WlzCMeshCopy2D(mesh, 0, NULL, NULL, &errNum);
+  dom.cm2 = WlzCMeshCopy2D(mesh, 0, NULL, NULL, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     mObj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
