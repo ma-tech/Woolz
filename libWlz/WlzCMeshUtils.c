@@ -598,6 +598,90 @@ int		WlzCMeshSetBoundNodFlags3D(WlzCMesh3D *mesh)
 }
 
 /*!
+* \return	Number of boundary nodes.
+* \ingroup	WlzMesh
+* \brief	Counts the number of boundary nodes of the mesh.
+* \param	mesh			Given mesh.
+*/
+int		WlzCMeshCountBoundNodes(WlzCMeshP mesh)
+{
+  int		nBnd = 0;
+  if(mesh.v)
+  {
+    switch(mesh.m2->type)
+    {
+      case WLZ_CMESH_TRI2D:
+        nBnd = WlzCMeshCountBoundNodes2D(mesh.m2);
+	break;
+      case WLZ_CMESH_TET3D:
+        nBnd = WlzCMeshCountBoundNodes3D(mesh.m3);
+	break;
+      default:
+        break;
+    }
+  }
+  return(nBnd);
+}
+
+/*!
+* \return	Number of boundary nodes.
+* \ingroup	WlzMesh
+* \brief	Counts the number of boundary nodes of the 2D mesh.
+* \param	mesh			Given mesh.
+*/
+int		WlzCMeshCountBoundNodes2D(WlzCMesh2D *mesh)
+{
+  int		idN,
+  		nBnd = 0;
+  WlzCMeshNod2D *nod;
+
+  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  {
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	if(WlzCMeshNodIsBoundary2D(nod))
+	{
+	  ++nBnd;
+	}
+      }
+    }
+  }
+  return(nBnd);
+}
+
+/*!
+* \return	Number of boundary nodes.
+* \ingroup	WlzMesh
+* \brief	Counts the number of boundary nodes of the 3D mesh.
+* \param	mesh			Given mesh.
+*/
+int		WlzCMeshCountBoundNodes3D(WlzCMesh3D *mesh)
+{
+  int		idN,
+  		nBnd = 0;
+  WlzCMeshNod3D *nod;
+
+  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  {
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	if(WlzCMeshNodIsBoundary3D(nod))
+	{
+	  ++nBnd;
+	}
+      }
+    }
+  }
+  return(nBnd);
+}
+
+/*!
 * \return	Number of boundary elements.
 * \ingroup	WlzMesh
 * \brief	Sets or clears the boundary element flag bit for all elements

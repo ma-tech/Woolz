@@ -1526,6 +1526,12 @@ extern WlzDBox2			WlzCMeshElmBBox2D(
 				  WlzCMeshElm2D *elm);
 extern WlzDBox3			WlzCMeshElmBBox3D(
 				  WlzCMeshElm3D *elm);
+extern int			WlzCMeshCountBoundNodes(
+				  WlzCMeshP mesh);
+extern int			WlzCMeshCountBoundNodes2D(
+				  WlzCMesh2D *mesh);
+extern int			WlzCMeshCountBoundNodes3D(
+				  WlzCMesh3D *mesh);
 extern int			WlzCMeshSetBoundNodFlags(
 				  WlzCMeshP mesh);
 extern int			WlzCMeshSetBoundNodFlags2D(
