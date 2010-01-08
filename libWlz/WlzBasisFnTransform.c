@@ -769,6 +769,9 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzObject *mObj,
     switch(basisTr->basisFn->type)
     {
       case WLZ_FN_BASIS_2DGAUSS:
+#ifdef _OPENMP
+#pragma omp parallel for private(dsp, dspV, nod)
+#endif
 	for(idN = 0; idN < maxNodIdx; ++idN)
 	{
 	  nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
@@ -782,6 +785,9 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzObject *mObj,
 	}
         break;
       case WLZ_FN_BASIS_2DIMQ:
+#ifdef _OPENMP
+#pragma omp parallel for private(dsp, dspV, nod)
+#endif
 	for(idN = 0; idN < maxNodIdx; ++idN)
 	{
 	  nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
@@ -795,6 +801,9 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzObject *mObj,
 	}
         break;
       case WLZ_FN_BASIS_2DMQ:
+#ifdef _OPENMP
+#pragma omp parallel for private(dsp, dspV, nod)
+#endif
 	for(idN = 0; idN < maxNodIdx; ++idN)
 	{
 	  nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
@@ -808,6 +817,9 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzObject *mObj,
 	}
         break;
       case WLZ_FN_BASIS_2DTPS:
+#ifdef _OPENMP
+#pragma omp parallel for private(dsp, dspV, nod)
+#endif
 	for(idN = 0; idN < maxNodIdx; ++idN)
 	{
 	  nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
@@ -892,6 +904,9 @@ WlzErrorNum    	WlzBasisFnSetCMesh3D(WlzObject *mObj,
     switch(basisTr->basisFn->type)
     {
       case WLZ_FN_BASIS_3DIMQ:
+#ifdef _OPENMP
+#pragma omp parallel for private(dsp, dspV, nod)
+#endif
         for(idN = 0; idN < maxNodIdx; ++idN)
 	{
 	  nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
@@ -906,6 +921,9 @@ WlzErrorNum    	WlzBasisFnSetCMesh3D(WlzObject *mObj,
 	}
 	break;
       case WLZ_FN_BASIS_3DMQ:
+#ifdef _OPENMP
+#pragma omp parallel for private(dsp, dspV, nod)
+#endif
         for(idN = 0; idN < maxNodIdx; ++idN)
 	{
 	  nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
@@ -1773,6 +1791,8 @@ WlzDVertex2	WlzBasisFnTransformNormalD(WlzBasisFnTransform *basisTr,
   		dNr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  dNr.vtX = 0.0;
+  dNr.vtY = 0.0;
   if(basisTr == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -1830,6 +1850,8 @@ WlzDVertex2	WlzBasisFnTransformVertexD(WlzBasisFnTransform *basisTr,
   WlzDVertex2	dstVx;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  dstVx.vtX = 0.0;
+  dstVx.vtY = 0.0;
   if(basisTr == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
