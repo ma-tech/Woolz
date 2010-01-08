@@ -2933,26 +2933,41 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
       /* Allocate and compute the distance maps. */
       maxNod = newBasisFn->mesh.m3->res.nod.maxEnt;
       newBasisFn->distFn = WlzBasisFnMapDistFn3D;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
       for(idN = 0; idN < newBasisFn->nVtx; ++idN)
       {
-        if(newBasisFn->distMap[idN] == NULL)
+	if(errNum == WLZ_ERR_NONE)
 	{
-	  if((newBasisFn->distMap[idN] = (double *)
-	                                 AlcMalloc(sizeof(double) *
-					           maxNod)) == NULL)
+	  WlzErrorNum	errNum1 = WLZ_ERR_NONE;
+
+	  if(newBasisFn->distMap[idN] == NULL)
 	  {
-	    errNum = WLZ_ERR_MEM_ALLOC;
+	    if((newBasisFn->distMap[idN] = (double *)
+					   AlcMalloc(sizeof(double) *
+						     maxNod)) == NULL)
+	    {
+	      errNum1 = WLZ_ERR_MEM_ALLOC;
+	    }
+	    else
+	    {
+	      errNum1 = WlzCMeshFMarNodes3D(newBasisFn->mesh.m3,
+					    newBasisFn->distMap[idN],
+					    1, dPts + idN);
+	    }
 	  }
-	  else
-	  {
-	    errNum = WlzCMeshFMarNodes3D(newBasisFn->mesh.m3,
-	                                 newBasisFn->distMap[idN],
-					 1, dPts + idN);
+#ifdef _OPENMP
+#pragma omp critical
+          {
+#endif
+            if((errNum == WLZ_ERR_NONE) && (errNum1 != WLZ_ERR_NONE))
+	    {
+	      errNum = errNum1;
+	    }
+#ifdef _OPENMP
 	  }
-	  if(errNum != WLZ_ERR_NONE)
-	  {
-	    break;
-	  }
+#endif
 	}
       }
     }
