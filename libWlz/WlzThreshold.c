@@ -592,13 +592,13 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
 				 WlzErrorNum	*dstErr)
 {
   /*----LOCAL AUTOMATIC VARIABLES-----*/
-  WlzObject		*obj1, *temp;
+  WlzObject		*obj1;
   WlzPlaneDomain	*pdom, *npdom;
   WlzVoxelValues	*voxtab, *nvoxtab;
-  WlzDomain		*domains, *ndomains, domain;
-  WlzValues		*values, *nvalues, vals;
-  int			i, nplanes;
-  WlzErrorNum		errNum=WLZ_ERR_NONE;
+  WlzDomain		domain;
+  WlzValues		vals;
+  int			i, p, nplanes;
+  WlzErrorNum		errNum = WLZ_ERR_NONE;
 
   /* no need to check the object pointer or type because this procedure
      can only be accessed via WlzThreshold. The domain and valuetable
@@ -653,55 +653,72 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
   }
 
   if( errNum == WLZ_ERR_NONE ){
-    /* set up variables */
-    domains = pdom->domains;
-    ndomains = npdom->domains;
-    values = voxtab->values;
-    nvalues = nvoxtab->values;
-    nplanes = pdom->lastpl - pdom->plane1 + 1;
-
     /* copy voxel_sizes */
     for(i=0; i < 3; i++){
       npdom->voxel_size[i] = pdom->voxel_size[i];
     }
-  }
+    /* threshold each plane */
+    nplanes = pdom->lastpl - pdom->plane1 + 1;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(p = 0; p < nplanes; ++p){
+      if(errNum == WLZ_ERR_NONE){
+  	WlzDomain	*domains,
+			*ndomains;
+  	WlzValues	*values,
+			*nvalues;
+	WlzObject	*gObj2D = NULL,
+			*tObj2D = NULL;
+	WlzErrorNum 	errNum2D = WLZ_ERR_NONE;
 
-  /* Threshold each plane */
-  while( (errNum == WLZ_ERR_NONE) && nplanes-- ){
-    if(((*domains).core == NULL) || ((*values).core == NULL)){
-      (*ndomains).core = NULL;
-      (*nvalues).core = NULL;
-    }
-    else if((temp = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-				NULL, NULL, &errNum)) != NULL){
+	domains = pdom->domains + p;
+	values = voxtab->values + p;
+	ndomains = npdom->domains + p;
+	nvalues = nvoxtab->values + p;
+	if(((*domains).core == NULL) || ((*values).core == NULL)){
+	  (*ndomains).core = NULL;
+	  (*nvalues).core = NULL;
+	}
+	else if((gObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+				      NULL, NULL, &errNum2D)) != NULL){
 
-      if( temp->domain.i != NULL ){
-	if((obj1 = WlzThreshold(temp, threshV, highlow, &errNum)) != NULL){
-	  if( obj1->type == WLZ_2D_DOMAINOBJ ){
-	    *ndomains = WlzAssignDomain(obj1->domain, NULL);
-	    *nvalues = WlzAssignValues(obj1->values, NULL);
-	  }
-	  else {
+	  if( gObj2D->domain.i != NULL ){
+	    if((tObj2D = WlzThreshold(gObj2D, threshV, highlow,
+	                              &errNum2D)) != NULL){
+	      if(tObj2D->type == WLZ_2D_DOMAINOBJ){
+		*ndomains = WlzAssignDomain(tObj2D->domain, NULL);
+		*nvalues = WlzAssignValues(tObj2D->values, NULL);
+	      }
+	      else {
+		(*ndomains).core = NULL;
+		(*nvalues).core = NULL;
+	      }
+	      (void )WlzFreeObj(tObj2D);
+	    }
+	  } else {
 	    (*ndomains).core = NULL;
 	    (*nvalues).core = NULL;
 	  }
-	  WlzFreeObj(obj1);
+	  (void )WlzFreeObj(gObj2D);
 	}
-      } else {
-	(*ndomains).core = NULL;
-	(*nvalues).core = NULL;
+#ifdef _OPENMP
+#pragma omp critical
+        {
+#endif
+          if((errNum == WLZ_ERR_NONE) && (errNum2D != WLZ_ERR_NONE))
+	  {
+	    errNum = errNum2D;
+	  }
+#ifdef _OPENMP
+	}
+#endif
       }
     }
-    else {
+    if(errNum != WLZ_ERR_NONE){
       WlzFreePlaneDomain(npdom);
-      WlzFreeVoxelValueTb( nvoxtab );
-      break;
+      WlzFreeVoxelValueTb(nvoxtab);
     }
-
-    domains++;
-    ndomains++;
-    values++;
-    nvalues++;
   }
   /* standardise the plane domain */
   if((errNum == WLZ_ERR_NONE) &&
