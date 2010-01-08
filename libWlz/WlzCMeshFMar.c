@@ -80,10 +80,12 @@ typedef struct _WlzCMeshFMarElmQEnt
 
 static int			WlzCMeshFMarElmQCalcPriority2D(
 				  WlzCMeshElm2D *elm,
-				  WlzCMeshNod2D *cNod);
+				  WlzCMeshNod2D *cNod,
+				  int *fmNFlags);
 static int			WlzCMeshFMarElmQCalcPriority3D(
 				  WlzCMeshElm3D *elm,
-				  WlzCMeshNod3D *cNod);
+				  WlzCMeshNod3D *cNod,
+				  int *fmNFlags);
 static double			WlzCMeshFMarQSElmPriority2D(
 				  WlzCMeshElm2D *elm,
 				  double *dst,
@@ -103,6 +105,7 @@ static int		 	WlzCMeshFMarCompute2D(
 				  WlzCMeshNod2D *nod1,
 				  WlzCMeshNod2D *nod2,
 				  double *distances,
+				  int *fmNFlags,
 				  WlzCMeshElm2D *elm);
 static int			WlzCMeshFMarCompute3D(
                                   WlzCMeshNod3D *nod0,
@@ -110,6 +113,7 @@ static int			WlzCMeshFMarCompute3D(
 				  WlzCMeshNod3D *nod2,
 				  WlzCMeshNod3D *nod3,
 				  double *distances,
+				  int *fmNFlags,
 				  WlzCMeshElm3D *elm);
 static int			WlzCMeshFMarCompute3D1(
                                   WlzCMeshNod3D *nod0,
@@ -134,6 +138,7 @@ static WlzErrorNum 		WlzCMeshFMarAddSeeds2D(
 				  WlzCMesh2D *mesh, 
 				  int qMin,
 				  double *distances,
+				  int *fmNFlags,
 				  int nSeeds,
 				  WlzDVertex2 *seeds);
 static WlzErrorNum 		WlzCMeshFMarAddSeeds3D(
@@ -141,6 +146,7 @@ static WlzErrorNum 		WlzCMeshFMarAddSeeds3D(
 				  WlzCMesh3D *mesh,
 				  int qMin,
 				  double *distances,
+				  int *fmNFlags,
 				  int nSeeds,
 				  WlzDVertex3 *seeds);
 static WlzErrorNum 		WlzCMeshFMarAddSeed2D(
@@ -160,10 +166,12 @@ static WlzErrorNum 		WlzCMeshFMarAddSeed3D(
 static WlzErrorNum 		WlzCMeshFMarQInsertNod2D(
 				  AlcHeap *queue,
 				  WlzCMeshNod2D *nod,
+				  int *fmNFlags,
 				  double dist);
 static WlzErrorNum 		WlzCMeshFMarQInsertNod3D(
 				  AlcHeap *queue,
 				  WlzCMeshNod3D *nod,
+				  int *fmNFlags,
 				  double dist);
 static WlzErrorNum 		WlzCMeshFMarSElmQInsert2D(
 				  AlcHeap *edgQ,
@@ -177,10 +185,12 @@ static WlzErrorNum 		WlzCMeshFMarSElmQInsert3D(
 				  WlzDVertex3 org);
 static WlzErrorNum 		WlzCMeshFMarElmQInit2D(
 				  AlcHeap *queue,
-				  WlzCMeshNod2D *nod);
+				  WlzCMeshNod2D *nod,
+				  int *fmNFlags);
 static WlzErrorNum 		WlzCMeshFMarElmQInit3D(
 				  AlcHeap *queue,
-				  WlzCMeshNod3D *nod);
+				  WlzCMeshNod3D *nod,
+				  int *fmNFlags);
 
 /*!
 * \return	A 2D domain object, an empty object if the mesh has
@@ -583,8 +593,7 @@ WlzObject	*WlzCMeshDistance3D(WlzObject *objG,
 * 		propagating wavefronts within a 2D conforming mesh. The
 * 		wavefronts are propagated from either the mesh boundary
 * 		or a number of seed positions within the mesh.
-* 		The given mesh will have modified node and element flags
-* 		on return. 
+* 		The given mesh will not be modified.
 * \param	mesh			Given mesh.
 * \param	distances		Array for computed distances.
 * \param	nSeeds			Number of seed nodes, if \f$<\f$ 1
@@ -603,6 +612,7 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
   		idN,
   		idS,
 		cnt;
+  int		*fmNFlags = NULL;
   WlzCMeshNod2D	*nod0,
                 *nod1;
   WlzCMeshNod2D	*nodes[3];
@@ -627,8 +637,20 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Set distance for all mesh nodes to maximum value. */
+    /* Allocate private node flags. */
+    if((fmNFlags = (int *)AlcCalloc(mesh->res.nod.maxEnt, sizeof(int))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Set distance for all mesh nodes to maximum value. */
+  if(errNum == WLZ_ERR_NONE)
+  {
     WlzValueSetDouble(distances, DBL_MAX, mesh->res.nod.maxEnt);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+#ifdef HACK_OLD_CODE
     /* Clear mesh node flags, set boundary node flags and count number of
      * boundary nodes. */
     WlzCMeshClearNodFlags2D(mesh, WLZ_CMESH_NOD_FLAG_ALL);
@@ -636,6 +658,12 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
+#else
+    if((cnt = WlzCMeshCountBoundNodes2D(mesh)) <= 0)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+#endif
   }
   /* Create and then initialise the active node queue using the given seed
    * or boundary nodes. */
@@ -651,7 +679,7 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
     if(nSeeds > 0)
     {
       errNum = WlzCMeshFMarAddSeeds2D(nodQ, mesh, cnt + 1,
-                                      distances, nSeeds, seeds);
+                                      distances, fmNFlags, nSeeds, seeds);
     }
     else
     {
@@ -667,15 +695,14 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
         for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
 	{
 	  nod0 = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
-	  if((nod0->idx >= 0) &&
-	     ((nod0->flags & WLZ_CMESH_NOD_FLAG_BOUNDARY) != 0))
+	  if((nod0->idx >= 0) && (WlzCMeshNodIsBoundary2D(nod0) != 0))
 	  {
 	    seeds[idS] = nod0->pos;
 	    ++idS;
 	  }
 	}
 	errNum = WlzCMeshFMarAddSeeds2D(nodQ, mesh, cnt + 1,
-				        distances, nSeeds, seeds);
+				        distances, fmNFlags, nSeeds, seeds);
 	AlcFree(seeds);
       }
     }
@@ -698,9 +725,9 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
      * them to active and insert them into the queue.*/
     nod0 = (WlzCMeshNod2D *)(nodQEntP->entity);
     AlcHeapEntFree(nodQ);
-    if((nod0->flags & WLZ_CMESH_NOD_FLAG_UPWIND) == 0)
+    if((fmNFlags[nod0->idx] & WLZ_CMESH_NOD_FLAG_UPWIND) == 0)
     {
-      errNum = WlzCMeshFMarElmQInit2D(elmQ, nod0);
+      errNum = WlzCMeshFMarElmQInit2D(elmQ, nod0, fmNFlags);
       if(errNum == WLZ_ERR_NONE)
       {
 	/* While element list is not empty, remove element and compute all
@@ -722,16 +749,17 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
 	  {
 	    nodes[idM] = elm->edu[(idN + idM) % 3].nod;
 	  }
-	  if((nodes[2]->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0)
+	  if((fmNFlags[nodes[2]->idx] & WLZ_CMESH_NOD_FLAG_KNOWN) != 0)
 	  {
 	    nod1 = nodes[2];
 	    nodes[2] = nodes[1];
 	    nodes[1] = nod1;
 	  }
 	  if(WlzCMeshFMarCompute2D(nodes[0], nodes[1], nodes[2],
-				   distances, elm) != 0)
+				   distances, fmNFlags, elm) != 0)
 	  {
 	    errNum = WlzCMeshFMarQInsertNod2D(nodQ, nodes[2],
+					      fmNFlags + nodes[2]->idx,
 					      distances[nodes[2]->idx]);
 	    if(errNum != WLZ_ERR_NONE)
 	    {
@@ -742,15 +770,17 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
 	/* Set the current node to be upwind. */
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  nod0->flags = (nod0->flags & ~(WLZ_CMESH_NOD_FLAG_ACTIVE)) |
-					 WLZ_CMESH_NOD_FLAG_KNOWN |
-		                         WLZ_CMESH_NOD_FLAG_UPWIND;
+	  fmNFlags[nod0->idx] = (fmNFlags[nod0->idx] &
+	                        ~(WLZ_CMESH_NOD_FLAG_ACTIVE)) |
+			       WLZ_CMESH_NOD_FLAG_KNOWN |
+		               WLZ_CMESH_NOD_FLAG_UPWIND;
 	}
       }
       AlcHeapAllEntFree(elmQ, 0);
     }
   }
   /* Clear up. */
+  AlcFree(fmNFlags);
   AlcHeapFree(elmQ);
   AlcHeapFree(nodQ);
   return(errNum);
@@ -763,8 +793,7 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
 * 		propagating wavefronts within a 3D conforming mesh. The
 * 		wavefronts are propagated from either the mesh boundary
 * 		or a number of seed positions within the mesh.
-* 		The given mesh will have modified node and element flags
-* 		on return. 
+* 		The given mesh will not be modified.
 * \param	mesh			Given mesh.
 * \param	distances		Array for computed distances.
 * \param	nSeeds			Number of seed nodes, if \f$<\f$ 1
@@ -784,6 +813,7 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
 		idP,
   		idS,
 		cnt;
+  int		*fmNFlags = NULL;
   WlzCMeshNod3D	*nod0,
                 *nod1;
   WlzCMeshNod3D	*nodes[4];
@@ -806,10 +836,21 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
+  /* Set distance for all mesh nodes to maximum value. */
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Set distance for all mesh nodes to maximum value. */
     WlzValueSetDouble(distances, DBL_MAX, mesh->res.nod.maxEnt);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((fmNFlags = (int *)AlcCalloc(mesh->res.nod.maxEnt, sizeof(int))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+#ifdef HACK_OLD_CODE
     /* Clear mesh node flags, set boundary node flags and count number of
      * boundary nodes. */
     WlzCMeshClearNodFlags3D(mesh, WLZ_CMESH_NOD_FLAG_ALL);
@@ -817,6 +858,12 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
+#else
+    if((cnt = WlzCMeshCountBoundNodes3D(mesh)) <= 0)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+#endif
   }
   /* Create and then initialise the active node queue using the given seed
    * or boundary nodes. */
@@ -832,7 +879,7 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
     if(nSeeds > 0)
     {
       errNum = WlzCMeshFMarAddSeeds3D(nodQ, mesh, cnt + 1,
-                                      distances, nSeeds, seeds);
+                                      distances, fmNFlags, nSeeds, seeds);
     }
     else
     {
@@ -848,15 +895,14 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
         for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
 	{
 	  nod0 = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
-	  if((nod0->idx >= 0) &&
-	     ((nod0->flags & WLZ_CMESH_NOD_FLAG_BOUNDARY) != 0))
+	  if((nod0->idx >= 0) && (WlzCMeshNodIsBoundary3D(nod0) != 0))
 	  {
 	    seeds[idS] = nod0->pos;
 	    ++idS;
 	  }
 	}
 	errNum = WlzCMeshFMarAddSeeds3D(nodQ, mesh, cnt + 1,
-				        distances, nSeeds, seeds);
+				        distances, fmNFlags, nSeeds, seeds);
 	AlcFree(seeds);
       }
     }
@@ -879,9 +925,9 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
      * them to active and insert them into the queue.*/
     nod0 = (WlzCMeshNod3D *)(nodQEntP->entity);
     AlcHeapEntFree(nodQ);
-    if((nod0->flags & WLZ_CMESH_NOD_FLAG_UPWIND) == 0)
+    if((fmNFlags[nod0->idx] & WLZ_CMESH_NOD_FLAG_UPWIND) == 0)
     {
-      errNum = WlzCMeshFMarElmQInit3D(elmQ, nod0);
+      errNum = WlzCMeshFMarElmQInit3D(elmQ, nod0, fmNFlags);
       if(errNum == WLZ_ERR_NONE)
       {
 	/* While element list is not empty, remove element and compute all
@@ -909,9 +955,10 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
 	    nod1 = nodes[idM]; nodes[idM] = nodes[idP]; nodes[idP] = nod1;
 	  }
 	  if(WlzCMeshFMarCompute3D(nodes[0], nodes[1], nodes[2], nodes[3],
-				   distances, elm) != 0)
+				   distances, fmNFlags, elm) != 0)
 	  {
 	    errNum = WlzCMeshFMarQInsertNod3D(nodQ, nodes[3],
+					      fmNFlags + nodes[3]->idx,
 					      distances[nodes[3]->idx]);
 	    if(errNum != WLZ_ERR_NONE)
 	    {
@@ -922,15 +969,17 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
 	/* Set the current node to be upwind. */
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  nod0->flags = (nod0->flags & ~(WLZ_CMESH_NOD_FLAG_ACTIVE)) |
-					 WLZ_CMESH_NOD_FLAG_KNOWN |
-		                         WLZ_CMESH_NOD_FLAG_UPWIND;
+	  fmNFlags[nod0->idx] = (fmNFlags[nod0->idx] &
+	                        ~(WLZ_CMESH_NOD_FLAG_ACTIVE)) |
+			       WLZ_CMESH_NOD_FLAG_KNOWN |
+			       WLZ_CMESH_NOD_FLAG_UPWIND;
 	}
       }
       AlcHeapAllEntFree(elmQ, 0);
     }
   }
   /* Clear up. */
+  AlcFree(fmNFlags);
   AlcHeapFree(elmQ);
   AlcHeapFree(nodQ);
   return(errNum);
@@ -945,15 +994,17 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
 * \param	queue			Given constrained mesh node priority
 * 					queue.
 * \param	nod			Given node to insert into the queue.
+* \param	fmNFlags		Fast marching flags pointer for the
+* 					given node.
 * \param	dist			Node distance.
 */
-static WlzErrorNum WlzCMeshFMarQInsertNod2D(AlcHeap *queue,
-					    WlzCMeshNod2D *nod, double dist)
+static WlzErrorNum WlzCMeshFMarQInsertNod2D(AlcHeap *queue, WlzCMeshNod2D *nod,
+					    int *fmNFlags, double dist)
 {
   WlzCMeshFMarQEnt ent;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
-  nod->flags |= WLZ_CMESH_NOD_FLAG_KNOWN | WLZ_CMESH_NOD_FLAG_ACTIVE;
+  *fmNFlags |= WLZ_CMESH_NOD_FLAG_KNOWN | WLZ_CMESH_NOD_FLAG_ACTIVE;
   ent.entity = nod;
   ent.priority = dist;
   if(AlcHeapInsertEnt(queue, &ent) != ALC_ER_NONE)
@@ -972,15 +1023,17 @@ static WlzErrorNum WlzCMeshFMarQInsertNod2D(AlcHeap *queue,
 * \param	queue			Given constrained mesh node priority
 * 					queue.
 * \param	nod			Given node to insert into the queue.
+* \param	fmNFlags		Fast marching flags pointer for the
+* 					given node.
 * \param	dist			Node distance.
 */
-static WlzErrorNum WlzCMeshFMarQInsertNod3D(AlcHeap *queue,
-				WlzCMeshNod3D *nod, double dist)
+static WlzErrorNum WlzCMeshFMarQInsertNod3D(AlcHeap *queue, WlzCMeshNod3D *nod,
+					int *fmNFlags, double dist)
 {
   WlzCMeshFMarQEnt ent;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
-  nod->flags |= WLZ_CMESH_NOD_FLAG_KNOWN | WLZ_CMESH_NOD_FLAG_ACTIVE;
+  *fmNFlags |= WLZ_CMESH_NOD_FLAG_KNOWN | WLZ_CMESH_NOD_FLAG_ACTIVE;
   ent.entity = nod;
   ent.priority = dist;
   if(AlcHeapInsertEnt(queue, &ent) != ALC_ER_NONE)
@@ -1083,52 +1136,13 @@ static double	WlzCMeshFMarQSElmPriority3D(WlzCMeshElm3D *elm,
 * \param	distances		Array of distances indexed by the
 * 					mesh node indices, which will be
 * 					set for the unknown node on return.
+* \param	fmNFlags			Node flags for fast marching.
 * 		elm			Element using these nodes.
 */
 static int	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
 				WlzCMeshNod2D *nod1, WlzCMeshNod2D *nod2, 
-				double *distances, WlzCMeshElm2D *elm)
-/* #define NEW_CODE_HACK */
-#ifdef NEW_CODE_HACK
-{
-  int		idN,
-		rtn = 0;
-  double	d0,
-		d2;
-  WlzCMeshNod2D *nod3;
-  WlzCMeshEdgU2D *edu;
-  const double  maxCosAng = 0.996195;		        /* Cosine 5 degrees. */
-
-  /* For each element which is a neighbour of the given one find a
-   * node in the element which is not a node of the current element.
-   * If this node has a smaller distance than nod1 use it as nod1. */
-  for(idN = 0; idN < 3; ++idN)
-  {
-    edu = elm->edu + idN;
-    if((edu->opp != NULL) && (edu->opp != edu))
-    {
-      nod3 = edu->opp->next->next->nod;
-      if(distances[nod3->idx] < distances[nod1->idx])
-      {
-	d0 = WlzGeomCos3V(nod0->pos, nod3->pos, nod2->pos);
-	if(d0 < maxCosAng)
-	{
-	  nod1 = nod3;
-	}
-      }
-    }
-  }
-  d2 = WlzCMeshFMarSolve2D2(nod0->pos, nod1->pos, nod2->pos,
-			    *(distances + nod0->idx),
-			    *(distances + nod1->idx));
-  if(d2 < *(distances + nod2->idx))
-  {
-    *(distances + nod2->idx) = d2;
-    rtn = 1;
-  }
-  return(rtn);
-}
-#else /* NEW_CODE_HACK */
+				double *distances, int *fmNFlags,
+				WlzCMeshElm2D *elm)
 {
   int		idN,
   		flg,
@@ -1175,7 +1189,7 @@ static int	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
     dist[0] = dist[1];
     dist[1] = distances[nod1->idx];
   }
-  if((nod1->flags & WLZ_CMESH_NOD_FLAG_KNOWN) == 0)
+  if((fmNFlags[nod1->idx] & WLZ_CMESH_NOD_FLAG_KNOWN) == 0)
   {
     /* Only have one node with known distance in this element. Compute the
      * distance using just the edge length. */
@@ -1257,7 +1271,6 @@ static int	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
   }
   return(rtn);
 }
-#endif /* NEW_CODE_HACK */
 
 /*!
 * \return	Computed distance of the third vertex.
@@ -1362,6 +1375,7 @@ static double 	WlzCMeshFMarSolve2D2(WlzDVertex2 p0, WlzDVertex2 p1,
 * \param	distances		Array of distanes indexed by the
 * 					mesh node indices, which will be
 * 					set for the unknown node on return.
+* \param	fmNFlags			Node flags for fast marching.
 * 		elm			Element using these nodes.
 */
 static int	WlzCMeshFMarCompute3D(WlzCMeshNod3D *nod0,
@@ -1369,15 +1383,16 @@ static int	WlzCMeshFMarCompute3D(WlzCMeshNod3D *nod0,
 				      WlzCMeshNod3D *nod2,
 				      WlzCMeshNod3D *nod3,
 				      double *distances,
+				      int *fmNFlags,
 				      WlzCMeshElm3D *elm)
 {
   int		rtn = 0,
   		kwnMsk = 0;
 
-  kwnMsk = (((nod0->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) << 0) |
-           (((nod1->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) << 1) |
-           (((nod2->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) << 2) |
-           (((nod3->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) << 3);
+  kwnMsk = (((fmNFlags[nod0->idx] & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) << 0) |
+           (((fmNFlags[nod1->idx] & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) << 1) |
+           (((fmNFlags[nod2->idx] & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) << 2) |
+           (((fmNFlags[nod3->idx] & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) << 3);
   switch(kwnMsk)
   {
     case  1: /* 0001 */
@@ -1755,12 +1770,13 @@ static int	WlzCMeshFMarCompute3D3(WlzCMeshNod3D *nod0,
 * 					edge queue. Appropriate value can
 * 					avoid reallocation.
 * \param	distances		Array of distances.
+* \param	fmNFlags			Node flags for fast marching.
 * \param	nSeed			Number of seeds.
 * \param	seeds			Array of seeds.
 */
 static WlzErrorNum WlzCMeshFMarAddSeeds2D(AlcHeap *nodQ,
 				WlzCMesh2D *mesh, int edgQMin,
-				double *distances,
+				double *distances, int *fmNFlags,
 				int nSeeds, WlzDVertex2 *seeds)
 {
   int		idN,
@@ -1807,7 +1823,7 @@ static WlzErrorNum WlzCMeshFMarAddSeeds2D(AlcHeap *nodQ,
       if(distances[idN] < DBL_MAX / 2.0)
       {
         nod0 = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
-	nod0->flags |= WLZ_CMESH_NOD_FLAG_KNOWN;
+	fmNFlags[nod0->idx] |= WLZ_CMESH_NOD_FLAG_KNOWN;
 	edu1 = edu0 = nod0->edu;
 	hit = 0;
 	do
@@ -1822,11 +1838,12 @@ static WlzErrorNum WlzCMeshFMarAddSeeds2D(AlcHeap *nodQ,
 	} while(edu1 != edu0);
 	if(hit == 0)
 	{
-	  nod0->flags |= WLZ_CMESH_NOD_FLAG_UPWIND;
+	  fmNFlags[nod0->idx] |= WLZ_CMESH_NOD_FLAG_UPWIND;
 	}
 	else
 	{
           if((errNum = WlzCMeshFMarQInsertNod2D(nodQ, nod0,
+	  				fmNFlags + nod0->idx,
 					distances[nod0->idx])) != WLZ_ERR_NONE)
 	  {
 	    break;
@@ -1849,12 +1866,13 @@ static WlzErrorNum WlzCMeshFMarAddSeeds2D(AlcHeap *nodQ,
 * 					face queue. Appropriate value can
 * 					avoid reallocation.
 * \param	distances		Array of distances.
+* \param	fmNFlags			Node flags for fast marching.
 * \param	nSeed			Number of seeds.
 * \param	seeds			Array of seeds.
 */
 static WlzErrorNum WlzCMeshFMarAddSeeds3D(AlcHeap *nodQ,
 				WlzCMesh3D *mesh, int fceQMin,
-				double *distances,
+				double *distances, int *fmNFlags,
 				int nSeeds, WlzDVertex3 *seeds)
 {
   int		idN,
@@ -1903,7 +1921,7 @@ static WlzErrorNum WlzCMeshFMarAddSeeds3D(AlcHeap *nodQ,
         nod0 = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
 	if(nod0->idx >= 0)
 	{
-	  nod0->flags |= WLZ_CMESH_NOD_FLAG_KNOWN;
+	  fmNFlags[nod0->idx] |= WLZ_CMESH_NOD_FLAG_KNOWN;
 	  edu1 = edu0 = nod0->edu;
 	  hit = 0;
 	  do
@@ -1918,12 +1936,13 @@ static WlzErrorNum WlzCMeshFMarAddSeeds3D(AlcHeap *nodQ,
 	  } while(edu1 != edu0);
 	  if(hit == 0)
 	  {
-	    nod0->flags |= WLZ_CMESH_NOD_FLAG_KNOWN |
-	                   WLZ_CMESH_NOD_FLAG_UPWIND;
+	    fmNFlags[nod0->idx] |= WLZ_CMESH_NOD_FLAG_KNOWN |
+	                           WLZ_CMESH_NOD_FLAG_UPWIND;
 	  }
 	  else
 	  {
 	    if((errNum = WlzCMeshFMarQInsertNod3D(nodQ, nod0,
+					fmNFlags + nod0->idx,
 					distances[nod0->idx])) != WLZ_ERR_NONE)
 	    {
 	      break;
@@ -2387,8 +2406,10 @@ static WlzErrorNum WlzCMeshFMarSElmQInsert3D(AlcHeap *queue,
 * \param	queue			Element queue to use/reuse.
 * \param	nod			Node with which to populate the
 * 					queue.
+* \param	fmNFlags		Node flags for fast marching.
 */
-static WlzErrorNum WlzCMeshFMarElmQInit2D(AlcHeap *queue, WlzCMeshNod2D *nod)
+static WlzErrorNum WlzCMeshFMarElmQInit2D(AlcHeap *queue, WlzCMeshNod2D *nod,
+					  int *fmNFlags)
 {
   int		priority;
   WlzCMeshEdgU2D *edu0,
@@ -2402,7 +2423,7 @@ static WlzErrorNum WlzCMeshFMarElmQInit2D(AlcHeap *queue, WlzCMeshNod2D *nod)
   do
   {
     ent.elm.e2 = edu1->elm;
-    priority = WlzCMeshFMarElmQCalcPriority2D(edu1->elm, nod);
+    priority = WlzCMeshFMarElmQCalcPriority2D(edu1->elm, nod, fmNFlags);
     if(priority > 0)
     {
       ent.priority = priority;
@@ -2428,8 +2449,10 @@ static WlzErrorNum WlzCMeshFMarElmQInit2D(AlcHeap *queue, WlzCMeshNod2D *nod)
 * \param	queue			Element queue to use/reuse.
 * \param	nod			Node with which to populate the
 * 					queue.
+* \param	fmNFlags		Node flags for fast marching.
 */
-static WlzErrorNum WlzCMeshFMarElmQInit3D(AlcHeap *queue, WlzCMeshNod3D *nod)
+static WlzErrorNum WlzCMeshFMarElmQInit3D(AlcHeap *queue, WlzCMeshNod3D *nod,
+				          int *fmNFlags)
 {
   int		priority;
   WlzCMeshEdgU3D *edu0,
@@ -2443,7 +2466,7 @@ static WlzErrorNum WlzCMeshFMarElmQInit3D(AlcHeap *queue, WlzCMeshNod3D *nod)
   do
   {
     ent.elm.e3 = edu1->face->elm;
-    priority = WlzCMeshFMarElmQCalcPriority3D(edu1->face->elm, nod);
+    priority = WlzCMeshFMarElmQCalcPriority3D(edu1->face->elm, nod, fmNFlags);
     if(priority > 0)
     {
       ent.priority = priority;
@@ -2474,9 +2497,11 @@ static WlzErrorNum WlzCMeshFMarElmQInit3D(AlcHeap *queue, WlzCMeshNod3D *nod)
 * \param	elm			Given element.
 * \param	cNod			The current node around wich the
 * 					elements in the queue are clustered.
+* \param	fmNFlags		Fast marching flags pointer for the
+* 					given node.
 */
 static int	WlzCMeshFMarElmQCalcPriority2D(WlzCMeshElm2D *elm,
-				               WlzCMeshNod2D *cNod)
+				WlzCMeshNod2D *cNod, int *fmNFlags)
 {
   int		idx,
   		priority = 6;
@@ -2485,9 +2510,9 @@ static int	WlzCMeshFMarElmQCalcPriority2D(WlzCMeshElm2D *elm,
   for(idx = 0; idx < 3; ++idx)
   {
     nod = elm->edu[idx].nod;
-    priority -= ((nod->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) +
+    priority -= ((fmNFlags[nod->idx] & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) +
                 ((nod->idx == cNod->idx) ||
-		 ((nod->flags & WLZ_CMESH_NOD_FLAG_UPWIND) != 0));
+		 ((fmNFlags[nod->idx] & WLZ_CMESH_NOD_FLAG_UPWIND) != 0));
   }
   return(priority);
 }
@@ -2507,9 +2532,11 @@ static int	WlzCMeshFMarElmQCalcPriority2D(WlzCMeshElm2D *elm,
 * \param	elm			The element.
 * \param	cNod			The current node around wich the
 * 					elements in the queue are clustered.
+* \param	fmNFlags		Fast marching flags pointer for the
+* 					given node.
 */
 static int	WlzCMeshFMarElmQCalcPriority3D(WlzCMeshElm3D *elm,
-				WlzCMeshNod3D *cNod)
+				WlzCMeshNod3D *cNod, int *fmNFlags)
 {
   int		idx,
   		priority = 8;
@@ -2518,13 +2545,13 @@ static int	WlzCMeshFMarElmQCalcPriority3D(WlzCMeshElm3D *elm,
   for(idx = 0; idx < 3; ++idx)
   {
     nod = elm->face[0].edu[idx].nod;
-    priority -= ((nod->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) +
+    priority -= ((fmNFlags[nod->idx] & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) +
                 ((nod->idx == cNod->idx) ||
-		 ((nod->flags & WLZ_CMESH_NOD_FLAG_UPWIND) != 0));
+		 ((fmNFlags[nod->idx] & WLZ_CMESH_NOD_FLAG_UPWIND) != 0));
   }
   nod = elm->face[1].edu[1].nod;
-  priority -= ((nod->flags & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) +
+  priority -= ((fmNFlags[nod->idx] & WLZ_CMESH_NOD_FLAG_KNOWN) != 0) +
               ((nod->idx == cNod->idx) ||
-	       ((nod->flags & WLZ_CMESH_NOD_FLAG_UPWIND) != 0));
+	       ((fmNFlags[nod->idx] & WLZ_CMESH_NOD_FLAG_UPWIND) != 0));
   return(priority);
 }
