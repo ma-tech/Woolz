@@ -192,7 +192,7 @@ int		main(int argc, char *argv[])
         break;
       case 's':
 	if(sscanf(optarg, "%lg,%lg,%lg",
-	          &(voxSz.vtX), &(voxSz.vtY), &(voxSz.vtX)) != 3)
+	          &(voxSz.vtX), &(voxSz.vtY), &(voxSz.vtZ)) != 3)
 	{
 	  usage = 1;
 	}
