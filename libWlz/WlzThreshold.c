@@ -680,8 +680,9 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
 	  (*ndomains).core = NULL;
 	  (*nvalues).core = NULL;
 	}
-	else if((gObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-				      NULL, NULL, &errNum2D)) != NULL){
+	else if((gObj2D = WlzAssignObject(
+	                  WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+				      NULL, NULL, &errNum2D), NULL)) != NULL){
 
 	  if( gObj2D->domain.i != NULL ){
 	    if((tObj2D = WlzThreshold(gObj2D, threshV, highlow,
