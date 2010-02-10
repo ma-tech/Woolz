@@ -245,8 +245,8 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
 				   WlzGreyTableType(WLZ_GREY_TAB_RECT,
 						    WLZ_GREY_UBYTE, NULL),
 				   pixval, &errNum))){
-	mask = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL, NULL,
-			      &errNum);
+        mask = WlzMakeMain(WLZ_2D_DOMAINOBJ, newObj->domain, values, NULL, NULL,
+                              &errNum);  //Changed 10/02/10 by Zsolt Husz
       }
 
       /* newObj is redundant if mask only required */
