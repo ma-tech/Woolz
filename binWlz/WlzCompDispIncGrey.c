@@ -8,7 +8,7 @@ static char _WlzCompDispIncGrey_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzCompDispIncGrey.c
+* \file         binWlz/WlzCompDispIncGrey.c
 * \author       Bill Hill
 * \date         February 2008
 * \version      $Id$

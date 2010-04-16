@@ -8,7 +8,7 @@ static char _WlzRGBChannelRatio_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzRGBChannelRatio.c
+* \file         binWlz/WlzRGBChannelRatio.c
 * \author       Bill Hill
 * \date         February 2008
 * \version      $Id$

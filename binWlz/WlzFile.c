@@ -8,7 +8,7 @@ static char _WlzFile_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzFile.c
+* \file         binWlz/WlzFile.c
 * \author       Bill Hill
 * \date         December 2008
 * \version      $Id$

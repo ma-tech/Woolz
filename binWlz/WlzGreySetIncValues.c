@@ -8,7 +8,7 @@ static char _WlzGreySetIncValues_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzGreySetIncValues.c
+* \file         binWlz/WlzGreySetIncValues.c
 * \author       Bill Hill
 * \date         February 2008
 * \version      $Id$
@@ -170,7 +170,7 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    outObj = WlzGreySetIncValues(inObj, &errNum);
+    outObj = WlzGreyNewIncValues(inObj, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;

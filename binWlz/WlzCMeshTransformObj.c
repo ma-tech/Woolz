@@ -8,7 +8,7 @@ static char _WlzCMeshTransformObj_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzCMeshTransformObj.c
+* \file         binWlz/WlzCMeshTransformObj.c
 * \author       Zsolt Husz
 * \date         December 2009
 * \version      $Id$

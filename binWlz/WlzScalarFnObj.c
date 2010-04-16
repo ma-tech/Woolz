@@ -8,7 +8,7 @@ static char _WlzScalarFnObj_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzScalarFnObj.c
+* \file         binWlz/WlzScalarFnObj.c
 * \author       Bill Hill
 * \date         August 2006
 * \version      $Id$

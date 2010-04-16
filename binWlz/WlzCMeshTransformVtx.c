@@ -8,7 +8,7 @@ static char _WlzCMeshTransformVtx_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzCMeshTransformVtx.c
+* \file         binWlz/WlzCMeshTransformVtx.c
 * \author       Bill Hill
 * \date         December 2009
 * \version      $Id$

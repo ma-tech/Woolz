@@ -8,7 +8,7 @@ static char _WlzCentralityObj_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzCentralityObj.c
+* \file         binWlz/WlzCentralityObj.c
 * \author       Bill Hill
 * \date         April 2008
 * \version      $Id$

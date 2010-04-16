@@ -8,7 +8,7 @@ static char _WlzMarkersToDomain_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzMarkersToDomain.c
+* \file         binWlz/WlzMarkersToDomain.c
 * \author       Bill Hill
 * \date         April 2003
 * \version      $Id$

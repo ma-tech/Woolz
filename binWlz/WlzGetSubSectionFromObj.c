@@ -8,7 +8,7 @@ static char _WlzGetSubSectionFromObj_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzGetSubSectionFromObj.c
+* \file         binWlz/WlzGetSubSectionFromObj.c
 * \author       Bill Hill
 * \date         March 2009
 * \version      $Id$

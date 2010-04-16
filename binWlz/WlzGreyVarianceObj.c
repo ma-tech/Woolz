@@ -8,7 +8,7 @@ static char _WlzGreyVarianceObj_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzGreyVarianceObj.c
+* \file         binWlz/WlzGreyVarianceObj.c
 * \author       Bill Hill
 * \date         February 2008
 * \version      $Id$

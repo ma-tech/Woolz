@@ -8,7 +8,7 @@ static char _WlzAutoCorrelate_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzAutoCorrelate.c
+* \file         binWlz/WlzAutoCorrelate.c
 * \author       Bill Hill
 * \date         November 2007
 * \version      $Id$

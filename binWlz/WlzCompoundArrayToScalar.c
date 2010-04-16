@@ -8,7 +8,7 @@ static char _lzCompoundArrayToScalar_c[] = "MRC HGU $Id$";
 #endif
 #endif
 /*!
-* \file         WlzCompoundArrayToScalar.c
+* \file         binWlz/WlzCompoundArrayToScalar.c
 * \author       Bill Hill
 * \date         February 2008
 * \version      $Id$
