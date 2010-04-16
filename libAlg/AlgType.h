@@ -74,6 +74,9 @@ extern "C" {
 #define ALG_M_SQRT3	(1.73205080756887729353)
 #define	ALG_M_SQRT1_2	(0.70710678118654752440)
 
+/* A tollerance value for double precission arithmetic. */
+#define ALG_DBL_TOLLERANCE	(1.0E-9)
+
 /*!
 * \enum		_AlgDistribution
 * \brief	Statistical distributions.
