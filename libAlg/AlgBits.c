@@ -231,3 +231,19 @@ int		AlgBitNextPowerOfTwo(unsigned int *dstP2I, unsigned int gI)
   }
   return(pI);
 }
+
+/*!
+* \return	Non zero if the given integer is an integral power of two.
+* \ingroup	AlgBits
+* \brief	Checks that the given integer is an integral power of two.
+* \param	gI			Given integer.
+*/
+int		AlgBitIsPowerOfTwo(unsigned int gI)
+{
+  int		status;
+  unsigned int	tmp;
+
+  (void )AlgBitNextPowerOfTwo(&tmp, gI);
+  status = (tmp == gI);
+  return(status);
+}

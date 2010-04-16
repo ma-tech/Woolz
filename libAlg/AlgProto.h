@@ -67,6 +67,9 @@ extern int			AlgBitNextSet(
 extern int			AlgBitNextPowerOfTwo(
 				  unsigned int *dstP2I,
 				  unsigned int gI);
+extern int			AlgBitIsPowerOfTwo(
+				  unsigned int gI);
+
 /* From AlgComplexUtils.c */
 extern double			AlgCModSq(
 				  ComplexD z);
