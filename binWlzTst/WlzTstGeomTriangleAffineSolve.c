@@ -12,6 +12,7 @@ int		main(int argc, char *argv[])
   		dVx[3];
 
 
+  thr = 1.0e-6;
   sVx[0].vtX = 260; sVx[0].vtY = 60;
   sVx[1].vtX = 240; sVx[1].vtY = 60;
   sVx[2].vtX = 250; sVx[2].vtY = 40;
