@@ -45,10 +45,12 @@ static char _WlzTstItrSpiral_c[] = "MRC HGU $Id$";
 #include <float.h>
 #include <Wlz.h>
 
-extern char     *optarg;
-extern int      optind,
-                opterr,
-                optopt;
+extern int      getopt(int argc, char * const *argv, const char *optstring);
+
+extern char	*optarg;
+extern int	optind,
+		opterr,
+		optopt;
 
 int		main(int argc, char *argv[])
 {
