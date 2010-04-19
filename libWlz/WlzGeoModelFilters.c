@@ -522,16 +522,19 @@ static void	WlzGMFilterGeomLPL2D(WlzGMModel *model,
 
   cnt = model->res.vertex.numIdx;
   vec = model->res.vertex.vec;
+#ifdef _OPENMP
+#pragma omp parallel for private(cV, tV0, tV1)
+#endif
   for(idx = 0; idx < cnt; ++idx)
   {
     cV = (WlzGMVertex *)AlcVectorItemGet(vec, idx);
     if(cV->idx >= 0)
     {
-      tV0 = *(vGIn + idx);
+      tV0 = vGIn[idx];
       tV1 = WlzGMFilterGeomLPL2Delta(model, cV, vGIn, nonMan);
       tV0.vtX += lambda * tV1.vtX;
       tV0.vtY += lambda * tV1.vtY;
-      *(vGOut + idx) = tV0;
+      vGOut[idx] = tV0;
     }
   }
 }
@@ -562,17 +565,20 @@ static void	WlzGMFilterGeomLPL3D(WlzGMModel *model,
 
   cnt = model->res.vertex.numIdx;
   vec = model->res.vertex.vec;
+#ifdef _OPENMP
+#pragma omp parallel for private(cV, tV0, tV1)
+#endif
   for(idx = 0; idx < cnt; ++idx)
   {
     cV = (WlzGMVertex *)AlcVectorItemGet(vec, idx);
     if(cV->idx >= 0)
     {
-      tV0 = *(vGIn + idx);
+      tV0 = vGIn[idx];
       tV1 = WlzGMFilterGeomLPL3Delta(model, cV, vGIn, nonMan);
       tV0.vtX += lambda * tV1.vtX;
       tV0.vtY += lambda * tV1.vtY;
       tV0.vtZ += lambda * tV1.vtZ;
-      *(vGOut + idx) = tV0;
+      vGOut[idx] = tV0;
     }
   }
 }
