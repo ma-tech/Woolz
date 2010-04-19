@@ -233,7 +233,7 @@ WlzPixelV WlzGetBackground(
 	break;
       }
 
-      if( obj->values.vox == NULL ){
+      if( obj->values.core == NULL ){
 	bgd.type = WLZ_GREY_INT;
 	bgd.v.inv = 0;
 	errNum = WLZ_ERR_NONE;
@@ -246,12 +246,18 @@ WlzPixelV WlzGetBackground(
 	break;
       }
 
-      voxtab = obj->values.vox;
-      if( voxtab->type != WLZ_VOXELVALUETABLE_GREY ){
-	errNum = WLZ_ERR_VOXELVALUES_TYPE;
-	break;
+      if(WlzGreyTableIsTiled(obj->values.core->type))
+      {
+        bgd = obj->values.t->bckgrnd;
       }
-      bgd = voxtab->bckgrnd;
+      else if(obj->values.core->type == WLZ_VOXELVALUETABLE_GREY)
+      {
+        bgd = obj->values.vox->bckgrnd;
+      }
+      else
+      {
+	errNum = WLZ_ERR_VALUES_TYPE;
+      }
       break;
 
     case WLZ_TRANS_OBJ:
