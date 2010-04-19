@@ -2295,6 +2295,74 @@ WlzErrorNum 	WlzGMModelTypeValid(WlzGMModelType type)
   return(errNum);
 }
 
+/*!
+* \return	Pointer to the appropriate resources or NULL on error.
+* \ingroup	WlzGeoModel
+* \brief	Gets the resources for the given element type in the given
+* 		model.
+* \param	model			Given model.
+* \param	elemType		Given element type.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzGMResource	*WlzGMModelGetRes(WlzGMModel *model, WlzGMElemType elemType,
+				  WlzErrorNum *dstErr)
+{
+  WlzGMResource	*res = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(model == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(elemType)
+    {
+      case WLZ_GMELM_VERTEX:
+        res = &(model->res.vertex);
+        break;
+      case WLZ_GMELM_VERTEX_G3I: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G3D: /* FALLTHROUGH */
+      case WLZ_GMELM_VERTEX_G3N: /* FALLTHROUGH */
+        res = &(model->res.vertexG);
+        break;
+      case WLZ_GMELM_VERTEX_T:
+        res = &(model->res.vertexT);
+        break;
+      case WLZ_GMELM_DISK_T:
+        res = &(model->res.diskT);
+        break;
+      case WLZ_GMELM_EDGE:
+        res = &(model->res.edge);
+        break;
+      case WLZ_GMELM_EDGE_T:
+        res = &(model->res.edgeT);
+        break;
+      case WLZ_GMELM_FACE:
+        res = &(model->res.face);
+        break;
+      case WLZ_GMELM_LOOP_T:
+        res = &(model->res.loopT);
+        break;
+      case WLZ_GMELM_SHELL:
+        res = &(model->res.shell);
+        break;
+      case WLZ_GMELM_SHELL_G3I:  /* FALLTHROUGH */
+      case WLZ_GMELM_SHELL_G3D:
+        res = &(model->res.shellG);
+        break;
+      default:
+        errNum = WLZ_ERR_PARAM_TYPE;
+        break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(res);
+}
+
 /* Geometry access, update and testing */
 
 /*!
@@ -4703,6 +4771,40 @@ double		WlzGMVertexDistSq2D(WlzGMVertex *vertex, WlzDVertex2 pos)
     }
   }
   return(dstSq);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzGeoModel
+* \brief	Gets the geometry of a face.
+* \param	face			Given face.
+* \param	dstPos0			Destination pointer for first vertex
+* 					geometry, must not be NULL.
+* \param	dstPos1			Destination pointer for second vertex
+* 					geometry, must not be NULL.
+* \param	dstPos2			Destination pointer for third vertex
+* 					geometry, must not be NULL.
+*/
+WlzErrorNum	WlzGMFaceGetG3D(WlzGMFace *face, WlzDVertex3 *dstPos0,
+				WlzDVertex3 *dstPos1, WlzDVertex3 *dstPos2)
+{
+  WlzGMEdgeT	*eT;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(face == NULL)
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    eT = face->loopT->edgeT;
+    (void )WlzGMVertexGetG3D(eT->vertexT->diskT->vertex, dstPos0);
+    eT = eT->next;
+    (void )WlzGMVertexGetG3D(eT->vertexT->diskT->vertex, dstPos1);
+    eT = eT->next;
+    (void )WlzGMVertexGetG3D(eT->vertexT->diskT->vertex, dstPos2);
+  }
+  return(errNum);
 }
 
 /*!
