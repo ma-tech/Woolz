@@ -68,11 +68,33 @@ static int			WlzGeomLineTriangleIntersectEdge3D(
 				  WlzDVertex3 v0,
 				  WlzDVertex3 v1,
 				  WlzDVertex3 v2);
+static int			WlzGeomTriAABBIsnDir(
+				  WlzDVertex3 d,
+				  WlzDVertex3 *t,
+				  WlzDVertex3 *b);
 static int			WlzGeomTetAABBIsnDir(
 				  WlzDVertex3 d,
                                   WlzDVertex3 *t,
-				  WlzDVertex3 *b,
-				  double tol);
+				  WlzDVertex3 *b);
+static int 			WlzGeomTriTri3DCoplanar(
+				  WlzDVertex3 n,
+				  WlzDVertex3 s[],
+				  WlzDVertex3 t[]);
+static int			WlzGeomTriTri3DIsn(
+				  WlzDVertex3 s[],
+				  double sp[],
+				  double d[],
+				  double d0d1,
+				  double d0d2,
+				  double is[]);
+static int			WlzGeomTriTriPlaneTest(
+				  double ds[],
+				  WlzDVertex3 *n,
+				  double *d,
+				  double *d0d1,
+				  double *d0d2,
+				  WlzDVertex3 s[],
+				  WlzDVertex3 t[]);
 
 /*!
 * \return	Zero if the circumcentre of the triangle lies at infinity,
@@ -112,6 +134,7 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 {
   int		finite = 0;
   double	tD[13];
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   tD[0]  = vx0.vtX * vx1.vtY;
   tD[1]  = vx0.vtX * vx2.vtY;
@@ -126,7 +149,7 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
   tD[10] = vx0.vtY * vx2.vtY;
   tD[11] = vx1.vtY * vx2.vtY;
   tD[12] = tD[0] + tD[3] - tD[5] - tD[2] - tD[1] + tD[4];
-  if((tD[12] * tD[12]) > DBL_EPSILON)
+  if((tD[12] * tD[12]) > tol)
   {
     finite = 1;
     tD[12] = 0.5 / tD[12];
@@ -164,7 +187,7 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 *		\f$p\f$ is outside the triangle at one or more of 
 *		\f$\lambda_0\f$, \f$\lambda_1\f$ and \f$\lambda_2\f$ is -ve.
 *		It is inside if all are +ve and on an edge of the
-*		triangle if any are close to zero (ie < DBL_EPSILON).
+*		triangle if any are close to zero (ie < ALG_DBL_TOLLERANCE).
 * \param	p0			First vertex of triangle.
 * \param	p1			Second vertex of triangle.
 * \param	p2			Third vertex of triangle.
@@ -232,7 +255,7 @@ int		 WlzGeomVxInTriangle2D(WlzDVertex2 p0, WlzDVertex2 p1,
 *		\f$\lambda_0\f$, \f$\lambda_1\f$, \f$\lambda_2\f$ and
 *		\f$\lambda_3\f$ is -ve. It is inside if all are +ve and
 *		on an edge of the tetrahedron if any are close to
-*		zero (ie fabs(x) < DBL_EPSILON).
+*		zero (ie fabs(x) < ALG_DBL_TOLLERANCE).
 *
 * 		The barycentric coordinates are computed by inverting the
 *		The tetrahedron vertices
@@ -559,10 +582,10 @@ int		WlzGeomInTriangleCircumcircle(WlzDVertex2 vx0, WlzDVertex2 vx1,
 * \brief	Tests to see if the two given line segments intersect.
 *
 *		Tests to see if the two given line segments intersect
-*		using the DBL_EPSILON tollerance value.
+*		using the ALG_DBL_TOLLERANCE tollerance value.
 *               This is taken from J. O'Rourke: Computational Geometry
 *               in C, p250, but has ben modified to include the use of
-*		DBL_EPSILON.
+*		ALG_DBL_TOLLERANCE.
 * \param	p0			1st vertex of 1st line segment.
 * \param	p1			2nd vertex 1st line segment.
 * \param	q0			1st vertex of 2nd line segment.
@@ -586,6 +609,7 @@ int		WlzGeomLineSegmentsIntersect(WlzDVertex2 p0, WlzDVertex2 p1,
   		sp,
   		tp;
   WlzDVertex2	ict;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   ict = p0;
   /* To minimize numerical problems don't factorize the expresion for dn. */
@@ -598,33 +622,29 @@ int		WlzGeomLineSegmentsIntersect(WlzDVertex2 p0, WlzDVertex2 p1,
   tp = ((p0.vtX * (q0.vtY - p1.vtY)) +
 	(p1.vtX * (p0.vtY - q0.vtY)) +
 	(q0.vtX * (p1.vtY - p0.vtY))) * sgn * -1.0;
-  if(fabs(dn) < DBL_EPSILON)
+  if(fabs(dn) < tol)
   {
     /* Line segments are parallel. */
-    if((fabs(sp) < DBL_EPSILON) && (fabs(tp) < DBL_EPSILON))
+    if((fabs(sp) < tol) && (fabs(tp) < tol))
     {
       /* Line segments are coincident. */
       ic = 0;
-      if((fabs(p0.vtX - q0.vtX) < DBL_EPSILON) &&
-	 (fabs(p0.vtY - q0.vtY) < DBL_EPSILON))
+      if((fabs(p0.vtX - q0.vtX) < tol) && (fabs(p0.vtY - q0.vtY) < tol))
       {
         ict = p0;
 	++ic;
       }
-      if((fabs(p0.vtX - q1.vtX) < DBL_EPSILON) &&
-	 (fabs(p0.vtY - q1.vtY) < DBL_EPSILON))
+      if((fabs(p0.vtX - q1.vtX) < tol) && (fabs(p0.vtY - q1.vtY) < tol))
       {
         ict = p0;
 	++ic;
       }
-      if((fabs(p1.vtX - q0.vtX) < DBL_EPSILON) &&
-	 (fabs(p1.vtY - q0.vtY) < DBL_EPSILON))
+      if((fabs(p1.vtX - q0.vtX) < tol) && (fabs(p1.vtY - q0.vtY) < tol))
       {
         ict = p1;
 	++ic;
       }
-      if((fabs(p1.vtX - q1.vtX) < DBL_EPSILON) &&
-	 (fabs(p1.vtY - q1.vtY) < DBL_EPSILON))
+      if((fabs(p1.vtX - q1.vtX) < tol) && (fabs(p1.vtY - q1.vtY) < tol))
       {
         ict = p1;
 	++ic;
@@ -647,12 +667,11 @@ int		WlzGeomLineSegmentsIntersect(WlzDVertex2 p0, WlzDVertex2 p1,
   {
     /* Line segments are not parallel. */
     dna = dn * sgn;
-    if((sp >= -(DBL_EPSILON)) && (sp < dna + DBL_EPSILON) &&
-       (tp >= -(DBL_EPSILON)) && (tp < dna + DBL_EPSILON))
+    if((sp >= -tol) && (sp - dna < tol) && (tp >= -tol) && (tp - dna < tol))
     {
       /* Line segments intersect. */
-      intersect = ((sp > DBL_EPSILON) && (sp < (dna - DBL_EPSILON)) &&
-		   (tp > DBL_EPSILON) && (tp < (dna - DBL_EPSILON)))? 3: 2;
+      intersect = ((sp > tol) && (sp - dna < tol) &&
+		   (tp > tol) && (tp - dna < tol))? 3: 2;
       if(dstN != NULL)
       {
 	spd = sp / dna;
@@ -726,6 +745,7 @@ int		WlzGeomCmpAngle(WlzDVertex2 p0, WlzDVertex2 p1)
   		s1;
   const int	quadTbl[4] = {2, 3, 1, 0},
   		octTbl[8] = {5, 6, 2, 1, 4, 7, 3, 0};
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   /* Compute relative endpoints. */
   /* Find quadrants:
@@ -769,59 +789,59 @@ int		WlzGeomCmpAngle(WlzDVertex2 p0, WlzDVertex2 p1)
       switch(o0)
       {
         case 0:
-	  if((s0.vtX > DBL_EPSILON) && (s1.vtX > DBL_EPSILON))
+	  if((s0.vtX > tol) && (s1.vtX > tol))
 	  {
 	    tst = (s0.vtY / s0.vtX) - (s1.vtY / s1.vtX);
 	  }
 	  break;
         case 1:
-	  if((s0.vtY > DBL_EPSILON) && (s1.vtY > DBL_EPSILON))
+	  if((s0.vtY > tol) && (s1.vtY > tol))
 	  {
 	    tst = (s1.vtX / s1.vtY) - (s0.vtX / s0.vtY);
 	  }
 	  break;
         case 2:
-	  if((s0.vtY > DBL_EPSILON) && (s1.vtY > DBL_EPSILON))
+	  if((s0.vtY > tol) && (s1.vtY > tol))
 	  {
 	    tst = (s0.vtX / s0.vtY) - (s1.vtX / s1.vtY);
 	  }
 	  break;
         case 3:
-	  if((s0.vtX > DBL_EPSILON) && (s1.vtX > DBL_EPSILON))
+	  if((s0.vtX > tol) && (s1.vtX > tol))
 	  {
 	    tst = (s1.vtY / s1.vtX) - (s0.vtY / s0.vtX);
 	  }
 	  break;
         case 4:
-	  if((s0.vtX > DBL_EPSILON) && (s1.vtX > DBL_EPSILON))
+	  if((s0.vtX > tol) && (s1.vtX > tol))
 	  {
 	    tst = (s0.vtY / s0.vtX) - (s1.vtY / s1.vtX);
 	  }
 	  break;
         case 5:
-	  if((s0.vtY > DBL_EPSILON) && (s1.vtY > DBL_EPSILON))
+	  if((s0.vtY > tol) && (s1.vtY > tol))
 	  {
 	    tst = (s1.vtX / s1.vtY) - (s0.vtX / s0.vtY);
 	  }
 	  break;
         case 6:
-	  if((s0.vtY > DBL_EPSILON) && (s1.vtY > DBL_EPSILON))
+	  if((s0.vtY > tol) && (s1.vtY > tol))
 	  {
 	    tst = (s0.vtX / s0.vtY) - (s1.vtX / s1.vtY);
 	  }
 	  break;
         case 7:
-	  if((s0.vtX > DBL_EPSILON) && (s1.vtX > DBL_EPSILON))
+	  if((s0.vtX > tol) && (s1.vtX > tol))
 	  {
 	    tst = (s1.vtY / s1.vtX) - (s0.vtY / s0.vtX);
 	  }
 	  break;
       }
-      if(tst > DBL_EPSILON)
+      if(tst > tol)
       {
         cmp = 1.0;
       }
-      else if(tst < -(DBL_EPSILON))
+      else if(tst < -tol)
       {
         cmp = -1.0;
       }
@@ -953,12 +973,13 @@ WlzDVertex3	WlzGeomTriangleNormal(WlzDVertex3 v0, WlzDVertex3 v1,
 {
   double	len;
   WlzDVertex3	nrm;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   WLZ_VTX_3_SUB(v1, v1, v0); 
   WLZ_VTX_3_SUB(v2, v2, v0); 
   WLZ_VTX_3_CROSS(nrm, v1, v2);
   len = WLZ_VTX_3_LENGTH(nrm);
-  if(len > DBL_EPSILON)
+  if(len > tol)
   {
     WLZ_VTX_3_SCALE(nrm, nrm, 1.0 / len);
   }
@@ -973,7 +994,7 @@ WlzDVertex3	WlzGeomTriangleNormal(WlzDVertex3 v0, WlzDVertex3 v1,
 
 /*!
 * \return	The result of the intersection test: 0 - no intersection,
-* 		1 - triangle and box are touching or intersect.
+* 		1 - triangle and box are touch or intersect.
 * \ingroup	WlzGeometry
 * \brief	Tests for an intersection between the given triangle and
 * 		the axis aligned bounding box using the Separating Axis
@@ -1022,7 +1043,7 @@ int		WlzGeomTriangleAABBIntersect2D(WlzDVertex2 t0,
   WlzDVertex2	b,
   		c;
   WlzDVertex2	t[3];
-  const double	tol = 10.0 * DBL_EPSILON;
+  const double	tol = 10.0 * ALG_DBL_TOLLERANCE;
 
   /* Make origin centroid of the AABB. */
   c.vtX = (b0.vtX + b1.vtX) * 0.5;
@@ -1060,8 +1081,8 @@ int		WlzGeomTriangleAABBIntersect2D(WlzDVertex2 t0,
     /* Compare AABB of triangle with given AABB. If is an intersection
      * when using tolerance then there may be an intersection. Set
      * intersection (will keep looking below). */
-    if(((-b.vtX > bT[1].vtX + tol) || (b.vtX + tol < bT[0].vtX)) &&
-       ((-b.vtY > bT[1].vtY + tol) || (b.vtY + tol < bT[0].vtY)))
+    if((-b.vtX - bT[1].vtX > tol) || (bT[0].vtX - b.vtX > tol) ||
+       (-b.vtY - bT[1].vtY > tol) || (bT[0].vtY - b.vtY > tol))
     {
       isn = 0;
     }
@@ -1114,7 +1135,7 @@ int		WlzGeomTriangleAABBIntersect2D(WlzDVertex2 t0,
 	  q[1] = q[2];
 	}
 	/* Look for intersection of projections. */
-	if((p[0] > q[1] + tol) || (p[1] + tol < q[0]))
+	if((p[0] - q[1] > -tol) || (q[0] + p[1] > -tol))
 	{
 	  isn = 0;
 	  break;
@@ -1127,7 +1148,7 @@ int		WlzGeomTriangleAABBIntersect2D(WlzDVertex2 t0,
 
 /*!
 * \return	The result of the intersection test: 0 - no intersection,
-* 		1 - tetrahedron and box touching or intersect.
+* 		1 - tetrahedron and box touch or intersect.
 * \ingroup	WlzGeometry
 * \brief	Tests for an intersection between the given tetrahedron and
 * 		the axis aligned bounding box using the Separating Axis
@@ -1185,7 +1206,7 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
   WlzDVertex3	e[6],
   		t[4],
 		x[8];
-  const double	tol = 10.0 * DBL_EPSILON;
+  const double	tol = 10.0 * ALG_DBL_TOLLERANCE;
 
   /* Make origin centroid of the AABB. */
   c.vtX = (b0.vtX + b1.vtX) * 0.5;
@@ -1233,9 +1254,9 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
       }
     }
     /* Compare AABB of triangle with given AABB. */
-    if(((-b.vtX > bT[1].vtX + tol) || (b.vtX + tol < bT[0].vtX)) &&
-       ((-b.vtY > bT[1].vtY + tol) || (b.vtY + tol < bT[0].vtY)) &&
-       ((-b.vtZ > bT[1].vtZ + tol) || (b.vtZ + tol < bT[0].vtZ)))
+    if((-b.vtX - bT[1].vtX > tol) || (bT[0].vtX - b.vtX > tol) ||
+       (-b.vtY - bT[1].vtY > tol) || (bT[0].vtY - b.vtY > tol) ||
+       (-b.vtZ - bT[1].vtZ > tol) || (bT[0].vtZ - b.vtZ > tol))
     {
       isn = 0;        /* No intersection of the AABB with AABB(tetrahedron). */
     }
@@ -1269,7 +1290,7 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
       l = WLZ_VTX_3_SQRLEN(d);
       if(l > tol)
       {
-	isn = WlzGeomTetAABBIsnDir(d, t, x, tol);
+	isn = WlzGeomTetAABBIsnDir(d, t, x);
       }
       while((isn != 0) && (idx < 3))
       {
@@ -1277,7 +1298,7 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
 	l = WLZ_VTX_3_SQRLEN(d);
 	if(l > tol)
 	{
-	  isn = WlzGeomTetAABBIsnDir(d, t, x, tol);
+	  isn = WlzGeomTetAABBIsnDir(d, t, x);
 	}
 	++idx;
       }
@@ -1302,7 +1323,7 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
 	l = WLZ_VTX_3_SQRLEN(d);
 	if(l > tol)
 	{
-	  isn = WlzGeomTetAABBIsnDir(d, t, x, tol);
+	  isn = WlzGeomTetAABBIsnDir(d, t, x);
 	  if(isn == 0)
 	  {
 	    break;
@@ -1314,7 +1335,7 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
 	l = WLZ_VTX_3_SQRLEN(d);
 	if(l > tol)
 	{
-	  isn = WlzGeomTetAABBIsnDir(d, t, x, tol);
+	  isn = WlzGeomTetAABBIsnDir(d, t, x);
 	  if(isn == 0)
 	  {
 	    break;
@@ -1326,7 +1347,7 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
 	l = WLZ_VTX_3_SQRLEN(d);
 	if(l > tol)
 	{
-	  isn = WlzGeomTetAABBIsnDir(d, t, x, tol);
+	  isn = WlzGeomTetAABBIsnDir(d, t, x);
 	}
       } while((isn >= 0) && (++idx < 6));
     }
@@ -1336,7 +1357,7 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
 
 /*!
 * \return	Intersection code : 0 - no intersection,
-* 		1 - tetrahedron and box touching or intersect.
+* 		1 - tetrahedron and box touch or intersect.
 * \ingroup	WlzGeometry
 * \brief	Intersection interval test code for
 * 		WlzGeomTetrahedronAABBIntersect3D().
@@ -1344,17 +1365,16 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
 * \param	t			Array of four vertices of the
 * 					tetrahedron.
 * \param	b			Array of 8 vertices of the box.
-* \param	tol			Tollerance value.
 */
 static int	WlzGeomTetAABBIsnDir(WlzDVertex3 d,
-                                     WlzDVertex3 t[], WlzDVertex3 b[],
-				     double tol)
+                                     WlzDVertex3 t[], WlzDVertex3 b[])
 {
   int		idx;
   double	f;
   double	p[2],
   		q[2];
   int		isn = 1;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   p[0] = p[1] = WLZ_VTX_3_DOT(d, t[0]);
   for(idx = 1; idx < 4; ++idx)
@@ -1382,7 +1402,7 @@ static int	WlzGeomTetAABBIsnDir(WlzDVertex3 d,
       q[1] = f;
     }
   }
-  if((q[1] + tol < p[0]) || (q[0] > p[1] + tol))
+  if((p[0] - q[1] > -tol) || (q[0] - p[1] > -tol))
   {
     isn = 0;              /* No intersection of the AABB with tetrahedron. */
   }
@@ -1412,6 +1432,7 @@ int		WlzGeomPlaneAABBIntersect(double a, double b,
   double        iVal;
   double        aP[3];
   WlzDVertex3   bV[4];
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   /* Check for approximate direction of the plane. */
   aP[0] = fabs(a); aP[1] = fabs(b); aP[2] = fabs(c);
@@ -1423,7 +1444,7 @@ int		WlzGeomPlaneAABBIntersect(double a, double b,
   {
     maxP = (aP[1] > aP[2])? 1: 2;
   }
-  if(aP[maxP] > DBL_EPSILON)
+  if(aP[maxP] > tol)
   {
     /* Get the verticies of the bounding box and check for an intersection
      * between four edges (not parallel to the plane) and the plane. */
@@ -1506,15 +1527,16 @@ int		WlzGeomPlaneLineIntersect(double a, double b,
   double	tD0,
   		tD1,
 		tD2;
+  const double  tol = ALG_DBL_TOLLERANCE;
   
   tD0 = (a * p0.vtX) + (b * p0.vtY) + (c * p0.vtZ) + d;
-  if(fabs(tD0) < DBL_EPSILON)
+  if(fabs(tD0) < tol)
   {
     /* The first line segment end point lies on the plane if the second end
      * point also lies on the plane then there is no unique intersection
      * point. */
     tD1 = (a * p1.vtX) + (b * p1.vtY) + (c * p1.vtZ) + d;
-    if(fabs(tD1) < DBL_EPSILON)
+    if(fabs(tD1) < tol)
     {
       intersect = 2;
     }
@@ -1531,7 +1553,7 @@ int		WlzGeomPlaneLineIntersect(double a, double b,
   {
     tD1 = (a * (p0.vtX - p1.vtX)) + (b * (p0.vtY - p1.vtY)) +
 	  (c * (p0.vtZ - p1.vtZ));
-    if(fabs(tD1) > DBL_EPSILON)
+    if(fabs(tD1) > tol)
     {
       /* The line segment does not have zero length and the plane equation is
        * valid. */
@@ -1603,6 +1625,7 @@ int		WlzGeomPlaneTriangleIntersect(double a, double b,
   		isn1;
   int		isnFlg[3];
   WlzDVertex3	isnVal[3];
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   isn0 = isn1 = p0;
   valFlg = dstIsn0 && dstIsn1;
@@ -1663,7 +1686,7 @@ int		WlzGeomPlaneTriangleIntersect(double a, double b,
     case 011:
       WLZ_VTX_3_SUB(tDV0, isnVal[1], isnVal[0]);
       tD0 = WLZ_VTX_3_SQRLEN(tDV0);
-      if(tD0 < DBL_EPSILON)
+      if(tD0 < tol)
       {
 	intersect = 1;
 	isn0 = p1;
@@ -1678,7 +1701,7 @@ int		WlzGeomPlaneTriangleIntersect(double a, double b,
     case 101:
       WLZ_VTX_3_SUB(tDV0, isnVal[2], isnVal[0]);
       tD0 = WLZ_VTX_3_SQRLEN(tDV0);
-      if(tD0 < DBL_EPSILON)
+      if(tD0 < tol)
       {
 	intersect = 1;
 	isn0 = p0;
@@ -1693,7 +1716,7 @@ int		WlzGeomPlaneTriangleIntersect(double a, double b,
     case 110:
       WLZ_VTX_3_SUB(tDV0, isnVal[1], isnVal[2]);
       tD0 = WLZ_VTX_3_SQRLEN(tDV0);
-      if(tD0 < DBL_EPSILON)
+      if(tD0 < tol)
       {
 	intersect = 1;
 	isn0 = p2;
@@ -1710,14 +1733,14 @@ int		WlzGeomPlaneTriangleIntersect(double a, double b,
       tD0 = WLZ_VTX_3_SQRLEN(tDV0);
       WLZ_VTX_3_SUB(tDV1, isnVal[2], isnVal[1]);
       tD1 = WLZ_VTX_3_SQRLEN(tDV1);
-      if((tD0 > DBL_EPSILON) && (tD1 > DBL_EPSILON))
+      if((tD0 > tol) && (tD1 > tol))
       {
 	intersect = 3;
       }
       else
       {
 	intersect = 2;
-	if(tD0 < DBL_EPSILON)
+	if(tD0 < tol)
 	{
 	  isn0 = p1;
 	  isn1 = p2;
@@ -1777,17 +1800,18 @@ double		WlzGeomEllipseVxDistSq(WlzDVertex2 centre, WlzDVertex2 sAx,
   		dRatSq;
   WlzDVertex2	sAxSq,
   		rPntSq;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   WLZ_VTX_2_SUB(rPntSq, gPnt, centre);
   rPntSq.vtX = rPntSq.vtX * rPntSq.vtX;
   rPntSq.vtY = rPntSq.vtY * rPntSq.vtY;
   sAxSq.vtX = sAx.vtX * sAx.vtX;
   sAxSq.vtY = sAx.vtY * sAx.vtY;
-  if(rPntSq.vtX < DBL_EPSILON)
+  if(rPntSq.vtX < tol)
   {
     dRatSq = rPntSq.vtY / sAxSq.vtY;
   }
-  else if(rPntSq.vtY < DBL_EPSILON)
+  else if(rPntSq.vtY < tol)
   {
     dRatSq = rPntSq.vtX / sAxSq.vtX;
   }
@@ -1988,8 +2012,9 @@ int		WlzGeomCmpVtx2D(WlzDVertex2 pos0, WlzDVertex2 pos1, double tol)
 WlzDVertex2	WlzGeomUnitVector2D(WlzDVertex2 vec)
 {
   double	len;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
-  if((len = WLZ_VTX_2_LENGTH(vec)) > DBL_EPSILON)
+  if((len = WLZ_VTX_2_LENGTH(vec)) > tol)
   {
     len = 1.0 / len;
     WLZ_VTX_2_SCALE(vec, vec, len);
@@ -2011,8 +2036,9 @@ WlzDVertex2	WlzGeomUnitVector2D(WlzDVertex2 vec)
 WlzDVertex3	WlzGeomUnitVector3D(WlzDVertex3 vec)
 {
   double	len;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
-  if((len = WLZ_VTX_3_LENGTH(vec)) > DBL_EPSILON)
+  if((len = WLZ_VTX_3_LENGTH(vec)) > tol)
   {
     len = 1.0 / len;
     WLZ_VTX_3_SCALE(vec, vec, len);
@@ -2037,9 +2063,10 @@ WlzDVertex3	WlzGeomUnitVector3D(WlzDVertex3 vec)
 WlzDVertex2	WlzGeomUnitVector2D2(WlzDVertex2 v1, WlzDVertex2 v0)
 {
   double	len;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   WLZ_VTX_2_SUB(v1, v1, v0);
-  if((len = WLZ_VTX_2_LENGTH(v1)) > DBL_EPSILON)
+  if((len = WLZ_VTX_2_LENGTH(v1)) > tol)
   {
     len = 1.0 / len;
     WLZ_VTX_2_SCALE(v1, v1, len);
@@ -2064,9 +2091,10 @@ WlzDVertex2	WlzGeomUnitVector2D2(WlzDVertex2 v1, WlzDVertex2 v0)
 WlzDVertex3	WlzGeomUnitVector3D2(WlzDVertex3 v1, WlzDVertex3 v0)
 {
   double	len;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   WLZ_VTX_3_SUB(v1, v1, v0);
-  if((len = WLZ_VTX_3_LENGTH(v1)) > DBL_EPSILON)
+  if((len = WLZ_VTX_3_LENGTH(v1)) > tol)
   {
     len = 1.0 / len;
     WLZ_VTX_3_SCALE(v1, v1, len);
@@ -2956,9 +2984,10 @@ double		WlzGeomTetraInSphereDiam(WlzDVertex3 vx0, WlzDVertex3 vx1,
 		a2,
 		a3,
   		vol6;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   vol6 = fabs(WlzGeomTetraSnVolume6(vx0, vx1, vx2, vx3));
-  if(vol6 > DBL_EPSILON)
+  if(vol6 > tol)
   {
     a0 = WlzGeomTriangleArea2Sq3(vx0, vx1, vx2);
     a1 = WlzGeomTriangleArea2Sq3(vx1, vx2, vx3);
@@ -2996,9 +3025,10 @@ double		WlzGeomTetraInSphereRegDiam(double side)
 		area,
 		sideSq,
   		vol12;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   sideSq = side * side;
-  if(sideSq > DBL_EPSILON)
+  if(sideSq > tol)
   {
     area = sideSq * ALG_M_SQRT3;
     vol12 = side * sideSq * ALG_M_SQRT2;
@@ -3070,6 +3100,7 @@ double		WlzGeomCos3V(WlzDVertex2 v0, WlzDVertex2 v1, WlzDVertex2 v2)
   WlzDVertex2	s0,
   		s1,
 		s2;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   WLZ_VTX_2_SUB(s0, v1, v2);
   WLZ_VTX_2_SUB(s1, v2, v0);
@@ -3077,7 +3108,7 @@ double		WlzGeomCos3V(WlzDVertex2 v0, WlzDVertex2 v1, WlzDVertex2 v2)
   l0 = WLZ_VTX_2_SQRLEN(s0);
   l1 = WLZ_VTX_2_SQRLEN(s1);
   l2 = WLZ_VTX_2_SQRLEN(s2);
-  if((l0 > DBL_EPSILON) && (l2 > DBL_EPSILON))
+  if((l0 > tol) && (l2 > tol))
   {
     c = (0.5 * (l0 + l2 - l1)) / sqrt(l0 * l2);
   }
@@ -3228,7 +3259,7 @@ int             WlzGeomVtxOnLineSegment2D(WlzDVertex2 tst,
 		\f]
 *		Obviously if \f$\mathbf{p_x}\f$ is on the line segment then
 *		\f$d^2 = 0\f$.
-*		DBL_EPSILON as a tolerance for squared distances in this
+*		ALG_DBL_TOLLERANCE as a tolerance for squared distances in this
 *		function.
 * \param	pX				Test vertex.
 * \param	p0				First vertex of line segment.
@@ -3247,14 +3278,15 @@ int             WlzGeomVtxOnLineSegment3D(WlzDVertex3 pX,
   WlzDVertex3	pT,
   		p10,
   		p0X;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   WLZ_VTX_3_SUB(p10, p1, p0);
   WLZ_VTX_3_SUB(p0X, p0, pX);
   l10Sq = WLZ_VTX_3_SQRLEN(p10);
-  if(l10Sq < DBL_EPSILON)
+  if(l10Sq < tol)
   {
     tSq = WLZ_VTX_3_SQRLEN(p0X);
-    if(tSq < DBL_EPSILON)
+    if(tSq < tol)
     {
       isn = 1;
       if(dstN)
@@ -3267,10 +3299,10 @@ int             WlzGeomVtxOnLineSegment3D(WlzDVertex3 pX,
   {
     WLZ_VTX_3_CROSS(pT, p10, p0X);
     tSq = WLZ_VTX_3_SQRLEN(pT) / l10Sq;
-    if(tSq < DBL_EPSILON)
+    if(tSq < tol)
     {
       s = WLZ_VTX_3_DOT(p0X, p10) / l10Sq;
-      if((1.0 - s) * (1.0 - s) < DBL_EPSILON)
+      if((1.0 - s) * (1.0 - s) < tol)
       {
         isn = 1;
 	if(dstN)
@@ -3319,10 +3351,11 @@ double		WlzGeomArcLength2D(WlzDVertex2 a, WlzDVertex2 b, WlzDVertex2 c)
 					       */
   double	quadEndX[4] = { 0.0, -1.0,  0.0,  1.0},
   		quadEndY[4] = { 1.0,  0.0, -1.0,  0.0};
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   WLZ_VTX_2_SUB(t, a, c);
   rSq = WLZ_VTX_2_SQRLEN(t);
-  if(rSq > DBL_EPSILON)
+  if(rSq > tol)
   {
     r = sqrt(rSq);
     /* Compute the quadrants that contain points a and b. */
@@ -3401,10 +3434,11 @@ int		WlzGeomRectFromWideLine(WlzDVertex2 s, WlzDVertex2 t,
   double	len;
   WlzDVertex2	del,
   		f;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   WLZ_VTX_2_SUB(del, t, s);
   len = WLZ_VTX_2_LENGTH(del);
-  if(len > DBL_EPSILON)
+  if(len > tol)
   {
     coincident = 0;
     f.vtX =   w * del.vtY / (2.0 * len);
@@ -3472,6 +3506,7 @@ WlzDVertex3	WlzGeomLinePlaneIntersection(WlzDVertex3 v,
 		h;
   WlzDVertex3	p1r,
 		q;
+  const double  tol = ALG_DBL_TOLLERANCE;
   		
   q = p0;
   WLZ_VTX_3_SUB(p1r, p1, p0);
@@ -3482,7 +3517,7 @@ WlzDVertex3	WlzGeomLinePlaneIntersection(WlzDVertex3 v,
   c = p0.vtX * p1.vtY - p0.vtY * p1.vtX +
       p1r.vtX * p2.vtY - p1r.vtY * p2.vtX;
   d = -(v.vtX * a + v.vtY * b + v.vtZ * c);
-  if(d * d < DBL_EPSILON)
+  if(d * d < tol)
   {
     *dstPar = 1;
   }
@@ -3594,6 +3629,7 @@ int		WlzGeomLineTriangleIntersect3D(WlzDVertex3 org, WlzDVertex3 dir,
 		p,
 		q,
 		m;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   /* Find vectors for two edges sharing v0. */
   WLZ_VTX_3_SUB(e1, v1, v0);
@@ -3601,7 +3637,7 @@ int		WlzGeomLineTriangleIntersect3D(WlzDVertex3 org, WlzDVertex3 dir,
   /* Compute determinant, if near zero line passes through plane of triangle. */
   WLZ_VTX_3_CROSS(p, dir, e2);
   det = WLZ_VTX_3_DOT(e1, p);
-  if(det * det < DBL_EPSILON)
+  if(det * det < tol)
   {
     par = 1;
     isn = WlzGeomLineTriangleIntersectEdge3D(org, dir, v0, v1, v2);
@@ -3614,18 +3650,18 @@ int		WlzGeomLineTriangleIntersect3D(WlzDVertex3 org, WlzDVertex3 dir,
     WLZ_VTX_3_SUB(m, org, v0);
     /* Calculate barycentric u parameter and test bounds. */
     u = WLZ_VTX_3_DOT(m, p) * det;
-    if((u > -DBL_EPSILON) && (u  <  1.0 + DBL_EPSILON))
+    if((u > -tol) && (u - 1.0 < tol))
     {
       /* Calculate barycentric v parameter and test bounds. */
       WLZ_VTX_3_CROSS(q, m, e1);
       v = WLZ_VTX_3_DOT(dir, q) * det;
-      if((v > -DBL_EPSILON) && (v < 1.0 + DBL_EPSILON))
+      if((v > -tol) && (v - 1.0 < tol))
       {
         /* Test bounds of the trird barycentric coordinate. */
         w = 1.0 - (u + v);
-	if((w > -DBL_EPSILON) && (w < 1.0 + DBL_EPSILON))
+	if((w > -tol) && (w - 1.0 < tol))
 	{
-	  if((u < DBL_EPSILON) || (v < DBL_EPSILON) || (w < DBL_EPSILON))
+	  if((u < tol) || (v < tol) || (w < tol))
 	  {
 	    isn = 1;
 	  }
@@ -3691,7 +3727,7 @@ static int	WlzGeomLineTriangleIntersectEdge3D(WlzDVertex3 org,
 *		</ul>
 * \ingroup	WlzGeometry
 * \brief	Tests to see if the two given line segment is intersected
-* 		by the given line using the DBL_EPSILON tollerance value.
+* 		by the given line using the ALG_DBL_TOLLERANCE tollerance value.
 * 		The line is a line which passes through the given point
 * 		to infinity (on both sides) with the given direction.
 *
@@ -3777,11 +3813,12 @@ int		WlzGeomLineLineSegmentIntersect3D(WlzDVertex3 r0,
   WlzDVertex3	p,
 		r,
   		v;
+  const double  tol = ALG_DBL_TOLLERANCE;
 
   /* TODO Test this function. */
   WLZ_VTX_3_SUB(p, p1, p0);
   lSq = WLZ_VTX_3_SQRLEN(p);
-  if(lSq < DBL_EPSILON)
+  if(lSq < tol)
   {
     /* Given line segment is a single point at p0. */
     if(WlzGeomVtxOnLine3D(p0, r0, rD) != 0)
@@ -3792,7 +3829,7 @@ int		WlzGeomLineLineSegmentIntersect3D(WlzDVertex3 r0,
   else
   {
     lSq = WLZ_VTX_3_SQRLEN(rD);
-    if(lSq < DBL_EPSILON)
+    if(lSq < tol)
     {
       /* Line is a single point at r0. */
       switch(WlzGeomVtxOnLineSegment3D(r0, p0, p1, dstN))
@@ -3811,7 +3848,7 @@ int		WlzGeomLineLineSegmentIntersect3D(WlzDVertex3 r0,
     {
       WLZ_VTX_3_CROSS(v, p, rD);
       den = WLZ_VTX_3_SQRLEN(v);
-      if(den < DBL_EPSILON)
+      if(den < tol)
       {
 	/* Line and line segment are parralel. */
 	if(WlzGeomVtxOnLine3D(p0, r0, rD) > 0)
@@ -3826,7 +3863,7 @@ int		WlzGeomLineLineSegmentIntersect3D(WlzDVertex3 r0,
 	s = (r.vtX * (rD.vtY * v.vtZ - rD.vtZ * v.vtY) +
 	     r.vtY * (rD.vtZ * v.vtX - rD.vtX * v.vtZ) +
 	     r.vtZ * (rD.vtX * v.vtY - rD.vtY * v.vtX)) / den;
-	if((s * s) < DBL_EPSILON)
+	if((s * s) < tol)
 	{
 	  isn = 2;
 	  if(dstN)
@@ -3834,7 +3871,7 @@ int		WlzGeomLineLineSegmentIntersect3D(WlzDVertex3 r0,
 	    *dstN = p0;
 	  }
 	}
-	else if((1 - s) * (1 - s) < DBL_EPSILON)
+	else if((1 - s) * (1 - s) < tol)
 	{
 	  isn = 2;
 	  if(dstN)
@@ -3869,7 +3906,7 @@ int		WlzGeomLineLineSegmentIntersect3D(WlzDVertex3 r0,
 * 		otherwise the vertex is on the line if the squared
 * 		length of the cross product of the line direction and
 * 		the direction of the vertex (with respect to the point
-* 		on the line) is less than DBL_EPSILON, ie if
+* 		on the line) is less than ALG_DBL_TOLLERANCE, ie if
 * 		\f[
 		\| (\mathbf{p_0} - \mathbf{r_0}) \times \mathbf{r_D} \|
 		< \epsilon
@@ -3883,10 +3920,11 @@ int		WlzGeomVtxOnLine3D(WlzDVertex3 p0, WlzDVertex3 r0,
 {
   int		isn = 0;
   double	lSq;
+  const double	tol = ALG_DBL_TOLLERANCE;
 
   WLZ_VTX_3_SUB(p0, p0, r0);
   lSq = WLZ_VTX_3_SQRLEN(p0);
-  if(lSq < DBL_EPSILON)
+  if(lSq < tol)
   {
     isn = 1;
   }
@@ -3894,7 +3932,7 @@ int		WlzGeomVtxOnLine3D(WlzDVertex3 p0, WlzDVertex3 r0,
   {
     WLZ_VTX_3_CROSS(r0, p0, rD);
     lSq = WLZ_VTX_3_SQRLEN(r0);
-    if(lSq < DBL_EPSILON)
+    if(lSq < tol)
     {
       isn = 1;
     }
@@ -4089,19 +4127,20 @@ void		WlzGeomMap3DTriangleTo2D(WlzDVertex3 p0,
 		n,
   		u,
   		v;
+  const double	tol = ALG_DBL_TOLLERANCE;
 
   WLZ_VTX_3_SUB(l1, p1, p0);
   WLZ_VTX_3_SUB(l2, p2, p0);
   ln1 = WLZ_VTX_3_LENGTH(l1);
   ln2 = WLZ_VTX_3_LENGTH(l1);
-  if(fabs(ln1) < DBL_EPSILON)
+  if(fabs(ln1) < tol)
   {
     q1.vtX = 0.0;
     q1.vtY = 0.0;
     q2.vtX = 0.0;
     q2.vtY = ln2;
   }
-  else if(fabs(ln2) < DBL_EPSILON)
+  else if(fabs(ln2) < tol)
   {
     q1.vtX = ln1;
     q1.vtY = 0.0;
@@ -4116,7 +4155,7 @@ void		WlzGeomMap3DTriangleTo2D(WlzDVertex3 p0,
     WLZ_VTX_3_SCALE(u, l1, t);
     WLZ_VTX_3_CROSS(n, l1, l2);
     t = WLZ_VTX_3_LENGTH(n);
-    if(fabs(t) < DBL_EPSILON)
+    if(fabs(t) < tol)
     {
       q2.vtX = ln1 + ln2;
       q2.vtY = 0.0;
@@ -4132,4 +4171,718 @@ void		WlzGeomMap3DTriangleTo2D(WlzDVertex3 p0,
   }
   *dstQ1 = q1;
   *dstQ2 = q2;
+}
+
+/*!
+* \return	The result of the intersection test: 0 - no intersection,
+* 		1 - triangle and box touch or intersect.
+* \ingroup	WlzGeometry
+* \brief	Tests for an intersection between the given triangle and
+* 		the axis aligned bounding box in 3D using the Separating Axis
+* 		Theorem (SAT).
+*
+* 		Given an axis aligned bounding box and a triangle this
+* 		function tests for an intersection using the Separating
+* 		Axis Theorem (SAT) which states : Two 3D convex domains do
+* 		not intersect iff there exists a line, called a separating
+* 		axis, on which projection intervals of the domains do not
+* 		intersect.  The minimal set of axes that need to be considered
+* 		is formed by the normals to all faces of the (polyhedral)
+* 		domains and the cross product of all edge combinations in
+* 		which one edge is from each polyhedron. For an axis aligned
+* 		bounding box and a triangle in 3D, this is equivalent to
+* 		testing for the intersection of the given axis aligned
+* 		bounding box with the axis aligned bounding box of the
+* 		triangle, testing for intersections on the axes
+* 		normal to the face of the triangle and testing
+* 		for intersection along the cross product of the axis
+* 		aligned bounding box - triangle edges. The mathematics
+* 		are simplified by the box being axis aligned.
+*
+* 		The algorithm may return false positives when the domains
+* 		are very close to touching.
+* \param	t0			First vertex of the triangle.
+* \param	t1			Second vertex of the triangle.
+* \param	t2			Third vertex of the triangle.
+* \param	b0			Minimum of the bounding box.
+* \param	b1			Maximum of the bounding box.
+* \param	tst			Determines the actual intersection
+* 					tests used:
+* 					0 - AABB / triangle.
+* 					1 - AABB / AABB(triangle) only.
+* 					2 - AABB / triangle omitting the
+* 					    AABB / AABB(tetrahedron) test
+* 					    this is probably only useful if
+* 					    the AABB / AABB(triangle) are
+* 					    known to intersect.
+*/
+int		WlzGeomTriangleAABBIntersect3D(WlzDVertex3 t0, WlzDVertex3 t1,
+				    WlzDVertex3 t2, WlzDVertex3 b0,
+				    WlzDVertex3 b1, int tst)
+{
+  int		idx,
+  		isn = 1;
+  double	l;
+  WlzDVertex3	b,
+  		c,
+		d;
+  WlzDVertex3	e[3],
+  		t[3],
+		x[8];
+  const double	tol = ALG_DBL_TOLLERANCE;
+
+  /* Make origin centroid of the AABB. */
+  c.vtX = (b0.vtX + b1.vtX) * 0.5;
+  c.vtY = (b0.vtY + b1.vtY) * 0.5;
+  c.vtZ = (b0.vtZ + b1.vtZ) * 0.5;
+  WLZ_VTX_3_SUB(b, b1, c);
+  WLZ_VTX_3_SUB(t[0], t0, c);
+  WLZ_VTX_3_SUB(t[1], t1, c);
+  WLZ_VTX_3_SUB(t[2], t2, c);
+  /* Check AABB and the AABB of the triangle intersect. This is equivalent
+   * to checking for an intersection using projections of the triangle
+   * onto vectors perpendicular to the faces of the AABB. */
+  if((tst == 0) || (tst == 1))
+  {
+    /* Compute the AABB of the triangle. */
+    WlzDVertex3	bT[2];
+
+    bT[0] = bT[1] = t[0];
+    for(idx = 1; idx <= 2; ++idx)
+    {
+      if(t[idx].vtX < bT[0].vtX)
+      {
+	bT[0].vtX = t[idx].vtX;
+      }
+      else if(t[idx].vtX > bT[1].vtX)
+      {
+	bT[1].vtX = t[idx].vtX;
+      }
+      if(t[idx].vtY < bT[0].vtY)
+      {
+	bT[0].vtY = t[idx].vtY;
+      }
+      else if(t[idx].vtY > bT[1].vtY)
+      {
+	bT[1].vtY = t[idx].vtY;
+      }
+      if(t[idx].vtZ < bT[0].vtZ)
+      {
+	bT[0].vtZ = t[idx].vtZ;
+      }
+      else if(t[idx].vtZ > bT[1].vtZ)
+      {
+	bT[1].vtZ = t[idx].vtZ;
+      }
+    }
+    /* Compare AABB of triangle with given AABB. */
+    if((-b.vtX - bT[1].vtX > tol) || ( bT[0].vtX - b.vtX > tol) ||
+       (-b.vtY - bT[1].vtY > tol) || ( bT[0].vtY - b.vtY > tol) ||
+       (-b.vtZ - bT[1].vtZ > tol) || ( bT[0].vtZ - b.vtZ > tol))
+    {
+      isn = 0;        /* No intersection of the AABB with AABB(tetrahedron). */
+    }
+  }
+  /* Check for intersection using projections of the AABB onto the vector
+   * perpendicular to the faces of the tetrahedron. */
+  if((tst == 0) || (tst == 2))
+  {
+    if(isn != 0)
+    {
+      /* Compute the 3 edge vectors for the triangle. */
+      WLZ_VTX_3_SUB(e[0], t[1], t[0]);
+      WLZ_VTX_3_SUB(e[1], t[2], t[1]);
+      WLZ_VTX_3_SUB(e[2], t[0], t[2]);
+      x[0].vtX = -b.vtX; x[0].vtY = -b.vtY; x[0].vtZ = -b.vtZ;
+      x[1].vtX = -b.vtX; x[1].vtY = -b.vtY; x[1].vtZ =  b.vtZ;
+      x[2].vtX = -b.vtX; x[2].vtY =  b.vtY; x[2].vtZ = -b.vtZ;
+      x[3].vtX = -b.vtX; x[3].vtY =  b.vtY; x[3].vtZ =  b.vtZ;
+      x[4].vtX =  b.vtX; x[4].vtY = -b.vtY; x[4].vtZ = -b.vtZ;
+      x[5].vtX =  b.vtX; x[5].vtY = -b.vtY; x[5].vtZ =  b.vtZ;
+      x[6].vtX =  b.vtX; x[6].vtY =  b.vtY; x[6].vtZ = -b.vtZ;
+      x[7].vtX =  b.vtX; x[7].vtY =  b.vtY; x[7].vtZ =  b.vtZ;
+      /* Check for an intersection between the normal vector and the AABB. */
+      WLZ_VTX_3_CROSS(d, e[0], e[1]); 
+      l = WLZ_VTX_3_SQRLEN(d);
+      if(l > tol)
+      {
+	isn = WlzGeomTriAABBIsnDir(d, t, x);
+      }
+    }
+    /* Check for intersection along vectors which are the cross product of
+     * all possible edge combinations where one edge is from the AABB and
+     * the other is from the triangle. */
+    if(isn != 0)
+    {
+      /* Cross product of tetrahedron edges with the AABB edges can be
+       * computed avoiding a full cross product as (0, -z, y), (z, 0, -x),
+       * and (-y, x, 0) where (x, y, z) is the tetrahedron edge vector.
+       * Edge - edge intersections with the edges parallel and consequent
+       * zero length cross product are ignored because the AABB - AABB
+       * intersection test above will find these intersections. */
+      idx = 0;
+      do
+      {
+	d.vtX =  0.0;
+	d.vtY = -e[idx].vtZ;
+	d.vtZ =  e[idx].vtY;
+	l = WLZ_VTX_3_SQRLEN(d);
+	if(l > tol)
+	{
+	  isn = WlzGeomTriAABBIsnDir(d, t, x);
+	  if(isn == 0)
+	  {
+	    break;
+	  }
+	}
+	d.vtX =  e[idx].vtZ;
+	d.vtY =  0.0;
+	d.vtZ = -e[idx].vtX;
+	l = WLZ_VTX_3_SQRLEN(d);
+	if(l > tol)
+	{
+	  isn = WlzGeomTriAABBIsnDir(d, t, x);
+	  if(isn == 0)
+	  {
+	    break;
+	  }
+	}
+	d.vtX = -e[idx].vtY;
+	d.vtY =  e[idx].vtX;
+	d.vtZ =  0.0;
+	l = WLZ_VTX_3_SQRLEN(d);
+	if(l > tol)
+	{
+	  isn = WlzGeomTriAABBIsnDir(d, t, x);
+	}
+      } while((isn >= 0) && (++idx < 3));
+    }
+  }
+  return(isn);
+}
+
+/*!
+* \return	Intersection code : 0 - no intersection,
+* 		1 - triangle and box touch or intersect.
+* \ingroup	WlzGeometry
+* \brief	Intersection interval test code for
+* 		WlzGeomTriangleAABBIntersect3D().
+* \param	d			Direction vector.
+* \param	t			Array of three traingle vertices.
+* \param	b			Array of eight box vertices.
+*/
+static int	WlzGeomTriAABBIsnDir(WlzDVertex3 d,
+                                     WlzDVertex3 t[], WlzDVertex3 b[])
+{
+  int		idx;
+  double	f;
+  double	p[2],
+  		q[2];
+  int		isn = 1;
+  const double  tol = ALG_DBL_TOLLERANCE;
+
+  p[0] = p[1] = WLZ_VTX_3_DOT(d, t[0]);
+  for(idx = 1; idx < 3; ++idx)
+  {
+    f = WLZ_VTX_3_DOT(d, t[idx]);
+    if(f < p[0])
+    {
+      p[0] = f;
+    }
+    else if(f > p[1])
+    {
+      p[1] = f;
+    }
+  }
+  q[0] = q[1] = WLZ_VTX_3_DOT(d, b[0]);
+  for(idx = 1; idx < 8; ++idx)
+  {
+    f = WLZ_VTX_3_DOT(d, b[idx]);
+    if(f < q[0])
+    {
+      q[0] = f;
+    }
+    else if(f > q[1])
+    {
+      q[1] = f;
+    }
+  }
+  if((p[0] - q[1] > tol) || (q[0] - p[1] > tol))
+  {
+    isn = 0;                   /* No intersection of the AABB with triangle. */
+  }
+  return(isn);
+}
+
+/*!
+* \return	Non zero if the two triangles intersect or touch.
+* \ingroup	WlzGeometry
+* \brief	Tests for an intersection between the two triangles in 2D
+* 		using the by testing for intersections between the line
+* 		segments of the triangles and then for either triangle
+* 		being contained within the other.
+*
+* 		See WlzGeomTriangleTriangleIntersect2DA().
+* \param	s0			First vertex of the first triangle.
+* \param	s1			Second vertex of the first triangle.
+* \param	s2			Third vertex of the first triangle.
+* \param	t0			First vertex of the second triangle.
+* \param	t1			Second vertex of the second triangle.
+* \param	t2			Third vertex of the second triangle.
+*/
+int		WlzGeomTriangleTriangleIntersect2D(WlzDVertex2 s0,
+				WlzDVertex2 s1, WlzDVertex2 s2,
+				WlzDVertex2 t0, WlzDVertex2 t1,
+				WlzDVertex2 t2)
+{
+  int		isn;
+  WlzDVertex2	s[3],
+  		t[3];
+
+  s[0] = s0; s[1] = s1; s[2] = s2;
+  t[0] = t0; t[1] = t1; t[2] = t2;
+  isn = WlzGeomTriangleTriangleIntersect2DA(s, t);
+  return(isn);
+}
+
+/*!
+* \return	Non zero if the two triangles intersect or touch.
+* \ingroup	WlzGeometry
+* \brief	Tests for an intersection between the two triangles in 2D
+* 		using the by testing for intersections between the line
+* 		segments of the triangles and then for either triangle
+* 		being contained within the other.
+*
+* 		The algorithm may return false positives when the domains
+* 		are very close to touching.
+* \param	s			Array of 3 vertices in 1st triangle.
+* \param	t			Array of 3 vertices in 2nd triangle.
+*/
+int		WlzGeomTriangleTriangleIntersect2DA(WlzDVertex2 s[],
+				WlzDVertex2 t[])
+{
+  int		i0,
+  		i1,
+		j0,
+		j1,
+		isn = 0;
+
+  i0 = 2;
+  for(i1 = 0; i1 < 3; ++i1)
+  {
+    j0 = 2;
+    for(j1 = 0; j1 < 3; ++j1)
+    {
+      if(WlzGeomLineSegmentsIntersect(s[i0], s[i1], t[j0], t[j1], NULL) != 0)
+      {
+        isn = 1;
+	goto RETURN;
+      }
+      j0 = j1;
+    }
+    i0 = i1;
+  }
+  isn = WlzGeomVxInTriangle2D(s[0], s[1], s[2], t[0]) >= 0;
+  if(isn == 0)
+  {
+    isn = WlzGeomVxInTriangle2D(t[0], t[1], t[2], s[0]) >= 0;
+  }
+RETURN:
+  return(isn);
+}
+
+/*!
+* \return	Non zero if the two triangles intersect or touch.
+* \ingroup	WlzGeometry
+* \brief	Tests for an intersection between the two triangles in 3D
+* 		using the Separating Axis Theorem (SAT).
+*
+* 		See WlzGeomTriangleTriangleIntersect3DA().
+* \param	s0			First vertex of the first triangle.
+* \param	s1			Second vertex of the first triangle.
+* \param	s2			Third vertex of the first triangle.
+* \param	t0			First vertex of the second triangle.
+* \param	t1			Second vertex of the second triangle.
+* \param	t2			Third vertex of the second triangle.
+*/
+int		WlzGeomTriangleTriangleIntersect3D(WlzDVertex3 s0,
+				WlzDVertex3 s1, WlzDVertex3 s2,
+				WlzDVertex3 t0, WlzDVertex3 t1,
+				WlzDVertex3 t2)
+{
+  int		isn;
+  WlzDVertex3	s[3],
+  		t[3];
+
+  s[0] = s0; s[1] = s1; s[2] = s2;
+  t[0] = t0, t[1] = t1; t[2] = t2;
+  isn = WlzGeomTriangleTriangleIntersect3DA(s, t);
+  return(isn);
+}
+
+/*!
+* \return	Non zero if the two triangles intersect or touch.
+* \ingroup	WlzGeometry
+* \brief	Tests for an intersection between the two triangles in 3D
+* 		using the Separating Axis Theorem (SAT).
+*
+* 		Given two triangles this function tests for an intersection
+* 		using the Separating Axis Theorem (SAT) which states:
+* 		Two 3D convex domains do not intersect iff there exists
+* 		a line, called a separating axis, on which projection
+* 		intervals of the domains do not intersect.  The minimal
+* 		set of axes that need to be considered is formed by the
+* 		normals to all faces of the (polyhedral) domains and the
+* 		cross product of all edge combinations in which one edge
+* 		is from each polyhedron.
+*
+* 		This code is based on "A Fast Triangle-Triangle Intersection
+* 		Test" Tomas Moller, Journal of Graphics, GPU, and Game Tools
+* 		1997 2(2) pp25-30.
+*
+* 		The algorithm may return false positives when the domains
+* 		are very close to touching.
+* \param	s			Array of vertices in 1st triangle.
+* \param	t			Array of vertices in 2nd triangle.
+*/
+int		WlzGeomTriangleTriangleIntersect3DA(WlzDVertex3 s[],
+				WlzDVertex3 t[])
+{
+  int		idx,
+		cop = 0,
+  		isn = 0;
+  double	tmp,
+  		ds0ds1,
+		ds0ds2,
+  		dt0dt1,
+		dt0dt2;
+  WlzDVertex3	e,
+  		ae;
+  double	d[2],
+  		ds[3],
+		dt[3],
+		is[2],
+		it[2],
+		ps[3],
+		pt[3];
+  WlzDVertex3	n[2];
+
+  isn = WlzGeomTriTriPlaneTest(dt, n + 0, d + 0, &dt0dt1, &dt0dt2, t, s);
+  if(isn != 0)
+  {
+    isn = WlzGeomTriTriPlaneTest(ds, n + 1, d + 1, &ds0ds1, &ds0ds2, s, t);
+    if(isn != 0)
+    {
+      isn = 0;
+      /* Compute direction of the intersection line. */
+      WLZ_VTX_3_CROSS(e, n[0], n[1]);
+      /* Find the largest component of e and use this to do a simplified
+       * projection. */
+      WLZ_VTX_3_FABS(ae, e);
+      idx = 0;
+      tmp = ae.vtX;
+      if(ae.vtY > tmp)
+      {
+        tmp = ae.vtY;
+	idx = 1;
+      }
+      if(ae.vtZ > tmp)
+      {
+	idx = 2;
+      }
+      switch(idx)
+      {
+        case 0: /* 0 - x component largest. */
+	  ps[0] = s[0].vtX;
+	  ps[1] = s[1].vtX;
+	  ps[2] = s[2].vtX;
+          break;
+	case 1: /* 1 - y component largest. */
+	  ps[0] = s[0].vtY;
+	  ps[1] = s[1].vtY;
+	  ps[2] = s[2].vtY;
+          break;
+	default: /* 2 - z component largest. */
+	  ps[0] = s[0].vtZ;
+	  ps[1] = s[1].vtZ;
+	  ps[2] = s[2].vtZ;
+          break;
+      }
+      /* Compute intersection for the 1st triangle (s). */
+      cop = WlzGeomTriTri3DIsn(s, ps, ds, ds0ds1, ds0ds2, is);
+      if(cop)
+      {
+        isn = WlzGeomTriTri3DCoplanar(n[0], s, t);
+      }
+      else
+      {
+	switch(idx)
+	{
+	  case 0: /* 0 - x component largest. */
+	    pt[0] = t[0].vtX;
+	    pt[1] = t[1].vtX;
+	    pt[2] = t[2].vtX;
+	    break;
+	  case 1: /* 1 - y component largest. */
+	    pt[0] = t[0].vtY;
+	    pt[1] = t[1].vtY;
+	    pt[2] = t[2].vtY;
+	    break;
+	  default: /* 2 - z component largest. */
+	    pt[0] = t[0].vtZ;
+	    pt[1] = t[1].vtZ;
+	    pt[2] = t[2].vtZ;
+	    break;
+	}
+	/* Compute intersection for the 2nd triangle (t). */
+	(void )WlzGeomTriTri3DIsn(t, pt, dt, dt0dt1, dt0dt2, it);
+	if(is[0] > is[1])
+	{
+	  tmp = is[0]; is[0] = is[1]; is[1] = tmp;
+	}
+	if(it[0] > it[1])
+	{
+	  tmp = it[0]; it[0] = it[1]; it[1] = tmp;
+	}
+	if((is[1] > it[0]) && (it[1] > is[0]))
+	{
+	  /* Now know the triangles intersect and are not coplanar. */
+	  isn = 1;
+	}
+      }
+    }
+  }
+  return(isn);
+}
+
+/*!
+* \return	Planarity code:
+*		<ul>
+*		  <li>0 1st triangle does not intersect plane of 2nd.</li>
+*		  <li>1 1st triangle intersects plane of 2nd.</li>
+*		  <li>2 1st and 2nd triangle are co-planar.</li>
+* \ingroup	WlzGeometry
+* \brief	Given the the vertices of two triangles; Computes the
+* 		plane equation of the 2nd triangle and then tests for
+* 		possible intersection of the 1st triangle with the plane
+* 		of the 2nd. Where the equation of the plane is of the
+* 		form:  n.x + d = 0.
+* 		All destination pointers must be valid.
+* \param	ds			Valid array for the three distances
+* 					from the vertices of the 1st triangle
+* 					to the plane of the 2nd.
+* \param	n			Destination pointer for the normal
+* 					of the plane equation.
+* \param	d			Destination pointer for the distance
+* 					of the plane equation.
+* \param	d0d1			Destination pointer for d[0] * d[1],
+* 					with robust treatment near zero.
+* \param	d0d2			Destination pointer for d[0] * d[2],
+* 					with robust treatment near zero.
+* \param	s[]			Vertices of the 1st triangle.
+* \param	t[]			Vertices of the 2nd triangle.
+*/
+static int	WlzGeomTriTriPlaneTest(double ds[], WlzDVertex3 *n,
+                                       double *d, double *d0d1, double *d0d2,
+				       WlzDVertex3 s[], WlzDVertex3 t[])
+{
+  int		isn = 0;
+  WlzDVertex3	e[2];
+  const double  tol = ALG_DBL_TOLLERANCE;
+
+  /* Compute the plane of the 2nd triangle. */
+  WLZ_VTX_3_SUB(e[0], t[1], t[0]);
+  WLZ_VTX_3_SUB(e[1], t[2], t[1]);
+  WLZ_VTX_3_CROSS(n[0], e[0], e[1]);
+  *d = -(WLZ_VTX_3_DOT(n[0], t[0]));
+  /* Put the 1st traingle (s) into the plane equation of the 2nd
+   * traingle (t) to compute signed distances to the  plane. */
+  ds[0] = WLZ_VTX_3_DOT(n[0], s[0]) + *d;
+  ds[1] = WLZ_VTX_3_DOT(n[0], s[1]) + *d;
+  ds[2] = WLZ_VTX_3_DOT(n[0], s[2]) + *d;
+  if(fabs(ds[0]) < tol)
+  {
+    ++isn;
+    ds[0] = 0.0;
+  }
+  if(fabs(ds[1]) < tol)
+  {
+    ++isn;
+    ds[1] = 0.0;
+  }
+  if(fabs(ds[2]) < tol)
+  {
+    ++isn;
+    ds[2] = 0.0;
+  }
+  if(isn == 3)
+  {
+    /* All distances are zero so the triangles are planar. */
+    isn = 2;
+  }
+  else
+  {
+    *d0d1 = ds[0] * ds[1];
+    *d0d2 = ds[0] * ds[2];
+    if((*d0d1 > 0.0) && (*d0d2 > 0.0))
+    {
+      /* Distances all have the same sign therefore on intersection is
+       * not possible. */
+      isn = 0;
+    }
+    else
+    {
+      /* Distances have different signs therefore on intersection is
+       * possible. */
+      isn = 1;
+    }
+  }
+  return(isn);
+}
+
+/*!
+* \return	Non-zero if the two triangles are coplanar.
+* \ingroup	WlzGeometry
+* \brief	Checks for coplanarity and computes intersection intervals
+* 		for WlzGeomTriangleTriangleIntersect3D().
+* \param	s			Vertices of 1st triangle.
+* \param	sp			Maximal component of each vertex of
+* 					1st triangle.
+* \param	d			Distances from vertices of the 1st
+* 					triangle to the plane of the 2nd.
+* \param	d0d1			Product d[0] * d[1], with robust
+* 					treatment near zero.
+* \param	d0d2			Product d[0] * d[2], with robust
+* 					treatment near zero.
+* \param	is			Destination pointer for the two
+* 					intersection interval values.
+*/
+static int	WlzGeomTriTri3DIsn(WlzDVertex3 s[], double sp[], double d[],
+				   double d0d1, double d0d2, double is[])
+{
+  int		coplanar = 0;
+  double	tmp;
+  double	dd[3],
+  		pp[3];
+  WlzDVertex3	ss[3];
+  const double  tol = ALG_DBL_TOLLERANCE;
+
+  if(d0d1 > 0.0)
+  {
+    /* Know that d0d2 <= 0.0, ie d[0], d[1] are on the same side, d[2] on the
+     * other or on the plane. */
+    ss[0] = s[2]; pp[0] = sp[2]; dd[0] = d[2];
+    ss[1] = s[0]; pp[1] = sp[0]; dd[1] = d[0];
+    ss[2] = s[1]; pp[2] = sp[1]; dd[2] = d[1];
+  }
+  else if(d0d2 > 0.0)
+  {
+    /* Know that d0d1 <= 0.0. */
+    ss[0] = s[1]; pp[0] = sp[1]; dd[0] = d[1];
+    ss[1] = s[0]; pp[1] = sp[0]; dd[1] = d[0];
+    ss[2] = s[2]; pp[2] = sp[2]; dd[2] = d[2];
+  }
+  else if((fabs(d[0]) > tol) || (d[1] * d[2] > tol))
+  {
+    /* Know that d0d1 <= 0.0 or that d[0] != 0.0 */
+    ss[0] = s[0]; pp[0] = sp[0]; dd[0] = d[0];
+    ss[1] = s[1]; pp[1] = sp[1]; dd[1] = d[1];
+    ss[2] = s[2]; pp[2] = sp[2]; dd[2] = d[2];
+  }
+  else if(fabs(d[1]) > tol)
+  {
+    ss[0] = s[1]; pp[0] = sp[1]; dd[0] = d[1];
+    ss[1] = s[0]; pp[1] = sp[0]; dd[1] = d[0];
+    ss[2] = s[2]; pp[2] = sp[2]; dd[2] = d[2];
+  }
+  else if(fabs(d[2]) > 0)
+  {
+    ss[0] = s[2]; pp[0] = sp[2]; dd[0] = d[2];
+    ss[1] = s[0]; pp[1] = sp[0]; dd[1] = d[0];
+    ss[2] = s[1]; pp[2] = sp[1]; dd[2] = d[1];
+  }
+  else
+  {
+    /* Triangles are coplanar */
+    coplanar = 1;
+  }
+  if(coplanar == 0)
+  {
+    tmp = dd[0] / (dd[0] - dd[1]);
+    is[0] = pp[0] + (pp[1] - pp[0]) * tmp;
+    tmp = dd[0] /(dd[0] - dd[2]);
+    is[1] = pp[0] + (pp[2] - pp[0]) * tmp;
+  }
+  return(coplanar);
+}
+
+/*!
+* \return	Non zero if the triangles intersect or touch.
+* \ingroup	WlzGeometry
+* \brief	Tests for an intersection between two 3D triangles that
+* 		are known to be coplanar. This is done by projecting the
+* 		triangles onto the common plane and then testing for an
+* 		intersection in that plane.
+* 		No tests are made for a zero length normal or coincident
+* 		vertices within a triangle.
+* \param	n			Unit normal to plane of the triangles,
+* 					must not be 0.0.
+* \param	s			Vertices of the 1st triangle which
+* 					must not be coincident.
+* \param	t			Vertices of the 2nd triangle which
+* 					must not be coincident.
+*/
+static int 	WlzGeomTriTri3DCoplanar(WlzDVertex3 n,
+				        WlzDVertex3 s[], WlzDVertex3 t[])
+{
+  int		i,
+  		isn = 0;
+  WlzDVertex3	m;
+  WlzDVertex2	u[3],
+  		v[3];
+
+  /* Project onto an axis aligned plane that maximises the area of the
+   * triangles which avoids vector arithmetic including square roots.
+   * Compute projected triangles. */
+  WLZ_VTX_3_FABS(m, n);
+  if(m.vtX > m.vtY)
+  {
+    if(m.vtX > m.vtZ)
+    {
+      for(i = 0; i < 3; ++i)
+      {
+	u[i].vtX = s[i].vtY; u[i].vtY = s[i].vtZ;
+	v[i].vtX = t[i].vtY; v[i].vtY = t[i].vtZ;
+      }
+    }
+    else
+    {
+      for(i = 0; i < 3; ++i)
+      {
+	u[i].vtX = s[i].vtX; u[i].vtY = s[i].vtY;
+	v[i].vtX = t[i].vtX; v[i].vtY = t[i].vtY;
+      }
+    }
+  }
+  else   //* m.vtX<=m.vtY *//
+  {
+    if(m.vtZ > m.vtY)
+    {
+      for(i = 0; i < 3; ++i)
+      {
+	u[i].vtX = s[i].vtX; u[i].vtY = s[i].vtY;
+	v[i].vtX = t[i].vtX; v[i].vtY = t[i].vtY;
+      }
+    }
+    else
+    {
+      for(i = 0; i < 3; ++i)
+      {
+	u[i].vtX = s[i].vtX; u[i].vtY = s[i].vtZ;
+	v[i].vtX = t[i].vtX; v[i].vtY = t[i].vtZ;
+      }
+    }
+  }
+  isn = WlzGeomTriangleTriangleIntersect2DA(u, v);
+  return(isn);
 }
