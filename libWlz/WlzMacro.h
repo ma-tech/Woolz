@@ -285,6 +285,17 @@ extern "C" {
 		 (fabs((U).vtY - (V).vtY) < (T)) && \
 		 (fabs((U).vtZ - (V).vtZ) < (T)))
 
+/* WLZ_VTX_2_FABS: Floating point absolute value. */
+#define WLZ_VTX_2_FABS(U,V) \
+              	((U).vtX = fabs((V).vtX), \
+              	 (U).vtY = fabs((V).vtY))
+
+/* WLZ_VTX_3_FABS: Floating point absolute value. */
+#define WLZ_VTX_3_FABS(U,V) \
+              	((U).vtX = fabs((V).vtX), \
+              	 (U).vtY = fabs((V).vtY), \
+              	 (U).vtZ = fabs((V).vtZ))
+
 /************************************************************************
 * CMesh node access
 ************************************************************************/
