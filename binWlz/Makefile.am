@@ -72,6 +72,7 @@ bin_PROGRAMS		= \
 			  WlzCompDispIncGrey \
 			  WlzCompThresh \
 			  WlzConstruct3D \
+			  WlzContourCut \
 			  WlzContourFlipOrient \
 			  WlzContourFromPoints \
 			  WlzContourGeomFilter \
@@ -81,6 +82,7 @@ bin_PROGRAMS		= \
 			  WlzConvertPix \
 			  WlzConvexPoly \
 			  WlzCopyObj \
+			  WlzCopyToTiledObj \
 			  WlzCreateSpecialSE \
 			  WlzCrossCorValue \
 			  WlzCutObjToBox \
@@ -132,6 +134,7 @@ bin_PROGRAMS		= \
 			  WlzLabel \
 			  WlzLaplacian \
 			  WlzMakeEmpty \
+			  WlzMakeRect \
 			  WlzMarkersToDomain \
 			  WlzMatchICPObj \
 			  WlzMeshTransformObj \
@@ -167,6 +170,7 @@ bin_PROGRAMS		= \
 			  WlzStripProperties \
 			  WlzStructDilation \
 			  WlzStructErosion \
+			  WlzTiledObjFromDomain \
 			  WlzThreshold \
 			  WlzTransformProduct \
 			  WlzTransposeObj \
@@ -294,6 +298,10 @@ WlzConstruct3D_SOURCES			= WlzConstruct3D.c
 WlzConstruct3D_LDADD			= $(LDADD)
 WlzConstruct3D_LDFLAGS			= $(AM_LFLAGS)
 
+WlzContourCut_SOURCES			= WlzContourCut.c
+WlzContourCut_LDADD			= $(LDADD)
+WlzContourCut_LDFLAGS			= $(AM_LFLAGS)
+
 WlzContourFlipOrient_SOURCES		= WlzContourFlipOrient.c
 WlzContourFlipOrient_LDADD		= $(LDADD)
 WlzContourFlipOrient_LDFLAGS		= $(AM_LFLAGS)
@@ -329,6 +337,10 @@ WlzConvexPoly_LDFLAGS			= $(AM_LFLAGS)
 WlzCopyObj_SOURCES			= WlzCopyObj.c
 WlzCopyObj_LDADD			= $(LDADD)
 WlzCopyObj_LDFLAGS			= $(AM_LFLAGS)
+
+WlzCopyToTiledObj_SOURCES		= WlzCopyToTiledObj.c
+WlzCopyToTiledObj_LDADD			= $(LDADD)
+WlzCopyToTiledObj_LDFLAGS		= $(AM_LFLAGS)
 
 WlzCreateSpecialSE_SOURCES		= WlzCreateSpecialSE.c
 WlzCreateSpecialSE_LDADD		= $(LDADD)
@@ -534,6 +546,10 @@ WlzMakeEmpty_SOURCES			= WlzMakeEmpty.c
 WlzMakeEmpty_LDADD			= $(LDADD)
 WlzMakeEmpty_LDFLAGS			= $(AM_LFLAGS)
 
+WlzMakeRect_SOURCES			= WlzMakeRect.c
+WlzMakeRect_LDADD			= $(LDADD)
+WlzMakeRect_LDFLAGS			= $(AM_LFLAGS)
+
 WlzMarkersToDomain_SOURCES		= WlzMarkersToDomain.c
 WlzMarkersToDomain_LDADD		= $(LDADD)
 WlzMarkersToDomain_LDFLAGS		= $(AM_LFLAGS)
@@ -689,6 +705,10 @@ WlzTransposePlanes_LDFLAGS		= $(AM_LFLAGS)
 WlzThreshold_SOURCES			= WlzThreshold.c
 WlzThreshold_LDADD			= $(LDADD)
 WlzThreshold_LDFLAGS			= $(AM_LFLAGS)
+
+WlzTiledObjFromDomain_SOURCES		= WlzTiledObjFromDomain.c
+WlzTiledObjFromDomain_LDADD		= $(LDADD)
+WlzTiledObjFromDomain_LDFLAGS		= $(AM_LFLAGS)
 
 WlzUnion_SOURCES			= WlzUnion.c
 WlzUnion_LDADD				= $(LDADD)
