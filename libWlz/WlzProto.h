@@ -1288,7 +1288,12 @@ extern WlzFBox3			WlzBoundingBoxUnion3F(
 extern WlzDBox3			WlzBoundingBoxUnion3D(
 				  WlzDBox3 box0,
 				  WlzDBox3 box1);
-
+extern WlzDBox2			WlzBoundingBoxGModel2D(
+				  WlzGMModel *model,
+				  WlzErrorNum *dstErr);
+extern WlzDBox3			WlzBoundingBoxGModel3D(
+				  WlzGMModel *model,
+				  WlzErrorNum *dstErr);
 /************************************************************************
 * WlzBoundToObj.c							*
 ************************************************************************/
@@ -1857,6 +1862,9 @@ extern int			WlzConvolutionNormalise(
 extern WlzObject		*WlzCopyObject(
 				  WlzObject *inObj,
 				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzCopyObjectGreyValues(
+				  WlzObject *dObj,
+				  WlzObject *sObj);
 #ifndef WLZ_EXT_BIND
 extern WlzDomain		WlzCopyDomain(
 				  WlzObjectType inObjType,
@@ -2418,6 +2426,11 @@ extern double			WlzGMVertexDistSq3D(
 extern double			WlzGMVertexDistSq2D(
 			  	  WlzGMVertex *vertex,
 			  	  WlzDVertex2 pos);
+extern WlzErrorNum		WlzGMFaceGetG3D(
+				  WlzGMFace *face,
+				  WlzDVertex3 *dstPos0,
+				  WlzDVertex3 *dstPos1,
+				  WlzDVertex3 *dstPos2);
 extern double			WlzGMVertexShellDist(
 			  	  WlzGMVertex *v0,
 			  	  WlzGMVertex *v1,
@@ -2441,6 +2454,10 @@ extern WlzErrorNum 		WlzGMModelTypeValid(
 extern int			WlzGMModelGetDimension(
 			  	  WlzGMModel *model,
 			  	  WlzErrorNum *dstErr);
+extern WlzGMResource		*WlzGMModelGetRes(
+				  WlzGMModel *model,
+				  WlzGMElemType elemType,
+				  WlzErrorNum *dstErr);
 /* Topology validity checks (useful for debugging) */
 extern WlzErrorNum		WlzGMVerifyModel(
 			  	  WlzGMModel *model,
@@ -2554,6 +2571,33 @@ extern WlzErrorNum		WlzGMModelConstructSimplex2N(
 extern int			WlzGMShellSimplexCnt(
 			  	  WlzGMShell *gShell);
 #endif /* !WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzGeoModelCellGridWSp.c
+************************************************************************/
+extern WlzGMGridWSp3D		*WlzGeoModelGridWSpNew3D(
+				  WlzGMModel *model,
+				  WlzGMElemType elemType,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzGeoModelGridWSpSet3D(
+				  WlzGMGridWSp3D *grid,
+				  WlzGMModel *model,
+				  WlzGMElemType elemType);
+extern WlzErrorNum		WlzGeoModelGridFree3D(
+				  WlzGMGridWSp3D *grid);
+extern WlzIBox3			WlzGeoModelGridCellsInDBox(
+				  WlzGMGridWSp3D *grid,
+				  WlzDBox3 dBox);
+
+/************************************************************************
+* WlzGeoModelCut.c
+************************************************************************/
+extern WlzGMModel		*WlzGMModelCut(WlzGMModel *given,
+				  WlzGMModel *knife,
+				  WlzErrorNum *dstErr);
+extern WlzGMModel		*WlzGMModelCutDom(WlzGMModel *given,
+				  WlzObject *knife,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzGeoModelFilters.c
@@ -2684,6 +2728,13 @@ extern int			WlzGeomTriangleAABBIntersect2D(
 				  WlzDVertex2 b0,
 				  WlzDVertex2 b1,
 				  int bbInt);
+extern int			WlzGeomTriangleAABBIntersect3D(
+				  WlzDVertex3 t0,
+				  WlzDVertex3 t1,
+				  WlzDVertex3 t2,
+				  WlzDVertex3 b0,
+				  WlzDVertex3 b1,
+				  int bbInt);
 extern int			WlzGeomTetrahedronAABBIntersect3D(
 				  WlzDVertex3 t0,
 				  WlzDVertex3 t1,
@@ -2698,6 +2749,26 @@ extern int			WlzGeomPlaneAABBIntersect(
 				  double c,
 				  double d,
 				  WlzDBox3 box);
+extern int			WlzGeomTriangleTriangleIntersect2D(
+				  WlzDVertex2 s0,
+				  WlzDVertex2 s1,
+				  WlzDVertex2 s2,
+				  WlzDVertex2 t0,
+				  WlzDVertex2 t1,
+				  WlzDVertex2 t2);
+extern int			WlzGeomTriangleTriangleIntersect2DA(
+				  WlzDVertex2 s[],
+				  WlzDVertex2 t[]);
+extern int			WlzGeomTriangleTriangleIntersect3D(
+				  WlzDVertex3 s0,
+				  WlzDVertex3 s1,
+				  WlzDVertex3 s2,
+				  WlzDVertex3 t0,
+				  WlzDVertex3 t1,
+				  WlzDVertex3 t2);
+extern int			WlzGeomTriangleTriangleIntersect3DA(
+				  WlzDVertex3 s[],
+				  WlzDVertex3 t[]);
 extern int			WlzGeomPlaneLineIntersect(
 				  double a,
 				  double b,
@@ -2965,9 +3036,12 @@ extern WlzErrorNum 		WlzGreyInterval(
 /************************************************************************
 * WlzGreySetIncValues.c  						*
 ************************************************************************/
-extern WlzObject		*WlzGreySetIncValues(
+extern WlzObject		*WlzGreyNewIncValues(
 				  WlzObject *in,
 				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzGreySetIncValues(
+				  WlzObject *obj,
+				  int *val);
 
 /************************************************************************
 * WlzGreySetRange.c							*
@@ -4999,6 +5073,24 @@ extern WlzObject 		*WlzThreshold(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzTiledValues.c							*
+************************************************************************/
+extern WlzTiledValues		*WlzMakeTiledValues(
+				  int dim,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzFreeTiledValues(
+				  WlzTiledValues *tVal);
+extern WlzErrorNum		WlzMakeTiledValuesTiles(
+				  WlzTiledValues *tVal);
+extern WlzObject		*WlzMakeTiledValuesFromObj(
+				  WlzObject *gObj,
+				  size_t tileSz,
+				  int copyValues,
+				  WlzGreyType gType,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzTransform.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
@@ -5043,6 +5135,8 @@ extern WlzGreyType 		WlzGreyTableTypeToGreyType(
 extern WlzObjectType 		WlzGreyTableTypeToTableType(
 				  WlzObjectType objType,
 				  WlzErrorNum *dstErr);
+extern WlzObjectType		WlzGreyTableIsTiled(
+				  WlzObjectType gTabType);
 extern WlzGreyType		WlzGreyTypeFromObj(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
