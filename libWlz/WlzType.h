@@ -200,6 +200,7 @@ typedef enum _WlzObjectType
   WLZ_FEAT_TAB_RAGR		= 5,	/*!< Base ragged rectangle feature
   					     table. */
   WLZ_FEAT_TAB_RECT 		= 6,	/*!< Base rectangular feature table. */
+  WLZ_GREY_TAB_TILED		= 7,    /*!< Tiled grey value table. */
   WLZ_VALUETABLE_RAGR_INT	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_INT),
   					/*!< Ragged rectangle int value
 					     table. */
@@ -263,6 +264,27 @@ typedef enum _WlzObjectType
   WLZ_VALUETABLE_INTL_RGBA	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_RGBA),
   					/*!< Interval coded red, green, blue,
 					     alpha value table.  */
+  WLZ_VALUETABLE_TILED_INT	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_INT),
+  					/*!< Tiled int value
+					     table. */
+  WLZ_VALUETABLE_TILED_SHORT	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_SHORT),
+  					/*!< Tiled short value
+					     table. */
+  WLZ_VALUETABLE_TILED_UBYTE	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_UBYTE),
+  					/*!< Tiled unsigned byte value
+					     table. */
+  WLZ_VALUETABLE_TILED_FLOAT	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_FLOAT),
+  					/*!< Tiled single precision
+					     floating point value table. */
+  WLZ_VALUETABLE_TILED_DOUBLE	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_DOUBLE),
+  					/*!< Tiled double precision
+					     floating point value table. */
+  WLZ_VALUETABLE_TILED_BIT	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_BIT),
+  					/*!< Tiled single bit (packed
+					     unsigned bytes) value table. */
+  WLZ_VALUETABLE_TILED_RGBA	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_RGBA),
+  					/*!< Tiled red, green, blue,
+					     table. */
   WLZ_FEATVALUETABLE_RAGR	= 50,	/*!< Ragged rectangle features
   					     value table. */
   WLZ_FEATVALUETABLE_RECT	= 60,	/*!< Rectangular features
@@ -1694,12 +1716,12 @@ typedef struct _WlzGMResource
 } WlzGMResource;
 
 /*!
-* \struct	_WlzGMShellR
+* \struct	_WlzGMModelR
 * \ingroup	WlzGeoModel
 * \brief	The resources used by a model.
 *		Typedef: ::WlzGMModelR.
 */
-typedef struct _WlzGMShellR
+typedef struct _WlzGMModelR
 {
   struct _WlzGMCbEntry	*callbacks;		/*!< Linked list of functions which
   					    are called when new elements are
@@ -1742,7 +1764,6 @@ typedef struct _WlzGMModel
 } WlzGMModel;
 
 #ifndef WLZ_EXT_BIND
-
 /*!
 * \typedef	WlzGMCbFn
 * \ingroup	WlzGeoModel
@@ -1801,6 +1822,50 @@ typedef struct _WlzGMResIdxTb
   WlzGMResIdx   shell;
   WlzGMResIdx   shellG;
 } WlzGMResIdxTb;
+
+/*!
+* \struct      _WlzGMGridWSpCell3D
+* \ingroup     WlzGeoModel
+* \brief       A single cell entry in an axis aligned grid for a 3D model.
+*              Typedef: ::WlzGMGridWSpCell3D
+*/
+typedef struct _WlzGMGridWSpCell3D
+{
+  WlzGMElemP    elem;                   /*! Geometric model element which
+                                            intersects the cuboid of this
+                                            cell. */
+  struct _WlzGMGridWSpCell3D *next;     /*! The next cell in the linked list of
+                                            cells. */
+} WlzGMGridWSpCell3D;
+
+/*!
+* \struct      _WlzGMGridWSp3D
+* \ingroup     WlzGeoModel
+* \brief       An axis aligned grid of cuboid cells. This has an array (the
+*              grid) of linked lists of cells, with the entries in each
+*              list holding the faces of the 3D model which intersect the
+*              cuboid of the cell.
+*              Typedef: ::WlzGMGridWSp3D
+*/
+typedef struct _WlzGMGridWSp3D
+{
+  WlzGMModelType elemType;              /*! Element type that the grid is
+                                            defined for. */
+  WlzIVertex3   nCells;                 /*! Dimensions of the cell grid
+                                            array in terms of the number of
+                                            cells. */
+  double        cellSz;                 /*! Each cell is an axis aligned
+                                            square with this side length. */
+  WlzDVertex3   org;                    /*! Model coordinate value at the cell
+                                            origin. */
+  struct _WlzGMGridWSpCell3D ****cells; /*! Array of linked list of cells. */
+  int           cellVecMax;             /*! Number of cells allocated and the
+                                            index into cell vector of next
+                                            cell available. */
+  AlcVector     *cellVec;               /*! Extensible vector of cells for
+                                            adding to the array of linked lists
+                                            of cells. */
+} WlzGMGridWSp3D;
 
 /************************************************************************
 * Data structures for linear binary tree domains.
@@ -2050,6 +2115,7 @@ typedef union _WlzValues
   struct _WlzFeatValues     *fv;
   struct _WlzRectFeatValues *rfv;
   struct _WlzIndexedValues  *x;
+  struct _WlzTiledValues    *t;
 } WlzValues;
 
 /*!
@@ -2395,7 +2461,6 @@ typedef struct _WlzPlaneDomain
   						     dimensions. */
 } WlzPlaneDomain;
 
-
 /************************************************************************
 * Intervals.						
 ************************************************************************/
@@ -2632,7 +2697,8 @@ typedef enum _WlzValueAttach
 */
 typedef struct _WlzIndexedValues
 {
-  WlzObjectType type;                   /*!< From WlzCoreValues. */
+  WlzObjectType type;                   /*!< From WlzCoreValues:
+                                             WLZ_INDEXED_VALUES. */
   int           linkcount;              /*!< From WlzCoreValues. */
   void          *freeptr;		/*!< From WlzCoreValues, although
   					     this won't free the values
@@ -2655,6 +2721,77 @@ typedef struct _WlzIndexedValues
                                              attached to. */
   AlcVector     *values;                /*!< The indexed values. */
 } WlzIndexedValues;
+
+/*!
+* \struct       _WlzTiledValues
+* \ingroup      WlzType
+* \brief        A  tiled value table for both 2 an 3D domain objects.
+*               Typedef: ::WlzTiledValues.
+*
+* 		The grey values are stored in square or cubic tiles
+* 		with tileSz being the number of values in each tile
+* 		irespective of the grey value type. An index to the
+* 		tiles is stored as a simple one dimensional array.
+*
+* 		To access a grey value at some position \f$(x,y,z)\f$
+* 		which is known to be within the tiled value table:
+* 		First the position relative to the first column (\f$x_0\f$),
+* 		line (\f$y_0\f$) and plane (\f$z_0\f$)of the value table
+* 		is computed:
+*		\f$x_r = x - x_0, y_r = y - y_0, z_r = z - z_0\f$.
+*		The tile index (\f$i\f$) and within tile offset (\f$o\f$)
+*		are then computed:
+*		\f{eqnarray*}
+		i_x = x_r / w \\
+		i_y = y_r / w \\
+		i_z = z_r / w \\
+		o_x = x_r - (w i_x) \\
+		o_y = y_r - (w i_y) \\
+		o_z = z_r - (w i_z) \\
+		i = (((i_z ni_y) + i_y) ni_x) + i_x \\
+		o = (((o_z nt_y) + o_y) nt_x) + o_x \\
+		g = T \left[ ( I \left[ i \right] t_s) + o \right]
+		\f{eqnarray*}
+*		Where \f$I\f$ is the index table and \f$T\f$ the start
+*		of the tile data.
+*
+* 		The tile data may be memory mapped instead of read into
+* 		memory in which case the file descriptor will have a
+* 		non-negative value. This can be used to close the file.
+*/
+typedef struct _WlzTiledValues
+{
+  WlzObjectType type;                   /*!< From WlzCoreValues:
+                                             built from WLZ_GREY_TAB_TILED
+					     and the grey value type. */
+  int           linkcount;              /*!< From WlzCoreValues. */
+  void          *freeptr;		/*!< From WlzCoreValues, although
+  					     this won't free the values
+					     themselves. */
+  int		dim;			/*!< The dimension of the value table,
+  					     ie 2 or 3D. */
+  int		kol1;			/*!< First column. */
+  int		lastkl;			/*!< Last column. */
+  int		line1;			/*!< First line. */
+  int		lastln;			/*!< Last line. */
+  int		plane1;			/*!< First plane. */
+  int		lastpl;			/*!< Last plane. */
+  WlzPixelV     bckgrnd;		/*!< Background value. */
+  size_t	tileSz;		        /*!< The number of values in each
+  					     tile which may be less than
+					     the number of bytes. */
+  size_t        tileWidth;              /*!< Width of the tiles (\f$w\f$). */
+  size_t	numTiles;		/*!< The total number of tiles. */
+  int		*nIdx;			/*!< Number of index columns,
+  					     lines, .... */
+  int		*indices;		/*!< Table of tile indices. */
+  int		fd;			/*!< File descriptor if tiles are
+  					     memory mapped else -1. */
+  long		tileOffset;             /*!< Offset from the start of the
+  					     file to the tiles. This may be
+					     set even if not memory mapped. */
+  WlzGreyP 	tiles;			/*!< The tiles. */
+} WlzTiledValues;
 
 /************************************************************************
 * Point domains.						
@@ -4135,19 +4272,23 @@ typedef struct _WlzGreyValueWSpace
                                              WLZ_3D_DOMAINOBJ. */
   WlzDomain     domain;             	/*!< The object's domain. */
   WlzValues     values;         	/*!< The object's values. */
+  WlzObjectType gTabType;		/*!< The grey table type. */
   WlzObjectType	*gTabTypes3D;		/*!< Cache for efficiency with 2D
-  					     value types. */
+  					     value types. Not used for
+					     tiled values. */
   WlzAffineTransform *invTrans;        	/*!< If the object is a WLZ_TRANS_OBJ
 					     then used to cache the inverse
 					     transform. */
   WlzIntervalDomain *iDom2D;       	/*!< Current/last plane or 2D object
   					     domain. */
   WlzValues     values2D;          	/*!< Current/last plane or 2D object
-  					     values. */
+  					     values. Not used for tiled
+					     values. */
   int           plane;                  /*!< Current/last plane position. */
   WlzGreyType   gType;          	/*!< Grey type. */
   WlzObjectType gTabType2D;           	/*!< Current/last plane or 2D grey
-  					     table. */
+  					     table. Not used for tiled
+					     values. */
   WlzGreyV      gBkd;              	/*!< Background grey value, always
   					     of gType. */
   WlzGreyP      gPtr[8];        	/*!< One, four or eight grey
