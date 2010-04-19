@@ -41,14 +41,20 @@ static char _WlzGreySetIncValues_c[] = "MRC HGU $Id$";
 */
 #include <Wlz.h>
 
-static WlzObject 		*WlzGreySetIncValues2D(
+static WlzObject 		*WlzGreyNewIncValues2D(
 				  WlzObject *in,
 				  int *val,
 				  WlzErrorNum *dstErr);
-static WlzObject 		*WlzGreySetIncValues3D(
+static WlzObject 		*WlzGreyNewIncValues3D(
 				  WlzObject *in,
 				  int *val,
 				  WlzErrorNum *dstErr);
+static WlzErrorNum 		WlzGreySetIncValues2D(
+				  WlzObject *obj,
+				  int *val);
+static WlzErrorNum 		WlzGreySetIncValues3D(
+				  WlzObject *obj,
+				  int *val);
 
 /*!
 * \return	New grey value domain object with incrementing values.
@@ -59,7 +65,7 @@ static WlzObject 		*WlzGreySetIncValues3D(
 * \param	in			Input domain object.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject	*WlzGreySetIncValues(WlzObject *in, WlzErrorNum *dstErr)
+WlzObject	*WlzGreyNewIncValues(WlzObject *in, WlzErrorNum *dstErr)
 {
   int		val = 1;
   WlzObject	*out = NULL;
@@ -78,10 +84,10 @@ WlzObject	*WlzGreySetIncValues(WlzObject *in, WlzErrorNum *dstErr)
     switch(in->type)
     {
       case WLZ_2D_DOMAINOBJ:
-	out = WlzGreySetIncValues2D(in, &val, &errNum);
+	out = WlzGreyNewIncValues2D(in, &val, &errNum);
         break;
       case WLZ_3D_DOMAINOBJ:
-	out = WlzGreySetIncValues3D(in, &val, &errNum);
+	out = WlzGreyNewIncValues3D(in, &val, &errNum);
         break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
@@ -96,6 +102,73 @@ WlzObject	*WlzGreySetIncValues(WlzObject *in, WlzErrorNum *dstErr)
 }
 
 /*!
+* \return	Woolz error code.
+* \ingroup	WlzValuesUtils
+* \brief	Sets the values of a 2 or 3D domain object with int 
+* 		values so that they increment throughout the object
+* 		in scan order. Object values are set by incrementing
+* 		the given value in place. The given object must have
+* 		WLZ_GREY_INT values.
+* \param	obj			The given object.
+* \param	gVal			Pointer to current value, this is
+* 					incremented in place. If NULL then
+* 					the values will be incremented from
+* 					zero.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzErrorNum 	WlzGreySetIncValues(WlzObject *obj, int *gVal)
+{
+  int		val;
+  WlzGreyType	gType;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(obj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    gType = WlzGreyTypeFromObj(obj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(gType != WLZ_GREY_INT)
+    {
+      errNum = WLZ_ERR_GREY_TYPE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    val = (gVal)? *gVal: 0;
+    switch(obj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+        errNum = WlzGreySetIncValues2D(obj, &val);
+	break;
+      case WLZ_3D_DOMAINOBJ:
+        errNum = WlzGreySetIncValues3D(obj, &val);
+	break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+    if(gVal && (errNum == WLZ_ERR_NONE))
+    {
+      *gVal = val;
+    }
+  }
+  return(errNum);
+}
+
+/*!
 * \return	New grey value domain object with incrementing values.
 * \ingroup	WlzValuesUtils
 * \brief	Creates a new 2D domain object with integer values that
@@ -106,16 +179,11 @@ WlzObject	*WlzGreySetIncValues(WlzObject *in, WlzErrorNum *dstErr)
 * 					incremented in place.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static WlzObject *WlzGreySetIncValues2D(WlzObject *in, int *val,
+static WlzObject *WlzGreyNewIncValues2D(WlzObject *in, int *val,
 					WlzErrorNum *dstErr)
 {
-  int		idV,
-  		iWidth;
-  int		*valP;
   WlzObject     *out = NULL;
   WlzObjectType	gTT;
-  WlzIntervalWSpace iWSp;
-  WlzGreyWSpace gWsp;
   WlzPixelV	bgd;
   WlzValues	values;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
@@ -134,23 +202,7 @@ static WlzObject *WlzGreySetIncValues2D(WlzObject *in, int *val,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzInitGreyScan(out, &iWSp, &gWsp);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    while((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)
-    {
-      valP = gWsp.u_grintptr.inp;
-      iWidth = iWSp.rgtpos - iWSp.lftpos + 1;
-      for(idV = 0; idV < iWidth; ++idV)
-      {
-        *valP++ = (*val)++;
-      }
-    }
-    if(errNum == WLZ_ERR_EOO)
-    {
-      errNum = WLZ_ERR_NONE;
-    }
+    errNum = WlzGreySetIncValues2D(out, val);
   }
   if(errNum != WLZ_ERR_NONE)
   {
@@ -172,6 +224,49 @@ static WlzObject *WlzGreySetIncValues2D(WlzObject *in, int *val,
 }
 
 /*!
+* \return	Woolz error code.
+* \ingroup	WlzValuesUtils
+* \brief	Sets the values of a 2D domain object with int values
+* 		so that they increment throughout the object in scan
+* 		order. Object values are set by incrementing the given
+* 		value in place. The given object must have WLZ_GREY_INT
+* 		values, but this is not checked.
+* \param	obj			The given object.
+* \param	val			Pointer to current value, this is
+* 					incremented in place.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzErrorNum WlzGreySetIncValues2D(WlzObject *obj, int *val)
+{
+  WlzIntervalWSpace iWSp;
+  WlzGreyWSpace gWsp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  errNum = WlzInitGreyScan(obj, &iWSp, &gWsp);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    while((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)
+    {
+      int	idV,
+      		iWidth;
+      int	*valP;
+
+      valP = gWsp.u_grintptr.inp;
+      iWidth = iWSp.rgtpos - iWSp.lftpos + 1;
+      for(idV = 0; idV < iWidth; ++idV)
+      {
+        *valP++ = (*val)++;
+      }
+    }
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
+  }
+  return(errNum);
+}
+
+/*!
 * \return	New grey value domain object with incrementing values.
 * \ingroup	WlzValuesUtils
 * \brief	Creates a new 3D domain object with integer values that
@@ -182,7 +277,7 @@ static WlzObject *WlzGreySetIncValues2D(WlzObject *in, int *val,
 * 					incremented in place.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static WlzObject *WlzGreySetIncValues3D(WlzObject *in, int *val,
+static WlzObject *WlzGreyNewIncValues3D(WlzObject *in, int *val,
 					WlzErrorNum *dstErr)
 {
   int		idO,
@@ -215,7 +310,7 @@ static WlzObject *WlzGreySetIncValues3D(WlzObject *in, int *val,
 			 nullValues, NULL, NULL, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-        out2D = WlzGreySetIncValues2D(in2D, val, &errNum);
+        out2D = WlzGreyNewIncValues2D(in2D, val, &errNum);
 	(void )WlzFreeObj(in2D);
       }
       if(errNum == WLZ_ERR_NONE)
@@ -246,4 +341,44 @@ static WlzObject *WlzGreySetIncValues3D(WlzObject *in, int *val,
     *dstErr = errNum;
   }
   return(out);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValuesUtils
+* \brief	Sets the values of a 3D domain object with int values
+* 		so that they increment throughout the object in scan
+* 		order. Object values are set by incrementing the given
+* 		value in place. The given object must have WLZ_GREY_INT
+* 		values, but this is not checked.
+* \param	obj			The given object.
+* \param	val			Pointer to current value, this is
+* 					incremented in place.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzErrorNum WlzGreySetIncValues3D(WlzObject *obj, int *val)
+{
+  int		idP;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  for(idP = obj->domain.p->plane1; idP <= obj->domain.p->lastpl; ++idP)
+  {
+    int		idO;
+    WlzObject	*obj2D;
+    idO = idP - obj->domain.p->plane1;
+    obj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+                        *(obj->domain.p->domains + idO),
+                        *(obj->values.vox->values + idO),
+			NULL, NULL, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzGreySetIncValues2D(obj2D, val);
+    }
+    (void )WlzFreeObj(obj2D);
+    if(errNum != WLZ_ERR_NONE)
+    {
+      break;
+    }
+  }
+  return(errNum);
 }
