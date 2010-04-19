@@ -56,9 +56,9 @@ static char _WlzFreeSpace_c[] = "MRC HGU $Id$";
 */
 WlzErrorNum WlzFreeObj(WlzObject *obj)
 {
+  int 			i;
   WlzCompoundArray	*ca = (WlzCompoundArray *) obj;
   WlzErrorNum		errNum = WLZ_ERR_NONE;
-  int 			i;
 
   WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
   	  ("WlzFreeObj FE 0x%lx\n",
@@ -80,14 +80,23 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 	       (unsigned long )obj,
 	       (unsigned long )(obj->domain.i),
 	       (obj->domain.i?obj->domain.i->linkcount: 0),
-	       (unsigned long )(obj->values.v),
-	       ((obj->values.v)? obj->values.v->linkcount: 0),
+	       (unsigned long )(obj->values.core),
+	       ((obj->values.core)? obj->values.core->linkcount: 0),
 	       (unsigned long )(obj->plist)));
-      if( WlzFreeDomain(obj->domain) ||
-	  WlzFreeValueTb(obj->values.v) ||
-	  WlzFreePropertyList(obj->plist) ||
-	  WlzFreeObj(obj->assoc) ){
-	errNum = WLZ_ERR_MEM_FREE;
+      errNum = WlzFreeDomain(obj->domain);
+      if((errNum == WLZ_ERR_NONE) && (obj->values.core != NULL)) {
+	if(WlzGreyTableIsTiled(obj->values.core->type) == WLZ_GREY_TAB_TILED) {
+	  errNum = WlzFreeTiledValues(obj->values.t);
+	}
+	else {
+	  errNum = WlzFreeValueTb(obj->values.v);
+	}
+      }
+      if(errNum == WLZ_ERR_NONE) {
+        errNum = WlzFreePropertyList(obj->plist);
+      }
+      if(errNum == WLZ_ERR_NONE) {
+        errNum = WlzFreeObj(obj->assoc);
       }
       break;
 
@@ -97,14 +106,23 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 	       "%d 0x%lx %d 0x%lx\n",
 	       (unsigned long )obj, (unsigned long )(obj->domain.i),
 	       (obj->domain.p?obj->domain.p->linkcount: 0),
-	       (unsigned long )(obj->values.vox),
-	       (obj->values.vox?obj->values.vox->linkcount: 0),
+	       (unsigned long )(obj->values.core),
+	       (obj->values.core?obj->values.core->linkcount: 0),
 	       (unsigned long )(obj->plist)));
-      if( WlzFreePlaneDomain(obj->domain.p) ||
-	  WlzFreeVoxelValueTb(obj->values.vox) ||
-	  WlzFreePropertyList(obj->plist) ||
-	  WlzFreeObj(obj->assoc) ){
-	errNum = WLZ_ERR_MEM_FREE;
+      errNum = WlzFreeDomain(obj->domain);
+      if((errNum == WLZ_ERR_NONE) && (obj->values.core != NULL)){
+	if(WlzGreyTableIsTiled(obj->values.core->type) == WLZ_GREY_TAB_TILED) {
+	  errNum = WlzFreeTiledValues(obj->values.t);
+	}
+	else {
+	  errNum = WlzFreeVoxelValueTb(obj->values.vox);
+	}
+      }
+      if(errNum == WLZ_ERR_NONE) {
+        errNum = WlzFreePropertyList(obj->plist);
+      }
+      if(errNum == WLZ_ERR_NONE) {
+        errNum = WlzFreeObj(obj->assoc);
       }
       break;
 

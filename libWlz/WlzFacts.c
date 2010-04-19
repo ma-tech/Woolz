@@ -94,6 +94,10 @@ static WlzErrorNum		WlzObjFactsVoxelTab(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
 				  WlzValues val);
+static WlzErrorNum 		WlzObjFactsTiledTab(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj,
+				  WlzValues val);
 static WlzErrorNum	        WlzObjFactsAffineTrans(
 				  WlzObjFactsData *fData,
 				   WlzAffineTransform *trans);
@@ -250,7 +254,14 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	  {
 	    if(obj->values.core)
 	    {
-	      errNum = WlzObjFactsVoxelTab(fData, obj, obj->values);
+	      if(WlzGreyTableIsTiled(obj->values.core->type) == 0)
+	      {
+	        errNum = WlzObjFactsVoxelTab(fData, obj, obj->values);
+	      }
+	      else
+	      {
+	        errNum = WlzObjFactsTiledTab(fData, obj, obj->values);
+	      }
 	    }
 	    else
 	    {
@@ -277,7 +288,9 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 		dom2D = *(obj->domain.p->domains + idx);
-		if(obj->values.core && (obj->values.vox->values + idx)->core)
+		if(obj->values.core &&
+		   (WlzGreyTableIsTiled(obj->values.core->type) == 0) &&
+		   (obj->values.vox->values + idx)->core)
 		{
 		  val2D = *(obj->values.vox->values + idx);
 		}
@@ -292,7 +305,9 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	      {
 		errNum = WlzObjFactsIntervalDom(fData, obj2D, obj2D->domain);
 	      }
-	      if(errNum == WLZ_ERR_NONE)
+	      if((errNum == WLZ_ERR_NONE) &&
+		 ((obj->values.core == NULL) ||
+	          (WlzGreyTableIsTiled(obj->values.core->type) == 0)))
 	      {
 		errNum = WlzObjFactsValueTab(fData, obj2D, obj2D->values);
 	      }
@@ -1064,6 +1079,104 @@ static WlzErrorNum WlzObjFactsPlaneDom(WlzObjFactsData *fData,
   --(fData->indent);
   return(errNum);
 }
+
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a tiled table.
+* \param	fData			Facts data structure.
+* \param	obj			Object to determine values type.
+* \param	val			Values union for voxel table.
+*/
+static WlzErrorNum WlzObjFactsTiledTab(WlzObjFactsData *fData,
+				       WlzObject *obj, WlzValues val)
+{
+  WlzGreyType	gType;
+  const char	*tStr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromObjValuesType(obj, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Values NULL.\n");
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Values type invalid.\n");
+    }
+  }
+  else
+  {
+    errNum = WlzObjFactsAppend(fData, "Values type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n",
+      				 val.core->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      gType = WlzGreyTableTypeToGreyType(val.core->type, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      tStr = WlzStringFromGreyType(gType, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Grey type: %s.\n", tStr);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsBackground(fData, val.t->bckgrnd);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Values column bounds: %d %d\n",
+				 val.t->kol1, val.t->lastkl);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Values line bounds: %d %d\n",
+				 val.t->line1, val.t->lastln);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Values plane bounds: %d %d\n",
+				 val.t->plane1, val.t->lastpl);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Values tile size: %ld\n",
+				 (long )(val.t->tileSz));
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Values tile width: %ld\n",
+				 (long )(val.t->tileWidth));
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Values num tiles: %ld\n",
+				 (long )(val.t->numTiles));
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Values file descriptor: %d\n",
+				 val.t->fd);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Values tile offset: %ld\n",
+				 (long )(val.t->tileOffset));
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
 
 /*!
 * \return	Error number.

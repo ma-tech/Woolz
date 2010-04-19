@@ -534,50 +534,63 @@ WlzValues	 WlzShiftValues(WlzObjectType inObjType, WlzValues inVal,
 	}
 	break;
       case WLZ_3D_DOMAINOBJ:
-	if(inVal.vox->type != WLZ_VOXELVALUETABLE_GREY)
+	if(WlzGreyTableIsTiled(inVal.core->type) != 0)
 	{
-	  errNum = WLZ_ERR_VALUES_TYPE;
+	  inVal.t->kol1 += xShift;
+	  inVal.t->lastkl += xShift;
+	  inVal.t->line1 += yShift;
+	  inVal.t->lastln += yShift;
+	  inVal.t->plane1 += zShift;
+	  inVal.t->lastpl += zShift;
+	  outVal = inVal;
 	}
-	else if(inDom.core == NULL)
+	else
 	{
-	  errNum = WLZ_ERR_DOMAIN_NULL;
-	}
-	else if(inDom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
-	{
-	  errNum = WLZ_ERR_DOMAIN_TYPE;
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  if((outVal.vox = WlzMakeVoxelValueTb(inVal.vox->type,
-					       inVal.vox->plane1 + zShift,
-					       inVal.vox->lastpl + zShift,
-					       inVal.vox->bckgrnd, NULL,
-					       &errNum)) != NULL)
+	  if(inVal.vox->type != WLZ_VOXELVALUETABLE_GREY)
 	  {
-	    idx0 = inVal.vox->plane1;
-	    domP0 = inDom.p->domains;
-	    valP0 = inVal.vox->values;
-	    valP1 = outVal.vox->values;
-	    while((idx0 <= inVal.vox->lastpl) && (errNum == WLZ_ERR_NONE))
+	    errNum = WLZ_ERR_VALUES_TYPE;
+	  }
+	  else if(inDom.core == NULL)
+	  {
+	    errNum = WLZ_ERR_DOMAIN_NULL;
+	  }
+	  else if(inDom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
+	  {
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    if((outVal.vox = WlzMakeVoxelValueTb(inVal.vox->type,
+						 inVal.vox->plane1 + zShift,
+						 inVal.vox->lastpl + zShift,
+						 inVal.vox->bckgrnd, NULL,
+						 &errNum)) != NULL)
 	    {
-	      *valP1++ = (valP0->core)?
-			 WlzAssignValues(
-			 WlzShiftValues(WLZ_2D_DOMAINOBJ, *valP0, *domP0,
-			 		xShift, yShift, 0, &errNum), NULL):
-			 nullVal;
-	      ++valP0;
-	      ++domP0;
-	      ++idx0;
-	    }
-	    if(errNum != WLZ_ERR_NONE)
-	    {
-	      while(--idx0 >= inVal.vox->plane1)
+	      idx0 = inVal.vox->plane1;
+	      domP0 = inDom.p->domains;
+	      valP0 = inVal.vox->values;
+	      valP1 = outVal.vox->values;
+	      while((idx0 <= inVal.vox->lastpl) && (errNum == WLZ_ERR_NONE))
 	      {
-		if(valP1->core)
+		*valP1++ = (valP0->core)?
+			   WlzAssignValues(
+			   WlzShiftValues(WLZ_2D_DOMAINOBJ, *valP0, *domP0,
+					  xShift, yShift, 0, &errNum), NULL):
+			   nullVal;
+		++valP0;
+		++domP0;
+		++idx0;
+	      }
+	      if(errNum != WLZ_ERR_NONE)
+	      {
+		while(--idx0 >= inVal.vox->plane1)
 		{
-		  (void )WlzFreeValues(*valP1);
+		  if(valP1->core)
+		  {
+		    (void )WlzFreeValues(*valP1);
+		  }
+		  --valP1;
 		}
-		--valP1;
 	      }
 	    }
 	  }

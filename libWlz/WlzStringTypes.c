@@ -510,6 +510,15 @@ const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
 	    case WLZ_3D_DOMAINOBJ:
 	      switch(obj->values.core->type)
 	      {
+  		case WLZ_VALUETABLE_TILED_INT:    /* FALLTHROUGH */
+  		case WLZ_VALUETABLE_TILED_SHORT:  /* FALLTHROUGH */
+  		case WLZ_VALUETABLE_TILED_UBYTE:  /* FALLTHROUGH */
+  		case WLZ_VALUETABLE_TILED_FLOAT:  /* FALLTHROUGH */
+  		case WLZ_VALUETABLE_TILED_DOUBLE: /* FALLTHROUGH */
+  		case WLZ_VALUETABLE_TILED_BIT:    /* FALLTHROUGH */
+  		case WLZ_VALUETABLE_TILED_RGBA:
+		  oValTypeStr = "WLZ_GREY_TAB_TILED";
+		  break;
 		case WLZ_VOXELVALUETABLE_GREY:
 		  oValTypeStr = "WLZ_VOXELVALUETABLE_GREY";
 		  break;
