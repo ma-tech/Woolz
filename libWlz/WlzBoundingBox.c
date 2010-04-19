@@ -745,6 +745,26 @@ static WlzDBox3	WlzBoundingBoxBound3D(WlzBoundList *bound,
 }
 
 /*!
+* \return	2D bounding box.
+* \ingroup      WlzFeatures
+* \brief	Computes the 2D axis aligned bounding box of the contour.
+* \param	ctr			The given boundary list.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzDBox2 WlzBoundingBoxContour2D(WlzContour *ctr, WlzErrorNum *dstErr)
+{
+  WlzDBox2	bBox2D;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  bBox2D = WlzBoundingBoxGModel2D(ctr->model, &errNum);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(bBox2D);
+}
+
+/*!
 * \return	3D bounding box.
 * \ingroup      WlzFeatures
 * \brief	Computes the 3D axis aligned bounding box of the contour.
@@ -753,21 +773,58 @@ static WlzDBox3	WlzBoundingBoxBound3D(WlzBoundList *bound,
 */
 static WlzDBox3 WlzBoundingBoxContour3D(WlzContour *ctr, WlzErrorNum *dstErr)
 {
+  WlzDBox3	bBox3D;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  bBox3D = WlzBoundingBoxGModel3D(ctr->model, &errNum);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(bBox3D);
+}
+
+/*!
+* \return	3D bounding box.
+* \ingroup	WlzFeatures
+* \brief	Computes the 3D axis aligned bounding box of the 3D geometric
+* 		model. It is an error if the model is not a 3D model.
+* \param	model			Given model.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzDBox3 	WlzBoundingBoxGModel3D(WlzGMModel *model, WlzErrorNum *dstErr)
+{
   WlzGMShell	*shell0,
   		*shell1;
   WlzDBox3	sBox3D,
   		bBox3D;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(ctr->model == NULL)
+  if(model == NULL)
   {
     errNum =  WLZ_ERR_DOMAIN_NULL;
   }
-  else if((shell0 = ctr->model->child) == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_DATA;
-  }
   else
+  {
+    switch(model->type)
+    {
+      case WLZ_GMMOD_3I: /* FALLTHROUGH */
+      case WLZ_GMMOD_3D: /* FALLTHROUGH */
+      case WLZ_GMMOD_3N:
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((shell0 = model->child) == NULL)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
   {
     /* Find the bounding box of all the GM's shell's bounding boxes. */
     shell1 = shell0->next;
@@ -809,6 +866,82 @@ static WlzDBox3 WlzBoundingBoxContour3D(WlzContour *ctr, WlzErrorNum *dstErr)
     *dstErr = errNum;
   }
   return(bBox3D);
+}
+
+/*!
+* \return	2D bounding box.
+* \ingroup	WlzFeatures
+* \brief	Computes the 2D axis aligned bounding box of the 2D geometric
+* 		model. It is an error if the model is not a 2D model.
+* \param	model			Given model.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzDBox2 	WlzBoundingBoxGModel2D(WlzGMModel *model, WlzErrorNum *dstErr)
+{
+  WlzGMShell	*shell0,
+  		*shell1;
+  WlzDBox2	sBox2D,
+  		bBox2D;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(model == NULL)
+  {
+    errNum =  WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(model->type)
+    {
+      case WLZ_GMMOD_2I: /* FALLTHROUGH */
+      case WLZ_GMMOD_2D: /* FALLTHROUGH */
+      case WLZ_GMMOD_2N:
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((shell0 = model->child) == NULL)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Find the bounding box of all the GM's shell's bounding boxes. */
+    shell1 = shell0->next;
+    errNum = WlzGMShellGetGBB2D(shell0, &bBox2D);
+    while((errNum == WLZ_ERR_NONE) && (shell1->idx != shell0->idx))
+    {
+      if((errNum = WlzGMShellGetGBB2D(shell1, &sBox2D)) == WLZ_ERR_NONE)
+      {
+	if(sBox2D.xMin < bBox2D.xMin)
+	{
+	  bBox2D.xMin = sBox2D.xMin;
+	}
+	if(sBox2D.yMin < bBox2D.yMin)
+	{
+	  bBox2D.yMin = sBox2D.yMin;
+	}
+	if(sBox2D.xMax > bBox2D.xMax)
+	{
+	  bBox2D.xMax = sBox2D.xMax;
+	}
+	if(sBox2D.yMax > bBox2D.yMax)
+	{
+	  bBox2D.yMax = sBox2D.yMax;
+	}
+        shell1 = shell1->next;
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(bBox2D);
 }
 
 /*!
