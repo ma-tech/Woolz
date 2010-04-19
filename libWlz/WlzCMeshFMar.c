@@ -650,20 +650,10 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-#ifdef HACK_OLD_CODE
-    /* Clear mesh node flags, set boundary node flags and count number of
-     * boundary nodes. */
-    WlzCMeshClearNodFlags2D(mesh, WLZ_CMESH_NOD_FLAG_ALL);
-    if((cnt = WlzCMeshSetBoundNodFlags2D(mesh)) <= 0)
-    {
-      errNum = WLZ_ERR_DOMAIN_DATA;
-    }
-#else
     if((cnt = WlzCMeshCountBoundNodes2D(mesh)) <= 0)
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
-#endif
   }
   /* Create and then initialise the active node queue using the given seed
    * or boundary nodes. */
@@ -850,20 +840,10 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-#ifdef HACK_OLD_CODE
-    /* Clear mesh node flags, set boundary node flags and count number of
-     * boundary nodes. */
-    WlzCMeshClearNodFlags3D(mesh, WLZ_CMESH_NOD_FLAG_ALL);
-    if((cnt = WlzCMeshSetBoundNodFlags3D(mesh)) <= 0)
-    {
-      errNum = WLZ_ERR_DOMAIN_DATA;
-    }
-#else
     if((cnt = WlzCMeshCountBoundNodes3D(mesh)) <= 0)
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
-#endif
   }
   /* Create and then initialise the active node queue using the given seed
    * or boundary nodes. */
@@ -1124,7 +1104,7 @@ static double	WlzCMeshFMarQSElmPriority3D(WlzCMeshElm3D *elm,
 * 		phi2. Edge lengths opposite to the similarly numbered nodes
 * 		of len0, len1 and len2. The solution is similar to that in
 * 		"Fast Sweeping Methods For Eikonal equations On triangular
-* 		meshes", Jianliang Qian, etal, SIAM journal on Mumerical
+* 		meshes", Qian, etal, SIAM journal on Mumerical
 * 		Analysis, Vol 45, pp 83-107, 2007. But uses simple
 * 		interpolation in the case of phi2 being obtuse.
 * \param	nod0			A known node directly connected to
