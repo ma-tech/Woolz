@@ -49,6 +49,30 @@ static char _WlzCopy_c[] = "MRC HGU $Id$";
 static WlzSimpleProperty  	*WlzCopySimpleProperty(
 				  WlzSimpleProperty *PList,
 				  WlzErrorNum *dstErr);
+static WlzErrorNum 		WlzCopyObjectGreyValues2D(
+				  WlzObject *dObj,
+				  WlzObject *sObj);
+static WlzErrorNum 		WlzCopyObjectGreyValues3D(
+				  WlzObject *dObj,
+				  WlzObject *sObj);
+static WlzErrorNum 		WlzCopyObjectGreyValuesAny2D(
+				  WlzObject *dObj,
+				  WlzObject *sObj);
+static WlzErrorNum 		WlzCopyObjectGreyValuesAny3D(
+				  WlzObject *dObj,
+				  WlzObject *sObj);
+static WlzErrorNum 		WlzCopyObjectGreyValuesScan2D(
+				  WlzObject *dObj,
+				  WlzObject *sObj);
+static WlzErrorNum 		WlzCopyObjectGreyValuesScan3D(
+				  WlzObject *dObj,
+				  WlzObject *sObj);
+static WlzErrorNum 		WlzCopyObjectGreyValuesGVWSp2D(
+				  WlzObject *dObj,
+				  WlzGreyValueWSpace *dGVWSp,
+				  WlzObject *sObj,
+				  WlzGreyValueWSpace *sGVWSp,
+				  int pln);
 
 /*!
 * \return	Copy of given object.
@@ -610,4 +634,492 @@ static WlzSimpleProperty *WlzCopySimpleProperty(WlzSimpleProperty *inPLst,
     *dstErr = errNum;
   }
   return(outPLst);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Copies the grey values of the source object to the destination
+* 		object, overwriting the values of the destination object.
+* \param	dObj			Destination object.
+* \param	sObj			Source object.
+*/
+WlzErrorNum	WlzCopyObjectGreyValues(WlzObject *dObj, WlzObject *sObj)
+{
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if((dObj == NULL) || (sObj == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(dObj->type != sObj->type)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if((dObj->domain.core == NULL) || (sObj->domain.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((dObj->values.core == NULL) || (sObj->values.core == NULL))
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    switch(dObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+	errNum = WlzCopyObjectGreyValues2D(dObj, sObj);
+        break;
+      case WLZ_3D_DOMAINOBJ:
+	errNum = WlzCopyObjectGreyValues3D(dObj, sObj);
+        break;
+      default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+        break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Copies the grey values of the 2D source object to the 2D
+* 		destination object, overwriting the values of the
+* 		destination object. Both the destination and source objects
+* 		are known to be valid 2D domain objects with valid non-NULL
+* 		values tables.
+* \param	dObj			Destination object.
+* \param	sObj			Source object.
+*/
+static WlzErrorNum WlzCopyObjectGreyValues2D(WlzObject *dObj, WlzObject *sObj)
+{
+  WlzObjectType dGTType,
+  		sGTType;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dGTType = WlzGreyTableTypeToTableType(dObj->values.core->type, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    sGTType = WlzGreyTableTypeToTableType(sObj->values.core->type, &errNum);
+  }
+  if((dGTType == WLZ_GREY_TAB_TILED) || (sGTType == WLZ_GREY_TAB_TILED))
+  {
+    errNum = WlzCopyObjectGreyValuesAny2D(dObj, sObj);
+  }
+  else
+  {
+    errNum = WlzCopyObjectGreyValuesScan2D(dObj, sObj);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Copies the grey values of the 3D source object to the 3D
+* 		destination object, overwriting the values of the
+* 		destination object. Both the destination and source objects
+* 		are known to be valid 3D domain objects with valid non-NULL
+* 		values tables.
+* \param	dObj			Destination object.
+* \param	sObj			Source object.
+*/
+static WlzErrorNum WlzCopyObjectGreyValues3D(WlzObject *dObj, WlzObject *sObj)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((dObj->values.core->type == WLZ_VOXELVALUETABLE_GREY) &&
+     (sObj->values.core->type == WLZ_VOXELVALUETABLE_GREY))
+  {
+    errNum = WlzCopyObjectGreyValuesScan3D(dObj, sObj);
+  }
+  else
+  {
+    errNum = WlzCopyObjectGreyValuesAny3D(dObj, sObj);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Copies the grey values of the 2D source object to the 2D
+* 		destination object, overwriting the values of the
+* 		destination object. Both the destination and source objects
+* 		are known to be valid 2D domain objects with valid values
+* 		tables of any type suitable for WlzGreyValueGet().
+* \param	dObj			Destination object.
+* \param	sObj			Source object.
+* 					
+*/
+static WlzErrorNum WlzCopyObjectGreyValuesAny2D(WlzObject *dObj,
+					WlzObject *sObj)
+{
+  WlzGreyValueWSpace *dGVWSp = NULL,
+  		*sGVWSp = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  dGVWSp = WlzGreyValueMakeWSp(dObj, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    sGVWSp = WlzGreyValueMakeWSp(sObj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCopyObjectGreyValuesGVWSp2D(dObj, dGVWSp, sObj, sGVWSp, 0);
+  }
+  WlzGreyValueFreeWSp(dGVWSp);
+  WlzGreyValueFreeWSp(sGVWSp);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Copies the grey values of the 3D source object to the 3D
+* 		destination object, overwriting the values of the
+* 		destination object. Both the destination and source objects
+* 		are known to be valid 3D domain objects with valid values
+* 		tables of any type suitable for WlzGreyValueGet().
+* \param	dObj			Destination object.
+* \param	sObj			Source object.
+*/
+static WlzErrorNum WlzCopyObjectGreyValuesAny3D(WlzObject *dObj,
+					WlzObject *sObj)
+{
+  int		idP,
+  		plMin,
+		plMax;
+  WlzPlaneDomain *dPDom,
+  		 *sPDom;
+  WlzValues	nullVal;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  nullVal.core = NULL;
+  dPDom = dObj->domain.p;
+  sPDom = sObj->domain.p;
+  plMin = ALG_MAX(dPDom->plane1, sPDom->plane1);
+  plMax = ALG_MIN(dPDom->lastpl, sPDom->lastpl);
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for(idP = plMin; idP <= plMax; ++idP)
+  {
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzDomain	*dDom2D,
+		*sDom2D;
+      WlzErrorNum errNum2D = WLZ_ERR_NONE;
+
+      if(((dDom2D = dPDom->domains + idP - dPDom->plane1) != NULL) &&
+	 ((sDom2D = sPDom->domains + idP - sPDom->plane1) != NULL))
+      {
+	WlzObject *dObj2D = NULL,
+		  *sObj2D = NULL;
+	WlzGreyValueWSpace *dGVWSp = NULL,
+  		*sGVWSp = NULL;
+	
+	if(((dObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *dDom2D, nullVal,
+				 NULL, NULL, &errNum2D)) != NULL) &&
+	   ((sObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *sDom2D, nullVal,
+				 NULL, NULL, &errNum2D)) != NULL) &&
+	   ((dGVWSp = WlzGreyValueMakeWSp(dObj, &errNum2D)) != NULL) &&
+	   ((sGVWSp = WlzGreyValueMakeWSp(sObj, &errNum2D)) != NULL))
+	{
+	  errNum2D = WlzCopyObjectGreyValuesGVWSp2D(dObj2D, dGVWSp,
+						    sObj2D, sGVWSp, idP);
+	}
+	WlzGreyValueFreeWSp(dGVWSp);
+	WlzGreyValueFreeWSp(sGVWSp);
+	(void )WlzFreeObj(dObj2D);
+	(void )WlzFreeObj(sObj2D);
+      }
+#ifdef _OPENMP
+#pragma omp critical
+      {
+#endif
+	if(errNum2D != WLZ_ERR_NONE)
+	{
+	  errNum = errNum2D;
+	}
+#ifdef _OPENMP
+      }
+#endif
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Copies the grey values of the 2D source object to the 2D
+* 		destination object, overwriting the values of the
+* 		destination object. Both the destination and source objects
+* 		are known to be valid 2D domain objects with values for which
+* 		the WlzInitGreyScan() and WlzNextGreyInterval() access
+* 		methods work.
+* \param	dObj			Destination object.
+* \param	sObj			Source object.
+*/
+static WlzErrorNum WlzCopyObjectGreyValuesScan2D(WlzObject *dObj,
+					WlzObject *sObj)
+{
+  int		lnMin,
+		lnMax;
+  WlzIntervalWSpace dIWSp,
+  		sIWSp;
+  WlzGreyWSpace dGWSp,
+  		sGWSp;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  lnMin = ALG_MAX(dObj->domain.i->line1, sObj->domain.i->line1);
+  lnMax = ALG_MIN(dObj->domain.i->lastln, sObj->domain.i->lastln);
+  if(lnMin <= lnMax)
+  {
+    if((errNum = WlzInitGreyScan(dObj, &dIWSp, &dGWSp) == WLZ_ERR_NONE) &&
+       (errNum = WlzInitGreyScan(sObj, &sIWSp, &sGWSp) == WLZ_ERR_NONE))
+    {
+      do
+      {
+	errNum = WlzNextGreyInterval(&dIWSp);
+      } while((errNum == WLZ_ERR_NONE) && (dIWSp.linpos < lnMin));
+      while((errNum == WLZ_ERR_NONE) && (dIWSp.linpos <= lnMax))
+      {
+	while((errNum == WLZ_ERR_NONE) && (sIWSp.linpos < dIWSp.linpos))
+	{
+	  errNum = WlzNextGreyInterval(&sIWSp);
+	}
+	while((errNum == WLZ_ERR_NONE) && (sIWSp.linpos == dIWSp.linpos))
+	{
+	  int   klMin,
+		klMax;
+
+	  klMin = ALG_MAX(dIWSp.lftpos, sIWSp.lftpos);
+	  klMax = ALG_MIN(dIWSp.rgtpos, sIWSp.rgtpos);
+	  if(klMin <= klMax)
+	  {
+	    WlzValueCopyGreyToGrey(dGWSp.u_grintptr, dIWSp.lftpos - klMin,
+				   dGWSp.pixeltype,
+	                           sGWSp.u_grintptr, sIWSp.lftpos - klMin,
+				   sGWSp.pixeltype,
+				   klMax - klMin + 1);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzNextGreyInterval(&sIWSp);
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzNextGreyInterval(&dIWSp);
+	}
+      }
+      if(errNum == WLZ_ERR_EOO)
+      {
+	errNum = WLZ_ERR_NONE;
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Copies the grey values of the 3D source object to the 3D
+* 		destination object, overwriting the values of the
+* 		destination object. Both the destination and source objects
+* 		are known to be valid 3D domain objects with valid voxel
+* 		valuses tables.
+* \param	dObj			Destination object.
+* \param	sObj			Source object.
+*/
+static WlzErrorNum WlzCopyObjectGreyValuesScan3D(WlzObject *dObj,
+					WlzObject *sObj)
+{
+  int		idP,
+  		plMin,
+		plMax;
+  WlzVoxelValues *dVVal,
+  		 *sVVal;
+  WlzPlaneDomain *dPDom,
+  		 *sPDom;
+  WlzValues	nullVal;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  nullVal.core = NULL;
+  dPDom = dObj->domain.p;
+  sPDom = sObj->domain.p;
+  dVVal = dObj->values.vox;
+  sVVal = sObj->values.vox;
+  plMin = ALG_MAX(dPDom->plane1, sPDom->plane1);
+  plMax = ALG_MIN(dPDom->lastpl, sPDom->lastpl);
+  for(idP = plMin; idP <= plMax; ++idP)
+  {
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzDomain	*dDom2D,
+		*sDom2D;
+      WlzValues *dVal2D,
+      		*sVal2D;
+      WlzErrorNum errNum2D = WLZ_ERR_NONE;
+
+      if(((dDom2D = dPDom->domains + idP - dPDom->plane1) != NULL) &&
+	 ((sDom2D = sPDom->domains + idP - sPDom->plane1) != NULL) &&
+	 ((dVal2D = dVVal->values + idP - dPDom->plane1) != NULL) &&
+	 ((sVal2D = sVVal->values + idP - sPDom->plane1) != NULL))
+      {
+	WlzObject *dObj2D = NULL,
+		  *sObj2D = NULL;
+	
+	if(((dObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *dDom2D, *dVal2D,
+				 NULL, NULL, &errNum2D)) != NULL) &&
+	   ((sObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *sDom2D, *sVal2D,
+				 NULL, NULL, &errNum2D)) != NULL))
+	{
+	  errNum2D = WlzCopyObjectGreyValuesScan2D(dObj2D, sObj2D);
+	}
+	(void )WlzFreeObj(dObj2D);
+	(void )WlzFreeObj(sObj2D);
+      }
+      if(errNum2D != WLZ_ERR_NONE)
+      {
+        errNum = errNum2D;
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Copies the grey values of the 2 or 3D source object to the
+* 		2 or 3D destination object, overwriting the values of the
+* 		destination object. Both the destination and source objects
+* 		are known to be valid 2 or 3D domain objects with values
+* 		tables of any type suitable for WlzGreyValueGet(). The
+* 		given objects are used to scan through the object's domains
+* 		and the grey value workspaces for their values. Both
+* 		workspaces must have been initialised for the objects.
+* \param	dObj			Destination object.
+* \param	dGVWSp			Destination grey value workspace.
+* \param	sObj			Source object.
+* \param	sGVWSp			Source grey value workspace.
+* \param	pln			The current plane, may be zero
+* 					for 2D objects.
+* 					
+*/
+static WlzErrorNum WlzCopyObjectGreyValuesGVWSp2D(
+				WlzObject *dObj, WlzGreyValueWSpace *dGVWSp,
+				WlzObject *sObj, WlzGreyValueWSpace *sGVWSp,
+				int pln)
+{
+  int		lnMin,
+		lnMax;
+  WlzIntervalWSpace dIWSp,
+  		sIWSp;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  lnMin = ALG_MAX(dObj->domain.i->line1, sObj->domain.i->line1);
+  lnMax = ALG_MIN(dObj->domain.i->lastln, sObj->domain.i->lastln);
+  if(lnMin <= lnMax)
+  {
+    if((errNum = WlzInitRasterScan(dObj, &dIWSp,
+				   WLZ_RASTERDIR_ILIC) == WLZ_ERR_NONE) &&
+       (errNum = WlzInitRasterScan(sObj, &sIWSp,
+				   WLZ_RASTERDIR_ILIC) == WLZ_ERR_NONE))
+    {
+      do
+      {
+	errNum = WlzNextInterval(&dIWSp);
+      } while((errNum == WLZ_ERR_NONE) && (dIWSp.linpos < lnMin));
+      while((errNum == WLZ_ERR_NONE) && (dIWSp.linpos <= lnMax))
+      {
+	while((errNum == WLZ_ERR_NONE) && (sIWSp.linpos < dIWSp.linpos))
+	{
+	  errNum = WlzNextInterval(&sIWSp);
+	}
+	while((errNum == WLZ_ERR_NONE) && (sIWSp.linpos == dIWSp.linpos))
+	{
+	  int		t0,
+	  		t1;
+
+	  /* Classify the possible intersections. Here s (source), d
+	   * (destination) and o (overlap) are used in comment strings
+	   * to represent the six possible interval intersection cases. */
+	  if(sIWSp.rgtpos < dIWSp.lftpos)                       /* ssss dddd */
+	  {
+	    t0 = 1;
+	  }
+	  else if(sIWSp.lftpos > dIWSp.rgtpos)                  /* dddd ssss */
+	  {
+	    t0 = 0;
+	  }
+	  else
+	  {
+	    int		idK;
+	    WlzInterval itv;
+
+            t0 = sIWSp.lftpos >= dIWSp.lftpos;
+	    t1 = sIWSp.rgtpos <= dIWSp.rgtpos;
+	    if((t0 != 0) && (t1 != 0))                     /* dooood || oooo */
+	    {
+	      itv.ileft = sIWSp.lftpos;
+	      itv.iright = sIWSp.rgtpos;
+	    }
+	    else if((t0 == 0) && (t1 == 0))                        /* soooos */
+	    {
+	      itv.ileft = dIWSp.lftpos;
+	      itv.iright = dIWSp.rgtpos;
+	    }
+	    else
+	    {
+	      if(t0 == 0)                                           /* soood */
+	      {
+	        itv.ileft = dIWSp.lftpos;
+		itv.iright = sIWSp.rgtpos;
+	      }
+	      else                                                  /* dooos */
+	      {
+	        itv.ileft = sIWSp.lftpos;
+		itv.iright = dIWSp.rgtpos;
+	      }
+	      t0 = !t0;
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      for(idK = itv.ileft; idK <= itv.iright; ++idK)
+	      {
+		WlzGreyValueGet(dGVWSp, pln, dIWSp.linpos, idK);
+		WlzGreyValueGet(sGVWSp, pln, dIWSp.linpos, idK);
+		WlzValueCopyGreyToGrey(dGVWSp->gPtr[0], 0, dGVWSp->gType,
+				       sGVWSp->gPtr[0], 0, sGVWSp->gType, 1);
+	      }
+	    }
+	  }
+	  if(t0 == 0)
+	  {
+	    errNum = WlzNextInterval(&dIWSp);
+	  }
+	  else
+	  {
+	    errNum = WlzNextInterval(&sIWSp);
+	  }
+	}
+	while((errNum == WLZ_ERR_NONE) && (dIWSp.linpos < sIWSp.linpos))
+	{
+	  errNum = WlzNextInterval(&dIWSp);
+	}
+      }
+      if(errNum == WLZ_ERR_EOO)
+      {
+	errNum = WLZ_ERR_NONE;
+      }
+    }
+  }
+  return(errNum);
 }
