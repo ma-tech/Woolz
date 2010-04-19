@@ -108,6 +108,8 @@ libWlz_la_SOURCES 	= \
 			  WlzGeometry.c \
 			  WlzGeometryTrackUpAndDown_s.c \
 			  WlzGeoModel.c \
+			  WlzGeoModelCellGridWSp.c \
+			  WlzGeoModelCut.c \
 			  WlzGeoModelFilters.c \
 			  WlzGeoModelStats.c \
 			  WlzGreyCrossing.c \
@@ -201,6 +203,7 @@ libWlz_la_SOURCES 	= \
 			  WlzStructDilation.c \
 			  WlzStructErosion.c \
 			  WlzThreshold.c \
+			  WlzTiledValues.c \
 			  WlzTransform.c \
 			  WlzTransposeObj.c \
 			  WlzUnion2.c \
