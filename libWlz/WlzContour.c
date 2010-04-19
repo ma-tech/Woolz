@@ -2708,8 +2708,9 @@ static WlzContour *WlzContourBndObj3D(WlzObject *obj, double ctrVal,
     (void )WlzFreeObj(obj2D);
     if(errNum == WLZ_ERR_NONE)
     {
+      (void )memset(*(itvBuf[!bufPnIdx]), 0, bufSzBytes);
       errNum = WlzContourBndEmptyPlane3D(ctr, ctrVal,
-      					 lastPn, itvBuf[!bufPnIdx],
+      					 lastPn, itvBuf[bufPnIdx],
 					 bufOrg2D, bufSz2D);
     }
   }
@@ -3242,7 +3243,7 @@ static WlzErrorNum WlzContourBndEmptyPlane3D(WlzContour *ctr, double isoVal,
     iPn0Ln1[1] = (WLZ_BIT_GET(tPn0Ln1, idX)) != 0;
     while((idX < (bufSz.vtX - 1)) && (errNum == WLZ_ERR_NONE))
     {
-      cbOrg.vtX = bufOrg.vtX + idX++;
+      cbOrg.vtX = bufOrg.vtX + idX;
       cbCnt = iPn0Ln0[0] = iPn0Ln0[1];
       cbCnt += iPn0Ln1[0] = iPn0Ln1[1];
       cbCnt += iPn0Ln0[1] = (WLZ_BIT_GET(tPn0Ln0, idX)) != 0;
