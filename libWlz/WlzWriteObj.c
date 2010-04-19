@@ -41,6 +41,7 @@ static char _WlzWriteObj_c[] = "MRC HGU $Id$";
 * \bug          None known.
 */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
@@ -71,6 +72,10 @@ static WlzErrorNum		WlzWriteValueTable(
 static WlzErrorNum		WlzWriteVoxelValueTable(
 				  FILE *fP,
 				  WlzObject *obj);
+static WlzErrorNum		WlzWriteTiledValueTable(
+				  FILE *fP,
+				  WlzObject *obj,
+				  int writeTiles);
 static WlzErrorNum		WlzWritePolygon(
 				  FILE *fP,
 				  WlzPolygonDomain *poly);
@@ -312,7 +317,7 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
 #endif
   else if(obj == NULL)
   {
-    if(putc((unsigned int )obj, fP) == EOF)
+    if(putc((unsigned int )0, fP) == EOF)
     {
       errNum = WLZ_ERR_WRITE_EOF;
     }
@@ -329,17 +334,31 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
 	/* Nothing except the object type needs to be written */
 	break;
       case WLZ_2D_DOMAINOBJ:
-	if(((errNum = WlzWriteIntervalDomain(fP,
-				obj->domain.i)) == WLZ_ERR_NONE) &&
-	   ((errNum = WlzWriteValueTable(fP, obj)) == WLZ_ERR_NONE))
-	{
+	errNum = WlzWriteIntervalDomain(fP, obj->domain.i);
+	if(errNum == WLZ_ERR_NONE)
+        {
+	  errNum = WlzWriteValueTable(fP, obj);
+	}
+	if(errNum == WLZ_ERR_NONE)
+        {
 	  errNum = WlzWritePropertyList(fP, obj->plist);
 	}
 	break;
       case WLZ_3D_DOMAINOBJ:
-	if(((errNum = WlzWritePlaneDomain(fP,
-				obj->domain.p)) == WLZ_ERR_NONE) &&
-	   ((errNum = WlzWriteVoxelValueTable(fP, obj)) == WLZ_ERR_NONE))
+	errNum = WlzWritePlaneDomain(fP, obj->domain.p);
+	if(errNum == WLZ_ERR_NONE)
+        {
+	  if((obj->values.core == NULL) ||
+	     (WlzGreyTableIsTiled(obj->values.core->type) == 0))
+	  {
+	    errNum = WlzWriteVoxelValueTable(fP, obj);
+	  }
+	  else
+	  {
+	    errNum = WlzWriteTiledValueTable(fP, obj, 1);
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
 	{
 	  errNum = WlzWritePropertyList(fP, obj->plist);
 	}
@@ -2998,5 +3017,156 @@ static WlzErrorNum WlzWriteIndexedValues(FILE *fP, WlzObject *obj)
       }
     }
   }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes an tiled value table to the given file.
+* \param	fP			Given file pointer.
+* \param	obj			Object with an tiled value table
+* 					that's to be written to the file.
+* \param	writeTiles		Write tiles even if no tiles are
+* 					allocated for the valuetable.
+*/
+static WlzErrorNum WlzWriteTiledValueTable(FILE *fP, WlzObject *obj,
+					   int writeTiles)
+{
+  long		tMrk;
+  WlzGreyType   gType;
+  WlzTiledValues *tVal = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  tVal = obj->values.t;
+  gType = WlzGreyTableTypeToGreyType(tVal->type, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(putc((unsigned int )(tVal->type), fP) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    putc(tVal->dim, fP);
+    putword(tVal->kol1, fP);
+    putword(tVal->lastkl, fP);
+    putword(tVal->line1, fP);
+    putword(tVal->lastln, fP);
+    putword(tVal->plane1, fP);
+    putword(tVal->lastpl, fP);
+    errNum = WlzWritePixelV(fP, &(tVal->bckgrnd), 1);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int         nIdx;
+
+    putword(tVal->tileSz, fP);
+    putword(tVal->tileWidth, fP);
+    putword(tVal->numTiles, fP);
+    putword(tVal->nIdx[0], fP);
+    putword(tVal->nIdx[1], fP);
+    nIdx = tVal->nIdx[0] * tVal->nIdx[1];
+    if(tVal->dim > 2)
+    {
+      putword(tVal->nIdx[2], fP);
+      nIdx *= tVal->nIdx[2];
+    }
+    errNum = WlzWriteInt(fP, tVal->indices, nIdx);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    long	blks;
+    long long   off[2];
+
+    tMrk = ftell(fP) + (2 * sizeof(unsigned int ));
+    blks = (tMrk + tVal->tileSz - 1) / tVal->tileSz;
+    tMrk = blks * tVal->tileSz;
+    off[0] = tMrk & 0xffffffff;
+    off[1] = (sizeof(long) > 4)? tMrk >> 32: 0;
+    putword((unsigned int )(off[0]), fP);
+    putword((unsigned int )(off[1]), fP);
+    if(fseek(fP, tMrk, SEEK_SET) != 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    size_t      gSz,
+    		tSz;
+
+    gSz = WlzGreySize(gType);
+    tSz = tVal->numTiles * tVal->tileSz;
+    if(tVal->tiles.v != NULL)
+    {
+      if(fwrite(tVal->tiles.v, gSz, tSz, fP) != tSz)
+      {
+        errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+    }
+    else if(writeTiles != 0)
+    {
+      /* No tile data so reserve tile space in the file by seeking
+       * to the end of the tiles and writing a byte. */
+      if((fseek(fP, (gSz * tSz) - 1, SEEK_CUR) != 0) ||
+         (fwrite("", 1, 1, fP) != 1))
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+    }
+  }
+#ifdef WLZ_DEBUG_WRITEOBJ
+  if(tVal == NULL)
+  {
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal == NULL\n");
+  }
+  else
+  {
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal\n");
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->type = %d\n",
+                   (int )(tVal->type));
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->linkcount = %d\n",
+                   tVal->linkcount);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->dim = %d\n",
+                   tVal->dim);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->kol1 = %d\n",
+                   tVal->kol1);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->lastkl = %d\n",
+                   tVal->lastkl);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->line1 = %d\n",
+                   tVal->line1);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->lastln = %d\n",
+                   tVal->lastln);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->plane1 = %d\n",
+                   tVal->plane1);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->lastpl = %d\n",
+                   tVal->lastpl);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->bckgrnd.type = %d\n",
+                   (int )(tVal->bckgrnd.type));
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->tileSz = %ld\n",
+                   (long )(tVal->tileSz));
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->tileWidth = %ld\n",
+                   (long )tVal->tileWidth);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->numTiles = %ld\n",
+                   (long )tVal->numTiles);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->nIdx = %d, %d, %d\n",
+                   tVal->nIdx[0], tVal->nIdx[1],
+		   (tVal->dim == 2)? 0: tVal->nIdx[2]);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->indices = 0x%lx\n",
+                   (long )(tVal->indices));
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->fd = %d\n",
+                   tVal->fd);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->tileOffset = %ld\n",
+                   tVal->tileOffset);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->tiles.v = 0x%lx\n",
+                   (long )(tVal->tiles.v));
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tMrk = %ld\n",
+                   tMrk);
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() errno = %s\n",
+                   strerror(errno));
+  }
+#endif /* WLZ_DEBUG_WRITEOBJ */
   return(errNum);
 }
