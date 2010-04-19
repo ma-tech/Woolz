@@ -45,6 +45,13 @@ static char _WlzReadObj_c[] = "MRC HGU $Id$";
 #include <string.h>
 #include <Wlz.h>
 
+#ifdef HAVE_MMAP
+#define WLZ_USE_MMAP
+#include <errno.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#endif
+
 /* #define WLZ_DEBUG_READOBJ */
 #define WLZ_OLD_CMESH_TRANS_SUPPORT
 
@@ -65,6 +72,15 @@ static WlzErrorNum		WlzReadRectVtb(
 				  FILE *fp,
 				  WlzObject *obj,
 				  WlzObjectType type);
+static WlzErrorNum 		WlzReadDomObjValues3D(
+				  FILE *fP,
+				  WlzObject *obj);
+static WlzErrorNum 		WlzReadTiledValues(
+				  FILE *fP,
+				  WlzObject *obj,
+				  int dim,
+				  WlzObjectType type,
+				  int map);
 static WlzErrorNum		WlzReadVoxelValues(
 				  FILE *fp,
 				  WlzObject *obj);
@@ -385,33 +401,32 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
       break;
 
     case WLZ_2D_DOMAINOBJ:
-      if((domain.i = WlzReadIntervalDomain(fp, &errNum)) &&
-	 (obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum)) )
+      if(((domain.i = WlzReadIntervalDomain(fp, &errNum)) != NULL) &&
+	 ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
+	                     &errNum)) != NULL))
       {
-	if( (errNum = WlzReadGreyValues(fp, obj)) == WLZ_ERR_NONE ){
+	if((errNum = WlzReadGreyValues(fp, obj)) == WLZ_ERR_NONE)
+	{
 	  obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
 					     NULL);
 	}
-	else {
-	  WlzFreeObj( obj );
-	  obj = NULL;
-	}
+	/* Don't clear up on error return, instead partial object as it may be
+	 * salvagable. */
       }
       break;
 
     case WLZ_3D_DOMAINOBJ:
-      if((domain.p = WlzReadPlaneDomain(fp, &errNum)) &&
-	 (obj = WlzMakeMain( type, domain, values, NULL, NULL, &errNum)) )
+      if(((domain.p = WlzReadPlaneDomain(fp, &errNum)) != NULL) &&
+	 ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
+	                     &errNum)) != NULL ))
       {
-	if( (errNum = WlzReadVoxelValues(fp, obj)) == WLZ_ERR_NONE ){
+	if((errNum = WlzReadDomObjValues3D(fp, obj)) == WLZ_ERR_NONE)
+	{
 	  obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
 					     NULL);
 	}
-	else {
-	  /* attempt to return a partial object */
-/*	  WlzFreeObj( obj );
-	  obj = NULL;*/
-	}
+	/* Don't clear up on error, instead return partial object as it may be
+	 * salvagable. */
       }
       break;
 
@@ -1788,14 +1803,282 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzIO
+* \brief	Reads a Woolz 3D value table for a 3D domain object.
+* 		This function reads the grey value table type and then
+* 		calls the appropriate function to complete the read.
+* \param	fP			Input file.
+* \param	obj			Object defining the domain of the
+*					grey values. The domain is known to
+*					be non NULL.
+*/
+static WlzErrorNum WlzReadDomObjValues3D(FILE *fP, WlzObject *obj)
+{
+  WlzObjectType	type;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  type = (WlzObjectType )getc(fP);
+  if(type == (WlzObjectType )EOF)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if(type == WLZ_NULL)
+  {
+    obj->values.core = NULL;
+  }
+  else
+  {
+    switch(type)
+    {
+      case WLZ_VOXELVALUETABLE_GREY:
+        errNum = WlzReadVoxelValues(fP, obj);
+	break;
+      case WLZ_VALUETABLE_TILED_INT:    /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_SHORT:  /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_UBYTE:  /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_FLOAT:  /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_DOUBLE: /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_RGBA:
+        errNum = WlzReadTiledValues(fP, obj, 3, type, 1);
+	break;
+      default:
+        errNum = WLZ_ERR_VALUES_TYPE;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz tiled value table from the input file.
+* 		The table type has already been read and verified.
+* \param	fp			Input file.
+* \param	obj			Object defining the domain of the
+*					grey values.
+* \param	dim			The dimension of the tiled value
+* 					table.
+* \param	type			The grey value table type which
+* 					encodes both the grey type and the
+* 					value table type.
+* \param	map			If non zero the tiles are memory
+* 					mapped rather than read.
+*/
+static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
+				      int dim, WlzObjectType type,
+				      int map)
+{
+  WlzGreyType	gType;
+  WlzTiledValues *tVal = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  gType = WlzGreyTableTypeToGreyType(type, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		tDim;
+
+    if((tDim = getc(fP)) != dim)
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tVal = WlzMakeTiledValues(dim, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tVal->type = type;
+    tVal->dim = dim;
+    tVal->kol1 = getword(fP);
+    tVal->lastkl = getword(fP);
+    tVal->line1 = getword(fP);
+    tVal->lastln = getword(fP);
+    tVal->plane1 = getword(fP);
+    tVal->lastpl = getword(fP);
+    errNum = WlzReadPixelV(fP, &(tVal->bckgrnd), 1);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int 	nIdx;
+
+    tVal->tileSz = getword(fP);
+    tVal->tileWidth = getword(fP);
+    tVal->numTiles = getword(fP);
+    tVal->nIdx[0] = getword(fP);
+    tVal->nIdx[1] = getword(fP);
+    tVal->nIdx[2] = getword(fP);
+    nIdx = tVal->nIdx[0] * tVal->nIdx[1]  * tVal->nIdx[2];
+    if((tVal->indices = (int *)AlcMalloc(nIdx * sizeof(int))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      errNum = WlzReadInt(fP, tVal->indices, nIdx);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    long long	off[2];
+
+    off[0] = getword(fP);
+    off[1] = getword(fP);
+    if(feof(fP) != 0)
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+    else if(sizeof(long) < 8)
+    {
+      if(off[1] != 0)
+      {
+        errNum = WLZ_ERR_READ_INCOMPLETE;
+      }
+      else
+      {
+        tVal->tileOffset = off[0];
+      }
+    }
+    else
+    {
+      tVal->tileOffset = (long )(off[1] << 32) | (long )(off[0]);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    size_t	gSz,
+      		tSz;
+
+    gSz = WlzGreySize(gType);
+    tSz = tVal->numTiles * tVal->tileSz;
+    if(map == 0)
+    {
+      tVal->fd = -1;
+      if((tVal->tiles.v = AlcMalloc(tSz * gSz)) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	if(fseek(fP, tVal->tileOffset, SEEK_SET) != 0)
+	{
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	/* The tiles are stored using native byte ordering. */
+	if(fread(tVal->tiles.v, gSz, tSz, fP) != tSz)
+	{
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+      }
+    }
+    else
+    {
+#ifdef WLZ_USE_MMAP
+      /* For mmap to work the file must have been opened either with
+       * "rb" or "rb+" if the values in the file are to be modified. */
+      if((tVal->fd = dup(fileno(fP))) < 0)
+      {
+	errNum = WLZ_ERR_READ_INCOMPLETE;
+      }
+      else
+      {
+	tVal->tiles.v = mmap(NULL, tSz * gSz, PROT_READ | PROT_WRITE,
+			     MAP_SHARED | MAP_FILE |MAP_NORESERVE,
+			     tVal->fd, tVal->tileOffset);
+	if(tVal->tiles.v == MAP_FAILED)
+	{
+	  tVal->tiles.v = mmap(NULL, tSz * gSz, PROT_READ,
+			       MAP_PRIVATE | MAP_FILE |MAP_NORESERVE,
+			       tVal->fd, tVal->tileOffset);
+	}
+	if(tVal->tiles.v == MAP_FAILED)
+	{
+	  tVal->fd = -1;
+	  tVal->tiles.v = NULL;
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+      }
+#else /* WLZ_USE_MMAP */
+      tVal->tiles.v = NULL;
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+#endif /* WLZ_USE_MMAP */
+    }
+  }
+#ifdef WLZ_DEBUG_READOBJ
+  if(tVal == NULL)
+  {
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal == NULL\n");
+  }
+  else
+  {
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal\n");
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->type = %d\n",
+                   (int )(tVal->type));
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->linkcount = %d\n",
+                   tVal->linkcount);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->dim = %d\n",
+                   tVal->dim);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->kol1 = %d\n",
+                   tVal->kol1);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->lastkl = %d\n",
+                   tVal->lastkl);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->line1 = %d\n",
+                   tVal->line1);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->lastln = %d\n",
+                   tVal->lastln);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->plane1 = %d\n",
+                   tVal->plane1);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->lastpl = %d\n",
+                   tVal->lastpl);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->bckgrnd.type = %d\n",
+                   (int )(tVal->bckgrnd.type));
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->tileSz = %ld\n",
+                   (long )(tVal->tileSz));
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->tileWidth = %ld\n",
+                   (long )tVal->tileWidth);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->numTiles = %ld\n",
+                   (long )tVal->numTiles);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->nIdx = %d, %d, %d\n",
+                   tVal->nIdx[0], tVal->nIdx[1],
+		   (tVal->dim == 2)? 0: tVal->nIdx[2]);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->indices = 0x%lx\n",
+                   (long )(tVal->indices));
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->fd = %d\n",
+                   tVal->fd);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->tileOffset = %ld\n",
+                   tVal->tileOffset);
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->tiles.v = 0x%lx\n",
+                   (long )(tVal->tiles.v));
+    (void )fprintf(stderr, "WlzReadTiledValues() errno = %s\n",
+                   strerror(errno));
+  }
+#endif /* WLZ_DEBUG_READOBJ */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    obj->values.t = tVal;
+    (void )WlzAssignValues(obj->values, NULL);
+  }
+  else
+  {
+    WlzFreeTiledValues(tVal);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
 * \brief	Reads a Woolz voxel value table from the input file.
+* 		The table type has already been read and verified.
 * \param	fp			Input file.
 * \param	obj			Object defining the domain of the
 *					grey values.
 */
 static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
 {
-  WlzObjectType		type;
   int 			i, nplanes;
   WlzObject 		*tmpobj;
   WlzDomain 		*domains;
@@ -1804,19 +2087,6 @@ static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
   WlzVoxelValues 	*voxtab;
   WlzPixelV		bgd;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
-
-  type = (WlzObjectType) getc(fp);
-
-  if( type == (WlzObjectType) EOF ){
-    return WLZ_ERR_READ_INCOMPLETE;
-  }
-  if( type == WLZ_NULL ){
-    obj->values.core = NULL;
-    return WLZ_ERR_NONE;
-  }
-  if( obj->domain.core == NULL ){
-    return WLZ_ERR_DOMAIN_NULL;
-  }
 
   planedm = obj->domain.p;
   domains = planedm->domains;
@@ -1831,63 +2101,53 @@ static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
   bgd.type = WLZ_GREY_INT;
   bgd.v.inv = 0;
 
-  switch( type ){
+  if((voxtab = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+				   planedm->plane1, planedm->lastpl,
+				   bgd, obj, &errNum)) != NULL){
+    values = voxtab->values;
+    voxtab->bckgrnd.v.inv = getword(fp);
+  }
+  else {
+    return errNum;
+  }
 
-  case WLZ_VOXELVALUETABLE_GREY:
-    if((voxtab = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
-				     planedm->plane1, planedm->lastpl,
-				     bgd, obj, &errNum)) != NULL){
-      values = voxtab->values;
-      voxtab->bckgrnd.v.inv = getword(fp);
-    }
-    else {
-      return errNum;
-    }
-
-    for(i=0; i < nplanes; i++, values++, domains++){
-      (*values).core = NULL;
-      if((tmpobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-			       NULL, NULL, &errNum)) != NULL){
-	if( (errNum = WlzReadGreyValues(fp, tmpobj)) == WLZ_ERR_NONE ){
-	  *values = WlzAssignValues(tmpobj->values, NULL);
-	  /* reset voxel-table background */
-	  if( (*values).core != NULL ){
-	    switch( WlzGreyTableTypeToTableType((*values).core->type, NULL) ){
-	    case WLZ_GREY_TAB_RAGR:
-	      voxtab->bckgrnd = (*values).v->bckgrnd;
-	      break;
-	    case WLZ_GREY_TAB_RECT:
-	      voxtab->bckgrnd = (*values).r->bckgrnd;
-	      break;
-	    case WLZ_GREY_TAB_INTL:
-	      voxtab->bckgrnd = (*values).i->bckgrnd;
-	      break;
-	    default:
-	      return WLZ_ERR_VALUES_TYPE;
-	      break;
-	    }
+  for(i=0; i < nplanes; i++, values++, domains++){
+    (*values).core = NULL;
+    if((tmpobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
+			     NULL, NULL, &errNum)) != NULL){
+      if( (errNum = WlzReadGreyValues(fp, tmpobj)) == WLZ_ERR_NONE ){
+	*values = WlzAssignValues(tmpobj->values, NULL);
+	/* reset voxel-table background */
+	if( (*values).core != NULL ){
+	  switch( WlzGreyTableTypeToTableType((*values).core->type, NULL) ){
+	  case WLZ_GREY_TAB_RAGR:
+	    voxtab->bckgrnd = (*values).v->bckgrnd;
+	    break;
+	  case WLZ_GREY_TAB_RECT:
+	    voxtab->bckgrnd = (*values).r->bckgrnd;
+	    break;
+	  case WLZ_GREY_TAB_INTL:
+	    voxtab->bckgrnd = (*values).i->bckgrnd;
+	    break;
+	  default:
+	    return WLZ_ERR_VALUES_TYPE;
+	    break;
 	  }
 	}
-	else {
-	  (*values).core = NULL;
-	  WlzFreeDomain(*domains);
-	  (*domains).core = NULL;
-	}
-	WlzFreeObj( tmpobj );
       }
+      else {
+	(*values).core = NULL;
+	WlzFreeDomain(*domains);
+	(*domains).core = NULL;
+      }
+      WlzFreeObj( tmpobj );
     }
-    break;
-
-  default:
-    return WLZ_ERR_VOXELVALUES_TYPE;
-    break;
-
   }
 
   if( feof(fp) != 0 ){
     /* allow incomplete object - set domains of unread
        valuetables to empty */
-/*    WlzFreeVoxelValueTb( voxtab );*/
+    /* WlzFreeVoxelValueTb( voxtab );*/
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
   value.vox = voxtab;
@@ -2757,9 +3017,9 @@ static WlzWarpTrans *WlzReadWarpTrans(FILE *fp, WlzErrorNum *dstErr)
   if( errNum == WLZ_ERR_NONE ){
     if( (obj->eltlist = (WlzTElement *)
 	 AlcMalloc(sizeof(WlzTElement) * obj->nelts)) == NULL ){
-      AlcFree( (void *) obj->nodes );
-      AlcFree( (void *) obj->ncoords );
-      AlcFree( (void *) obj );
+      AlcFree((void *)(obj->nodes));
+      AlcFree((void *)(obj->ncoords));
+      AlcFree((void *)obj);
       obj = NULL;
       errNum = WLZ_ERR_MEM_ALLOC;
     }
