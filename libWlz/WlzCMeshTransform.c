@@ -1024,7 +1024,7 @@ static WlzObject *WlzCMeshToDomObj2D(WlzObject *mObj, int trans,
   WlzDynItvPool itvPool;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  /* HACK TODO trans parameter not used but should be! HACK */
+  /* TODO trans parameter not used but should be! HACK */
   dom.core = NULL;
   val.core = NULL;
   if(mObj == NULL)
