@@ -1044,7 +1044,8 @@ WlzMakeIntervalDomain() then WlzMakeRectValueTb() then WlzMakeMain().
 * \param    lastln	Last line
 * \param    kol1	First column
 * \param    lastkl	last column
-* \param    pixeltype	Pixel type for the grey values.
+* \param    pixeltype	Pixel type for the grey values. If WLZ_GREY_ERROR
+*                       is given then no values are created.
 * \param    grey_values	Pointer to the grey values array.
 * \param    backgrnd	Background pixel value.
 * \param    plist	Property list to be attached.
@@ -1067,27 +1068,28 @@ WlzObject *WlzMakeRect(int 			line1,
 {
   WlzDomain	domain;
   WlzValues	values;
-  WlzObject 	*obj=NULL;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzObject 	*obj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  values.core = NULL;
   domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
 				   line1, lastln,
 				   kol1, lastkl, &errNum);
-
-  if((errNum == WLZ_ERR_NONE) && 
+  if((errNum == WLZ_ERR_NONE) &&
+     (pixeltype != WLZ_GREY_ERROR) &&
      ((values.r = 
        WlzMakeRectValueTb(WlzGreyTableType(WLZ_GREY_TAB_RECT, pixeltype,
 					   NULL),
 			  line1, lastln, kol1, lastkl - kol1 + 1,
-			  backgrnd, grey_values, &errNum)) == NULL) ){
-    WlzFreeDomain( domain );
+			  backgrnd, grey_values, &errNum)) == NULL)){
+    WlzFreeDomain(domain);
   }
 
   if((errNum == WLZ_ERR_NONE) &&
      ((obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
-			 plist, assoc_obj, &errNum)) == NULL) ){
-    WlzFreeDomain( domain );
-    WlzFreeValues( values );
+			 plist, assoc_obj, &errNum)) == NULL)){
+    (void )WlzFreeDomain(domain);
+    (void )WlzFreeValues(values);
   }
 
   if( dstErr ){
@@ -1108,7 +1110,9 @@ WlzObject *WlzMakeRect(int 			line1,
 * \param	lastln			Last line.
 * \param	kol1			First column.
 * \param	lastkl			Last column.
-* \param	pixType			Pixel type for the grey values.
+* \param	pixType			Pixel type for the grey values. If
+* 					WLZ_GREY_ERROR is given then no values
+* 					are created.
 * \param	bgdV			Background pixel value.
 * \param	plist			Property list to be attached.
 * \param	assocObj		Associated object.
@@ -1140,9 +1144,12 @@ WlzObject	*WlzMakeCuboid(int plane1, int lastpl,
   val.core = NULL;
   dom2D.core = NULL;
   val2D.core = NULL;
-  if((arElmSz = WlzGreySize(pixType)) == 0)
+  if(pixType != WLZ_GREY_ERROR)
   {
-    errNum = WLZ_ERR_GREY_TYPE;
+    if((arElmSz = WlzGreySize(pixType)) == 0)
+    {
+      errNum = WLZ_ERR_GREY_TYPE;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1151,7 +1158,7 @@ WlzObject	*WlzMakeCuboid(int plane1, int lastpl,
 			       plane1, lastpl, line1, lastln, kol1, lastkl,
 			       &errNum);
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && (pixType != WLZ_GREY_ERROR))
   {
     val.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
     				  plane1, lastpl, bgdV, NULL, &errNum);
@@ -1160,41 +1167,50 @@ WlzObject	*WlzMakeCuboid(int plane1, int lastpl,
   {
     pPos = plane1				;
     dom2DP = dom.p->domains;
-    val2DP = val.vox->values;
-    tbType = WlzGreyTableType(WLZ_GREY_TAB_RECT, pixType, &errNum);
+    if(val.core != NULL)
+    {
+      val2DP = val.vox->values;
+      tbType = WlzGreyTableType(WLZ_GREY_TAB_RECT, pixType, &errNum);
+    }
     while((errNum == WLZ_ERR_NONE) && (pPos <= lastpl))
     {
       dom2D.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
       				      line1, lastln, kol1, lastkl, &errNum);
-      if(errNum == WLZ_ERR_NONE)
+      if(val.core != NULL)
       {
-        if((arDat = AlcCalloc(arSz, arElmSz)) == NULL)
+	if(errNum == WLZ_ERR_NONE)
 	{
-	  errNum = WLZ_ERR_MEM_ALLOC;
+	  if((arDat = AlcCalloc(arSz, arElmSz)) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
 	}
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-        val2D.r = WlzMakeRectValueTb(tbType, line1, lastln,
-				    kol1, lastkl - kol1 + 1,
-				    bgdV, (int *)arDat, &errNum);
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	val2D.r->freeptr = AlcFreeStackPush(val2D.r->freeptr, arDat, &alcErr);
-	if(alcErr != ALC_ER_NONE)
+	if(errNum == WLZ_ERR_NONE)
 	{
-	  errNum = WLZ_ERR_MEM_ALLOC;
+	  val2D.r = WlzMakeRectValueTb(tbType, line1, lastln,
+				      kol1, lastkl - kol1 + 1,
+				      bgdV, (int *)arDat, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  val2D.r->freeptr = AlcFreeStackPush(val2D.r->freeptr, arDat, &alcErr);
+	  if(alcErr != ALC_ER_NONE)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
 	}
       }
       if(errNum == WLZ_ERR_NONE)
       {
 	++pPos;
         *dom2DP++ = WlzAssignDomain(dom2D, NULL);
-        *val2DP++ = WlzAssignValues(val2D, NULL);
-	dom2D.core = NULL;
-	val2D.core = NULL;
-	arDat = NULL;
+	if(val.core != NULL)
+	{
+	  *val2DP++ = WlzAssignValues(val2D, NULL);
+	  dom2D.core = NULL;
+	  val2D.core = NULL;
+	  arDat = NULL;
+	}
       }
       else
       {
