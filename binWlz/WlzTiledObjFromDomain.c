@@ -117,6 +117,7 @@ int		main(int argc, char *argv[])
   		*outObj = NULL;
   char		*inFileStr,
 		*outFileStr;
+  int		iBuf[4];
   const char	*errMsg;
   const size_t	tlSz = 4096;
   static char	optList[] = "hb:g:o:s:",
@@ -134,9 +135,76 @@ int		main(int argc, char *argv[])
     switch(option)
     {
       case 'b':
-        if(sscanf(optarg, "%lg", &(bgdV.v.dbv)) != 1)
+	bgdV.type = gType;
+	switch(gType)
 	{
-	  usage = 1;
+
+	  case WLZ_GREY_LONG:
+	    if(sscanf(optarg, "%ld", &(bgdV.v.lnv)) != 1)
+	    {
+	      usage = 1;
+	    }
+	    break;
+	  case WLZ_GREY_INT:
+	    if(sscanf(optarg, "%d", &(bgdV.v.inv)) != 1)
+	    {
+	      usage = 1;
+	    }
+	    break;
+	  case WLZ_GREY_SHORT:
+	    if((sscanf(optarg, "%d", iBuf) != 1) ||
+	       (iBuf[0] < SHRT_MIN) || (iBuf[0] > SHRT_MAX))
+	    {
+	      usage = 1;
+	    }
+	    else
+	    {
+	      bgdV.v.shv = iBuf[0];
+	    }
+	    break;
+	  case WLZ_GREY_UBYTE:
+	    if((sscanf(optarg, "%d", iBuf) != 1) ||
+	       (iBuf[0] < 0) || (iBuf[0] > 255))
+	    {
+	      usage = 1;
+	    }
+	    else
+	    {
+	      bgdV.v.ubv = iBuf[0];
+	    }
+	    break;
+	  case WLZ_GREY_FLOAT:
+	    if(sscanf(optarg, "%g", &(bgdV.v.flv)) != 1)
+	    {
+	      usage = 1;
+	    }
+	    break;
+	  case WLZ_GREY_DOUBLE:
+	    if(sscanf(optarg, "%lg", &(bgdV.v.dbv)) != 1)
+	    {
+	      usage = 1;
+	    }
+	    break;
+	  case WLZ_GREY_RGBA:
+	    iBuf[0] = iBuf[1] = iBuf[2] = iBuf[3] = 0;
+	    if((sscanf(optarg, "%d,%d,%d,%d",
+	               iBuf + 0, iBuf + 1, iBuf + 2, iBuf + 3) < 3) ||
+	       (iBuf[0] < 0) || (iBuf[0] > 255) ||
+	       (iBuf[1] < 0) || (iBuf[1] > 255) ||
+	       (iBuf[2] < 0) || (iBuf[2] > 255) ||
+	       (iBuf[3] < 0) || (iBuf[3] > 255))
+	    {
+	      usage = 1;
+	    }
+	    else
+	    {
+	      WLZ_RGBA_RGBA_SET(bgdV.v.rgbv,
+	                        iBuf[0], iBuf[1], iBuf[2], iBuf[3]);
+	    }
+	    break;
+	  default:
+	    usage = 1;
+	    break;
 	}
 	break;
       case 'g':
@@ -306,10 +374,12 @@ int		main(int argc, char *argv[])
     "valid spatial domain.\n"
     "Options:\n"
     "  -h  Prints this usage information.\n"
-    "  -b  Background value.\n"
+    "  -b  Background value. If the grey type is RGBA then the channel\n"
+    "      background values should be comma seperated and in the order\n"
+    "      RGBA.\n"
     "  -g  Grey type specified using one of the characters:\n"
     "      l, i, s, u, f, d, r for long, intm shortm unsigned byte,\n"
-    "      float, double or red-green-blue-alpha.\n"
+    "      float, double or RGBA.\n"
     "  -s  Voxel size (x,y,z).\n"
     "  -o  Output tiled object.\n");
   }
