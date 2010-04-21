@@ -278,8 +278,8 @@ int		main(int argc, char *argv[])
     (void )fprintf(stderr,
     "Usage: %s%s",
     *argv,
-    " [-o<output object>] [-h] [-t <tiled object>] [-x #] [-y #] [-z #]\n"
-    "                  [<input objects>]\n"
+    " [-h] [-t <tiled object>] [-x #] [-y #] [-z #]\n"
+    "                         [<input objects>]\n"
     "Sets the values in the tiled object using the values in the given\n"
     "input object(s).\n"
     "Options:\n"

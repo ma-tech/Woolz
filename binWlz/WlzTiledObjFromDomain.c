@@ -300,8 +300,9 @@ int		main(int argc, char *argv[])
     (void )fprintf(stderr,
     "Usage: %s%s",
     *argv,
-    " [-o<output object>] [-h] [-o <file>] [<input object>]\n"
-    "Creates an object with a tiled value table from an	object with a\n"
+    " [-o<output object>] [-h] [-b #] [-g #] [-s #,#,#]\n"
+    "                             [<input object>]\n"
+    "Creates an object with a tiled value table from an object with a\n"
     "valid spatial domain.\n"
     "Options:\n"
     "  -h  Prints this usage information.\n"
