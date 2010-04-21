@@ -106,19 +106,20 @@ int		main(int argc, char *argv[])
 {
   int		option,
   		ok = 1,
-		usage = 0;
+		usage = 0,
+		voxSzSet = 0;
   WlzGreyType	gType = WLZ_GREY_UBYTE;
+  WlzFVertex3	voxSz;
   WlzPixelV	bgdV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   FILE		*fP = NULL;
-  WlzObject	*domObj = NULL,
-  		*inObj = NULL,
+  WlzObject	*inObj = NULL,
   		*outObj = NULL;
   char		*inFileStr,
 		*outFileStr;
   const char	*errMsg;
   const size_t	tlSz = 4096;
-  static char	optList[] = "hb:g:o:",
+  static char	optList[] = "hb:g:o:s:",
   		inFileStrDef[] = "-",
 		outFileStrDef[] = "-";
 
@@ -127,6 +128,7 @@ int		main(int argc, char *argv[])
   outFileStr = outFileStrDef;
   bgdV.v.dbv = 0.0;
   bgdV.type = WLZ_GREY_DOUBLE;
+  voxSz.vtX = voxSz.vtY = voxSz.vtZ = 1.0f;
   while(ok && ((option = getopt(argc, argv, optList)) != -1))
   {
     switch(option)
@@ -169,6 +171,14 @@ int		main(int argc, char *argv[])
       case 'o':
         outFileStr = optarg;
 	break;
+      case 's':
+	voxSzSet = 1;
+	if(sscanf(optarg, "%g,%g,%g",
+	          &(voxSz.vtX), &(voxSz.vtY), &(voxSz.vtZ)) != 3)
+	{
+	  usage = 1;
+	}
+        break;
       case 'h': /* FALLTHROUGH */
       default:
 	usage = 1;
@@ -238,12 +248,23 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
+    WlzObject *domObj = NULL;
     WlzValues nullVal;
 
     nullVal.core = NULL;
     domObj = WlzMakeMain(inObj->type, inObj->domain, nullVal,
     			 NULL, NULL, &errNum);
-    outObj = WlzMakeTiledValuesFromObj(inObj, tlSz, 0, gType, bgdV, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if((voxSzSet != 0) && (domObj->type == WLZ_3D_DOMAINOBJ))
+      {
+	domObj->domain.p->voxel_size[0] = voxSz.vtX;
+	domObj->domain.p->voxel_size[1] = voxSz.vtY;
+	domObj->domain.p->voxel_size[2] = voxSz.vtZ;
+      }
+      outObj = WlzMakeTiledValuesFromObj(domObj, tlSz, 0, gType, bgdV,
+      					 &errNum);
+    }
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -252,6 +273,7 @@ int		main(int argc, char *argv[])
                      "%s: Failed to create object with tiled values (%s).\n",
 		     *argv, errMsg);
     }
+    (void )WlzFreeObj(domObj);
   }
   if(ok && (outFileStr != NULL))
   {
@@ -272,7 +294,6 @@ int		main(int argc, char *argv[])
     }
   }
   (void )WlzFreeObj(outObj);
-  (void )WlzFreeObj(domObj);
   (void )WlzFreeObj(inObj);
   if(usage)
   {
