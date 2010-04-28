@@ -253,6 +253,8 @@ int		main(int argc, char *argv[])
   if(ok)
   {
     idx = 0;
+    WLZ_VTX_2_SET(v2, 0.0, 0.0);
+    WLZ_VTX_3_SET(v3, 0.0, 0.0, 0.0);
     do
     {
       if(fscanf(inFP, "%lg %lg %lg", &(v3.vtX), &(v3.vtY), &(v3.vtZ)) != 3)
@@ -284,13 +286,14 @@ int		main(int argc, char *argv[])
 	  default:
 	    break;
 	}
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-        if(fprintf(outFP, "%d %lg %lg %lg\n",
-	           (int )errNum, v3.vtX, v3.vtY, v3.vtZ) <= 0)
-        {
+	if(fprintf(outFP, "%d %lg %lg %lg\n",
+		   (int )errNum, v3.vtX, v3.vtY, v3.vtZ) <= 0)
+	{
 	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+	else
+	{
+	  errNum = WLZ_ERR_NONE;
 	}
       }
       ++idx;
