@@ -43,11 +43,11 @@ static char _WlzTiledValues_c[] = "MRC HGU $Id$";
 #include <limits.h>
 #include <Wlz.h>
 
+#ifdef HAVE_MMAP
 #define WLZ_USE_MMAP
-#ifdef WLZ_USE_MMAP
 #include <unistd.h>
 #include <sys/mman.h>
-#endif /* WLZ_USE_MMAP */
+#endif
 
 static WlzObject  		*WlzMakeTiledValuesObj2D(
 				  WlzObject *gObj,
