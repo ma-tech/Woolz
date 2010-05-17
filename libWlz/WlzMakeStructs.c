@@ -338,6 +338,7 @@ WlzMakeMain(WlzObjectType 	type,
     case WLZ_CMESH_TRANS:
     case WLZ_CONTOUR:
     case WLZ_CMESH_2D:
+    case WLZ_CMESH_2D5:
     case WLZ_CMESH_3D:
     case WLZ_CONV_HULL:
     case WLZ_EMPTY_OBJ:
@@ -1989,7 +1990,7 @@ WlzIndexedValues *WlzMakeIndexedValues(WlzObject *obj,
   {
     switch(obj->domain.core->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
 	switch(attach)
 	{
 	  case WLZ_VALUE_ATTACH_NOD:
@@ -2005,7 +2006,23 @@ WlzIndexedValues *WlzMakeIndexedValues(WlzObject *obj,
 	    break;
 	}
         break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_2D5:
+	switch(attach)
+	{
+	  case WLZ_VALUE_ATTACH_NOD:
+	    bSz = obj->domain.cm2d5->res.nod.vec->blkSz;
+	    bCnt= obj->domain.cm2d5->res.nod.vec->blkCnt;
+	    break;
+	  case WLZ_VALUE_ATTACH_ELM:
+	    bSz = obj->domain.cm2d5->res.elm.vec->blkSz;
+	    bCnt= obj->domain.cm2d5->res.elm.vec->blkCnt;
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+        break;
+      case WLZ_CMESH_3D:
 	switch(attach)
 	{
 	  case WLZ_VALUE_ATTACH_NOD:

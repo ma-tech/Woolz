@@ -110,6 +110,11 @@ static WlzDVertex2  		*WlzDVerticesFromCMesh2D(
 				  int *dstCnt, 
 				  int skip,
 				  WlzErrorNum *dstErr);
+static WlzDVertex3  		*WlzDVerticesFromCMesh2D5(
+				  WlzCMesh2D5 *mesh,
+				  int *dstCnt, 
+				  int skip,
+				  WlzErrorNum *dstErr);
 static WlzDVertex3  		*WlzDVerticesFromCMesh3D(
 				  WlzCMesh3D *mesh,
 				  int *dstCnt, 
@@ -896,7 +901,7 @@ static WlzDVertex3 *WlzDVerticesFromGM3(WlzGMModel *model, int *dstCnt,
 * \return	Allocated vertices.
 * \ingroup	WlzFeatures
 * \brief	Allocates a buffer which it fills with either 2D or
-*		3D double precission vertices from the constrained
+*		3D double precission vertices from the conforming
 *		mesh. The indicies of the vertices in the buffer are
 *		the same as the indices of the vertices in the model
 *		unless the skip non-valid nodes flag is set..
@@ -921,11 +926,15 @@ WlzVertexP 	WlzDVerticesFromCMesh(WlzCMeshP mesh,
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
 	*dstType = WLZ_VERTEX_D2;
 	vData.d2 = WlzDVerticesFromCMesh2D(mesh.m2, dstCnt, skip, &errNum);
         break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_2D5:
+	*dstType = WLZ_VERTEX_D3;
+	vData.d3 = WlzDVerticesFromCMesh2D5(mesh.m2d5, dstCnt, skip, &errNum);
+        break;
+      case WLZ_CMESH_3D:
 	*dstType = WLZ_VERTEX_D3;
 	vData.d3 = WlzDVerticesFromCMesh3D(mesh.m3, dstCnt, skip, &errNum);
         break;
@@ -945,7 +954,7 @@ WlzVertexP 	WlzDVerticesFromCMesh(WlzCMeshP mesh,
 * \return	Allocated vertices.
 * \ingroup	WlzFeatures
 * \brief	Allocates a buffer which it fills with the vertices
-*		from a 2D constrained mesh.
+*		from a 2D conforming mesh.
 * \param	mesh			Given mesh.
 * \param	dstCnt			Destination ptr for the number
 *					of vertices.
@@ -1017,7 +1026,79 @@ static WlzDVertex2  *WlzDVerticesFromCMesh2D(WlzCMesh2D *mesh, int *dstCnt,
 * \return	Allocated vertices.
 * \ingroup	WlzFeatures
 * \brief	Allocates a buffer which it fills with the vertices
-*		from a 3D constrained mesh.
+*		from a 2D5 conforming mesh.
+* \param	mesh			Given mesh.
+* \param	dstCnt			Destination ptr for the number
+*					of vertices.
+* \param	skip			Skip non-valid nodes if non-zero.
+* \param	dstErr			Destination error pointer,
+*					may be NULL.
+*/
+static WlzDVertex3  *WlzDVerticesFromCMesh2D5(WlzCMesh2D5 *mesh, int *dstCnt, 
+				        int skip, WlzErrorNum *dstErr)
+{
+  int		idN,
+		idV,
+		aCnt,
+  		nCnt,
+		vCnt;
+  AlcVector	*vec;
+  WlzVertexP    vData;
+  WlzCMeshNod2D5 *cN;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  vData.v = NULL;
+  nCnt = mesh->res.nod.maxEnt;
+  vCnt = (skip)? mesh->res.nod.numEnt: mesh->res.nod.maxEnt;
+  aCnt = (skip)? vCnt: nCnt;
+  vec = mesh->res.nod.vec;
+  if((vData.v = AlcMalloc(sizeof(WlzDVertex3) * aCnt)) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(skip)
+    {
+      for(idN = idV = 0; idN < nCnt; ++idN)
+      {
+	cN = (WlzCMeshNod2D5 *)AlcVectorItemGet(vec, idN);
+	if((cN->idx >= 0) && (idV < vCnt))
+	{
+	  *(vData.d3 + idV++) = cN->pos;
+	}
+      }
+    }
+    else
+    {
+      for(idN = 0; idN < nCnt; ++idN)
+      {
+	cN = (WlzCMeshNod2D5 *)AlcVectorItemGet(vec, idN);
+	*(vData.d3 + idN) = cN->pos;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    *dstCnt = aCnt;
+  }
+  else
+  {
+    AlcFree(vData.v);
+    vData.v = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vData.d3);
+}
+
+/*!
+* \return	Allocated vertices.
+* \ingroup	WlzFeatures
+* \brief	Allocates a buffer which it fills with the vertices
+*		from a 3D conforming mesh.
 * \param	mesh			Given mesh.
 * \param	dstCnt			Destination ptr for the number
 *					of vertices.

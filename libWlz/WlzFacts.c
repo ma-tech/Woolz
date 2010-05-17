@@ -135,6 +135,10 @@ static WlzErrorNum 		WlzObjFactsCMeshDom2D(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
 				  WlzCMesh2D *mesh);
+static WlzErrorNum 		WlzObjFactsCMeshDom2D5(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj,
+				  WlzCMesh2D5 *mesh);
 static WlzErrorNum 		WlzObjFactsCMeshDom3D(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
@@ -356,6 +360,17 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	  break;
 	case WLZ_CMESH_2D:
 	  errNum = WlzObjFactsCMeshDom2D(fData, obj, obj->domain.cm2);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsIndexedValues(fData, obj, obj->values);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
+	  break;
+	case WLZ_CMESH_2D5:
+	  errNum = WlzObjFactsCMeshDom2D5(fData, obj, obj->domain.cm2);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    errNum = WlzObjFactsIndexedValues(fData, obj, obj->values);
@@ -1929,6 +1944,106 @@ static WlzErrorNum WlzObjFactsCMeshDom2D(WlzObjFactsData *fData,
 /*!
 * \return	Error number.
 * \ingroup      WlzDebug
+* \brief	Produces a text description of a 2D5 constrained mesh.
+* \param	fData			Facts data structure.
+* \param	obj			Object for type.
+* \param	cmt			Given constrained mesh transform.
+*/
+static WlzErrorNum WlzObjFactsCMeshDom2D5(WlzObjFactsData *fData,
+				         WlzObject *obj,
+				         WlzCMesh2D5 *mesh)
+{
+  int		idx,
+  		nElm,
+  		nNod;
+  const char	*tStr;
+  WlzCMeshNod2D5 *nod;
+  WlzCMeshElm2D5 *elm;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromObjDomainType(obj, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Domain NULL.\n");
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Domain type invalid.\n");
+    }
+  }
+  else
+  {
+    errNum = WlzObjFactsAppend(fData, "Domain type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n", mesh->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      nElm = mesh->res.elm.numEnt;
+      nNod = mesh->res.nod.numEnt;
+      errNum = WlzObjFactsAppend(fData, "Number of Elements: %d.\n", nElm);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzObjFactsAppend(fData, "Number of Nodes: %d.\n", nNod);
+      }
+    }
+    if((errNum == WLZ_ERR_NONE) && (fData->verbose != 0))
+    {
+      errNum = WlzObjFactsAppend(fData, "Nodes:\n");
+      if(errNum == WLZ_ERR_NONE)
+      {
+	idx = 0;
+        ++(fData->indent);
+	while((errNum == WLZ_ERR_NONE) && (idx < mesh->res.nod.maxEnt))
+	{
+	  nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idx);
+	  if(nod->idx >= 0)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "% 8d % 8g % 8g % 8g\n",
+				     nod->idx,
+				     nod->pos.vtX, nod->pos.vtY, nod->pos.vtZ);
+	  }
+	  ++idx;
+	}
+        --(fData->indent);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzObjFactsAppend(fData, "Elements:\n");
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	idx = 0;
+        ++(fData->indent);
+	while((errNum == WLZ_ERR_NONE) && (idx < mesh->res.elm.maxEnt))
+	{
+	  elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, idx);
+	  if(elm->idx >= 0)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "% 8d % 8d % 8d % 8d\n",
+				       elm->idx,
+				       elm->edu[0].nod->idx,
+				       elm->edu[1].nod->idx,
+				       elm->edu[2].nod->idx);
+	  }
+	  ++idx;
+	}
+        --(fData->indent);
+      }
+
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
 * \brief	Produces a text description of a 3D constrained mesh.
 * \param	fData			Facts data structure.
 * \param	obj			Object for type.
@@ -2142,7 +2257,7 @@ static WlzErrorNum WlzObjFactsIndexedValues(WlzObjFactsData *fData,
         ++(fData->indent);
 	switch(obj->domain.core->type)
 	{
-	  case WLZ_CMESH_TRI2D:
+	  case WLZ_CMESH_2D:
 	    mesh.m2 = obj->domain.cm2;
 	    switch(ixv->attach)
 	    {
@@ -2179,7 +2294,7 @@ static WlzErrorNum WlzObjFactsIndexedValues(WlzObjFactsData *fData,
 		break;
 	    }
 	    break;
-	  case WLZ_CMESH_TET3D:
+	  case WLZ_CMESH_3D:
 	    mesh.m3 = obj->domain.cm3;
 	    switch(ixv->attach)
 	    {

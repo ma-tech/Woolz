@@ -119,8 +119,8 @@ const char	*WlzStringFromObjTypeValue(WlzObjectType objType,
     case WLZ_CONTOUR:
       oTypeStr = "WLZ_CONTOUR";
       break;
-    case WLZ_CMESH_2D:
-      oTypeStr = "WLZ_CMESH_2D";
+    case WLZ_CMESH_2D5:
+      oTypeStr = "WLZ_CMESH_2D5";
       break;
     case WLZ_CMESH_3D:
       oTypeStr = "WLZ_CMESH_3D";
@@ -205,6 +205,7 @@ WlzObjectType	WlzStringToObjType(const char *oTypeStr,
 		"WLZ_CONV_HULL", WLZ_CONV_HULL,
 		"WLZ_CONTOUR", WLZ_CONTOUR,
 		"WLZ_CMESH_2D", WLZ_CMESH_2D,
+		"WLZ_CMESH_2D5", WLZ_CMESH_2D5,
 		"WLZ_CMESH_3D", WLZ_CMESH_3D,
 		"WLZ_HISTOGRAM", WLZ_HISTOGRAM,
 		"WLZ_3D_POLYGON", WLZ_3D_POLYGON,
@@ -362,6 +363,9 @@ const char	*WlzStringFromObjDomainType(WlzObject *obj,
       case WLZ_CMESH_2D:
         oDomTypeStr = "WLZ_CMESH_2D";
 	break;
+      case WLZ_CMESH_2D5:
+        oDomTypeStr = "WLZ_CMESH_2D5";
+	break;
       case WLZ_CMESH_3D:
         oDomTypeStr = "WLZ_CMESH_3D";
 	break;
@@ -438,6 +442,7 @@ WlzObjectType	WlzStringToObjDomainType(const char *oDomTypeStr,
 		"WLZ_BOUNDLIST_PIECE", WLZ_BOUNDLIST_PIECE,
 		"WLZ_BOUNDLIST_HOLE", WLZ_BOUNDLIST_HOLE,
 		"WLZ_CMESH_2D", WLZ_CMESH_2D,
+		"WLZ_CMESH_2D5", WLZ_CMESH_2D5,
 		"WLZ_CMESH_3D", WLZ_CMESH_3D,
 		"WLZ_HISTOGRAMDOMAIN_INT", WLZ_HISTOGRAMDOMAIN_INT,
 		"WLZ_HISTOGRAMDOMAIN_FLOAT", WLZ_HISTOGRAMDOMAIN_FLOAT,

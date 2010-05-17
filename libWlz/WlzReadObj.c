@@ -160,6 +160,9 @@ static WlzMeshTransform         *WlzReadMeshTransform2D(
 static WlzCMesh2D		*WlzReadCMesh2D(
 				  FILE *fp,
 				  WlzErrorNum *dstErr);
+static WlzCMesh2D5		*WlzReadCMesh2D5(
+				  FILE *fp,
+				  WlzErrorNum *dstErr);
 static WlzCMesh3D		*WlzReadCMesh3D(
 				  FILE *fp,
 				  WlzErrorNum *dstErr);
@@ -482,6 +485,17 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 
     case WLZ_CMESH_2D:
       if(((domain.cm2 = WlzReadCMesh2D(fp, &errNum)) != NULL) &&
+         ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
+	                     &errNum)) != NULL)){
+        if((errNum = WlzReadIndexedvValues(fp, obj)) == WLZ_ERR_NONE){
+	  obj->plist = WlzAssignPropertyList(
+	               WlzReadPropertyList(fp, NULL), NULL);
+	}
+      }
+      break;
+
+    case WLZ_CMESH_2D5:
+      if(((domain.cm2d5 = WlzReadCMesh2D5(fp, &errNum)) != NULL) &&
          ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
 	                     &errNum)) != NULL)){
         if((errNum = WlzReadIndexedvValues(fp, obj)) == WLZ_ERR_NONE){
@@ -3803,8 +3817,6 @@ static WlzCMesh2D *WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
     WlzCMeshUpdateBBox2D(mesh);
     /* Compute a new bucket grid and reassign nodes to it. */
     errNum = WlzCMeshReassignGridCells2D(mesh, nNod);
-    /* Recompute maximum edge length. */
-    WlzCMeshUpdateMaxSqEdgLen2D(mesh);
   }
   /* Read elements and create them within the mesh using the already
    * created nodes. */
@@ -3855,6 +3867,11 @@ static WlzCMesh2D *WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
       }
     }
   }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Compute maximum edge length. */
+    WlzCMeshUpdateMaxSqEdgLen2D(mesh);
+  }
 #ifdef WLZ_DEBUG_READOBJ
   if(errNum == WLZ_ERR_NONE)
   {
@@ -3865,6 +3882,170 @@ static WlzCMesh2D *WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
   if(errNum != WLZ_ERR_NONE)
   {
     (void )WlzCMeshFree2D(mesh);
+    mesh = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(mesh);
+}
+
+/*!
+* \return	New 2D5 constrained mesh.
+* \ingroup	WlzIO
+* \brief	reads a 2D5 constrained mesh using the given file pointer.
+* \param	fp			Given file pointer.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzCMesh2D5 *WlzReadCMesh2D5(FILE *fp, WlzErrorNum *dstErr)
+{
+  int		idE,
+  		idN,
+		flags,
+		nElm,
+		nNod;
+  WlzDVertex3	pos;
+  WlzCMeshElm2D5 *elm;
+  WlzCMesh2D5	*mesh = NULL;
+  int		idx[3];
+  WlzCMeshNod2D5 *nod[3];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  nNod = getword(fp);
+  nElm = getword(fp);
+  if(feof(fp) != 0)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if((nNod < 0) || (nElm < 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+#ifdef WLZ_DEBUG_READOBJ
+  if(errNum == WLZ_ERR_NONE)
+  {
+    (void )fprintf(stderr,
+    		   "WlzReadCMesh2D5() "
+		   "%d %d\n",
+		   nNod, nElm);
+  }
+#endif /* WLZ_DEBUG_READOBJ */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    mesh = WlzCMeshNew2D5(&errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((AlcVectorExtendAndGet(mesh->res.nod.vec, nNod) == NULL) ||
+       (AlcVectorExtendAndGet(mesh->res.elm.vec, nElm) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      errNum = WlzCMeshReassignGridCells2D5(mesh, nNod);
+    }
+  }
+  /* Read nodes. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < nNod; ++idN)
+    {
+      flags = getword(fp);
+      pos.vtX = getdouble(fp);
+      pos.vtY = getdouble(fp);
+      pos.vtZ = getdouble(fp);
+#ifdef WLZ_DEBUG_READOBJ
+      (void )fprintf(stderr,
+                     "WlzReadCMesh2D5() "
+		     "% 8d 0x%08x % 8g % 8g % 8g\n",
+		     idN, flags, pos.vtX, pos.vtY, pos.vtZ);
+#endif /* WLZ_DEBUG_READOBJ */
+      if(feof(fp) != 0)
+      {
+        errNum = WLZ_ERR_READ_INCOMPLETE;
+	break;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        nod[0] = WlzCMeshAllocNod2D5(mesh);
+	nod[0]->pos = pos;
+	nod[0]->flags = flags;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Update the bounding box. */
+    WlzCMeshUpdateBBox2D5(mesh);
+    /* Compute a new bucket grid and reassign nodes to it. */
+    errNum = WlzCMeshReassignGridCells2D5(mesh, nNod);
+  }
+  /* Read elements and create them within the mesh using the already
+   * created nodes. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < nElm; ++idE)
+    {
+      flags = getword(fp);
+      idx[0] = getword(fp);
+      idx[1] = getword(fp);
+      idx[2] = getword(fp);
+      if(feof(fp) != 0)
+      {
+        errNum = WLZ_ERR_READ_INCOMPLETE;
+	break;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+#ifdef WLZ_DEBUG_READOBJ
+	(void )fprintf(stderr,
+		       "WlzReadCMesh2D5() "
+		       "% 8d 0x%08x % 8d % 8d % 8d\n",
+		       idE, flags, idx[0], idx[1], idx[2]);
+#endif /* WLZ_DEBUG_READOBJ */
+	for(idN = 0; idN < 3; ++idN)
+	{
+	  if((idx[idN] < 0) || (idx[idN] >= nNod))
+	  {
+	    errNum = WLZ_ERR_DOMAIN_DATA;
+	    break;
+	  }
+	  nod[idN] = (WlzCMeshNod2D5 *)
+	             AlcVectorItemGet(mesh->res.nod.vec, idx[idN]);
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        elm = WlzCMeshNewElm2D5(mesh,
+	                       nod[0], nod[1], nod[2], &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        elm->flags = flags;
+      }
+      else
+      {
+        break;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Compute maximum edge length. */
+    WlzCMeshUpdateMaxSqEdgLen2D5(mesh);
+  }
+#ifdef WLZ_DEBUG_READOBJ
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshVerify2D5(mesh, NULL, 1, stderr);
+  }
+#endif /* WLZ_DEBUG_READOBJ */
+  /* Clean up if errors. */
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzCMeshFree2D5(mesh);
     mesh = NULL;
   }
   if(dstErr)

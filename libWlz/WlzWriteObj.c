@@ -151,6 +151,10 @@ static WlzErrorNum		WlzWriteCMesh2D(
 				  FILE *fP,
 				  int **dstNodTbl,
 				  WlzCMesh2D *mesh);
+static WlzErrorNum		WlzWriteCMesh2D5(
+				  FILE *fP,
+				  int **dstNodTbl,
+				  WlzCMesh2D5 *mesh);
 static WlzErrorNum		WlzWriteCMesh3D(
 				  FILE *fP,
 				  int **dstNodTbl,
@@ -393,6 +397,14 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
       case WLZ_CMESH_2D:
         if(((errNum = WlzWriteCMesh2D(fP, NULL,
 	                              obj->domain.cm2)) == WLZ_ERR_NONE) &&
+           ((errNum = WlzWriteIndexedValues(fP, obj)) == WLZ_ERR_NONE))
+	{
+	  errNum = WlzWritePropertyList(fP, obj->plist);
+	}
+	break;
+      case WLZ_CMESH_2D5:
+        if(((errNum = WlzWriteCMesh2D5(fP, NULL,
+	                              obj->domain.cm2d5)) == WLZ_ERR_NONE) &&
            ((errNum = WlzWriteIndexedValues(fP, obj)) == WLZ_ERR_NONE))
 	{
 	  errNum = WlzWritePropertyList(fP, obj->plist);
@@ -2605,7 +2617,7 @@ static WlzErrorNum WlzWriteCMesh2D(FILE *fP, int **dstNodTbl,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TRI2D)
+  else if(mesh->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -2723,6 +2735,151 @@ static WlzErrorNum WlzWriteCMesh2D(FILE *fP, int **dstNodTbl,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzIO
+* \brief	Writes a 2D5 conforming mesh to the given file.
+* \param	fP			Given file.
+* \param	dstNodTbl		If non-null the node table used in
+* 					squeezing out the non-valid nodes is
+* 					returned, otherwise the table is
+* 					freed.
+* \param	mesh			Conforming mesh (3D).
+*/
+static WlzErrorNum WlzWriteCMesh2D5(FILE *fP, int **dstNodTbl,
+				   WlzCMesh2D5 *mesh)
+{
+  int		idN,
+  		idE,
+		nNod,
+  		nElm;
+  WlzCMeshNod2D5 *nod;
+  WlzCMeshElm2D5 *elm;
+  WlzCMeshNod2D5 *nodes[3];
+  int		*nodTbl = NULL;
+  WlzErrorNum errNum = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_2D5)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  /* Generate mesh node index table to avoid deleted nodes and then
+   * write the number of nodes followed by the number of elements
+   * to the file. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((nodTbl = (int *)AlcMalloc(mesh->res.nod.maxEnt * sizeof(int))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nNod = 0;
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	nodTbl[idN] = nNod++;
+      }
+    }
+    nElm = 0;
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	nElm++;
+      }
+    }
+    putword(nNod, fP);
+    putword(nElm, fP);
+#ifdef WLZ_DEBUG_WRITEOBJ
+    (void )fprintf(stderr,
+		   "WlzWriteCMesh2D() "
+		   "%d %d\n",
+		   nNod, nElm);
+#endif /* WLZ_DEBUG_WRITEOBJ */
+    if(feof(fP) != 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  /* Write node flags then node position (x then y). */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	putword(nod->flags, fP);
+	putdouble(nod->pos.vtX, fP);
+	putdouble(nod->pos.vtY, fP);
+	putdouble(nod->pos.vtZ, fP);
+#ifdef WLZ_DEBUG_WRITEOBJ
+        (void )fprintf(stderr,
+	               "WlzWriteCMesh2D5() "
+		       "% 8d % 8d 0x%08x % 8g % 8g % 8g\n",
+                       nod->idx, nodTbl[idN], nod->flags,
+		       nod->pos.vtX, nod->pos.vtY, nod->pos.vtZ);
+#endif /* WLZ_DEBUG_WRITEOBJ */
+	if(feof(fP) != 0)
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  break;
+	}
+      }
+    }
+  }
+  /* Write element flags and node indices. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	nodes[0] = WLZ_CMESH_ELM2D5_GET_NODE_0(elm);
+	nodes[1] = WLZ_CMESH_ELM2D5_GET_NODE_1(elm);
+	nodes[2] = WLZ_CMESH_ELM2D5_GET_NODE_2(elm);
+	putword(elm->flags, fP);
+	putword(nodTbl[nodes[0]->idx], fP);
+	putword(nodTbl[nodes[1]->idx], fP);
+	putword(nodTbl[nodes[2]->idx], fP);
+#ifdef WLZ_DEBUG_WRITEOBJ
+        (void )fprintf(stderr,
+	               "WlzWriteCMesh2D5() "
+                       "% 8d 0x%08x % 8d % 8d % 8d\n",
+		       elm->idx, elm->flags,
+		       nodes[0]->idx, nodes[1]->idx,
+		       nodes[2]->idx);
+#endif /* WLZ_DEBUG_WRITEOBJ */
+	if(feof(fP) != 0)
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  break;
+	}
+      }
+    }
+  }
+  if(dstNodTbl)
+  {
+    *dstNodTbl = nodTbl;
+  }
+  else
+  {
+    AlcFree(nodTbl);
+  }
+  return(errNum);
+}
+
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
 * \brief	Writes a 3D conforming mesh to the given file.
 * \param	fP			Given file.
 * \param	dstNodTbl		If non-null the node table used in
@@ -2748,7 +2905,7 @@ static WlzErrorNum WlzWriteCMesh3D(FILE *fP, int **dstNodTbl,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TET3D)
+  else if(mesh->type != WLZ_CMESH_3D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -2911,7 +3068,7 @@ static WlzErrorNum WlzWriteIndexedValues(FILE *fP, WlzObject *obj)
     {
       switch(obj->domain.core->type)
       {
-	case WLZ_CMESH_TRI2D:
+	case WLZ_CMESH_2D:
 	  mesh.m2 = obj->domain.cm2;
 	  switch(ixv->attach)
 	  {
@@ -2926,7 +3083,7 @@ static WlzErrorNum WlzWriteIndexedValues(FILE *fP, WlzObject *obj)
 	      break;
 	  }
 	  break;
-	case WLZ_CMESH_TET3D:
+	case WLZ_CMESH_3D:
 	  mesh.m3 = obj->domain.cm3;
 	  switch(ixv->attach)
 	  {

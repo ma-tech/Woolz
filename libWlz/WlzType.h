@@ -128,8 +128,12 @@ typedef enum _WlzObjectType
   WLZ_HISTOGRAM			= 13,	/*!< Histogram. */
   WLZ_3D_POLYGON		= 14,	/*!< 3D polygon. */
   WLZ_CONTOUR			= 15,	/*!< Contour in either 2D or 3D. */
-  WLZ_CMESH_2D			= 16,   /*!< 2D constrained mesh. */
-  WLZ_CMESH_3D			= 17,   /*!< 3D constrained mesh. */
+  WLZ_CMESH_2D			= 16,   /*!< Constrained mesh with triangular
+                                             elements in 2D. */
+  WLZ_CMESH_3D			= 17,   /*!< Constrained mesh with tetrahedral
+  					     elements in 3D. */
+  WLZ_CMESH_2D5			= 18,   /*!< Constrained mesh with triangular
+  					     elements in 3D. */
   WLZ_RECTANGLE			= 20,	/*!< Rectangle. */
   WLZ_POINTS			= 21,   /*!< Points. */
   WLZ_CONVOLVE_INT		= 50,	/*!< Integer convolution. */
@@ -521,21 +525,6 @@ typedef enum _WlzMeshError
   WLZ_MESH_ERR_NELEM_NOTNBR	= (1<<7), /*!< Neighbour not a neighbour */
   WLZ_MESH_ERR_NELEM_ZOMBIE	= (1<<8)  /*!< Neighbour is a zombie */
 } WlzMeshError;
-
-/*!
-* \enum         _WlzCMeshType
-* \ingroup      WlzMesh
-* \brief        Type of graph based mesh model.
-*               Typedef: ::WlzCMeshType.
-*/
-typedef enum _WlzCMeshType
-{
-  WLZ_CMESH_TRI2D = WLZ_CMESH_2D,       /*!< Planar mesh with triangular
-                                             mesh elements. */
-  WLZ_CMESH_TET3D = WLZ_CMESH_3D        /*!< Volumetric mesh with tetrahedral
-                                             mesh elements. */
-
-} WlzCMeshType;
 
 /*!
 * \enum		_WlzConnectType
@@ -2141,6 +2130,7 @@ typedef union _WlzDomain
   struct _WlzLBTDomain2D     *l2;
   struct _WlzLBTDomain3D     *l3;
   struct _WlzCMesh2D	     *cm2;
+  struct _WlzCMesh2D5	     *cm2d5;
   struct _WlzCMesh3D	     *cm3;
   struct _WlzPoints	     *pts;
 } WlzDomain;
@@ -3188,12 +3178,30 @@ typedef struct _WlzCMeshNod2D
   int           idx;                    /*!< The node index. */
   unsigned int  flags;                  /*!< Bitwise description of node. */
   WlzDVertex2   pos;                    /*!< Node position. */
-  struct _WlzCMeshEdgU2D *edu;        /*!< One of many edge uses which is
+  struct _WlzCMeshEdgU2D *edu;          /*!< One of many edge uses which is
                                              directed from the node. A
                                              node is shared by many parents. */
   struct _WlzCMeshNod2D *next;          /*!< Next node in bucket. */
   void		*prop;      		/*!< Node properties. */
 } WlzCMeshNod2D;
+
+/*!
+* \struct       _WlzCMeshNod2D5
+* \ingroup      WlzMesh
+* \brief        A node of a 2D5 mesh with a 3D position but 2D connectivity.
+*               Typedef: ::WlzCMeshNod2D5.
+*/
+typedef struct _WlzCMeshNod2D5
+{
+  int           idx;                    /*!< The node index. */
+  unsigned int  flags;                  /*!< Bitwise description of node. */
+  WlzDVertex3   pos;                    /*!< Node position. */
+  struct _WlzCMeshEdgU2D5 *edu;         /*!< One of many edge uses which is
+                                             directed from the node. A
+                                             node is shared by many parents. */
+  struct _WlzCMeshNod2D5 *next;         /*!< Next node in bucket. */
+  void		*prop;      		/*!< Node properties. */
+} WlzCMeshNod2D5;
 
 /*!
 * \struct       _WlzCMeshNod3D
@@ -3221,9 +3229,10 @@ typedef struct _WlzCMeshNod3D
 */
 typedef union _WlzCMeshNodP
 {
-  void			*v;		/*! Generic pointer. */
-  struct _WlzCMeshNod2D *n2;		/*!< 2D node pointer. */
-  struct _WlzCMeshNod3D *n3;		/*!< 3D node pointer. */
+  void			 *v;		/*!< Generic pointer. */
+  struct _WlzCMeshNod2D  *n2;		/*!< 2D node pointer. */
+  struct _WlzCMeshNod2D5 *n2d5;		/*!< 2D5 node pointer. */
+  struct _WlzCMeshNod3D  *n3;		/*!< 3D node pointer. */
 } WlzCMeshNodP;
 
 /*!
@@ -3236,13 +3245,32 @@ typedef struct _WlzCMeshEdgU2D
 {
   struct _WlzCMeshNod2D *nod;           /*!< Node from which this edge is
                                              directed. */
-  struct _WlzCMeshEdgU2D *next;       /*!< Next directed edge, previous
+  struct _WlzCMeshEdgU2D *next;         /*!< Next directed edge, previous
                                              can be found using next->next. */
-  struct _WlzCMeshEdgU2D *opp;        /*!< Opposite directed edge. */
-  struct _WlzCMeshEdgU2D *nnxt;       /*!< Next edge directed from the
+  struct _WlzCMeshEdgU2D *opp;          /*!< Opposite directed edge. */
+  struct _WlzCMeshEdgU2D *nnxt;         /*!< Next edge directed from the
                                              same node (un-ordered). */
   struct _WlzCMeshElm2D *elm;           /*!< Parent element. */
 } WlzCMeshEdgU2D;
+
+/*!
+* \struct       _WlzCMeshEdgU2D5
+* \ingroup      WlzMesh
+* \brief        A 2D CCW directed (half) edge within the parent simplex.
+*               Typedef: ::WlzCMeshEdgU2D5.
+*/
+typedef struct _WlzCMeshEdgU2D5
+{
+  struct _WlzCMeshNod2D5 *nod;           /*!< Node from which this edge is
+                                              directed. */
+  struct _WlzCMeshEdgU2D5 *next;         /*!< Next directed edge, previous
+                                             can be found using next->next. */
+  struct _WlzCMeshEdgU2D5 *opp;          /*!< Opposite directed edge. */
+  struct _WlzCMeshEdgU2D5 *nnxt;         /*!< Next edge directed from the
+                                             same node (un-ordered). */
+  struct _WlzCMeshElm2D5 *elm;           /*!< Parent element. */
+} WlzCMeshEdgU2D5;
+
 /*!
 * \struct       _WlzCMeshEdgU3D
 * \ingroup      WlzMesh
@@ -3253,9 +3281,9 @@ typedef struct _WlzCMeshEdgU3D
 {
   struct _WlzCMeshNod3D *nod;           /*!< Node from which this edge is
                                              directed. */
-  struct _WlzCMeshEdgU3D *next;       /*!< Next directed edge, previous
+  struct _WlzCMeshEdgU3D *next;         /*!< Next directed edge, previous
                                              can be found using next->next. */
-  struct _WlzCMeshEdgU3D *nnxt;       /*!< Next edge directed from the
+  struct _WlzCMeshEdgU3D *nnxt;         /*!< Next edge directed from the
                                              same node (un-ordered). */
   struct _WlzCMeshFace *face;           /*!< Parent face. */
 } WlzCMeshEdgU3D;
@@ -3268,9 +3296,10 @@ typedef struct _WlzCMeshEdgU3D
 */
 typedef union _WlzCMeshEdgUP
 {
-  void			 *v;		/*! Generic pointer. */
-  struct _WlzCMeshEdgU2D *e2;		/*!< 2D node pointer. */
-  struct _WlzCMeshEdgU3D *e3;		/*!< 3D node pointer. */
+  void			  *v;		/*!< Generic pointer. */
+  struct _WlzCMeshEdgU2D  *e2;		/*!< 2D node pointer. */
+  struct _WlzCMeshEdgU2D5 *e2d5;	/*!< 2D5 node pointer. */
+  struct _WlzCMeshEdgU3D  *e3;		/*!< 3D node pointer. */
 } WlzCMeshEdgUP;
 
 /*!
@@ -3303,6 +3332,24 @@ typedef struct _WlzCMeshElm2D
 					     reached using the next pointer. */
   void		*prop;      		/*!< Element properties. */
 } WlzCMeshElm2D;
+
+/*!
+* \struct       _WlzCMeshElm2D5
+* \ingroup      WlzMesh
+* \brief        A single 3D triangular mesh element.
+*               Typedef: ::WlzCMeshElm2D5.
+*/
+typedef struct _WlzCMeshElm2D5
+{
+  int           idx;                     /*!< The element index. */
+  unsigned int  flags;                   /*!< Element flags. */
+  struct _WlzCMeshEdgU2D5 edu[3];        /*!< Edges of the mesh element. */
+  struct _WlzCMeshCellElm2D5 *cElm;	 /*!< First cell element from which
+                                              all other cell elements can be
+					      reached using the next
+					      pointer. */
+  void		*prop;      		 /*!< Element properties. */
+} WlzCMeshElm2D5;
 
 /*!
 * \struct       _WlzCMeshElm3D
@@ -3429,9 +3476,10 @@ typedef struct _WlzCMeshElm3D
 */
 typedef union _WlzCMeshElmP
 {
-  void			*v;		/*! Generic pointer. */
-  struct _WlzCMeshElm2D *e2;		/*!< 2D element pointer. */
-  struct _WlzCMeshElm3D *e3;		/*!< 3D element pointer. */
+  void			 *v;		/*! Generic pointer. */
+  struct _WlzCMeshElm2D  *e2;		/*!< 2D element pointer. */
+  struct _WlzCMeshElm2D5 *e2d5;		/*!< 2D5 element pointer. */
+  struct _WlzCMeshElm3D  *e3;		/*!< 3D element pointer. */
 } WlzCMeshElmP;
 
 /*!
@@ -3451,6 +3499,24 @@ typedef struct _WlzCMeshCellElm2D
   struct _WlzCMeshCellElm2D *nextCell;	/*! Next cell which this element
   					    intersects. */
 } WlzCMeshCellElm2D;
+
+/*!
+* \struct	_WlzCMeshCellElm2D5
+* \ingroup      WlzMesh
+* \brief	Data structure which is used to link lists of 2D5 elements
+* 		with the grid cells that they intersect.
+*		Typedef: ::WlzCMeshCell2D5.
+*/
+typedef struct _WlzCMeshCellElm2D5
+{
+  struct _WlzCMeshElm2D5 *elm;		/*! The element. */
+  struct _WlzCMeshCell2D5 *cell;	/*! The cell. */
+  struct _WlzCMeshCellElm2D5 *next;	/*! Next element intersecting cell or
+  					    next cell element in the free
+					    list. */
+  struct _WlzCMeshCellElm2D5 *nextCell;	/*! Next cell which this element
+  					    intersects. */
+} WlzCMeshCellElm2D5;
 
 /*!
 * \struct	_WlzCMeshCellElm3D
@@ -3487,6 +3553,22 @@ typedef struct _WlzCMeshCell2D
 } WlzCMeshCell2D;
 
 /*!
+* \struct 	_WlzCMeshCell2D5
+* \ingroup	WlzMesh
+* \brief	A single cell of a spatial grid or array of 2D5 cells.
+*		Typedef: ::WlzCMeshCell2D5.
+*/
+typedef struct _WlzCMeshCell2D5
+{
+  struct _WlzCMeshNod2D5 *nod;		/*! Head of a linked list of nodes
+  					    which are located within the
+					    cell. */
+  struct _WlzCMeshCellElm2D5 *cElm;	/*! Cell element data structure for
+  					    an element which intersects this
+					    cell. */
+} WlzCMeshCell2D5;
+
+/*!
 * \struct 	_WlzCMeshCell3D
 * \ingroup	WlzMesh
 * \brief	A single cell of a spatial grid or array of 3D cells.
@@ -3521,6 +3603,26 @@ typedef struct _WlzCMeshCellGrid2D
                                             re/use. */
   AlcBlockStack	*allCE;                 /*! Allocated cell elements. */
 } WlzCMeshCellGrid2D;
+
+/*!
+* \struct       _WlzCMeshCellGrid2D5
+* \ingroup      WlzMesh
+* \brief        A spatial grid or array of cubiod 3D cells that are used for
+* 		fast 2D5 node and element location queries.
+*               Typedef: ::WlzCMeshCellGrid2D5.
+*/
+typedef struct _WlzCMeshCellGrid2D5
+{
+  WlzIVertex3	nCells;			/*! Dimensions of the cell grid
+  					    array in terms of the number of
+					    cells. */
+  double	cellSz;			/*! Each cell is an axis aligned
+  					    square with this side length. */
+  struct _WlzCMeshCell2D5 ***cells;	/*! Array of cells. */
+  WlzCMeshCellElm2D5 *freeCE;	        /*! List of free cell elements for
+                                            re/use. */
+  AlcBlockStack	*allCE;                 /*! Allocated cell elements. */
+} WlzCMeshCellGrid2D5;
 
 /*!
 * \struct       _WlzCMeshCellGrid3D
@@ -3613,8 +3715,10 @@ typedef union _WlzCMeshEntP
 {
   void			*v;		/*! Generic pointer. */
   struct _WlzCMeshNod2D *n2;		/*!< 2D node pointer. */
+  struct _WlzCMeshNod2D *n2d5;		/*!< 2D5 node pointer. */
   struct _WlzCMeshNod3D *n3;		/*!< 3D node pointer. */
   struct _WlzCMeshElm2D	*e2;		/*!< 2D element pointer. */
+  struct _WlzCMeshElm2D	*e2d5;		/*!< 2D5 element pointer. */
   struct _WlzCMeshElm3D	*e3;		/*!< 3D element pointer. */
 } WlzCMeshEntP;
 
@@ -3646,6 +3750,35 @@ typedef struct _WlzCMesh2D
   struct _WlzCMeshRes res;              /*!< Mesh resources. */
 
 } WlzCMesh2D;
+
+/*!
+* \struct       _WlzCMesh2D5
+* \ingroup      WlzMesh
+* \brief        A graph based mesh model for 2D5 boundary conforming
+*               simplical meshes.
+*               The mesh inherits it's core fields from the Woolz core
+*               domain.
+*               Typedef: ::WlzCMesh2D5.
+*/
+typedef struct _WlzCMesh2D5
+{
+  int           type;                   /*!< Type of mesh. */
+  int           linkcount;              /*!< Core. */
+  void          *freeptr;               /*!< Core. */
+  double	maxSqEdgLen;		/*!< Maximum of squared edge lengths
+  					     which can be used to restrict
+					     geometric searches. This may not
+					     be correct if nodes have been
+					     deleted or modified so it should
+					     not be relied upon for any more
+					     than an upper limit. */
+  WlzDBox3      bBox;                   /*!< Axis aligned bounding box of
+                                             the mesh. */
+  WlzCMeshCellGrid2D5 cGrid;		/*!< Cell grid for fast node and
+  					     element location queries. */
+  struct _WlzCMeshRes res;              /*!< Mesh resources. */
+
+} WlzCMesh2D5;
 
 /*!
 * \struct       _WlzCMesh3D
@@ -3685,6 +3818,7 @@ typedef union _WlzCMeshP
 {
   void		*v;
   WlzCMesh2D	*m2;
+  WlzCMesh2D5	*m2d5;
   WlzCMesh3D	*m3;
 } WlzCMeshP;
 

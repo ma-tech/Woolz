@@ -527,8 +527,10 @@ WlzErrorNum     WlzIndexedValuesSet(WlzObject *obj, size_t cnt, void *val)
   void		*dst;
   AlcVector	*vec;
   WlzCMeshElm2D	*e2;
+  WlzCMeshElm2D5 *e2d5;
   WlzCMeshElm3D	*e3;
   WlzCMeshNod2D	*n2;
+  WlzCMeshNod2D5 *n2d5;
   WlzCMeshNod3D	*n3;
   WlzCMeshP	mesh;
   WlzIndexedValues *ixv;
@@ -556,7 +558,7 @@ WlzErrorNum     WlzIndexedValuesSet(WlzObject *obj, size_t cnt, void *val)
     {
       case WLZ_CMESH_2D:
 	mesh.m2 = obj->domain.cm2;
-	if(mesh.m2->type != WLZ_CMESH_TRI2D)
+	if(mesh.m2->type != WLZ_CMESH_2D)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
@@ -610,9 +612,65 @@ WlzErrorNum     WlzIndexedValuesSet(WlzObject *obj, size_t cnt, void *val)
 	  }
 	}
         break;
+      case WLZ_CMESH_2D5:
+	mesh.m2d5 = obj->domain.cm2d5;
+	if(mesh.m2->type != WLZ_CMESH_2D5)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+	else
+	{
+	  switch(ixv->attach)
+	  {
+	    case WLZ_VALUE_ATTACH_NOD:
+	      max = mesh.m2d5->res.nod.maxEnt;
+	      if(WlzIndexedValueExtGet(ixv, max) == NULL)
+	      {
+	        errNum = WLZ_ERR_MEM_ALLOC;
+	      }
+	      else
+	      {
+	        vec = mesh.m2d5->res.nod.vec;
+		for(idx = 0; idx < max; ++idx)
+		{
+		  n2d5 = (WlzCMeshNod2D5 *)AlcVectorItemGet(vec, idx);
+		  if(n2d5->idx >= 0)
+		  {
+		    dst = WlzIndexedValueGet(ixv, idx);
+		    memcpy(dst, val, cnt);
+		  }
+		}
+	      }
+	      break;
+	    case WLZ_VALUE_ATTACH_ELM:
+	      max = mesh.m2d5->res.elm.maxEnt;
+	      if(WlzIndexedValueExtGet(ixv, max) == NULL)
+	      {
+	        errNum = WLZ_ERR_MEM_ALLOC;
+	      }
+	      else
+	      {
+	        vec = mesh.m2d5->res.elm.vec;
+		for(idx = 0; idx < max; ++idx)
+		{
+		  e2d5 = (WlzCMeshElm2D5 *)AlcVectorItemGet(vec, idx);
+		  if(e2d5->idx >= 0)
+		  {
+		    dst = WlzIndexedValueGet(ixv, idx);
+		    memcpy(dst, val, cnt);
+		  }
+		}
+	      }
+	      break;
+	    default:
+	      errNum = WLZ_ERR_VALUES_DATA;
+	      break;
+	  }
+	}
+        break;
       case WLZ_CMESH_3D:
 	mesh.m3 = obj->domain.cm3;
-	if(mesh.m3->type != WLZ_CMESH_TET3D)
+	if(mesh.m3->type != WLZ_CMESH_3D)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
