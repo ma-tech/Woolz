@@ -66,17 +66,25 @@ typedef enum _WlzCMeshConformAction
 
 static void	  		WlzCMeshFreeGridCells2D(
 				  WlzCMesh2D *mesh);
+static void	  		WlzCMeshFreeGridCells2D5(
+				  WlzCMesh2D5 *mesh);
 static void	  		WlzCMeshFreeGridCells3D(
 				  WlzCMesh3D *mesh);
 static void			WlzCMeshAddNodToGrid2D(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshNod2D *nod);
+static void			WlzCMeshAddNodToGrid2D5(
+				  WlzCMesh2D5 *mesh,
+				  WlzCMeshNod2D5 *nod);
 static void			WlzCMeshAddNodToGrid3D(
 				  WlzCMesh3D *mesh,
 				  WlzCMeshNod3D *nod);
 static void			WlzCMeshRemNodFromGrid2D(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshNod2D *nod);
+static void			WlzCMeshRemNodFromGrid2D5(
+				  WlzCMesh2D5 *mesh,
+				  WlzCMeshNod2D5 *nod);
 static void			WlzCMeshRemNodFromGrid3D(
 				  WlzCMesh3D *mesh,
 				  WlzCMeshNod3D *nod);
@@ -85,6 +93,9 @@ static void			WlzCMeshEntMarkFree(
 static void			WlzCMeshRemElmFromGrid2D(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshElm2D *elm);
+static void			WlzCMeshRemElmFromGrid2D5(
+				  WlzCMesh2D5 *mesh,
+				  WlzCMeshElm2D5 *elm);
 static void 			WlzCMeshRemEntCb(
 				  WlzCMeshCbEntry **list,
 				  WlzCMeshCbFn fn,
@@ -109,16 +120,24 @@ static WlzCMeshNod3D 		*WlzCMeshComputeBoundNod3D(
 static WlzCMeshCellElm2D 	*WlzCMeshNewCElm2D(
 				  WlzCMesh2D *mesh,
 				  WlzErrorNum *dstErr);
+static WlzCMeshCellElm2D5 	*WlzCMeshNewCElm2D5(
+				  WlzCMesh2D5 *mesh,
+				  WlzErrorNum *dstErr);
 static WlzCMeshCellElm3D 	*WlzCMeshNewCElm3D(
 				  WlzCMesh3D *mesh,
 				  WlzErrorNum *dstErr);
 static WlzErrorNum 		WlzCMeshAllocGridCells2D(
 				  WlzCMesh2D *mesh);
+static WlzErrorNum 		WlzCMeshAllocGridCells2D5(
+				  WlzCMesh2D5 *mesh);
 static WlzErrorNum 		WlzCMeshAllocGridCells3D(
 				  WlzCMesh3D *mesh);
 static WlzErrorNum 		WlzCMeshAddElmToGrid2D(
 				  WlzCMesh2D *mesh,
 				  WlzCMeshElm2D *elm);
+static WlzErrorNum 		WlzCMeshAddElmToGrid2D5(
+				  WlzCMesh2D5 *mesh,
+				  WlzCMeshElm2D5 *elm);
 static WlzErrorNum 		WlzCMeshAddElmToGrid3D(
 				  WlzCMesh3D *mesh,
 				  WlzCMeshElm3D *elm);
@@ -211,6 +230,10 @@ static double	 		WlzCMeshCompGridBSz2D(
 				  int nN,
 				  double nPB,
 				  WlzDVertex2 mSz);
+static double	 		WlzCMeshCompGridBSz2D5(
+				  int nN,
+				  double nPB,
+				  WlzDVertex3 mSz);
 static double	 		WlzCMeshCompGridBSz3D(
 				  int nN,
 				  double nPB,
@@ -321,15 +344,22 @@ static WlzErrorNum 		WlzCMeshElmsFromLBTNode3D5(
 static WlzIVertex2 		WlzCMeshCellIdxVtx2D(
 				  WlzCMesh2D *mesh,
 				  WlzDVertex2 vtx);
+static WlzIVertex3 		WlzCMeshCellIdxVtx2D5(
+				  WlzCMesh2D5 *mesh,
+				  WlzDVertex3 vtx);
 static WlzIVertex3 		WlzCMeshCellIdxVtx3D(
 				  WlzCMesh3D *mesh,
 				  WlzDVertex3 vtx);
 static WlzCMeshElm2D 		*WlzCMeshAllocElm2D(
 				  WlzCMesh2D *mesh);
+static WlzCMeshElm2D5 		*WlzCMeshAllocElm2D5(
+				  WlzCMesh2D5 *mesh);
 static WlzCMeshElm3D 		*WlzCMeshAllocElm3D(
 				  WlzCMesh3D *mesh);
 static WlzCMeshEdgU2D 		*WlzCMeshEdgUseFindOpp2D(
 				  WlzCMeshEdgU2D *gEdu);
+static WlzCMeshEdgU2D5 		*WlzCMeshEdgUseFindOpp2D5(
+				  WlzCMeshEdgU2D5 *gEdu);
 static WlzCMeshFace 		*WlzCMeshFindOppFce(
 				  WlzCMeshFace *gFce);
 
@@ -359,7 +389,7 @@ WlzCMesh2D	*WlzCMeshNew2D(WlzErrorNum *dstErr)
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mesh->type = WLZ_CMESH_TRI2D;
+    mesh->type = WLZ_CMESH_2D;
     if(((mesh->res.nod.vec = AlcVectorNew(1, sizeof(WlzCMeshNod2D),
     					  nodBSz, NULL)) == NULL) ||
        ((mesh->res.elm.vec = AlcVectorNew(1, sizeof(WlzCMeshElm2D),
@@ -371,6 +401,53 @@ WlzCMesh2D	*WlzCMeshNew2D(WlzErrorNum *dstErr)
   if(errNum != WLZ_ERR_NONE)
   {
     (void )WlzCMeshFree2D(mesh);
+    mesh = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(mesh);
+}
+
+/*!
+* \return	New 2D5 mesh.
+* \ingroup	WlzMesh
+* \brief	Creates a new 2D5 mesh data structure with the resources
+*		optimized for the given number of mesh elements and nodes.
+*		It is better to under estimate the number of elements and
+*		nodes rather than over estimate and if zero is given some
+*		reasonable defaults will be used.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMesh2D5	*WlzCMeshNew2D5(WlzErrorNum *dstErr)
+{
+  WlzCMesh2D5	*mesh = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	nodBSz = 1024,
+  		elmBSz = 1024;
+
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((mesh = (WlzCMesh2D5 *)AlcCalloc(1, sizeof(WlzCMesh2D5))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    mesh->type = WLZ_CMESH_2D5;
+    if(((mesh->res.nod.vec = AlcVectorNew(1, sizeof(WlzCMeshNod2D5),
+    					  nodBSz, NULL)) == NULL) ||
+       ((mesh->res.elm.vec = AlcVectorNew(1, sizeof(WlzCMeshElm2D5),
+       					  elmBSz, NULL)) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzCMeshFree2D5(mesh);
     mesh = NULL;
   }
   if(dstErr)
@@ -406,7 +483,7 @@ WlzCMesh3D	*WlzCMeshNew3D(WlzErrorNum *dstErr)
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mesh->type = WLZ_CMESH_TET3D;
+    mesh->type = WLZ_CMESH_3D;
     if(((mesh->res.nod.vec = AlcVectorNew(1, sizeof(WlzCMeshNod3D),
     					  nodBSz, NULL)) == NULL) ||
        ((mesh->res.elm.vec = AlcVectorNew(1, sizeof(WlzCMeshElm3D),
@@ -436,6 +513,23 @@ WlzCMesh3D	*WlzCMeshNew3D(WlzErrorNum *dstErr)
 * \param	data			Callback data for function.
 */
 WlzErrorNum	WlzCMeshAddNewNodCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
+				      void *data)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  errNum = WlzCMeshAddEntCb(&(mesh->res.nod.newEntCb), fn, data);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Adds a new 2D5 node callback to the mesh.
+* \param	mesh			Given mesh.
+* \param	fn			Function to be called.
+* \param	data			Callback data for function.
+*/
+WlzErrorNum	WlzCMeshAddNewNodCb2D5(WlzCMesh2D5 *mesh, WlzCMeshCbFn fn,
 				      void *data)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -481,6 +575,23 @@ WlzErrorNum	WlzCMeshAddNewElmCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
+* \brief	Adds a new 2D5 element callback to the mesh.
+* \param	mesh			Given mesh.
+* \param	fn			Function to be called.
+* \param	data			Callback data for function.
+*/
+WlzErrorNum	WlzCMeshAddNewElmCb2D5(WlzCMesh2D5 *mesh, WlzCMeshCbFn fn,
+				      void *data)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  errNum = WlzCMeshAddEntCb(&(mesh->res.elm.newEntCb), fn, data);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
 * \brief	Adds a new 3D element callback to the mesh.
 * \param	mesh			Given mesh.
 * \param	fn			Function to be called.
@@ -503,6 +614,22 @@ WlzErrorNum	WlzCMeshAddNewElmCb3D(WlzCMesh3D *mesh, WlzCMeshCbFn fn,
 * \param	data			Callback data for function.
 */
 WlzErrorNum	WlzCMeshAddDelNodCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
+				      void *data)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  errNum = WlzCMeshAddEntCb(&(mesh->res.nod.delEntCb), fn, data);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Adds a 2D5 deleted node callback to the mesh.
+* \param	mesh			Given mesh.
+* \param	fn			Function to be called.
+* \param	data			Callback data for function.
+*/
+WlzErrorNum	WlzCMeshAddDelNodCb2D5(WlzCMesh2D5 *mesh, WlzCMeshCbFn fn,
 				      void *data)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -536,6 +663,23 @@ WlzErrorNum	WlzCMeshAddDelNodCb3D(WlzCMesh3D *mesh, WlzCMeshCbFn fn,
 * \param	data			Callback data for function.
 */
 WlzErrorNum	WlzCMeshAddDelElmCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
+				      void *data)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  errNum = WlzCMeshAddEntCb(&(mesh->res.elm.delEntCb), fn, data);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Adds a 2D5 deleted element callback to the mesh.
+* \param	mesh			Given mesh.
+* \param	fn			Function to be called.
+* \param	data			Callback data for function.
+*/
+WlzErrorNum	WlzCMeshAddDelElmCb2D5(WlzCMesh2D5 *mesh, WlzCMeshCbFn fn,
 				      void *data)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -581,6 +725,23 @@ WlzErrorNum	WlzCMeshRemNewNodCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
+* \brief	Removes a new 2D5 node callback to the mesh.
+* \param	mesh			Given mesh.
+* \param	fn			Function to be called.
+* \param	data			Callback data for function.
+*/
+WlzErrorNum	WlzCMeshRemNewNodCb2D5(WlzCMesh2D5 *mesh, WlzCMeshCbFn fn,
+				      void *data)
+{
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  WlzCMeshRemEntCb(&(mesh->res.nod.newEntCb), fn, data);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
 * \brief	Removes a new 3D node callback to the mesh.
 * \param	mesh			Given mesh.
 * \param	fn			Function to be called.
@@ -604,6 +765,23 @@ WlzErrorNum	WlzCMeshRemNewNodCb3D(WlzCMesh3D *mesh, WlzCMeshCbFn fn,
 * \param	data			Callback data for function.
 */
 WlzErrorNum	WlzCMeshRemNewElmCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
+				      void *data)
+{
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  WlzCMeshRemEntCb(&(mesh->res.elm.newEntCb), fn, data);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Removes a new 2D5 element callback to the mesh.
+* \param	mesh			Given mesh.
+* \param	fn			Function to be called.
+* \param	data			Callback data for function.
+*/
+WlzErrorNum	WlzCMeshRemNewElmCb2D5(WlzCMesh2D5 *mesh, WlzCMeshCbFn fn,
 				      void *data)
 {
   WlzErrorNum   errNum = WLZ_ERR_NONE;
@@ -649,6 +827,23 @@ WlzErrorNum	WlzCMeshRemDelNodCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
+* \brief	Removes a deleted 2D5 node callback to the mesh.
+* \param	mesh			Given mesh.
+* \param	fn			Function to be called.
+* \param	data			Callback data for function.
+*/
+WlzErrorNum	WlzCMeshRemDelNodCb2D5(WlzCMesh2D5 *mesh, WlzCMeshCbFn fn,
+				      void *data)
+{
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  WlzCMeshRemEntCb(&(mesh->res.nod.delEntCb), fn, data);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
 * \brief	Removes a deleted 3D node callback to the mesh.
 * \param	mesh			Given mesh.
 * \param	fn			Function to be called.
@@ -673,6 +868,23 @@ WlzErrorNum	WlzCMeshRemDelNodCb3D(WlzCMesh3D *mesh, WlzCMeshCbFn fn,
 */
 WlzErrorNum	WlzCMeshRemDelElmCb2D(WlzCMesh2D *mesh, WlzCMeshCbFn fn,
 				      void *data)
+{
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  WlzCMeshRemEntCb(&(mesh->res.elm.delEntCb), fn, data);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Removes a deleted 2D5 element callback to the mesh.
+* \param	mesh			Given mesh.
+* \param	fn			Function to be called.
+* \param	data			Callback data for function.
+*/
+WlzErrorNum	WlzCMeshRemDelElmCb2D5(WlzCMesh2D5 *mesh, WlzCMeshCbFn fn,
+				       void *data)
 {
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
@@ -830,6 +1042,76 @@ WlzCMeshNod2D	*WlzCMeshNewNod2D(WlzCMesh2D *mesh, WlzDVertex2 pos,
 }
 
 /*!
+* \return	New 2D5 mesh node.
+* \ingroup	WlzMesh
+* \brief	Creates a new 2D5 mesh node at the given position. It is
+*		assumed that a node does not already exist at the given
+*		position but for efficiency this is not checked.
+* \param	mesh			The mesh for resources.
+* \param	pos			Position for the node.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMeshNod2D5	*WlzCMeshNewNod2D5(WlzCMesh2D5 *mesh, WlzDVertex3 pos,
+				  WlzErrorNum *dstErr)
+{
+  WlzCMeshNod2D5 *nNod = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+
+  if((nNod = WlzCMeshAllocNod2D5(mesh)) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    nNod->pos = pos;
+    nNod->next = NULL;
+    WlzCMeshAddNodToGrid2D5(mesh, nNod);
+  }
+  if((errNum == WLZ_ERR_NONE) && mesh->res.nod.newEntCb)
+  {
+    errNum = WlzCMeshCallCallbacks(mesh, nNod, mesh->res.nod.newEntCb);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(nNod);
+}
+
+/*!
+* \return	New 3D mesh node.
+* \ingroup	WlzMesh
+* \brief	Creates a new 3D mesh node at the given position. A node
+*		must not already exist at this position.
+* \param	mesh			The mesh for resources.
+* \param	pos			Position for the node.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMeshNod3D	*WlzCMeshNewNod3D(WlzCMesh3D *mesh, WlzDVertex3 pos,
+				  WlzErrorNum *dstErr)
+{
+  WlzCMeshNod3D	*nNod = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+
+  if((nNod = WlzCMeshAllocNod3D(mesh)) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    nNod->pos = pos;
+    WlzCMeshAddNodToGrid3D(mesh, nNod);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(nNod);
+}
+
+/*!
 * \return	void
 * \ingroup	WlzMesh
 * \brief	Adds a new mesh node to the mesh's cell grid.
@@ -846,6 +1128,27 @@ static void	WlzCMeshAddNodToGrid2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
   /* Find the cell in the grid. */
   idx = WlzCMeshCellIdxVtx2D(mesh, nod->pos);
   cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
+  /* Add the node to the cell. */
+  nod->next = cell->nod; cell->nod = nod;
+}
+
+/*!
+* \return	void
+* \ingroup	WlzMesh
+* \brief	Adds a new mesh node to the mesh's cell grid.
+*		It is assumed that the given node is not already in the
+*		cell grid but this is not checked for.
+* \param	mesh			The mesh.
+* \param	nod			Node to add to the cell grid.
+*/
+static void	WlzCMeshAddNodToGrid2D5(WlzCMesh2D5 *mesh, WlzCMeshNod2D5 *nod)
+{
+  WlzIVertex3	idx;
+  WlzCMeshCell2D5 *cell;
+
+  /* Find the cell in the grid. */
+  idx = WlzCMeshCellIdxVtx2D5(mesh, nod->pos);
+  cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
   /* Add the node to the cell. */
   nod->next = cell->nod; cell->nod = nod;
 }
@@ -939,6 +1242,93 @@ static WlzErrorNum WlzCMeshAddElmToGrid2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
 	cElm->next = cell->cElm; cell->cElm = cElm;
 	/* Next cell of this element. */
 	cElm->nextCell = elm->cElm; elm->cElm = cElm;
+      }
+    }
+  }
+RETURN:
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Adds a new 2D5 mesh element to the mesh's cell grid.
+* 		It is assumed that the given element is not already in the
+* 		cell grid but this is not checked for.
+* \param	mesh			The mesh.
+* \param	elm			Element to add to the cell grid.
+*/
+static WlzErrorNum WlzCMeshAddElmToGrid2D5(WlzCMesh2D5 *mesh,
+					   WlzCMeshElm2D5 *elm)
+{
+  double	delta;
+  WlzIVertex3	idx;
+  WlzDVertex3	cBoxMin,
+  		cBoxMax;
+  WlzIBox3	cBox;
+  WlzDBox3	eBox;
+  WlzCMeshCell2D5 *cell;
+  WlzCMeshCellElm2D5 *cElm;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	eps = 0.001;
+
+  elm->cElm = NULL;
+  delta = eps * mesh->cGrid.cellSz;
+  /* Find grid cells that may be intersected by the element on the basis
+   * of this element's axis aligned bounding box. */
+  eBox = WlzCMeshElmBBox2D5(elm);
+  cBox.xMin = (int )floor((eBox.xMin - mesh->bBox.xMin - delta) /
+                          mesh->cGrid.cellSz);
+  cBox.yMin = (int )floor((eBox.yMin - mesh->bBox.yMin - delta) /
+                          mesh->cGrid.cellSz);
+  cBox.zMin = (int )floor((eBox.zMin - mesh->bBox.zMin - delta) /
+                          mesh->cGrid.cellSz);
+  cBox.xMax = (int )ceil((eBox.xMax - mesh->bBox.xMin + delta) /
+                         mesh->cGrid.cellSz);
+  cBox.yMax = (int )ceil((eBox.yMax - mesh->bBox.yMin + delta) /
+                         mesh->cGrid.cellSz);
+  cBox.zMax = (int )ceil((eBox.zMax - mesh->bBox.zMin + delta) /
+                         mesh->cGrid.cellSz);
+  cBox.xMin = WLZ_CLAMP(cBox.xMin, 0,  mesh->cGrid.nCells.vtX - 1);
+  cBox.xMax = WLZ_CLAMP(cBox.xMax, 0,  mesh->cGrid.nCells.vtX - 1);
+  cBox.yMin = WLZ_CLAMP(cBox.yMin, 0,  mesh->cGrid.nCells.vtY - 1);
+  cBox.yMax = WLZ_CLAMP(cBox.yMax, 0,  mesh->cGrid.nCells.vtY - 1);
+  cBox.zMin = WLZ_CLAMP(cBox.zMin, 0,  mesh->cGrid.nCells.vtZ - 1);
+  cBox.zMax = WLZ_CLAMP(cBox.zMax, 0,  mesh->cGrid.nCells.vtZ - 1);
+  /* For each of the grid cells found, check for an intersection with the
+   * element and then if there is an intersection add a grid cell element
+   * to the cell. */
+  for(idx.vtZ = cBox.zMin; idx.vtZ <= cBox.zMax; ++idx.vtZ)
+  {
+    cBoxMin.vtZ = mesh->bBox.zMin + (idx.vtZ * mesh->cGrid.cellSz);
+    cBoxMax.vtZ = mesh->bBox.zMin + ((idx.vtZ + 1) * mesh->cGrid.cellSz);
+    for(idx.vtY = cBox.yMin; idx.vtY <= cBox.yMax; ++idx.vtY)
+    {
+      cBoxMin.vtY = mesh->bBox.yMin + (idx.vtY * mesh->cGrid.cellSz);
+      cBoxMax.vtY = mesh->bBox.yMin + ((idx.vtY + 1) * mesh->cGrid.cellSz);
+      for(idx.vtX = cBox.xMin; idx.vtX <= cBox.xMax; ++idx.vtX)
+      {
+	cBoxMin.vtX = mesh->bBox.xMin + (idx.vtX * mesh->cGrid.cellSz);
+	cBoxMax.vtX = mesh->bBox.xMin + ((idx.vtX + 1) * mesh->cGrid.cellSz);
+	/* Faster to test using AABB(cell)/AABB(element) only and incur
+	 * false positives. */
+	if(WlzGeomTriangleAABBIntersect3D(elm->edu[0].nod->pos,
+					  elm->edu[1].nod->pos,
+					  elm->edu[2].nod->pos,
+					  cBoxMin, cBoxMax, 1) != 0)
+	{
+	  if((cElm = WlzCMeshNewCElm2D5(mesh, &errNum)) == NULL)
+	  {
+	    goto RETURN;
+	  }
+	  cElm->elm = elm;
+	  cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+	  cElm->cell = cell;
+	  /* Next element of this cell. */
+	  cElm->next = cell->cElm; cell->cElm = cElm;
+	  /* Next cell of this element. */
+	  cElm->nextCell = elm->cElm; elm->cElm = cElm;
+	}
       }
     }
   }
@@ -1086,6 +1476,56 @@ static WlzCMeshCellElm2D *WlzCMeshNewCElm2D(WlzCMesh2D *mesh,
 /*!
 * \return	New mesh cell element.
 * \ingroup	WlzMesh
+* \brief	Gets a new 2D5 mesh cell element allocating more cell
+* 		elements as required.
+* \param	mesh			The mesh.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzCMeshCellElm2D5 *WlzCMeshNewCElm2D5(WlzCMesh2D5 *mesh,
+				            WlzErrorNum *dstErr)
+{
+  int		idE;
+  WlzCMeshCellElm2D5 *cElm = NULL;
+  WlzCMeshCellGrid2D5 *cGrid;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int 	elmBSz = 1024;
+
+  cGrid = &(mesh->cGrid);
+  if(cGrid->freeCE == NULL)
+  {
+    cGrid->allCE = AlcBlockStackNew(elmBSz, sizeof(WlzCMeshCellElm2D5),
+				    cGrid->allCE, NULL);
+    
+    if(cGrid->allCE == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      cElm = (WlzCMeshCellElm2D5 *)(cGrid->allCE->elements);
+      for(idE = 0; idE < elmBSz; ++idE)
+      {
+	cElm->next = cGrid->freeCE;
+	cGrid->freeCE = cElm;
+	++cElm;
+      }
+    }
+  }
+  if(cGrid->freeCE != NULL)
+  {
+    cElm = cGrid->freeCE;
+    cGrid->freeCE = cElm->next;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(cElm);
+}
+
+/*!
+* \return	New mesh cell element.
+* \ingroup	WlzMesh
 * \brief	Gets a new 3D mesh cell element allocating more cell
 * 		elements as required.
 * \param	mesh			The mesh.
@@ -1150,6 +1590,47 @@ static void	WlzCMeshRemNodFromGrid2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
   /* Find the cell in the grid. */
   idx = WlzCMeshCellIdxVtx2D(mesh, nod->pos);
   cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
+  /* Remove node from linked list of nodes in the cell. */
+  if(cell->nod != NULL)
+  {
+    if(cell->nod == nod)
+    {
+      cell->nod = nod->next;
+    }
+    else
+    {
+      nod0 = cell->nod;
+      while((nod1 = nod0->next) != NULL)
+      {
+	if(nod1 == nod)
+	{
+	  nod0->next = nod1->next;
+	  break;
+	}
+	nod0 = nod1;
+      }
+    }
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzMesh
+* \brief	Removes a mesh node from the mesh's cell grid.
+* \param	mesh			The mesh.
+* \param	nod			New node to add.
+*/
+static void	WlzCMeshRemNodFromGrid2D5(WlzCMesh2D5 *mesh,
+                                          WlzCMeshNod2D5 *nod)
+{
+  WlzCMeshNod2D5 *nod0,
+  		*nod1;
+  WlzIVertex3	idx;
+  WlzCMeshCell2D5 *cell;
+
+  /* Find the cell in the grid. */
+  idx = WlzCMeshCellIdxVtx2D5(mesh, nod->pos);
+  cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
   /* Remove node from linked list of nodes in the cell. */
   if(cell->nod != NULL)
   {
@@ -1256,6 +1737,48 @@ static void	WlzCMeshRemElmFromGrid2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
 
 /*!
 * \ingroup	WlzMesh
+* \brief	Removes a 2D5 mesh element from the cell linked list.
+* \param	mesh			The mesh.
+* \param	elm			Elememnt to remove.
+*/
+static void	WlzCMeshRemElmFromGrid2D5(WlzCMesh2D5 *mesh,
+					  WlzCMeshElm2D5 *elm)
+{
+  WlzCMeshCellElm2D5 *cElm0,
+  		*cElm1,
+		*cElm2;
+  WlzCMeshCell2D5 *cell;
+
+  cElm0 = elm->cElm;
+  while(cElm0 != NULL)
+  {
+    cell = cElm0->cell;
+    cElm1 = NULL;
+    cElm2 = cell->cElm;
+    while(cElm2 != NULL)
+    {
+      if(cElm2->elm == elm)
+      {
+	if(cElm1 == NULL)
+	{
+	  cell->cElm = cElm2->next;
+	}
+	else
+	{
+	  cElm1->next = cElm2->next;
+	}
+	cElm2->next = mesh->cGrid.freeCE; mesh->cGrid.freeCE = cElm2;
+        break;
+      }
+      cElm1 = cElm2;
+      cElm2 = cElm2->next;           /* Next element intersecting this cell. */
+    }
+    cElm0 = cElm0->nextCell;            /* Next cell intersected by element. */
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
 * \brief	Removes a 3D mesh element from the cell linked list.
 * \param	mesh			The mesh.
 * \param	elm			Elememnt to remove.
@@ -1296,38 +1819,6 @@ static void	WlzCMeshRemElmFromGrid3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm)
 }
 
 /*!
-* \return	New 3D mesh node.
-* \ingroup	WlzMesh
-* \brief	Creates a new 3D mesh node at the given position. A node
-*		must not already exist at this position.
-* \param	mesh			The mesh for resources.
-* \param	pos			Position for the node.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-WlzCMeshNod3D	*WlzCMeshNewNod3D(WlzCMesh3D *mesh, WlzDVertex3 pos,
-				  WlzErrorNum *dstErr)
-{
-  WlzCMeshNod3D	*nNod = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-
-  if((nNod = WlzCMeshAllocNod3D(mesh)) == NULL)
-  {
-    errNum = WLZ_ERR_MEM_ALLOC;
-  }
-  else
-  {
-    nNod->pos = pos;
-    WlzCMeshAddNodToGrid3D(mesh, nNod);
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(nNod);
-}
-
-/*!
 * \return	New 2D mesh node or NULL on error.
 * \ingroup	WlzMesh
 * \brief	Allocates a new 2D mesh node and sets it's index. 
@@ -1337,11 +1828,35 @@ WlzCMeshNod3D	*WlzCMeshNewNod3D(WlzCMesh3D *mesh, WlzDVertex3 pos,
 */
 WlzCMeshNod2D 	*WlzCMeshAllocNod2D(WlzCMesh2D *mesh)
 {
-  WlzCMeshEntRes	*nRes;
+  WlzCMeshEntRes *nRes;
   WlzCMeshNod2D	*nod = NULL;
   
   nRes = &(mesh->res.nod);
   if((nod = (WlzCMeshNod2D *)
+	    (AlcVectorExtendAndGet(nRes->vec, nRes->nextIdx))) != NULL)
+  {
+    ++(nRes->numEnt);
+    ++(nRes->maxEnt);
+    nod->idx = nRes->nextIdx++;
+  }
+  return(nod);
+}
+
+/*!
+* \return	New 2D5 mesh node or NULL on error.
+* \ingroup	WlzMesh
+* \brief	Allocates a new 2D5 mesh node and sets it's index. 
+*		For efficiency this function does not check it's parameters.
+* \param	mesh			Mesh with resources.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMeshNod2D5 	*WlzCMeshAllocNod2D5(WlzCMesh2D5 *mesh)
+{
+  WlzCMeshEntRes *nRes;
+  WlzCMeshNod2D5 *nod = NULL;
+  
+  nRes = &(mesh->res.nod);
+  if((nod = (WlzCMeshNod2D5 *)
 	    (AlcVectorExtendAndGet(nRes->vec, nRes->nextIdx))) != NULL)
   {
     ++(nRes->numEnt);
@@ -1374,6 +1889,7 @@ WlzCMeshNod3D 	*WlzCMeshAllocNod3D(WlzCMesh3D *mesh)
   }
   return(nod);
 }
+
 /*!
 * \return	New 2D mesh element.
 * \ingroup	WlzMesh
@@ -1412,6 +1928,56 @@ WlzCMeshElm2D 	*WlzCMeshNewElm2D(WlzCMesh2D *mesh,
   if(errNum == WLZ_ERR_NONE)
   {
     errNum = WlzCMeshAddElmToGrid2D(mesh, nElm);
+  }
+  if((errNum == WLZ_ERR_NONE) && mesh->res.elm.newEntCb)
+  {
+    errNum = WlzCMeshCallCallbacks(mesh, nElm, mesh->res.elm.newEntCb);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(nElm);
+}
+
+/*!
+* \return	New 2D5 mesh element.
+* \ingroup	WlzMesh
+* \brief	Creates a new 2D5 mesh element connecting the given
+*		mesh nodes but does not connect this new mesh element
+*		to the rest of the mesh apart from changing the parent
+*		edges of the mesh nodes.
+* \param	mesh			The mesh for resources.
+* \param	nod0			First mesh node.
+* \param	nod1			Second mesh node.
+* \param	nod2			Third mesh node.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMeshElm2D5 	*WlzCMeshNewElm2D5(WlzCMesh2D5 *mesh,
+				   WlzCMeshNod2D5 *nod0, WlzCMeshNod2D5 *nod1,
+				   WlzCMeshNod2D5 *nod2, WlzErrorNum *dstErr)
+{
+  WlzCMeshElm2D5 *nElm = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((nod0 == NULL) || (nod1 == NULL) || (nod2 == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    if((nElm = WlzCMeshAllocElm2D5(mesh)) == NULL) 
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshSetElm2D5(mesh, nElm, nod0, nod1, nod2);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshAddElmToGrid2D5(mesh, nElm);
   }
   if((errNum == WLZ_ERR_NONE) && mesh->res.elm.newEntCb)
   {
@@ -1478,6 +2044,7 @@ WlzCMeshElm3D 	*WlzCMeshNewElm3D(WlzCMesh3D *mesh,
   }
   return(nElm);
 }
+
 /*!
 * \return	New 2D mesh element or NULL on error.
 * \ingroup	WlzMesh
@@ -1493,6 +2060,33 @@ static WlzCMeshElm2D *WlzCMeshAllocElm2D(WlzCMesh2D *mesh)
   
   eRes = &(mesh->res.elm);
   if((elm = (WlzCMeshElm2D *)
+	    (AlcVectorExtendAndGet(eRes->vec, eRes->nextIdx))) != NULL)
+  {
+    ++(eRes->numEnt);
+    ++(eRes->maxEnt);
+    elm->idx = eRes->nextIdx++;
+    elm->edu[0].next = &(elm->edu[1]);
+    elm->edu[1].next = &(elm->edu[2]);
+    elm->edu[2].next = &(elm->edu[0]);
+  }
+  return(elm);
+}
+
+/*!
+* \return	New 2D5 mesh element or NULL on error.
+* \ingroup	WlzMesh
+* \brief	Allocates a new 2D5 mesh element and sets it's index. 
+*		Internal edge connectivities are set.
+* 		For efficiency this function does not check it's parameters.
+* \param	mesh			Mesh with resources.
+*/
+static WlzCMeshElm2D5 *WlzCMeshAllocElm2D5(WlzCMesh2D5 *mesh)
+{
+  WlzCMeshEntRes *eRes;
+  WlzCMeshElm2D5 *elm = NULL;
+  
+  eRes = &(mesh->res.elm);
+  if((elm = (WlzCMeshElm2D5 *)
 	    (AlcVectorExtendAndGet(eRes->vec, eRes->nextIdx))) != NULL)
   {
     ++(eRes->numEnt);
@@ -1595,6 +2189,81 @@ WlzErrorNum  	WlzCMeshSetElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm,
     {
       edu = &(elm->edu[idE]);
       if((edu->opp = WlzCMeshEdgUseFindOpp2D(edu)) != NULL)
+      {
+        edu->opp->opp = edu;
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Sets up the edge and node connectivities within the given
+*		2D5 mesh element.
+*		The geometry of the element is checked to make sure that
+*		it's area is greater than the mesh tolerance and that
+*		the nodes are in CCW order. If this test fails an error
+*		is returned.
+* \param	mesh			The mesh.
+* \param	elm			Given mesh element.
+* \param	nod0			First mesh node of element.
+* \param	nod1			Second mesh node of element.
+* \param	nod2			Third mesh node of element.
+*/
+WlzErrorNum  	WlzCMeshSetElm2D5(WlzCMesh2D5 *mesh, WlzCMeshElm2D5 *elm,
+				 WlzCMeshNod2D5 *nod0, WlzCMeshNod2D5 *nod1,
+				 WlzCMeshNod2D5 *nod2)
+{
+  int		idE,
+  		idN;
+  double	lenSq,
+  		sA2;
+  WlzCMeshEdgU2D5 *edu;
+  WlzDVertex3	dsp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  sA2 = WlzGeomTriangleArea2Sq3(nod0->pos, nod1->pos, nod2->pos);
+  if(sA2 < WLZ_MESH_TOLERANCE_SQ)
+  {
+    /* Element either has a very small area or is CW. */
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    elm->edu[0].nod = nod0;
+    elm->edu[1].nod = nod1;
+    elm->edu[2].nod = nod2;
+    /* Set internal adjacencies and check for maximum edge length. */
+    for(idE = 0; idE < 3; ++idE)
+    {
+      idN = (idE + 1) % 3;
+      edu = &(elm->edu[idE]);
+      edu->elm = elm;
+      edu->next = &(elm->edu[idN]);
+      if(edu->nod->edu)
+      {
+        edu->nnxt = edu->nod->edu->nnxt;
+	edu->nod->edu->nnxt = edu;
+      }
+      else
+      {
+        edu->nnxt = edu;
+	edu->nod->edu = edu;
+      }
+      WLZ_VTX_3_SUB(dsp, elm->edu[idE].nod->pos, elm->edu[idN].nod->pos);
+      lenSq = WLZ_VTX_3_SQRLEN(dsp);
+      if(lenSq > mesh->maxSqEdgLen)
+      {
+        mesh->maxSqEdgLen = lenSq;
+      }
+    }
+    /* Set external adjacencies. */
+    for(idE = 0; idE < 3; ++idE)
+    {
+      edu = &(elm->edu[idE]);
+      if((edu->opp = WlzCMeshEdgUseFindOpp2D5(edu)) != NULL)
       {
         edu->opp->opp = edu;
       }
@@ -1804,10 +2473,13 @@ WlzErrorNum	WlzCMeshFree(WlzCMeshP mesh)
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         errNum = WlzCMeshFree2D(mesh.m2);
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_2D5:
+        errNum = WlzCMeshFree2D5(mesh.m2d5);
+	break;
+      case WLZ_CMESH_3D:
         errNum = WlzCMeshFree3D(mesh.m3);
 	break;
       default:
@@ -1838,6 +2510,31 @@ WlzErrorNum	WlzCMeshFree2D(WlzCMesh2D *mesh)
     (void )AlcVectorFree(mesh->res.nod.vec);
     (void )AlcBlockStackFree(mesh->cGrid.allCE);
     (void )WlzCMeshFreeGridCells2D(mesh);
+    AlcFree(mesh);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Free's the 2D5 mesh, it's cells, nodes and elements.
+* \param	mesh			Mesh to free.
+*/
+WlzErrorNum	WlzCMeshFree2D5(WlzCMesh2D5 *mesh)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(WlzUnlink(&(mesh->linkcount), &errNum))
+  {
+    (void )AlcVectorFree(mesh->res.elm.vec);
+    (void )AlcVectorFree(mesh->res.nod.vec);
+    (void )AlcBlockStackFree(mesh->cGrid.allCE);
+    (void )WlzCMeshFreeGridCells2D5(mesh);
     AlcFree(mesh);
   }
   return(errNum);
@@ -1892,6 +2589,34 @@ WlzErrorNum	WlzCMeshDelNod2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
   {
     WlzCMeshRemNodFromGrid2D(mesh, nod);
     WlzCMeshNodFree2D(mesh, nod);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Deletes the 2D5 mesh node. This function assumes that the node
+*		is no longer used by any elements.
+* \param	mesh			The mesh to which the node belongs.
+* \param	nod			The given node.
+*/
+WlzErrorNum	WlzCMeshDelNod2D5(WlzCMesh2D5 *mesh, WlzCMeshNod2D5 *nod)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((mesh == NULL) || (nod == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((errNum == WLZ_ERR_NONE) && mesh->res.nod.delEntCb)
+  {
+    errNum = WlzCMeshCallCallbacks(mesh, nod, mesh->res.nod.delEntCb);
+  }
+  else
+  {
+    WlzCMeshRemNodFromGrid2D5(mesh, nod);
+    WlzCMeshNodFree2D5(mesh, nod);
   }
   return(errNum);
 }
@@ -2002,6 +2727,81 @@ WlzErrorNum	WlzCMeshDelElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
+* \brief	Deletes the 2D5 mesh element and any mesh nodes that are
+*		used exclusively by this mesh element. 
+* \param	mesh			The mesh to which the element belongs.
+* \param	elm			The given element.
+*/
+WlzErrorNum	WlzCMeshDelElm2D5(WlzCMesh2D5 *mesh, WlzCMeshElm2D5 *elm)
+{
+  int		idE;
+  WlzCMeshEdgU2D5 *edu0,
+  		*edu1,
+		*edu2;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+#ifdef WLZ_CMESH_DEBUG_VERIFY_DELETE
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshVerify2D5(mesh, NULL, 1, stderr);
+  }
+#endif
+  if((mesh == NULL) || (elm == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((errNum == WLZ_ERR_NONE) && mesh->res.elm.delEntCb)
+  {
+    errNum = WlzCMeshCallCallbacks(mesh, elm, mesh->res.elm.delEntCb);
+  }
+  else
+  {
+    for(idE = 0; idE < 3; ++idE)
+    {
+      edu0 = elm->edu + idE;
+      /* Need to make sure that the opp - opp link is back to this
+       * element and not some other that will replace it. */
+      if((edu0->opp != NULL) && (edu0->opp->opp != NULL) &&
+         (edu0->opp->opp->elm == elm))
+      {
+        edu0->opp->opp = NULL;
+      }
+      if(edu0 == edu0->nnxt)
+      {
+        (void )WlzCMeshDelNod2D5(mesh, edu0->nod);
+      }
+      else
+      {
+        edu1 = edu0;
+	while((edu2 = edu1->nnxt) != edu0)
+	{
+	  edu1 = edu2;
+	}
+	edu1->nnxt = edu0->nnxt;
+	if(edu0->nod->edu == edu0)
+	{
+	  edu0->nod->edu = edu1;
+	}
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzCMeshRemElmFromGrid2D5(mesh, elm);
+      WlzCMeshElmFree2D5(mesh, elm);
+    }
+  }
+#ifdef WLZ_CMESH_DEBUG_VERIFY_DELETE
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzCMeshVerify2D5(mesh, NULL, 1, stderr);
+  }
+#endif
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
 * \brief	Deletes the 3D mesh element and any mesh nodes that are
 *		used exclusively by this mesh element. 
 * \param	mesh			The mesh to which the element belongs.
@@ -2096,6 +2896,24 @@ void 		WlzCMeshNodFree2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
 /*!
 * \return	void
 * \ingroup	WlzMesh
+* \brief	Free's the given 2D5 mesh node. Actually just sets the
+*		node's index to mark it freed and then decrements
+*		the number of mesh nodes.
+* \param	mesh			Input mesh
+* \param	nod			Given mesh node.
+*/
+void 		WlzCMeshNodFree2D5(WlzCMesh2D5 *mesh, WlzCMeshNod2D5 *nod)
+{
+  if(nod && (nod->idx >= 0))
+  {
+    WlzCMeshEntMarkFree(&(nod->idx));
+    --(mesh->res.nod.numEnt);
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzMesh
 * \brief	Free's the given 3D mesh node. Actually just sets the
 *		node's index to mark it freed and then decrements
 *		the number of mesh nodes.
@@ -2121,6 +2939,24 @@ void 		WlzCMeshNodFree3D(WlzCMesh3D *mesh, WlzCMeshNod3D *nod)
 * \param	elm			Given mesh element.
 */
 void		WlzCMeshElmFree2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
+{
+  if(elm && (elm->idx >= 0))
+  {
+    WlzCMeshEntMarkFree(&(elm->idx));
+    --(mesh->res.elm.numEnt);
+  }
+}
+
+/*!
+* \return	void
+* \ingroup	WlzMesh
+* \brief	Free's the given 2D5 mesh element. Actually just sets the
+*		element's index to mark it freed and then decrements
+*		the number of mesh elements.
+* \param	mesh			Input mesh
+* \param	elm			Given mesh element.
+*/
+void		WlzCMeshElmFree2D5(WlzCMesh2D5 *mesh, WlzCMeshElm2D5 *elm)
 {
   if(elm && (elm->idx >= 0))
   {
@@ -2189,6 +3025,52 @@ WlzErrorNum	WlzCMeshAffineTransformMesh2D(WlzCMesh2D *mesh,
     errNum = WlzCMeshReassignGridCells2D(mesh, nNod);
     /* Recompute maximum edge length. */
     WlzCMeshUpdateMaxSqEdgLen2D(mesh);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Affine transforms the node positions of the given 2D5 mesh.
+* \param	mesh			Given mesh.
+* \param	tr			Affine transform.
+*/
+WlzErrorNum	WlzCMeshAffineTransformMesh2D5(WlzCMesh2D5 *mesh,
+					       WlzAffineTransform *tr)
+{
+  int		idN,
+  		nNod;
+  WlzCMeshNod2D5 *nod;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((mesh == NULL) || (tr == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(WlzAffineTransformDimension(tr, NULL) != 3)
+  {
+    errNum = WLZ_ERR_TRANSFORM_TYPE;
+  }
+  else
+  {
+    /* Transform the nodes. */
+    nNod = 0;
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	++nNod;
+        nod->pos = WlzAffineTransformVertexD3(tr, nod->pos, NULL);
+      }
+    }
+    /* Update the bounding box. */
+    WlzCMeshUpdateBBox2D5(mesh);
+    /* Recompute maximum edge length. */
+    WlzCMeshUpdateMaxSqEdgLen2D5(mesh);
+    /* Compute a new cell grid and reassign nodes to it. */
+    errNum = WlzCMeshReassignGridCells2D5(mesh, nNod);
   }
   return(errNum);
 }
@@ -3455,6 +4337,8 @@ double 		WlzCMeshElmMinEdgLnSq2D(WlzCMeshElm2D *elm)
   return(minLenSq);
 }
 
+/* TODO HACK I've reached here from the top of file adding 2D5 HACK TODO */
+
 /*!
 * \return	Square of the minimum edge length for the element,
 *		this will be negative for invalid elements.
@@ -3531,6 +4415,22 @@ static void	  WlzCMeshFreeGridCells2D(WlzCMesh2D *mesh)
 
 /*!
 * \ingroup	WlzMesh
+* \brief	Free's the grid cells of a 2D5 mesh.
+* \param	mesh			Given 2D5 mesh.
+*/
+static void	  WlzCMeshFreeGridCells2D5(WlzCMesh2D5 *mesh)
+{
+  if((mesh != NULL) && (mesh->cGrid.cells != NULL))
+  {
+    AlcFree(**(mesh->cGrid.cells));
+    AlcFree(*(mesh->cGrid.cells));
+    AlcFree(mesh->cGrid.cells);
+    mesh->cGrid.cells = NULL;
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
 * \brief	Free's the grid cells of a 3D mesh.
 * \param	mesh			Given 3D mesh.
 */
@@ -3582,6 +4482,60 @@ static WlzErrorNum WlzCMeshAllocGridCells2D(WlzCMesh2D *mesh)
     {
       *(cGrid->cells + idy) = cellP;
       cellP += cGrid->nCells.vtX;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Allocates the grid cells of a 2D5 mesh.
+* \param	mesh			Given 2D5 mesh.
+*/
+static WlzErrorNum WlzCMeshAllocGridCells2D5(WlzCMesh2D5 *mesh)
+{
+  int		idy,
+  		idz;
+  WlzCMeshCell2D5 *cellP;
+  WlzCMeshCell2D5 **cellPP;
+  WlzCMeshCellGrid2D5 *cGrid;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    cGrid = &(mesh->cGrid);
+    if(((cellP = (WlzCMeshCell2D5 *)
+                 AlcCalloc(cGrid->nCells.vtZ * cGrid->nCells.vtY *
+		           cGrid->nCells.vtX,
+			   sizeof(WlzCMeshCell2D5))) == NULL) ||
+       ((cellPP = (WlzCMeshCell2D5 **)
+			AlcMalloc(cGrid->nCells.vtZ * cGrid->nCells.vtY *
+				  sizeof(WlzCMeshCell2D5 *))) == NULL) ||
+       ((cGrid->cells = (WlzCMeshCell2D5 ***)
+			AlcMalloc(cGrid->nCells.vtZ *
+				  sizeof(WlzCMeshCell2D5 **))) == NULL))
+    {
+      AlcFree(cellP);
+      AlcFree(cellPP);
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idz = 0; idz < cGrid->nCells.vtZ; ++idz)
+    {
+      *(cGrid->cells + idz) = cellPP;
+      for(idy = 0; idy < cGrid->nCells.vtY; ++idy)
+      {
+	*(*(cGrid->cells + idz) + idy) = cellP;
+	cellP += cGrid->nCells.vtX;
+      }
+      cellPP += cGrid->nCells.vtY;
     }
   }
   return(errNum);
@@ -3735,6 +4689,94 @@ WlzErrorNum 	WlzCMeshReassignGridCells2D(WlzCMesh2D *mesh, int newNumNod)
 *					or a small number (1024) will be used
 *					(which ever is the greater).
 */
+WlzErrorNum 	WlzCMeshReassignGridCells2D5(WlzCMesh2D5 *mesh, int newNumNod)
+{
+  int		idE,
+  		idN;
+  WlzDVertex3	mSz;
+  WlzCMeshNod2D5 *nod;
+  WlzCMeshElm2D5 *elm;
+  AlcBlockStack *bStack;
+  WlzCMeshCellGrid2D5 *cGrid;
+  WlzCMeshCellElm2D5 *cElm;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	nodBSz = 1024; 	  /* Minimum number of nodes for which to
+                                     allocate space. */
+  const double	nodPerCell = 1.0; /* Number of nodes per cell on average. */
+
+  if(newNumNod <= 0)
+  {
+    newNumNod = (mesh->res.nod.numEnt < nodBSz)?
+                nodBSz: mesh->res.nod.numEnt;
+  }
+  /* This assumes that the mesh nodes will be evenly distributed over
+   * the LBT domain (which they're not). */
+  mSz.vtX = ceil(mesh->bBox.xMax - mesh->bBox.xMin + 1.0);
+  mSz.vtY = ceil(mesh->bBox.yMax - mesh->bBox.yMin + 1.0);
+  mSz.vtZ = ceil(mesh->bBox.zMax - mesh->bBox.zMin + 1.0);
+  cGrid = &(mesh->cGrid);
+  cGrid->cellSz = WlzCMeshCompGridBSz2D5(newNumNod, nodPerCell, mSz);
+  cGrid->nCells.vtX = (int )ceil(mSz.vtX / cGrid->cellSz) + 1;
+  cGrid->nCells.vtY = (int )ceil(mSz.vtY / cGrid->cellSz) + 1;
+  cGrid->nCells.vtZ = (int )ceil(mSz.vtZ / cGrid->cellSz) + 1;
+  /* Reclaim all cell elements. */
+  cGrid->freeCE = NULL;
+  bStack = cGrid->allCE;
+  while(bStack != NULL)
+  {
+    cElm = (WlzCMeshCellElm2D5 *)(bStack->elements);
+    for(idE = 0; idE < bStack->maxElm; ++idE)
+    {
+      cElm->next = cGrid->freeCE;
+      cGrid->freeCE = cElm;
+      ++cElm;
+    }
+    bStack = bStack->next;
+  }
+  /* Reallocate the grid cells. */
+  WlzCMeshFreeGridCells2D5(mesh);
+  errNum = WlzCMeshAllocGridCells2D5(mesh);
+  /* Add all nodes to grid of cells. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	WlzCMeshAddNodToGrid2D5(mesh, nod);
+      }
+    }
+  }
+  /* Add all elements to grid of cells. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	if((errNum = WlzCMeshAddElmToGrid2D5(mesh, elm)) != WLZ_ERR_NONE)
+	{
+	  break;
+	}
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Wlz error code.
+* \ingroup	WlzMesh
+* \brief	Allocates a new cell grid and then reassigns the nodes
+*		and elements to the cells.
+* \param	mesh			The mesh.
+* \param	newNumNod		New expected number of nodes.
+*					If zero the current number of nodes
+*					or a small number (1024) will be used
+*					(which ever is the greater).
+*/
 WlzErrorNum 	WlzCMeshReassignGridCells3D(WlzCMesh3D *mesh, int newNumNod)
 {
   int		idE,
@@ -3835,20 +4877,40 @@ static double	WlzCMeshCompGridBSz2D(int nN, double nPC, WlzDVertex2 mSz)
 /*!
 * \return	Bucket size.
 * \ingroup	WlzMesh
+* \brief	Computes the bucket size for the 2D5 mesh node location grid.
+*		The function assumes that nodes are evenly distributed over
+*		the bounding box of the mesh and uses simple scaling to
+*		compute  the bucket size. The function should be called for
+*		the x, and y components.
+* \param	Nn			Total number of nodes in the mesh.
+* \param	nPC			Number of nodes per cell.
+* \param	mSz			Mesh size.
+*/
+static double 	WlzCMeshCompGridBSz2D5(int nN, double nPC, WlzDVertex3 mSz)
+{
+  double	bSz;
+
+  bSz = pow(fabs((nPC * mSz.vtX * mSz.vtY * mSz.vtZ)/(nN + 1.0)), 1.0 / 3.0);
+  return(bSz);
+}
+
+/*!
+* \return	Bucket size.
+* \ingroup	WlzMesh
 * \brief	Computes the bucket size for the 3D mesh node location grid.
 *		The function assumes that nodes are evenly distributed over
 *		the bounding box of the mesh and uses simple scaling to
 *		compute  the bucket size. The function should be called for
 *		the x, and y components.
 * \param	Nn			Total number of nodes in the mesh.
-* \param	nPB			Number of nodes per bucket.
+* \param	nPC			Number of nodes per cell.
 * \param	mSz			Mesh size.
 */
-static double 	WlzCMeshCompGridBSz3D(int nN, double nPB, WlzDVertex3 mSz)
+static double 	WlzCMeshCompGridBSz3D(int nN, double nPC, WlzDVertex3 mSz)
 {
   double	bSz;
 
-  bSz = pow(fabs((nPB * mSz.vtX * mSz.vtY * mSz.vtZ)/(nN + 1.0)), 1.0 / 3.0);
+  bSz = pow(fabs((nPC * mSz.vtX * mSz.vtY * mSz.vtZ)/(nN + 1.0)), 1.0 / 3.0);
   return(bSz);
 }
 
@@ -3868,6 +4930,27 @@ static WlzIVertex2 WlzCMeshCellIdxVtx2D(WlzCMesh2D *mesh, WlzDVertex2 vtx)
   idx.vtX = WLZ_CLAMP(idx.vtX, 0,  mesh->cGrid.nCells.vtX - 1);
   idx.vtY = (int )((vtx.vtY - mesh->bBox.yMin) / mesh->cGrid.cellSz);
   idx.vtY = WLZ_CLAMP(idx.vtY, 0,  mesh->cGrid.nCells.vtY - 1);
+  return(idx);
+}
+
+/*!
+* \return	Mesh grid bucket indices.
+* \ingroup	WlzMesh
+* \brief	Computes the mesh cell grid indices for a given
+*		vertex position.
+* \param	mesh			The mesh.
+* \param	vtx			Given vertex.
+*/
+static WlzIVertex3 WlzCMeshCellIdxVtx2D5(WlzCMesh2D5 *mesh, WlzDVertex3 vtx)
+{
+  WlzIVertex3	idx;
+
+  idx.vtX = (int )((vtx.vtX - mesh->bBox.xMin) / mesh->cGrid.cellSz);
+  idx.vtX = WLZ_CLAMP(idx.vtX, 0,  mesh->cGrid.nCells.vtX - 1);
+  idx.vtY = (int )((vtx.vtY - mesh->bBox.yMin) / mesh->cGrid.cellSz);
+  idx.vtY = WLZ_CLAMP(idx.vtY, 0,  mesh->cGrid.nCells.vtY - 1);
+  idx.vtZ = (int )((vtx.vtZ - mesh->bBox.zMin) / mesh->cGrid.cellSz);
+  idx.vtZ = WLZ_CLAMP(idx.vtZ, 0,  mesh->cGrid.nCells.vtZ - 1);
   return(idx);
 }
 
@@ -4154,15 +5237,16 @@ int             WlzCMeshElmEnclosingPos(WlzCMeshP mesh,
 {
   int           elmIdx = -1;
 
-  if(mesh.m2->type == WLZ_CMESH_TRI2D)
+  switch(mesh.m2->type)
   {
-    elmIdx = WlzCMeshElmEnclosingPos2D(mesh.m2, lastElmIdx, pX, pY,
-                                       exhaustive, dstCloseNod);
-  }
-  else if(mesh.m3->type == WLZ_CMESH_TET3D)
-  {
-    elmIdx = WlzCMeshElmEnclosingPos3D(mesh.m3, lastElmIdx, pX, pY, pZ,
-    				       exhaustive, dstCloseNod);
+    case WLZ_CMESH_2D:
+      elmIdx = WlzCMeshElmEnclosingPos2D(mesh.m2, lastElmIdx, pX, pY,
+					 exhaustive, dstCloseNod);
+      break;
+    case WLZ_CMESH_3D:
+      elmIdx = WlzCMeshElmEnclosingPos3D(mesh.m3, lastElmIdx, pX, pY, pZ,
+					 exhaustive, dstCloseNod);
+      break;
   }
   return(elmIdx);
 }
@@ -5159,6 +6243,154 @@ WlzCMesh3D	*WlzCMeshFromObj3D(WlzObject *obj,
 }
 
 /*!
+* \return	New mesh or NULL on error.
+* \ingroup	WlzMesh
+* \brief	Constructs a 2D5 mesh from a 3D geometric model.
+* \param	model			The given model which must be 2D.
+* \param	dstErr			Destination error pointer may be NULL.
+*/
+WlzCMesh2D5	*WlzCMeshFromGM(WlzGMModel *model, WlzErrorNum *dstErr)
+{
+  int		nElm,
+  		nNod,
+		maxFce,
+		maxVtx;
+  WlzCMesh2D5	*mesh;
+  WlzGMResIdxTb	*resIdxTb = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(model == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(model->type)
+    {
+      case WLZ_GMMOD_3I:
+      case WLZ_GMMOD_3D:
+      case WLZ_GMMOD_3N:
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+     /* Index the verticies. */
+     resIdxTb = WlzGMModelResIdx(model, WLZ_GMELMFLG_VERTEX, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    maxFce = model->res.face.numIdx;
+    maxVtx = model->res.vertex.numIdx;
+    if(((nNod = model->res.vertex.numElm) < 3) ||
+       ((nElm = model->res.face.numElm) < 1))
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  /* Create the mesh. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    mesh = WlzCMeshNew2D5(&errNum);
+  }
+  /* Create the mesh nodes and elements. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((AlcVectorExtendAndGet(mesh->res.nod.vec, nNod) == NULL) ||
+       (AlcVectorExtendAndGet(mesh->res.elm.vec, nElm) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int	idV;
+    AlcVector *vec;
+
+    vec = model->res.vertex.vec;
+    for(idV = 0; idV < maxVtx; ++idV)
+    {
+      WlzGMVertex *vtx;
+      WlzCMeshNod2D5 *nod;
+
+      vtx = (WlzGMVertex *)AlcVectorItemGet(vec, idV);
+      if(vtx->idx >= 0)
+      {
+	nod = WlzCMeshAllocNod2D5(mesh);
+	nod->flags = WLZ_CMESH_NOD_FLAG_NONE;
+	(void )WlzGMVertexGetG3D(vtx, &(nod->pos));
+      }
+    }
+    WlzCMeshUpdateBBox2D5(mesh);
+    WlzCMeshUpdateMaxSqEdgLen2D5(mesh);
+    errNum = WlzCMeshReassignGridCells2D5(mesh, nNod);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int	idF;
+    AlcVector *vec;
+
+    vec = model->res.face.vec;
+    for(idF = 0; idF < maxFce; ++idF)
+    {
+      WlzGMFace *fce;
+
+      fce = (WlzGMFace *)AlcVectorItemGet(vec, idF);
+      if(fce->idx >= 0)
+      {
+	int	tI;
+	WlzGMEdgeT *tET;
+	WlzCMeshNod2D5 *nod[3];
+
+	tET = fce->loopT->edgeT;
+	tI = *(resIdxTb->vertex.idxLut +
+	       tET->vertexT->diskT->vertex->idx);
+	if((tI < 0) && (tI >= nNod))
+	{
+	  errNum = WLZ_ERR_DOMAIN_DATA;
+	  break;
+	}
+	nod[0] = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, tI);
+        tI = *(resIdxTb->vertex.idxLut +
+	       tET->next->vertexT->diskT->vertex->idx);
+	if((tI < 0) && (tI >= nNod))
+	{
+	  errNum = WLZ_ERR_DOMAIN_DATA;
+	  break;
+	}
+	nod[1] = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, tI);
+	tI = *(resIdxTb->vertex.idxLut +
+	       tET->prev->vertexT->diskT->vertex->idx);
+	if((tI < 0) && (tI >= nNod))
+	{
+	  errNum = WLZ_ERR_DOMAIN_DATA;
+	  break;
+	}
+	nod[2] = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, tI);
+        (void )WlzCMeshNewElm2D5(mesh, nod[0], nod[1], nod[2], &errNum);
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  break;
+	}
+      }
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzCMeshFree2D5(mesh);
+    mesh = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(mesh);
+}
+
+/*!
 * \return       New mesh or NULL on error.
 * \ingroup      WlzMesh
 * \brief        Constructs a 2D mesh from a balanced 2D linear binary
@@ -5978,6 +7210,32 @@ static int	WlzCMeshCompLBTFceNodPos3D(WlzDVertex3 *nPos,
 static WlzCMeshEdgU2D *WlzCMeshEdgUseFindOpp2D(WlzCMeshEdgU2D *gEdu)
 {
   WlzCMeshEdgU2D *fEdu,
+  		*tEdu,
+		*oEdu = NULL;
+
+  tEdu = fEdu = gEdu->next->nod->edu;
+  do
+  {
+    if(tEdu->next->nod == gEdu->nod)
+    {
+      oEdu = tEdu;
+      break;
+    }
+    tEdu = tEdu->nnxt;
+  } while(tEdu != fEdu);
+  return(oEdu);
+}
+
+/*!
+* \return	The opposite edge or NULL if there is no opposite edge.
+* \ingroup	WlzMesh
+* \brief	Finds the opposite edge (to set the opp link) using node
+*		nnxt links.
+* \param	gEdu			Given edge.
+*/
+static WlzCMeshEdgU2D5 *WlzCMeshEdgUseFindOpp2D5(WlzCMeshEdgU2D5 *gEdu)
+{
+  WlzCMeshEdgU2D5 *fEdu,
   		*tEdu,
 		*oEdu = NULL;
 
@@ -7030,7 +8288,7 @@ void		WlzCMeshDbgOutVTK2D(FILE *fP, WlzCMesh2D *mesh)
   WlzCMeshElm2D  *elm;
   WlzCMeshNod2D	*nod;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TRI2D) &&
+  if(mesh && (mesh->type == WLZ_CMESH_2D) &&
     ((nNod = mesh->res.nod.maxEnt) > 0) &&
     ((nElm = mesh->res.elm.maxEnt) > 0))
   {
@@ -7099,7 +8357,7 @@ void		WlzCMeshDbgOutVTK3D(FILE *fP, WlzCMesh3D *mesh)
   WlzCMeshFace	*fce;
   WlzCMeshNod3D	*nod;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TET3D) &&
+  if(mesh && (mesh->type == WLZ_CMESH_3D) &&
     ((nNod = mesh->res.nod.maxEnt) > 0) &&
     ((nElm = mesh->res.elm.maxEnt) > 0))
   {
@@ -7184,10 +8442,10 @@ void		WlzCMeshDbgOutVTK(FILE *fP, WlzCMeshP mesh)
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         WlzCMeshDbgOutVTK2D(fP, mesh.m2);
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         WlzCMeshDbgOutVTK3D(fP, mesh.m3);
         break;
       default:
