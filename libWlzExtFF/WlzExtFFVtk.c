@@ -496,7 +496,7 @@ static WlzErrorNum WlzEffWriteCMesh2DVtk(FILE *fP, WlzCMesh2D *mesh)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TRI2D)
+  else if(mesh->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -626,7 +626,7 @@ static WlzErrorNum WlzEffWriteCMesh3DVtk(FILE *fP, WlzCMesh3D *mesh)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TET3D)
+  else if(mesh->type != WLZ_CMESH_3D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -1236,7 +1236,7 @@ WlzObject	*WlzEffReadCMeshVtk(FILE *fP, WlzEffVtkHeader *header,
 	      {
 	        switch(mesh.m2->type)
 		{
-		  case WLZ_CMESH_TRI2D:
+		  case WLZ_CMESH_2D:
 		    /* Read cell types, just make sure that they are all
 		     * triangles (type 5).  */
 		    for(idE = 0; idE < cnt; ++idE)
@@ -1248,7 +1248,7 @@ WlzObject	*WlzEffReadCMeshVtk(FILE *fP, WlzEffVtkHeader *header,
 		      }
 		    }
 		    break;
-		  case WLZ_CMESH_TET3D:
+		  case WLZ_CMESH_3D:
 		    /* Read cell types, just make sure that they are all
 		     * tetrahedra (type 10).  */
 		    for(idE = 0; idE < cnt; ++idE)
@@ -1296,12 +1296,12 @@ WlzObject	*WlzEffReadCMeshVtk(FILE *fP, WlzEffVtkHeader *header,
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
 	WlzCMeshUpdateMaxSqEdgLen2D(mesh.m2);
 	dom.cm2 = mesh.m2;
 	obj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
 	WlzCMeshUpdateMaxSqEdgLen3D(mesh.m3);
 	dom.cm3 = mesh.m3;
 	obj = WlzMakeMain(WLZ_CMESH_3D, dom, val, NULL, NULL, &errNum);
@@ -1314,10 +1314,10 @@ WlzObject	*WlzEffReadCMeshVtk(FILE *fP, WlzEffVtkHeader *header,
     {
       switch(mesh.m2->type)
       {
-	case  WLZ_CMESH_TRI2D:
+	case  WLZ_CMESH_2D:
 	  (void )WlzCMeshFree2D(mesh.m2);
 	  break;
-	case WLZ_CMESH_TET3D:
+	case WLZ_CMESH_3D:
 	  (void )WlzCMeshFree3D(mesh.m3);
 	  break;
       }

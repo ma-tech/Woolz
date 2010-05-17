@@ -87,7 +87,7 @@ void     	WlzCMeshUpdateMaxSqEdgLen2D(WlzCMesh2D *mesh)
   double        dSq;
   WlzCMeshElm2D *elm;
 
-  if((mesh != NULL) && (mesh->type == WLZ_CMESH_TRI2D))
+  if((mesh != NULL) && (mesh->type == WLZ_CMESH_2D))
   {
     mesh->maxSqEdgLen = 0.0;
     for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
@@ -129,6 +129,54 @@ void     	WlzCMeshUpdateMaxSqEdgLen2D(WlzCMesh2D *mesh)
 *               will be inefficient when vertices are outside the mesh.
 * \param        mesh                    The mesh.
 */
+void     	WlzCMeshUpdateMaxSqEdgLen2D5(WlzCMesh2D5 *mesh)
+{
+  int           idE;
+  double        dSq;
+  WlzCMeshElm2D5 *elm;
+
+  if((mesh != NULL) && (mesh->type == WLZ_CMESH_2D5))
+  {
+    mesh->maxSqEdgLen = 0.0;
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec,
+      				              idE);
+      if(elm->idx >= 0)
+      {
+	dSq = WlzGeomDistSq3D(elm->edu[0].nod->pos,
+	                      elm->edu[1].nod->pos);
+	if(dSq > mesh->maxSqEdgLen)
+	{
+	  mesh->maxSqEdgLen = dSq;
+	}
+	dSq = WlzGeomDistSq3D(elm->edu[1].nod->pos,
+			      elm->edu[2].nod->pos);
+	if(dSq > mesh->maxSqEdgLen)
+	{
+	  mesh->maxSqEdgLen = dSq;
+	}
+	dSq = WlzGeomDistSq3D(elm->edu[2].nod->pos,
+	                      elm->edu[0].nod->pos);
+	if(dSq > mesh->maxSqEdgLen)
+	{
+	  mesh->maxSqEdgLen = dSq;
+	}
+      }
+    }
+  }
+}
+
+/*!
+* \ingroup      WlzMesh
+* \brief        Computes the mesh maximum edge length which is used to
+*               terminate vertex location. This should not be allowed
+*               to become less than the actual maximum edge length or
+*               vertex location may fail, also if it is far larger than
+*               the actual maximum edge length then vertex location
+*               will be inefficient when vertices are outside the mesh.
+* \param        mesh                    The mesh.
+*/
 void            WlzCMeshUpdateMaxSqEdgLen3D(WlzCMesh3D *mesh)
 {
   int           idE,
@@ -138,7 +186,7 @@ void            WlzCMeshUpdateMaxSqEdgLen3D(WlzCMesh3D *mesh)
   WlzCMeshElm3D *elm;
   WlzCMeshNod3D	*nodes[4];
 
-  if((mesh != NULL) && (mesh->type == WLZ_CMESH_TET3D))
+  if((mesh != NULL) && (mesh->type == WLZ_CMESH_3D))
   {
     mesh->maxSqEdgLen = 0.0;
     for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
@@ -179,7 +227,7 @@ void     	WlzCMeshUpdateBBox2D(WlzCMesh2D *mesh)
   WlzCMeshNod2D *nod;
   WlzDBox2      bBox;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  if(mesh && (mesh->type == WLZ_CMESH_2D))
   {
     /* Update the bounding box. */
     firstNod = 1;
@@ -224,6 +272,70 @@ void     	WlzCMeshUpdateBBox2D(WlzCMesh2D *mesh)
 
 /*!
 * \ingroup      WlzMesh
+* \brief        Updates the bounding box of the 2D5 conforming mesh.
+* \param        mesh                    The mesh.
+*/
+void            WlzCMeshUpdateBBox2D5(WlzCMesh2D5 *mesh)
+{
+  int           idN,
+                firstNod;
+  WlzCMeshNod2D5 *nod;
+  WlzDBox3      bBox;
+
+  if(mesh && (mesh->type == WLZ_CMESH_2D5))
+  {
+    /* Update the bounding box. */
+    firstNod = 1;
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	if(firstNod)
+	{
+	  firstNod = 0;
+	  bBox.xMin = bBox.xMax = nod->pos.vtX;
+	  bBox.yMin = bBox.yMax = nod->pos.vtY;
+	  bBox.zMin = bBox.zMax = nod->pos.vtZ;
+	}
+	else
+	{
+	  if(nod->pos.vtX < bBox.xMin)
+	  {
+	    bBox.xMin = nod->pos.vtX;
+	  }
+	  else if(nod->pos.vtX > bBox.xMax)
+	  {
+	    bBox.xMax = nod->pos.vtX;
+	  }
+	  if(nod->pos.vtY < bBox.yMin)
+	  {
+	    bBox.yMin = nod->pos.vtY;
+	  }
+	  else if(nod->pos.vtY > bBox.yMax)
+	  {
+	    bBox.yMax = nod->pos.vtY;
+	  }
+	  if(nod->pos.vtZ < bBox.zMin)
+	  {
+	    bBox.zMin = nod->pos.vtZ;
+	  }
+	  else if(nod->pos.vtZ > bBox.zMax)
+	  {
+	    bBox.zMax = nod->pos.vtZ;
+	  }
+	}
+      }
+    }
+    if(firstNod == 0)
+    {
+      mesh->bBox = bBox;
+    }
+  }
+}
+
+/*!
+* \ingroup      WlzMesh
 * \brief        Updates the bounding box of the 3D conforming mesh.
 * \param        mesh                    The mesh.
 */
@@ -234,7 +346,7 @@ void            WlzCMeshUpdateBBox3D(WlzCMesh3D *mesh)
   WlzCMeshNod3D *nod;
   WlzDBox3      bBox;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  if(mesh && (mesh->type == WLZ_CMESH_3D))
   {
     /* Update the bounding box. */
     firstNod = 1;
@@ -298,10 +410,10 @@ void		WlzCMeshSetNodFlags(WlzCMeshP mesh, unsigned int flags)
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         WlzCMeshSetNodFlags2D(mesh.m2, flags);
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         WlzCMeshSetNodFlags3D(mesh.m3, flags);
 	break;
       default:
@@ -321,7 +433,7 @@ void		WlzCMeshSetNodFlags2D(WlzCMesh2D *mesh, unsigned int flags)
   int		idN;
   WlzCMeshNod2D *nod;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  if(mesh && (mesh->type == WLZ_CMESH_2D))
   {
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
     {
@@ -345,7 +457,7 @@ void		WlzCMeshSetNodFlags3D(WlzCMesh3D *mesh, unsigned int flags)
   int		idN;
   WlzCMeshNod3D *nod;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  if(mesh && (mesh->type == WLZ_CMESH_3D))
   {
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
     {
@@ -370,10 +482,10 @@ void		WlzCMeshClearNodFlags(WlzCMeshP mesh, unsigned int flags)
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         WlzCMeshClearNodFlags2D(mesh.m2, flags);
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         WlzCMeshClearNodFlags3D(mesh.m3, flags);
 	break;
       default:
@@ -393,7 +505,7 @@ void		WlzCMeshClearNodFlags2D(WlzCMesh2D *mesh, unsigned int flags)
   int		idN;
   WlzCMeshNod2D *nod;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  if(mesh && (mesh->type == WLZ_CMESH_2D))
   {
     flags = ~flags;
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
@@ -418,7 +530,7 @@ void		WlzCMeshClearNodFlags3D(WlzCMesh3D *mesh, unsigned int flags)
   int		idN;
   WlzCMeshNod3D *nod;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  if(mesh && (mesh->type == WLZ_CMESH_3D))
   {
     flags = ~flags;
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
@@ -444,10 +556,10 @@ void		WlzCMeshClearElmFlags(WlzCMeshP mesh, unsigned int flags)
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         WlzCMeshClearElmFlags2D(mesh.m2, flags);
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         WlzCMeshClearElmFlags3D(mesh.m3, flags);
 	break;
       default:
@@ -467,7 +579,7 @@ void		WlzCMeshClearElmFlags2D(WlzCMesh2D *mesh, unsigned int flags)
   int		idN;
   WlzCMeshElm2D *elm;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  if(mesh && (mesh->type == WLZ_CMESH_2D))
   {
     flags = ~flags;
     for(idN = 0; idN < mesh->res.elm.maxEnt; ++idN)
@@ -492,7 +604,7 @@ void		WlzCMeshClearElmFlags3D(WlzCMesh3D *mesh, unsigned int flags)
   int		idN;
   WlzCMeshElm3D *elm;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  if(mesh && (mesh->type == WLZ_CMESH_3D))
   {
     flags = ~flags;
     for(idN = 0; idN < mesh->res.elm.maxEnt; ++idN)
@@ -520,10 +632,10 @@ int		WlzCMeshSetBoundNodFlags(WlzCMeshP mesh)
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         nBnd = WlzCMeshSetBoundNodFlags2D(mesh.m2);
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         nBnd = WlzCMeshSetBoundNodFlags3D(mesh.m3);
 	break;
       default:
@@ -546,7 +658,7 @@ int		WlzCMeshSetBoundNodFlags2D(WlzCMesh2D *mesh)
   		nBnd = 0;
   WlzCMeshNod2D *nod;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  if(mesh && (mesh->type == WLZ_CMESH_2D))
   {
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
     {
@@ -578,7 +690,7 @@ int		WlzCMeshSetBoundNodFlags3D(WlzCMesh3D *mesh)
   		nBnd = 0;
   WlzCMeshNod3D *nod;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  if(mesh && (mesh->type == WLZ_CMESH_3D))
   {
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
     {
@@ -610,10 +722,10 @@ int		WlzCMeshCountBoundNodes(WlzCMeshP mesh)
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         nBnd = WlzCMeshCountBoundNodes2D(mesh.m2);
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         nBnd = WlzCMeshCountBoundNodes3D(mesh.m3);
 	break;
       default:
@@ -635,7 +747,7 @@ int		WlzCMeshCountBoundNodes2D(WlzCMesh2D *mesh)
   		nBnd = 0;
   WlzCMeshNod2D *nod;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  if(mesh && (mesh->type == WLZ_CMESH_2D))
   {
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
     {
@@ -664,7 +776,7 @@ int		WlzCMeshCountBoundNodes3D(WlzCMesh3D *mesh)
   		nBnd = 0;
   WlzCMeshNod3D *nod;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  if(mesh && (mesh->type == WLZ_CMESH_3D))
   {
     for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
     {
@@ -695,10 +807,10 @@ int		WlzCMeshSetBoundElmFlags(WlzCMeshP mesh)
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         nBnd = WlzCMeshSetBoundElmFlags2D(mesh.m2);
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         nBnd = WlzCMeshSetBoundElmFlags3D(mesh.m3);
 	break;
       default:
@@ -721,7 +833,7 @@ int		WlzCMeshSetBoundElmFlags2D(WlzCMesh2D *mesh)
   		nBnd = 0;
   WlzCMeshElm2D *elm;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  if(mesh && (mesh->type == WLZ_CMESH_2D))
   {
     for(idN = 0; idN < mesh->res.elm.maxEnt; ++idN)
     {
@@ -753,7 +865,7 @@ int		WlzCMeshSetBoundElmFlags3D(WlzCMesh3D *mesh)
   		nBnd = 0;
   WlzCMeshElm3D *elm;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  if(mesh && (mesh->type == WLZ_CMESH_3D))
   {
     for(idN = 0; idN < mesh->res.elm.maxEnt; ++idN)
     {
@@ -912,10 +1024,10 @@ WlzErrorNum	WlzCMeshLaplacianSmooth(WlzCMeshP mesh,
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         errNum = WlzCMeshLaplacianSmooth2D(mesh.m2, itr, alpha, doBnd, update);
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         errNum = WlzCMeshLaplacianSmooth3D(mesh.m3, itr, alpha, doBnd, update);
 	break;
       default:
@@ -954,7 +1066,7 @@ WlzErrorNum	WlzCMeshLaplacianSmooth2D(WlzCMesh2D *mesh,
   		*edu1;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TRI2D))
+  if(mesh && (mesh->type == WLZ_CMESH_2D))
   {
     for(idI = 0; idI < itr; ++idI)
     {
@@ -1025,7 +1137,7 @@ WlzErrorNum	WlzCMeshLaplacianSmooth3D(WlzCMesh3D *mesh,
   		*edu1;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(mesh && (mesh->type == WLZ_CMESH_TET3D))
+  if(mesh && (mesh->type == WLZ_CMESH_3D))
   {
     for(idI = 0; idI < itr; ++idI)
     {
@@ -1125,12 +1237,12 @@ WlzErrorNum	WlzCMeshLPFilter(WlzCMeshP mesh,
     {
       switch(mesh.m2->type)
       {
-        case WLZ_CMESH_TRI2D:
+        case WLZ_CMESH_2D:
 	  WlzCMeshUpdateBBox2D(mesh.m2);
 	  WlzCMeshUpdateMaxSqEdgLen2D(mesh.m2);
 	  errNum = WlzCMeshReassignGridCells2D(mesh.m2, 0);
 	  break;
-        case WLZ_CMESH_TET3D:
+        case WLZ_CMESH_3D:
 	  WlzCMeshUpdateBBox3D(mesh.m3);
 	  WlzCMeshUpdateMaxSqEdgLen3D(mesh.m3);
 	  errNum = WlzCMeshReassignGridCells3D(mesh.m3, 0);
@@ -1184,7 +1296,7 @@ WlzErrorNum	WlzCMeshLPFilterLM(WlzCMeshP mesh,
     (void )WlzCMeshSetBoundNodFlags(mesh);
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         if((vtxBuf[1].d2 = (WlzDVertex2 *)
 	                   AlcMalloc(sizeof(WlzDVertex2) * nVtx)) == NULL)
         {
@@ -1201,7 +1313,7 @@ WlzErrorNum	WlzCMeshLPFilterLM(WlzCMeshP mesh,
 	  }
 	}
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         if((vtxBuf[1].d3 = (WlzDVertex3 *)
 	                   AlcMalloc(sizeof(WlzDVertex3) * nVtx)) == NULL)
         {
@@ -1260,10 +1372,10 @@ WlzErrorNum	WlzCMeshSetVertices(WlzCMeshP mesh, WlzVertexP vtxBuf,
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         WlzCMeshSetVertices2D(mesh.m2, vtxBuf.d2, update);
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         WlzCMeshSetVertices3D(mesh.m3, vtxBuf.d3, update);
 	break;
       default:
@@ -1384,11 +1496,11 @@ WlzErrorNum 	WlzCMeshVerify(WlzCMeshP mesh, void **dstElm,
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         errNum = WlzCMeshVerify2D(mesh.m2, (WlzCMeshElm2D **)dstElm,
 				  allErr, fP);
         break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         errNum = WlzCMeshVerify3D(mesh.m3, (WlzCMeshElm3D **)dstElm,
 				  allErr, fP);
         break;
@@ -1442,7 +1554,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
   {
     errNum1 = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TRI2D)
+  else if(mesh->type != WLZ_CMESH_2D)
   {
     errNum1 = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -1628,6 +1740,46 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
   }
   return(errNum1);
 }
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Checks that the 2D5 mesh has valid connectivities.
+*		This function is slow and should only be used when
+*		debugging mesh connectivities - it is not intended for
+*		routine use. With an invalid mesh this checking function
+*		may provoke NULL pointer access or segmentation faults.
+* \param	mesh			Given mesh.
+* \param	dstElm			Destination mesh element pointer
+*					for last mesh element, may be NULL.
+* \param	allErr			If non zero the checking conmtinues
+*					after an error has been found, else if
+*					zero the checking stops after the first
+*					error has been found.
+* \param	fP			Stream for diagnostic output
+*					statements - may be NULL in which case
+*					there will be no diagnostic output.
+*/
+WlzErrorNum 	WlzCMeshVerify2D5(WlzCMesh2D5 *mesh, WlzCMeshElm2D5 **dstElm,
+				  int allErr, FILE *fP)
+{
+  WlzCMeshElm2D5 *elm = NULL;
+  WlzErrorNum	errNum1 = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum1 = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_2D5)
+  {
+    errNum1 = WLZ_ERR_DOMAIN_TYPE;
+  }
+  /* TODO Write check code here based on 2D. */
+  if(dstElm)
+  {
+    *dstElm = elm;
+  }
+  return(errNum1);
+}
 
 /*!
 * \return	Woolz error code.
@@ -1671,7 +1823,7 @@ WlzErrorNum 	WlzCMeshVerify3D(WlzCMesh3D *mesh, WlzCMeshElm3D **dstElm,
   {
     errNum1 = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TET3D)
+  else if(mesh->type != WLZ_CMESH_3D)
   {
     errNum1 = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -1869,11 +2021,11 @@ WlzErrorNum 	WlzCMeshCmpElmFeat(WlzCMeshP mesh, int *dstNElm,
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         errNum = WlzCMeshCmpElmFeat2D(mesh.m2, &nElm, &idx, &vol,
 	                              &minLen, &maxLen);
         break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         errNum = WlzCMeshCmpElmFeat3D(mesh.m3, &nElm, &idx, &vol,
 	                              &minLen, &maxLen);
         break;
@@ -1947,7 +2099,7 @@ WlzErrorNum 	WlzCMeshCmpElmFeat2D(WlzCMesh2D *mesh, int *dstNElm,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TRI2D)
+  else if(mesh->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -2082,7 +2234,7 @@ WlzErrorNum 	WlzCMeshCmpElmFeat3D(WlzCMesh3D *mesh, int *dstNElm,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TET3D)
+  else if(mesh->type != WLZ_CMESH_3D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -2295,6 +2447,52 @@ WlzDBox2	WlzCMeshElmBBox2D(WlzCMeshElm2D *elm)
     else if(nod->pos.vtY > bBox.yMax)
     {
       bBox.yMax = nod->pos.vtY;
+    }
+  }
+  return(bBox);
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Gets the axis aligned bounding box of a 3D element.
+* \param	elm			Given mesh element.
+*/
+WlzDBox3	WlzCMeshElmBBox2D5(WlzCMeshElm2D5 *elm)
+{
+  int		idx;
+  WlzCMeshNod2D5 *nod;
+  WlzDBox3	bBox;
+
+  nod = elm->edu[0].nod;
+  bBox.xMin = bBox.xMax = nod->pos.vtX;
+  bBox.yMin = bBox.yMax = nod->pos.vtY;
+  bBox.zMin = bBox.zMax = nod->pos.vtZ;
+  for(idx = 1; idx <= 2; ++idx)
+  {
+    nod = elm->edu[idx].nod;
+    if(nod->pos.vtX < bBox.xMin)
+    {
+      bBox.xMin = nod->pos.vtX;
+    }
+    else if(nod->pos.vtX > bBox.xMax)
+    {
+      bBox.xMax = nod->pos.vtX;
+    }
+    if(nod->pos.vtY < bBox.yMin)
+    {
+      bBox.yMin = nod->pos.vtY;
+    }
+    else if(nod->pos.vtY > bBox.yMax)
+    {
+      bBox.yMax = nod->pos.vtY;
+    }
+    if(nod->pos.vtZ < bBox.zMin)
+    {
+      bBox.zMin = nod->pos.vtZ;
+    }
+    else if(nod->pos.vtZ > bBox.zMax)
+    {
+      bBox.zMax = nod->pos.vtZ;
     }
   }
   return(bBox);
@@ -2566,11 +2764,11 @@ WlzCMeshP	WlzCMeshCopy(WlzCMeshP gvnMesh, size_t datSz,
   {
     switch(gvnMesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         newMesh.m2 = WlzCMeshCopy2D(gvnMesh.m2, datSz, newDat, gvnDat,
 				    &errNum);
         break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         newMesh.m3 = WlzCMeshCopy3D(gvnMesh.m3, datSz, newDat, gvnDat,
 				    &errNum);
         break;
@@ -2624,7 +2822,7 @@ WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, size_t datSz,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(gvnMesh->type != WLZ_CMESH_TRI2D)
+  else if(gvnMesh->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -2752,7 +2950,7 @@ WlzCMesh3D	*WlzCMeshCopy3D(WlzCMesh3D *gvnMesh, size_t datSz,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(gvnMesh->type != WLZ_CMESH_TET3D)
+  else if(gvnMesh->type != WLZ_CMESH_3D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -2860,10 +3058,10 @@ WlzErrorNum     WlzCMeshFixNegativeElms(WlzCMeshP mesh)
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         errNum = WlzCMeshFixNegativeElms2D(mesh.m2);
         break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         errNum = WlzCMeshFixNegativeElms3D(mesh.m3);
         break;
       default:
@@ -2898,7 +3096,7 @@ WlzErrorNum     WlzCMeshFixNegativeElms2D(WlzCMesh2D *mesh)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TRI2D)
+  else if(mesh->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -2983,7 +3181,7 @@ WlzErrorNum     WlzCMeshFixNegativeElms3D(WlzCMesh3D *mesh)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TET3D)
+  else if(mesh->type != WLZ_CMESH_3D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -3082,12 +3280,12 @@ void	 	WlzCMeshGetCellStats(WlzCMeshP mesh,
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         WlzCMeshGetCellStats2D(mesh.m2,
 			dstMinNodPerCell, dstMaxNodPerCell, dstMeanNodPerCell,
 			dstMinElmPerCell, dstMaxElmPerCell, dstMeanElmPerCell);
         break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         WlzCMeshGetCellStats3D(mesh.m3,
 			dstMinNodPerCell, dstMaxNodPerCell, dstMeanNodPerCell,
 			dstMinElmPerCell, dstMaxElmPerCell, dstMeanElmPerCell);

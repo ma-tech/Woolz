@@ -352,11 +352,11 @@ int		main(int argc, char *argv[])
       case 'w':
 	switch(mesh.m2->type)
 	{
-	  case WLZ_CMESH_TRI2D:
+	  case WLZ_CMESH_2D:
 	    cMType = WLZ_CMESH_2D;
 	    dom.cm2 = mesh.m2;
 	    break;
-	  case WLZ_CMESH_TET3D:
+	  case WLZ_CMESH_3D:
 	    cMType = WLZ_CMESH_3D;
 	    dom.cm3 = mesh.m3;
 	    break;

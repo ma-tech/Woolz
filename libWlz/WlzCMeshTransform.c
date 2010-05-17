@@ -355,7 +355,7 @@ static WlzErrorNum WlzCMeshTransformInvert2D(WlzObject *mObj)
   WlzIndexedValues *ixv;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  if((mesh = mObj->domain.cm2)->type != WLZ_CMESH_TRI2D)
+  if((mesh = mObj->domain.cm2)->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
   }
@@ -412,7 +412,7 @@ static WlzErrorNum WlzCMeshTransformInvert3D(WlzObject *mObj)
   WlzIndexedValues *ixv;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  if((mesh = mObj->domain.cm3)->type != WLZ_CMESH_TET3D)
+  if((mesh = mObj->domain.cm3)->type != WLZ_CMESH_3D)
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
   }
@@ -971,10 +971,10 @@ WlzObject       *WlzCMeshToDomObj(WlzObject *mObj, int trans,
   {
     switch(mObj->domain.core->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
         dObj = WlzCMeshToDomObj2D(mObj, trans, &errNum);
         break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
         dObj = WlzCMeshToDomObj3D(mObj, trans, &errNum);
         break;
       default:
@@ -1039,7 +1039,7 @@ static WlzObject *WlzCMeshToDomObj2D(WlzObject *mObj, int trans,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TRI2D)
+  else if(mesh->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -1176,7 +1176,7 @@ static WlzObject *WlzCMeshToDomObj3D(WlzObject *mObj, int trans,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TET3D)
+  else if(mesh->type != WLZ_CMESH_3D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -1965,7 +1965,7 @@ static WlzCMeshScanWSp2D *WlzCMeshScanWSpInit2D(WlzObject *mObj,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TRI2D)
+  else if(mesh->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -2147,7 +2147,7 @@ static WlzCMeshScanWSp3D *WlzCMeshScanWSpInit3D(WlzObject *mObj,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TET3D)
+  else if(mesh->type != WLZ_CMESH_3D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -3162,13 +3162,13 @@ WlzObject 	*WlzCMeshTransformObj(WlzObject *srcObj,
     switch(mObj->type)
     {
       case WLZ_CMESH_2D:
-	if(mObj->domain.core->type != WLZ_CMESH_TRI2D)
+	if(mObj->domain.core->type != WLZ_CMESH_2D)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
         break;
       case WLZ_CMESH_3D:
-	if(mObj->domain.core->type != WLZ_CMESH_TET3D)
+	if(mObj->domain.core->type != WLZ_CMESH_3D)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
@@ -4751,7 +4751,7 @@ WlzErrorNum     WlzCMeshGetNodesAndEdges(WlzObject *mObj,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mObj->domain.core->type != WLZ_CMESH_TRI2D)
+  else if(mObj->domain.core->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -4954,7 +4954,7 @@ static WlzErrorNum WlzScaleCMeshValueNodOrElem(double scale,
 
     switch(obj->domain.core->type)
         {
-          case WLZ_CMESH_TRI2D:
+          case WLZ_CMESH_2D:
             mesh.m2 = obj->domain.cm2;
             ixv = obj->values.x;
             switch(ixv->attach)
@@ -4992,7 +4992,7 @@ static WlzErrorNum WlzScaleCMeshValueNodOrElem(double scale,
                 break;
             }
             break;
-          case WLZ_CMESH_TET3D:
+          case WLZ_CMESH_3D:
             mesh.m3 = obj->domain.cm3;
             ixv = obj->values.x;
             switch(ixv->attach)
@@ -5072,7 +5072,7 @@ WlzDBox2	WlzCMeshTransformGetBBox2D(WlzObject *mObj,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mObj->domain.core->type != WLZ_CMESH_TRI2D)
+  else if(mObj->domain.core->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -5173,7 +5173,7 @@ WlzDBox3	WlzCMeshTransformGetBBox3D(WlzObject *mObj,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mObj->domain.core->type != WLZ_CMESH_TET3D)
+  else if(mObj->domain.core->type != WLZ_CMESH_3D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }

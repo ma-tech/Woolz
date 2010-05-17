@@ -249,7 +249,7 @@ WlzObject	*WlzCMeshDistance2D(WlzObject *objG,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TRI2D)
+  else if(mesh->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -437,7 +437,7 @@ WlzObject	*WlzCMeshDistance3D(WlzObject *objG,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TET3D)
+  else if(mesh->type != WLZ_CMESH_3D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -627,7 +627,7 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TRI2D)
+  else if(mesh->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -818,7 +818,7 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(mesh->type != WLZ_CMESH_TET3D)
+  else if(mesh->type != WLZ_CMESH_3D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }

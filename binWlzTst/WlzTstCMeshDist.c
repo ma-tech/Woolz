@@ -320,13 +320,17 @@ int		main(int argc, char *argv[])
   {
     for(idN = 0; idN < repeats; ++idN)
     {
-      if(inObj->type == WLZ_CMESH_2D)
+      switch(inObj->type)
       {
-        errNum = WlzCMeshFMarNodes2D(mesh.m2, dist, nSeeds, seeds.d2);
-      }
-      else /* inObj->type == WLZ_CMESH_3D */
-      {
-        errNum = WlzCMeshFMarNodes3D(mesh.m3, dist, nSeeds, seeds.d3);
+        case WLZ_CMESH_2D:
+          errNum = WlzCMeshFMarNodes2D(mesh.m2, dist, nSeeds, seeds.d2);
+	  break;
+        case WLZ_CMESH_3D:
+          errNum = WlzCMeshFMarNodes3D(mesh.m3, dist, nSeeds, seeds.d3);
+	  break;
+        default:
+	  errNum = WLZ_ERR_OBJECT_TYPE;
+	  break;
       }
       if(errNum != WLZ_ERR_NONE)
       {
@@ -359,7 +363,7 @@ int		main(int argc, char *argv[])
 	{
 	  switch(mesh.m2->type)
 	  {
-	    case WLZ_CMESH_TRI2D:
+	    case WLZ_CMESH_2D:
 	      for(idN = 0; idN < maxNod; ++idN)
 	      {
 		nod2 = (WlzCMeshNod2D *)
@@ -379,7 +383,7 @@ int		main(int argc, char *argv[])
 		}
 	      }
 	      break;
-	    case WLZ_CMESH_TET3D:
+	    case WLZ_CMESH_3D:
 	      for(idN = 0; idN < maxNod; ++idN)
 	      {
 		nod3 = (WlzCMeshNod3D *)

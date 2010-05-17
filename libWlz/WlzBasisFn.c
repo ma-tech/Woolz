@@ -1028,7 +1028,7 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts, WlzDVertex2 *dPts,
   deltaSq = delta * delta;
   if(mesh != NULL)
   {
-    if((mesh->type != WLZ_CMESH_TRI2D) ||
+    if((mesh->type != WLZ_CMESH_2D) ||
        ((prvBasisFn != NULL) && (mesh != prvBasisFn->mesh.m2)))
     {
       errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -1653,7 +1653,7 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
   deltaSq = delta * delta;
   if(mesh != NULL)
   {
-    if((mesh->type != WLZ_CMESH_TRI2D) ||
+    if((mesh->type != WLZ_CMESH_2D) ||
        ((prvBasisFn != NULL) && (mesh != prvBasisFn->mesh.m2)))
     {
       errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -2018,7 +2018,7 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
   deltaSq = delta * delta;
   if(mesh != NULL)
   {
-    if((mesh->type != WLZ_CMESH_TET3D) ||
+    if((mesh->type != WLZ_CMESH_3D) ||
        ((prvBasisFn != NULL) && (mesh != prvBasisFn->mesh.m3)))
     {
       errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -2435,7 +2435,7 @@ WlzBasisFn *WlzBasisFnIMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
   nSys = nPts + 3;
   if(mesh != NULL)
   {
-    if((mesh->type != WLZ_CMESH_TRI2D) ||
+    if((mesh->type != WLZ_CMESH_2D) ||
        ((prvBasisFn != NULL) && (mesh != prvBasisFn->mesh.m2)))
     {
       errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -2800,7 +2800,7 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
   nSys = nPts + 4;
   if(mesh != NULL)
   {
-    if((mesh->type != WLZ_CMESH_TET3D) ||
+    if((mesh->type != WLZ_CMESH_3D) ||
        ((prvBasisFn != NULL) && (mesh != prvBasisFn->mesh.m3)))
     {
       errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -3157,7 +3157,7 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
 * \param        mesh                    Mesh which is used to compute
 *                                       constrained distances. If non NULL
 *                                       and the mesh type is
-*                                       WLZ_CMESH_TRI2D then  constrained
+*                                       WLZ_CMESH_2D then  constrained
 *                                       distances are used and these are
 *                                       computed using the mesh.
 *                                       If NULL or the transform is
@@ -3201,7 +3201,7 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   nSys = nPts + 3;
   if(mesh != NULL)
   {
-    if((mesh->type != WLZ_CMESH_TRI2D) ||
+    if((mesh->type != WLZ_CMESH_2D) ||
        ((prvBasisFn != NULL) && (mesh != prvBasisFn->mesh.m2)))
     {
       errNum = WLZ_ERR_DOMAIN_TYPE;

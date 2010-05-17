@@ -512,7 +512,7 @@ int             main(int argc, char **argv)
 	      {
 		errNum = WLZ_ERR_DOMAIN_NULL;
 	      }
-	      else if(tmpObj->domain.cm2->type != WLZ_CMESH_TRI2D)
+	      else if(tmpObj->domain.cm2->type != WLZ_CMESH_2D)
 	      {
 		errNum = WLZ_ERR_DOMAIN_DATA;
 	      }
@@ -538,7 +538,7 @@ int             main(int argc, char **argv)
 	      {
 		errNum = WLZ_ERR_DOMAIN_NULL;
 	      }
-	      else if(tmpObj->domain.cm3->type != WLZ_CMESH_TET3D)
+	      else if(tmpObj->domain.cm3->type != WLZ_CMESH_3D)
 	      {
 		errNum = WLZ_ERR_DOMAIN_DATA;
 	      }

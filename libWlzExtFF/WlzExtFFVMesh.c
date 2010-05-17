@@ -416,7 +416,7 @@ WlzErrorNum	WlzEffWriteObjVMesh(FILE *fP, WlzObject *obj)
   else
   {
     mesh = obj->domain.cm3;
-    if(mesh->type != WLZ_CMESH_TET3D)
+    if(mesh->type != WLZ_CMESH_3D)
     {
       errNum = WLZ_ERR_DOMAIN_TYPE;
     }

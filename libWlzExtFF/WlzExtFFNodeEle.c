@@ -702,7 +702,7 @@ WlzErrorNum	WlzEffWriteObjNodeEle(const char *gvnFileName, WlzObject *obj)
     {
       case WLZ_CMESH_2D:
 	mesh.m2 = obj->domain.cm2;
-	if(mesh.m2->type == WLZ_CMESH_TRI2D)
+	if(mesh.m2->type == WLZ_CMESH_2D)
 	{
 	  dim = 2;
 	  nNod = mesh.m2->res.nod.numEnt;
@@ -717,7 +717,7 @@ WlzErrorNum	WlzEffWriteObjNodeEle(const char *gvnFileName, WlzObject *obj)
         break;
       case WLZ_CMESH_3D:
 	mesh.m3 = obj->domain.cm3;
-	if(mesh.m3->type == WLZ_CMESH_TET3D)
+	if(mesh.m3->type == WLZ_CMESH_3D)
 	{
 	  dim = 3;
 	  nNod = mesh.m3->res.nod.numEnt;

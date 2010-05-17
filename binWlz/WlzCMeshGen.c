@@ -38,7 +38,7 @@ static char _WlzMeshGen_c[] = "MRC HGU $Id$";
 * \brief	Constructs a 2D or 3D conforming simplical mesh from
 * 		a domain object.
 *
-* \ingroup	Wlz
+* \ingroup	BinWlz
 * \todo         -
 * \bug          None known.
 *
@@ -333,11 +333,11 @@ int		main(int argc, char *argv[])
   {
     switch(mesh.m2->type)
     {
-      case WLZ_CMESH_TRI2D:
+      case WLZ_CMESH_2D:
 	cMType = WLZ_CMESH_2D;
 	dom.cm2 = mesh.m2;
 	break;
-      case WLZ_CMESH_TET3D:
+      case WLZ_CMESH_3D:
 	cMType = WLZ_CMESH_3D;
 	dom.cm3 = mesh.m3;
 	break;

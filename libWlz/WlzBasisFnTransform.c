@@ -112,7 +112,7 @@ WlzErrorNum	WlzBasisFnFreeTransform(WlzBasisFnTransform *basisTr)
 * \param        mesh                    Mesh which is used to compute
 *                                       constrained distances. If non NULL
 *                                       and the mesh type is
-*                                       WLZ_CMESH_TRI2D then  constrained
+*                                       WLZ_CMESH_2D then  constrained
 *                                       distances are used and these are
 *                                       computed using the mesh.
 *                                       If NULL or the transform is
@@ -164,7 +164,7 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2D(WlzFnType type,
 * \param        mesh                    Mesh which is used to compute
 *                                       constrained distances. If non NULL
 *                                       and the mesh type is
-*                                       WLZ_CMESH_TRI2D then  constrained
+*                                       WLZ_CMESH_2D then  constrained
 *                                       distances are used and these are
 *                                       computed using the mesh.
 *                                       If NULL or the transform is
@@ -201,7 +201,7 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2DParam(WlzFnType type,
   }
   else if(mesh)
   {
-    if(mesh->type != WLZ_CMESH_TRI2D)
+    if(mesh->type != WLZ_CMESH_2D)
     {
       errNum = WLZ_ERR_DOMAIN_TYPE;
     }
@@ -297,7 +297,7 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts2DParam(WlzFnType type,
 * \param        mesh                    Mesh which is used to compute
 *                                       constrained distances. If non NULL
 *                                       and the mesh type is
-*                                       WLZ_CMESH_TET3D then  constrained
+*                                       WLZ_CMESH_3D then  constrained
 *                                       distances are used and these are
 *                                       computed using the mesh.
 *                                       If NULL or the transform is
@@ -333,7 +333,7 @@ WlzBasisFnTransform *WlzBasisFnTrFromCPts3DParam(WlzFnType type,
   }
   else if(mesh)
   {
-    if(mesh->type != WLZ_CMESH_TET3D)
+    if(mesh->type != WLZ_CMESH_3D)
     {
       errNum = WLZ_ERR_DOMAIN_TYPE;
     }
@@ -476,7 +476,7 @@ WlzErrorNum	WlzBasisFnTPS2DChangeCPtsParam(WlzBasisFnTransform *basisTr,
   }
   else if(basisTr->basisFn->mesh.v != NULL)
   {
-    if(basisTr->basisFn->mesh.m2->type != WLZ_CMESH_TRI2D)
+    if(basisTr->basisFn->mesh.m2->type != WLZ_CMESH_2D)
     {
       errNum = WLZ_ERR_DOMAIN_TYPE;
     }
@@ -551,7 +551,7 @@ WlzErrorNum	WlzBasisFnTPS2DChangeCPtsParam(WlzBasisFnTransform *basisTr,
 * \param        mesh                    Mesh which is used to compute
 *                                       constrained distances. If non NULL
 *                                       and the mesh type is
-*                                       WLZ_CMESH_TET3D then  constrained
+*                                       WLZ_CMESH_3D then  constrained
 *                                       distances are used and these are
 *                                       computed using the mesh.
 *                                       If NULL or the transform is
@@ -738,7 +738,7 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzObject *mObj,
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
   else if((basisTr->type != WLZ_TRANSFORM_2D_BASISFN) ||
-          (mesh->type != WLZ_CMESH_TRI2D))
+          (mesh->type != WLZ_CMESH_2D))
   {
     errNum = WLZ_ERR_TRANSFORM_TYPE;
   }
@@ -873,7 +873,7 @@ WlzErrorNum    	WlzBasisFnSetCMesh3D(WlzObject *mObj,
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
   else if((basisTr->type != WLZ_TRANSFORM_3D_BASISFN) ||
-          (mesh->type != WLZ_CMESH_TET3D))
+          (mesh->type != WLZ_CMESH_3D))
   {
     errNum = WLZ_ERR_TRANSFORM_TYPE;
   }
@@ -974,7 +974,7 @@ WlzObject 	*WlzBasisFnMakeCMeshTr(WlzBasisFnTransform *basisTr,
     switch(basisTr->type)
     {
       case WLZ_TRANSFORM_2D_BASISFN:
-	if(mesh.m2->type != WLZ_CMESH_TRI2D)
+	if(mesh.m2->type != WLZ_CMESH_2D)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
@@ -984,7 +984,7 @@ WlzObject 	*WlzBasisFnMakeCMeshTr(WlzBasisFnTransform *basisTr,
 	}
 	break;
       case WLZ_TRANSFORM_3D_BASISFN:
-	if(mesh.m3->type != WLZ_CMESH_TET3D)
+	if(mesh.m3->type != WLZ_CMESH_3D)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
@@ -1030,7 +1030,7 @@ WlzObject 	*WlzBasisFnMakeCMeshTr2D(WlzBasisFnTransform *basisTr,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   val.core = NULL;
-  if(mesh->type != WLZ_CMESH_TRI2D)
+  if(mesh->type != WLZ_CMESH_2D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -1093,7 +1093,7 @@ WlzObject 	*WlzBasisFnMakeCMeshTr3D(WlzBasisFnTransform *basisTr,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   val.core = NULL;
-  if(mesh->type != WLZ_CMESH_TET3D)
+  if(mesh->type != WLZ_CMESH_3D)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -1160,7 +1160,7 @@ WlzObject 	*WlzBasisFnInvertMakeCMeshTr(WlzBasisFnTransform *basisTr,
     switch(basisTr->type)
     {
       case WLZ_TRANSFORM_2D_BASISFN:
-	if(mesh.m2->type != WLZ_CMESH_TRI2D)
+	if(mesh.m2->type != WLZ_CMESH_2D)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
@@ -1170,7 +1170,7 @@ WlzObject 	*WlzBasisFnInvertMakeCMeshTr(WlzBasisFnTransform *basisTr,
 	}
 	break;
       case WLZ_TRANSFORM_3D_BASISFN:
-	if(mesh.m3->type != WLZ_CMESH_TET3D)
+	if(mesh.m3->type != WLZ_CMESH_3D)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
