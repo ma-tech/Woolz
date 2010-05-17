@@ -63,6 +63,7 @@ bin_PROGRAMS		= \
 			  WlzClipObjToBox \
 			  WlzClosestVertices \
 			  WlzCMeshDistance \
+			  WlzCMeshFromContour \
 			  WlzCMeshGen \
 			  WlzCMeshToSpatialDomain \
 			  WlzCMeshTransformVtx \
@@ -261,6 +262,10 @@ WlzClosestVertices_LDFLAGS		= $(AM_LFLAGS)
 WlzCMeshDistance_SOURCES		= WlzCMeshDistance.c
 WlzCMeshDistance_LDADD			= $(LDADD)
 WlzCMeshDistance_LDFLAGS		= $(AM_LFLAGS)
+
+WlzCMeshFromContour_SOURCES		= WlzCMeshFromContour.c
+WlzCMeshFromContour_LDADD		= $(LDADD)
+WlzCMeshFromContour_LDFLAGS		= $(AM_LFLAGS)
 
 WlzCMeshGen_SOURCES			= WlzCMeshGen.c
 WlzCMeshGen_LDADD			= $(LDADD)
