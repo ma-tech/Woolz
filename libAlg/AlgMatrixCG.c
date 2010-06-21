@@ -56,6 +56,7 @@ static char _AlgMatrixCG_c[] = "MRC HGU $Id$";
 #include <Alg.h>
 #include <float.h>
 
+
 #ifdef ALG_MATRIXCG_DEBUG
 static void			AlgMatrixCGDebug(
 				  FILE *fP,
@@ -240,8 +241,7 @@ static void	AlgMatrixCGDebug(FILE *fP, const char *name,
 }
 #endif /* ALG_MATRIXCG_DEBUG */
 
-#ifdef ALG_MATRIXCG_TEST
-#if (ALG_MATRIXCG_TEST == 1)
+#ifdef ALG_MATRIXCG_TEST_1
 int		main(int argc, char *argv[])
 {
   int		id0,
@@ -283,9 +283,9 @@ int		main(int argc, char *argv[])
     printf("%g\n", x[id0]);
   }
 }
-#endif /* ALG_MATRIXCG_TEST == 1 */
+#endif /* ALG_MATRIXCG_TEST_1 */
 
-#if (ALG_MATRIXCG_TEST == 2)
+#ifdef ALG_MATRIXCG_TEST_2
 int		main(int argc, char *argv[])
 {
   int		id0,
@@ -346,9 +346,16 @@ int		main(int argc, char *argv[])
   }
   printf("rms %g\n", del);
 }
-#endif /* ALG_MATRIXCG_TEST == 2 */
+#endif /* ALG_MATRIXCG_TEST_2 */
 
-#if (ALG_MATRIXCG_TEST == 3)
+#ifdef ALG_MATRIXCG_TEST_3
+typedef enum _AlgMatrixTestMtd
+{
+  ALG_MATRIX_TST_MTD_CG,
+  ALG_MATRIX_TST_MTD_LSQR,
+  ALG_MATRIX_TST_MTD_SV
+} AlgMatrixTestMtd;
+
 extern int	getopt(int argc, char * const *argv, const char *optstring);
 
 extern char	*optarg;
@@ -363,13 +370,12 @@ int		main(int argc, char *argv[])
 		rpt,
 		option,
 		ok = 1,
-		useCG = 1,
 		sz = 100,
   		nRpt = 1,
   		itr = 1000;
+  AlgMatrixTestMtd mtd = ALG_MATRIX_TST_MTD_CG;
   AlgMatrixType	aType = ALG_MATRIX_RECT;
-  double 	tD0,
-  		del;
+  double 	del;
   double	**a0,
   		**a1,
   		**w;
@@ -379,17 +385,20 @@ int		main(int argc, char *argv[])
 		*i0;
   AlgError	errCode = ALG_ERR_NONE;
   const double	tol = 0.000001;
-  const char	*optList = "CSRYr:s:";
+  const char	*optList = "CLSRYr:s:";
 
   while(ok && ((option = getopt(argc, argv, optList)) != -1))
   {
     switch(option)
     {
       case 'C':
-        useCG = 1;
+        mtd = ALG_MATRIX_TST_MTD_CG;
+	break;
+      case 'L':
+        mtd = ALG_MATRIX_TST_MTD_LSQR;
 	break;
       case 'S':
-        useCG = 0;
+        mtd = ALG_MATRIX_TST_MTD_SV;
 	break;
       case 'R':
         aType = ALG_MATRIX_RECT;
@@ -416,12 +425,13 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    if(!useCG && (aType != ALG_MATRIX_RECT))
+    if((mtd == ALG_MATRIX_TST_MTD_SV) && (aType != ALG_MATRIX_RECT))
     {
       ok = 0;
       (void )fprintf(stderr,
                      "%s: Non-rectangular matrices can be used with the\n"
-      		      "conjugate gradient method\n");
+      		     "conjugate gradient method\n",
+		     argv[0]);
     }
   }
   if(ok)
@@ -434,8 +444,10 @@ int		main(int argc, char *argv[])
       case ALG_MATRIX_SYM:
         (void )AlcSymDouble2Malloc(&a0, sz);
 	break;
+      default:
+        break;
     }
-    if(!useCG)
+    if(mtd == ALG_MATRIX_TST_MTD_SV)
     {
       (void )AlcDouble2Malloc(&a1, sz, sz);
     }
@@ -451,47 +463,85 @@ int		main(int argc, char *argv[])
         case ALG_MATRIX_RECT:
 	  for(id0 = 0; id0 <= id1; ++id0)
 	  {
-	    a0[id1][id0] = a0[id0][id1] = ((id0 + id1) % 7) * 0.01;
+	    a0[id1][id0] = a0[id0][id1] = ((id0 + id1) % 5) * 0.1;
 	  }
 	  a0[id1][id1] += 1.0;
 	  break;
         case ALG_MATRIX_SYM:
 	  for(id0 = 0; id0 <= id1; ++id0)
 	  {
-	    a0[id1][id0] = ((id0 + id1) % 7) * 0.01;
+	    a0[id1][id0] = ((id0 + id1) % 5) * 0.1;
 	  }
 	  a0[id1][id1] += 1.0;
 	  break;
+        default:
+	  break;
       }
-      *(b0 + id1) = ((id1) % 5) * 0.1;
+      *(b0 + id1) = ((id1) % 3) * 0.1;
       *(i0 + id1) = 1.0;
     }
 #ifdef ALG_MATRIXCG_DEBUG
-    for(id1 = 0; id1 < sz; ++id1)
+    (void )fprintf(stderr, "A = \n");
+    switch(aType)
     {
-      for(id0 = 0; id0 <= id1; ++id0)
-      {
-        (void )fprintf(stderr, "%g ", a0[id1][id0]);
-      }
-      (void )fprintf(stderr, "\n");
+      case ALG_MATRIX_RECT:
+	for(id1 = 0; id1 < sz; ++id1)
+	{
+	  for(id0 = 0; id0 < sz; ++id0)
+	  {
+	    (void )fprintf(stderr, "%g ", a0[id1][id0]);
+	  }
+	  (void )fprintf(stderr, "\n");
+	}
+	break;
+      case ALG_MATRIX_SYM:
+	for(id1 = 0; id1 < sz; ++id1)
+	{
+	  for(id0 = 0; id0 <= id1; ++id0)
+	  {
+	    (void )fprintf(stderr, "%g ", a0[id1][id0]);
+	  }
+	  (void )fprintf(stderr, "\n");
+	}
+	break;
+      default:
+        break;
+    }
+    (void )fprintf(stderr, "b = \n");
+    for(id0 = 0; id0 < sz; ++id0)
+    {
+      (void )fprintf(stderr, "%g\n", b0[id0]);
     }
 #endif /* ALG_MATRIXCG_DEBUG */
     for(rpt = 0; rpt < nRpt; ++rpt)
     {
-      if(useCG)
+      long tL;
+
+      switch(mtd)
       {
-	del = tol;
-	AlgVectorCopy(x0, i0, sz);
-	errCode = AlgMatrixCGSolve(aType, (double **)a0,
-				   (double *)x0, (double *)b0,
-				   (double **)w, sz, NULL, NULL,
-				   tol, itr, &del, &itr);
-      }
-      else
-      {
-	AlgVectorCopy(x0, b0, sz);
-	AlgMatrixCopy(a1, a0, sz, sz);
-	errCode = AlgMatrixSVSolve((double **)a1, sz, sz, x0, tol, NULL);
+	case ALG_MATRIX_TST_MTD_CG:
+	  del = tol;
+	  AlgVectorCopy(x0, i0, sz);
+	  errCode = AlgMatrixCGSolve(aType, (double **)a0,
+				     (double *)x0, (double *)b0,
+				     (double **)w, sz, NULL, NULL,
+				     tol, itr, &del, &itr);
+	  break;
+	case ALG_MATRIX_TST_MTD_LSQR:
+	  errCode = AlgMatrixSolveLSQR(aType, (double **)a0,
+				       sz, sz, (double *)b0, (double *)x0,
+				       1.0e-1, 1.0e-10, 1.0e-10, itr, 0,
+				       NULL, &tL, NULL, NULL, NULL,
+				       NULL, NULL);
+	  itr = tL;
+	  break;
+	case ALG_MATRIX_TST_MTD_SV:
+	  AlgVectorCopy(x0, b0, sz);
+	  AlgMatrixCopy(a1, a0, sz, sz);
+	  errCode = AlgMatrixSVSolve((double **)a1, sz, sz, x0, tol, NULL);
+	  break;
+	default:
+	  break;
       }
     }
     for(id1 = 0; id1 < sz; ++id1)
@@ -506,12 +556,13 @@ int		main(int argc, char *argv[])
 		   "Test for timing solution of Ax = b using the Conjugate\n"
 		   "Gradient and Singular Value Decomposition algorithms.\n"
                    "  -C  Use the Conjugate Gradient algorithm.\n"
+		   "  -L  Use the LSQR algorithm.\n"
                    "  -S  Use the Singular Value Decomposition algorithm.\n"
 		   "  -R  Use a rectangular matrix.\n"
 		   "  -Y  Use a symetric matrix.\n"
                    "  -s  matrix size.\n"
                    "  -r  Number of repeat solutions.\n");
   }
+  exit(errCode);
 }
-#endif /* ALG_MATRIXCG_TEST == 3 */
-#endif /* ALG_MATRIXCG_TEST */
+#endif /* ALG_MATRIXCG_TEST_3 */
