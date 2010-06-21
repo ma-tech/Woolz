@@ -55,6 +55,7 @@ libAlg_la_SOURCES 	= \
 			  AlgLinearFit.c \
 			  AlgMatrixCG.c \
 			  AlgMatrixGauss.c \
+			  AlgMatrixLSQR.c \
 			  AlgMatrixLU.c \
 			  AlgMatrixMath.c \
 			  AlgMatrixRSEigen.c \
