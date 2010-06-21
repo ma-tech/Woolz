@@ -185,7 +185,6 @@ static WlzCompoundArray *WlzCompDispIncGrey3D(WlzObject *obj0, WlzObject *obj1,
   int		*ary,
 		*valF;
   int		*val[4];
-  WlzObject	*obj02D;
   WlzObject	*objs[3],
   		*objs2D[4];
   WlzObjectType	gTT;

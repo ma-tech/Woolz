@@ -271,7 +271,6 @@ WlzErrorNum 	WlzGeoModelGridWSpSet3D(WlzGMGridWSp3D *grid,
       elemP.core = (WlzGMCore *)AlcVectorItemGet(eVec, idE);
       if(elemP.core->idx >= 0)
       {
-	WlzGMEdgeT *eT;
 	WlzDVertex3 fVtx[3];
 	WlzIBox3 cBox;
 	WlzDBox3 fBox;
