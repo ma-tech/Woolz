@@ -438,14 +438,14 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 				  int bgdNoise, double bgdMu, double bgdSigma,
 				  WlzErrorNum *dstErrNum)
 {
-  int		sz2D,
-		sz3D,
-  		dPlIdx,
+  int		dPlIdx,
   		sPlIdx,
 		sPlPos,
   		plCnt,
 		sHasVal = 0;
-  size_t	tSz;
+  size_t	sz2D,
+  		sz3D,
+		tSz;
   WlzObject	*sObj2D,
 		*dObj2D,
 		*dObj = NULL;
