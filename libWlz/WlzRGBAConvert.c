@@ -45,44 +45,43 @@ static char _WlzRGBAConvert_c[] = "MRC HGU $Id$";
 #include <Wlz.h>
 
 /* static functions defined later */
-static WlzCompoundArray *WlzRGBAToCompound3D(
-  WlzObject	*obj,
-  WlzRGBAColorSpace	colSpc,
-  WlzErrorNum	*dstErr);
+static WlzCompoundArray 	*WlzRGBAToCompound3D(
+  				  WlzObject *obj,
+  				  WlzRGBAColorSpace colSpc,
+  				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzCompoundToRGBA2D(
+  				  WlzCompoundArray *cmpnd,
+  				  WlzRGBAColorSpace colSpc,
+  				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzCompoundToRGBA3D(
+  				  WlzCompoundArray *cmpnd,
+  				  WlzRGBAColorSpace colSpc,
+  				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzIndexToRGBA3D(
+  				  WlzObject *obj,
+				  unsigned char colormap[3][256],
+				  WlzErrorNum *dstErr);
 
-static WlzObject *WlzCompoundToRGBA3D(
-  WlzCompoundArray	*cmpnd,
-  WlzRGBAColorSpace	colSpc,
-  int			clipFlg,
-  WlzErrorNum		*dstErr);
+static WlzObject		*WlzRGBAToModulus3D(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
 
-static WlzObject *WlzIndexToRGBA3D(
-  WlzObject	*obj,
-  unsigned char	colormap[3][256],
-  WlzErrorNum	*dstErr);
+static WlzObject		*WlzRGBAToChannel3D(
+				  WlzObject *obj,
+				  WlzRGBAColorChannel chan,
+				  WlzErrorNum *dstErr);
 
-static WlzObject *WlzRGBAToModulus3D(
-  WlzObject	*obj,
-  WlzErrorNum	*dstErr);
-
-static WlzObject *WlzRGBAToChannel3D(
-  WlzObject	*obj,
-  WlzRGBAColorChannel	chan,
-  WlzErrorNum	*dstErr);
-
-/* function:     WlzRGBAToCompound    */
 /*! 
 * \ingroup      WlzValuesUtils
 * \brief        Convert a RGBA image to a compound object. The RGBA
- channels are at array indices 0,1,2,3 respectively and the sub-object
- grey types will be WLZ_GREY_UBYTE.
+*		 channels are at array indices 0,1,2,3 respectively
+*		 and the sub-object grey types will be WLZ_GREY_UBYTE.
 *
 * \return       Compound array of rgba values
-* \param    obj	Input domain object with value type WLZ_GREY_RGBA
-* \param    colSpc	The colour space.
-* \param    dstErr	error return
-* \par      Source:
-*                WlzRGBAConvert.c
+* \param    obj				Input domain object with value type
+* 					WLZ_GREY_RGBA
+* \param    colSpc			The colour space.
+* \param    dstErr			Destination error ponyer, may be NULL.
 */
 WlzCompoundArray *WlzRGBAToCompound(
   WlzObject	*obj,
@@ -282,7 +281,7 @@ static WlzCompoundArray *WlzRGBAToCompound3D(
   WlzRGBAColorSpace	colSpc,
   WlzErrorNum	*dstErr)
 {
-  WlzErrorNum		errNum=WLZ_ERR_NONE;
+  WlzErrorNum		errNum = WLZ_ERR_UNIMPLEMENTED;
   
   if( dstErr ){
     *dstErr = errNum;
@@ -290,153 +289,359 @@ static WlzCompoundArray *WlzRGBAToCompound3D(
   return NULL;
 }
 
-WlzObject *WlzCompoundToRGBA(
-  WlzCompoundArray	*cmpnd,
-  WlzRGBAColorSpace	colSpc,
-  int			clipFlg,
-  WlzErrorNum		*dstErr)
+/*!
+* \return	New object with WLZ_GREY_RGBA values or possible an empty
+* 		object.
+* \ingroup      WlzValuesUtils
+* \brief	Creates a WLZ_GREY_RGBA valued object from the given compound
+* 		array. This is a static function which will always be called
+* 		with valid parameters so they aren't checked. If all members of
+* 		the compound array are empty then the returned object will be
+* 		empty too.
+* \param	cObj			Compound array object.
+* \param	cSpc 			The colour space.
+* \param	dstErr			Destination error pointer may be NULL.
+*/
+WlzObject	*WlzCompoundToRGBA(WlzCompoundArray *cmpnd,
+				WlzRGBAColorSpace colSpc,
+  				WlzErrorNum *dstErr)
 {
+  int		i;
+  WlzObject	*rObj = NULL;
+  WlzObjectType	oType = WLZ_EMPTY_OBJ;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  /* Check the compound array type and it's object types which must all
+   * be either WLZ_2D_DOMAINOBJ and WLZ_EMPTY_OBJ or WLZ_3D_DOMAINOBJ
+   * and WLZ_EMPTY_OBJ. If the number of channels is less than four
+   * then the components will be assigned in order of R, G, B and then
+   * A. Components not supplied will be treated as if they were WLZ_EMPTY_OBJ. */
+  if(cmpnd == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(cmpnd->n < 3)
+  {
+    errNum = WLZ_ERR_OBJECT_DATA;
+  }
+  else
+  {
+    for(i = 0; i < cmpnd->n; ++i)
+    {
+      WlzObject *o;
+      if((o = cmpnd->o[i]) != NULL)
+      {
+	switch(o->type)
+	{
+	  case WLZ_EMPTY_OBJ:
+	    break;
+	  case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
+	  case WLZ_3D_DOMAINOBJ:
+	    if(oType == WLZ_EMPTY_OBJ)
+	    {
+	      oType = o->type;
+	    }
+	    else if(oType != o->type)
+	    {
+	      errNum = WLZ_ERR_OBJECT_TYPE;
+	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_OBJECT_TYPE;
+	    break;
+	}
+      }
+    }
+  }
+  /* Check the colour space parameter */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(colSpc)
+    {
+      case WLZ_RGBA_SPACE_RGB: /* FALLTHROUGH */
+      case WLZ_RGBA_SPACE_HSB: /* FALLTHROUGH */
+      case WLZ_RGBA_SPACE_CMY:
+	break;
+      default:
+	errNum = WLZ_ERR_PARAM_DATA;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(oType)
+    {
+      case WLZ_EMPTY_OBJ:
+        rObj = WlzMakeEmpty(&errNum);
+	break;
+      case WLZ_2D_DOMAINOBJ:
+        rObj =  WlzCompoundToRGBA2D(cmpnd, colSpc, &errNum);
+        break;
+      case WLZ_3D_DOMAINOBJ:
+        rObj =  WlzCompoundToRGBA3D(cmpnd, colSpc, &errNum);
+        break;
+      default:
+        break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
+* \return	New 3D domain object with corresponding WLZ_GREY_RGBA values.
+* \ingroup      WlzValuesUtils
+* \brief	Creates a WLZ_GREY_RGBA valued object from the given compound
+* 		array. This is a static function which will always be called
+* 		with valid parameters so they aren't checked.
+* \param	cObj			Compound array object.
+* \param	cSpc 			The colour space.
+* \param	dstErr			Destination error pointer may be NULL.
+*/
+static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
+  				WlzRGBAColorSpace cSpc, WlzErrorNum *dstErr)
+{
+  int		i,
+  		j;
   WlzObject	*rtnObj=NULL;
   WlzPixelV	bckgrnd;
-  int		i, j;
+  WlzObject	*objs[4];
+  WlzObjectType vType;
   WlzUInt	b[4];
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  /* check object - must have at least 3 grey-level objects
-     all of the same type. A fourth is used as the alpha-channel
-     which is otherwise set to 255.
-     The union of domains is returned with values external to
-     any input domain set using the respective background */
-  if( cmpnd == NULL ){
-    errNum = WLZ_ERR_OBJECT_NULL;
+  /* Make a copy of the object pointers because WlzUnionN() modifies the
+   * array if it contains empty objects. */
+  for(i = 0; i < 3; ++i)
+  {
+    objs[i] = cObj->o[i];
   }
-  else if( cmpnd->n < 3 ){
-    errNum = WLZ_ERR_OBJECT_DATA;
-  }
-  else {
-    switch( cmpnd->o[0]->type ){
-    case WLZ_2D_DOMAINOBJ:
-    case WLZ_3D_DOMAINOBJ:
-      if((cmpnd->o[1]->type != cmpnd->o[0]->type) ||
-	 (cmpnd->o[2]->type != cmpnd->o[0]->type)){
-	errNum = WLZ_ERR_OBJECT_DATA;
-      }
-      break;
-
-    default:
-      errNum = WLZ_ERR_OBJECT_DATA;
-      break;
-    }
-  }
-
-  /* check the colour space parameter */
-  if( errNum == WLZ_ERR_NONE ){
-    switch( colSpc ){
-    case WLZ_RGBA_SPACE_RGB:
-    case WLZ_RGBA_SPACE_HSB:
-    case WLZ_RGBA_SPACE_CMY:
-      break;
-
-    default:
-      errNum = WLZ_ERR_PARAM_DATA;
-      break;
-    }
-  }
-
-  /* check for 3D */
-  if( errNum == WLZ_ERR_NONE ){
-    if( cmpnd->o[0]->type == WLZ_3D_DOMAINOBJ ){
-      return WlzCompoundToRGBA3D(cmpnd, colSpc, clipFlg, dstErr);
-    }
-  }
-
-  /* 2D case */
-  if( errNum == WLZ_ERR_NONE ){
-    /* build the 2D object - union of the rgb channels */
-    if((rtnObj = WlzUnionN(3, cmpnd->o, 0, &errNum)) != 0){
-      WlzValues	values;
-      WlzObjectType	vType;
-
-      /* add an RGBA valuetable, extract background for each channel */
-      vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_RGBA, NULL);
-      for(i=0; i < 3; i++){
-	bckgrnd = WlzGetBackground(cmpnd->o[i], NULL);
-	WlzValueConvertPixel(&bckgrnd, bckgrnd, WLZ_GREY_UBYTE);
-	b[i] = bckgrnd.v.ubv;
-      }
-      bckgrnd.type = WLZ_GREY_RGBA;
-      WLZ_RGBA_RGBA_SET(bckgrnd.v.rgbv, b[0], b[1], b[2], 255);
-      if((values.v = WlzNewValueTb(rtnObj, vType, bckgrnd, &errNum)) != NULL){
-	rtnObj->values = WlzAssignValues(values, &errNum);
-      }
-      else {
-	WlzFreeObj(rtnObj);
-	rtnObj = NULL;
+  rtnObj = WlzUnionN(3, objs, 0, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Add an RGBA valuetable, extract background for each channel */
+    vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_RGBA, &errNum);
+    for(i=0; (errNum == WLZ_ERR_NONE) && (i < 3); i++)
+    {
+      bckgrnd = WlzGetBackground(cObj->o[i], &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzValueConvertPixel(&bckgrnd, bckgrnd, WLZ_GREY_UBYTE);
+        b[i] = bckgrnd.v.ubv;
       }
     }
   }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzValues	values;
 
-  /* transfer values */
-  if( errNum == WLZ_ERR_NONE ){
+    bckgrnd.type = WLZ_GREY_RGBA;
+    WLZ_RGBA_RGBA_SET(bckgrnd.v.rgbv, b[0], b[1], b[2], 255);
+    values.v = WlzNewValueTb(rtnObj, vType, bckgrnd, &errNum);
+    if(values.v != NULL)
+    {
+      rtnObj->values = WlzAssignValues(values, &errNum);
+    }
+    else
+    {
+      (void )WlzFreeObj(rtnObj);
+      rtnObj = NULL;
+    }
+  }
+  /* Transfer values */
+  if( errNum == WLZ_ERR_NONE)
+  {
     WlzGreyValueWSpace	*gValWSpc[4];
     WlzIntervalWSpace	iwsp;
     WlzGreyWSpace	gwsp;
     WlzGreyV		gval;
 
     /* do it dumb fashion for now, rgb only */
-    for(i=0; i < 3; i++){
-      gValWSpc[i] = WlzGreyValueMakeWSp(cmpnd->o[i], &errNum);
+    gValWSpc[0] = gValWSpc[1] = gValWSpc[2] = gValWSpc[3] = NULL;
+    for(i=0; i < 3; i++)
+    {
+      if((cObj->o[i] != NULL) && (cObj->o[i]->type != WLZ_EMPTY_OBJ))
+      {
+        gValWSpc[i] = WlzGreyValueMakeWSp(cObj->o[i], &errNum);
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  break;
+	}
+      }
     }
-    
-    errNum = WlzInitGreyScan(rtnObj, &iwsp, &gwsp);
-    while((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE){
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzInitGreyScan(rtnObj, &iwsp, &gwsp);
+    }
+    while((errNum == WLZ_ERR_NONE) &&
+          ((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE))
+    {
       WlzPixelV	pix;
 
-      for(j = iwsp.lftpos; j <= iwsp.rgtpos; j++){
-	for(i=0; i < 3; i++){
-	  WlzGreyValueGet(gValWSpc[i], 0, iwsp.linpos, j);
-	  pix.type = gValWSpc[i]->gType;
-	  pix.v = gValWSpc[i]->gVal[0];
-	  WlzValueConvertPixel(&pix, pix, WLZ_GREY_UBYTE);
+      for(j = iwsp.lftpos; j <= iwsp.rgtpos; j++)
+      {
+	for(i = 0; i < 3; i++)
+	{
+	  if(gValWSpc[i] == NULL)
+	  {
+	    pix.v.ubv = (i < 2)? 0: 255;
+	  }
+	  else
+	  {
+	    WlzGreyValueGet(gValWSpc[i], 0, iwsp.linpos, j);
+	    pix.type = gValWSpc[i]->gType;
+	    pix.v = gValWSpc[i]->gVal[0];
+	    WlzValueConvertPixel(&pix, pix, WLZ_GREY_UBYTE);
+	  }
 	  b[i] = pix.v.ubv;
 	}
-	WLZ_RGBA_RGBA_SET(gval.rgbv,
-			  b[0], b[1], b[2], 255);
+	WLZ_RGBA_RGBA_SET(gval.rgbv, b[0], b[1], b[2], b[3]);
 	*gwsp.u_grintptr.rgbp = gval.rgbv;
 	gwsp.u_grintptr.rgbp++;
       }
     }
-    if( errNum == WLZ_ERR_EOO ){
+    if(errNum == WLZ_ERR_EOO)
+    {
       errNum = WLZ_ERR_NONE;
     }
+    for(i=0; i < 3; i++)
+    {
+      WlzGreyValueFreeWSp(gValWSpc[i]);
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(rtnObj);
+}
 
-    for(i=0; i < 3; i++){
-      if( gValWSpc[i] ){
-	WlzGreyValueFreeWSp(gValWSpc[i]);
+/*!
+* \return	New 3D domain object with corresponding WLZ_GREY_RGBA values.
+* \ingroup      WlzValuesUtils
+* \brief	Creates a WLZ_GREY_RGBA valued object from the given compound
+* 		array. This is a static function which will always be called
+* 		with valid parameters so they aren't checked.
+* \param	cObj			Compound array object.
+* \param	cSpc 			The colour space.
+* \param	dstErr			Destination error pointer may be NULL.
+*/
+static WlzObject *WlzCompoundToRGBA3D(WlzCompoundArray *cObj,
+  				WlzRGBAColorSpace cSpc, WlzErrorNum *dstErr)
+{
+  WlzIBox3 	bBox;
+  WlzDomain	dom;
+  WlzValues	val;
+  WlzPixelV	bgd;
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  
+  dom.core = NULL;
+  val.core = NULL;
+  bgd.v.rgbv = 0;
+  bgd.type = WLZ_GREY_RGBA;
+  bBox = WlzBoundingBox3I((WlzObject *)cObj, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dom.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN, bBox.zMin, bBox.zMax,
+		               bBox.yMin, bBox.yMax, bBox.xMin, bBox.xMax,
+			       &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    val.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+                                  bBox.zMin, bBox.zMax, bgd, NULL,
+			          &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, dom, val, NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idP,
+    		nPl;
+
+    nPl = bBox.zMax - bBox.zMin + 1;
+    for(idP = 0; idP < nPl; ++idP)
+    {
+      if(errNum == WLZ_ERR_NONE)
+      {
+	int	idC;
+	WlzObject *rObj2 = NULL;
+	WlzCompoundArray *cObj2 = NULL;
+	WlzErrorNum errNum2 = WLZ_ERR_NONE;
+
+	cObj2 = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_2, 1, cObj->n,
+	                             NULL, WLZ_2D_DOMAINOBJ, &errNum2);
+
+	idC = 0;
+	while((errNum2 == WLZ_ERR_NONE) && (idC < cObj->n))
+	{
+	  int		idP2,
+	  		nPl2;
+	  WlzDomain	dom2;
+	  WlzValues	val2;
+
+	  dom2.core = NULL;
+	  val2.core = NULL;
+	  if((cObj->o[idC] != NULL) &&
+	     (cObj->o[idC]->type == WLZ_3D_DOMAINOBJ))
+	  {
+	    idP2 = bBox.zMin + idP - cObj->o[idC]->domain.p->plane1;
+	    nPl2 = cObj->o[idC]->domain.p->lastpl - 
+	           cObj->o[idC]->domain.p->plane1 + 1;
+	    if((idP2 >= 0) && (idP2 <= nPl2))
+	    {
+	      dom2 = *(cObj->o[idC]->domain.p->domains + idP2);
+	      val2 = *(cObj->o[idC]->values.vox->values + idP2);
+	    }
+	  }
+	  cObj2->o[idC] = (dom2.core == NULL)?
+	                  WlzMakeEmpty(&errNum2):
+	                  WlzMakeMain(WLZ_2D_DOMAINOBJ, dom2, val2,
+	                              NULL, NULL, &errNum2);
+	  ++idC;
+	}
+	if(errNum2 == WLZ_ERR_NONE)
+	{
+	  rObj2 = WlzCompoundToRGBA2D(cObj2, cSpc, &errNum2);
+	}
+	if(errNum2 == WLZ_ERR_NONE)
+	{
+	  dom.p->domains[idP] = WlzAssignDomain(rObj2->domain, NULL);
+	  val.vox->values[idP] = WlzAssignValues(rObj2->values, NULL);
+	}
+	(void )WlzFreeObj((WlzObject *)cObj2);
+	if(errNum2 != WLZ_ERR_NONE)
+	{
+	  errNum = errNum2;
+	}
       }
     }
   }
-
-  /* set error and return */
-  if( dstErr ){
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(rObj != NULL)
+    {
+      (void )WlzFreeObj(rObj);
+      rObj = NULL;
+    }
+    else
+    {
+      (void )WlzFreePlaneDomain(dom.p);
+      (void )WlzFreeVoxelValueTb(val.vox);
+    }
+  }
+  if(dstErr)
+  {
     *dstErr = errNum;
   }
-  return rtnObj;
-}
-
-static WlzObject *WlzCompoundToRGBA3D(
-  WlzCompoundArray	*cmpnd,
-  WlzRGBAColorSpace	colSpc,
-  int			clipFlg,
-  WlzErrorNum		*dstErr)
-{
-  WlzObject	*rtnObj=NULL;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
-
-  if( dstErr ){
-    *dstErr = errNum;
-  }
-  return rtnObj;
+  return(rObj);
 }
 
 /* function:     WlzRGBAToModulus    */
