@@ -448,8 +448,7 @@ int             main(int argc, char **argv)
       }
       else
       {
-	dstGreyType = WlzGreyTableTypeToGreyType(inObj->values.core->type,
-						 NULL);
+	dstGreyType = WlzGreyTypeFromObj(inObj, NULL);
       }
     }
     if(((outObj = WlzCutObjToBox3D(inObj, cutBox, dstGreyType,
