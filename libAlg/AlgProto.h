@@ -358,6 +358,26 @@ extern AlgError			AlgMatrixGaussSolve(
 				  int aSz,
 				  double *xMat);
 
+/* From AlgMatrixLSQR.c */
+extern AlgError			AlgMatrixSolveLSQR(
+				  AlgMatrixType aType,
+				   double **aM,
+				   size_t nR,
+				   size_t nC,
+				   double *bV,
+				   double *xV,
+				   double damping,
+				   double relErrA,
+				   double relErrB,
+				   long maxItr,
+				   long condLim,
+				   int *dstTerm,
+				   long *dstItr,
+				   double *dstFNorm,
+				   double *dstCondN,
+				   double *dstResNorm,
+				   double *dstResNormA,
+				   double *dstNormX);
 /* From AlgMatrixLU.c */
 extern AlgError			AlgMatrixLUSolve(
 				  double **aMat,
@@ -400,6 +420,11 @@ extern void            		AlgMatrixScale(
 				  double sv,
 				  size_t nR,
 				  size_t nC);
+extern void			AlgMatrixVectorScale(
+				  double *aV,
+				  double *bV,
+				  double sv,
+				  size_t nV);
 extern void			AlgMatrixScaleAdd(
 				  double **aM,
 				  double **bM,
@@ -427,6 +452,10 @@ extern void            		AlgMatrixCopy(
 				  double **bM,
 				  size_t nR,
 				  size_t nC);
+extern void			AlgMatrixVectorCopy(
+				  double *aV,
+				  double *bV,
+				  size_t nV);
 extern void			AlgMatrixScalar(
 				  double **aM,
 				  double sv,
@@ -435,6 +464,9 @@ extern void			AlgMatrixZero(
 				  double **aM,
 				  size_t nR,
 				  size_t nC);
+extern void			AlgMatrixVectorZero(
+				  double *aV,
+				  size_t nV);
 extern void			AlgMatrixVectorMul(
 				  double *aV,
 				  AlgMatrixType bType,
@@ -442,6 +474,42 @@ extern void			AlgMatrixVectorMul(
 				  double *cV,
 				  size_t nR,
 				  size_t nC);
+extern void			AlgMatrixVectorMulAdd(
+				  double *aV,
+				  AlgMatrixType bType,
+				  double **bM,
+				  double *cV,
+				  double *dV,
+				  size_t nR,
+				  size_t nC);
+extern void			AlgMatrixVectorMulWAdd(
+				  double *aV,
+				  AlgMatrixType bType,
+				  double **bM,
+				  double *cV,
+				  double *dV,
+				  size_t nR,
+				  size_t nC,
+				  double s,
+				  double t);
+extern void			AlgMatrixTVectorMul(
+				  double *aV,
+                                  AlgMatrixType bType,
+				  double **bM,
+				  double *cV,
+				  size_t nR,
+				  size_t nC);
+extern void			AlgMatrixTVectorMulAdd(
+				  double *aV,
+                                  AlgMatrixType bType,
+				  double **bM,
+				  double *cV,
+				  double *dV,
+				  size_t nR,
+				  size_t nC);
+extern double          		AlgMatrixVectorNorm(
+				  double *aV,
+				  size_t nV);
 
 /* From AlgMatrixCG.c */
 extern AlgError			AlgMatrixCGSolve(
