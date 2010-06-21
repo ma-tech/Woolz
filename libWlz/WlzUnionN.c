@@ -56,6 +56,9 @@ extern WlzObject *WlzUnion3d(int 	n,
  table. Note background values are used in the averaging process. All
  objects must be domain objects of the same type (2D or 3D) unless
  WLZ_EMPTY_OBJ, NULL input objects are an error.
+
+ This function may modify the order of the objects in the array it is
+ passed if the array contains empty objects.
 *
 * \return       Union of the array of object.
 * \param    n	number of input objects
