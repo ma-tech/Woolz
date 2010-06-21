@@ -116,10 +116,6 @@ histogram of hist.wlz.
 #include <string.h>
 #include <Wlz.h>
 
-static WlzObject 		*WlzRGBCombineBlankObj(
-				  WlzObject **objs,
-				  WlzIBox3 *bBox,
-				  WlzErrorNum *dstErr);
 
 /* Externals required by getopt  - not in ANSI C standard */
 #ifdef __STDC__ /* [ */
@@ -134,7 +130,6 @@ int             main(int argc, char **argv)
   int		idx,
 		option,
 		invFlg = 0,
-  		isnFlg = 0,
 		nrmFlg = 0,
 		ok = 1,
 		usage = 0;
@@ -182,9 +177,6 @@ int             main(int argc, char **argv)
       break;
     case 'o':
       outObjFileStr = optarg;
-      break;
-    case 's':
-      isnFlg = 1;
       break;
     case 'h': /* FALLTHROUGH */
     default:
@@ -306,7 +298,7 @@ int             main(int argc, char **argv)
       {
 	if(blankObj == NULL)
 	{
-	  blankObj = WlzRGBCombineBlankObj(inObj, &bBox, &errNum);
+          blankObj = WlzMakeEmpty(&errNum);
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
@@ -409,11 +401,7 @@ int             main(int argc, char **argv)
   /* Create RGBA object. */
   if(ok)
   {
-    tmpObj = WlzCompoundToRGBA(cpdObj, WLZ_RGBA_SPACE_RGB, isnFlg, &errNum);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      outObj = WlzClipObjToBox3D(tmpObj, bBox, &errNum);
-    }
+    outObj = WlzCompoundToRGBA(cpdObj, WLZ_RGBA_SPACE_RGB, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -490,88 +478,4 @@ int             main(int argc, char **argv)
   return(!ok);
 }
 
-/*!
-* \return	Blank object.
-* \ingroup	BinWlz
-* \brief	Creates a blank object, which is a single pixel/voxel
-*		that is just outside the bounding box of the given
-*               (non-NULL) objects. The blank object has a WlzUByte
-*		value table with the single zero.
-* \param	objs			Array of four objects some (but
-*					not all) of which are NULL.
-* \param	bBox			Destination pointer for the bounding
-*					box of the given objects (not
-*					including the blank object).
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-static WlzObject *WlzRGBCombineBlankObj(WlzObject **objs, WlzIBox3 *bBox,
-				        WlzErrorNum *dstErr)
-{
-  int		idx,
-  		cnt;
-  WlzIBox3	tBox;
-  WlzUByte	*val = NULL;
-  WlzObjectType	oType = WLZ_NULL;
-  WlzObject	*blankObj = NULL;
-  WlzPixelV	bgd;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const int	offset = 8; 		   /* Any small +ve number would do. */
-
-  idx = 0;
-  cnt = 0;
-  bgd.type = WLZ_GREY_UBYTE;
-  bgd.v.ubv = 0;
-  while(idx < 4)
-  {
-    if(objs[idx] != NULL)
-    {
-      if(cnt == 0)
-      {
-        *bBox = WlzBoundingBox3I(objs[idx], &errNum);
-	oType = objs[idx]->type;
-      }
-      else
-      {
-        tBox = WlzBoundingBox3I(objs[idx], &errNum);
-	*bBox = WlzBoundingBoxUnion3I(*bBox, tBox);
-      }
-      ++cnt;
-    }
-    ++idx;
-  }
-  switch(oType)
-  {
-    case WLZ_2D_DOMAINOBJ:
-      if((val = (WlzUByte *)AlcCalloc(1, sizeof(WlzUByte))) == NULL)
-      {
-        errNum = WLZ_ERR_MEM_ALLOC;
-      }
-      else
-      {
-	blankObj = WlzMakeRect(bBox->yMax + offset, bBox->yMax + offset,
-			       bBox->xMax + offset, bBox->xMax + offset,
-			       WLZ_GREY_UBYTE, (int *)val, bgd, NULL, NULL,
-			       &errNum);
-      }
-      break;
-    case WLZ_3D_DOMAINOBJ:
-      blankObj = WlzMakeCuboid(bBox->zMax + offset, bBox->zMax + offset,
-			       bBox->yMax + offset, bBox->yMax + offset,
-			       bBox->xMax + offset, bBox->xMax + offset,
-			       WLZ_GREY_UBYTE, bgd, NULL, NULL, &errNum);
-      break;
-    default:
-      errNum = WLZ_ERR_OBJECT_TYPE;
-      break;
-  }
-  if(blankObj == NULL)
-  {
-    AlcFree(val);
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(blankObj);
-}
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
