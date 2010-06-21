@@ -65,6 +65,9 @@ bin_PROGRAMS		= \
 			  WlzCMeshDistance \
 			  WlzCMeshFromContour \
 			  WlzCMeshGen \
+			  WlzCMeshSurfaceMap \
+			  WlzCMeshToContour \
+			  WlzCMeshCurvToImage \
 			  WlzCMeshToSpatialDomain \
 			  WlzCMeshTransformVtx \
 			  WlzCMeshTransformObj \
@@ -270,6 +273,18 @@ WlzCMeshFromContour_LDFLAGS		= $(AM_LFLAGS)
 WlzCMeshGen_SOURCES			= WlzCMeshGen.c
 WlzCMeshGen_LDADD			= $(LDADD)
 WlzCMeshGen_LDFLAGS			= $(AM_LFLAGS)
+
+WlzCMeshToContour_SOURCES		= WlzCMeshToContour.c
+WlzCMeshToContour_LDADD			= $(LDADD)
+WlzCMeshToContour_LDFLAGS		= $(AM_LFLAGS)
+
+WlzCMeshCurvToImage_SOURCES		= WlzCMeshCurvToImage.c
+WlzCMeshCurvToImage_LDADD		= $(LDADD)
+WlzCMeshCurvToImage_LDFLAGS		= $(AM_LFLAGS)
+
+WlzCMeshSurfaceMap_SOURCES		= WlzCMeshSurfaceMap.c
+WlzCMeshSurfaceMap_LDADD		= $(LDADD)
+WlzCMeshSurfaceMap_LDFLAGS		= $(AM_LFLAGS)
 
 WlzCMeshToSpatialDomain_SOURCES		= WlzCMeshToSpatialDomain.c
 WlzCMeshToSpatialDomain_LDADD		= $(LDADD)
