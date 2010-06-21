@@ -3083,6 +3083,21 @@ static WlzErrorNum WlzWriteIndexedValues(FILE *fP, WlzObject *obj)
 	      break;
 	  }
 	  break;
+	case WLZ_CMESH_2D5:
+	  mesh.m2d5 = obj->domain.cm2d5;
+	  switch(ixv->attach)
+	  {
+	    case WLZ_VALUE_ATTACH_NOD:
+	      nValues = mesh.m2d5->res.nod.numEnt;
+	      break;
+	    case WLZ_VALUE_ATTACH_ELM:
+	      nValues = mesh.m2d5->res.elm.numEnt;
+	      break;
+	    default:
+	      errNum = WLZ_ERR_VALUES_DATA;
+	      break;
+	  }
+	  break;
 	case WLZ_CMESH_3D:
 	  mesh.m3 = obj->domain.cm3;
 	  switch(ixv->attach)
