@@ -413,7 +413,7 @@ WlzObject	*WlzCMeshDistance3D(WlzObject *objG,
 		*objR = NULL,
 		*objT = NULL;
   WlzCMeshElm3D	*elm;
-  WlzCMeshNod3D	*nod[3];
+  WlzCMeshNod3D	*nod[4];
   WlzCMesh3D  	*mesh;
   WlzObjectType	vTT;
   WlzValues	valD,
@@ -1289,7 +1289,7 @@ static double 	WlzCMeshFMarSolve2D2(WlzDVertex2 p0, WlzDVertex2 p1,
   if(len[2] < WLZ_MESH_TOLERANCE)
   {
     /* Element is degenerate so just use edge length to compute distance. */
-    d2 = d0 + len[1];
+    d2 = d0 + len[2];
   }
   else
   {
