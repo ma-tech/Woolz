@@ -605,17 +605,18 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 	    {
               tok[1] = WLZEFF_AM_TOKEN_NONE;
 	      (void )WlzStringMatchValue((int *)&(tok[1]), tokBuf,
-				   "BoundingBox", WLZEFF_AM_TOKEN_BOUNDINGBOX,
-				   "Colormap", WLZEFF_AM_TOKEN_COLORMAP,
-				   "Content", WLZEFF_AM_TOKEN_CONTENT,
-				   "CoordType", WLZEFF_AM_TOKEN_COORDTYPE,
-				   "Expression", WLZEFF_AM_TOKEN_EXPRESSION,
-				   "ImageData", WLZEFF_AM_TOKEN_IMAGEDATA,
-				   "Materials", WLZEFF_AM_TOKEN_MATERIALS,
-				   "Seeds", WLZEFF_AM_TOKEN_SEEDS,
-				   "Limits", WLZEFF_AM_TOKEN_LIMITS,
-				   "TIFF", WLZEFF_AM_TOKEN_TIFF,
-				   NULL);
+			   "BoundingBox", WLZEFF_AM_TOKEN_BOUNDINGBOX,
+			   "Colormap", WLZEFF_AM_TOKEN_COLORMAP,
+			   "Content", WLZEFF_AM_TOKEN_CONTENT,
+			   "CoordType", WLZEFF_AM_TOKEN_COORDTYPE,
+			   "Expression", WLZEFF_AM_TOKEN_EXPRESSION,
+			   "ImageData", WLZEFF_AM_TOKEN_IMAGEDATA,
+			   "Materials", WLZEFF_AM_TOKEN_MATERIALS,
+			   "Seeds", WLZEFF_AM_TOKEN_SEEDS,
+			   "Limits", WLZEFF_AM_TOKEN_LIMITS,
+			   "TIFF", WLZEFF_AM_TOKEN_TIFF,
+			   "TransformationMatrix", WLZEFF_AM_TOKEN_TRANSFORM,
+			   NULL);
 	      switch(tok[1])
 	      {
 	        case WLZEFF_AM_TOKEN_BOUNDINGBOX:
@@ -670,6 +671,10 @@ static WlzErrorNum WlzEffAmReadHead(FILE *fP, WlzEffAmHead *head)
 		  break;
 		case WLZEFF_AM_TOKEN_TIFF:
 		  errNum = WlzEffAmReadAndSkipValues(fP, tokBuf, tokBufMax);
+		  *tokBuf = '\0';
+		  break;
+		case WLZEFF_AM_TOKEN_TRANSFORM:
+		  errNum = WlzEffAmSkipEOL(fP);
 		  *tokBuf = '\0';
 		  break;
 		default:
