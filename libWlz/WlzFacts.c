@@ -370,7 +370,7 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	  }
 	  break;
 	case WLZ_CMESH_2D5:
-	  errNum = WlzObjFactsCMeshDom2D5(fData, obj, obj->domain.cm2);
+	  errNum = WlzObjFactsCMeshDom2D5(fData, obj, obj->domain.cm2d5);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    errNum = WlzObjFactsIndexedValues(fData, obj, obj->values);
@@ -2280,6 +2280,43 @@ static WlzErrorNum WlzObjFactsIndexedValues(WlzObjFactsData *fData,
 		{
 		  ent.v = AlcVectorItemGet(mesh.m2->res.elm.vec, idx);
 		  if(ent.e2->idx >= 0)
+		  {
+		    if((errNum = WlzFactsIndexedVal(fData, ixv,
+		                                    idx)) != WLZ_ERR_NONE)
+		    {
+		      break;
+		    }
+		  }
+		}
+		break;
+	      default:
+	        errNum = WLZ_ERR_VALUES_DATA;
+		break;
+	    }
+	    break;
+	  case WLZ_CMESH_2D5:
+	    mesh.m2d5 = obj->domain.cm2d5;
+	    switch(ixv->attach)
+	    {
+	      case WLZ_VALUE_ATTACH_NOD:
+	        for(idx = 0; idx < mesh.m2d5->res.nod.maxEnt; ++idx)
+		{
+		  ent.v = AlcVectorItemGet(mesh.m2d5->res.nod.vec, idx);
+		  if(ent.n2d5->idx >= 0)
+		  {
+		    if((errNum = WlzFactsIndexedVal(fData, ixv,
+		                                    idx)) != WLZ_ERR_NONE)
+		    {
+		      break;
+		    }
+		  }
+		}
+		break;
+	      case WLZ_VALUE_ATTACH_ELM:
+	        for(idx = 0; idx < mesh.m2d5->res.nod.maxEnt; ++idx)
+		{
+		  ent.v = AlcVectorItemGet(mesh.m2d5->res.elm.vec, idx);
+		  if(ent.e2d5->idx >= 0)
 		  {
 		    if((errNum = WlzFactsIndexedVal(fData, ixv,
 		                                    idx)) != WLZ_ERR_NONE)
