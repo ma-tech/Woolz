@@ -97,16 +97,65 @@ typedef enum _AlgDistribution
 */
 typedef enum _AlgMatrixType
 {
+  ALG_MATRIX_NULL = 0,		/*!< A NULL matric with no elements. */
   ALG_MATRIX_RECT,		/*!< Rectangular matrix, with storage
   				     for each element. These matrices should
 				     be allocated using the libAlc array
 				     allocation functions. */
-  ALG_MATRIX_SYM		/*!< Symetric matrix, with storage
+  ALG_MATRIX_SYM,		/*!< Symetric matrix, with storage
   				     for the upper triangle only. These
 				     matrices should be allocated using the
 				     libAlc symetric array allocation
 				     functions. */
+  ALG_MATRIX_CSR		/*!< Sparse matrix stored in compressed sparse
+                                     row format. */
 } AlgMatrixType;
+
+typedef union _AlgMatrix
+{
+  struct _AlgMatrixCore	*core;
+  struct _AlgMatrixRect	*rect;
+  struct _AlgMatrixSym	*sym;
+  struct _AlgMatrixCSR	*csr;
+} Algmatrix;
+
+typedef struct _AlgMatrixCore
+{
+  AlgMatrixType	type;		/*!< Matrix type. */
+  size_t	nR;		/*!< Number of rows. */
+  size_t	nC;		/*!< Number of columns. */
+} AlgmatrixCore;
+
+typedef struct _AlgMatrixRect
+{
+  AlgMatrixType	type;		/*!< From AlgmatrixCore. */
+  size_t	nR;		/*!< From AlgmatrixCore. */
+  size_t	nC;		/*!< From AlgmatrixCore. */
+  double	**array;
+} AlgMatrixRect;
+
+typedef struct _AlgMatrixSym
+{
+  AlgMatrixType	type;		/*!< From AlgmatrixCore. */
+  size_t	nR;		/*!< From AlgmatrixCore. */
+  size_t	nC;		/*!< From AlgmatrixCore. */
+  double	**array;
+} AlgMatrixSym;
+
+typedef struct _AlgMatrixCSR
+{
+  AlgMatrixType type;		/*!< From AlgmatrixCore. */
+  size_t	nR;		/*!< From AlgmatrixCore. */
+  size_t	nC;		/*!< From AlgmatrixCore. */
+  size_t	nDat;
+  size_t	nCol;
+  size_t	nRow;
+  size_t	nBuf;
+  double	*dat;
+  double	*col;
+  double	*row;
+  double	*buf;
+} AlgMatrixCSR;
 
 /*!
 * \enum		_AlgPadType
@@ -115,9 +164,9 @@ typedef enum _AlgMatrixType
 */
 typedef enum _AlgPadType
 {
-  ALG_PAD_NONE,              	/*!< No padding, same as padding with zeros */
-  ALG_PAD_ZERO,                 /*!< Pad data with zeros */
-  ALG_PAD_END                   /*!< Pad data with first/last data values */
+  ALG_PAD_NONE,              	/*!< No padding, same as padding with zeros. */
+  ALG_PAD_ZERO,                 /*!< Pad data with zeros. */
+  ALG_PAD_END                   /*!< Pad data with first/last data values. */
 } AlgPadType;
 
 /*!
@@ -140,14 +189,15 @@ typedef struct _ComplexD
 typedef enum _AlgError
 {
   ALG_ERR_NONE		= (0),
-  ALG_ERR_FUNC,			/*!< Function parameters invalid */
-  ALG_ERR_MALLOC,		/*!< Memory allocation failure */
-  ALG_ERR_SINGULAR,		/*!< Singular matrix */
-  ALG_ERR_HOMOGENEOUS,		/*!< Homogeneous matrix */
-  ALG_ERR_CONVERGENCE,		/*!< Failure to converge */
+  ALG_ERR_FUNC,			/*!< Function parameters invalid. */
+  ALG_ERR_MALLOC,		/*!< Memory allocation failure. */
+  ALG_ERR_SINGULAR,		/*!< Singular matrix. */
+  ALG_ERR_HOMOGENEOUS,		/*!< Homogeneous matrix. */
+  ALG_ERR_CONVERGENCE,		/*!< Failure to converge. */
   ALG_ERR_NONGLOBAL,   		/*!< Finds local solution, but fails to global
-  				     solution */
-  ALG_ERR_DIVZERO,   		/*!< Divide by zero */
+  				     solution. */
+  ALG_ERR_DIVZERO,   		/*!< Divide by zero. */
+  ALG_ERR_CONDITIONN,   	/*!< Matrix condition number out of range. */
   ALG_ERR_MAX
 } AlgError;
 
