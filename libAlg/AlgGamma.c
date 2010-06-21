@@ -68,7 +68,7 @@ double		AlgGammaLog(double x, AlgError *dstErr)
 		y,
 		tmp,
 		ser,
-		lnGam;
+		lnGam = 1.0;
   AlgError	algErr = ALG_ERR_NONE;
   const double	cof[6]={76.18009172947146,-86.50532032941677,
   			24.01409824083091,-1.231739572450155,
