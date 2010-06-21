@@ -60,6 +60,10 @@ static WlzDBox3			WlzBoundingBoxTransObj3D(
 static WlzDBox3 		WlzBoundingBoxContour3D(
 				  WlzContour *ctr,
 				  WlzErrorNum *dstErr);
+static WlzDBox3 		WlzBoundingBoxCompound3D(
+				  WlzCompoundArray *cObj,
+				  WlzErrorNum *dstErr);
+
 /*!
 * \return	2D integer bounding box.
 * \ingroup      WlzFeatures
@@ -237,6 +241,11 @@ WlzIBox3	WlzBoundingBox3I(WlzObject *inObj, WlzErrorNum *dstErr)
 	  bBox3I = WlzBoundingBox3DTo3I(bBox3D);
 	}
         break;
+      case WLZ_COMPOUND_ARR_1: /* FALLTHROUGH */
+      case WLZ_COMPOUND_ARR_2:
+        bBox3D = WlzBoundingBoxCompound3D((WlzCompoundArray *)inObj, &errNum);
+	bBox3I = WlzBoundingBox3DTo3I(bBox3D);
+        break;
       case WLZ_EMPTY_OBJ:
       case WLZ_AFFINE_TRANS:
       case WLZ_HISTOGRAM:
@@ -250,8 +259,6 @@ WlzIBox3	WlzBoundingBox3I(WlzObject *inObj, WlzErrorNum *dstErr)
       case WLZ_WARP_TRANS:
       case WLZ_FMATCHOBJ:
       case WLZ_TEXT:
-      case WLZ_COMPOUND_ARR_1:
-      case WLZ_COMPOUND_ARR_2:
       case WLZ_COMPOUND_LIST_1:
       case WLZ_COMPOUND_LIST_2:
       default:
@@ -386,6 +393,10 @@ WlzDBox3	WlzBoundingBox3D(WlzObject *inObj, WlzErrorNum *dstErr)
 	  bBox3D = WlzBoundingBoxContour3D(inObj->domain.ctr, &errNum);
 	}
         break;
+      case WLZ_COMPOUND_ARR_1: /* FALLTHROUGH */
+      case WLZ_COMPOUND_ARR_2:
+        bBox3D = WlzBoundingBoxCompound3D((WlzCompoundArray *)inObj, &errNum);
+	break;
       case WLZ_EMPTY_OBJ:
       case WLZ_AFFINE_TRANS:
       case WLZ_HISTOGRAM:
@@ -399,8 +410,6 @@ WlzDBox3	WlzBoundingBox3D(WlzObject *inObj, WlzErrorNum *dstErr)
       case WLZ_WARP_TRANS:
       case WLZ_FMATCHOBJ:
       case WLZ_TEXT:
-      case WLZ_COMPOUND_ARR_1:
-      case WLZ_COMPOUND_ARR_2:
       case WLZ_COMPOUND_LIST_1:
       case WLZ_COMPOUND_LIST_2:
       default:
@@ -573,6 +582,60 @@ static WlzDBox3	WlzBoundingBoxTransObj3D(WlzObject *inObj,
 
 /*!
 * \return	3D bounding box.
+* \ingroup	WlzFeatures
+* \brief	Computes the 3D axis aligned bounding box of the
+* 		compound array object.
+* \param	WlzCompoundArray *cObjdstErr
+*/
+static WlzDBox3 WlzBoundingBoxCompound3D(WlzCompoundArray *cObj,
+					 WlzErrorNum *dstErr)
+{
+  WlzDBox3	tBox3D,
+  		bBox3D;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if(cObj->n < 1)
+  {
+    errNum = WLZ_ERR_OBJECT_DATA;
+  }
+  else
+  {
+    int		idx = 0;
+
+    while((idx < cObj->n) &&
+          ((cObj->o[idx] == NULL) || (cObj->o[idx]->type == WLZ_EMPTY_OBJ)))
+    {
+      ++idx;
+    }
+    if(idx >= cObj->n)
+    {
+      errNum = WLZ_ERR_OBJECT_TYPE;
+    }
+    else
+    {
+      bBox3D = WlzBoundingBox3D(cObj->o[idx], &errNum);
+      while((errNum == WLZ_ERR_NONE) && (++idx < cObj->n))
+      {
+	if((cObj->o[idx] != NULL) && (cObj->o[idx]->type != WLZ_EMPTY_OBJ))
+	{
+	  tBox3D = WlzBoundingBox3D(cObj->o[idx], &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    bBox3D = WlzBoundingBoxUnion3D(bBox3D, tBox3D);
+	  }
+	}
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(bBox3D);
+}
+
+/*!
+* \return	3D bounding box.
 * \ingroup      WlzFeatures
 * \brief	Computes the 3D axis aligned bounding box of the polygon
 * 		domain.
@@ -630,8 +693,8 @@ static WlzDBox3	WlzBoundingBoxPoly3D(WlzPolygonDomain *poly,
       if((idx = poly->nvertices) > 0)
       {
 	tFVxP = (WlzFVertex2 *)(poly->vtx);
-	bBox3D.xMax = bBox3D.xMin = WLZ_NINT(tIVxP->vtX);
-	bBox3D.yMax = bBox3D.yMin = WLZ_NINT(tIVxP->vtY);
+	bBox3D.xMax = bBox3D.xMin = WLZ_NINT(tFVxP->vtX);
+	bBox3D.yMax = bBox3D.yMin = WLZ_NINT(tFVxP->vtY);
 	while(--idx > 0)
 	{
 	  if((tI0 = WLZ_NINT(tFVxP->vtX)) < bBox3D.xMin)
@@ -658,8 +721,8 @@ static WlzDBox3	WlzBoundingBoxPoly3D(WlzPolygonDomain *poly,
       if((idx = poly->nvertices) > 0)
       {
 	tDVxP = (WlzDVertex2 *)(poly->vtx);
-	bBox3D.xMax = bBox3D.xMin = WLZ_NINT(tIVxP->vtX);
-	bBox3D.yMax = bBox3D.yMin = WLZ_NINT(tIVxP->vtY);
+	bBox3D.xMax = bBox3D.xMin = WLZ_NINT(tDVxP->vtX);
+	bBox3D.yMax = bBox3D.yMin = WLZ_NINT(tDVxP->vtY);
 	while(--idx > 0)
 	{
 	  if((tI0 = WLZ_NINT(tDVxP->vtX)) < bBox3D.xMin)
@@ -742,26 +805,6 @@ static WlzDBox3	WlzBoundingBoxBound3D(WlzBoundList *bound,
     *dstErr = errNum;
   }
   return(bBox3D);
-}
-
-/*!
-* \return	2D bounding box.
-* \ingroup      WlzFeatures
-* \brief	Computes the 2D axis aligned bounding box of the contour.
-* \param	ctr			The given boundary list.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-static WlzDBox2 WlzBoundingBoxContour2D(WlzContour *ctr, WlzErrorNum *dstErr)
-{
-  WlzDBox2	bBox2D;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  bBox2D = WlzBoundingBoxGModel2D(ctr->model, &errNum);
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(bBox2D);
 }
 
 /*!
