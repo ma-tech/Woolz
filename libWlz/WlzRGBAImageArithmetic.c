@@ -111,8 +111,7 @@ WlzObject *WlzRGBAImageArithmetic(
 
   /* convert back to RGBA  */
   if( errNum == WLZ_ERR_NONE ){
-    rtnObj = WlzCompoundToRGBA(rtnCmpnd, WLZ_RGBA_SPACE_RGB,
-			       0, &errNum);
+    rtnObj = WlzCompoundToRGBA(rtnCmpnd, WLZ_RGBA_SPACE_RGB, &errNum);
   }
   if( rtnCmpnd ){
     WlzFreeObj((WlzObject *) rtnCmpnd);

@@ -1681,7 +1681,7 @@ static WlzObject *WlzCelCmpColorise(WlzObject *gObj,
   /* Create RGB object. */
   if(errNum == WLZ_ERR_NONE)
   {
-    cObj = WlzCompoundToRGBA(cpd, WLZ_RGBA_SPACE_RGB, 0, &errNum);
+    cObj = WlzCompoundToRGBA(cpd, WLZ_RGBA_SPACE_RGB, &errNum);
   }
   (void )WlzFreeObj((WlzObject *)cpd);
   if(dstErr)
@@ -1743,8 +1743,7 @@ static WlzObject *WlzCelCmpNormalise(WlzObject *gObj, int dither,
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      nObj = WlzCompoundToRGBA(cpdObj, WLZ_RGBA_SPACE_RGB, 0,
-	      			       &errNum);
+	      nObj = WlzCompoundToRGBA(cpdObj, WLZ_RGBA_SPACE_RGB, &errNum);
 	    }
 	    (void )WlzFreeObj((WlzObject *)cpdObj);
 	  }

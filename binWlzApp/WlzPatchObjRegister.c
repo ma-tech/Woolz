@@ -763,8 +763,7 @@ WlzObject *WlzRGBAGreyScale(
 	objs[3] = cmpnd->o[3];
 	rtnCmpnd = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 3, 4, &(objs[0]),
 					objs[0]->type, &errNum);
-	rtnObj = WlzCompoundToRGBA(rtnCmpnd, WLZ_RGBA_SPACE_RGB,
-				   0, &errNum);
+	rtnObj = WlzCompoundToRGBA(rtnCmpnd, WLZ_RGBA_SPACE_RGB, &errNum);
 	WlzFreeObj((WlzObject *) rtnCmpnd);
       }
       break;

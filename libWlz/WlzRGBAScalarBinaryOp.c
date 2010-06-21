@@ -93,8 +93,7 @@ WlzObject *WlzRGBAScalarBinaryOp(
 
   /* convert back to RGBA  */
   if( errNum == WLZ_ERR_NONE ){
-    rtnObj = WlzCompoundToRGBA(cmpnd0, WLZ_RGBA_SPACE_RGB,
-			       0, &errNum);
+    rtnObj = WlzCompoundToRGBA(cmpnd0, WLZ_RGBA_SPACE_RGB, &errNum);
   }
   if( cmpnd0 ){
     WlzFreeObj((WlzObject *) cmpnd0);
