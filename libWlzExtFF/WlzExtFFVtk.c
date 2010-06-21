@@ -58,6 +58,9 @@ static WlzErrorNum 		WlzEffWriteGMModelVtk(
 static WlzErrorNum 		WlzEffWriteCMesh2DVtk(
 				  FILE *fP,
 				  WlzCMesh2D *mesh);
+static WlzErrorNum 		WlzEffWriteCMesh2D5Vtk(
+				  FILE *fP,
+				  WlzCMesh2D5 *mesh);
 static WlzErrorNum 		WlzEffWriteCMesh3DVtk(
 				  FILE *fP,
 				  WlzCMesh3D *mesh);
@@ -170,6 +173,9 @@ WlzErrorNum	WlzEffWriteObjVtk(FILE *fP, WlzObject *obj)
 	break;
       case WLZ_CMESH_2D:
         errNum = WlzEffWriteCMesh2DVtk(fP, obj->domain.cm2);
+        break;
+      case WLZ_CMESH_2D5:
+        errNum = WlzEffWriteCMesh2D5Vtk(fP, obj->domain.cm2d5);
         break;
       case WLZ_CMESH_3D:
         errNum = WlzEffWriteCMesh3DVtk(fP, obj->domain.cm3);
@@ -579,7 +585,137 @@ static WlzErrorNum WlzEffWriteCMesh2DVtk(FILE *fP, WlzCMesh2D *mesh)
   AlcFree(nodTbl);
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Output the element cell types (all tetrahedra). */
+    /* Output the element cell types (all triangles, type 5). */
+    if(fprintf(fP,
+               "CELL_TYPES %d\n", nElm) <= 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < nElm; ++idE)
+    {
+      if(fprintf(fP, "5\n") <= 0)
+      {
+        errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	break;
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz 2D5 constrained mesh to the
+*		given stream using the Visualization Toolkit
+*		unstructured grid file format with triangular elements.
+* \param	fP			Output file stream.
+* \param	model			Given gemetric model.
+*/
+static WlzErrorNum WlzEffWriteCMesh2D5Vtk(FILE *fP, WlzCMesh2D5 *mesh)
+{
+
+  int		cnt,
+		idE,
+		idN,
+  		nElm,
+  		nNod;
+  WlzCMeshElm2D5 *elm;
+  WlzCMeshNod2D5 *nod[3];
+  int		*nodTbl = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_2D5)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if(((nNod = mesh->res.nod.numEnt) < 3) ||
+          ((nElm = mesh->res.elm.numEnt) < 1))
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Allocate a node table to avoid deleted nodes. */
+    if((nodTbl = (int *)AlcMalloc(sizeof(int) *
+                                  mesh->res.nod.maxEnt)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the file header. */
+    if(fprintf(fP,
+	       "# vtk DataFile Version 1.0\n"
+	       "Written by WlzEffWriteCMesh2D5Vtk().\n"
+	       "ASCII\n"
+	       "DATASET UNSTRUCTURED_GRID\n"
+	       "POINTS %d float\n",
+	       nNod) <= 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the node positions while building a table of valid nodes. */
+    cnt = 0;
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod[0] = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod[0]->idx >= 0)
+      {
+        if(fprintf(fP, "%g %g %g\n",
+	               nod[0]->pos.vtX, nod[0]->pos.vtY, nod[0]->pos.vtZ) <= 0)
+        {
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  break;
+	}
+	nodTbl[idN] = cnt++;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the element node indices. */
+    if(fprintf(fP,
+               "CELLS %d %d\n", nElm, 4 * nElm) <= 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	nod[0] = WLZ_CMESH_ELM2D5_GET_NODE_0(elm);
+	nod[1] = WLZ_CMESH_ELM2D5_GET_NODE_1(elm);
+	nod[2] = WLZ_CMESH_ELM2D5_GET_NODE_2(elm);
+        if(fprintf(fP, "3 %d %d %d\n",
+	           nodTbl[nod[0]->idx], nodTbl[nod[2]->idx],
+	           nodTbl[nod[1]->idx]) <= 0)
+        {
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  break;
+	}
+      }
+    }
+  }
+  AlcFree(nodTbl);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the element cell types (all triangles, type 5). */
     if(fprintf(fP,
                "CELL_TYPES %d\n", nElm) <= 0)
     {
@@ -710,7 +846,7 @@ static WlzErrorNum WlzEffWriteCMesh3DVtk(FILE *fP, WlzCMesh3D *mesh)
   AlcFree(nodTbl);
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Output the element cell types (all tetrahedra). */
+    /* Output the element cell types (all tetrahedra, type 10). */
     if(fprintf(fP,
                "CELL_TYPES %d\n", nElm) <= 0)
     {

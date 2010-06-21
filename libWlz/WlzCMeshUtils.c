@@ -92,8 +92,7 @@ void     	WlzCMeshUpdateMaxSqEdgLen2D(WlzCMesh2D *mesh)
     mesh->maxSqEdgLen = 0.0;
     for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
     {
-      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec,
-      				              idE);
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
 	dSq = WlzGeomDistSq2D(elm->edu[0].nod->pos,
@@ -140,8 +139,7 @@ void     	WlzCMeshUpdateMaxSqEdgLen2D5(WlzCMesh2D5 *mesh)
     mesh->maxSqEdgLen = 0.0;
     for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
     {
-      elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec,
-      				              idE);
+      elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
 	dSq = WlzGeomDistSq3D(elm->edu[0].nod->pos,
@@ -191,8 +189,7 @@ void            WlzCMeshUpdateMaxSqEdgLen3D(WlzCMesh3D *mesh)
     mesh->maxSqEdgLen = 0.0;
     for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
     {
-      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec,
-      					      idE);
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
 	nodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
@@ -3575,4 +3572,340 @@ void	 	WlzCMeshGetCellStats3D(WlzCMesh3D *mesh,
     *dstMaxElmPerCell = 0;
     *dstMeanElmPerCell = 0.0;
   }
+}
+
+/*!
+* \return	New node index look up table or NULL on error.
+* \ingroup	WlzMesh
+* \brief	Allocates and populates a node look up table which maps
+* 		node indices to the range 0 - (n nodes - 1). The size of
+* 		the look up table is the maximum number of nodes allocated
+* 		in the mesh.
+* \param	mesh			The mesh.
+* \param	dstNNod			Destination pointer for the number of
+* 					nodes in the look up table.
+*/
+int		*WlzCMeshMakeNodIdxTbl2D(WlzCMesh2D *mesh, int *dstNNod)
+{
+  int		nNod = 0;
+  int		*idxTb = NULL;
+
+  if((idxTb = AlcMalloc(sizeof(int) * mesh->res.nod.maxEnt)) != NULL) 
+  {
+    nNod = WlzCMeshSetNodIdxTbl2D(mesh, idxTb);
+  }
+  if(dstNNod)
+  {
+    *dstNNod = nNod;
+  }
+  return(idxTb);
+}
+
+/*!
+* \return	New node index look up table or NULL on error.
+* \ingroup	WlzMesh
+* \brief	Allocates and populates a node look up table which maps
+* 		node indices to the range 0 - (n nodes - 1). The size of
+* 		the look up table is the maximum number of nodes allocated
+* 		in the mesh.
+* \param	mesh			The mesh.
+* \param	dstNNod			Destination pointer for the number of
+* 					nodes in the look up table.
+*/
+int		*WlzCMeshMakeNodIdxTbl2D5(WlzCMesh2D5 *mesh, int *dstNNod)
+{
+  int		nNod = 0;
+  int		*idxTb = NULL;
+
+  if((idxTb = AlcMalloc(sizeof(int) * mesh->res.nod.maxEnt)) != NULL) 
+  {
+    nNod = WlzCMeshSetNodIdxTbl2D5(mesh, idxTb);
+  }
+  if(dstNNod)
+  {
+    *dstNNod = nNod;
+  }
+  return(idxTb);
+}
+
+/*!
+* \return	New node index look up table or NULL on error.
+* \ingroup	WlzMesh
+* \brief	Allocates and populates a node look up table which maps
+* 		node indices to the range 0 - (n nodes - 1). The size of
+* 		the look up table is the maximum number of nodes allocated
+* 		in the mesh.
+* \param	mesh			The mesh.
+* \param	dstNNod			Destination pointer for the number of
+* 					nodes in the look up table.
+*/
+int		*WlzCMeshMakeNodIdxTbl3D(WlzCMesh3D *mesh, int *dstNNod)
+{
+  int		nNod = 0;
+  int		*idxTb = NULL;
+
+  if((idxTb = AlcMalloc(sizeof(int) * mesh->res.nod.maxEnt)) != NULL) 
+  {
+    nNod = WlzCMeshSetNodIdxTbl3D(mesh, idxTb);
+  }
+  if(dstNNod)
+  {
+    *dstNNod = nNod;
+  }
+  return(idxTb);
+}
+
+/*!
+* \return	Number of nodes in the look up table.
+* \ingroup	WlzMesh
+* \brief	Populates a node look up table which maps node indices to
+* 		the range 0 - (n nodes - 1). The size of the look up table
+* 		must be at least the maximum number of nodes allocated in
+* 		the mesh.
+* \param	mesh			The mesh.
+* \param	idxTb			The allocated index table to be
+* 					populated.
+*/
+int		WlzCMeshSetNodIdxTbl2D(WlzCMesh2D *mesh, int *idxTb)
+{
+  int		idN,
+  		nNod = 0;
+
+  for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+  {
+    WlzCMeshNod2D *nod;
+
+    nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+    if(nod->idx >= 0)
+    {
+      idxTb[idN] = nNod++;
+    }
+  }
+  return(nNod);
+}
+
+/*!
+* \return	Number of nodes in the look up table.
+* \ingroup	WlzMesh
+* \brief	Populates a node look up table which maps node indices to
+* 		the range 0 - (n nodes - 1). The size of the look up table
+* 		must be at least the maximum number of nodes allocated in
+* 		the mesh.
+* \param	mesh			The mesh.
+* \param	idxTb			The allocated index table to be
+* 					populated.
+*/
+int		WlzCMeshSetNodIdxTbl2D5(WlzCMesh2D5 *mesh, int *idxTb)
+{
+  int		idN,
+  		nNod = 0;
+
+  for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+  {
+    WlzCMeshNod2D5 *nod;
+
+    nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+    if(nod->idx >= 0)
+    {
+      idxTb[idN] = nNod++;
+    }
+  }
+  return(nNod);
+}
+
+/*!
+* \return	Number of nodes in the look up table.
+* \ingroup	WlzMesh
+* \brief	Populates a node look up table which maps node indices to
+* 		the range 0 - (n nodes - 1). The size of the look up table
+* 		must be at least the maximum number of nodes allocated in
+* 		the mesh.
+* \param	mesh			The mesh.
+* \param	idxTb			The allocated index table to be
+* 					populated.
+*/
+int		WlzCMeshSetNodIdxTbl3D(WlzCMesh3D *mesh, int *idxTb)
+{
+  int		idN,
+  		nNod = 0;
+
+  for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+  {
+    WlzCMeshNod3D *nod;
+
+    nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+    if(nod->idx >= 0)
+    {
+      idxTb[idN] = nNod++;
+    }
+  }
+  return(nNod);
+}
+
+/*!
+* \return	New element index look up table or NULL on error.
+* \ingroup	WlzMesh
+* \brief	Allocates and populates an element look up table which maps
+* 		element indices to the range 0 - (n elements - 1). The size
+* 		of the look up table is the maximum number of elements
+* 		allocated in the mesh.
+* \param	mesh			The mesh.
+* \param	dstNElm			Destination pointer for the number of
+* 					elements in the look up table.
+*/
+int		*WlzCMeshMakeElmIdxTbl2D(WlzCMesh2D *mesh, int *dstNElm)
+{
+  int		nElm = 0;
+  int		*idxTb = NULL;
+
+  if((idxTb = AlcMalloc(sizeof(int) * mesh->res.elm.maxEnt)) != NULL) 
+  {
+    nElm = WlzCMeshSetElmIdxTbl2D(mesh, idxTb);
+  }
+  if(dstNElm)
+  {
+    *dstNElm = nElm;
+  }
+  return(idxTb);
+}
+
+/*!
+* \return	New element index look up table or NULL on error.
+* \ingroup	WlzMesh
+* \brief	Allocates and populates an element look up table which maps
+* 		element indices to the range 0 - (n elements - 1). The size
+* 		of the look up table is the maximum number of elements
+* 		allocated in the mesh.
+* \param	mesh			The mesh.
+* \param	dstNElm			Destination pointer for the number of
+* 					elements in the look up table.
+*/
+int		*WlzCMeshMakeElmIdxTbl2D5(WlzCMesh2D5 *mesh, int *dstNElm)
+{
+  int		nElm = 0;
+  int		*idxTb = NULL;
+
+  if((idxTb = AlcMalloc(sizeof(int) * mesh->res.elm.maxEnt)) != NULL) 
+  {
+    nElm = WlzCMeshSetElmIdxTbl2D5(mesh, idxTb);
+  }
+  if(dstNElm)
+  {
+    *dstNElm = nElm;
+  }
+  return(idxTb);
+}
+
+/*!
+* \return	New element index look up table or NULL on error.
+* \ingroup	WlzMesh
+* \brief	Allocates and populates an element look up table which maps
+* 		element indices to the range 0 - (n elements - 1). The size
+* 		of the look up table is the maximum number of elements
+* 		allocated in the mesh.
+* \param	mesh			The mesh.
+* \param	dstNElm			Destination pointer for the number of
+* 					elements in the look up table.
+*/
+int		*WlzCMeshMakeElmIdxTbl3D(WlzCMesh3D *mesh, int *dstNElm)
+{
+  int		nElm = 0;
+  int		*idxTb = NULL;
+
+  if((idxTb = AlcMalloc(sizeof(int) * mesh->res.elm.maxEnt)) != NULL) 
+  {
+    nElm = WlzCMeshSetElmIdxTbl3D(mesh, idxTb);
+  }
+  if(dstNElm)
+  {
+    *dstNElm = nElm;
+  }
+  return(idxTb);
+}
+
+/*!
+* \return	Number of elements in the look up table.
+* \ingroup	WlzMesh
+* \brief	Populates a element look up table which maps ellement indices
+* 		to the range 0 - (n elements - 1). The size of the look up
+* 		table must be at least the maximum number of elements
+* 		allocated in the mesh.
+* \param	mesh			The mesh.
+* \param	idxTb			The allocated index table to be
+* 					populated.
+*/
+int		WlzCMeshSetElmIdxTbl2D(WlzCMesh2D *mesh, int *idxTb)
+{
+  int		idE,
+  		nElm = 0;
+
+  for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+  {
+    WlzCMeshElm2D *elm;
+
+    elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+    if(elm->idx >= 0)
+    {
+      idxTb[idE] = nElm++;
+    }
+  }
+  return(nElm);
+}
+
+/*!
+* \return	Number of elements in the look up table.
+* \ingroup	WlzMesh
+* \brief	Populates a element look up table which maps ellement indices
+* 		to the range 0 - (n elements - 1). The size of the look up
+* 		table must be at least the maximum number of elements
+* 		allocated in the mesh.
+* \param	mesh			The mesh.
+* \param	idxTb			The allocated index table to be
+* 					populated.
+*/
+int		WlzCMeshSetElmIdxTbl2D5(WlzCMesh2D5 *mesh, int *idxTb)
+{
+  int		idE,
+  		nElm = 0;
+
+  for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+  {
+    WlzCMeshElm2D5 *elm;
+
+    elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+    if(elm->idx >= 0)
+    {
+      idxTb[idE] = nElm++;
+    }
+  }
+  return(nElm);
+}
+
+/*!
+* \return	Number of elements in the look up table.
+* \ingroup	WlzMesh
+* \brief	Populates a element look up table which maps ellement indices
+* 		to the range 0 - (n elements - 1). The size of the look up
+* 		table must be at least the maximum number of elements
+* 		allocated in the mesh.
+* \param	mesh			The mesh.
+* \param	idxTb			The allocated index table to be
+* 					populated.
+*/
+int		WlzCMeshSetElmIdxTbl3D(WlzCMesh3D *mesh, int *idxTb)
+{
+  int		idE,
+  		nElm = 0;
+
+  for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+  {
+    WlzCMeshElm3D *elm;
+
+    elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+    if(elm->idx >= 0)
+    {
+      idxTb[idE] = nElm++;
+    }
+  }
+  return(nElm);
 }

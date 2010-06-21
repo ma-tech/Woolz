@@ -5046,6 +5046,72 @@ FOUND:
 *		grid cell containing the node.
 * \param	mesh			The mesh.
 * \param	pos			Given node position.
+* \param	dstNod			Destination pointer for the matched
+*					node which will be NULL if there
+*					is no node at the given position.
+*					Must not be NULL.
+*/
+int	 	WlzCMeshLocateNod2D5(WlzCMesh2D5 *mesh, 
+				     WlzDVertex3 pos,
+				     WlzCMeshNod2D5 **dstNod)
+{
+  int		found = 0;
+  double	delta;
+  WlzDVertex3	pos0,
+  		pos1;
+  WlzIVertex3	idx,
+  		idxMin,
+		idxMax;
+  WlzCMeshCell2D5 *cell;
+  WlzCMeshNod2D5 *nod;
+  const double	eps = 0.001;
+
+  /* Search within a range of cells because the vertex may be on the
+   * edge of a cell. */
+  delta = eps * mesh->cGrid.cellSz;
+  pos0.vtX = pos.vtX - delta;
+  pos0.vtY = pos.vtY - delta;
+  pos0.vtZ = pos.vtZ - delta;
+  pos1.vtX = pos.vtX + delta;
+  pos1.vtY = pos.vtY + delta;
+  pos1.vtZ = pos.vtZ + delta;
+  idxMin = WlzCMeshCellIdxVtx2D5(mesh, pos0);
+  idxMax = WlzCMeshCellIdxVtx2D5(mesh, pos1);
+  for(idx.vtZ = idxMin.vtZ; idx.vtZ <= idxMax.vtZ; ++idx.vtZ)
+  {
+    for(idx.vtY = idxMin.vtY; idx.vtY <= idxMax.vtY; ++idx.vtY)
+    {
+      for(idx.vtX = idxMin.vtX; idx.vtX <= idxMax.vtX; ++idx.vtX)
+      {
+	cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+	nod = cell->nod;
+	while(nod != NULL)
+	{
+	  if(WLZ_VTX_3_EQUAL(nod->pos, pos, WLZ_MESH_TOLERANCE))
+	  {
+	    found = 1;
+	    goto FOUND;
+	  }
+	  nod = nod->next;
+	}
+      }
+    }
+  }
+FOUND:
+  *dstNod = (found)? nod: NULL;
+  return(found);
+}
+
+/*!
+* \return	Non zero if there is an existing node at the given position.
+* \ingroup	WlzMesh
+* \brief	Locates the matching node and for the given vertex
+*		position. The matched node is the mesh node which has the
+*		same position (within WLZ_MESH_TOLERANCE distance) of
+*		the given vertex. This function also gives access to the
+*		grid cell containing the node.
+* \param	mesh			The mesh.
+* \param	pos			Given node position.
 * \param	dstGPos			Destination pointer for the grid
 *					position. Must not be NULL.
 * \param	dstPrev			Destination pointer for the previous
@@ -5140,6 +5206,24 @@ WlzCMeshNod2D 	*WlzCMeshMatchNod2D(WlzCMesh2D *mesh, WlzDVertex2 nPos)
 * \param	mesh			The mesh.
 * \param	nPos			Given vertex position.
 */
+WlzCMeshNod2D5 	*WlzCMeshMatchNod2D5(WlzCMesh2D5 *mesh, WlzDVertex3 nPos)
+{
+  WlzCMeshNod2D5 *mNod;
+
+  (void )WlzCMeshLocateNod2D5(mesh, nPos, &mNod);
+  return(mNod);
+}
+
+/*!
+* \return	Matched node or NULL if no node is matched.
+* \ingroup	WlzMesh
+* \brief	Locates the matching node and for the given vertex
+*		position. The matched node is the mesh node which has the
+*		same position (within WLZ_MESH_TOLERANCE distance) of
+*		the given vertex.
+* \param	mesh			The mesh.
+* \param	nPos			Given vertex position.
+*/
 WlzCMeshNod3D 	*WlzCMeshMatchNod3D(WlzCMesh3D *mesh, WlzDVertex3 nPos)
 {
   WlzIVertex3	gPos;
@@ -5187,6 +5271,31 @@ int		WlzCMeshMatchNNod2D(WlzCMesh2D *mesh, int nNod,
 * \param	nPos			Node positions.
 * \param	mNod			Array for matched nodes.
 */
+int		WlzCMeshMatchNNod2D5(WlzCMesh2D5 *mesh, int nNod,
+				     WlzDVertex3 *nPos, WlzCMeshNod2D5 **mNod)
+{
+  int		idN,
+  		cnt = 0;
+
+  for(idN = 0; idN < nNod; ++idN)
+  {
+    cnt += (*(mNod + idN) = WlzCMeshMatchNod2D5(mesh, *(nPos + idN))) != NULL;
+  }
+  return(cnt);
+}
+
+/*!
+* \return	Number of matched nodes.
+* \ingroup	WlzMesh
+* \brief	Locates the nodes matching the given vertex positions.
+*		The matched nodes are the mesh nodes which have the
+*		same positions (within WLZ_MESH_TOLERANCE distance) of
+*		the given vertices.
+* \param	mesh			The mesh.
+* \param	nNod			Number of node positions to match.
+* \param	nPos			Node positions.
+* \param	mNod			Array for matched nodes.
+*/
 int		WlzCMeshMatchNNod3D(WlzCMesh3D *mesh, int nNod,
 				    WlzDVertex3 *nPos, WlzCMeshNod3D **mNod)
 {
@@ -5196,6 +5305,99 @@ int		WlzCMeshMatchNNod3D(WlzCMesh3D *mesh, int nNod,
   for(idN = 0; idN < nNod; ++idN)
   {
     cnt += (*(mNod + idN) = WlzCMeshMatchNod3D(mesh, *(nPos + idN))) != NULL;
+  }
+  return(cnt);
+}
+
+/*!
+* \return	Number of matched nodes.
+* \ingroup	WlzMesh
+* \brief	Locates the nodes matching the given vertex positions.
+*		The matched nodes are the mesh nodes which have the
+*		same positions (within WLZ_MESH_TOLERANCE distance) of
+*		the given vertices.
+* \param	mesh			The mesh.
+* \param	nNod			Number of node positions to match.
+* \param	nPos			Node positions.
+* \param	mNod			For indices of the matched nodes.
+*/
+int		WlzCMeshMatchNNodIdx2D(WlzCMesh2D *mesh, int nNod,
+				       WlzDVertex2 *nPos, int *mIdx)
+{
+  int		idN,
+  		cnt = 0;
+  WlzCMeshNod2D *nod;
+
+  for(idN = 0; idN < nNod; ++idN)
+  {
+    nod = WlzCMeshMatchNod2D(mesh, *(nPos + idN));
+    if((nod != NULL) && (nod->idx >= 0))
+    {
+      *(mIdx + idN) = nod->idx;
+      ++cnt;
+    }
+  }
+  return(cnt);
+}
+
+/*!
+* \return	Number of matched nodes.
+* \ingroup	WlzMesh
+* \brief	Locates the nodes matching the given vertex positions.
+*		The matched nodes are the mesh nodes which have the
+*		same positions (within WLZ_MESH_TOLERANCE distance) of
+*		the given vertices.
+* \param	mesh			The mesh.
+* \param	nNod			Number of node positions to match.
+* \param	nPos			Node positions.
+* \param	mNod			For indices of the matched nodes.
+*/
+int		WlzCMeshMatchNNodIdx2D5(WlzCMesh2D5 *mesh, int nNod,
+				        WlzDVertex3 *nPos, int *mIdx)
+{
+  int		idN,
+  		cnt = 0;
+  WlzCMeshNod2D5 *nod;
+
+  for(idN = 0; idN < nNod; ++idN)
+  {
+    nod = WlzCMeshMatchNod2D5(mesh, *(nPos + idN));
+    if((nod != NULL) && (nod->idx >= 0))
+    {
+      *(mIdx + idN) = nod->idx;
+      ++cnt;
+    }
+  }
+  return(cnt);
+}
+
+/*!
+* \return	Number of matched nodes.
+* \ingroup	WlzMesh
+* \brief	Locates the nodes matching the given vertex positions.
+*		The matched nodes are the mesh nodes which have the
+*		same positions (within WLZ_MESH_TOLERANCE distance) of
+*		the given vertices.
+* \param	mesh			The mesh.
+* \param	nNod			Number of node positions to match.
+* \param	nPos			Node positions.
+* \param	mNod			For indices of the matched nodes.
+*/
+int		WlzCMeshMatchNNodIdx3D(WlzCMesh3D *mesh, int nNod,
+				       WlzDVertex3 *nPos, int *mIdx)
+{
+  int		idN,
+  		cnt = 0;
+  WlzCMeshNod3D *nod;
+
+  for(idN = 0; idN < nNod; ++idN)
+  {
+    nod = WlzCMeshMatchNod3D(mesh, *(nPos + idN));
+    if((nod != NULL) && (nod->idx >= 0))
+    {
+      *(mIdx + idN) = nod->idx;
+      ++cnt;
+    }
   }
   return(cnt);
 }
