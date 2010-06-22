@@ -137,9 +137,8 @@ int             main(int argc, char **argv)
   WlzIBox3	bBox;
   WlzPixelV	gMin,
   		gMax;
-  WlzObject	*tmpObj,
+  WlzObject	*tmpObj = NULL,
   		*histObj = NULL,
-		*blankObj = NULL,
   		*outObj = NULL;
   WlzObject	*inObj[4];
   WlzCompoundArray *cpdObj = NULL;
@@ -296,14 +295,7 @@ int             main(int argc, char **argv)
     {
       if(inObj[idx] == NULL)
       {
-	if(blankObj == NULL)
-	{
-          blankObj = WlzMakeEmpty(&errNum);
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  inObj[idx] = WlzAssignObject(blankObj, NULL);
-	}
+	inObj[idx] = WlzAssignObject(WlzMakeEmpty(&errNum), NULL);
       }
       else
       {
@@ -438,7 +430,6 @@ int             main(int argc, char **argv)
   (void )WlzFreeObj(inObj[3]);
   (void )WlzFreeObj(outObj);
   (void )WlzFreeObj(histObj);
-  (void )WlzFreeObj(blankObj);
   (void )WlzFreeObj((WlzObject *)cpdObj);
   /* Report usage if required. */
   if(usage)

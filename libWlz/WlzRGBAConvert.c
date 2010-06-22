@@ -616,6 +616,7 @@ static WlzObject *WlzCompoundToRGBA3D(WlzCompoundArray *cObj,
 	  dom.p->domains[idP] = WlzAssignDomain(rObj2->domain, NULL);
 	  val.vox->values[idP] = WlzAssignValues(rObj2->values, NULL);
 	}
+	(void )WlzFreeObj(rObj2);
 	(void )WlzFreeObj((WlzObject *)cObj2);
 	if(errNum2 != WLZ_ERR_NONE)
 	{
