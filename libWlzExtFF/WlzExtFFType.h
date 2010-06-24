@@ -82,6 +82,7 @@ typedef enum _WlzEffFormat
   WLZEFF_FORMAT_MESH,           /*!< NETGEN tetrahedral mesh format. */
   WLZEFF_FORMAT_NODEELE,        /*!< Jonathan Shewchuk's mesh format. */
   WLZEFF_FORMAT_VMESH,          /*!< GRUMMP tetrahedral mesh format. */
+  WLZEFF_FORMAT_TXT,		/*!< Simple ASCII text listing, csv format. */
   WLZEFF_FORMAT_COUNT 		/*!< Keep last: Number of formats */
 } WlzEffFormat;
 

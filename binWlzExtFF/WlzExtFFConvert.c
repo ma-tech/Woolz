@@ -131,6 +131,7 @@ The valid file formats are:
   <tr> <td>SLC</td> <td>slc</td> <td>.slc</td> </tr>
   <tr> <td>Stanford Density</td> <td>den</td> <td>.den</td> </tr>
   <tr> <td>Sunvision VFF</td> <td>vff</td> <td>.vff</td> </tr>
+  <tr> <td>Text</td> <td>txt</td> <td>.txt</td> </tr>
   <tr> <td>TIFF</td> <td>tif</td> <td>.tif</td> </tr>
   <tr> <td>Visualization Toolkit VTK</td> <td>vtk</td> <td>.vtk</td> </tr>
   <tr> <td>MRC HGU Woolz</td> <td>wlz</td> <td>.wlz</td> </tr>
@@ -146,6 +147,9 @@ size of the bounding box is maintained but the position is set to
 result in a shifted image, i.e. registration is lost. Most 3D
 formats encode this data, of the 2D formats only woolz can retain
 all offsets, TIFF can only encode positive offsets.
+
+Note the text format is output only and currently only valid
+ or UBYTE, short and int grey types.
 
 \par Examples
 
@@ -521,6 +525,7 @@ int             main(int argc, char **argv)
 	"  Stanford Density                 den     .den\n"
 	"  Sunvision VFF                    vff     .vff\n"
 	"  TIFF                             tif     .tif\n"
+	"  Text (output only)               txt     .txt\n"
 	"  Visualization Toolkit VTK        vtk     .vtk\n"
 	"  MRC HGU Woolz                    wlz     .wlz\n",
 	"Simple example:\n  ",

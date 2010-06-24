@@ -76,6 +76,7 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "raw",   WLZEFF_FORMAT_RAW,
 			 "slc",   WLZEFF_FORMAT_SLC,
 			 "tif",   WLZEFF_FORMAT_TIFF,
+			 "txt",    WLZEFF_FORMAT_TXT,
 			 "vmesh", WLZEFF_FORMAT_VMESH,
 			 "vff",   WLZEFF_FORMAT_VFF,
 			 "vtk",   WLZEFF_FORMAT_VTK,
@@ -114,6 +115,7 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
 		     "SLC", WLZEFF_FORMAT_SLC,
 		     "Stanford Density", WLZEFF_FORMAT_DEN,
 		     "Sunvision VFF", WLZEFF_FORMAT_VFF,
+		     "Text", WLZEFF_FORMAT_TXT,
 		     "Tiff", WLZEFF_FORMAT_TIFF,
 		     "Visualization Toolkit VTK", WLZEFF_FORMAT_VTK,
 		     "Woolz", WLZEFF_FORMAT_WLZ,
@@ -164,6 +166,8 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*fmtTiffStr = "Tiff",
 		*extRawStr = "raw",
 		*fmtRawStr = "Raw",
+		*extTxtStr = "txt",
+		*fmtTxtStr = "Text",
 		*extAmStr  = "am",
                 *fmtAmStr  = "Amira Lattice",
 		*extJpegStr  = "jpg",
@@ -254,6 +258,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     case WLZEFF_FORMAT_VMESH:
       fmtStr = fmtVMeshStr;
       extStr = extVMeshStr;
+      break;
+    case WLZEFF_FORMAT_TXT:
+      fmtStr = fmtTxtStr;
+      extStr = extTxtStr;
       break;
     default:
       break;
@@ -540,6 +548,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 	break;
       case WLZEFF_FORMAT_JPEG:
         errNum = WlzEffWriteObjJpeg(fP, obj, "");
+	break;
+      case WLZEFF_FORMAT_TXT:
+        errNum = WlzEffWriteObjTxt(fP, obj, "");
 	break;
       case WLZEFF_FORMAT_ANL:
 	errNum = WlzEffWriteObjAnl(fName, obj);

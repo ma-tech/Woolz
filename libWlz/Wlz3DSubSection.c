@@ -50,13 +50,13 @@ static char _Wlz3DSubSection_c[] = "MRC HGU $Id:";
 
 #include <Wlz.h>
 
-static WlzObject 		*WlzGetSubSectionFrom3DDomObj(
-  				  WlzObject 	*obj,
-				  WlzObject	*subDomain,
-				  WlzThreeDViewStruct *viewStr,
-				  WlzInterpolationType	interp,
-				  WlzObject	**maskRtn,
-				  WlzErrorNum *dstErr);
+static WlzObject *WlzGetSubSectionFrom3DDomObj(
+  WlzObject 		*obj,
+  WlzObject		*subDomain,
+  WlzThreeDViewStruct 	*viewStr,
+  WlzInterpolationType	interp,
+  WlzObject		**maskRtn,
+  WlzErrorNum 		*dstErr);
 
 
 WlzObject 	*WlzGetSubSectionFromObject(

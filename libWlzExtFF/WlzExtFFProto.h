@@ -261,6 +261,12 @@ extern WlzErrorNum		WlzEffWriteObjJpeg(
 				  WlzObject *obj,
 				  char	*params);
 
+/* From WlzExtFFTxt.c */
+extern WlzErrorNum		WlzEffWriteObjTxt(
+				  FILE *fP,
+				  WlzObject *obj,
+				  char	*params);
+
 /* From	WlzExtFFBibUtils.c */
 extern WlzErrorNum 		WlzEffBibWrite3DSectionViewParamsRecord(
 				  FILE *fp,
