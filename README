@@ -1,7 +1,8 @@
 Core Woolz README
 =================
+($Id$)
 
-bill@hgu.mrc.ac.uk 20070914
+bill@hgu.mrc.ac.uk 2010
 
 Contents
 --------
@@ -12,15 +13,16 @@ Contents
         b) Authors
 	c) Other Acknowledgements
 2) Where can I get the Woolz software?
-3) How can I build the libraries?
-        a) Compatibility issues
-        b) Compiler warning messages
+3) How can I build Woolz?
+	a) Install instructions
+        b) Compatibility issues
+        c) Compiler warning messages
 4) How can I write my own Woolz code?
 	a) Where to start
 
 
 1) What is Woolz?
-----------------
+-----------------
 
 
 Woolz is a set of software libraries and executables for image processing
@@ -32,18 +34,86 @@ build using MingW on Windows systems.
 
 The code is partitioned into the following modules:
 
-libAlc:		A basic library providing generic data structures and
-		memory allocation functions.
-TODO
+libAlc:		Library providing generic data structures and memory allocation functions.
+libAlg:		Library providing basic numerical algorithms.
+libbibfile:     Library with bibfile style input/output functions.
+libhguDlpList:  Library with a generic doubly linked pointer list.
+libReconstruct: Library with code for 3D alignment of 2D section images to form a 3D image.
+libWlz:         The Woolz image processing library.
+libWlzBnd:      Library with small functions that bind Woolz to other languages.
+libWlzExtFF:    Library for external data format input/output.
+java:           Directory structure in which the Woolz java binding can be built.
+binWlz:         Small command line based Woolz programs.
+binWlzApp:      More small command line based Woolz programs.
+binWlzExtFF:    Small command line based Woolz programs which use external file formats.
+binWlzTst:      Small command line based test programs for Woolz.
 
 1a) History
-===========
+-----------
+
+TODO
 
 1b) Authors
-===========
+-----------
+
+TODO
 
 1c) Other Acknowledgements
-==========================
+--------------------------
 
 The skeleton for the autoconf system was shamelessly copied from Tina
 (http://www.tina-vision.net).
+
+2) Where can I get the Woolz software?
+--------------------------------------
+
+While we plan to release Woolz to some public code repository, currently it can
+only be obtained (both as source code and compilled code) from the MRC Human Genetics Unit,
+Edinburgh, UK.
+
+3. How can I build Woolz?
+-------------------------
+
+3a) Install instructions
+------------------------
+
+Woolz should build easily on most modern systems that have the GNU Autoconf and Automake
+tools.
+
+In most cases the following should be sufficient:
+
+tar -zxf Woolz.tgz
+cd Woolz/src/Core
+aclocal
+automake -a
+autoconf
+./configure --enable-extff --enable-optimise
+make 
+
+A prefix can be given in the configure stage to define where the programs, libraries
+etc will be installed. Use
+
+./configure --help
+
+to see this and more options.
+
+3b) Compatibility issues
+------------------------
+
+TODO
+
+3c) Compiler warning messages
+-----------------------------
+
+TODO
+
+4) How can I write my own Woolz code?
+-------------------------------------
+
+TODO
+
+4a) Where to start
+------------------
+
+TODO
+
