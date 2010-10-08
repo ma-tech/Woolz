@@ -47,6 +47,15 @@ static char _AlgMatrixLSQR_c[] = "MRC HGU $Id$";
 #include <Alg.h>
 #include <float.h>
 
+
+static double 			AlgMatrixLSQRNorm2(
+				  double a,
+				  double b);
+static double 			AlgMatrixLSQRNorm4(
+				  double a,
+				  double b,
+				  double c,
+				  double d);
 /*!
 * \return
 * \ingroup	AlgMatrix
@@ -105,7 +114,7 @@ static char _AlgMatrixLSQR_c[] = "MRC HGU $Id$";
 * 					this function.
 * \param	nR			Number of rows in matrix A.
 * \param	nC             		Number of columns in matrix A.
-* \param	bV			Vector b with nR entries whicha are
+* \param	bV			Vector b with nR entries which are
 * 					modified by this function.
 * \param	xV			Vector x for return with nC entries.
 * \param	damping			Damping parameter, set to 0.0 for no
@@ -115,45 +124,31 @@ static char _AlgMatrixLSQR_c[] = "MRC HGU $Id$";
 * 					6 digits, set to 1.0e-06.
 * \param	relErrB			An estimate of the relative error in
 * 					vector b. Set as for relErrA.
+* \param	maxItr			An upper limit on the number of
+* 					iterations. If zero set to nC.
 * \param	condLim			Upper limit on the condition number
 * 					of matrix 'Abar'. Iterations will be
 * 					terminated if a computed estimate of
 * 					exceeds this condition number.
-* \param	maxItr			An upper limit on the number of
-* 					iterations. If zero set to nC.
 * \param	dstTerm			Destination pointer for termination
-* 					code, which may be NULL:
-*   TODO use nice list TODO
-*                     0       x = x0  is the exact solution.
-*                             No iterations were performed.
-*
-*                     1       The equations A*x = b are probably compatible.
-*                             Norm(A*x - b) is sufficiently small, given the
-*                             values of relErrA and relErrB.
-*
-*                     2       The system A*x = b is probably not
-*                             compatible.  A least-squares solution has
-*                             been obtained that is sufficiently accurate,
-*                             given the value of relErrA.
-*
-*                     3       An estimate of cond('Abar') has exceeded
-*                             condLim.  The system A*x = b appears to be
-*                             ill-conditioned.
-*
-*                     4       The equations A*x = b are probably
-*                             compatible.  Norm(A*x - b) is as small as
-*                             seems reasonable on this machine.
-*
-*                     5       The system A*x = b is probably not
-*                             compatible.  A least-squares solution has
-*                             been obtained that is as accurate as seems
-*                             reasonable on this machine.
-*
-*                     6       Cond('Abar') seems to be so large that there is
-*                             no point in doing further iterations,
-*                             given the precision of this machine.
-*
-*                     7       The iteration limit maxItr was reached.
+* 					code, which may be NULL. The values
+* 					used are:
+*   - 0       x = x0  is the exact solution. No iterations were performed.
+*   - 1      The equations A*x = b are probably compatible. Norm(A*x - b)
+*             is sufficiently small, given the values of relErrA and relErrB.
+*   - 2       The system A*x = b is probably not compatible.  A least-squares
+*             solution has been obtained that is sufficiently accurate, given
+*             the value of relErrA.
+*   - 3       An estimate of cond('Abar') has exceeded condLim.  The system
+*             A*x = b appears to be ill-conditioned.
+*   - 4       The equations A*x = b are probably compatible.  Norm(A*x - b)
+*             is as small as seems reasonable on this machine.
+*   - 5       The system A*x = b is probably not compatible.  A least-squares
+*   	      solution has been obtained that is as accurate as seems
+*   	      reasonable on this machine.
+*   - 6       Cond('Abar') seems to be so large that there is no point in
+*   	      doing further iterations, given the precision of this machine.
+*   - 7       The iteration limit maxItr was reached.
 * \param	dstItr			Destination pointer for the number of
 * 				 	iterations performed, which may be
 * 				 	NULL.
@@ -212,8 +207,13 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
 		resTolMach,
 		rho,
 		rhobar,
+		rhobar1,
 		sn,
 		sn1,
+		t0,
+		t1,
+		t2,
+		t3,
 		tau,
 		temp,
 		theta,
@@ -224,7 +224,7 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
 		condN = 0.0,
 		cs2 = -1.0,
 		ddnorm = 0.0,
-		fNorm = 0.0,
+		fnorm = 0.0,
 		normX = 0.0,
 		res = 0.0,
 		sn2 = 0.0,
@@ -233,8 +233,8 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
 		stopCrit3,
 		xxnorm = 0.0,
 		zeta = 0.0;
-  double	*biDiagV = NULL,
-  		*searchDirV = NULL;
+  double	*vV = NULL,
+  		*wV = NULL;
   AlgError	errNum = ALG_ERR_NONE;
 
   if(maxItr <= 0)
@@ -261,39 +261,37 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
         	 condLim, relErrB, maxItr);
 #endif
   /* Allocate workspace vectors. */
-  if(((biDiagV = (double *)AlcCalloc(nC, sizeof(double))) == NULL) ||
-     ((searchDirV = (double *)AlcCalloc(nC, sizeof(double))) == NULL))
+  if(((vV = (double *)AlcCalloc(nC, sizeof(double))) == NULL) ||
+     ((wV = (double *)AlcCalloc(nC, sizeof(double))) == NULL))
   {
     errNum = ALC_ER_ALLOC;
   }
   if(errNum == ALC_ER_NONE)
   {
-    /* Initialise the result vector. */
+    /* Initialise the result vector to zero. */
     AlgMatrixZero(&xV, 1, nC);
     /* Set up the initial vectors u and v for bidiagonalization.  These
      * satisfy  the relations
-     * BETA*u = b - A*x0 
-     * ALPHA*v = A^T*u
+     * beta*u = b - A*x0 
+     * alpha*v = A^T*u
      */
-    /* Compute b - A*x0 and store in vector u which initially held vector b */
-    AlgMatrixVectorMulWAdd(bV, aType, aM, xV, bV, nR, nC, 1.0, -1.0);
-    /* Compute Euclidean length of u and store as BETA */
+    /* Compute Euclidean length of u and store as beta */
     beta = AlgMatrixVectorNorm(bV, nR);
     if(beta > 0.0)
     {
-      /* Scale vector u by the inverse of BETA */
+      /* Scale vector u by the inverse of beta */
       AlgMatrixVectorScale(bV, bV, 1.0 / beta, nR);
       /* Compute matrix-vector product A^T*u and store it in vector v */
-      AlgMatrixTVectorMulAdd(biDiagV, aType, aM, bV, biDiagV, nR, nC);
-      /* Compute Euclidean length of v and store as ALPHA */
-      alpha = AlgMatrixVectorNorm(biDiagV, nC);
+      AlgMatrixTVectorMulAdd(vV, aType, aM, bV, vV, nR, nC);
+      /* Compute Euclidean length of v and store as alpha */
+      alpha = AlgMatrixVectorNorm(vV, nC);
     }
     if(alpha > 0.0)
     {
-      /* Scale vector v by the inverse of ALPHA */
-      AlgMatrixScale(&biDiagV, &biDiagV, 1.0 / alpha, 1, nC);
+      /* Scale vector v by the inverse of alpha */
+      AlgMatrixScale(&vV, &vV, 1.0 / alpha, 1, nC);
       /* Copy vector v to vector w */
-      AlgMatrixVectorCopy(searchDirV, biDiagV, nC);
+      AlgMatrixVectorCopy(wV, vV, nC);
     }    
     resNormA = alpha * beta;
     resNorm = beta;
@@ -312,7 +310,7 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
 		     "  || A ||_F = %13.5e\tcond(A) = %13.5e\n"
 		     "  || r ||_2 = %13.5e\t|| A^T r ||_2 = %13.5e\n"
 		     "  || b ||_2 = %13.5e\t|| x - x0 ||_2 = %13.5e\n\n", 
-		     term, itr, fNorm, 
+		     term, itr, fnorm, 
 		     condN, resNorm, resNormA,
 		     bnorm, normX);
 #endif
@@ -326,11 +324,11 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
       stopCrit2 = alpha / beta;
       (void )fprintf(stderr,
 		     "AlgMatrixSolveLSQR()\n"
-		     "  ITER     || r ||    Compatible  "
+		     " Er ||  ITER     || r ||    Compatible  "
 		     "||A^T r|| / ||A|| ||r||  || A ||    cond(A)\n"
 		     "%6li %13.5e %10.2e \t%10.2e \t%10.2e  %10.2e\n",
 		     itr, resNorm, stopCrit1, stopCrit2,
-		     fNorm, condN);
+		     fnorm, condN);
 #endif
     }
     /*
@@ -343,153 +341,156 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
       ++itr;
       /*      
        *     Perform the next step of the bidiagonalization to obtain
-       *     the next vectors u and v, and the scalars ALPHA and BETA.
+       *     the next vectors u and v, and the scalars alpha and beta.
        *     These satisfy the relations
-       *                BETA*u  =  A*v  -  ALPHA*u,
-       *                ALFA*v  =  A^T*u  -  BETA*v.
+       *                beta*u  =  A*v  -  alpha*u,
+       *                alpha*v =  A^T*u  -  beta*v.
        */      
-      /* Scale vector u by the negative of ALPHA */
+      /* Scale vector u by -alpha */
       AlgMatrixVectorScale(bV, bV, -alpha, nR);
-      /* Compute A*v - ALPHA*u and store in vector u */
-      AlgMatrixVectorMulAdd(bV, aType, aM, biDiagV, bV, nR, nC);
-      /* Compute Euclidean length of u and store as BETA */
+      /* Compute A*v - alpha*u and store in vector u */
+      AlgMatrixVectorMulAdd(bV, aType, aM, vV, bV, nR, nC);
+      /* Compute Euclidean length of u and store as beta */
       beta = AlgMatrixVectorNorm(bV, nR);
       /* Accumulate this quantity to estimate Frobenius norm of matrix A */
-      bbnorm += ALG_SQR(alpha) + ALG_SQR(beta) + ALG_SQR(damping);
+      bbnorm = AlgMatrixLSQRNorm4(alpha, beta, damping, bbnorm);
       if(beta > 0.0)
       {
-	/* Scale vector u by the inverse of BETA */
+	/* Scale vector u by 1.0 / beta */
 	AlgMatrixVectorScale(bV, bV, 1.0 / beta, nR);
-	/* Scale vector v by the negative of BETA */
-	AlgMatrixVectorScale(biDiagV, biDiagV, -beta, nC);
-	/* Compute A^T*u - BETA*v and store in vector v */
-	AlgMatrixTVectorMulAdd(biDiagV, aType, aM, bV, biDiagV, nR, nC);
-	/* Compute Euclidean length of v and store as ALPHA */
-	alpha = AlgMatrixVectorNorm(biDiagV, nC);
+	/* Scale vector v by -beta */
+	AlgMatrixVectorScale(vV, vV, -beta, nC);
+	/* Compute A^T*u - beta*v and store in vector v */
+	AlgMatrixTVectorMulAdd(vV, aType, aM, bV, vV, nR, nC);
+	/* Compute Euclidean length of v and store as alpha */
+	alpha = AlgMatrixVectorNorm(vV, nC);
 	if(alpha > 0.0)
 	{
-	  /* Scale vector v by the inverse of ALPHA */
-	  AlgMatrixVectorScale(biDiagV, biDiagV, 1.0 / alpha, nC); 
+	  /* Scale vector v by the inverse of alpha */
+	  AlgMatrixVectorScale(vV, vV, 1.0 / alpha, nC); 
 	}
       }
       /* Use a plane rotation to eliminate the damping parameter.
        * This alters the diagonal (RHOBAR) of the lower-bidiagonal matrix.
        */
-      cs1 = rhobar / sqrt(ALG_SQR(rhobar) + ALG_SQR(damping));
-      sn1 = damping / sqrt(ALG_SQR(rhobar) + ALG_SQR(damping));
-      psi = sn1 * phibar;
-      phibar = cs1 * phibar;
-      /* Use a plane rotation to eliminate the subdiagonal element (BETA)
+      rhobar1 = AlgMatrixLSQRNorm2(rhobar, damping);
+      cs1     = rhobar / rhobar1;
+      sn1     = damping / rhobar1;
+      psi     = sn1 * phibar;
+      phibar  = cs1 * phibar;
+      /* Use a plane rotation to eliminate the subdiagonal element (beta)
        * of the lower-bidiagonal matrix, giving an upper-bidiagonal matrix.
        */
-      rho = sqrt(ALG_SQR(rhobar) + ALG_SQR(damping) + ALG_SQR(beta));
-      cs  = sqrt(ALG_SQR(rhobar) + ALG_SQR(damping)) / rho;
-      sn  = beta / rho;
-      theta = sn * alpha;
+      rho    =  AlgMatrixLSQRNorm2(rhobar1, beta);
+      cs     =  rhobar1 / rho;
+      sn     =  beta / rho;
+      theta  =  sn * alpha;
       rhobar = -cs * alpha;
-      phi = cs * phibar;
-      phibar = sn * phibar;
-      tau = sn * phi;
-      /* Update the solution vector x, the search direction vector w, and the 
-       * standard error estimates vector se.
+      phi    =  cs * phibar;
+      phibar =  sn * phibar;
+      tau    =  sn * phi;
+      /* Update the solution vector x, the search direction vector w.
        */     
+      t3 = 1.0 / rho;
+      t1 = phi * t3;
+      t2 = -theta * t3;
       for(idx = 0; idx < nC; idx++)
       {
+	t0 = wV[idx];
 	/* Update the solution vector x */
-	xV[idx] += (phi / rho) * searchDirV[idx];
-	/* Accumulate this quantity to estimate condition number of A */
-	ddnorm += ALG_SQR((1.0 / rho) * searchDirV[idx]);
+	xV[idx] = t0 * t1 + xV[idx];
 	/* Update the search direction vector w */
-	searchDirV[idx] = biDiagV[idx] - (theta / rho) * searchDirV[idx];
+	wV[idx] = t0 * t2 + vV[idx];
+	/* Accumulate this quantity to estimate condition number of A */
+	ddnorm += ALG_SQR(t0 * t3);
       }
+      ddnorm = sqrt(ddnorm);
       /* Use a plane rotation on the right to eliminate the super-diagonal
        * element (THETA) of the upper-bidiagonal matrix.  Then use the result
        * to estimate the solution norm || x ||.
        */
-      delta = sn2 * rho;
+      delta    = sn2 * rho;
       gammabar = -cs2 * rho;
       zetabar = (phi - delta * zeta) / gammabar;
       /* Compute an estimate of the solution norm || x || */
       normX = sqrt(xxnorm + ALG_SQR(zetabar));
-      gamma = sqrt(ALG_SQR(gammabar) + ALG_SQR(theta));
+      gamma = AlgMatrixLSQRNorm2(gammabar, theta);
       cs2 = gammabar / gamma;
       sn2 = theta / gamma;
       zeta = (phi - delta * zeta) / gamma;
       /* Accumulate this quantity to estimate solution norm || x || */
-      xxnorm += ALG_SQR(zeta);
-      /* Estimate the Frobenius norm and condition of the matrix A, and the 
-       * Euclidean norms of the vectors r and A^T*r.
+      xxnorm = AlgMatrixLSQRNorm2(xxnorm, zeta);
+      /* Estimate the norm and condition of the matrix A, and the norms of
+       * the vectors r and A^T*r.
        */
-      fNorm = sqrt(bbnorm);
-      condN = fNorm * sqrt(ddnorm);
-      res += ALG_SQR(psi);
-      resNorm = sqrt(ALG_SQR(phibar) + res);
+      condN = fnorm * sqrt(ddnorm);
+      res = AlgMatrixLSQRNorm2(res, psi);
+      resNorm = AlgMatrixLSQRNorm2(phibar, res) + 1e-30;     /* avoid == 0.0 */
       resNormA = alpha * fabs(tau);
-      /* Use these norms to estimate the values of the three stopping
-       * criteria.
+
+      /* Use these norms to estimate certain quantities, some of which will be
+       * small near a solution.
        */
       stopCrit1 = resNorm / bnorm;
       stopCrit2 = 0.0;
       if(resNorm > 0.0)
       {
-	stopCrit2 = resNormA / (fNorm * resNorm);
+	stopCrit2 = resNormA / (bbnorm * resNorm);
       }
       stopCrit3 = 1.0 / condN;
-      resTol = relErrB + relErrA * fNorm * normX / bnorm;
-      resTolMach = DBL_EPSILON + DBL_EPSILON * fNorm * normX / bnorm;
+      resTol = relErrB + relErrA * fnorm * normX / bnorm;
+      resTolMach = DBL_EPSILON + DBL_EPSILON * fnorm * normX / bnorm;
       /* Check to see if any of the stopping criteria are satisfied.
        * First compare the computed criteria to the machine precision.
        * Second compare the computed criteria to the the user specified
        * precision.
        */
-      /* Iteration limit reached */
       if(itr >= maxItr)
       {
+        /* Iteration limit reached */
 	term = 7;
 	errNum = ALG_ERR_CONVERGENCE;
       }
-      /* Condition number greater than machine precision */
-      if(stopCrit3 <= DBL_EPSILON)
+      else if(stopCrit3 <= DBL_EPSILON)
       {
+        /* Condition number greater than machine precision */
 	term = 6;
 	errNum = ALG_ERR_CONDITIONN;
       }
-      /* Least squares error less than machine precision */
-      /*
-      if(stopCrit2 <= DBL_EPSILON)
+      else if(stopCrit2 <= DBL_EPSILON)
       {
+        /* Least squares error less than machine precision */
 	term = 5;
       }
-      */
-      /* Residual less than a function of machine precision */
-      if(stopCrit1 <= resTolMach)
+      else if(stopCrit1 <= resTolMach)
       {
+        /* Residual less than a function of machine precision */
 	term = 4;
       }
-      /* Condition number greater than CONLIM */
-      if(stopCrit3 <= condNTol)
+      else if(stopCrit3 <= condNTol)
       {
+        /* Condition number greater than CONLIM */
 	term = 3;
 	errNum = ALG_ERR_CONDITIONN;
       }
-      /* Least squares error less than ATOL */
-      if(stopCrit2 <= relErrA)
+      else if(stopCrit2 <= relErrA)
       {
+        /* Least squares error less than ATOL */
 	term = 2;
       }
-      /* Residual less than a function of ATOL and BTOL */
-      if(stopCrit1 <= resTol)
+      else if(stopCrit1 <= resTol)
       {
+        /* Residual less than a function of ATOL and BTOL */
 	term = 1;
       }
 #ifdef ALG_MATRIXLSQR_DEBUG
       (void )fprintf(stderr,
 		     "AlgMatrixSolveLSQR()\n"
-		     "%3d %6li %13.5e %10.2e \t%10.2e \t%10.2e %10.2e\n",
+		     "%2d %6li %10.5e %10.2e \t%10.2e \t%10.2e %10.2e\n",
 		     errNum,
 		     itr, resNorm, stopCrit1, 
 		     stopCrit2,
-		     fNorm, condN);
+		     fnorm, condN);
 #endif
       /* The convergence criteria are required to be met on NCONV consecutive 
        * iterations, where NCONV is set below.  Suggested values are 1, 2, or
@@ -528,7 +529,7 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
     }
     if(dstFNorm)
     {
-      *dstFNorm = fNorm;
+      *dstFNorm = fnorm;
     }
     if(dstCondN)
     {
@@ -547,8 +548,8 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
       *dstNormX = normX;
     }
   }
-  AlcFree(biDiagV);
-  AlcFree(searchDirV);
+  AlcFree(vV);
+  AlcFree(wV);
 #ifdef ALG_MATRIXLSQR_DEBUG
   (void )fprintf(stderr,
 		 "AlgMatrixSolveLSQR()\n"
@@ -558,9 +559,59 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
 		 "  || r ||_2 = %13.5e\t|| A^T r ||_2 = %13.5e\n"
 		 "  || b ||_2 = %13.5e\t|| x - x0 ||_2 = %13.5e\n\n", 
 		 errNum,
-		 term, itr, fNorm, 
+		 term, itr, fnorm, 
 		 condN, resNorm, resNormA,
 		 bnorm, normX );
 #endif
   return(errNum);
+}
+
+/*!
+* \return	Norm of the given values.
+* \ingroup	AlgMatrix
+* \brief	Computes the norm of the given values, i.e.
+*               \f$\sqrt{a^2 + b^2}\f$ but with precautions to avoid overflow.
+* \param	a			First value.
+* \param	b			Second value.
+*/
+static double 	AlgMatrixLSQRNorm2(double a, double b)
+{
+  double	scale,
+  		norm = 0.0;
+
+  scale = fabs(a) + fabs(b);
+  if(scale > DBL_EPSILON)
+  {
+    a /= scale;
+    b /= scale;
+    norm = scale * sqrt(ALG_SQR(a) + ALG_SQR(b));
+  }
+  return(norm);
+}
+
+/*!
+* \return	Norm of the given values.
+* \ingroup	AlgMatrix
+* \brief	Computes the norm of the given values, i.e.
+*               \f$\sqrt{a^2 + b^2 + c^2 + d^2}\f$ but with precautions to avoid
+*               overflow.
+* \param	a			First value.
+* \param	b			Second value.
+* \param	c			Third value.
+*/
+static double 	AlgMatrixLSQRNorm4(double a, double b, double c, double d)
+{
+  double	scale,
+  		norm = 0.0;
+
+  scale = fabs(a) + fabs(b) + fabs(c) + fabs(d);
+  if(scale > DBL_EPSILON)
+  {
+    a /= scale;
+    b /= scale;
+    c /= scale;
+    d /= scale;
+    norm = scale * sqrt(ALG_SQR(a) + ALG_SQR(b) + ALG_SQR(c) + ALG_SQR(d));
+  }
+  return(norm);
 }
