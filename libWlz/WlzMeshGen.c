@@ -350,12 +350,6 @@ static WlzIVertex3 		WlzCMeshCellIdxVtx2D5(
 static WlzIVertex3 		WlzCMeshCellIdxVtx3D(
 				  WlzCMesh3D *mesh,
 				  WlzDVertex3 vtx);
-static WlzCMeshElm2D 		*WlzCMeshAllocElm2D(
-				  WlzCMesh2D *mesh);
-static WlzCMeshElm2D5 		*WlzCMeshAllocElm2D5(
-				  WlzCMesh2D5 *mesh);
-static WlzCMeshElm3D 		*WlzCMeshAllocElm3D(
-				  WlzCMesh3D *mesh);
 static WlzCMeshEdgU2D 		*WlzCMeshEdgUseFindOpp2D(
 				  WlzCMeshEdgU2D *gEdu);
 static WlzCMeshEdgU2D5 		*WlzCMeshEdgUseFindOpp2D5(
@@ -1901,11 +1895,14 @@ WlzCMeshNod3D 	*WlzCMeshAllocNod3D(WlzCMesh3D *mesh)
 * \param	nod0			First mesh node.
 * \param	nod1			Second mesh node.
 * \param	nod2			Third mesh node.
+* \param	allowFlip		Allow flipping of node order to get
+* 					valid element.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzCMeshElm2D 	*WlzCMeshNewElm2D(WlzCMesh2D *mesh,
 				  WlzCMeshNod2D *nod0, WlzCMeshNod2D *nod1,
-				  WlzCMeshNod2D *nod2, WlzErrorNum *dstErr)
+				  WlzCMeshNod2D *nod2, int allowFlip,
+				  WlzErrorNum *dstErr)
 {
   WlzCMeshElm2D	*nElm = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1923,7 +1920,7 @@ WlzCMeshElm2D 	*WlzCMeshNewElm2D(WlzCMesh2D *mesh,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshSetElm2D(mesh, nElm, nod0, nod1, nod2);
+    errNum = WlzCMeshSetElm2D(mesh, nElm, nod0, nod1, nod2, allowFlip);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1951,11 +1948,14 @@ WlzCMeshElm2D 	*WlzCMeshNewElm2D(WlzCMesh2D *mesh,
 * \param	nod0			First mesh node.
 * \param	nod1			Second mesh node.
 * \param	nod2			Third mesh node.
+* \param	allowFlip		Allow flipping of node order to get
+* 					valid element.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzCMeshElm2D5 	*WlzCMeshNewElm2D5(WlzCMesh2D5 *mesh,
 				   WlzCMeshNod2D5 *nod0, WlzCMeshNod2D5 *nod1,
-				   WlzCMeshNod2D5 *nod2, WlzErrorNum *dstErr)
+				   WlzCMeshNod2D5 *nod2, int allowFlip,
+				   WlzErrorNum *dstErr)
 {
   WlzCMeshElm2D5 *nElm = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1973,7 +1973,7 @@ WlzCMeshElm2D5 	*WlzCMeshNewElm2D5(WlzCMesh2D5 *mesh,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshSetElm2D5(mesh, nElm, nod0, nod1, nod2);
+    errNum = WlzCMeshSetElm2D5(mesh, nElm, nod0, nod1, nod2, allowFlip);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2005,12 +2005,14 @@ WlzCMeshElm2D5 	*WlzCMeshNewElm2D5(WlzCMesh2D5 *mesh,
 * \param	nod1			Second mesh node.
 * \param	nod2			Third mesh node.
 * \param	nod3			Fourth mesh node.
+* \param	allowFlip		Allow flipping of node order to get
+* 					valid element.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzCMeshElm3D 	*WlzCMeshNewElm3D(WlzCMesh3D *mesh,
 				  WlzCMeshNod3D *nod0, WlzCMeshNod3D *nod1,
 				  WlzCMeshNod3D *nod2, WlzCMeshNod3D *nod3,
-				  WlzErrorNum *dstErr)
+				  int allowFlip, WlzErrorNum *dstErr)
 {
   WlzCMeshElm3D	*nElm = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -2028,7 +2030,7 @@ WlzCMeshElm3D 	*WlzCMeshNewElm3D(WlzCMesh3D *mesh,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshSetElm3D(mesh, nElm, nod0, nod1, nod2, nod3);
+    errNum = WlzCMeshSetElm3D(mesh, nElm, nod0, nod1, nod2, nod3, allowFlip);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2053,7 +2055,7 @@ WlzCMeshElm3D 	*WlzCMeshNewElm3D(WlzCMesh3D *mesh,
 * 		For efficiency this function does not check it's parameters.
 * \param	mesh			Mesh with resources.
 */
-static WlzCMeshElm2D *WlzCMeshAllocElm2D(WlzCMesh2D *mesh)
+WlzCMeshElm2D 	*WlzCMeshAllocElm2D(WlzCMesh2D *mesh)
 {
   WlzCMeshEntRes	*eRes;
   WlzCMeshElm2D	*elm = NULL;
@@ -2080,7 +2082,7 @@ static WlzCMeshElm2D *WlzCMeshAllocElm2D(WlzCMesh2D *mesh)
 * 		For efficiency this function does not check it's parameters.
 * \param	mesh			Mesh with resources.
 */
-static WlzCMeshElm2D5 *WlzCMeshAllocElm2D5(WlzCMesh2D5 *mesh)
+WlzCMeshElm2D5 	*WlzCMeshAllocElm2D5(WlzCMesh2D5 *mesh)
 {
   WlzCMeshEntRes *eRes;
   WlzCMeshElm2D5 *elm = NULL;
@@ -2106,7 +2108,7 @@ static WlzCMeshElm2D5 *WlzCMeshAllocElm2D5(WlzCMesh2D5 *mesh)
 * 		For efficiency this function does not check it's parameters.
 * \param	mesh			Mesh with resources.
 */
-static WlzCMeshElm3D *WlzCMeshAllocElm3D(WlzCMesh3D *mesh)
+WlzCMeshElm3D 	*WlzCMeshAllocElm3D(WlzCMesh3D *mesh)
 {
   WlzCMeshEntRes	*eRes;
   WlzCMeshElm3D	*elm = NULL;
@@ -2136,10 +2138,12 @@ static WlzCMeshElm3D *WlzCMeshAllocElm3D(WlzCMesh3D *mesh)
 * \param	nod0			First mesh node of element.
 * \param	nod1			Second mesh node of element.
 * \param	nod2			Third mesh node of element.
+* \param	allowFlip		Allow flipping of node order to get
+* 					valid element.
 */
 WlzErrorNum  	WlzCMeshSetElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm,
 				     WlzCMeshNod2D *nod0, WlzCMeshNod2D *nod1,
-				     WlzCMeshNod2D *nod2)
+				     WlzCMeshNod2D *nod2, int allowFlip)
 {
   int		idE,
   		idN;
@@ -2152,8 +2156,17 @@ WlzErrorNum  	WlzCMeshSetElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm,
   sA2 = WlzGeomTriangleSnArea2(nod0->pos, nod1->pos, nod2->pos);
   if(sA2 < WLZ_MESH_TOLERANCE_SQ)
   {
-    /* Element either has a very small area or is CW. */
-    errNum = WLZ_ERR_PARAM_DATA;
+    if((allowFlip == 0) || (sA2 > -WLZ_MESH_TOLERANCE_SQ))
+    {
+      /* Element either has a very small area or is CW. */
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+    else
+    {
+      WlzCMeshNod2D *tNod;
+
+      tNod = nod1; nod1 = nod2; nod2 = tNod;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2211,10 +2224,12 @@ WlzErrorNum  	WlzCMeshSetElm2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm,
 * \param	nod0			First mesh node of element.
 * \param	nod1			Second mesh node of element.
 * \param	nod2			Third mesh node of element.
+* \param	allowFlip		Allow flipping of node order to get
+* 					valid element.
 */
 WlzErrorNum  	WlzCMeshSetElm2D5(WlzCMesh2D5 *mesh, WlzCMeshElm2D5 *elm,
 				 WlzCMeshNod2D5 *nod0, WlzCMeshNod2D5 *nod1,
-				 WlzCMeshNod2D5 *nod2)
+				 WlzCMeshNod2D5 *nod2, int allowFlip)
 {
   int		idE,
   		idN;
@@ -2227,8 +2242,17 @@ WlzErrorNum  	WlzCMeshSetElm2D5(WlzCMesh2D5 *mesh, WlzCMeshElm2D5 *elm,
   sA2 = WlzGeomTriangleArea2Sq3(nod0->pos, nod1->pos, nod2->pos);
   if(sA2 < WLZ_MESH_TOLERANCE_SQ)
   {
-    /* Element either has a very small area or is CW. */
-    errNum = WLZ_ERR_PARAM_DATA;
+    if((allowFlip == 0) || (sA2 > -WLZ_MESH_TOLERANCE_SQ))
+    {
+      /* Element either has a very small area or is CW. */
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+    else
+    {
+      WlzCMeshNod2D5 *tNod;
+
+      tNod = nod1; nod1 = nod2; nod2 = tNod;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2287,10 +2311,13 @@ WlzErrorNum  	WlzCMeshSetElm2D5(WlzCMesh2D5 *mesh, WlzCMeshElm2D5 *elm,
 * \param	nod1			Second mesh node of element.
 * \param	nod2			Third mesh node of element.
 * \param	nod3			Fourth mesh node of element.
+* \param	allowFlip		Allow flipping of node order to get
+* 					valid element.
 */
 WlzErrorNum  	WlzCMeshSetElm3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm,
 				     WlzCMeshNod3D *nod0, WlzCMeshNod3D *nod1,
-				     WlzCMeshNod3D *nod2, WlzCMeshNod3D *nod3)
+				     WlzCMeshNod3D *nod2, WlzCMeshNod3D *nod3,
+				     int allowFlip)
 {
   int		idE,
   		idF,
@@ -2320,8 +2347,17 @@ WlzErrorNum  	WlzCMeshSetElm3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm,
   sV6 = WlzGeomTetraSnVolume6(nod0->pos, nod1->pos, nod2->pos, nod3->pos);
   if(sV6 < WLZ_MESH_TOLERANCE_SQ)
   {
-    /* Either element has a very small volume or is colinear / coplanar. */
-    errNum = WLZ_ERR_PARAM_DATA;
+    if((allowFlip == 0) || (sV6 > -WLZ_MESH_TOLERANCE_SQ))
+    {
+      /* Element either has a very small area or is CW. */
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+    else
+    {
+      WlzCMeshNod3D *tNod;
+
+      tNod = nod2; nod2 = nod3; nod3 = tNod;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -3646,16 +3682,7 @@ static WlzErrorNum WlzCMeshBoundConformElm2D1(WlzCMesh2D *mesh,
       area = WlzGeomTriangleSnArea2(eNod[0]->pos, eNod[1]->pos, eNod[2]->pos);
       if(area * area > WLZ_MESH_TOLERANCE_SQ)
       {
-	if(area < 0)
-	{
-	  (void )WlzCMeshNewElm2D(mesh, eNod[0], eNod[2], eNod[1],
-				  &errNum);
-	}
-	else
-	{
-	  (void )WlzCMeshNewElm2D(mesh, eNod[0], eNod[1], eNod[2],
-				  &errNum);
-	}
+	(void )WlzCMeshNewElm2D(mesh, eNod[0], eNod[2], eNod[1], 1, &errNum);
 	if(errNum != WLZ_ERR_NONE)
 	{
 	  break;
@@ -3740,14 +3767,7 @@ static WlzErrorNum WlzCMeshBoundConformElm2D2(WlzCMesh2D *mesh,
     if(area * area > WLZ_MESH_TOLERANCE_SQ)
     {
       /* Create new element. */
-      if(area < 0)
-      {
-	(void )WlzCMeshNewElm2D(mesh, nod[2], nod[4], nod[3], &errNum);
-      }
-      else
-      {
-	(void )WlzCMeshNewElm2D(mesh, nod[2], nod[3], nod[4], &errNum);
-      }
+      (void )WlzCMeshNewElm2D(mesh, nod[2], nod[4], nod[3], 1, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
 	elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
@@ -3916,16 +3936,8 @@ static WlzErrorNum WlzCMeshBoundConformElm3D1(WlzCMesh3D *mesh,
 				      eNod[2]->pos, eNod[3]->pos);
 	  if(vol * vol > WLZ_MESH_TOLERANCE_SQ)
 	  {
-	    if(vol < 0)
-	    {
-	      elm = WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[3], eNod[2],
-				     &errNum);
-	    }
-	    else
-	    {
-	      elm = WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[2], eNod[3],
-				     &errNum);
-	    }
+	    elm = WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[3], eNod[2],
+				   1, &errNum);
 	    if(errNum != WLZ_ERR_NONE)
 	    {
 	      break;
@@ -4118,16 +4130,8 @@ static WlzErrorNum WlzCMeshBoundConformElm3D2(WlzCMesh3D *mesh,
 				    eNod[2]->pos, eNod[3]->pos);
 	if(vol * vol > WLZ_MESH_TOLERANCE_SQ)
 	{
-	  if(vol < 0)
-	  {
-	    elm = WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[3], eNod[2],
-				   &errNum);
-	  }
-	  else
-	  {
-	    elm = WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[2], eNod[3],
-				   &errNum);
-	  }
+	  elm = WlzCMeshNewElm3D(mesh, eNod[0], eNod[1], eNod[3], eNod[2],
+				 1, &errNum);
 	  if(errNum != WLZ_ERR_NONE)
 	  {
 	    break;
@@ -4255,16 +4259,8 @@ static WlzErrorNum WlzCMeshBoundConformElm3D3(WlzCMesh3D *mesh,
 	  (void )WlzCMeshDelElm3D(mesh, elm);
 	}
 	/* Create new element. */
-	if(vol < 0)
-	{
-	  elm = WlzCMeshNewElm3D(mesh, nod[3], nod[4], nod[6], nod[5],
-				 &errNum);
-	}
-	else
-	{
-	  elm = WlzCMeshNewElm3D(mesh, nod[3], nod[4], nod[5], nod[6],
-				 &errNum);
-	}
+	elm = WlzCMeshNewElm3D(mesh, nod[3], nod[4], nod[6], nod[5],
+			       1, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  elm->flags |= WLZ_CMESH_ELM_FLAG_BOUNDARY;
@@ -4336,8 +4332,6 @@ double 		WlzCMeshElmMinEdgLnSq2D(WlzCMeshElm2D *elm)
   }
   return(minLenSq);
 }
-
-/* TODO HACK I've reached here from the top of file adding 2D5 HACK TODO */
 
 /*!
 * \return	Square of the minimum edge length for the element,
@@ -6091,6 +6085,268 @@ int		WlzCMeshElmEnclosesPos3D(WlzCMeshElm3D *elm, WlzDVertex3 gPos)
 }
 
 /*!
+* \return	New 2D conforming mesh.
+* \ingroup	WlzMesh
+* \brief	Makes a 2D conforming mesh from the given 2D or 2D5
+* 		conforming mesh by simply ignoring the z component (if
+* 		it exists) as the node positions are copied.
+* 		Node and element indices are preserved by this function.
+* \param	gObj			Given conforming mesh object.
+* \param	applyDsp		Apply displacement if non-zero and
+* 					the given object has valid
+* 					displacements in it's indexed values.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzCMeshExtract2D(WlzObject *gObj, int applyDsp,
+				   WlzErrorNum *dstErr)
+{
+  int		nNod,
+  		nElm,
+		maxNod = 0,
+		maxElm = 0;
+  WlzCMeshP	gMeshP;
+  WlzIndexedValues *dspIxv = NULL;
+  WlzCMesh2D	*rMesh = NULL;
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((gObj->type != WLZ_CMESH_2D) && (gObj->type != WLZ_CMESH_2D5))
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if((gMeshP.m2d5 = gObj->domain.cm2d5) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    if((applyDsp != 0) && (gObj->values.core != NULL))
+    {
+      dspIxv = gObj->values.x;
+      if((dspIxv->attach != WLZ_VALUE_ATTACH_NOD) ||
+         (dspIxv->rank != 1) || (dspIxv->dim == NULL) || (*(dspIxv->dim) < 2))
+      {
+        applyDsp = 0;
+	dspIxv = NULL;
+      }
+    }
+    switch(gMeshP.m2->type)
+    {
+      case WLZ_CMESH_2D:
+	nElm = gMeshP.m2->res.elm.numEnt;
+	nNod = gMeshP.m2->res.nod.numEnt;
+	maxElm = gMeshP.m2->res.elm.maxEnt;
+	maxNod = gMeshP.m2->res.nod.maxEnt;
+	break;
+      case WLZ_CMESH_2D5:
+	nElm = gMeshP.m2d5->res.elm.numEnt;
+	nNod = gMeshP.m2d5->res.nod.numEnt;
+	maxElm = gMeshP.m2d5->res.elm.maxEnt;
+	maxNod = gMeshP.m2d5->res.nod.maxEnt;
+	break;
+      default:
+	break;
+    }
+    if(nElm < 1)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rMesh = WlzCMeshNew2D(&errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((AlcVectorExtendAndGet(rMesh->res.nod.vec, maxNod) == NULL) ||
+       (AlcVectorExtendAndGet(rMesh->res.elm.vec, maxElm) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int 	idN,
+		idE;
+    AlcVector	*gNodVec,
+		*gElmVec,
+    		*rNodVec,
+		*rElmVec;
+
+    switch(gMeshP.m2->type)
+    {
+      case WLZ_CMESH_2D:
+	gNodVec = gMeshP.m2->res.nod.vec;
+	rNodVec = rMesh->res.nod.vec;
+	for(idN = 0; idN < maxNod; ++idN)
+	{
+	  WlzCMeshNod2D *gNod,
+	  		*rNod;
+
+	  gNod = (WlzCMeshNod2D *)AlcVectorItemGet(gNodVec, idN); 
+	  rNod = (WlzCMeshNod2D *)AlcVectorItemGet(rNodVec, idN); 
+	  rNod->idx = gNod->idx;
+	  if(gNod->idx >= 0)
+	  {
+	    rNod = WlzCMeshAllocNod2D(rMesh);
+	    rNod->flags = WLZ_CMESH_NOD_FLAG_NONE;
+	    rNod->pos = gNod->pos;
+	    if(dspIxv != NULL)
+	    {
+	      double *dsp;
+
+	      dsp = (double *)WlzIndexedValueGet(dspIxv, idN);
+	      rNod->pos.vtX += dsp[0]; 
+	      rNod->pos.vtY += dsp[1]; 
+	    }
+	  }
+	}
+	rMesh->res.nod.numEnt = nNod;
+	rMesh->res.nod.maxEnt = maxNod;
+	WlzCMeshUpdateBBox2D(rMesh);
+	errNum = WlzCMeshReassignGridCells2D(rMesh, nNod);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  gElmVec = gMeshP.m2->res.elm.vec;
+	  rElmVec = rMesh->res.elm.vec;
+	  for(idE = 0; idE < maxElm; ++idE)
+	  {
+	    WlzCMeshElm2D *gElm,
+	    		  *rElm;
+
+	    gElm = (WlzCMeshElm2D *)AlcVectorItemGet(gElmVec, idE);
+	    rElm = (WlzCMeshElm2D *)AlcVectorItemGet(rElmVec, idE);
+	    rElm->idx = gElm->idx;
+	    if(gElm->idx >= 0)
+	    {
+	      WlzCMeshNod2D *nod[3];
+
+	      for(idN = 0; idN < 3; ++idN)
+	      {
+		nod[idN] = (WlzCMeshNod2D *)
+		           AlcVectorItemGet(rNodVec, gElm->edu[idN].nod->idx);
+	      }
+              errNum = WlzCMeshSetElm2D(rMesh, rElm, nod[0], nod[1], nod[2],
+	                                0);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		errNum = WlzCMeshAddElmToGrid2D(rMesh, rElm);
+	      }
+	      if(errNum != WLZ_ERR_NONE)
+	      {
+		break;
+	      }
+	    }
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  rMesh->res.elm.numEnt = nElm;
+	  rMesh->res.elm.maxEnt = maxElm;
+	  WlzCMeshUpdateMaxSqEdgLen2D(rMesh);
+	}
+	break;
+      case WLZ_CMESH_2D5:
+	gNodVec = gMeshP.m2d5->res.nod.vec;
+	rNodVec = rMesh->res.nod.vec;
+	for(idN = 0; idN < maxNod; ++idN)
+	{
+	  WlzCMeshNod2D5 *gNod;
+	  WlzCMeshNod2D  *rNod;
+
+	  gNod = (WlzCMeshNod2D5 *)AlcVectorItemGet(gNodVec, idN); 
+	  rNod = (WlzCMeshNod2D *)AlcVectorItemGet(rNodVec, idN); 
+	  rNod->idx = gNod->idx;
+	  if(gNod->idx >= 0)
+	  {
+	    rNod->flags = WLZ_CMESH_NOD_FLAG_NONE;
+	    rNod->pos.vtX = gNod->pos.vtX;
+	    rNod->pos.vtY = gNod->pos.vtY;
+	    if(dspIxv != NULL)
+	    {
+	      double *dsp;
+
+	      dsp = (double *)WlzIndexedValueGet(dspIxv, idN);
+	      rNod->pos.vtX += dsp[0];
+	      rNod->pos.vtY += dsp[1];
+	    }
+	  }
+	}
+	rMesh->res.nod.numEnt = nNod;
+	rMesh->res.nod.maxEnt = maxNod;
+	WlzCMeshUpdateBBox2D(rMesh);
+	errNum = WlzCMeshReassignGridCells2D(rMesh, nNod);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  gElmVec = gMeshP.m2d5->res.elm.vec;
+	  rElmVec = rMesh->res.elm.vec;
+	  for(idE = 0; idE < maxElm; ++idE)
+	  {
+	    WlzCMeshElm2D  *rElm;
+	    WlzCMeshElm2D5 *gElm;
+
+	    gElm = (WlzCMeshElm2D5 *)AlcVectorItemGet(gElmVec, idE);
+	    rElm = (WlzCMeshElm2D *)AlcVectorItemGet(rElmVec, idE);
+	    rElm->idx = gElm->idx;
+	    if(gElm->idx >= 0)
+	    {
+	      WlzCMeshNod2D *nod[3];
+
+	      for(idN = 0; idN < 3; ++idN)
+	      {
+		nod[idN] = (WlzCMeshNod2D *)
+		           AlcVectorItemGet(rNodVec, gElm->edu[idN].nod->idx);
+	      }
+	      errNum = WlzCMeshSetElm2D(rMesh, rElm, nod[0], nod[1], nod[2],
+	                                1);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		errNum = WlzCMeshAddElmToGrid2D(rMesh, rElm);
+	      }
+	      if(errNum != WLZ_ERR_NONE)
+	      {
+		break;
+	      }
+	    }
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  rMesh->res.elm.numEnt = nElm;
+	  rMesh->res.elm.maxEnt = maxElm;
+	  WlzCMeshUpdateMaxSqEdgLen2D(rMesh);
+	}
+	break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzDomain dom;
+    WlzValues val;
+
+    dom.cm2 = rMesh;
+    val.core = NULL;
+    rObj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzCMeshFree2D(rMesh);
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
 * \return	New mesh or NULL on error.
 * \ingroup	WlzMesh
 * \brief	Constructs a 2D or 3D mesh from a 2D or 3D domain object.
@@ -6572,7 +6828,7 @@ WlzCMesh2D5	*WlzCMeshFromGM(WlzGMModel *model, WlzErrorNum *dstErr)
 	  break;
 	}
 	nod[2] = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, tI);
-        (void )WlzCMeshNewElm2D5(mesh, nod[0], nod[1], nod[2], &errNum);
+        (void )WlzCMeshNewElm2D5(mesh, nod[0], nod[1], nod[2], 0, &errNum);
 	if(errNum != WLZ_ERR_NONE)
 	{
 	  break;
@@ -7597,11 +7853,11 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D0(WlzCMesh2D *mesh,
   /* Create new mesh elements using the nodes. */
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[0] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[1], mNod[2], &errNum);
+    mElm[0] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[1], mNod[2], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[1] = WlzCMeshNewElm2D(mesh, mNod[2], mNod[3], mNod[0], &errNum);
+    mElm[1] = WlzCMeshNewElm2D(mesh, mNod[2], mNod[3], mNod[0], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -7658,15 +7914,15 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D1(WlzCMesh2D *mesh,
   /* Create new mesh elements using the nodes. */
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[0] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[1], mNod[3], &errNum);
+    mElm[0] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[1], mNod[3], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[1] = WlzCMeshNewElm2D(mesh, mNod[1], mNod[2], mNod[3], &errNum);
+    mElm[1] = WlzCMeshNewElm2D(mesh, mNod[1], mNod[2], mNod[3], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[2] = WlzCMeshNewElm2D(mesh, mNod[3], mNod[4], mNod[0], &errNum);
+    mElm[2] = WlzCMeshNewElm2D(mesh, mNod[3], mNod[4], mNod[0], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -7723,19 +7979,19 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D2(WlzCMesh2D *mesh,
   /* Create new mesh elements using the nodes. */
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[0] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[1], mNod[2], &errNum);
+    mElm[0] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[1], mNod[2], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[1] = WlzCMeshNewElm2D(mesh, mNod[2], mNod[3], mNod[4], &errNum);
+    mElm[1] = WlzCMeshNewElm2D(mesh, mNod[2], mNod[3], mNod[4], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[2] = WlzCMeshNewElm2D(mesh, mNod[4], mNod[5], mNod[0], &errNum);
+    mElm[2] = WlzCMeshNewElm2D(mesh, mNod[4], mNod[5], mNod[0], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[3] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[2], mNod[4], &errNum);
+    mElm[3] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[2], mNod[4], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -7792,19 +8048,19 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D3(WlzCMesh2D *mesh,
   /* Create new mesh elements using the nodes. */
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[0] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[1], mNod[4], &errNum);
+    mElm[0] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[1], mNod[4], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[1] = WlzCMeshNewElm2D(mesh, mNod[1], mNod[2], mNod[3], &errNum);
+    mElm[1] = WlzCMeshNewElm2D(mesh, mNod[1], mNod[2], mNod[3], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[2] = WlzCMeshNewElm2D(mesh, mNod[3], mNod[4], mNod[1], &errNum);
+    mElm[2] = WlzCMeshNewElm2D(mesh, mNod[3], mNod[4], mNod[1], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[3] = WlzCMeshNewElm2D(mesh, mNod[4], mNod[5], mNod[0], &errNum);
+    mElm[3] = WlzCMeshNewElm2D(mesh, mNod[4], mNod[5], mNod[0], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -7861,23 +8117,23 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D4(WlzCMesh2D *mesh,
   /* Create new mesh elements using the nodes. */
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[0] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[1], mNod[5], &errNum);
+    mElm[0] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[1], mNod[5], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[1] = WlzCMeshNewElm2D(mesh, mNod[1], mNod[2], mNod[3], &errNum);
+    mElm[1] = WlzCMeshNewElm2D(mesh, mNod[1], mNod[2], mNod[3], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[2] = WlzCMeshNewElm2D(mesh, mNod[3], mNod[4], mNod[5], &errNum);
+    mElm[2] = WlzCMeshNewElm2D(mesh, mNod[3], mNod[4], mNod[5], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[3] = WlzCMeshNewElm2D(mesh, mNod[5], mNod[6], mNod[0], &errNum);
+    mElm[3] = WlzCMeshNewElm2D(mesh, mNod[5], mNod[6], mNod[0], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[4] = WlzCMeshNewElm2D(mesh, mNod[1], mNod[3], mNod[5], &errNum);
+    mElm[4] = WlzCMeshNewElm2D(mesh, mNod[1], mNod[3], mNod[5], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -7934,27 +8190,27 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode2D5(WlzCMesh2D *mesh,
   /* Create new mesh elements using the nodes. */
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[0] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[1], mNod[7], &errNum);
+    mElm[0] = WlzCMeshNewElm2D(mesh, mNod[0], mNod[1], mNod[7], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[1] = WlzCMeshNewElm2D(mesh, mNod[1], mNod[2], mNod[3], &errNum);
+    mElm[1] = WlzCMeshNewElm2D(mesh, mNod[1], mNod[2], mNod[3], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[2] = WlzCMeshNewElm2D(mesh, mNod[3], mNod[4], mNod[5], &errNum);
+    mElm[2] = WlzCMeshNewElm2D(mesh, mNod[3], mNod[4], mNod[5], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[3] = WlzCMeshNewElm2D(mesh, mNod[5], mNod[6], mNod[7], &errNum);
+    mElm[3] = WlzCMeshNewElm2D(mesh, mNod[5], mNod[6], mNod[7], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[4] = WlzCMeshNewElm2D(mesh, mNod[7], mNod[1], mNod[5], &errNum);
+    mElm[4] = WlzCMeshNewElm2D(mesh, mNod[7], mNod[1], mNod[5], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    mElm[5] = WlzCMeshNewElm2D(mesh, mNod[1], mNod[3], mNod[5], &errNum);
+    mElm[5] = WlzCMeshNewElm2D(mesh, mNod[1], mNod[3], mNod[5], 0, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -8036,7 +8292,7 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D0(WlzCMesh3D *mesh,
     mElm[idE] = WlzCMeshNewElm3D(mesh, mNod[nodTbl[idE][0]],
                                        mNod[nodTbl[idE][1]],
 				       mNod[nodTbl[idE][2]],
-				       mNod[nodTbl[idE][3]], &errNum);
+				       mNod[nodTbl[idE][3]], 0, &errNum);
     ++idE;
   }
   if(errNum == WLZ_ERR_NONE)
@@ -8120,7 +8376,7 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D1(WlzCMesh3D *mesh,
     mElm[idE] = WlzCMeshNewElm3D(mesh, mNod[nodTbl[idE][0]],
                                        mNod[nodTbl[idE][1]],
 				       mNod[nodTbl[idE][2]],
-				       mNod[nodTbl[idE][3]], &errNum);
+				       mNod[nodTbl[idE][3]], 0, &errNum);
     ++idE;
   }
   if(errNum == WLZ_ERR_NONE)
@@ -8205,7 +8461,7 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D2(WlzCMesh3D *mesh,
     mElm[idE] = WlzCMeshNewElm3D(mesh, mNod[nodTbl[idE][0]],
                                        mNod[nodTbl[idE][1]],
 				       mNod[nodTbl[idE][2]],
-				       mNod[nodTbl[idE][3]], &errNum);
+				       mNod[nodTbl[idE][3]], 0, &errNum);
     ++idE;
   }
   if(errNum == WLZ_ERR_NONE)
@@ -8290,7 +8546,7 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D3(WlzCMesh3D *mesh,
     mElm[idE] = WlzCMeshNewElm3D(mesh, mNod[nodTbl[idE][0]],
                                        mNod[nodTbl[idE][1]],
 				       mNod[nodTbl[idE][2]],
-				       mNod[nodTbl[idE][3]], &errNum);
+				       mNod[nodTbl[idE][3]], 0, &errNum);
     ++idE;
   }
   if(errNum == WLZ_ERR_NONE)
@@ -8376,7 +8632,7 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D4(WlzCMesh3D *mesh,
     mElm[idE] = WlzCMeshNewElm3D(mesh, mNod[nodTbl[idE][0]],
                                        mNod[nodTbl[idE][1]],
 				       mNod[nodTbl[idE][2]],
-				       mNod[nodTbl[idE][3]], &errNum);
+				       mNod[nodTbl[idE][3]], 0, &errNum);
     ++idE;
   }
   if(errNum == WLZ_ERR_NONE)
@@ -8463,7 +8719,7 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D5(WlzCMesh3D *mesh,
     mElm[idE] = WlzCMeshNewElm3D(mesh, mNod[nodTbl[idE][0]],
                                        mNod[nodTbl[idE][1]],
 				       mNod[nodTbl[idE][2]],
-				       mNod[nodTbl[idE][3]], &errNum);
+				       mNod[nodTbl[idE][3]], 0, &errNum);
     ++idE;
   }
   if(errNum == WLZ_ERR_NONE)
@@ -8471,6 +8727,156 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D5(WlzCMesh3D *mesh,
     *dstNElm = nElm;
   }
   return(errNum);
+}
+
+/*!
+* \return 	A new object with the same domain as the given object but
+* 		with 3D normals for it's indexed values.
+* \ingroup	WlzMesh
+* \brief	Computes the normals at the nodes of the given mesh.
+* 		The normals are computed for each node by computing the
+* 		area and normal of each face which uses the node and then
+* 		using a linear combination of the face normals with a
+* 		weight proportional to the area.
+*
+* 		\f[
+ 		   n = \sum_{i\inE} {A_i n_i}
+* 		\f]
+* 		where \f$A_i\f$ is the area of the i'th element \f$n_i\f$
+* 		is it normal and \f$E\f$ is the set of elements that use
+* 		the node.
+* \param	gObj			Given 2D5 conforming mesh object.
+* \param	nrmFlg			All normals will have unit length if
+* 					this flag is non-zero.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzCMeshComputeNormalsIxv2D5(WlzObject *gObj, int nrmFlg,
+					      WlzErrorNum *dstErr)
+{
+  WlzDVertex3	*norm = NULL;
+  WlzObject	*nObj = NULL;
+  WlzIndexedValues *nIxv = NULL;
+  WlzCMesh2D5	*mesh;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(gObj->type != WLZ_CMESH_2D5)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if((mesh = gObj->domain.cm2d5) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((mesh->res.nod.numEnt < 3) || (mesh->res.elm.numEnt < 1))
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else if(((norm = (WlzDVertex3 *)AlcMalloc(sizeof(WlzDVertex3) *
+                                            mesh->res.elm.maxEnt)) == NULL))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    int	dim = 3;
+    nIxv = WlzMakeIndexedValues(gObj, 1, &dim, WLZ_GREY_DOUBLE,
+                                WLZ_VALUE_ATTACH_NOD, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzValues val;
+
+    val.x = nIxv;
+    nObj = WlzMakeMain(WLZ_CMESH_2D5, gObj->domain, val, NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int	idE,
+    	idN,
+	maxIdxBuf = 0;
+    int *idxBuf = NULL;
+
+    /* Compute area vectors these will be twice the area x normal. */
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      WlzCMeshElm2D5 *elm;
+      WlzDVertex3 v[3];
+
+      elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	v[0] = elm->edu[0].nod->pos;
+	v[1] = elm->edu[1].nod->pos;
+	v[2] = elm->edu[2].nod->pos;
+	WLZ_VTX_3_SUB(v[0], v[1], v[0]);
+	WLZ_VTX_3_SUB(v[1], v[2], v[1]);
+	WLZ_VTX_3_CROSS(norm[idE], v[0], v[1]);
+      }
+    }
+    /* Compute the node normals from the sum of the element area vectors. */
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      WlzCMeshNod2D5 *nod;
+
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	int nE;
+	WlzDVertex3 nrm;
+	double *n;
+
+	WLZ_VTX_3_ZERO(nrm);
+        nE = WlzCMeshNodRingElmIndices2D5(nod, &maxIdxBuf, &idxBuf, &errNum);
+	for(idE = 0; idE < nE; ++idE)
+	{
+	  WLZ_VTX_3_ADD(nrm, nrm, norm[idE]);
+	}
+	if(nrmFlg == 0)
+	{
+	  double l;
+
+	  l = WLZ_VTX_3_LENGTH(nrm);
+	  if(l > DBL_EPSILON)
+	  {
+	    l = 1.0 / l;
+	    WLZ_VTX_3_SCALE(nrm, nrm, l);
+	  }
+	  else
+	  {
+	    l = 1.0 / ALG_M_SQRT3;
+	    WLZ_VTX_3_SET(nrm, l, l, l);
+	  }
+	}
+        n = WlzIndexedValueGet(nIxv, idN);
+	n[0] = nrm.vtX;
+	n[1] = nrm.vtY;
+	n[2] = nrm.vtZ;
+      }
+    }
+    AlcFree(idxBuf);
+  }
+  AlcFree(norm);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(nObj)
+    {
+      (void )WlzFreeObj(nObj);
+      nObj = NULL;
+    }
+    else if(nIxv != NULL)
+    {
+      (void )WlzFreeIndexedValues(nIxv);
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(nObj);
 }
 
 /*!
