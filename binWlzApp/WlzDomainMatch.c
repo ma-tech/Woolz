@@ -369,7 +369,7 @@ int main(
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		verboseFlg=0;
   int		type=1;
-  WlzObject	*obj, *obj1, *obj2, *obj3;
+  WlzObject	*obj = NULL, *obj1, *obj2, *obj3;
   double	matchVal=0.0;
   double	s1, s2, s3, s4;
   double	delta=0.01;
