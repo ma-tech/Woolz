@@ -288,7 +288,7 @@ int		main(int argc, char *argv[])
   }
   if(ok && (copyMesh != 0))
   {
-    meshCopy = WlzCMeshCopy(mesh, 0, NULL, NULL, &errNum);
+    meshCopy = WlzCMeshCopy(mesh, 1, 0, NULL, NULL, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
