@@ -136,7 +136,6 @@ WlzObject	*WlzEffReadObjNodeEle(const char *gvnFileName,
   		nElm = 0,
   		nNod = 0,
 		nodPerElm = 0;
-  double	vol;
   FILE		*fP = NULL;
   char		*fileName = NULL,
   		*nodeFileName = NULL,
@@ -487,20 +486,8 @@ WlzObject	*WlzEffReadObjNodeEle(const char *gvnFileName,
 			   AlcVectorItemGet(mesh.m2->res.nod.vec,
 			                    eBuf[idN] - 1);
 	    }
-	    vol = WlzGeomTriangleSnArea2(nBuf2[0]->pos, nBuf2[1]->pos,
-					 nBuf2[2]->pos);
-	    if(vol < 0)
-	    {
-	      (void )WlzCMeshNewElm2D(mesh.m2,
-	                              nBuf2[0], nBuf2[2], nBuf2[1],
-				      &errNum);
-	    }
-	    else
-	    {
-	      (void )WlzCMeshNewElm2D(mesh.m2,
-	                              nBuf2[0], nBuf2[1], nBuf2[2],
-				      &errNum);
-	    }
+	    (void )WlzCMeshNewElm2D(mesh.m2, nBuf2[0], nBuf2[2], nBuf2[1],
+				    1, &errNum);
 	    ++idE;
 	  }
 	  else
@@ -549,20 +536,8 @@ WlzObject	*WlzEffReadObjNodeEle(const char *gvnFileName,
 			   AlcVectorItemGet(mesh.m3->res.nod.vec,
 			                    eBuf[idN] - 1);
 	    }
-	    vol = WlzGeomTetraSnVolume6(nBuf3[0]->pos, nBuf3[1]->pos,
-					nBuf3[2]->pos, nBuf3[3]->pos);
-	    if(vol < 0)
-	    {
-	      (void )WlzCMeshNewElm3D(mesh.m3,
-	                              nBuf3[0], nBuf3[1], nBuf3[3], nBuf3[2],
-				      &errNum);
-	    }
-	    else
-	    {
-	      (void )WlzCMeshNewElm3D(mesh.m3,
-	                              nBuf3[0], nBuf3[1], nBuf3[2], nBuf3[3],
-				      &errNum);
-	    }
+	    (void )WlzCMeshNewElm3D(mesh.m3,
+				    nBuf3[0], nBuf3[1], nBuf3[3], nBuf3[2], 1, &errNum);
 	    ++idE;
 	  }
 	  else
