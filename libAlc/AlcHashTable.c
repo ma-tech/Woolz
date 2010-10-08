@@ -85,7 +85,7 @@ AlcHashTable	*AlcHashTableNew(size_t tableSz,
   else
   {
     hTbl->keyCmp = keyCmp;
-    hTbl->hashFn = hashFn;
+    hTbl->hashFn = (size_t (*)(void *))hashFn;
     hTbl->tableSz = tableSz;
     hTbl->table = items;
   }
