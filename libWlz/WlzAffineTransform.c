@@ -72,6 +72,18 @@ static WlzPolygonDomain 	*WlzAffineTransformPoly2(
 static WlzBoundList 		*WlzAffineTransformBoundList(WlzBoundList *,
 				  WlzAffineTransform *,
 				  WlzErrorNum *);
+static WlzCMesh2D		*WlzAffineTransformCMesh2D(
+				  WlzCMesh2D *mesh,
+				  WlzAffineTransform *trans,
+				  WlzErrorNum *dstErr);
+static WlzCMesh2D5		*WlzAffineTransformCMesh2D5(
+				  WlzCMesh2D5 *mesh,
+				  WlzAffineTransform *trans,
+				  WlzErrorNum *dstErr);
+static WlzCMesh3D		*WlzAffineTransformCMesh3D(
+				  WlzCMesh3D *mesh,
+				  WlzAffineTransform *trans,
+				  WlzErrorNum *dstErr);
 static WlzErrorNum 		WlzAffineTransformValues2(WlzObject *newObj,
 				  WlzObject *srcObj,
 				  WlzAffineTransform *tr,
@@ -419,9 +431,138 @@ static WlzObject *WlzAffineTransformIntTranslate(WlzObject *srcObj,
 }
 
 /*!
+* \return	New mesh or NULL on error.
 * \ingroup	WlzTransform
+* \brief	Transforms the given conforming mesh.
+* \param	srcMesh			Given mesh.
+* \param	trans			Given affine transform.
+* \param	dstErr			Destination pointer for error number.
+*/
+static WlzCMesh2D *WlzAffineTransformCMesh2D(WlzCMesh2D *srcMesh,
+				WlzAffineTransform *trans, WlzErrorNum *dstErr)
+{
+  int		idN;
+  WlzCMesh2D	*dstMesh = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dstMesh = WlzCMeshCopy2D(srcMesh, 0, 0, NULL, NULL, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < dstMesh->res.nod.maxEnt; ++idN)
+    {
+      WlzCMeshNod2D *nod;
+
+      nod = (WlzCMeshNod2D *)AlcVectorItemGet(dstMesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+        nod->pos = WlzAffineTransformVertexD2(trans, nod->pos, NULL);
+      }
+    }
+    WlzCMeshUpdateBBox2D(dstMesh);
+    errNum = WlzCMeshReassignGridCells2D(dstMesh, 0);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    WlzCMeshFree2D(dstMesh);
+    dstMesh = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstMesh);
+}
+
+/*!
+* \return	New mesh or NULL on error.
+* \ingroup	WlzTransform
+* \brief	Transforms the given conforming mesh.
+* \param	srcMesh			Given mesh.
+* \param	trans			Given affine transform.
+* \param	dstErr			Destination pointer for error number.
+*/
+static WlzCMesh2D5 *WlzAffineTransformCMesh2D5(WlzCMesh2D5 *srcMesh,
+				WlzAffineTransform *trans, WlzErrorNum *dstErr)
+{
+  int		idN;
+  WlzCMesh2D5	*dstMesh = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dstMesh = WlzCMeshCopy2D5(srcMesh, 0, 0, NULL, NULL, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < dstMesh->res.nod.maxEnt; ++idN)
+    {
+      WlzCMeshNod2D5 *nod;
+
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(dstMesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+        nod->pos = WlzAffineTransformVertexD3(trans, nod->pos, NULL);
+      }
+    }
+    WlzCMeshUpdateBBox2D5(dstMesh);
+    errNum = WlzCMeshReassignGridCells2D5(dstMesh, 0);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    WlzCMeshFree2D5(dstMesh);
+    dstMesh = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstMesh);
+}
+
+/*!
+* \return	New mesh or NULL on error.
+* \ingroup	WlzTransform
+* \brief	Transforms the given conforming mesh.
+* \param	srcMesh			Given mesh.
+* \param	trans			Given affine transform.
+* \param	dstErr			Destination pointer for error number.
+*/
+static WlzCMesh3D *WlzAffineTransformCMesh3D(WlzCMesh3D *srcMesh,
+				WlzAffineTransform *trans, WlzErrorNum *dstErr)
+{
+  int		idN;
+  WlzCMesh3D	*dstMesh = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dstMesh = WlzCMeshCopy3D(srcMesh, 0, 0, NULL, NULL, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < dstMesh->res.nod.maxEnt; ++idN)
+    {
+      WlzCMeshNod3D *nod;
+
+      nod = (WlzCMeshNod3D *)AlcVectorItemGet(dstMesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+        nod->pos = WlzAffineTransformVertexD3(trans, nod->pos, NULL);
+      }
+    }
+    WlzCMeshUpdateBBox3D(dstMesh);
+    errNum = WlzCMeshReassignGridCells3D(dstMesh, 0);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    WlzCMeshFree3D(dstMesh);
+    dstMesh = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstMesh);
+}
+
+/*!
 * \return			     	Transformed polygon domain or
 *                                    	NULL on error.
+* \ingroup	WlzTransform
 * \brief      	Transforms the given polygon domain.
 *             	Because this is a static function the parameters (other
 *             	than polygon type) are not checked.
@@ -511,9 +652,9 @@ static WlzPolygonDomain *WlzAffineTransformPoly2(WlzPolygonDomain *srcPoly,
         count = srcPoly->nvertices;
         while(count-- > 0)
         {
-          dstVtxF->vtX = (float )((cx * srcVtxF->vtX) + (sx * srcVtxF->vtY) +
+          dstVtxD->vtX = (float )((cx * srcVtxD->vtX) + (sx * srcVtxD->vtY) +
 	                          tx);
-          dstVtxF->vtY = (float )((sy * srcVtxF->vtX) + (cy * srcVtxF->vtY) +
+          dstVtxD->vtY = (float )((sy * srcVtxD->vtX) + (cy * srcVtxD->vtY) +
 	                          ty);
           ++srcVtxD;
           ++dstVtxD;
@@ -3044,6 +3185,9 @@ WlzObject	*WlzAffineTransformObjCb(WlzObject *srcObj,
       case WLZ_2D_POLYGON:
       case WLZ_BOUNDLIST:
       case WLZ_CONTOUR:
+      case WLZ_CMESH_2D:
+      case WLZ_CMESH_2D5:
+      case WLZ_CMESH_3D:
       case WLZ_TRANS_OBJ:
       case WLZ_AFFINE_TRANS:
 	if(srcObj->domain.core == NULL)
@@ -3074,6 +3218,21 @@ WlzObject	*WlzAffineTransformObjCb(WlzObject *srcObj,
 	    case WLZ_AFFINE_TRANS:
 	      dstDom.t = WlzAffineTransformProduct(srcObj->domain.t,
 	      					   trans, &errNum);
+	      break;
+	    case WLZ_CMESH_2D:
+	      dstDom.cm2 = WlzAffineTransformCMesh2D(srcObj->domain.cm2,
+	      					     trans, &errNum);
+	      srcValues = srcObj->values;
+	      break;
+	    case WLZ_CMESH_2D5:
+	      dstDom.cm2d5 = WlzAffineTransformCMesh2D5(srcObj->domain.cm2d5,
+	      					        trans, &errNum);
+	      srcValues = srcObj->values;
+	      break;
+	    case WLZ_CMESH_3D:
+	      dstDom.cm3 = WlzAffineTransformCMesh3D(srcObj->domain.cm3,
+	      					     trans, &errNum);
+	      srcValues = srcObj->values;
 	      break;
 	    default:
 	      errNum = WLZ_ERR_OBJECT_TYPE;
