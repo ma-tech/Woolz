@@ -184,8 +184,24 @@ static void			WlzCMeshScanClearOlpBuf(
 				  int clrWidth);
 static void			WlzCMeshSqzRedundantItv3D(
 				  WlzCMeshScanWSp3D *mSWSp);
+static void	 		WlzCMeshInterpolate2DLinear(
+				  WlzGreyP dst,
+				  int ln,
+				  int kolL,
+				  int kolR,
+				  WlzCMesh2D *mesh,
+				  WlzIndexedValues *ixv);
+static void	 		WlzCMeshInterpolate3DLinear(
+				  WlzGreyP dst,
+				  int pl,
+				  int ln,
+				  int kolL,
+				  int kolR,
+				  WlzCMesh3D *mesh,
+				  WlzIndexedValues *ixv);
 static int			WlzCMeshScanTriElm2D(
 				  WlzCMeshScanWSp2D *mSWSp,
+				  int trans,
 				  WlzCMeshElm2D *elm,
 				  int iIdx);
 static int			WlzCMeshItv2Cmp(
@@ -198,6 +214,8 @@ static int			WlzCMeshDVertex3Cmp(
 				  const void *cmp0,
 				  const void *cmp1);
 static WlzErrorNum		WlzCMeshTransformInvert2D(
+				  WlzObject *mObj);
+static WlzErrorNum		WlzCMeshTransformInvert2D5(
 				  WlzObject *mObj);
 static WlzErrorNum		WlzCMeshTransformInvert3D(
 				  WlzObject *mObj);
@@ -262,6 +280,21 @@ static WlzObject		*WlzCMeshToDomObj3D(
 				  WlzObject *mObj,
 				  int trans,
 				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzCMeshToDomObjValues2D(
+				  WlzObject *dObj,
+				  WlzObject *mObj,
+                                  WlzInterpolationType itp,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzCMeshToDomObjValues3D(
+				  WlzObject *dObj,
+				  WlzObject *mObj,
+                                  WlzInterpolationType itp,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzCMeshToDomObjValues3D(
+				  WlzObject *dObj,
+				  WlzObject *mObj,
+                                  WlzInterpolationType itp,
+				  WlzErrorNum *dstErr);
 static WlzPolygonDomain 	*WlzCMeshTransformPoly(
 				  WlzPolygonDomain *srcPoly,
 				  WlzObject *mObj,
@@ -272,6 +305,7 @@ static WlzBoundList 		*WlzCMeshTransformBoundList(
 				  WlzErrorNum *dstErr);
 static WlzCMeshScanWSp2D 	*WlzCMeshScanWSpInit2D(
 				  WlzObject *mObj,
+				  int trans,
 				  WlzErrorNum *dstErr);
 static WlzCMeshScanWSp3D 	*WlzCMeshMakeScanWSp3D(
 				  WlzObject *mObj,
@@ -279,6 +313,7 @@ static WlzCMeshScanWSp3D 	*WlzCMeshMakeScanWSp3D(
 				  WlzErrorNum *dstErr);
 static WlzCMeshScanWSp3D 	*WlzCMeshScanWSpInit3D(
 				  WlzObject *mObj,
+				  int trans,
 				  WlzErrorNum *dstErr);
 static WlzErrorNum		WlzScaleIndexedVal(double scale,
                                   WlzIndexedValues *ixv,
@@ -325,6 +360,9 @@ WlzErrorNum	WlzCMeshTransformInvert(WlzObject *mObj)
     {
       case WLZ_CMESH_2D:
 	errNum = WlzCMeshTransformInvert2D(mObj);
+        break;
+      case WLZ_CMESH_2D5:
+	errNum = WlzCMeshTransformInvert2D5(mObj);
         break;
       case WLZ_CMESH_3D:
 	errNum = WlzCMeshTransformInvert3D(mObj);
@@ -390,6 +428,65 @@ static WlzErrorNum WlzCMeshTransformInvert2D(WlzObject *mObj)
     WlzCMeshUpdateBBox2D(mesh);
     WlzCMeshUpdateMaxSqEdgLen2D(mesh);
     errNum = WlzCMeshReassignGridCells2D(mesh, mesh->res.nod.numEnt);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Inverts the given 2D5 constrained mesh transform in place.
+* \param	mObj			Given constrained mesh transform object.
+*/
+static WlzErrorNum WlzCMeshTransformInvert2D5(WlzObject *mObj)
+{
+  int		idN,
+  		maxNod;
+  AlcVector	*nodVec;
+  double	*dsp;
+  WlzCMesh2D5	*mesh;
+  WlzDVertex3	*pos;
+  WlzCMeshNod2D5 *nod;
+  WlzIndexedValues *ixv;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if((mesh = mObj->domain.cm2d5)->type != WLZ_CMESH_2D5)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else
+  {
+    ixv = mObj->values.x;
+    if((ixv->attach != WLZ_VALUE_ATTACH_NOD) ||
+       (ixv->rank != 1) ||
+       (ixv->dim[0] < 3) ||
+       (ixv->vType != WLZ_GREY_DOUBLE))
+    {
+      errNum = WLZ_ERR_VALUES_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nodVec = mesh->res.nod.vec;
+    maxNod = mesh->res.nod.maxEnt;
+    for(idN = 0; idN < maxNod; ++idN)
+    {
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(nodVec, idN);
+      if(nod->idx >= 0)
+      {
+	pos = &(nod->pos);
+	dsp = (double *)WlzIndexedValueGet(ixv, idN);
+	pos->vtX += dsp[0];
+	pos->vtY += dsp[1];
+	pos->vtZ += dsp[2];
+	dsp[0] = -dsp[0];
+	dsp[1] = -dsp[1];
+	dsp[2] = -dsp[2];
+      }
+    }
+    WlzCMeshUpdateBBox2D5(mesh);
+    WlzCMeshUpdateMaxSqEdgLen2D5(mesh);
+    errNum = WlzCMeshReassignGridCells2D5(mesh, mesh->res.nod.numEnt);
   }
   return(errNum);
 }
@@ -990,6 +1087,57 @@ WlzObject       *WlzCMeshToDomObj(WlzObject *mObj, int trans,
 }
 
 /*!
+* \return	New domain object (image) with values interpolated from mesh
+* 		values.
+* \ingroup      WlzMesh
+* \brief	Given a domain object and a mesh object, this function
+* 		creates a new domain object using the domain of the given
+* 		object and a new value table. The function then interpolates
+* 		the mesh values throughout the domain object.
+* \param	dObj			Given domain object.
+* \param	mObj			Given mesh object.
+* \param	itp			Interpolation method.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzCMeshToDomObjValues(WlzObject *dObj, WlzObject *mObj,
+                                        WlzInterpolationType itp,
+					WlzErrorNum *dstErr)
+{
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((dObj == NULL) || (mObj == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((dObj->domain.core == NULL) || (mObj->domain.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;;
+  }
+  else if(mObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  if((dObj->type == WLZ_2D_DOMAINOBJ) && (mObj->type == WLZ_CMESH_2D))
+  {
+    rObj = WlzCMeshToDomObjValues2D(dObj, mObj, itp, &errNum);
+  }
+  else if((dObj->type == WLZ_3D_DOMAINOBJ) && (mObj->type == WLZ_CMESH_3D))
+  {
+    rObj = WlzCMeshToDomObjValues3D(dObj, mObj, itp, &errNum);
+  }
+  else
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
 * \return       New 2D domain object, empty object if the mesh has no elements
 *               or NULL on error.
 * \ingroup      WlzMesh
@@ -1024,7 +1172,6 @@ static WlzObject *WlzCMeshToDomObj2D(WlzObject *mObj, int trans,
   WlzDynItvPool itvPool;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  /* TODO trans parameter not used but should be! HACK */
   dom.core = NULL;
   val.core = NULL;
   if(mObj == NULL)
@@ -1053,7 +1200,7 @@ static WlzObject *WlzCMeshToDomObj2D(WlzObject *mObj, int trans,
   }
   else
   {
-    mSWSp = WlzCMeshScanWSpInit2D(mObj, &errNum);
+    mSWSp = WlzCMeshScanWSpInit2D(mObj, trans, &errNum);
     /* Create a single line bit mask buffer. */
     if(errNum == WLZ_ERR_NONE)
     {
@@ -1163,7 +1310,6 @@ static WlzObject *WlzCMeshToDomObj3D(WlzObject *mObj, int trans,
   WlzCMeshScanWSp3D *mSWSp = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  /* HACK TODO trans parameter not used but should be! HACK */
   if(mObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -1194,7 +1340,7 @@ static WlzObject *WlzCMeshToDomObj3D(WlzObject *mObj, int trans,
      * mesh, with intervals sorted by plane, line and then column. */
     if(errNum == WLZ_ERR_NONE)
     {
-      mSWSp = WlzCMeshScanWSpInit3D(mObj, &errNum);
+      mSWSp = WlzCMeshScanWSpInit3D(mObj, trans, &errNum);
     }
     /* Scan through the sorted intervals creating domains as required. */
     if(errNum == WLZ_ERR_NONE)
@@ -1207,6 +1353,527 @@ static WlzObject *WlzCMeshToDomObj3D(WlzObject *mObj, int trans,
     *dstErr = errNum;
   }
   return(dobj);
+}
+
+/*!
+* \return	New domain object (image) with values interpolated from mesh
+* 		values.
+* \ingroup      WlzMesh
+* \brief	Given a domain object and a mesh object, this function
+* 		creates a new domain object using the domain of the given
+* 		object and a new value table. The function then interpolates
+* 		the mesh values throughout the domain object.
+* \param	dObj			Given domain object, must be a valid
+* 					WLZ_2D_DOMAINOBJ.
+* \param	mObj			Given mesh object, must be a valid
+* 					WLZ_CMESH_2D object with valid indexed
+* 					values..
+* \param	itp			Interpolation method.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject *WlzCMeshToDomObjValues2D(WlzObject *dObj, WlzObject *mObj,
+                                        WlzInterpolationType itp,
+					WlzErrorNum *dstErr)
+{
+  WlzValues	rVal;
+  WlzObjectType	rVTT;
+  WlzPixelV	bgd;
+  WlzIndexedValues *ixv;
+  WlzCMesh2D	*mesh;
+  WlzGreyWSpace gWsp;
+  WlzIntervalWSpace iWsp;
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  rVal.core = NULL;
+  ixv = mObj->values.x;
+  mesh = mObj->domain.cm2;
+  bgd.type = ixv->vType;
+  switch(bgd.type)
+  {
+    case WLZ_GREY_LONG:
+      bgd.v.lnv = 0;
+      break;
+    case WLZ_GREY_INT:
+      bgd.v.inv = 0;
+      break;
+    case WLZ_GREY_SHORT:
+      bgd.v.shv = 0;
+      break;
+    case WLZ_GREY_UBYTE:
+      bgd.v.ubv = 0;
+      break;
+    case WLZ_GREY_FLOAT:
+      bgd.v.flv = 0.0f;
+      break;
+    case WLZ_GREY_DOUBLE:
+      bgd.v.dbv = 0.0;
+      break;
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
+      break;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rVTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, bgd.type, NULL);
+    rVal.v = WlzNewValueTb(dObj, rVTT, bgd, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rObj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+                       dObj->domain, rVal, NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzInitGreyScan(rObj, &iWsp, &gWsp);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    while((errNum == WLZ_ERR_NONE) &&
+          ((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE))
+    {
+      switch(itp)
+      {
+	case WLZ_INTERPOLATION_LINEAR:
+	  WlzCMeshInterpolate2DLinear(gWsp.u_grintptr, 
+				      iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
+				      mesh, ixv);
+	  break;
+        default:
+	  errNum = WLZ_ERR_PARAM_TYPE;
+	  break;
+      }
+    }
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(rObj != NULL)
+    {
+      (void )WlzFreeObj(rObj);
+      rObj = NULL;
+    }
+    else if(rVal.core != NULL)
+    {
+      (void )WlzFreeValueTb(rVal.v);
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
+* \return	New domain object (image) with values interpolated from mesh
+* 		values.
+* \ingroup      WlzMesh
+* \brief	Given a domain object and a mesh object, this function
+* 		creates a new domain object using the domain of the given
+* 		object and a new value table. The function then interpolates
+* 		the mesh values throughout the domain object.
+* \param	dObj			Given domain object, must be a valid
+* 					WLZ_3D_DOMAINOBJ.
+* \param	mObj			Given mesh object, must be a valid
+* 					WLZ_CMESH_3D object with valid indexed
+* 					values..
+* \param	itp			Interpolation method.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject *WlzCMeshToDomObjValues3D(WlzObject *dObj, WlzObject *mObj,
+                                        WlzInterpolationType itp,
+					WlzErrorNum *dstErr)
+{
+  WlzValues	rVal;
+  WlzObjectType	rVTT;
+  WlzPixelV	bgd;
+  WlzIndexedValues *ixv;
+  WlzCMesh3D	*mesh;
+  WlzGreyWSpace gWsp;
+  WlzIntervalWSpace iWsp;
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  rVal.core = NULL;
+  ixv = mObj->values.x;
+  mesh = mObj->domain.cm3;
+  bgd.type = ixv->vType;
+  switch(bgd.type)
+  {
+    case WLZ_GREY_LONG:
+      bgd.v.lnv = 0;
+      break;
+    case WLZ_GREY_INT:
+      bgd.v.inv = 0;
+      break;
+    case WLZ_GREY_SHORT:
+      bgd.v.shv = 0;
+      break;
+    case WLZ_GREY_UBYTE:
+      bgd.v.ubv = 0;
+      break;
+    case WLZ_GREY_FLOAT:
+      bgd.v.flv = 0.0f;
+      break;
+    case WLZ_GREY_DOUBLE:
+      bgd.v.dbv = 0.0;
+      break;
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
+      break;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rVTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, bgd.type, NULL);
+    rVal.vox = WlzNewValuesVox(dObj, rVTT, bgd, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rObj = WlzMakeMain(WLZ_3D_DOMAINOBJ,
+                       dObj->domain, rVal, NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idP,
+    		pCnt;
+    
+    pCnt = rObj->domain.p->lastpl - rObj->domain.p->plane1 + 1;
+    for(idP = 0; idP < pCnt; ++idP)
+    {
+      int	plnPos;
+      WlzObject *objT = NULL;
+
+      objT = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+                         *(rObj->domain.p->domains + idP),
+			 *(rObj->values.vox->values + idP),
+			 NULL, NULL, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        plnPos = rObj->domain.p->plane1 + idP;
+	errNum = WlzInitGreyScan(objT, &iWsp, &gWsp);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	while((errNum == WLZ_ERR_NONE) &&
+	      ((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE))
+	{
+	  switch(itp)
+	  {
+	    case WLZ_INTERPOLATION_LINEAR:
+	      WlzCMeshInterpolate3DLinear(gWsp.u_grintptr, 
+					  plnPos, iWsp.linpos,
+					  iWsp.lftpos, iWsp.rgtpos,
+					  mesh, ixv);
+	      break;
+	    default:
+	      errNum = WLZ_ERR_PARAM_TYPE;
+	      break;
+	  }
+	}
+	if(errNum == WLZ_ERR_EOO)
+	{
+	  errNum = WLZ_ERR_NONE;
+	}
+      }
+      (void )WlzFreeObj(objT);
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(rObj != NULL)
+    {
+      (void )WlzFreeObj(rObj);
+      rObj = NULL;
+    }
+    else if(rVal.core != NULL)
+    {
+      (void )WlzFreeValueTb(rVal.v);
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Interpolates values along the pixels of a single interval
+* 		from the given mesh and it's indexed values. Uses linear
+* 		interpolation within each mesh element.
+* \param	dst				The interval values.
+* \param	ln				Line coordinate of the
+* 						interval.
+* \param	kolL				leftmost column coordinate of
+* 						the interval.
+* \param	kolR				Rightmost column coordinate of
+* 						the interval.
+* \param	mesh				The mesh.
+* \param	ixv				The indexed values.
+*/
+static void 	WlzCMeshInterpolate2DLinear(WlzGreyP dst,
+                                            int ln, int kolL, int kolR,
+					    WlzCMesh2D *mesh,
+					    WlzIndexedValues *ixv)
+{
+  int		kl,
+  		idE,
+		idI,
+		idN;
+  WlzDVertex2	pos;
+
+  idI = 0;
+  idE = -1;
+  pos.vtY = ln;
+  for(kl = kolL; kl <= kolR; ++kl)
+  {
+    pos.vtX = kl;
+    if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE, pos.vtX, pos.vtY, 0, 
+                                        &idN)) >= 0)
+    {
+      double d[4];
+      WlzCMeshElm2D *elm;
+      WlzCMeshNod2D *nod[3];
+
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+      nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+      nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
+      switch(ixv->vType)
+      {
+	case WLZ_GREY_LONG:
+	  d[0] = *(long *)WlzIndexedValueGet(ixv, nod[0]->idx);
+	  d[1] = *(long *)WlzIndexedValueGet(ixv, nod[1]->idx);
+	  d[2] = *(long *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  d[3] = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos, d[0], d[1], d[2], pos);
+	  *(dst.lnp + idI) = WLZ_NINT(d[3]);
+	  break;
+	case WLZ_GREY_INT:
+	  d[0] = *(int *)WlzIndexedValueGet(ixv, nod[0]->idx);
+	  d[1] = *(int *)WlzIndexedValueGet(ixv, nod[1]->idx);
+	  d[2] = *(int *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  d[3] = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos, d[0], d[1], d[2], pos);
+	  *(dst.inp + idI) = WLZ_NINT(d[3]);
+	  break;
+	case WLZ_GREY_SHORT:
+	  d[0] = *(short *)WlzIndexedValueGet(ixv, nod[0]->idx);
+	  d[1] = *(short *)WlzIndexedValueGet(ixv, nod[1]->idx);
+	  d[2] = *(short *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  d[3] = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos, d[0], d[1], d[2], pos);
+	  *(dst.shp + idI) = WLZ_NINT(d[3]);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  d[0] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[0]->idx);
+	  d[1] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[1]->idx);
+	  d[2] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  d[3] = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos, d[0], d[1], d[2], pos);
+	  *(dst.ubp + idI) = WLZ_NINT(d[3]);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  d[0] = *(float *)WlzIndexedValueGet(ixv, nod[0]->idx);
+	  d[1] = *(float *)WlzIndexedValueGet(ixv, nod[1]->idx);
+	  d[2] = *(float *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  d[3] = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos, d[0], d[1], d[2], pos);
+	  *(dst.flp + idI) = d[3];
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  *(dst.dbp + idI) = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos,
+			*(double *)WlzIndexedValueGet(ixv, nod[0]->idx),
+			*(double *)WlzIndexedValueGet(ixv, nod[1]->idx),
+			*(double *)WlzIndexedValueGet(ixv, nod[2]->idx),
+			pos);
+	  break;
+	default:
+	  break;
+      }
+    }
+    else if(idN >= 0)
+    {
+      WlzCMeshNod2D *nod;
+
+      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      switch(ixv->vType)
+      {
+	case WLZ_GREY_LONG:
+	  *(dst.lnp + idI) = *(long *)WlzIndexedValueGet(ixv, nod->idx);
+	  break;
+	case WLZ_GREY_INT:
+	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, nod->idx);
+	  break;
+	case WLZ_GREY_SHORT:
+	  *(dst.shp + idI) = *(short *)WlzIndexedValueGet(ixv, nod->idx);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, nod->idx);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  *(dst.flp + idI) = *(float *)WlzIndexedValueGet(ixv, nod->idx);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, nod->idx);
+	  break;
+	default:
+	  break;
+      }
+    }
+    ++idI;
+  }
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Interpolates values along the pixels of a single interval
+* 		from the given mesh and it's indexed values. Uses linear
+* 		interpolation within each mesh element.
+* \param	dst				The interval values.
+* \param	ln				Line coordinate of the
+* 						interval.
+* \param	kolL				leftmost column coordinate of
+* 						the interval.
+* \param	kolR				Rightmost column coordinate of
+* 						the interval.
+* \param	mesh				The mesh.
+* \param	ixv				The indexed values.
+*/
+static void 	WlzCMeshInterpolate3DLinear(WlzGreyP dst,
+                                            int pl, int ln, int kolL, int kolR,
+					    WlzCMesh3D *mesh,
+					    WlzIndexedValues *ixv)
+{
+  int		kl,
+  		idE,
+		idI,
+		idN;
+  WlzDVertex3	pos;
+
+  idI = 0;
+  idE = -1;
+  pos.vtY = ln;
+  pos.vtZ = pl;
+  for(kl = kolL; kl <= kolR; ++kl)
+  {
+    pos.vtX = kl;
+    if((idE = WlzCMeshElmEnclosingPos3D(mesh, idE, pos.vtX, pos.vtY, pos.vtZ,
+    					0, &idN)) >= 0)
+    {
+      double d[5];
+      WlzCMeshElm3D *elm;
+      WlzCMeshNod3D *nod[4];
+
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+      nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+      nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+      nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
+      switch(ixv->vType)
+      {
+	case WLZ_GREY_LONG:
+	  d[0] = *(long *)WlzIndexedValueGet(ixv, nod[0]->idx);
+	  d[1] = *(long *)WlzIndexedValueGet(ixv, nod[1]->idx);
+	  d[2] = *(long *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  d[3] = *(long *)WlzIndexedValueGet(ixv, nod[3]->idx);
+	  d[4] = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos, nod[3]->pos,
+			d[0], d[1], d[2], d[3], pos);
+	  *(dst.lnp + idI) = WLZ_NINT(d[4]);
+	  break;
+	case WLZ_GREY_INT:
+	  d[0] = *(int *)WlzIndexedValueGet(ixv, nod[0]->idx);
+	  d[1] = *(int *)WlzIndexedValueGet(ixv, nod[1]->idx);
+	  d[2] = *(int *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  d[3] = *(int *)WlzIndexedValueGet(ixv, nod[3]->idx);
+	  d[4] = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos, nod[3]->pos,
+			d[0], d[1], d[2], d[3], pos);
+	  *(dst.inp + idI) = WLZ_NINT(d[4]);
+	  break;
+	case WLZ_GREY_SHORT:
+	  d[0] = *(short *)WlzIndexedValueGet(ixv, nod[0]->idx);
+	  d[1] = *(short *)WlzIndexedValueGet(ixv, nod[1]->idx);
+	  d[2] = *(short *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  d[3] = *(short *)WlzIndexedValueGet(ixv, nod[3]->idx);
+	  d[4] = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos, nod[3]->pos,
+			d[0], d[1], d[2], d[3], pos);
+	  *(dst.shp + idI) = WLZ_NINT(d[4]);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  d[0] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[0]->idx);
+	  d[1] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[1]->idx);
+	  d[2] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  d[3] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[3]->idx);
+	  d[4] = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos, nod[3]->pos,
+			d[0], d[1], d[2], d[3], pos);
+	  *(dst.ubp + idI) = WLZ_NINT(d[4]);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  d[0] = *(float *)WlzIndexedValueGet(ixv, nod[0]->idx);
+	  d[1] = *(float *)WlzIndexedValueGet(ixv, nod[1]->idx);
+	  d[2] = *(float *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  d[3] = *(float *)WlzIndexedValueGet(ixv, nod[3]->idx);
+	  d[4] = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos, nod[3]->pos,
+			d[0], d[1], d[2], d[3], pos);
+	  *(dst.flp + idI) = d[4];
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  *(dst.dbp + idI) = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos, nod[3]->pos,
+			*(double *)WlzIndexedValueGet(ixv, nod[0]->idx),
+			*(double *)WlzIndexedValueGet(ixv, nod[1]->idx),
+			*(double *)WlzIndexedValueGet(ixv, nod[2]->idx),
+			*(double *)WlzIndexedValueGet(ixv, nod[3]->idx),
+			pos);
+	  break;
+	default:
+	  break;
+      }
+    }
+    else if(idN >= 0)
+    {
+      WlzCMeshNod3D *nod;
+
+      nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      switch(ixv->vType)
+      {
+	case WLZ_GREY_LONG:
+	  *(dst.lnp + idI) = *(long *)WlzIndexedValueGet(ixv, nod->idx);
+	  break;
+	case WLZ_GREY_INT:
+	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, nod->idx);
+	  break;
+	case WLZ_GREY_SHORT:
+	  *(dst.shp + idI) = *(short *)WlzIndexedValueGet(ixv, nod->idx);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, nod->idx);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  *(dst.flp + idI) = *(float *)WlzIndexedValueGet(ixv, nod->idx);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, nod->idx);
+	  break;
+	default:
+	  break;
+      }
+    }
+    ++idI;
+  }
 }
 
 /*!
@@ -1442,7 +2109,7 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
   if(errNum == WLZ_ERR_NONE)
   {
     mItvIdx0 = 0;
-    mSWSp = WlzCMeshScanWSpInit2D(mObj, &errNum);
+    mSWSp = WlzCMeshScanWSpInit2D(mObj, 1, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1931,9 +2598,13 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 * \ingroup	WlzTransform
 * \brief	Allocate and initialise a 2D conforming mesh scan workspace.
 * \param	mObj			Conforming mesh transform object.
+* \param	trans			Build workspace for transformed
+* 					mesh using the transform in the 
+* 					mesh indexed values if non-zero.
 * \param	dstErr			Destination error pointer.
 */
 static WlzCMeshScanWSp2D *WlzCMeshScanWSpInit2D(WlzObject *mObj,
+						int trans,
 				    	        WlzErrorNum *dstErr)
 {
   int		iIdx;
@@ -1945,7 +2616,7 @@ static WlzCMeshScanWSp2D *WlzCMeshScanWSpInit2D(WlzObject *mObj,
   WlzCMeshNod2D	*nod;
   WlzCMeshElm2D	*elm;
   WlzCMesh2D	*mesh;
-  WlzIndexedValues *ixv;
+  WlzIndexedValues *ixv = NULL;
   WlzCMeshEntRes *elmRes;
   WlzCMeshScanElm2D *dElm;
   WlzCMeshScanWSp2D *mSWSp = NULL;
@@ -1969,7 +2640,7 @@ static WlzCMeshScanWSp2D *WlzCMeshScanWSpInit2D(WlzObject *mObj,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else
+  else if(trans != 0)
   {
     if((ixv = mObj->values.x) != NULL)
     {
@@ -2069,7 +2740,7 @@ static WlzCMeshScanWSp2D *WlzCMeshScanWSpInit2D(WlzObject *mObj,
       dElm->idx = elm->idx;
       if(elm->idx >= 0)
       {
-        iIdx += WlzCMeshScanTriElm2D(mSWSp, elm, iIdx);
+        iIdx += WlzCMeshScanTriElm2D(mSWSp, trans, elm, iIdx);
       }
       ++eIdx;
       ++dElm;
@@ -2109,9 +2780,12 @@ static WlzCMeshScanWSp2D *WlzCMeshScanWSpInit2D(WlzObject *mObj,
 * \ingroup	WlzTransform
 * \brief	Allocate and initialise a 3D conforming mesh scan workspace.
 * \param	mObj			Conforming mesh transform object.
+* \param	trans			Build workspace for transformed
+* 					mesh using the transform in the 
+* 					mesh indexed values if non-zero.
 * \param	dstErr			Destination error pointer.
 */
-static WlzCMeshScanWSp3D *WlzCMeshScanWSpInit3D(WlzObject *mObj,
+static WlzCMeshScanWSp3D *WlzCMeshScanWSpInit3D(WlzObject *mObj, int trans,
 				    	WlzErrorNum *dstErr)
 {
   int		idE,
@@ -2127,7 +2801,7 @@ static WlzCMeshScanWSp3D *WlzCMeshScanWSpInit3D(WlzObject *mObj,
   AlcVector	*elmVec;
   WlzCMeshNod3D	*nodBuf[4];
   WlzCMeshElm3D	*elm;
-  WlzIndexedValues *ixv;
+  WlzIndexedValues *ixv = NULL;
   WlzCMesh3D	*mesh;
   WlzCMeshScanWSp3D *mSWSp = NULL;
   WlzCMeshScanElm3D *dElm;
@@ -2151,7 +2825,7 @@ static WlzCMeshScanWSp3D *WlzCMeshScanWSpInit3D(WlzObject *mObj,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else
+  else if(trans != 0)
   {
     if((ixv = mObj->values.x) != NULL)
     {
@@ -2455,11 +3129,12 @@ static void	WlzCMeshScanWSpFree3D(WlzCMeshScanWSp3D *mSWSp)
 * \brief	Scans a single triangular conforming mesh scan element
 *		into conforming mesh intervals.
 * \param	mSnWSp			Conforming mesh scan workspace.
+* \param	trans			Use transformed element if non zero.
 * \param	elm			Mesh element which is assumed to be
 *					valid.
 * \param	iIdx			Conforming mesh element interval index.
 */
-static int	WlzCMeshScanTriElm2D(WlzCMeshScanWSp2D *mSWSp,
+static int	WlzCMeshScanTriElm2D(WlzCMeshScanWSp2D *mSWSp, int trans,
 				     WlzCMeshElm2D *elm, int iIdx)
 {
   int		kolI0,
@@ -2482,7 +3157,7 @@ static int	WlzCMeshScanTriElm2D(WlzCMeshScanWSp2D *mSWSp,
   WlzIndexedValues *ixv;
   WlzCMeshScanItv2D *itv;
 
-  ixv = mSWSp->mTr->values.x;
+  ixv = (trans != 0)? mSWSp->mTr->values.x: NULL;
   /* Compute the integer displaced nodes of the element. */
   for(ndIdx0 = 0; ndIdx0 < 3; ++ndIdx0)
   {
@@ -3429,7 +4104,7 @@ static WlzObject *WlzCMeshTransformObjPDomain3D(WlzObject *srcObj,
    * mesh, with intervals sorted by plane, line and then column. */
   if(errNum == WLZ_ERR_NONE)
   {
-    mSWSp = WlzCMeshScanWSpInit3D(mObj, &errNum);
+    mSWSp = WlzCMeshScanWSpInit3D(mObj, 1, &errNum);
   }
   /* Scan through the sorted intervals creating domains as required. */
   if(errNum == WLZ_ERR_NONE)
@@ -3483,7 +4158,7 @@ static WlzObject *WlzCMeshTransformObjV3D(WlzObject *srcObj,
    * mesh, with intervals sorted by plane, line and then column. */
   if(errNum == WLZ_ERR_NONE)
   {
-    mSWSp = WlzCMeshScanWSpInit3D(mObj, &errNum);
+    mSWSp = WlzCMeshScanWSpInit3D(mObj, 1, &errNum);
   }
   /* Scan through the sorted intervals creating domains as required. */
   if(errNum == WLZ_ERR_NONE)
