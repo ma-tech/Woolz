@@ -315,6 +315,15 @@ WlzDomain	 WlzCopyDomain(WlzObjectType inObjType, WlzDomain inDom,
 	  		      WlzGMModelCopy(inDom.ctr->model, &errNum), NULL);
 	}
         break;
+      case WLZ_CMESH_2D:
+        outDom.cm2 = WlzCMeshCopy2D(inDom.cm2, 1, 0, NULL, NULL, &errNum);
+	break;
+      case WLZ_CMESH_2D5:
+        outDom.cm2d5 = WlzCMeshCopy2D5(inDom.cm2d5, 1, 0, NULL, NULL, &errNum);
+	break;
+      case WLZ_CMESH_3D:
+        outDom.cm3 = WlzCMeshCopy3D(inDom.cm3, 0, 0, NULL, NULL, &errNum);
+	break;
       case WLZ_3D_WARP_TRANS:
       case WLZ_CONV_HULL:
       case WLZ_3D_POLYGON:
