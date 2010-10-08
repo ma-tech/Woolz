@@ -486,7 +486,7 @@ WlzErrorNum	WlzEffWriteObjVff(FILE *fP, WlzObject *obj)
 			    "rank=%d;\n"
 			    "bands=%d;\n"
 			    "bits=%d;\n"
-			    "rawsize=%d;\n"
+			    "rawsize=%ld;\n"
 			    "size=%d %d %d;\n"
 			    "origin=%f %f %f;\n"
 			    "extent=%f %f %f;\n"
