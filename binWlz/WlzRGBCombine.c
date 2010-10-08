@@ -134,7 +134,6 @@ int             main(int argc, char **argv)
 		ok = 1,
 		usage = 0;
   FILE		*fP = NULL;
-  WlzIBox3	bBox;
   WlzPixelV	gMin,
   		gMax;
   WlzObject	*tmpObj = NULL,
