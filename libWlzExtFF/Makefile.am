@@ -58,7 +58,9 @@ libWlzExtFF_la_SOURCES 	= \
 			  WlzExtFFJpeg.c \
 			  WlzExtFFMesh.c \
 			  WlzExtFFNodeEle.c \
+			  WlzExtFFObj.c \
 			  WlzExtFFPic.c \
+			  WlzExtFFPly2.c \
 			  WlzExtFFPnm.c \
 			  WlzExtFFSlc.c \
 			  WlzExtFFStack.c \
