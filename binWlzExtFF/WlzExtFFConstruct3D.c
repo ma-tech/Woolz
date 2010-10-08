@@ -172,6 +172,7 @@ int		main(int argc, char *argv[])
   const char    outFileStrDef[] = "-";
 
   opterr = 0;
+  fStr = "";
   voxSz.vtX = voxSz.vtY = voxSz.vtZ = 1.0;
   outFileStr = (char *)outFileStrDef;
   while(ok && ((option = getopt(argc, argv, optList)) != EOF))
