@@ -51,13 +51,17 @@ WlzCMeshCurvToImage - creates a grey scale image from a conforming mesh in
 		      Gaussian curvature values.
 \par Synopsis
 \verbatim
-WlzCMeshCurvToImage [-h] [-o<output object>] [<input object>]
+WlzCMeshCurvToImage [-h] [-m] [-o<output object>] [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr>
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr>
+    <td><b>-m</b></td>
+    <td>Computes the mean rather than the Gaussian curvature values..</td>
   </tr>
   <tr>
     <td><b>-o</b></td>
@@ -107,6 +111,7 @@ extern int      optind,
 int             main(int argc, char **argv)
 {
   int		option,
+		meanCrv = 0,
   		ok = 1,
 		usage = 0;
   WlzObject     *inObj = NULL,
@@ -116,7 +121,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "ho:",
+  static char	optList[] = "hmo:",
   		fileStrDef[] = "-";
 
   opterr = 0;
@@ -126,6 +131,9 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case 'm':
+        meanCrv = 1;
+	break;
       case 'o':
         outObjFileStr = optarg;
 	break;
@@ -169,7 +177,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    outObj = WlzCMeshCurvToImage(inObj, &errNum);
+    outObj = WlzCMeshCurvToImage(inObj, meanCrv, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -205,9 +213,10 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-h] [-o<output object>] [<input object>]\n"
+    " [-h] [-m] [-o<output object>] [<input object>]\n"
     "Options:\n"
     "  -h  Help, prints usage message.\n"
+    "  -m  Set image values to the mean rather than the Gaussian curvature.\n"
     "  -o  Output object file.\n"
     "Creates a 2D domain object with grey values (image) in which the values\n"
     "that are interpolated from the Gaussian curvature of the mesh. The 2D\n"
