@@ -71,6 +71,11 @@ extern WlzErrorNum 		WlzEffWriteObj(
 				  WlzObject *obj,
 				  WlzEffFormat fFmt);
 extern int			WlzEffNumberOfFormats(void);
+extern char			*WlzEffFormatTable(
+				  unsigned indWth,
+                                  unsigned desWth,
+				  unsigned fmtWth,
+				  WlzErrorNum *dstErr);
 
 #ifndef WLZ_EXT_BIND
 /* From WlzExtFFAm.c */
@@ -158,11 +163,27 @@ extern WlzErrorNum 		WlzEffWriteObjMesh(
 				  FILE *fP,
 				  WlzObject *obj);
 
+/* From WlzExtFFObj.c */
+extern WlzObject 		*WlzEffReadObjObj(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum 		WlzEffWriteObjObj(
+				  FILE *fP,
+				  WlzObject *obj);
+
 /* From WlzExtFFPic.c */
 extern WlzObject 		*WlzEffReadObjPic(
 				  FILE *fP,
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum 		WlzEffWriteObjPic(
+				  FILE *fP,
+				  WlzObject *obj);
+
+/* From WlzExtFFPly2.c */
+extern WlzObject 		*WlzEffReadObjPly2(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum 		WlzEffWriteObjPly2(
 				  FILE *fP,
 				  WlzObject *obj);
 
