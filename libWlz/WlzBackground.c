@@ -178,7 +178,6 @@ WlzPixelV WlzGetBackground(
   WlzErrorNum	*dstErr)
 {
   WlzPlaneDomain	*planedmn;
-  WlzVoxelValues	*voxtab;
   WlzPixelV		bgd;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 

@@ -65,7 +65,6 @@ WlzObject	*RecPreProcObj(WlzObject *obj, RecPPControl *ppCtrl,
 		*ppObj2 = NULL,
 		*ppObj3 = NULL,
 		*rtnObj = NULL;
-  double	tD0;
   WlzPixelV	tV0,
   		tV1;
   WlzErrorNum	wlzErr = WLZ_ERR_NONE;
