@@ -71,6 +71,7 @@ libWlz_la_SOURCES 	= \
 			  WlzCentrality.c \
 			  WlzCentreOfMass.c \
 			  WlzClipObjToBox.c \
+			  WlzCMeshCurvature.c \
 			  WlzCMeshFMar.c \
 			  WlzCMeshScan.c \
 			  WlzCMeshSurfMap.c \
