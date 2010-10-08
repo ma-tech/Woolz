@@ -201,6 +201,30 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 	errNum = WlzFreeObj(obj->assoc);
       }
       break;
+    case WLZ_CMESH_2D5:
+      WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
+      	      ("WlzFreeObj 03 0x%lx WLZ_CMESH_2D5 0x%lx, "
+	       "%d 0x%lx %d 0x%lx\n",
+	       (unsigned long )obj,
+	       (unsigned long )(obj->domain.cm2d5),
+	       ((obj->domain.cm2d5)?(obj->domain.cm2d5)->linkcount: 0),
+	       (unsigned long )(obj->values.x),
+	       ((obj->values.x)?(obj->values.x)->linkcount: 0),
+	       (unsigned long )(obj->plist)));
+      errNum = WlzCMeshFree2D5(obj->domain.cm2d5);
+      if((errNum == WLZ_ERR_NONE) && (obj->values.core != NULL))
+      {
+	errNum = WlzFreeIndexedValues(obj->values.x);
+      }
+      if((errNum == WLZ_ERR_NONE) && (obj->plist != NULL))
+      {
+	errNum = WlzFreePropertyList(obj->plist);
+      }
+      if((errNum == WLZ_ERR_NONE) && (obj->assoc != NULL))
+      {
+	errNum = WlzFreeObj(obj->assoc);
+      }
+      break;
 
     case WLZ_CMESH_3D:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
