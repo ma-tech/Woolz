@@ -1052,7 +1052,6 @@ WlzObject	*WlzEffReadCMeshVtk(FILE *fP, WlzEffVtkHeader *header,
   		valI,
 		nElm = 0,
 		nNod = 0;
-  double	vol;
   char 		*valS0,
   		*valS1;
   WlzDBox3	bBox;
@@ -1260,20 +1259,8 @@ WlzObject	*WlzEffReadCMeshVtk(FILE *fP, WlzEffVtkHeader *header,
 			  }
 			  /* Add triangle to the mesh. It's possible that the
 			   * orienation will be wrong so try both. */
-			  vol = WlzGeomTriangleSnArea2(nBuf2[0]->pos,
-					    nBuf2[1]->pos, nBuf2[2]->pos);
-			  if(vol < 0)
-			  {
-			    (void )WlzCMeshNewElm2D(mesh.m2,
-			                            nBuf2[0], nBuf2[2],
-						    nBuf2[1], &errNum);
-			  }
-			  else
-			  {
-			    (void )WlzCMeshNewElm2D(mesh.m2,
-			                            nBuf2[0], nBuf2[1],
-						    nBuf2[2], &errNum);
-			  }
+			  (void )WlzCMeshNewElm2D(mesh.m2, nBuf2[0], nBuf2[2],
+						  nBuf2[1], 1, &errNum);
 			}
 		      }
 		      if(errNum == WLZ_ERR_NONE)
@@ -1326,21 +1313,8 @@ WlzObject	*WlzEffReadCMeshVtk(FILE *fP, WlzEffVtkHeader *header,
 			  }
 			  /* Add tetrahedron to the mesh. It's possible that
 			   * the orienation will be wrong so try both. */
-			  vol = WlzGeomTetraSnVolume6(nBuf3[0]->pos,
-					    nBuf3[1]->pos, nBuf3[2]->pos,
-					    nBuf3[3]->pos);
-			  if(vol < 0)
-			  {
-			    (void )WlzCMeshNewElm3D(mesh.m3, nBuf3[0], nBuf3[1],
-						    nBuf3[3], nBuf3[2],
-						    &errNum);
-			  }
-			  else
-			  {
-			    (void )WlzCMeshNewElm3D(mesh.m3, nBuf3[0], nBuf3[1],
-						    nBuf3[2], nBuf3[3],
-						    &errNum);
-			  }
+			  (void )WlzCMeshNewElm3D(mesh.m3, nBuf3[0], nBuf3[1],
+						  nBuf3[3], nBuf3[2], 1, &errNum);
 			}
 		      }
 		      if(errNum == WLZ_ERR_NONE)
@@ -1487,7 +1461,7 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 		sumPoints,
 		endOfData,
 		vHTSz;
-  char *valS;
+  char 		*valS = NULL;
   WlzGMModel	*model = NULL;
   WlzEffVtkPolyDataType prim;
   WlzErrorNum	errNum = WLZ_ERR_NONE;

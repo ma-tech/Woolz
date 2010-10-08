@@ -73,7 +73,6 @@ WlzObject	*WlzEffReadObjVMesh(FILE *fP, WlzErrorNum *dstErr)
   		nFce = 0,
 		nBFce = 0,
 		nNod = 0;
-  double	vol;
   char		*str;
   int		*eBufP,
   		*eBuf = NULL;
@@ -307,18 +306,7 @@ WlzObject	*WlzEffReadObjVMesh(FILE *fP, WlzErrorNum *dstErr)
         nBuf[idN] = (WlzCMeshNod3D *)
 	            AlcVectorItemGet(mesh->res.nod.vec, eBufP[1 + idN]);
       }
-      vol = WlzGeomTetraSnVolume6(nBuf[0]->pos, nBuf[1]->pos,
-      				  nBuf[2]->pos, nBuf[3]->pos);
-      if(vol < 0)
-      {
-	(void )WlzCMeshNewElm3D(mesh, nBuf[0], nBuf[1], nBuf[3], nBuf[2],
-				&errNum);
-      }
-      else
-      {
-	(void )WlzCMeshNewElm3D(mesh, nBuf[0], nBuf[1], nBuf[2], nBuf[3],
-				&errNum);
-      }
+      (void )WlzCMeshNewElm3D(mesh, nBuf[0], nBuf[1], nBuf[3], nBuf[2], 1, &errNum);
       if(errNum != WLZ_ERR_NONE)
       {
         break;
