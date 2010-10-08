@@ -916,6 +916,37 @@ int		WlzCMeshNodIsBoundary2D(WlzCMeshNod2D *nod)
 * \return	Non-zero if the node is a boundary node.
 * \ingroup	WlzMesh
 * \brief	Checks whether the node is a boundary node by examining
+* 		the edges which use the node. If one of these edges does
+*		not have an opposite edge (other than itself) the node is
+*		a boundary node.
+* \param	nod			Given node of mesh.
+*/
+int		WlzCMeshNodIsBoundary2D5(WlzCMeshNod2D5 *nod)
+{
+  int		isBnd = 0;
+  WlzCMeshEdgU2D5 *edu0,
+  		  *edu1;
+
+  if(nod && (nod->idx >= 0))
+  {
+    edu0 = edu1 = nod->edu;
+    do
+    {
+      if((edu1->opp == NULL) || (edu1->opp == edu1))
+      {
+	isBnd = 1;
+	break;
+      }
+      edu1 = edu1->nnxt;
+    } while(edu1 != edu0);
+  }
+  return(isBnd);
+}
+
+/*!
+* \return	Non-zero if the node is a boundary node.
+* \ingroup	WlzMesh
+* \brief	Checks whether the node is a boundary node by examining
 * 		the faces which use the node. If one of these faces does
 *		not have an opposite face (other than itself) the node is
 *		a boundary node.
@@ -1737,6 +1768,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
   }
   return(errNum1);
 }
+
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
@@ -2393,6 +2425,24 @@ void		WlzCMeshElmGetNodes2D(WlzCMeshElm2D *elm,
 
 /*!
 * \ingroup	WlzMesh
+* \brief	Gets the three nodes of a 2D5 element.
+* \param	elm			Given mesh element.
+* \param	dstNod0			First destination pointer for node.
+* \param	dstNod1			Second destination pointer for node.
+* \param	dstNod2			Third destination pointer for node.
+*/
+void		WlzCMeshElmGetNodes2D5(WlzCMeshElm2D5 *elm,
+				       WlzCMeshNod2D5 **dstNod0,
+				       WlzCMeshNod2D5 **dstNod1,
+				       WlzCMeshNod2D5 **dstNod2)
+{
+  *dstNod0 = WLZ_CMESH_ELM2D5_GET_NODE_0(elm);
+  *dstNod1 = WLZ_CMESH_ELM2D5_GET_NODE_1(elm);
+  *dstNod2 = WLZ_CMESH_ELM2D5_GET_NODE_2(elm);
+}
+
+/*!
+* \ingroup	WlzMesh
 * \brief	Gets the four nodes of a 3D element.
 * \param	elm			Given mesh element.
 * \param	dstNod0			First destination pointer for node.
@@ -2728,10 +2778,11 @@ static WlzDVertex3 WlzCMeshFilterLPLDelta3D(WlzCMesh3D *mesh,
 /*!
 * \return	Copy of the given mesh.
 * \ingroup	WlzMesh
-* \brief	Creates a copy of the given constrained mesh in which
-* 		all deleted entities have been squeezed out. In the
-* 		mew mesh the valid mesh entities are contiguous and start
-* 		with index 0.
+* \brief	Creates a copy of the given constrained mesh.
+* 		If the squeeze flag is set then the copy will have all
+* 		invalid (deleted) entities squeezed out so that the
+* 		mew mesh will only have valid mesh entities that are
+* 		contiguous and start with index 0.
 * 		As well as copying the given mesh this function will
 * 		also copy data associated with the nodes of the mesh.
 * 		The associated data are held in AlcVector data structures
@@ -2739,13 +2790,15 @@ static WlzDVertex3 WlzCMeshFilterLPLDelta3D(WlzCMesh3D *mesh,
 * 		If (datSz == 0) || (newDat == NULL) || (gvnDat == NULL)
 * 		then the associated data will be ignored.
 * \param	gvnMesh			Given mesh.
+* \param	squeeze			Squeeze out invalid (deleted entities
+* 					if non zero).
 * \param	datSz			Size of associated datum.
 * \param	newDat			Destination pointer for the copied
 * 					associated data, may be NULL.
 * \param	gvnDat			Given associated data, may be NULL.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzCMeshP	WlzCMeshCopy(WlzCMeshP gvnMesh, size_t datSz,
+WlzCMeshP	WlzCMeshCopy(WlzCMeshP gvnMesh, int squeeze, size_t datSz,
 				AlcVector **newDat, AlcVector *gvnDat,
 				WlzErrorNum *dstErr)
 {
@@ -2762,12 +2815,16 @@ WlzCMeshP	WlzCMeshCopy(WlzCMeshP gvnMesh, size_t datSz,
     switch(gvnMesh.m2->type)
     {
       case WLZ_CMESH_2D:
-        newMesh.m2 = WlzCMeshCopy2D(gvnMesh.m2, datSz, newDat, gvnDat,
-				    &errNum);
+        newMesh.m2 = WlzCMeshCopy2D(gvnMesh.m2, squeeze, datSz, newDat,
+	                            gvnDat, &errNum);
+        break;
+      case WLZ_CMESH_2D5:
+        newMesh.m2d5 = WlzCMeshCopy2D5(gvnMesh.m2d5, squeeze, datSz, newDat,
+				       gvnDat, &errNum);
         break;
       case WLZ_CMESH_3D:
-        newMesh.m3 = WlzCMeshCopy3D(gvnMesh.m3, datSz, newDat, gvnDat,
-				    &errNum);
+        newMesh.m3 = WlzCMeshCopy3D(gvnMesh.m3, squeeze, datSz, newDat,
+				    gvnDat, &errNum);
         break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -2784,10 +2841,11 @@ WlzCMeshP	WlzCMeshCopy(WlzCMeshP gvnMesh, size_t datSz,
 /*!
 * \return	Copy of the given mesh.
 * \ingroup	WlzMesh
-* \brief	Creates a copy of the given constrained mesh in which
-* 		all deleted entities have been squeezed out. In the
-* 		mew mesh the valid mesh entities are contiguous and start
-* 		with index 0.
+* \brief	Creates a copy of the given constrained mesh.
+* 		If the squeeze flag is set then the copy will have all
+* 		invalid (deleted) entities squeezed out so that the
+* 		mew mesh will only have valid mesh entities that are
+* 		contiguous and start with index 0.
 * 		As well as copying the given mesh this function will
 * 		also copy data associated with the nodes of the mesh.
 * 		The associated data are held in AlcVector data structures
@@ -2795,23 +2853,22 @@ WlzCMeshP	WlzCMeshCopy(WlzCMeshP gvnMesh, size_t datSz,
 * 		If (datSz == 0) || (newDat == NULL) || (gvnDat == NULL)
 * 		then the associated data will be ignored.
 * \param	gvnMesh			Given mesh.
+* \param	squeeze			Squeeze out invalid (deleted entities
+* 					if non zero).
 * \param	datSz			Size of associated datum.
 * \param	newDat			Destination pointer for the copied
 * 					associated data, may be NULL.
 * \param	gvnDat			Given associated data, may be NULL.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, size_t datSz,
+WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, int squeeze,
+				size_t datSz,
 				AlcVector **newDat, AlcVector *gvnDat,
 				WlzErrorNum *dstErr)
 {
   int		idE,
   		idN;
-  void		*ascP;
   AlcVector	*prvDat = NULL;
-  WlzCMeshNod2D	*gvnNodes[3],
-  		*newNodes[3];
-  WlzCMeshElm2D	*gvnElm;
   WlzCMesh2D	*newMesh = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -2833,52 +2890,141 @@ WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, size_t datSz,
   if((errNum == WLZ_ERR_NONE) &&
      (gvnMesh->res.nod.numEnt > 0) && (gvnMesh->res.elm.numEnt > 0))
   {
-    idE = 0;
     newMesh = WlzCMeshNew2D(&errNum);
     if(errNum == WLZ_ERR_NONE)
     {
       newMesh->bBox = gvnMesh->bBox;
+      newMesh->maxSqEdgLen = gvnMesh->maxSqEdgLen;
       errNum = WlzCMeshReassignGridCells2D(newMesh, gvnMesh->res.nod.numEnt);
     }
-    while((errNum == WLZ_ERR_NONE) && (idE < gvnMesh->res.elm.maxEnt))
+    if(errNum == WLZ_ERR_NONE)
     {
-      gvnElm = (WlzCMeshElm2D *)AlcVectorItemGet(gvnMesh->res.elm.vec, idE);
-      if(gvnElm->idx >= 0)
-      {
-	/* Copy Nodes. */
-	gvnNodes[0] = WLZ_CMESH_ELM2D_GET_NODE_0(gvnElm);
-	gvnNodes[1] = WLZ_CMESH_ELM2D_GET_NODE_1(gvnElm);
-	gvnNodes[2] = WLZ_CMESH_ELM2D_GET_NODE_2(gvnElm);
-	idN = 0;
-	do
-	{
-	  if(WlzCMeshLocateNod2D(newMesh, gvnNodes[idN]->pos,
-	                         newNodes + idN) == 0)
+      int newMaxNod,
+      	  newMaxElm;
 
+      newMaxNod = (squeeze)? gvnMesh->res.nod.numEnt: gvnMesh->res.nod.maxEnt;
+      newMaxElm = (squeeze)? gvnMesh->res.elm.numEnt: gvnMesh->res.elm.maxEnt;
+      if((AlcVectorExtend(newMesh->res.nod.vec, newMaxNod) != ALC_ER_NONE) ||
+         (AlcVectorExtend(newMesh->res.elm.vec, newMaxElm) != ALC_ER_NONE) ||
+         ((prvDat != NULL) &&
+          (AlcVectorExtend(prvDat, newMaxNod) != ALC_ER_NONE)))
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)          
+    {
+      if(squeeze != 0)    /* Make entities with indices contigous from zero. */
+      {
+	for(idE = 0; idE < gvnMesh->res.elm.maxEnt; ++idE)
+	{
+	  WlzCMeshElm2D *gvnElm;
+
+	  gvnElm = (WlzCMeshElm2D *)AlcVectorItemGet(gvnMesh->res.elm.vec, idE);
+	  if(gvnElm->idx >= 0)
 	  {
-	    newNodes[idN] = WlzCMeshNewNod2D(newMesh, gvnNodes[idN]->pos,
-	                                     &errNum);
-	    /* Copy associated data. */
-	    if((errNum == WLZ_ERR_NONE) && (prvDat != NULL))
+	    WlzCMeshNod2D *gvnNodes[3],
+			  *newNodes[3];
+
+	    /* Copy Nodes. */
+	    gvnNodes[0] = WLZ_CMESH_ELM2D_GET_NODE_0(gvnElm);
+	    gvnNodes[1] = WLZ_CMESH_ELM2D_GET_NODE_1(gvnElm);
+	    gvnNodes[2] = WLZ_CMESH_ELM2D_GET_NODE_2(gvnElm);
+	    for(idN = 0; idN < 3; ++idN)
 	    {
-	      if((ascP = AlcVectorExtendAndGet(prvDat,
-	                                       newNodes[idN]->idx)) != NULL)
+	      if(WlzCMeshLocateNod2D(newMesh, gvnNodes[idN]->pos,
+				     newNodes + idN) == 0)
 	      {
-	        memcpy(ascP, AlcVectorItemGet(prvDat, gvnNodes[idN]->idx),
-		       datSz);
+		newNodes[idN] = WlzCMeshNewNod2D(newMesh, gvnNodes[idN]->pos,
+						 NULL);
+		/* Copy node associated data. */
+		if(prvDat != NULL)
+		{
+	          void *ascP;
+
+		  ascP = AlcVectorItemGet(prvDat, newNodes[idN]->idx);
+		  memcpy(ascP, AlcVectorItemGet(gvnDat, gvnNodes[idN]->idx),
+			 datSz);
+		}
 	      }
 	    }
+	    /* Copy element. */
+	    (void )WlzCMeshNewElm2D(newMesh,
+				    newNodes[0], newNodes[1], newNodes[2],
+				    0, &errNum);
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
 	  }
-	} while((errNum == WLZ_ERR_NONE) && (++idN < 3));
-	/* Copy element. */
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  (void )WlzCMeshNewElm2D(newMesh,
-	                          newNodes[0], newNodes[1], newNodes[2],
-				  &errNum);
 	}
       }
-      ++idE;
+      else /* squeeze == 0, preserve entity indices in copy. */
+      {
+	/* Copy Nodes. */
+        for(idN = 0; idN < gvnMesh->res.nod.maxEnt; ++idN)
+	{
+	  WlzCMeshNod2D *gvnNod,
+	  		*newNod;
+
+	  gvnNod = (WlzCMeshNod2D *)AlcVectorItemGet(gvnMesh->res.nod.vec,
+	  					     idN);
+	  if(gvnNod->idx < 0)
+	  {
+            newNod = WlzCMeshAllocNod2D(newMesh);
+	    newNod->idx = -1;
+	    ++(newMesh->res.nod.numEnt);
+	  }
+	  else
+	  {
+	    newNod = WlzCMeshNewNod2D(newMesh, gvnNod->pos, NULL);
+	    /* Copy node associated data. */
+	    if(prvDat != NULL)
+	    {
+	      void *ascP;
+
+	      ascP = AlcVectorItemGet(prvDat, newNod->idx);
+	      memcpy(ascP, AlcVectorItemGet(gvnDat, gvnNod->idx), datSz);
+	    }
+	  }
+	}
+	/* Copy elements. */
+	for(idE = 0; idE < gvnMesh->res.elm.maxEnt; ++idE)
+	{
+	  WlzCMeshElm2D *gvnElm;
+
+	  gvnElm = (WlzCMeshElm2D *)AlcVectorItemGet(gvnMesh->res.elm.vec, idE);
+	  if(gvnElm->idx < 0)
+	  {
+	    WlzCMeshElm2D *newElm;
+
+	    newElm = WlzCMeshAllocElm2D(newMesh);
+	    --(newMesh->res.elm.numEnt);
+	  }
+	  else
+	  {
+	    WlzCMeshNod2D *gvnNod;
+	    WlzCMeshNod2D *newNodes[3];
+
+	    gvnNod = WLZ_CMESH_ELM2D_GET_NODE_0(gvnElm);
+	    newNodes[0] = (WlzCMeshNod2D *)
+	    		  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
+	    gvnNod = WLZ_CMESH_ELM2D_GET_NODE_1(gvnElm);
+	    newNodes[1] = (WlzCMeshNod2D *)
+	                  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
+	    gvnNod = WLZ_CMESH_ELM2D_GET_NODE_2(gvnElm);
+	    newNodes[2] = (WlzCMeshNod2D *)
+	                  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
+	    (void )WlzCMeshNewElm2D(newMesh,
+	                            newNodes[0], newNodes[1], newNodes[2],
+				    0, &errNum);
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
+	}
+      }
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -2910,36 +3056,251 @@ WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, size_t datSz,
 /*!
 * \return	Copy of the given mesh.
 * \ingroup	WlzMesh
-* \brief	Creates a copy of the given constrained mesh in which
-* 		all deleted entities have been squeezed out. In the
-* 		mew mesh the valid mesh entities are contiguous and start
-* 		with index 0.
-*		As well as copying the given mesh this function will
-*               also copy data associated with the nodes of the mesh.
-*               The associated data are held in AlcVector data structures
-*               and are indexed using the node index.
-*               If (datSz == 0) || (newDat == NULL) || (gvnDat == NULL)
-*               then the associated data will be ignored.
+* \brief	Creates a copy of the given constrained mesh.
+* 		If the squeeze flag is set then the copy will have all
+* 		invalid (deleted) entities squeezed out so that the
+* 		mew mesh will only have valid mesh entities that are
+* 		contiguous and start with index 0.
+* 		As well as copying the given mesh this function will
+* 		also copy data associated with the nodes of the mesh.
+* 		The associated data are held in AlcVector data structures
+* 		and are indexed using the node index.
+* 		If (datSz == 0) || (newDat == NULL) || (gvnDat == NULL)
+* 		then the associated data will be ignored.
 * \param	gvnMesh			Given mesh.
+* \param	squeeze			Squeeze out invalid (deleted entities
+* 					if non zero).
 * \param        datSz                   Size of associated datum.
 * \param        newDat                  Destination pointer for the copied
 *                                       associated data, may be NULL.
 * \param        gvnDat                  Given associated data, may be NULL.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzCMesh3D	*WlzCMeshCopy3D(WlzCMesh3D *gvnMesh, size_t datSz,
+WlzCMesh2D5	*WlzCMeshCopy2D5(WlzCMesh2D5 *gvnMesh, int squeeze,
+				 size_t datSz,
+                                 AlcVector **newDat, AlcVector *gvnDat,
+                                 WlzErrorNum *dstErr)
+{
+  int		idE,
+  		idN;
+  AlcVector	*prvDat = NULL;
+  WlzCMesh2D5	*newMesh = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gvnMesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(gvnMesh->type != WLZ_CMESH_2D5)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((datSz > 0) && (newDat != NULL) && (gvnDat != NULL))
+  {
+    if((prvDat = AlcVectorNew(1, datSz, gvnDat->blkSz, NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) &&
+     (gvnMesh->res.nod.numEnt > 0) && (gvnMesh->res.elm.numEnt > 0))
+  {
+    newMesh = WlzCMeshNew2D5(&errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      newMesh->bBox = gvnMesh->bBox;
+      newMesh->maxSqEdgLen = gvnMesh->maxSqEdgLen;
+      errNum = WlzCMeshReassignGridCells2D5(newMesh, gvnMesh->res.nod.numEnt);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int newMaxNod,
+      	  newMaxElm;
+
+      newMaxNod = (squeeze)? gvnMesh->res.nod.numEnt: gvnMesh->res.nod.maxEnt;
+      newMaxElm = (squeeze)? gvnMesh->res.elm.numEnt: gvnMesh->res.elm.maxEnt;
+      if((AlcVectorExtend(newMesh->res.nod.vec, newMaxNod) != ALC_ER_NONE) ||
+         (AlcVectorExtend(newMesh->res.elm.vec, newMaxElm) != ALC_ER_NONE) ||
+         ((prvDat != NULL) &&
+          (AlcVectorExtend(prvDat, newMaxNod) != ALC_ER_NONE)))
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)          
+    {
+      if(squeeze != 0)    /* Make entities with indices contigous from zero. */
+      {
+	for(idE = 0; idE < gvnMesh->res.elm.maxEnt; ++idE)
+	{
+	  WlzCMeshElm2D5 *gvnElm;
+
+	  gvnElm = (WlzCMeshElm2D5 *)AlcVectorItemGet(gvnMesh->res.elm.vec,
+	  					      idE);
+	  if(gvnElm->idx >= 0)
+	  {
+	    WlzCMeshNod2D5 *gvnNodes[3],
+			   *newNodes[3];
+
+	    /* Copy Nodes. */
+	    gvnNodes[0] = WLZ_CMESH_ELM2D5_GET_NODE_0(gvnElm);
+	    gvnNodes[1] = WLZ_CMESH_ELM2D5_GET_NODE_1(gvnElm);
+	    gvnNodes[2] = WLZ_CMESH_ELM2D5_GET_NODE_2(gvnElm);
+	    for(idN = 0; idN < 3; ++idN)
+	    {
+	      if(WlzCMeshLocateNod2D5(newMesh, gvnNodes[idN]->pos,
+				      newNodes + idN) == 0)
+	      {
+		newNodes[idN] = WlzCMeshNewNod2D5(newMesh, gvnNodes[idN]->pos,
+						  NULL);
+		/* Copy node associated data. */
+		if(prvDat != NULL)
+		{
+	          void *ascP;
+
+		  ascP = AlcVectorItemGet(prvDat, newNodes[idN]->idx);
+		  memcpy(ascP, AlcVectorItemGet(gvnDat, gvnNodes[idN]->idx),
+			 datSz);
+		}
+	      }
+	    }
+	    /* Copy element. */
+	    (void )WlzCMeshNewElm2D5(newMesh,
+				     newNodes[0], newNodes[1], newNodes[2],
+				     0, &errNum);
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
+	}
+      }
+      else /* squeeze == 0, preserve entity indices in copy. */
+      {
+	/* Copy Nodes. */
+        for(idN = 0; idN < gvnMesh->res.nod.maxEnt; ++idN)
+	{
+	  WlzCMeshNod2D5 *gvnNod,
+	  		 *newNod;
+
+	  gvnNod = (WlzCMeshNod2D5 *)AlcVectorItemGet(gvnMesh->res.nod.vec,
+	  					      idN);
+	  if(gvnNod->idx < 0)
+	  {
+            newNod = WlzCMeshAllocNod2D5(newMesh);
+	    newNod->idx = -1;
+	    ++(newMesh->res.nod.numEnt);
+	  }
+	  else
+	  {
+	    newNod = WlzCMeshNewNod2D5(newMesh, gvnNod->pos, NULL);
+	    /* Copy node associated data. */
+	    if(prvDat != NULL)
+	    {
+	      void *ascP;
+
+	      ascP = AlcVectorItemGet(prvDat, newNod->idx);
+	      memcpy(ascP, AlcVectorItemGet(gvnDat, gvnNod->idx), datSz);
+	    }
+	  }
+	}
+	/* Copy elements. */
+	for(idE = 0; idE < gvnMesh->res.elm.maxEnt; ++idE)
+	{
+	  WlzCMeshElm2D5 *gvnElm;
+
+	  gvnElm = (WlzCMeshElm2D5 *)AlcVectorItemGet(gvnMesh->res.elm.vec,
+	                                              idE);
+	  if(gvnElm->idx < 0)
+	  {
+	    WlzCMeshElm2D5 *newElm;
+
+	    newElm = WlzCMeshAllocElm2D5(newMesh);
+	    --(newMesh->res.elm.numEnt);
+	  }
+	  else
+	  {
+	    WlzCMeshNod2D5 *gvnNod;
+	    WlzCMeshNod2D5 *newNodes[3];
+
+	    gvnNod = WLZ_CMESH_ELM2D_GET_NODE_0(gvnElm);
+	    newNodes[0] = (WlzCMeshNod2D5 *)
+	    		  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
+	    gvnNod = WLZ_CMESH_ELM2D_GET_NODE_1(gvnElm);
+	    newNodes[1] = (WlzCMeshNod2D5 *)
+	                  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
+	    gvnNod = WLZ_CMESH_ELM2D_GET_NODE_2(gvnElm);
+	    newNodes[2] = (WlzCMeshNod2D5 *)
+	                  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
+	    (void )WlzCMeshNewElm2D5(newMesh,
+	                            newNodes[0], newNodes[1], newNodes[2],
+				    0, &errNum);
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
+	}
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(prvDat != NULL)
+    {
+      *newDat = prvDat;
+    }
+  }
+  else
+  {
+    if(newMesh != NULL)
+    {
+      WlzCMeshFree2D5(newMesh);
+      newMesh = NULL;
+    }
+    if(prvDat != NULL)
+    {
+      (void )AlcVectorFree(prvDat);
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(newMesh);
+}
+
+/*!
+* \return	Copy of the given mesh.
+* \ingroup	WlzMesh
+* \brief	Creates a copy of the given constrained mesh.
+* 		If the squeeze flag is set then the copy will have all
+* 		invalid (deleted) entities squeezed out so that the
+* 		mew mesh will only have valid mesh entities that are
+* 		contiguous and start with index 0.
+* 		As well as copying the given mesh this function will
+* 		also copy data associated with the nodes of the mesh.
+* 		The associated data are held in AlcVector data structures
+* 		and are indexed using the node index.
+* 		If (datSz == 0) || (newDat == NULL) || (gvnDat == NULL)
+* 		then the associated data will be ignored.
+* \param	gvnMesh			Given mesh.
+* \param	squeeze			Squeeze out invalid (deleted entities
+* 					if non zero).
+* \param        datSz                   Size of associated datum.
+* \param        newDat                  Destination pointer for the copied
+*                                       associated data, may be NULL.
+* \param        gvnDat                  Given associated data, may be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMesh3D	*WlzCMeshCopy3D(WlzCMesh3D *gvnMesh, int squeeze,
+				size_t datSz,
                                 AlcVector **newDat, AlcVector *gvnDat,
                                 WlzErrorNum *dstErr)
 {
   int		idE,
   		idN;
-  void          *ascP;
-  AlcVector     *prvDat = NULL;
-  WlzIVertex3	dumGrdPos;
-  WlzCMeshNod3D	*dumNod;
-  WlzCMeshNod3D	*gvnNodes[4],
-  		*newNodes[4];
-  WlzCMeshElm3D	*gvnElm;
+  AlcVector	*prvDat = NULL;
   WlzCMesh3D	*newMesh = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -2961,53 +3322,146 @@ WlzCMesh3D	*WlzCMeshCopy3D(WlzCMesh3D *gvnMesh, size_t datSz,
   if((errNum == WLZ_ERR_NONE) &&
      (gvnMesh->res.nod.numEnt > 0) && (gvnMesh->res.elm.numEnt > 0))
   {
-    idE = 0;
     newMesh = WlzCMeshNew3D(&errNum);
     if(errNum == WLZ_ERR_NONE)
     {
       newMesh->bBox = gvnMesh->bBox;
+      newMesh->maxSqEdgLen = gvnMesh->maxSqEdgLen;
       errNum = WlzCMeshReassignGridCells3D(newMesh, gvnMesh->res.nod.numEnt);
     }
-    while((errNum == WLZ_ERR_NONE) && (idE < gvnMesh->res.elm.maxEnt))
+    if(errNum == WLZ_ERR_NONE)
     {
-      gvnElm = (WlzCMeshElm3D *)AlcVectorItemGet(gvnMesh->res.elm.vec, idE);
-      if(gvnElm->idx >= 0)
-      {
-	/* Copy Nodes. */
-	gvnNodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(gvnElm);
-	gvnNodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(gvnElm);
-	gvnNodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(gvnElm);
-	gvnNodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(gvnElm);
-	idN = 0;
-	do
-	{
-	  if(WlzCMeshLocateNod3D(newMesh, gvnNodes[idN]->pos,
-	                         &dumGrdPos, &dumNod, newNodes + idN) == 0)
+      int newMaxNod,
+      	  newMaxElm;
 
-	  {
-	    newNodes[idN] = WlzCMeshNewNod3D(newMesh, gvnNodes[idN]->pos,
-	                                     &errNum);
-            /* Copy associated data. */
-            if((errNum == WLZ_ERR_NONE) && (prvDat != NULL))
-            {
-              if((ascP = AlcVectorExtendAndGet(prvDat,
-                                               newNodes[idN]->idx)) != NULL)
-              {
-                memcpy(ascP, AlcVectorItemGet(prvDat, gvnNodes[idN]->idx),
-		       datSz);
-              }
-            }
-	  }
-	} while((errNum == WLZ_ERR_NONE) && (++idN < 4));
-	/* Copy element. */
-	if(errNum == WLZ_ERR_NONE)
+      newMaxNod = (squeeze)? gvnMesh->res.nod.numEnt: gvnMesh->res.nod.maxEnt;
+      newMaxElm = (squeeze)? gvnMesh->res.elm.numEnt: gvnMesh->res.elm.maxEnt;
+      if((AlcVectorExtend(newMesh->res.nod.vec, newMaxNod) != ALC_ER_NONE) ||
+         (AlcVectorExtend(newMesh->res.elm.vec, newMaxElm) != ALC_ER_NONE) ||
+         ((prvDat != NULL) &&
+          (AlcVectorExtend(prvDat, newMaxNod) != ALC_ER_NONE)))
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)          
+    {
+      if(squeeze != 0)    /* Make entities with indices contigous from zero. */
+      {
+	for(idE = 0; idE < gvnMesh->res.elm.maxEnt; ++idE)
 	{
-	  (void )WlzCMeshNewElm3D(newMesh,
-	                          newNodes[0], newNodes[1], newNodes[2],
-				  newNodes[3], &errNum);
+	  WlzCMeshElm3D *gvnElm;
+
+	  gvnElm = (WlzCMeshElm3D *)AlcVectorItemGet(gvnMesh->res.elm.vec, idE);
+	  if(gvnElm->idx >= 0)
+	  {
+	    WlzCMeshNod3D *gvnNodes[4],
+			  *newNodes[4];
+
+	    /* Copy Nodes. */
+	    gvnNodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(gvnElm);
+	    gvnNodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(gvnElm);
+	    gvnNodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(gvnElm);
+	    gvnNodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(gvnElm);
+	    for(idN = 0; idN < 4; ++idN)
+	    {
+              WlzIVertex3 dumGrdPos;
+              WlzCMeshNod3D *dumNod;
+
+	      if(WlzCMeshLocateNod3D(newMesh, gvnNodes[idN]->pos,
+				     &dumGrdPos, &dumNod, newNodes + idN) == 0)
+	      {
+		newNodes[idN] = WlzCMeshNewNod3D(newMesh, gvnNodes[idN]->pos,
+						 NULL);
+		/* Copy node associated data. */
+		if(prvDat != NULL)
+		{
+	          void *ascP;
+
+		  ascP = AlcVectorItemGet(prvDat, newNodes[idN]->idx);
+		  memcpy(ascP, AlcVectorItemGet(gvnDat, gvnNodes[idN]->idx),
+			 datSz);
+		}
+	      }
+	    }
+	    /* Copy element. */
+	    (void )WlzCMeshNewElm3D(newMesh, newNodes[0], newNodes[1],
+	    			    newNodes[2], newNodes[3], 0, &errNum);
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
 	}
       }
-      ++idE;
+      else /* squeeze == 0, preserve entity indices in copy. */
+      {
+	/* Copy Nodes. */
+        for(idN = 0; idN < gvnMesh->res.nod.maxEnt; ++idN)
+	{
+	  WlzCMeshNod3D *gvnNod,
+	  		*newNod;
+
+	  gvnNod = (WlzCMeshNod3D *)AlcVectorItemGet(gvnMesh->res.nod.vec,
+	  					     idN);
+	  if(gvnNod->idx < 0)
+	  {
+            newNod = WlzCMeshAllocNod3D(newMesh);
+	    newNod->idx = -1;
+	    ++(newMesh->res.nod.numEnt);
+	  }
+	  else
+	  {
+	    newNod = WlzCMeshNewNod3D(newMesh, gvnNod->pos, NULL);
+	    /* Copy node associated data. */
+	    if(prvDat != NULL)
+	    {
+	      void *ascP;
+
+	      ascP = AlcVectorItemGet(prvDat, newNod->idx);
+	      memcpy(ascP, AlcVectorItemGet(gvnDat, gvnNod->idx), datSz);
+	    }
+	  }
+	}
+	/* Copy elements. */
+	for(idE = 0; idE < gvnMesh->res.elm.maxEnt; ++idE)
+	{
+	  WlzCMeshElm3D *gvnElm;
+
+	  gvnElm = (WlzCMeshElm3D *)AlcVectorItemGet(gvnMesh->res.elm.vec, idE);
+	  if(gvnElm->idx < 0)
+	  {
+	    WlzCMeshElm3D *newElm;
+
+	    newElm = WlzCMeshAllocElm3D(newMesh);
+	    --(newMesh->res.elm.numEnt);
+	  }
+	  else
+	  {
+	    WlzCMeshNod3D *gvnNod;
+	    WlzCMeshNod3D *newNodes[4];
+
+	    gvnNod = WLZ_CMESH_ELM3D_GET_NODE_0(gvnElm);
+	    newNodes[0] = (WlzCMeshNod3D *)
+	    		  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
+	    gvnNod = WLZ_CMESH_ELM3D_GET_NODE_1(gvnElm);
+	    newNodes[1] = (WlzCMeshNod3D *)
+	                  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
+	    gvnNod = WLZ_CMESH_ELM3D_GET_NODE_2(gvnElm);
+	    newNodes[2] = (WlzCMeshNod3D *)
+	                  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
+	    gvnNod = WLZ_CMESH_ELM3D_GET_NODE_3(gvnElm);
+	    newNodes[3] = (WlzCMeshNod3D *)
+	                  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
+	    (void )WlzCMeshNewElm3D(newMesh, newNodes[0], newNodes[1],
+	    			    newNodes[2], newNodes[3], 0, &errNum);
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
+	}
+      }
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -3144,7 +3598,7 @@ WlzErrorNum     WlzCMeshFixNegativeElms2D(WlzCMesh2D *mesh)
 	  }
 	  /* Create connnectivities with the element and to the rest of the
 	   * mesh. */
-	  errNum = WlzCMeshSetElm2D(mesh, elm, nod[1], nod[0], nod[2]);
+	  errNum = WlzCMeshSetElm2D(mesh, elm, nod[1], nod[0], nod[2], 0);
 	}
       }
     }
@@ -3237,7 +3691,7 @@ WlzErrorNum     WlzCMeshFixNegativeElms3D(WlzCMesh3D *mesh)
 	  /* Create connnectivities with the element and to the rest of the
 	   * mesh. */
 	  errNum = WlzCMeshSetElm3D(mesh, elm, nod[1], nod[0], nod[2],
-	  			    nod[3]);
+	  			    nod[3], 0);
 	}
       }
     }
@@ -3908,4 +4362,168 @@ int		WlzCMeshSetElmIdxTbl3D(WlzCMesh3D *mesh, int *idxTb)
     }
   }
   return(nElm);
+}
+
+/*!
+* \return	Number of nodes in the ring plus one for the given node or
+* 		zero on error.
+* \ingroup	WlzMesh
+* \brief	Gathers the indices of the nodes that form a ring or
+* 		partial rings around the given node. Where members of the
+*		ring are the immediate neighbours of the given node. The
+*		given node's index will always be the first in the
+*		buffer but the remainder of the node indices may be
+*		unsorted.
+* \param	nod			Given node which must be valid.
+* \param	maxIdxBuf		Pointer to the current maximum number
+* 					of indices possible in the current
+* 					buffer. This must be valid and may
+* 					be modified on return.
+* \param	*idxBuf			Pointer to the current node index
+* 					buffer. This must either be valid
+* 					or a pointer to a NULL array. The
+* 					array pointer may be modified on
+* 					return.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int		WlzCMeshNodRingNodIndices2D5(WlzCMeshNod2D5 *nod,
+					     int *maxIdxBuf,
+					     int **idxBuf,
+				             WlzErrorNum *dstErr)
+{
+  int		nN;
+  WlzCMeshEdgU2D5 *edu0,
+  		*edu1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Count the number of edge uses directed away from this node plus one. */
+  nN = 1;
+  edu1 = edu0 = nod->edu;
+  do
+  {
+    if((edu1->opp == NULL) || (edu1->opp == edu1))
+    {
+      nN += 2;
+    }
+    else
+    {
+      nN += 1;
+    }
+    edu1 = edu1->nnxt;
+  } while((edu1 != NULL) && (edu1 != edu0));
+  /* Re-allocate the index buffer if required. */
+  if((*idxBuf == NULL) || (*maxIdxBuf < nN))
+  {
+    *maxIdxBuf = 2 * nN;
+    if((*idxBuf = (int *)
+                  AlcRealloc(*idxBuf, sizeof(int) * *maxIdxBuf)) == NULL)
+    {
+      nN = 0;
+      *maxIdxBuf = 0;
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Fill the buffer with the indices of the nodes on the opposite ends
+   * of all edge uses directed away from the node. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int idN;
+
+    idN = 1;
+    edu1 = edu0;
+    (*idxBuf)[0] = nod->idx;
+    do
+    {
+      if((edu1->opp == NULL) || (edu1->opp == edu1))
+      {
+        (*idxBuf)[idN++] = edu1->next->nod->idx;
+      }
+      (*idxBuf)[idN++] = edu1->next->next->nod->idx;
+      edu1 = edu1->nnxt;
+    } while((edu1 != NULL) && (edu1 != edu0));
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    nN = 0;
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(nN);
+}
+
+/*!
+* \return	Number of elements in the ring or zero on error.
+* \ingroup	WlzMesh
+* \brief	Gathers the indices of the elements that form a ring or
+* 		partial rings around the given node. Where members of the
+*		ring are immediate neighbours of the given node. The
+*		element indices may be unsorted.
+* \param	nod			Given node which must be valid.
+* \param	maxIdxBuf		Pointer to the current maximum number
+* 					of indices possible in the current
+* 					buffer. This must be valid and may
+* 					be modified on return.
+* \param	*idxBuf			Pointer to the current node index
+* 					buffer. This must either be valid
+* 					or a pointer to a NULL array. The
+* 					array pointer may be modified on
+* 					return.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int		WlzCMeshNodRingElmIndices2D5(WlzCMeshNod2D5 *nod,
+					     int *maxIdxBuf,
+					     int **idxBuf,
+				             WlzErrorNum *dstErr)
+{
+  int		nE;
+  WlzCMeshEdgU2D5 *edu0,
+  		*edu1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Count the number of edge uses directed away from this node, there
+   * will be one per element. */
+  nE = 0;
+  edu1 = edu0 = nod->edu;
+  do
+  {
+    ++nE;
+    edu1 = edu1->nnxt;
+  } while((edu1 != NULL) && (edu1 != edu0));
+  /* Re-allocate the index buffer if required. */
+  if((*idxBuf == NULL) || (*maxIdxBuf < nE))
+  {
+    *maxIdxBuf = 2 * nE;
+    if((*idxBuf = (int *)
+                  AlcRealloc(*idxBuf, sizeof(int) * *maxIdxBuf)) == NULL)
+    {
+      nE = 0;
+      *maxIdxBuf = 0;
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Fill the buffer with the indices of the elements that use the node. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int idN;
+
+    idN = 0;
+    edu1 = edu0;
+    (*idxBuf)[0] = nod->idx;
+    for(idN = 1; idN < nE; ++idN)
+    {
+      (*idxBuf)[idN] = edu1->elm->idx;
+      edu1 = edu1->nnxt;
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    nE = 0;
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(nE);
 }
