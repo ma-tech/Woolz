@@ -4886,3 +4886,136 @@ static int 	WlzGeomTriTri3DCoplanar(WlzDVertex3 n,
   isn = WlzGeomTriangleTriangleIntersect2DA(u, v);
   return(isn);
 }
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzGeometry
+* \brief	Computes the principle curvatures of a parabolic surface
+* 		fitted to the given vertices at the first of these vertices.
+* 		TODO expand on this.
+* \param	nC			Number of curvatures required:
+* 					  1 computes the Gaussian curvature,
+* 					  2 computes both principle
+* 					    curvatures.
+* \param	dstC			Destination pointer for the curvature
+* 					value(s), must not be NULL. If nC == 2
+* 					then the values atr Gaussian followed
+* 					by mean curvature.
+* \param	n			Normal at the first vertex.
+* \param	nV			Number of vertices, must be >= 3.
+* \param	v			Array of vertex positions, the first of
+* 					which must be the vertex at which the
+* 					curvature is to be computed. The
+* 					array contents are modified by this
+* 					function. Must not be NULL.
+*/
+WlzErrorNum	WlzGeomCurvature(int nC, double *dstC, WlzDVertex3 n,
+                                 int nV, WlzDVertex3 *v)
+{
+  int		idV;
+  double	det,
+  		len;
+  double	*vecB= NULL;
+  double	**matA = NULL;
+  WlzDVertex3   t;
+  WlzDVertex3   b[3],
+  		r[3];
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  if((nV < 3) || (nC < 1) || (nC > 2) ||
+     ((len = WLZ_VTX_3_LENGTH(n)) < ALG_DBL_TOLLERANCE))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if(((vecB = (double *)AlcMalloc(sizeof(double) * nV)) == NULL) ||
+	  (AlcDouble2Malloc(&matA, nV, 3) != ALC_ER_NONE))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    /* Make b[2] = n  / |n|. */
+    len = 1.0 / len;
+    WLZ_VTX_3_SCALE(b[2], n, len);
+    /* Shift st v[0] is at the origin. */
+    for(idV = 1; idV < nV; ++idV)
+    {
+      WLZ_VTX_3_SUB(v[idV], v[idV], v[0]);
+    }
+    /* Find a unit vector b[0] that is perpendicular to b[2]. */
+    WLZ_VTX_3_SET(b[1], fabs(n.vtX), fabs(n.vtY), fabs(n.vtZ));
+    if(b[1].vtX < b[1].vtY)
+    {
+      if(b[1].vtX < b[1].vtZ)
+      {
+        WLZ_VTX_3_SET(b[1], 1, 0, 0);
+      }
+      else
+      {
+        WLZ_VTX_3_SET(b[1], 0, 0, 1);
+      }
+    }
+    else
+    {
+      if(b[1].vtY < b[1].vtZ)
+      {
+        WLZ_VTX_3_SET(b[1], 0, 1, 0);
+      }
+      else
+      {
+        WLZ_VTX_3_SET(b[1], 0, 0, 1);
+      }
+    }
+    WLZ_VTX_3_CROSS(b[0], b[1], b[2]);
+    len = WLZ_VTX_3_LENGTH(b[0]);
+    len = 1.0 / len;
+    WLZ_VTX_3_SCALE(b[0], b[0], len);
+    /* Complete the three orthogonal vectors with b[1] = b[2] x b[0]. */
+    WLZ_VTX_3_CROSS(b[1], b[2], b[0]);
+    len = WLZ_VTX_3_LENGTH(b[1]);
+    len = 1.0 / len;
+    WLZ_VTX_3_SCALE(b[1], b[1], len);
+    /* Compute rotation matrix R which transforms b[0], b[1], b[2] to the
+     * x, y, z axes. This is just the inverse of the vectors b[0,1,2]. */
+    det = b[0].vtX * (b[1].vtY * b[2].vtZ - b[2].vtY * b[1].vtZ) +
+          b[1].vtX * (b[2].vtY * b[0].vtZ - b[0].vtY * b[2].vtZ) +
+          b[2].vtX * (b[0].vtY * b[1].vtZ - b[1].vtY * b[0].vtZ);
+    det = 1.0 / det;
+    r[0].vtX = det * (b[1].vtY * b[2].vtZ - b[2].vtY * b[1].vtZ);
+    r[0].vtY = det * (b[2].vtX * b[1].vtZ - b[1].vtX * b[2].vtZ);
+    r[0].vtZ = det * (b[1].vtX * b[2].vtY - b[2].vtX * b[1].vtY);
+    r[1].vtX = det * (b[2].vtY * b[0].vtZ - b[0].vtY * b[2].vtZ);
+    r[1].vtY = det * (b[0].vtX * b[2].vtZ - b[2].vtX * b[0].vtZ);
+    r[1].vtZ = det * (b[2].vtX * b[0].vtY - b[0].vtX * b[2].vtY);
+    r[2].vtX = det * (b[0].vtY * b[1].vtZ - b[1].vtY * b[0].vtZ);
+    r[2].vtY = det * (b[1].vtX * b[0].vtZ - b[0].vtX * b[1].vtZ);
+    r[2].vtZ = det * (b[0].vtX * b[1].vtY - b[1].vtX * b[0].vtY);
+    /* Rotate the shifted vertices about the first using the rotation
+     * matrix r and fill in the matrices ready to compute the least squares
+     * estimate of the parameters a,b,c in z = ax^2 + bxy + cy^2. */
+    matA[0][0] = 0.0;
+    matA[0][1] = 0.0;
+    matA[0][2] = 0.0;
+    vecB[0] = 0.0;
+    for(idV = 1; idV < nV; ++idV)
+    {
+      t.vtX = WLZ_VTX_3_DOT(v[idV], r[0]);
+      t.vtY = WLZ_VTX_3_DOT(v[idV], r[1]);
+      t.vtZ = WLZ_VTX_3_DOT(v[idV], r[2]);
+      matA[idV][0] = t.vtX * t.vtX;
+      matA[idV][1] = t.vtX * t.vtY;
+      matA[idV][2] = t.vtY * t.vtY;
+      vecB[idV] = t.vtZ;
+    }
+    /* Solve for a, b, c ie matrix x. */
+    errNum = WlzErrorFromAlg(AlgMatrixSVSolve(matA, nV, 3, vecB, 1.0e-06,
+                                              NULL));
+  }
+  /* Compute the curmatures values, Gaussian = 4ac - b^2, mean = a + c. */
+  dstC[0] = 4.0 * vecB[0] * vecB[2] - vecB[1] * vecB[1];
+  dstC[1] = vecB[0] + vecB[2];
+  /* Free allocated storage. */
+  AlcFree(vecB);
+  (void )Alc2Free((void **)matA);
+  return(errNum);
+}
