@@ -482,17 +482,20 @@ int             main(int argc, char **argv)
   {
     if(usage)
     {
+      char *fmtStr = NULL;
+
+      fmtStr = WlzEffFormatTable(2, 40, 10, NULL);
       (void )fprintf(
 	stderr,
-	"Usage: %s%s%s%s%s%s%s%s\n",
+	"Usage: %s%s%s%s%s%s%s%s%s\n",
 	*argv,
 	" [-h] [-s] [-b<background>]\n"
 	"        [-d<min-dimension>] [-D<max-dimension>]\n"
 	"        [-f<input format>] [-F<output format>]\n"
 	"        [-x<x size>] [-y<y size>] [-z<z size>]\n"
 	"        [-o<output file>] [<input file>)]\n"
-	"Converts objects between one file format and another,\n"
-	"neither of which need be the Woolz data file format.\n"
+	"Converts objects between one file format and another, neither of\n"
+	"which need be the Woolz data file format.\n"
 	"Options are:\n"
 	"  -h    Help, prints this usage information.\n"
 	"  -s    Split labeled volumes into domains.This will also split\n"
@@ -506,28 +509,10 @@ int             main(int argc, char **argv)
 	"  -x#   X voxel/pixel size.\n"
 	"  -y#   Y voxel/pixel size.\n"
 	"  -z#   Z voxel/pixel size.\n"
-	"Valid formats are:\n"
-	"  Description                      Fmt     Extension\n"
-	"  ***********                      ***     *********\n"
-	"  Amira Lattice                    am      .am\n"
-	"  Analyze                          anl     .hdr/.img\n"
-	"  BioRad Confocal                  pic     .pic\n"
-	"  Graphics Interchange Format      gif     .gif\n"
-	"  GRUMMP VMESH                     vmesh   .vmesh\n"
-	"  ICS                              ics     .ics/.ids\n"
-	"  IPLab                            ipl     .ipl\n"
-	"  Jonathan Shewchuk's mesh format  node    .node\n"
-	"  JPEG                             jpg     .jpg\n"
-	"  Microsoft Bitmap                 bmp     .bmp\n"
-	"  NETGEN tetrahedral mesh          mesh    .mesh\n"
-	"  PNM                              pnm     .pgm\n"
-	"  SLC                              slc     .slc\n"
-	"  Stanford Density                 den     .den\n"
-	"  Sunvision VFF                    vff     .vff\n"
-	"  TIFF                             tif     .tif\n"
-	"  Text (output only)               txt     .txt\n"
-	"  Visualization Toolkit VTK        vtk     .vtk\n"
-	"  MRC HGU Woolz                    wlz     .wlz\n",
+	"The known file formats are:\n"
+	"  Description                             Extension\n"
+	"  ***********                             *********\n",
+	fmtStr,
 	"Simple example:\n  ",
 	*argv,
 	" -f wlz -F slc <in.wlz >out.slc\n"
