@@ -2205,7 +2205,7 @@ static WlzErrorNum WlzObjFactsIndexedValues(WlzObjFactsData *fData,
       }
       else if(ixv->rank == 0)
       {
-        errNum = WlzObjFactsAppend(fData, " NULL");
+        errNum = WlzObjFactsAppend(fData, " NULL\n");
       }
       else
       {
