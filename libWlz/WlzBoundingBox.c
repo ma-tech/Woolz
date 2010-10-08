@@ -397,6 +397,66 @@ WlzDBox3	WlzBoundingBox3D(WlzObject *inObj, WlzErrorNum *dstErr)
       case WLZ_COMPOUND_ARR_2:
         bBox3D = WlzBoundingBoxCompound3D((WlzCompoundArray *)inObj, &errNum);
 	break;
+      case WLZ_CMESH_2D:
+	if(inObj->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else if(inObj->domain.core->type != WLZ_CMESH_2D)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+	else
+	{
+	  WlzCMeshUpdateBBox2D(inObj->domain.cm2);
+          bBox3D.xMin = inObj->domain.cm2->bBox.xMin;
+          bBox3D.yMin = inObj->domain.cm2->bBox.yMin;
+          bBox3D.zMin = 0.0;
+          bBox3D.xMax = inObj->domain.cm2->bBox.xMax;
+          bBox3D.yMax = inObj->domain.cm2->bBox.yMax;
+          bBox3D.zMax = 0.0;
+	}
+	break;
+      case WLZ_CMESH_2D5:
+	if(inObj->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else if(inObj->domain.core->type != WLZ_CMESH_2D5)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+	else
+	{
+	  WlzCMeshUpdateBBox2D5(inObj->domain.cm2d5);
+          bBox3D.xMin = inObj->domain.cm2d5->bBox.xMin;
+          bBox3D.yMin = inObj->domain.cm2d5->bBox.yMin;
+          bBox3D.zMin = inObj->domain.cm2d5->bBox.zMin;
+          bBox3D.xMax = inObj->domain.cm2d5->bBox.xMax;
+          bBox3D.yMax = inObj->domain.cm2d5->bBox.yMax;
+          bBox3D.zMax = inObj->domain.cm2d5->bBox.zMax;
+	}
+	break;
+      case WLZ_CMESH_3D:
+	if(inObj->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else if(inObj->domain.core->type != WLZ_CMESH_3D)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+	else
+	{
+	  WlzCMeshUpdateBBox3D(inObj->domain.cm3);
+          bBox3D.xMin = inObj->domain.cm3->bBox.xMin;
+          bBox3D.yMin = inObj->domain.cm3->bBox.yMin;
+          bBox3D.zMin = inObj->domain.cm3->bBox.zMin;
+          bBox3D.xMax = inObj->domain.cm3->bBox.xMax;
+          bBox3D.yMax = inObj->domain.cm3->bBox.yMax;
+          bBox3D.zMax = inObj->domain.cm3->bBox.zMax;
+	}
+        break;
       case WLZ_EMPTY_OBJ:
       case WLZ_AFFINE_TRANS:
       case WLZ_HISTOGRAM:
