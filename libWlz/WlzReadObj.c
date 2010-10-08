@@ -3855,7 +3855,7 @@ static WlzCMesh2D *WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
       if(errNum == WLZ_ERR_NONE)
       {
         elm = WlzCMeshNewElm2D(mesh,
-	                       nod[0], nod[1], nod[2], &errNum);
+	                       nod[0], nod[1], nod[2], 0, &errNum);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -4019,7 +4019,7 @@ static WlzCMesh2D5 *WlzReadCMesh2D5(FILE *fp, WlzErrorNum *dstErr)
       if(errNum == WLZ_ERR_NONE)
       {
         elm = WlzCMeshNewElm2D5(mesh,
-	                       nod[0], nod[1], nod[2], &errNum);
+	                       nod[0], nod[1], nod[2], 0, &errNum);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -4224,7 +4224,7 @@ static WlzCMesh3D *WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
       if(errNum == WLZ_ERR_NONE)
       {
         elm = WlzCMeshNewElm3D(mesh,
-	                       nod[0], nod[1], nod[2], nod[3], &errNum);
+	                       nod[0], nod[1], nod[2], nod[3], 0, &errNum);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -4299,7 +4299,8 @@ static WlzErrorNum WlzReadIndexedvValues(FILE *fP, WlzObject *obj)
     {
       errNum = WLZ_ERR_VALUES_DATA;
     }
-    else if((dim = (int *)AlcMalloc((sizeof(int) * rank))) == NULL)
+    else if((rank >= 1) &&
+            ((dim = (int *)AlcMalloc((sizeof(int) * rank))) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
