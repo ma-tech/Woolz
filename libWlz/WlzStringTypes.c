@@ -119,6 +119,9 @@ const char	*WlzStringFromObjTypeValue(WlzObjectType objType,
     case WLZ_CONTOUR:
       oTypeStr = "WLZ_CONTOUR";
       break;
+    case WLZ_CMESH_2D:
+      oTypeStr = "WLZ_CMESH_2D";
+      break;
     case WLZ_CMESH_2D5:
       oTypeStr = "WLZ_CMESH_2D5";
       break;
