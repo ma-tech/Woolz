@@ -54,7 +54,7 @@ WlzScalarFnObj - applies a scalar function to the values of a Woolz
 \par Synopsis
 \verbatim
 WlzScalarFnObj [-o<out object>] [-h] 
-		       [-e] [-m] [-l]
+		       [-e] [-m] [-l] [-s] [-S]
 		       [<in object>]
 \endverbatim
 \par Options
@@ -70,6 +70,14 @@ WlzScalarFnObj [-o<out object>] [-h]
   <tr> 
     <td><b>-l</b></td>
     <td>Log function (\f$g_{out} = \log(g_{in})\f$).</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Square root function (\f$g_{out} = \sqrt(g_{in})\f$).</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Inverse square root function (\f$g_{out} = \frac{1.0}{\sqrt(g_{in})}\f$).</td>
   </tr>
   <tr> 
     <td><b>-h</b></td>
@@ -129,7 +137,7 @@ int             main(int argc, char **argv)
   char 		*inObjFileStr,
   		*outObjFileStr;
   const char    *errMsg;
-  static char	optList[] = "ehlmo:",
+  static char	optList[] = "ehlmsSo:",
   		inObjFileStrDef[] = "-",
 		outObjFileStrDef[] = "-";
 
@@ -151,6 +159,12 @@ int             main(int argc, char **argv)
 	break;
       case 'l':
 	fn = WLZ_FN_SCALAR_LOG;
+	break;
+      case 's':
+	fn = WLZ_FN_SCALAR_SQRT;
+	break;
+      case 'S':
+	fn = WLZ_FN_SCALAR_INVSQRT;
 	break;
       case 'h':
       default:
@@ -249,6 +263,8 @@ int             main(int argc, char **argv)
     "  -e  Exponential function (g_out = exp(g_in)).\n"
     "  -m  Mudulus function (g_out = |g_in|).\n"
     "  -l  Log function (g_out = log(g_in)).\n"
+    "  -s  Square root function (g_out = sqrt(g_in)).\n"
+    "  -S  Inverse square root function (g_out = 1.0 / sqrt(g_in)).\n"
     "  -o  Output object file name.\n"
     "  -h  Help, prints this usage message.\n"
     "Applies a scalar function to the values of a Woolz object.\n");
