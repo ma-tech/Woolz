@@ -272,7 +272,6 @@ const char	*RecErrorToStr(RecError errFlag)
   REC_DBG((REC_DBG_MISC|REC_DBG_LVL_FN|REC_DBG_LVL_1),
 	  ("RecErrorToStr FE %d\n",
 	   (int )errFlag));
-  errStr = errStrDef;
   switch(errFlag)
   {
     case REC_ERR_NONE:
@@ -310,6 +309,9 @@ const char	*RecErrorToStr(RecError errFlag)
       break;
     case REC_ERR_LIST:
       errStr = errListStr;
+      break;
+    default:
+      errStr = errStrDef;
       break;
   }
   REC_DBG((REC_DBG_MISC|REC_DBG_LVL_FN|REC_DBG_LVL_2),
