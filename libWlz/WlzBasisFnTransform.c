@@ -1217,7 +1217,7 @@ WlzObject 	*WlzBasisFnInvertMakeCMeshTr2D(
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   val.core = NULL;
-  dom.cm2 = WlzCMeshCopy2D(mesh, 0, NULL, NULL, &errNum);
+  dom.cm2 = WlzCMeshCopy2D(mesh, 1, 0, NULL, NULL, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     mObj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
@@ -1273,7 +1273,7 @@ WlzObject 	*WlzBasisFnInvertMakeCMeshTr3D(
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   val.core = NULL;
-  dom.cm3 = WlzCMeshCopy3D(mesh, 0, NULL, NULL, &errNum);
+  dom.cm3 = WlzCMeshCopy3D(mesh, 1, 0, NULL, NULL, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     mObj = WlzMakeMain(WLZ_CMESH_3D, dom, val, NULL, NULL, &errNum);
