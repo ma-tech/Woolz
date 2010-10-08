@@ -534,19 +534,19 @@ void 		AlgMatrixVectorMulAdd(double *aV,
     case ALG_MATRIX_RECT:
       for(id0 = 0; id0 < nR; ++id0)
       {
-	tD0 = 0.0;
+	tD0 = dV[id0];
 	bRow = bM[id0];
 	for(id1 = 0; id1 < nC; ++id1)
 	{
 	  tD0 += bRow[id1] * cV[id1];
 	}
-	aV[id0] = tD0 + dV[id0];
+	aV[id0] = tD0;
       }
       break;
     case ALG_MATRIX_SYM:
       for(id0 = 0; id0 < nR; ++id0)
       {
-        tD0 = 0.0;
+	tD0 = dV[id0];
 	for(id1 = 0; id1 <= id0; ++id1)
 	{
 	  tD0 += bM[id0][id1] * cV[id1];
@@ -555,7 +555,7 @@ void 		AlgMatrixVectorMulAdd(double *aV,
 	{
 	  tD0 += bM[id1][id0] * cV[id1];
 	}
-	aV[id0] = tD0 + dV[id0];
+	aV[id0] = tD0;
       }
       break;
     default:
@@ -654,7 +654,6 @@ void 		AlgMatrixTVectorMul(double *aV,
 {
   size_t	id0,
   		id1;
-  double	tD0;
 
   switch(bType)
   {
@@ -722,7 +721,7 @@ void 		AlgMatrixTVectorMulAdd(double *aV,
 	aV[id0] = dV[id0];
         for(id1 = 0; id1 < nR; ++id1)
 	{
-	  aV[id1] += bM[id0][id1] * cV[id0];
+	  aV[id0] += bM[id1][id0] * cV[id1];
 	}
       }
       break;
