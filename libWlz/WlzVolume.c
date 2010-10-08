@@ -78,6 +78,9 @@ int WlzVolume(
 
   switch( obj->type ){
 
+  case WLZ_2D_DOMAINOBJ:
+    return(WlzArea(obj, wlzErr));
+
   case WLZ_3D_DOMAINOBJ:
     if( obj->domain.core == NULL ){
       if(*wlzErr)
