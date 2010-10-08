@@ -54,6 +54,7 @@ bin_PROGRAMS		= \
 			  WlzBasisFnTransformObj \
 			  WlzBasisFnTransformVertices \
 			  WlzBoundaryToObj \
+			  WlzBoundaryVertices \
 			  WlzBoundingBox \
 			  WlzBuildContour \
 			  WlzCannyDeriche \
@@ -229,6 +230,10 @@ WlzBasisFnTransformVertices_LDFLAGS	= $(AM_LFLAGS)
 WlzBoundaryToObj_SOURCES		= WlzBoundaryToObj.c
 WlzBoundaryToObj_LDADD			= $(LDADD)
 WlzBoundaryToObj_LDFLAGS		= $(AM_LFLAGS)
+
+WlzBoundaryVertices_SOURCES		= WlzBoundaryVertices.c
+WlzBoundaryVertices_LDADD		= $(LDADD)
+WlzBoundaryVertices_LDFLAGS		= $(AM_LFLAGS)
 
 WlzBoundingBox_SOURCES			= WlzBoundingBox.c
 WlzBoundingBox_LDADD			= $(LDADD)
