@@ -1733,8 +1733,7 @@ static WlzErrorNum WlzMeshElemFindVxWalk(WlzMeshTransform *mesh,
 		extFlg = 0,
 		fndFlg = 0,
 		countOut;
-  double	tD0,
-		eArea,
+  double	eArea,
 		pArea0,
 		pArea1;
   WlzMeshElem	*elm = NULL,
@@ -1769,12 +1768,12 @@ static WlzErrorNum WlzMeshElemFindVxWalk(WlzMeshTransform *mesh,
     }
     else
     {
-      if(((((tD0 = (eVx0.vtX - gVx.vtX)) * tD0) < WLZ_MESH_TOLERANCE_SQ) &&
-	  (((tD0 = (eVx0.vtY - gVx.vtY)) * tD0) < WLZ_MESH_TOLERANCE_SQ)) ||
-	 ((((tD0 = (eVx1.vtX - gVx.vtX)) * tD0) < WLZ_MESH_TOLERANCE_SQ) &&
-	  (((tD0 = (eVx1.vtY - gVx.vtY)) * tD0) < WLZ_MESH_TOLERANCE_SQ)) ||
-	 ((((tD0 = (eVx2.vtX - gVx.vtX)) * tD0) < WLZ_MESH_TOLERANCE_SQ) &&
-	  (((tD0 = (eVx2.vtY - gVx.vtY)) * tD0) < WLZ_MESH_TOLERANCE_SQ)))
+      if(((ALG_SQR(eVx0.vtX - gVx.vtX) < WLZ_MESH_TOLERANCE_SQ) &&
+	  (ALG_SQR(eVx0.vtY - gVx.vtY) < WLZ_MESH_TOLERANCE_SQ)) ||
+	 ((ALG_SQR(eVx1.vtX - gVx.vtX) < WLZ_MESH_TOLERANCE_SQ) &&
+	  (ALG_SQR(eVx1.vtY - gVx.vtY) < WLZ_MESH_TOLERANCE_SQ)) ||
+	 ((ALG_SQR(eVx2.vtX - gVx.vtX) < WLZ_MESH_TOLERANCE_SQ) &&
+	  (ALG_SQR(eVx2.vtY - gVx.vtY) < WLZ_MESH_TOLERANCE_SQ)))
       {
 	fndFlg = 1;
 	extFlg = 1;
@@ -1886,12 +1885,12 @@ static void	 WlzMeshElemFindVxForce(WlzMeshTransform *mesh,
       if(WlzGeomVxInTriangle2D(eVx0, eVx1, eVx2, gVx) >= 0)
       {
 	fndId = tstId;
-	if(((((tD0 = (eVx0.vtX - gVx.vtX)) * tD0) < WLZ_MESH_TOLERANCE_SQ) &&
-	    (((tD0 = (eVx0.vtY - gVx.vtY)) * tD0) < WLZ_MESH_TOLERANCE_SQ)) ||
-	   ((((tD0 = (eVx1.vtX - gVx.vtX)) * tD0) < WLZ_MESH_TOLERANCE_SQ) &&
-	    (((tD0 = (eVx1.vtY - gVx.vtY)) * tD0) < WLZ_MESH_TOLERANCE_SQ)) ||
-	   ((((tD0 = (eVx2.vtX - gVx.vtX)) * tD0) < WLZ_MESH_TOLERANCE_SQ) &&
-	    (((tD0 = (eVx2.vtY - gVx.vtY)) * tD0) < WLZ_MESH_TOLERANCE_SQ)))
+	if(((ALG_SQR(eVx0.vtX - gVx.vtX) < WLZ_MESH_TOLERANCE_SQ) &&
+	    (ALG_SQR(eVx0.vtY - gVx.vtY) < WLZ_MESH_TOLERANCE_SQ)) ||
+	   ((ALG_SQR(eVx1.vtX - gVx.vtX) < WLZ_MESH_TOLERANCE_SQ) &&
+	    (ALG_SQR(eVx1.vtY - gVx.vtY) < WLZ_MESH_TOLERANCE_SQ)) ||
+	   ((ALG_SQR(eVx2.vtX - gVx.vtX) < WLZ_MESH_TOLERANCE_SQ) &&
+	    (ALG_SQR(eVx2.vtY - gVx.vtY) < WLZ_MESH_TOLERANCE_SQ)))
 	{
 	  extFlg = 1;
 	}
