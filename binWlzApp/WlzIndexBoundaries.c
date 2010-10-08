@@ -209,7 +209,6 @@ int main(
   PolyListItem	*polyItem;
   WlzIBox3	bBox3;
   AlcErrno	alcErr;
-  const char	*errMsg;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* default values */
@@ -281,7 +280,8 @@ int main(
 	minG.v.inv = index;
 	for(;index < maxG.v.inv; index++){
 	  minG.v.inv = index;
-	  if( obj1 = WlzThreshold(obj, minG, WLZ_THRESH_HIGH, &errNum) ){
+	  if((obj1 = WlzThreshold(obj, minG, WLZ_THRESH_HIGH,
+	                          &errNum)) != NULL){
 	    if( WlzIsEmpty(obj1, &errNum) ){
 	      break;
 	    }
@@ -312,7 +312,7 @@ int main(
 
 	/* get the last polygons */
 	minG.v.inv = index;
-	if( obj1 = WlzThreshold(obj, minG, WLZ_THRESH_HIGH, &errNum) ){
+	if((obj1 = WlzThreshold(obj, minG, WLZ_THRESH_HIGH, &errNum)) != NULL){
 	  if( !WlzIsEmpty(obj1, &errNum) ){
 	    boundObj = WlzObjToBoundary(obj1, 1, &errNum);
 	    addPolylineToList(polyList, index, boundObj->domain.b);
