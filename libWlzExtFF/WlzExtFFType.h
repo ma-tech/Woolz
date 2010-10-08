@@ -62,7 +62,8 @@ extern "C" {
 */
 typedef enum _WlzEffFormat
 {
-  WLZEFF_FORMAT_NONE,		/*!< None, used to indicating no match.  */
+  WLZEFF_FORMAT_NONE = 0,	/*!< None, used to indicating no match (equal
+  				     to zero).  */
   WLZEFF_FORMAT_BMP,		/*!< Microscoft bitmap. */
   WLZEFF_FORMAT_DEN,		/*!< Stanford density. */
   WLZEFF_FORMAT_ICS,		/*!< International cytometry standard.  */
@@ -82,8 +83,11 @@ typedef enum _WlzEffFormat
   WLZEFF_FORMAT_MESH,           /*!< NETGEN tetrahedral mesh format. */
   WLZEFF_FORMAT_NODEELE,        /*!< Jonathan Shewchuk's mesh format. */
   WLZEFF_FORMAT_VMESH,          /*!< GRUMMP tetrahedral mesh format. */
+  WLZEFF_FORMAT_PLY2,           /*!< Riken PLY2 mesh format. */
+  WLZEFF_FORMAT_OBJ,            /*!< Wavefront geometry format. */
   WLZEFF_FORMAT_TXT,		/*!< Simple ASCII text listing, csv format. */
-  WLZEFF_FORMAT_COUNT 		/*!< Keep last: Number of formats */
+  WLZEFF_FORMAT_COUNT 		/*!< Keep last: Number of formats (including
+  				     WLZEFF_FORMAT_NONE). */
 } WlzEffFormat;
 
 #ifndef WLZ_EXT_BIND
