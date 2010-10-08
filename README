@@ -80,10 +80,11 @@ Edinburgh, UK.
 Woolz should build easily on most modern systems that have the GNU Autoconf and Automake
 tools.
 
-In most cases the following should be sufficient:
+In most cases the following should be sufficient to build Woolz:
 
 tar -zxf Woolz.tgz
 cd Woolz/src/Core
+
 aclocal
 automake -a
 autoconf
