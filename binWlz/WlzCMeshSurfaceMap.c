@@ -51,7 +51,7 @@ WlzCMeshSurfaceMap - computes a conforming mesh transform which maps a
                      surface in 3D to a plane.
 \par Synopsis
 \verbatim
-WlzCMeshSurfaceMap [-h] [-p<points file>] [-o<output object>]
+WlzCMeshSurfaceMap [-h] [-p<points file>] [-o<output object>] [-2]
                    [<input object>]
 \endverbatim
 \par Options
@@ -63,6 +63,10 @@ WlzCMeshSurfaceMap [-h] [-p<points file>] [-o<output object>]
   <tr>
     <td><b>-o</b></td>
     <td>Output object file.</td>
+  </tr>
+  <tr>
+    <td><b>-2</b></td>
+    <td>Output a 2D mesh rather than a 3D mesh with displacements.</td>
   </tr>
   <tr>
     <td><b>-p</b></td>
@@ -123,12 +127,14 @@ extern int      optind,
 int             main(int argc, char **argv)
 {
   int		option,
+		flg2D = 0,
 		nV = 0,
   		ok = 1,
 		usage = 0;
   WlzDVertex3	*srcV = NULL,
   		*dstV = NULL;
   WlzObject     *inObj = NULL,
+		*mapObj = NULL,
   		*outObj = NULL;
   FILE		*fP = NULL;
   char		*ptsFileStr,
@@ -136,7 +142,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "ho:p:",
+  static char	optList[] = "2ho:p:",
   		fileStrDef[] = "-";
 
   opterr = 0;
@@ -147,6 +153,8 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case '2':
+        flg2D = 1;
       case 'o':
         outObjFileStr = optarg;
 	break;
@@ -236,7 +244,7 @@ int             main(int argc, char **argv)
   /* Compute mapping transform. */
   if(ok)
   {
-    outObj = WlzCMeshCompSurfMapConformal(inObj, nV, dstV, nV, srcV,
+    mapObj = WlzCMeshCompSurfMapConformal(inObj, nV, dstV, nV, srcV,
                                           &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
@@ -250,6 +258,26 @@ int             main(int argc, char **argv)
   }
   AlcFree(srcV);
   AlcFree(dstV);
+  if(ok)
+  {
+    if(flg2D)
+    {
+      outObj = WlzCMeshExtract2D(mapObj, 1, &errNum);
+      if(errNum != WLZ_ERR_NONE)
+      {
+        ok = 0;
+	(void )WlzStringFromErrorNum(errNum, &errMsg);
+	(void )fprintf(stderr,
+		       "%s: Failed to make 2D mesh object (%s)\n",
+		       *argv, errMsg);
+      }
+    }
+    else
+    {
+      outObj = mapObj;
+      mapObj = NULL;
+    }
+  }
   if(ok)
   {
     errNum = WLZ_ERR_WRITE_EOF;
@@ -269,18 +297,20 @@ int             main(int argc, char **argv)
     }
   }
   (void )WlzFreeObj(inObj);
+  (void )WlzFreeObj(mapObj);
   (void )WlzFreeObj(outObj);
   if(usage)
   {
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-h] [-p<points file>] [-o<output object>]\n"
+    " [-h] [-p<points file>] [-o<output object>] [-2]\n"
     "                          [<input object>]\n"
     "Options:\n"
     "  -h  Help, prints usage message.\n"
     "  -p  Displacements file.\n"
     "  -o  Output object file.\n"
+    "  -2  Output a 2D mesh rather than a 3D mesh with displacements.\n"
     "Computes a conforming mesh transform which maps the surface defined by\n"
     "the 2D5 conforming mesh onto another surface defined by the mesh with\n"
     "displacements. The given displacements are used to compute the least\n"
