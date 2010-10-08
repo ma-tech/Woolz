@@ -52,7 +52,7 @@ static char _WlzMeshGen_c[] = "MRC HGU $Id$";
 WlzCMeshDistance - computes distances within conforming meshes.
 \par Synopsis
 \verbatim
-WlzCMeshDistance [-b] [-h] [-o<out obj file>] [-r<ref obj file>] [-s #,#,#]
+WlzCMeshDistance [-b] [-h] [-i] [-o<out obj file>] [-r<ref obj file>] [-s #,#,#]
                  [<input mesh file>]
 \endverbatim
 \par Options
@@ -64,6 +64,11 @@ WlzCMeshDistance [-b] [-h] [-o<out obj file>] [-r<ref obj file>] [-s #,#,#]
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-i</b></td>
+    <td>Output and image with interpolated distance values rather than a
+        mesh with indexed values.</td>
   </tr>
   <tr> 
     <td><b>-o</b></td>
@@ -79,12 +84,12 @@ WlzCMeshDistance [-b] [-h] [-o<out obj file>] [-r<ref obj file>] [-s #,#,#]
   </tr>
 </table>
 \par Description
-Constructs a 2D or 3D domain object the values of which are the
+Constructs a 2D or 3D object the values of which are the
 minimum distance from the given seeds points in the given conforming
-mesh. The domain of the output object covers the input mesh.
+mesh.
 \par Examples
 \verbatim
-WlzCMeshDistance -s 100,200,0 -o out.wlz mesh.wlz
+WlzCMeshDistance -i -s 100,200,0 -o out.wlz mesh.wlz
 \endverbatim
 Creates a new domain object with values, in which the domain covers the
 given mesh and the values are distances from the seed (at column 100,
@@ -121,11 +126,13 @@ int		main(int argc, char *argv[])
 		nSeeds,
   		nBndSeeds,
 		boundFlg = 0,
+		imgFlg = 0,
   		seedFlg = 0,
   		ok = 1,
   		option,
   		usage = 0;
   size_t	vtxSize = sizeof(WlzDVertex2);
+  WlzObjectType	outObjType;
   WlzVertexType vtxType,
   		bndVtxType;
   WlzVertex	seed;
@@ -142,7 +149,7 @@ int		main(int argc, char *argv[])
   		*refObj = NULL;
   WlzCMeshP 	mesh;
   WlzCMeshNodP	nod;
-  static char   optList[] = "bho:r:s:";
+  static char   optList[] = "bhio:r:s:";
   const char    meshFileStrDef[] = "-",
   	        outObjFileStrDef[] = "-";
 
@@ -159,6 +166,9 @@ int		main(int argc, char *argv[])
     {
       case 'b':
 	boundFlg = 1;
+        break;
+      case 'i':
+	imgFlg = 1;
         break;
       case 's':
 	seedFlg = 1;
@@ -341,6 +351,7 @@ int		main(int argc, char *argv[])
     {
       case WLZ_CMESH_2D:
 	idN = 0;
+	outObjType = (imgFlg != 0)? WLZ_2D_DOMAINOBJ: WLZ_CMESH_2D;
 	if(seedFlg)
 	{
 	  idN = 1;
@@ -383,12 +394,13 @@ int		main(int argc, char *argv[])
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  outObj = WlzCMeshDistance2D(mshObj, WLZ_2D_DOMAINOBJ,
+	  outObj = WlzCMeshDistance2D(mshObj, outObjType,
 	                              nSeeds, seeds.d2, &errNum);
 	}
 	break;
       case WLZ_CMESH_3D:
 	idN = 0;
+	outObjType = (imgFlg != 0)? WLZ_3D_DOMAINOBJ: WLZ_CMESH_3D;
 	if(seedFlg)
 	{
 	  idN = 1;
@@ -432,7 +444,7 @@ int		main(int argc, char *argv[])
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  outObj = WlzCMeshDistance3D(mshObj, WLZ_3D_DOMAINOBJ,
+	  outObj = WlzCMeshDistance3D(mshObj, outObjType,
 	  	                      nSeeds, seeds.d3, &errNum);
 	}
 	break;
@@ -482,6 +494,9 @@ int		main(int argc, char *argv[])
 	    "conforming mesh. The domain of the output object covers the\n"
 	    "input mesh. Options are:\n"
 	    "  -h  Help, prints this usage message.\n"
+            "  -i  Output and image (ie a 2 or 3D domain object) with\n"
+	    "      interpolated distance values rather than a mesh with\n"
+	    "      indexed values.\n"
 	    "  -o  Output object.\n"
 	    "  -b  Set seed points around the boundary of the mesh.\n"
 	    "  -s  Single seed position.\n"
