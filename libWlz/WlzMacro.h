@@ -258,7 +258,7 @@ extern "C" {
 		(U).vtY = 0
 
 /* WLZ_VTX_3_ZERO: Set vector to zero. */
-#define WLZ_VTX_3_ZERO(U,V) \
+#define WLZ_VTX_3_ZERO(U) \
 		(U).vtX = 0, \
 		(U).vtY = 0, \
 		(U).vtZ = 0
