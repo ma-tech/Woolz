@@ -70,8 +70,10 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "jpg",   WLZEFF_FORMAT_JPEG,
 			 "mesh",  WLZEFF_FORMAT_MESH,
 			 "node",  WLZEFF_FORMAT_NODEELE,
+			 "obj",   WLZEFF_FORMAT_OBJ,
 			 "pgm",   WLZEFF_FORMAT_PNM,
 			 "pic",   WLZEFF_FORMAT_PIC,
+			 "ply2",  WLZEFF_FORMAT_PLY2,
 			 "pnm",   WLZEFF_FORMAT_PNM,
 			 "raw",   WLZEFF_FORMAT_RAW,
 			 "slc",   WLZEFF_FORMAT_SLC,
@@ -104,20 +106,22 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
 		     "BioRad Confocal", WLZEFF_FORMAT_PIC,
 		     "Graphics Interchange Format", WLZEFF_FORMAT_GIF,
 		     "GRUMMP VMESH", WLZEFF_FORMAT_VMESH,
-		     "ICS", WLZEFF_FORMAT_ICS,
+		     "Image Cytometry Standard", WLZEFF_FORMAT_ICS,
 		     "IPLab", WLZEFF_FORMAT_IPL,
 		     "JPEG", WLZEFF_FORMAT_JPEG,
 		     "Microsoft Bitmap", WLZEFF_FORMAT_BMP,
 		     "NETGEN tetrahedral mesh", WLZEFF_FORMAT_MESH,
 		     "Jonathan Shewchuk's mesh format", WLZEFF_FORMAT_NODEELE,
+		     "OBJ", WLZEFF_FORMAT_OBJ,
 		     "PNM", WLZEFF_FORMAT_PNM,
 		     "Raw", WLZEFF_FORMAT_RAW,
+		     "Riken PLY2", WLZEFF_FORMAT_PLY2,
 		     "SLC", WLZEFF_FORMAT_SLC,
 		     "Stanford Density", WLZEFF_FORMAT_DEN,
 		     "Sunvision VFF", WLZEFF_FORMAT_VFF,
 		     "Text", WLZEFF_FORMAT_TXT,
 		     "Tiff", WLZEFF_FORMAT_TIFF,
-		     "Visualization Toolkit VTK", WLZEFF_FORMAT_VTK,
+		     "Visualization Toolkit", WLZEFF_FORMAT_VTK,
 		     "Woolz", WLZEFF_FORMAT_WLZ,
 		     NULL) == 0)
   {
@@ -140,46 +144,50 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 {
   const char	*extStr = NULL,
   		*fmtStr = NULL;
-  const char	*extBmpStr = "bmp",
-		*fmtBmpStr = "Microsoft Bitmap",
-  		*extDenStr = "den",
-  		*fmtDenStr = "Stanford Density",
-		*extGifStr = "gif",
-		*fmtGifStr = "Graphics Interchange Format",
-  		*extIcsStr = "ics",
-  		*fmtIcsStr = "ICS",
-  		*extPnmStr = "pnm",
-  		*fmtPnmStr = "PNM",
-  		*extPicStr = "pic",
-  		*fmtPicStr = "BioRad Confocal",
-  		*extSlcStr = "slc",
-		*fmtSlcStr = "SLC",
-  		*extVffStr = "vff",
-  		*fmtVffStr = "Sunvision VFF",
-  		*extVtkStr = "vtk",
-  		*fmtVtkStr = "Visualization Toolkit VTK",
-		*extWlzStr = "wlz",
-		*fmtWlzStr = "Woolz",
-		*extIPLStr = "ipl",
-		*fmtIPLStr = "IPLab",
-		*extTiffStr = "tif",
-		*fmtTiffStr = "Tiff",
-		*extRawStr = "raw",
-		*fmtRawStr = "Raw",
-		*extTxtStr = "txt",
-		*fmtTxtStr = "Text",
-		*extAmStr  = "am",
-                *fmtAmStr  = "Amira Lattice",
-		*extJpegStr  = "jpg",
-		*fmtJpegStr  = "JPEG",
-		*extAnlStr = "hdr",
-		*fmtAnlStr = "HDR",
+  const char	*extAmStr   = "am",
+                *fmtAmStr   = "Amira Lattice",
+		*extAnlStr  = "hdr",
+		*fmtAnlStr  = "ANALYZE HDR",
+  		*extBmpStr  = "bmp",
+		*fmtBmpStr  = "Microsoft Bitmap",
+  		*extDenStr  = "den",
+  		*fmtDenStr  = "Stanford Density",
+		*extGifStr  = "gif",
+		*fmtGifStr  = "Graphics Interchange Format",
+  		*extIcsStr  = "ics",
+  		*fmtIcsStr  = "Image Cytometry Standard",
+		*extIPLStr  = "ipl",
+		*fmtIPLStr  = "IPLab",
+		*extJpegStr = "jpg",
+		*fmtJpegStr = "JPEG",
+		*extMeshStr = "mesh",
+		*fmtMeshStr = "NETGEN tetrahedral mesh",
 		*extNodeEleStr = "node",
 		*fmtNodeEleStr = "Jonathan Shewchuk's mesh format",
-		*extMeshStr = "mesh",
-		*fmtMeshStr = " NETGEN tetrahedral mesh",
+  		*extObjStr  = "obj",
+  		*fmtObjStr  = "Wavefront",
+  		*extPnmStr  = "pnm",
+  		*fmtPnmStr  = "PNM",
+  		*extPicStr  = "pic",
+  		*fmtPicStr  = "BioRad Confocal",
+  		*extPly2Str = "ply2",
+  		*fmtPly2Str = "Riken PLY2",
+		*extRawStr  = "raw",
+		*fmtRawStr  = "Raw",
+  		*extSlcStr  = "slc",
+		*fmtSlcStr  = "SLC",
+		*extTxtStr  = "txt",
+		*fmtTxtStr  = "Text",
+		*extTiffStr = "tif",
+		*fmtTiffStr = "Tiff",
+  		*extVffStr  = "vff",
+  		*fmtVffStr  = "Sunvision VFF",
 		*extVMeshStr = "vmesh",
-		*fmtVMeshStr = "GRUMMP VMESH";
+		*fmtVMeshStr = "GRUMMP VMESH",
+  		*extVtkStr  = "vtk",
+  		*fmtVtkStr  = "Visualization Toolkit VTK",
+		*extWlzStr  = "wlz",
+		*fmtWlzStr  = "Woolz";
 
   switch(fileFmt)
   {
@@ -199,6 +207,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
       fmtStr = fmtIcsStr;
       extStr = extIcsStr;
       break;
+    case WLZEFF_FORMAT_OBJ:
+      fmtStr = fmtObjStr;
+      extStr = extObjStr;
+      break;
     case WLZEFF_FORMAT_PNM:
       fmtStr = fmtPnmStr;
       extStr = extPnmStr;
@@ -206,6 +218,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     case WLZEFF_FORMAT_PIC:
       fmtStr = fmtPicStr;
       extStr = extPicStr;
+      break;
+    case WLZEFF_FORMAT_PLY2:
+      fmtStr = fmtPly2Str;
+      extStr = extPly2Str;
       break;
     case WLZEFF_FORMAT_SLC:
       fmtStr = fmtSlcStr;
@@ -383,11 +399,17 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
       case WLZEFF_FORMAT_ICS:
 	obj = WlzEffReadObjIcs(fName, &errNum);
 	break;
+      case WLZEFF_FORMAT_OBJ:
+	obj = WlzEffReadObjObj(fP, &errNum);
+	break;
       case WLZEFF_FORMAT_PNM:
 	obj = WlzEffReadObjPnm(fName, &errNum);
 	break;
       case WLZEFF_FORMAT_PIC:
 	obj = WlzEffReadObjPic(fP, &errNum);
+	break;
+      case WLZEFF_FORMAT_PLY2:
+	obj = WlzEffReadObjPly2(fP, &errNum);
 	break;
       case WLZEFF_FORMAT_SLC:
 	obj = WlzEffReadObjSlc(fP, &errNum);
@@ -510,11 +532,17 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
       case WLZEFF_FORMAT_ICS:
 	errNum = WlzEffWriteObjIcs(fName, obj);
 	break;
+      case WLZEFF_FORMAT_OBJ:
+	errNum = WlzEffWriteObjObj(fP, obj);
+	break;
       case WLZEFF_FORMAT_PNM:
 	errNum = WlzEffWriteObjPnm(fName, obj);
 	break;
       case WLZEFF_FORMAT_PIC:
 	errNum = WlzEffWriteObjPic(fP, obj);
+	break;
+      case WLZEFF_FORMAT_PLY2:
+	errNum = WlzEffWriteObjPly2(fP, obj);
 	break;
       case WLZEFF_FORMAT_SLC:
 	errNum = WlzEffWriteObjSlc(fP, obj);
@@ -575,4 +603,110 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 int 		WlzEffNumberOfFormats(void)
 {
   return WLZEFF_FORMAT_COUNT - 1;
+}
+
+/*!
+* \return	Ascii table of valid file formats.
+* \ingroup	WlzExtFF
+* \brief	Creates an ascii table of the valid formats supported by
+* 		WlzExtFF. This may be useful for giving usage information
+* 		in binaries.
+* \param        indWth			Indent width (no default).
+* \param	desWth			Maximum description width (if 0 a
+* 					default field width is used).
+* \param	extWth			Maximum extension width (if 0 a default
+* 					field width is used).
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+char		*WlzEffFormatTable(unsigned indWth,
+				   unsigned desWth, unsigned extWth,
+				   WlzErrorNum *dstErr)
+{
+  int		fmtTblSz,
+		maxFmtRecSz;
+  int		*idxTbl;
+  char		*fmtTbl = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	defExtWth = 10,
+  		defDesWth = 50;
+  
+  if(desWth == 0)
+  {
+    desWth = defDesWth;
+  }
+  if(extWth == 0)
+  {
+    extWth = defExtWth;
+  }
+  maxFmtRecSz = indWth + desWth + extWth + 2;
+  fmtTblSz = WLZEFF_FORMAT_COUNT * maxFmtRecSz;
+  if(((idxTbl = (int *)AlcMalloc(sizeof(int) * WLZEFF_FORMAT_COUNT)) == NULL) ||
+     ((fmtTbl = (char *)AlcMalloc(sizeof(char) * fmtTblSz)) == NULL))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    int		id0,
+    		id1;
+    char	*s0;
+
+    for(id0 = 0; id0 < WLZEFF_FORMAT_COUNT - 1; ++id0)
+    {
+      idxTbl[id0] = id0;
+    }
+    /* Insertion sort of the index table. */
+    for(id0 = 0; id0 < WLZEFF_FORMAT_COUNT - 2; ++id0)
+    {
+      const char *e0,
+		 *e1;
+
+      (void )WlzEffStringFromFormat((WlzEffFormat)idxTbl[id0] + 1, &e0);
+      for(id1 = id0 + 1; id1 < WLZEFF_FORMAT_COUNT - 1; ++id1)
+      {
+        (void )WlzEffStringFromFormat((WlzEffFormat)idxTbl[id1] + 1, &e1);
+	if(strcmp(e0, e1) > 0)
+	{
+	  int	t;
+
+	  t = idxTbl[id0]; idxTbl[id0] = idxTbl[id1]; idxTbl[id1] = t;
+	  e0 = e1;
+	}
+      }
+    }
+    /* Fill in the format table string. */
+    s0 = fmtTbl;
+    for(id0 = 0; id0 < WLZEFF_FORMAT_COUNT - 2; ++id0)
+    {
+      int 	len;
+      const char *ext,
+      		 *des;
+
+      des = WlzEffStringFromFormat((WlzEffFormat )(idxTbl[id0] + 1), &ext);
+      for(id1 = 0; id1 < indWth; ++id1)
+      {
+        *s0++ = ' ';
+      }
+      (void )strncpy(s0, des, desWth);
+      if((len = strlen(des)) > desWth)
+      {
+        len = desWth;
+      }
+      s0 += len;
+      for(id1 = len; id1 < desWth; ++id1)
+      {
+        *s0++ = ' ';
+      }
+      (void )strncpy(s0, ext, extWth);
+      if((len = strlen(ext)) > extWth)
+      {
+        len = extWth;
+      }
+      s0 += len;
+      *s0++ = '\n';
+    }
+    *s0 = '\0';
+  }
+  AlcFree(idxTbl);
+  return(fmtTbl);
 }
