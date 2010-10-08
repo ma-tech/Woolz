@@ -127,7 +127,7 @@ int main(int	argc,
 {
 
   WlzObject	*obj, *mask, *newobj;
-  FILE		*inFile;
+  FILE		*inFile = NULL;
   char 		optList[] = "m:hv";
   int		option;
   WlzPixelV	maskVal;

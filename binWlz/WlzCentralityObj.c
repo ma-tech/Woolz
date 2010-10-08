@@ -162,6 +162,7 @@ int		main(int argc, char *argv[])
 	break;
     }
   }
+  ok = !usage;
   if(ok && (optind < argc))
   {
     if((optind + 1) == argc)

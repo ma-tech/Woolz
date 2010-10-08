@@ -359,7 +359,7 @@ int main(
     int	xNum, yNum, zNum;
     int xWidth, yWidth, zWidth;
     int i, j, k;
-    int	x, y, z;
+    int	x, y, z = 0;
 
     domainCount = 0;
     switch( obj->type ){
