@@ -47,13 +47,18 @@ static char _WlzTiledObjFromDomain_c[] = "MRC HGU $Id$";
 WlzTiledObjFromDomain  - creates an object with a tiled value table.
 \par Synopsis
 \verbatim
-WlzTiledObjFromDomain  [-h] [-o<output file>] [<input file>]
+WlzTiledObjFromDomain  [-b #] [-c] [-g ] [-h] [-o<output file>]
+                       [-s #,#,#] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr>
     <td><b>-b</b></td>
     <td>Background value.</td>
+  </tr>
+  <tr>
+    <td><b>-c</b></td>
+    <td>Copy grey values from the given object.</td>
   </tr>
   <tr>
     <td><b>-g</b></td>
@@ -105,6 +110,7 @@ extern int	optind,
 int		main(int argc, char *argv[])
 {
   int		option,
+		copy = 0,
   		ok = 1,
 		usage = 0,
 		voxSzSet = 0;
@@ -120,7 +126,7 @@ int		main(int argc, char *argv[])
   int		iBuf[4];
   const char	*errMsg;
   const size_t	tlSz = 4096;
-  static char	optList[] = "hb:g:o:s:",
+  static char	optList[] = "chb:g:o:s:",
   		inFileStrDef[] = "-",
 		outFileStrDef[] = "-";
 
@@ -134,6 +140,9 @@ int		main(int argc, char *argv[])
   {
     switch(option)
     {
+      case 'c':
+        copy = 1;
+	break;
       case 'b':
 	bgdV.type = gType;
 	switch(gType)
@@ -320,7 +329,8 @@ int		main(int argc, char *argv[])
     WlzValues nullVal;
 
     nullVal.core = NULL;
-    domObj = WlzMakeMain(inObj->type, inObj->domain, nullVal,
+    domObj = WlzMakeMain(inObj->type, inObj->domain,
+                         (copy == 0)? nullVal: inObj->values,
     			 NULL, NULL, &errNum);
     if(errNum == WLZ_ERR_NONE)
     {
@@ -330,7 +340,7 @@ int		main(int argc, char *argv[])
 	domObj->domain.p->voxel_size[1] = voxSz.vtY;
 	domObj->domain.p->voxel_size[2] = voxSz.vtZ;
       }
-      outObj = WlzMakeTiledValuesFromObj(domObj, tlSz, 0, gType, bgdV,
+      outObj = WlzMakeTiledValuesFromObj(domObj, tlSz, copy, gType, bgdV,
       					 &errNum);
     }
     if(errNum != WLZ_ERR_NONE)
@@ -373,13 +383,14 @@ int		main(int argc, char *argv[])
     "Creates an object with a tiled value table from an object with a\n"
     "valid spatial domain.\n"
     "Options:\n"
-    "  -h  Prints this usage information.\n"
     "  -b  Background value. If the grey type is RGBA then the channel\n"
     "      background values should be comma seperated and in the order\n"
     "      RGBA.\n"
+    "  -c  Copy the values from the given object to the tiled object.\n"
     "  -g  Grey type specified using one of the characters:\n"
     "      l, i, s, u, f, d, r for long, intm shortm unsigned byte,\n"
     "      float, double or RGBA.\n"
+    "  -h  Prints this usage information.\n"
     "  -s  Voxel size (x,y,z).\n"
     "  -o  Output tiled object.\n");
   }
