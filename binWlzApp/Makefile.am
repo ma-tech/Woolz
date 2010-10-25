@@ -59,6 +59,7 @@ bin_PROGRAMS		=  \
 			  Wlz3DGetSection \
 			  Wlz3DViewTransformBitmap \
 			  Wlz3DViewTransformObj \
+			  WlzApplyTileFunction \
 			  WlzBibToMeshTrans \
 			  WlzBibTransAbsRel \
 			  WlzCelCmpFeatures \
@@ -110,6 +111,10 @@ Wlz3DViewTransformBitmap_LDFLAGS = $(AM_LFLAGS)
 Wlz3DViewTransformObj_SOURCES	= Wlz3DViewTransformObj.c
 Wlz3DViewTransformObj_LDADD	= $(LDADD)
 Wlz3DViewTransformObj_LDFLAGS	= $(AM_LFLAGS)
+
+WlzApplyTileFunction_SOURCES	= WlzApplyTileFunction.c
+WlzApplyTileFunction_LDADD	= $(LDADD)
+WlzApplyTileFunction_LDFLAGS	= $(AM_LFLAGS)
 
 WlzBibToMeshTrans_SOURCES	= WlzBibToMeshTrans.c
 WlzBibToMeshTrans_LDADD		= $(LDADD)
