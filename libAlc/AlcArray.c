@@ -1413,38 +1413,22 @@ AlcErrno	AlcDouble3Free(double ***dest)
 AlcErrno	AlcDouble1ReadAsci(FILE *fP, double **dstA,
 				   size_t *dstNElem)
 {
-  size_t	nR = 0;
-  double	*dP0,
-  		*aM = NULL;
+  size_t	nV = 0;
+  double	*aM = NULL;
   AlcVector	*vec = NULL;
-  const size_t	vecCnt = 1024;		/* Initial number of elements in
-  					 * the vector */
   const int	maxRecLen = 8192;	/* Maximum number of chars in an
   					 * input record */
-  char		recS[8192 /* = maxRecLen */];
   AlcErrno	errNum = ALC_ER_NONE;
 
-  vec = AlcVectorNew(vecCnt, sizeof(double), vecCnt, &errNum);
-  while((errNum == ALC_ER_NONE) && (fgets(recS, maxRecLen, fP) != NULL))
-  {
-    if((dP0 = (double *)AlcVectorExtendAndGet(vec, nR)) == NULL)
-    {
-      errNum = ALC_ER_ALLOC;
-    }
-    else if(sscanf(recS, "%lg", dP0) != 1)
-    {
-      errNum = ALC_ER_READ;
-    }
-    ++nR;
-  }
+  vec = AlcVecReadDouble1Asci(fP," \t\n\r", maxRecLen,  &nV, &errNum);
   if(errNum == ALC_ER_NONE)
   {
-    aM = (double *)AlcVectorToArray1D(vec, 0, nR - 1, &errNum);
+    aM = (double *)AlcVectorToArray1D(vec, 0, nV - 1, &errNum);
   }
   if(errNum == ALC_ER_NONE)
   {
     *dstA = aM;
-    *dstNElem = nR;
+    *dstNElem = nV;
   }
   (void )AlcVectorFree(vec);
   return(errNum);
@@ -1469,66 +1453,24 @@ AlcErrno	AlcDouble1ReadAsci(FILE *fP, double **dstA,
 AlcErrno	AlcDouble2ReadAsci(FILE *fP, double ***dstA,
 				   size_t *dstMElem, size_t *dstNElem)
 {
-  size_t	iF,
-  		nR = 0,
-  		nF = 0,
-		nV = 0;
-  double	*dP0;
+  size_t	nR = 0,
+  		nC = 0;
   double	**aM = NULL;
-  char		*parseS,
-  		*tokS;
-  const size_t	vecCnt = 1024; 		/* Initial number of elements in
-  					 * the vector */
   const int	maxRecLen = 8192; 	/* Maximum number of chars in an
   					 * input record */
-  char		recS[8192 /* = maxRecLen */];
   AlcVector	*vec = NULL;
   AlcErrno	errNum = ALC_ER_NONE;
 
-  vec = AlcVectorNew(vecCnt, sizeof(double), vecCnt, &errNum);
-  while((errNum == ALC_ER_NONE) && (fgets(recS, maxRecLen, fP) != NULL))
-  {
-    iF = 0;
-    parseS = recS;
-    while((errNum == ALC_ER_NONE) &&
-          ((tokS = (char *) strtok(parseS, " \t\n")) != NULL) && *tokS)
-    {
-      parseS = NULL;
-      if((dP0 = (double *)AlcVectorExtendAndGet(vec, nV)) == NULL)
-      {
-        errNum = ALC_ER_ALLOC;
-      }
-      else if(sscanf(tokS, "%lg", dP0) != 1)
-      {
-        errNum = ALC_ER_READ;
-      }
-      else
-      {
-        ++iF;
-	++nV;
-      }
-    }
-    if((errNum == ALC_ER_NONE) && (iF > 0))
-    {
-      if(nR == 0)
-      {
-	 nF = iF;
-      }
-      else if(iF != nF)
-      {
-	errNum = ALC_ER_READ;
-      }
-      ++nR;
-    }
-  }
+  vec =	AlcVecReadDouble2Asci(fP, " \t\n\r", maxRecLen, &nR, &nC,
+                              &errNum);
   if(errNum == ALC_ER_NONE)
   {
-    aM = (double **)AlcVectorToArray2D(vec, 0, nV - 1, nR, nF, &errNum);
+    aM = (double **)AlcVectorToArray2D(vec, nR, nC, &errNum);
   }
   if(errNum == ALC_ER_NONE)
   {
     *dstA = aM;
-    *dstNElem = nF;
+    *dstNElem = nC;
     *dstMElem = nR;
   }
   (void )AlcVectorFree(vec);
