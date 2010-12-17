@@ -60,6 +60,7 @@ static char _AlgMatrixMath_c[] = "MRC HGU $Id$";
 *		combination of aM, bM and cM.
 * \note		For efficiency the given parameters are not checked.
 * \note		Matrix size is limited only by address space.
+* \note		All matrices must be of the same type (not checked for).
 * \param        aM 			Supplied matrix for result,
 *					\f$\mathbf{A}\f$.
 * \param        bM 			First matrix in the sum,
@@ -69,24 +70,114 @@ static char _AlgMatrixMath_c[] = "MRC HGU $Id$";
 * \param	nR			Number of rows in matricies.
 * \param	nC			Number of columns in matricies.
 */
-void		AlgMatrixAdd(double **aM, double **bM, double **cM,
-			     size_t nR, size_t nC)
+void		AlgMatrixAdd(AlgMatrix aM, AlgMatrix bM, AlgMatrix cM)
 {
-  size_t        id0,
-  		id1;
-  double	*aRowM,
-  		*bRowM,
-		*cRowM;
+  size_t  	id0,
+  		nR,
+		nC;
 
-  for(id0 = 0; id0 < nR; ++id0)
+  nR = aM.core->nR;
+  nC = aM.core->nC;
+  switch(aM.core->type)
   {
-    aRowM = aM[id0];
-    bRowM = bM[id0];
-    cRowM = cM[id0];
-    for(id1 = 0; id1 < nC; ++id1)
-    {
-      *aRowM++ = *bRowM++ + *cRowM++;
-    }
+    case ALG_MATRIX_RECT:
+      {
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+	  size_t  id1;
+	  double  *aRow,
+		  *bRow,
+		  *cRow;
+
+	  aRow = aM.rect->array[id0];
+	  bRow = bM.rect->array[id0];
+	  cRow = cM.rect->array[id0];
+	  for(id1 = 0; id1 < nC; ++id1)
+	  {
+	    *aRow++ = *bRow++ + *cRow++;
+	  }
+	}
+      }
+      break;
+    case ALG_MATRIX_SYM:
+      {
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+	  size_t  id1;
+	  double  **aA,
+		  **bA,
+		  **cA;
+
+	  aA = aM.sym->array;
+	  bA = bM.sym->array;
+	  cA = cM.sym->array;
+	  for(id1 = 0; id1 <= id0; ++id1)
+	  {
+	    aA[id0][id1] = bA[id0][id1] + cA[id0][id1];
+	  }
+	}
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      {
+	/* Check to see if A is an alias of B or C and if not zero it's
+	 * entries. */
+	if((aM.core != bM.core)  && (aM.core != cM.core))
+	{
+	  AlgMatrixLLRZero(aM.llr);
+	}
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+	  AlgMatrixLLRE aE;
+	  AlgMatrixLLRE *bE,
+	  		*cE;
+
+	  bE = bM.llr->tbl[id0];
+	  cE = cM.llr->tbl[id0];
+	  while((bE != NULL) || (cE != NULL))
+	  {
+	    if(bE == NULL)
+	    {
+	      aE.col = cE->col; aE.val = cE->val;
+	      cE = cE->nxt;
+	    }
+	    else if(cE == NULL)
+	    {
+	      aE.col = bE->col; aE.val = bE->val;
+	      bE = bE->nxt;
+	    }
+	    else
+	    {
+	      if(bE->col < cE->col)
+	      {
+	        aE.col = bE->col; aE.val = bE->val;
+		bE = bE->nxt;
+	      }
+	      else if(bE->col > cE->col)
+	      {
+	        aE.col = cE->col; aE.val = cE->val;
+		cE = cE->nxt;
+	      }
+	      else
+	      {
+	        aE.col = bE->col; aE.val = bE->val + cE->val;
+		bE = bE->nxt;
+		cE = cE->nxt;
+	      }
+	    }
+	    (void )AlgMatrixLLRSet(aM.llr, id0, aE.col, aE.val);
+	  }
+	}
+      }
+      break;
+    default:
+      break;
   }
 }
 
@@ -112,24 +203,114 @@ void		AlgMatrixAdd(double **aM, double **bM, double **cM,
 * \param	nR			Number of rows in matricies.
 * \param	nC			Number of columns in matricies.
 */
-void		AlgMatrixSub(double **aM, double **bM, double **cM,
-			     size_t nR, size_t nC)
+void		AlgMatrixSub(AlgMatrix aM, AlgMatrix bM, AlgMatrix cM)
 {
-  size_t	id0,
-  		id1;
-  double	*aRowM,
-  		*bRowM,
-		*cRowM;
+  size_t  	id0,
+  		nR,
+		nC;
 
-  for(id0 = 0; id0 < nR; ++id0)
+  nR = aM.core->nR;
+  nC = aM.core->nC;
+  switch(aM.core->type)
   {
-    aRowM = aM[id0];
-    bRowM = bM[id0];
-    cRowM = cM[id0];
-    for(id1 = 0; id1 < nC; ++id1)
-    {
-      *aRowM++ = *bRowM++ - *cRowM++;
-    }
+    case ALG_MATRIX_RECT:
+      {
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+	  size_t  id1;
+	  double  *aRow,
+		  *bRow,
+		  *cRow;
+
+	  aRow = aM.rect->array[id0];
+	  bRow = bM.rect->array[id0];
+	  cRow = cM.rect->array[id0];
+	  for(id1 = 0; id1 < nC; ++id1)
+	  {
+	    *aRow++ = *bRow++ - *cRow++;
+	  }
+	}
+      }
+      break;
+    case ALG_MATRIX_SYM:
+      {
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+	  size_t  id1;
+	  double  **aA,
+		  **bA,
+		  **cA;
+
+	  aA = aM.sym->array;
+	  bA = bM.sym->array;
+	  cA = cM.sym->array;
+	  for(id1 = 0; id1 <= id0; ++id1)
+	  {
+	    aA[id0][id1] = bA[id0][id1] - cA[id0][id1];
+	  }
+	}
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      {
+	/* Check to see if A is an alias of B or C and if not zero it's
+	 * entries. */
+	if((aM.core != bM.core)  && (aM.core != cM.core))
+	{
+	  AlgMatrixLLRZero(aM.llr);
+	}
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+	  AlgMatrixLLRE aE;
+	  AlgMatrixLLRE *bE,
+	  		*cE;
+
+	  bE = bM.llr->tbl[id0];
+	  cE = cM.llr->tbl[id0];
+	  while((bE != NULL) || (cE != NULL))
+	  {
+	    if(bE == NULL)
+	    {
+	      aE.col = cE->col; aE.val = -cE->val;
+	      cE = cE->nxt;
+	    }
+	    else if(cE == NULL)
+	    {
+	      aE.col = bE->col; aE.val = bE->val;
+	      bE = bE->nxt;
+	    }
+	    else
+	    {
+	      if(bE->col < cE->col)
+	      {
+	        aE.col = bE->col; aE.val = bE->val;
+		bE = bE->nxt;
+	      }
+	      else if(bE->col > cE->col)
+	      {
+	        aE.col = cE->col; aE.val = -cE->val;
+		cE = cE->nxt;
+	      }
+	      else
+	      {
+	        aE.col = bE->col; aE.val = bE->val - cE->val;
+		bE = bE->nxt;
+		cE = cE->nxt;
+	      }
+	    }
+	    (void )AlgMatrixLLRSet(aM.llr, id0, aE.col, aE.val);
+	  }
+	}
+      }
+      break;
+    default:
+      break;
   }
 }
 
@@ -142,7 +323,11 @@ void		AlgMatrixSub(double **aM, double **bM, double **cM,
                   \mathbf{A} = \mathbf{B} \mathbf{C}
 		\f]
 *		The dimensions of the result matrix (aM) must be cR, bC.
-* \note		For efficiency the given parameters are not checked.
+* 		All the matrices must be valid and of the same type except
+* 		in the case of multiplying tow symmetric matrices when
+* 		the result matrix must be rectangular (because in general
+* 		the product of two symmetric matrices is not symmetric).
+* \note		For efficiency the given parameters are not fully checked.
 * \note		Matrix size is limited only by address space.
 * \param        aM 			Supplied matrix for result,
 *					\f$\mathbf{A}\f$
@@ -154,27 +339,152 @@ void		AlgMatrixSub(double **aM, double **bM, double **cM,
 * \param	bC			Number of columns in matrix bM.
 * \param	cC			Number of columns in matrix cM.
 */
-void		AlgMatrixMul(double **aM, double **bM, double **cM,
-			     size_t bR, size_t bC, size_t cC)
+void		AlgMatrixMul(AlgMatrix aM, AlgMatrix bM, AlgMatrix cM)
 {
-  size_t	id0,
-  		id1,
-		id2;
-  double	tD0;
-  double	*bRowM;
+  size_t  	id0,
+  		nBR,
+		nBC,
+		nCC;
+  AlgError	errNum = ALG_ERR_NONE;
 
-  for(id0 = 0; id0 < bR; ++id0)
+  nBR = bM.core->nR;
+  nBC = bM.core->nC;
+  nCC = cM.core->nC;
+  switch(bM.core->type)
   {
-    bRowM = bM[id0];
-    for(id1 = 0; id1 < cC; ++id1)
-    {
-      tD0 = 0.0;
-      for(id2 = 0; id2 < bC; ++id2)
+    case ALG_MATRIX_RECT:
+      if((aM.core->type != bM.core->type) || (cM.core->type != bM.core->type))
       {
-	tD0 += bRowM[id2] * cM[id2][id1];
+        errNum = ALG_ERR_MATRIX_TYPE;
       }
-      aM[id0][id1] = tD0;
-    }
+      else
+      {
+        double	**aA,
+		**bA,
+		**cA;
+
+        aA = aM.rect->array;
+        bA = bM.rect->array;
+        cA = cM.rect->array;
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nBR; ++id0)
+	{
+	  size_t  id1;
+	  double  *bRow;
+	  
+	  bRow = bA[id0];
+	  for(id1 = 0; id1 < nCC; ++id1)
+	  {
+	    size_t id2;
+	    double v = 0.0;
+
+	    for(id2 = 0; id2 < nBC; ++id2)
+	    {
+	      v += bRow[id2] * cA[id2][id1];
+	    }
+	    aA[id0][id1] = v;
+	  }
+	}
+      }
+      break;
+    case ALG_MATRIX_SYM:
+      if((aM.core->type != ALG_MATRIX_RECT) || (cM.core->type != bM.core->type))
+      {
+        errNum = ALG_ERR_MATRIX_TYPE;
+      }
+      else
+      {
+        double	**aA,
+		**bA,
+		**cA;
+
+        aA = aM.rect->array;
+        bA = bM.rect->array;
+        cA = cM.rect->array;
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nBR; ++id0)
+	{
+	  size_t  id1;
+	  
+	  for(id1 = 0; id1 < nCC; ++id1)
+	  {
+	    size_t id2;
+	    double v = 0.0;
+
+	    id2 = 0;
+	    while(id2 <= id0)
+	    {
+	      if(id1 <= id2)
+	      {
+	        v += bA[id0][id2] * cA[id2][id1];
+	      }
+	      else
+	      {
+	        v += bA[id0][id2] * cA[id1][id2];
+	      }
+	      ++id2;
+	    }
+	    while(id2 < nBC)
+	    {
+	      if(id1 <= id2)
+	      {
+	        v += bA[id2][id0] * cA[id2][id1];
+	      }
+	      else
+	      {
+	        v += bA[id2][id0] * cA[id1][id2];
+	      }
+	      ++id2;
+	    }
+	    aA[id0][id1] = v;
+	  }
+	}
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      if((aM.core->type != bM.core->type) || (cM.core->type != bM.core->type))
+      {
+        errNum = ALG_ERR_MATRIX_TYPE;
+      }
+      else
+      {
+	size_t id0;
+
+	for(id0 = 0; id0 < nBR; ++id0)
+	{
+	  if(errNum == ALG_ERR_NONE)
+	  {
+	    size_t id1;
+	    AlgMatrixLLRE *bRow;
+
+	    bRow = bM.llr->tbl[id0];
+	    for(id1 = 0; id1 < nCC; ++id1)
+	    {
+	      double v = 0.0;
+	      AlgMatrixLLRE *bEnt = bRow;
+
+	      while(bEnt != NULL)
+	      {
+		v += bEnt->val * AlgMatrixLLRValue(cM.llr, bEnt->col, id1);
+		bEnt = bEnt->nxt;
+	      }
+	      errNum = AlgMatrixLLRSet(aM.llr, id0, id1, v);
+	      if(errNum != ALG_ERR_NONE)
+	      {
+		break;
+	      }
+	    }
+	  }
+	}
+      }
+      break;
+    default:
+      errNum = ALG_ERR_MATRIX_TYPE;
+      break;
   }
 }
 
@@ -188,14 +498,35 @@ void		AlgMatrixMul(double **aM, double **bM, double **cM,
 * \param	nRC			Number of rows and columns in
 *					the (square) matrix aM.
 */
-double		AlgMatrixTrace(double **aM, size_t nRC)
+double		AlgMatrixTrace(AlgMatrix aM)
 {
-  size_t	id0;
+  size_t	id0,
+  		nN;
   double	trace = 0.0;
 
-  for(id0 = 0; id0 < nRC; ++id0)
+  nN = ALG_MIN(aM.core->nR, aM.core->nC);
+  switch(aM.core->type)
   {
-    trace += aM[id0][id0];
+    case ALG_MATRIX_RECT:
+      for(id0 = 0; id0 < nN; ++id0)
+      {
+	trace += aM.rect->array[id0][id0];
+      }
+      break;
+    case ALG_MATRIX_SYM:
+      for(id0 = 0; id0 < nN; ++id0)
+      {
+	trace += aM.sym->array[id0][id0];
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      for(id0 = 0; id0 < nN; ++id0)
+      {
+	trace += AlgMatrixLLRValue(aM.llr, id0, id0);
+      }
+      break;
+    default:
+      break;
   }
   return(trace);
 }
@@ -218,18 +549,78 @@ double		AlgMatrixTrace(double **aM, size_t nRC)
 * \param	bR			Number of rows in matrix bM.
 * \param	bC			Number of columns in matrix bM.
 */
-void		AlgMatrixTranspose(double **aM, double **bM,
-				   size_t bR, size_t bC)
+void            AlgMatrixTranspose(AlgMatrix aM, AlgMatrix bM)
 {
-  size_t	id0,
-  		id1;
+  size_t	nR,
+  		nC;
 
-  for(id0 = 0; id0 < bR; ++id0)
+  nR = bM.core->nR;
+  nC = bM.core->nC;
+  switch(aM.core->type)
   {
-    for(id1 = 0; id1 < bC; ++id1)
-    {
-      aM[id0][id1] = bM[id1][id0];
-    }
+    case ALG_MATRIX_RECT:
+      {
+	size_t	id0,
+	        id1;
+        double	**aA,
+		**bA;
+
+        aA = aM.rect->array;
+	bA = bM.rect->array;
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0, id1)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+	  for(id1 = 0; id1 < nC; ++id1)
+	  {
+	    aA[id0][id1] = bA[id1][id0];
+	  }
+	}
+      }
+      break;
+    case ALG_MATRIX_SYM:
+      {
+	size_t	id0,
+	        id1;
+        double	**aA,
+		**bA;
+
+        aA = aM.sym->array;
+	bA = bM.sym->array;
+	/* Transpose is just a copy of the values for a symetric matrix. */
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0, id1)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+	  for(id1 = 0; id1 <= id0; ++id1)
+	  {
+	    aA[id0][id1] = bA[id0][id1];
+	  }
+	}
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      {
+	size_t	id0;
+
+	AlgMatrixLLRZero(aM.llr);
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+	  AlgMatrixLLRE *p;
+
+	  p = bM.llr->tbl[id0];
+	  while(p != NULL)
+	  {
+	    AlgMatrixLLRSet(aM.llr, id0, p->col, p->val);
+	    p = p->nxt;
+	  }
+	}
+      }
+      break;
+    default:
+      break;
   }
 }
 
@@ -249,38 +640,47 @@ void		AlgMatrixTranspose(double **aM, double **bM,
 * \param	nR			Number of rows in matricies.
 * \param	nC			Number of columns in matricies.
 */
-void		AlgMatrixCopy(double **aM, double **bM, size_t nR, size_t nC)
+void            AlgMatrixCopy(AlgMatrix aM, AlgMatrix bM)
 {
-  size_t	id0;
+  size_t	nR,
+  		nC;
+  AlgError	errNum = ALG_ERR_NONE;
 
-  for(id0 = 0; id0 < nR; ++id0)
+  nR = bM.core->nR;
+  nC = bM.core->nC;
+  switch(aM.core->type)
   {
-    AlgMatrixVectorCopy(aM[id0], bM[id0], nC);
-  }
-}
+    case ALG_MATRIX_RECT:
+      {
+	size_t	id0;
 
-/*!
-* \return       void
-* \ingroup      AlgMatrix
-* \brief        Copies the values of the vector bV to the result
-*		vector aV:
-*		\f[
-		\mathbf{a} = \mathbf{b}
-		\f]
-* \note		For efficiency the given parameters are not checked.
-* \note		Matrix size is limited only by address space.
-* \param        aV 			Supplied vector for result,
-*					\f$\mathbf{a}\f$.
-* \param        bV 			Vector to copy, \f$\mathbf{b}\f$.
-* \param	nV			Number of entries to copy.
-*/
-void		AlgMatrixVectorCopy(double *aV, double *bV, size_t nV)
-{
-  size_t	id0;
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+          AlgVectorCopy(aM.rect->array[id0], bM.rect->array[id0], nC);
+	}
+      }
+      break;
+    case ALG_MATRIX_SYM:
+      {
+	size_t	id0;
 
-  for(id0 = 0; id0 < nV; ++id0)
-  {
-    aV[id0] = bV[id0];
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+          AlgVectorCopy(aM.sym->array[id0], bM.sym->array[id0], id0);
+	}
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      errNum = AlgMatrixLLRCopyInPlace(aM.llr, bM.llr);
+      break;
+    default:
+      break;
   }
 }
 
@@ -300,40 +700,89 @@ void		AlgMatrixVectorCopy(double *aV, double *bV, size_t nV)
 * \param	nR			Number of rows in matrix aM.
 * \param	nC			Number of columns in matrix aM.
 */
-void		AlgMatrixScale(double **aM, double **bM, double sv,
-			       size_t nR, size_t nC)
+void		AlgMatrixScale(AlgMatrix aM, AlgMatrix bM, double sv)
 {
-  size_t	id0;
+  size_t	id0,
+  		nR,
+		nC;
 
-  for(id0 = 0; id0 < nR; ++id0)
+  nR = aM.core->nR;
+  nC = aM.core->nC;
+  switch(aM.core->type)
   {
-    AlgMatrixVectorScale(aM[id0], bM[id0], sv, nC);
-  }
-}
+    case ALG_MATRIX_RECT:
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+      for(id0 = 0; id0 < nR; ++id0)
+      {
+	AlgVectorScale(aM.rect->array[id0], bM.rect->array[id0], sv, nC);
+      }
+      break;
+    case ALG_MATRIX_SYM:
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+      for(id0 = 0; id0 < nR; ++id0)
+      {
+	AlgVectorScale(aM.sym->array[id0], bM.sym->array[id0], sv, id0 + 1);
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      if(aM.llr == bM.llr)
+      {
+	if(fabs(sv) < 1.0)
+	{
+	  for(id0 = 0; id0 < nR; ++id0)
+	  {
+	    AlgMatrixLLRE *p,
+	    		  *q;
 
-/*!
-* \ingroup      AlgMatrix
-* \brief        Multiplies the given vector elements by the given scalar:
-*		\f[
-		\mathbf{a} = s \mathbf{b}
-		\f]
-* \note		For efficiency the given parameters are not checked.
-* \note		Matrix size is limited only by address space.
-* \param        aV 			Supplied vector for result,
-*					\f$\mathbf{a}\f$.
-* \param        bV 			Given vector to scale,
-*					\f$\mathbf{b}\f$.
-* \param	sv			Scalar value, \f$s\f$.
-* \param	nV			Number of vector entries.
-*/
-void		AlgMatrixVectorScale(double *aV, double *bV, double sv,
-			            size_t nV)
-{
-  size_t	id0;
+	    p = aM.llr->tbl[id0];
+	    while(p != NULL)
+	    {
+	      q = p;
+	      p = p->nxt;
+	      q->val *= sv;
+	      if(q->val < aM.llr->tol)
+	      {
+	        AlgMatrixLLRERemove(aM.llr, id0, q->col);
+	      }
+	    }
+	  }
+	}
+	else
+	{
+	  for(id0 = 0; id0 < aM.llr->nR; ++id0)
+	  {
+	    AlgMatrixLLRE *q;
 
-  for(id0 = 0; id0 < nV; ++id0)
-  {
-    aV[id0] = sv * bV[id0];
+	    q = aM.llr->tbl[id0];
+	    while(q != NULL)
+	    {
+	      q->val *= sv;
+	      q = q->nxt;
+	    }
+	  }
+	}
+      }
+      else
+      {
+	for(id0 = 0; id0 < aM.llr->nR; ++id0)
+	{
+	  AlgMatrixLLRE *q;
+
+	  q = bM.llr->tbl[id0];
+	  while(q != NULL)
+	  {
+	    AlgMatrixLLRSet(aM.llr, id0, q->col, q->val * sv);
+	    q = q->nxt;
+	  }
+	}
+      }
+      break;
+    default:
+      break;
   }
 }
 
@@ -357,24 +806,115 @@ void		AlgMatrixVectorScale(double *aV, double *bV, double sv,
 * \param	nR			Number of rows in each matrix.
 * \param	nC			Number of columns in each matrix.
 */
-void		AlgMatrixScaleAdd(double **aM, double **bM, double **cM,
-				  double sv, size_t nR, size_t nC)
+void		AlgMatrixScaleAdd(AlgMatrix aM, AlgMatrix bM, AlgMatrix cM,
+				  double sv)
 {
-  size_t	id0,
-  		id1;
-  double 	*aRowM,
-  		*bRowM,
-		*cRowM;
+  size_t  	id0,
+  		nR,
+		nC;
 
-  for(id0 = 0; id0 < nR; ++id0)
+  nR = aM.core->nR;
+  nC = aM.core->nC;
+  switch(aM.core->type)
   {
-    aRowM = aM[id0];
-    bRowM = bM[id0];
-    cRowM = cM[id0];
-    for(id1 = 0; id1 < nC; ++id1)
-    {
-      *aRowM++ = *bRowM++ + (*cRowM++ * sv);
-    }
+    case ALG_MATRIX_RECT:
+      {
+#ifdef _OPENMP
+	#pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+	  size_t  id1;
+	  double  *aRow,
+		  *bRow,
+		  *cRow;
+
+	  aRow = aM.rect->array[id0];
+	  bRow = bM.rect->array[id0];
+	  cRow = cM.rect->array[id0];
+	  for(id1 = 0; id1 < nC; ++id1)
+	  {
+	    *aRow++ = *bRow++ + (sv * *cRow++);
+	  }
+	}
+      }
+      break;
+    case ALG_MATRIX_SYM:
+      {
+#ifdef _OPENMP
+	#pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+	  size_t  id1;
+	  double  **aA,
+		  **bA,
+		  **cA;
+
+	  aA = aM.sym->array;
+	  bA = bM.sym->array;
+	  cA = cM.sym->array;
+	  for(id1 = 0; id1 <= id0; ++id1)
+	  {
+	    aA[id0][id1] = bA[id0][id1] + (sv * cA[id0][id1]);
+	  }
+	}
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      {
+	/* Check to see if A is an alias of B or C and if not zero it's
+	 * entries. */
+	if((aM.core != bM.core)  && (aM.core != cM.core))
+	{
+	  AlgMatrixLLRZero(aM.llr);
+	}
+	for(id0 = 0; id0 < nR; ++id0)
+	{
+	  AlgMatrixLLRE aE;
+	  AlgMatrixLLRE *bE,
+	  		*cE;
+
+	  bE = bM.llr->tbl[id0];
+	  cE = cM.llr->tbl[id0];
+	  while((bE != NULL) || (cE != NULL))
+	  {
+	    if(bE == NULL)
+	    {
+	      aE.col = cE->col; aE.val = sv * cE->val;
+	      cE = cE->nxt;
+	    }
+	    else if(cE == NULL)
+	    {
+	      aE.col = bE->col; aE.val = bE->val;
+	      bE = bE->nxt;
+	    }
+	    else
+	    {
+	      if(bE->col < cE->col)
+	      {
+	        aE.col = bE->col; aE.val = bE->val;
+		bE = bE->nxt;
+	      }
+	      else if(bE->col > cE->col)
+	      {
+	        aE.col = cE->col; aE.val = sv * cE->val;
+		cE = cE->nxt;
+	      }
+	      else
+	      {
+	        aE.col = bE->col; aE.val = bE->val + (sv * cE->val);
+		bE = bE->nxt;
+		cE = cE->nxt;
+	      }
+	    }
+	    (void )AlgMatrixLLRSet(aM.llr, id0, aE.col, aE.val);
+	  }
+	}
+      }
+      break;
+    default:
+      break;
   }
 }
 
@@ -393,14 +933,57 @@ void		AlgMatrixScaleAdd(double **aM, double **bM, double **cM,
 * \param	sv			Scalar value, \f$s\f$.
 * \param	nRC			Number of rows and columns in matrix.
 */
-void		AlgMatrixScalar(double **aM, double sv, size_t nRC)
+void		AlgMatrixScalar(AlgMatrix aM, double sv)
 {
-  size_t	id0;
+  size_t	nN;
 
-  (void )memset(*aM, 0, sizeof(double) * nRC * nRC);
-  for(id0 = 0; id0 < nRC; ++id0)
+  nN = ALG_MIN(aM.core->nR, aM.core->nC);
+  switch(aM.core->type)
   {
-    aM[id0][id0] = sv;
+    case ALG_MATRIX_RECT:
+      {
+	size_t id0;
+
+	AlgMatrixRectZero(aM.rect);
+	for(id0 = 0; id0 < nN; ++id0)
+	{
+	  aM.rect->array[id0][id0] = sv;
+	}
+      }
+      break;
+    case ALG_MATRIX_SYM:
+      {
+	size_t id0;
+
+	AlgMatrixSymZero(aM.sym);
+	for(id0 = 0; id0 < nN; ++id0)
+	{
+	  aM.rect->array[id0][id0] = sv;
+	}
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      {
+	size_t id0;
+
+	AlgMatrixLLRZero(aM.llr);
+	if(AlgMatrixLLRExpand(aM.llr, nN) == ALG_ERR_NONE)
+	{
+	  for(id0 = 0; id0 < nN; ++id0)
+	  {
+	    AlgMatrixLLRE *p;
+
+	    p = AlgMatrixLLRENew(aM.llr);
+	    p->col = id0;
+	    p->val = sv;
+	    p->nxt = NULL;
+	    aM.llr->tbl[id0] = p;
+	  }
+	}
+      }
+      break;
+    default:
+      break;
   }
 }
 
@@ -411,32 +994,27 @@ void		AlgMatrixScalar(double **aM, double sv, size_t nRC)
 *		\f[
 		\mathbf{A} = \mathbf{0}
 		\f]
-* \note		This function assumes that the matrix has been allocated
-*		by AlcDouble2Malloc().
 * \note		Matrix size is limited only by address space.
 * \param        aM 			Supplied matrix for result.
 * \param	nR			Number of rows in matrix.
 * \param	nC			Number of columns in matrix.
 */
-void		AlgMatrixZero(double **aM, size_t nR, size_t nC)
+void            AlgMatrixZero(AlgMatrix mat)
 {
-  (void )memset(*aM, 0, sizeof(double) * nR * nC);
-}
-
-/*!
-* \ingroup      AlgMatrix
-* \brief        Sets the elements of the given vector to zero.
-* \note		For efficiency the given parameters are not checked.
-*		\f[
-		\mathbf{a} = \mathbf{0}
-		\f]
-* \note		Vector size is limited only by address space.
-* \param        aV 			Supplied Vector for result.
-* \param	nV			Number of vector elements.
-*/
-void		AlgMatrixVectorZero(double *aV, size_t nV)
-{
-  (void )memset(aV, 0, sizeof(double) * nV);
+  switch(mat.core->type)
+  {
+    case ALG_MATRIX_RECT:
+      AlgMatrixRectZero(mat.rect);
+      break;
+    case ALG_MATRIX_SYM:
+      AlgMatrixSymZero(mat.sym);
+      break;
+    case ALG_MATRIX_LLR:
+      AlgMatrixLLRZero(mat.llr);
+      break;
+    default:
+      break;
+  }
 }
 
 /*!
@@ -457,42 +1035,79 @@ void		AlgMatrixVectorZero(double *aV, size_t nV)
 * \param	nC			The number of columns in
 * 					\f$mathbf{B}\f$.
 */
-void 		AlgMatrixVectorMul(double *aV,
-				   AlgMatrixType bType, double **bM,
-				   double *cV, size_t nR, size_t nC)
+void 		AlgMatrixVectorMul(double *aV, AlgMatrix bM, double *cV)
 {
-  size_t	id0,
-  		id1;
-  double	tD0;
-  double	*bRow;
-
-  switch(bType)
+  switch(bM.core->type)
   {
     case ALG_MATRIX_RECT:
-      for(id0 = 0; id0 < nR; ++id0)
       {
-	tD0 = 0.0;
-	bRow = bM[id0];
-	for(id1 = 0; id1 < nC; ++id1)
+	size_t id0;
+
+#ifdef _OPENMP
+	#pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < bM.rect->nR; ++id0)
 	{
-	  tD0 += bRow[id1] * cV[id1];
+	  size_t id1;
+	  double v;
+	  double *bRow;
+
+	  v = 0.0;
+	  bRow = bM.rect->array[id0];
+	  for(id1 = 0; id1 < bM.rect->nC; ++id1)
+	  {
+	    v += bRow[id1] * cV[id1];
+	  }
+	  aV[id0] = v;
 	}
-	aV[id0] = tD0;
       }
       break;
     case ALG_MATRIX_SYM:
-      for(id0 = 0; id0 < nR; ++id0)
       {
-        tD0 = 0.0;
-	for(id1 = 0; id1 <= id0; ++id1)
+	size_t id0;
+
+#ifdef _OPENMP
+	#pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < bM.sym->nR; ++id0)
 	{
-	  tD0 += bM[id0][id1] * cV[id1];
+	  size_t id1;
+	  double v;
+
+	  v = 0.0;
+	  for(id1 = 0; id1 <= id0; ++id1)
+	  {
+	    v += bM.sym->array[id0][id1] * cV[id1];
+	  }
+	  for( ; id1 < bM.sym->nR; ++id1)
+	  {
+	    v += bM.sym->array[id1][id0] * cV[id1];
+	  }
+	  aV[id0] = v;
 	}
-	for(id1 = id0 + 1; id1 < nR; ++id1)
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      {
+	size_t id0;
+
+#ifdef _OPENMP
+	#pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < bM.llr->nR; ++id0)
 	{
-	  tD0 += bM[id1][id0] * cV[id1];
+	  double	v;
+	  AlgMatrixLLRE *p;
+
+	  v = 0.0;
+	  p = bM.llr->tbl[id0];
+	  while(p != NULL)
+	  {
+	    v += p->val * cV[p->col];
+	    p = p->nxt;
+	  }
+	  aV[id0] = v;
 	}
-	aV[id0] = tD0;
       }
       break;
     default:
@@ -519,43 +1134,94 @@ void 		AlgMatrixVectorMul(double *aV,
 * \param	nC			The number of columns in
 * 					\f$mathbf{B}\f$.
 */
-void 		AlgMatrixVectorMulAdd(double *aV,
-				   AlgMatrixType bType, double **bM,
-				   double *cV, double *dV,
-				   size_t nR, size_t nC)
+void 		AlgMatrixVectorMulAdd(double *aV, AlgMatrix bM,
+				   double *cV, double *dV)
 {
-  size_t	id0,
-  		id1;
-  double	tD0;
-  double	*bRow;
-
-  switch(bType)
+  switch(bM.core->type)
   {
     case ALG_MATRIX_RECT:
-      for(id0 = 0; id0 < nR; ++id0)
       {
-	tD0 = dV[id0];
-	bRow = bM[id0];
-	for(id1 = 0; id1 < nC; ++id1)
+	size_t id0,
+		nC,
+		nR;
+        double	**bA;
+
+        nR = bM.rect->nR;
+        nC = bM.rect->nC;
+	bA = bM.rect->array;
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
 	{
-	  tD0 += bRow[id1] * cV[id1];
+	  size_t id1;
+	  double v;
+	  double *bRow;
+
+	  v = dV[id0];
+	  bRow = bA[id0];
+	  for(id1 = 0; id1 < nC; ++id1)
+	  {
+	    v += bRow[id1] * cV[id1];
+	  }
+	  aV[id0] = v;
 	}
-	aV[id0] = tD0;
       }
       break;
     case ALG_MATRIX_SYM:
-      for(id0 = 0; id0 < nR; ++id0)
       {
-	tD0 = dV[id0];
-	for(id1 = 0; id1 <= id0; ++id1)
+	size_t id0,
+		nC,
+		nR;
+        double	**bA;
+
+	nR = bM.sym->nR;
+	nC = bM.sym->nC;
+	bA = bM.sym->array;
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
 	{
-	  tD0 += bM[id0][id1] * cV[id1];
+	  size_t id1;
+	  double v;
+
+	  v = dV[id0];
+	  for(id1 = 0; id1 <= id0; ++id1)
+	  {
+	    v += bA[id0][id1] * cV[id1];
+	  }
+	  for(id1 = id0 + 1; id1 < nR; ++id1)
+	  {
+	    v += bA[id1][id0] * cV[id1];
+	  }
+	  aV[id0] = v;
 	}
-	for(id1 = id0 + 1; id1 < nR; ++id1)
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      {
+	size_t id0,
+		nR;
+
+        nR = bM.llr->nR;
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < nR; ++id0)
 	{
-	  tD0 += bM[id1][id0] * cV[id1];
+	  double	v;
+	  AlgMatrixLLRE *p;
+
+	  v = dV[id0];
+	  p = bM.llr->tbl[id0];
+	  while(p != NULL)
+	  {
+	    v += p->val * cV[p->col];
+	    p = p->nxt;
+	  }
+	  aV[id0] = v;
 	}
-	aV[id0] = tD0;
       }
       break;
     default:
@@ -585,44 +1251,77 @@ void 		AlgMatrixVectorMulAdd(double *aV,
 * \param	s			First weighting scalar \f$s\f$.
 * \param	t			Second weighting scalar \f$t\f$.
 */
-void 		AlgMatrixVectorMulWAdd(double *aV,
-				   AlgMatrixType bType, double **bM,
-				   double *cV, double *dV,
-				   size_t nR, size_t nC,
-				   double s, double t)
+void 		AlgMatrixVectorMulWAdd(double *aV, AlgMatrix bM,
+				   double *cV, double *dV, double s, double t)
 {
-  size_t	id0,
-  		id1;
-  double	tD0;
-  double	*bRow;
 
-  switch(bType)
+  size_t id0;
+
+  switch(bM.core->type)
   {
     case ALG_MATRIX_RECT:
-      for(id0 = 0; id0 < nR; ++id0)
       {
-	tD0 = 0.0;
-	bRow = bM[id0];
-	for(id1 = 0; id1 < nC; ++id1)
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < bM.rect->nR; ++id0)
 	{
-	  tD0 += bRow[id1] * cV[id1];
+          size_t id1;
+	  double v;
+	  double *bRow;
+
+	  v = 0.0;
+	  bRow = bM.rect->array[id0];
+	  for(id1 = 0; id1 < bM.rect->nC; ++id1)
+	  {
+	    v += bRow[id1] * cV[id1];
+	  }
+	  aV[id0] = (s * v) + (t * dV[id0]);
 	}
-	aV[id0] = (s * tD0) + (t * dV[id0]);
+	break;
       }
-      break;
     case ALG_MATRIX_SYM:
-      for(id0 = 0; id0 < nR; ++id0)
       {
-        tD0 = 0.0;
-	for(id1 = 0; id1 <= id0; ++id1)
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < bM.sym->nR; ++id0)
 	{
-	  tD0 += bM[id0][id1] * cV[id1];
+          size_t id1;
+	  double v;
+
+	  v = 0.0;
+	  for(id1 = 0; id1 <= id0; ++id1)
+	  {
+	    v += bM.sym->array[id0][id1] * cV[id1];
+	  }
+	  for(id1 = id0 + 1; id1 < bM.sym->nR; ++id1)
+	  {
+	    v += bM.sym->array[id1][id0] * cV[id1];
+	  }
+	  aV[id0] = (s * v) + (t * dV[id0]);
 	}
-	for(id1 = id0 + 1; id1 < nR; ++id1)
+	break;
+      }
+    case ALG_MATRIX_LLR:
+      {
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < bM.llr->nR; ++id0)
 	{
-	  tD0 += bM[id1][id0] * cV[id1];
+	  double	v;
+	  AlgMatrixLLRE *p;
+
+	  v = 0.0;
+	  p = bM.llr->tbl[id0];
+	  while(p != NULL)
+	  {
+	    v += p->val * cV[p->col];
+	    p = p->nxt;
+	  }
+	  aV[id0] = (s * v) + (t * dV[id0]);
 	}
-	aV[id0] = (s * tD0) + (t * dV[id0]);
       }
       break;
     default:
@@ -648,36 +1347,69 @@ void 		AlgMatrixVectorMulWAdd(double *aV,
 * \param	nC			The number of columns in
 * 					\f$mathbf{B}\f$.
 */
-void 		AlgMatrixTVectorMul(double *aV,
-				    AlgMatrixType bType, double **bM,
-				    double *cV, size_t nR, size_t nC)
+void 		AlgMatrixTVectorMul(double *aV, AlgMatrix bM, double *cV)
 {
-  size_t	id0,
-  		id1;
-
-  switch(bType)
+  switch(bM.core->type)
   {
     case ALG_MATRIX_RECT:
-      for(id0 = 0; id0 < nR; ++id0)
       {
-	aV[id0] = 0.0;
-	for(id1 = 0; id1 < nC; ++id1)
+	size_t id0;
+
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < bM.rect->nR; ++id0)
 	{
-	  aV[id0] += bM[id1][id0] * cV[id1];
+	  size_t id1;
+
+	  aV[id0] = 0.0;
+	  for(id1 = 0; id1 < bM.rect->nC; ++id1)
+	  {
+	    aV[id0] += bM.rect->array[id1][id0] * cV[id1];
+	  }
 	}
       }
       break;
     case ALG_MATRIX_SYM:
-      for(id0 = 0; id0 < nR; ++id0)
       {
-        aV[id0] = bM[id0][0] * cV[0];
-	for(id1 = 1; id1 <= id0; ++id1)
+	size_t id0;
+
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < bM.sym->nR; ++id0)
 	{
-	  aV[id0] += bM[id0][id1] * cV[id1];
+	  size_t id1;
+
+	  aV[id0] = bM.sym->array[id0][0] * cV[0];
+	  for(id1 = 1; id1 <= id0; ++id1)
+	  {
+	    aV[id0] += bM.sym->array[id0][id1] * cV[id1];
+	  }
+	  for(id1 = id0 + 1; id1 < bM.sym->nR; ++id1)
+	  {
+	    aV[id0] += bM.sym->array[id1][id0] * cV[id1];
+	  }
 	}
-	for(id1 = id0 + 1; id1 < nR; ++id1)
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      {
+	size_t id0;
+
+	AlgVectorZero(aV, bM.llr->nC);
+	for(id0 = 0; id0 < bM.llr->nR; ++id0)
 	{
-	  aV[id0] += bM[id1][id0] * cV[id1];
+	  double	c;
+	  AlgMatrixLLRE *p;
+
+	  c = cV[id0];
+	  p = bM.llr->tbl[id0];
+	  while(p != NULL)
+	  {
+	    aV[p->col] += p->val * c;
+	    p = p->nxt;
+	  }
 	}
       }
       break;
@@ -705,62 +1437,74 @@ void 		AlgMatrixTVectorMul(double *aV,
 * \param	nC			The number of columns in
 * 					\f$mathbf{B}\f$.
 */
-void 		AlgMatrixTVectorMulAdd(double *aV,
-				       AlgMatrixType bType, double **bM,
-				       double *cV, double *dV,
-				       size_t nR, size_t nC)
+void 		AlgMatrixTVectorMulAdd(double *aV, AlgMatrix bM,
+				       double *cV, double *dV)
 {
-  size_t	id0,
-  		id1;
-
-  switch(bType)
+  switch(bM.core->type)
   {
     case ALG_MATRIX_RECT:
-      for(id0 = 0; id0 < nC; ++id0)
       {
-	aV[id0] = dV[id0];
-        for(id1 = 0; id1 < nR; ++id1)
+        size_t id0;
+
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < bM.rect->nC; ++id0)
 	{
-	  aV[id0] += bM[id1][id0] * cV[id1];
+          size_t id1;
+
+	  aV[id0] = dV[id0];
+	  for(id1 = 0; id1 < bM.rect->nR; ++id1)
+	  {
+	    aV[id0] += bM.sym->array[id1][id0] * cV[id1];
+	  }
 	}
       }
       break;
     case ALG_MATRIX_SYM:
-      for(id0 = 0; id0 < nR; ++id0)
       {
-        aV[id0] = dV[id0];
-	for(id1 = 0; id1 <= id0; ++id1)
+        size_t id0;
+
+#ifdef _OPENMP
+        #pragma omp parallel for default(shared) private(id0)
+#endif
+	for(id0 = 0; id0 < bM.sym->nR; ++id0)
 	{
-	  aV[id0] += bM[id0][id1] * cV[id1];
+          size_t id1;
+
+	  aV[id0] = dV[id0];
+	  for(id1 = 0; id1 <= id0; ++id1)
+	  {
+	    aV[id0] += bM.sym->array[id0][id1] * cV[id1];
+	  }
+	  for(id1 = id0 + 1; id1 < bM.sym->nR; ++id1)
+	  {
+	    aV[id0] += bM.sym->array[id1][id0] * cV[id1];
+	  }
 	}
-	for(id1 = id0 + 1; id1 < nR; ++id1)
+      }
+      break;
+    case ALG_MATRIX_LLR:
+      {
+	size_t id0;
+
+	AlgVectorCopy(aV, dV, bM.llr->nC);
+	for(id0 = 0; id0 < bM.llr->nR; ++id0)
 	{
-	  aV[id0] += bM[id1][id0] * cV[id1];
+	  double	c;
+	  AlgMatrixLLRE *p;
+
+	  c = cV[id0];
+	  p = bM.llr->tbl[id0];
+	  while(p != NULL)
+	  {
+	    aV[p->col] += p->val * c;
+	    p = p->nxt;
+	  }
 	}
       }
       break;
     default:
       break;
   }
-}
-
-/*!
-* \return	Euclidean or L2 norm of the vector.
-* \ingroup	AlgMatrix
-* \brief	Computes the Euclidean or L2 norm of the given vector.
-* \param	aV			Given vector.
-* \param	nV			Number of entries in the vector.
-*/
-double		AlgMatrixVectorNorm(double *aV, size_t nV)
-{
-  size_t	id0;
-  double	nrm,
-  		ssq = 0.0;
-
-  for(id0 = 0; id0 < nV; ++id0)
-  {
-    ssq += aV[id0] * aV[id0];
-  }
-  nrm = sqrt(ssq);
-  return(nrm);
 }
