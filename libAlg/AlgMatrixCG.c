@@ -56,7 +56,6 @@ static char _AlgMatrixCG_c[] = "MRC HGU $Id$";
 #include <Alg.h>
 #include <float.h>
 
-
 #ifdef ALG_MATRIXCG_DEBUG
 static void			AlgMatrixCGDebug(
 				  FILE *fP,
@@ -106,16 +105,18 @@ static void			AlgMatrixCGDebug(
 *					may be NULL.
 
 */
-AlgError	AlgMatrixCGSolve(AlgMatrixType aType, double **aM,
+AlgError	AlgMatrixCGSolve(
+			         AlgMatrix aM,
 				 double *xV, double *bV,
-				 double **wM, size_t n,
-		     		 void (*pFn)(void *, double **,
-				 	     double *, double *, size_t),
+				 AlgMatrix wM,
+		     		 void (*pFn)(void *, AlgMatrix,
+				 	     double *, double *),
 				 void *pDat, double tol, int maxItr,
 				 double *dstTol, int *dstItr)
 {
   int		itr = 0,
   		conv = 0;
+  size_t	nN;
   double	alpha,
 		beta,
   		resid = DBL_MAX,
@@ -128,15 +129,18 @@ AlgError	AlgMatrixCGSolve(AlgMatrixType aType, double **aM,
   AlgError	errCode = ALG_ERR_NONE;
 
   rho[0] = rho[1] = 0.0;
-  if((aM == NULL) || (*aM == NULL) || (xV == NULL) || (bV == NULL) || 
-     (wM == NULL) || (*wM == NULL) || (n < 1) || (tol < 0.0) || (maxItr < 0))
+  if((aM.core == NULL) || (aM.core->nR < 1) || (aM.core->nR != aM.core->nC) ||
+     (wM.core == NULL) || (wM.core->type != ALG_MATRIX_RECT) ||
+     (wM.core->nR != 4) || (wM.core->nC != aM.core->nC) ||
+     (xV == NULL) || (bV == NULL) || (tol < 0.0) || (maxItr < 0))
   {
     errCode = ALG_ERR_FUNC;
   }
   else
   {
-    switch(aType)
+    switch(aM.core->type)
     {
+      case ALG_MATRIX_LLR:  /* FALLTHROUGH */
       case ALG_MATRIX_RECT: /* FALLTHROUGH */
       case ALG_MATRIX_SYM:
 	break;
@@ -147,20 +151,21 @@ AlgError	AlgMatrixCGSolve(AlgMatrixType aType, double **aM,
   }
   if(errCode == ALG_ERR_NONE)
   {
-    r = *(wM + 0);
-    p = *(wM + 1);
-    z = *(wM + 2);
-    q = *(wM + 3);
-    AlgMatrixZero(wM, 4, n);
-    nrmB = AlgVectorNorm(bV, n);
+    nN = aM.core->nR;
+    AlgMatrixZero(wM);
+    r = wM.rect->array[0];
+    p = wM.rect->array[1];
+    z = wM.rect->array[2];
+    q = wM.rect->array[3];
+    nrmB = AlgVectorNorm(bV, aM.core->nR);
     /* r = b - A x */
-    AlgMatrixVectorMul(r, aType, aM, xV, n, n);
-    AlgVectorSub(r, bV, r, n);
+    AlgMatrixVectorMul(r, aM, xV);
+    AlgVectorSub(r, bV, r, aM.core->nR);
     if(nrmB < DBL_EPSILON) 
     {
       nrmB = 1.0;
     }
-    if((resid = AlgVectorNorm(r, n) / nrmB) <= tol)
+    if((resid = AlgVectorNorm(r, nN) / nrmB) <= tol)
     {
       conv = 1;
     }
@@ -168,37 +173,37 @@ AlgError	AlgMatrixCGSolve(AlgMatrixType aType, double **aM,
     {
 #ifdef ALG_MATRIXCG_DEBUG
       (void )fprintf(stderr, "rho = {%g, %g}\n", rho[0], rho[1]);
-      AlgMatrixCGDebug(stderr, "x", xV, n);
-      AlgMatrixCGDebug(stderr, "r", r, n);
+      AlgMatrixCGDebug(stderr, "x", xV, nN);
+      AlgMatrixCGDebug(stderr, "r", r, nN);
 #endif /* ALG_MATRIXCG_DEBUG */
       /* Pre-conditioning: Solve aM z = r for z. */
       if(pFn)
       {
-	(*pFn)(pDat, aM, r, z, n);
+	(*pFn)(pDat, aM, r, z);
       }
       else
       {
-	AlgVectorCopy(z, r, n);
+	AlgVectorCopy(z, r, nN);
       }
-      rho[0] = AlgVectorDot(r, z, n);
+      rho[0] = AlgVectorDot(r, z, nN);
       if(itr == 0)
       {
-	AlgVectorCopy(p, z, n);
+	AlgVectorCopy(p, z, nN);
       }
       else
       {
 	beta = rho[0] / rho[1];
 	/* p = z + beta p */
-	AlgVectorScaleAdd(p, p, z, beta, n);
+	AlgVectorScaleAdd(p, p, z, beta, nN);
       }
       /* q = A p */
-      AlgMatrixVectorMul(q, aType, aM, p, n, n);
-      alpha = rho[0] / AlgVectorDot(p, q, n);
+      AlgMatrixVectorMul(q, aM, p);
+      alpha = rho[0] / AlgVectorDot(p, q, nN);
       /* x = x + alpha p */
-      AlgVectorScaleAdd(xV, p, xV, alpha, n);
+      AlgVectorScaleAdd(xV, p, xV, alpha, nN);
       /* r = r - alpha * q */
-      AlgVectorScaleAdd(r, q, r, -alpha, n);
-      if((resid = AlgVectorNorm(r, n) / nrmB) <= tol)
+      AlgVectorScaleAdd(r, q, r, -alpha, nN);
+      if((resid = AlgVectorNorm(r, nN) / nrmB) <= tol)
       {
 	tol = resid;
 	conv = 1;
@@ -240,401 +245,3 @@ static void	AlgMatrixCGDebug(FILE *fP, const char *name,
   }
 }
 #endif /* ALG_MATRIXCG_DEBUG */
-
-#ifdef ALG_MATRIXCG_TEST_1
-int		main(int argc, char *argv[])
-{
-  int		id0,
-  		itr = 1000;
-  double	tol = 0.000001;
-  double	**a,
-  		**w;
-  double	*b,
-  		*x;
-  AlgError	errCode = ALG_ERR_NONE;
-
-  (void )AlcDouble2Malloc(&a, 3, 3);
-  (void )AlcDouble2Malloc(&w, 4, 3);
-  b = (double *)AlcMalloc(3 * sizeof(double));
-  x = (double *)AlcMalloc(3 * sizeof(double));
-  a[0][0] = 6.0; 
-  a[0][1] = 1.0; 
-  a[0][2] = 0.0; 
-  a[1][0] = 1.0; 
-  a[1][1] = 5.0; 
-  a[1][2] = 1.0; 
-  a[2][0] = 0.0; 
-  a[2][1] = 1.0; 
-  a[2][2] = 8.0; 
-  b[0] = 8.0;
-  b[1] = 14.0;
-  b[2] = 26.0;
-  x[0] = 1.0;
-  x[1] = 1.0;
-  x[2] = 1.0;
-  errCode = AlgMatrixCGSolve(ALG_MATRIX_RECT,
-  			     (double **)a, (double *)x, (double *)b,
-                             (double **)w, 3, NULL, NULL, tol, itr,
-			     &tol, &itr);
-  (void )printf("itr = %d\n", itr);
-  (void )printf("tol = %g\n", tol);
-  for(id0 = 0; id0 < 3; ++id0)
-  {
-    printf("%g\n", x[id0]);
-  }
-}
-#endif /* ALG_MATRIXCG_TEST_1 */
-
-#ifdef ALG_MATRIXCG_TEST_2
-int		main(int argc, char *argv[])
-{
-  int		id0,
-  		id1,
-		rpt,
-		sz = 100,
-  		nRpt = 1,
-  		itr = 1000;
-  double 	tD0,
-  		del;
-  double	**a0,
-  		**a1,
-  		**w;
-  double	*b0,
-  		*b1,
-  		*x0,
-		*x1,
-		*i0;
-  AlgError	errCode = ALG_ERR_NONE;
-  const double	tol = 0.000001;
-
-  /* AlgRandSeed(0); */
-  (void )AlcDouble2Malloc(&a0, sz, sz);
-  (void )AlcDouble2Malloc(&a1, sz, sz);
-  (void )AlcDouble2Malloc(&w, 4, sz);
-  b0 = (double *)AlcMalloc(sz * sizeof(double));
-  b1 = (double *)AlcMalloc(sz * sizeof(double));
-  x0 = (double *)AlcMalloc(sz * sizeof(double));
-  x1 = (double *)AlcMalloc(sz * sizeof(double));
-  i0 = (double *)AlcMalloc(sz * sizeof(double));
-  for(id1 = 0; id1 < sz; ++id1)
-  {
-    for(id0 = 0; id0 <= id1; ++id0)
-    {
-      *(*(a0 + id1) + id0) = *(*(a0 + id0) + id1) = AlgRandUniform();
-    }
-    *(*(a0 + id1) + id1) += 1.0;
-    *(b0 + id1) = AlgRandUniform();
-    *(i0 + id1) = 1.0;
-  }
-  for(rpt = 0; rpt < nRpt; ++rpt)
-  {
-    AlgVectorCopy(x0, i0, sz);
-    AlgVectorCopy(x1, b0, sz);
-    AlgMatrixCopy(a1, a0, sz, sz);
-    del = tol;
-    errCode = AlgMatrixCGSolve(ALG_MATRIX_RECT,
-    			       (double **)a0, (double *)x0, (double *)b0,
-			       (double **)w, sz, NULL, NULL, tol, itr,
-			       &del, &itr);
-    errCode = AlgMatrixSVSolve((double **)a1, sz, sz, x1, tol, NULL);
-    for(id1 = 0; id1 < sz; ++id1)
-    {
-      tD0 = *(x0 + id1) - *(x1 + id1);
-      del += tD0 * tD0;
-    }
-    del = (del > DBL_EPSILON)? sqrt(del) / sz: 0.0;
-  }
-  printf("rms %g\n", del);
-}
-#endif /* ALG_MATRIXCG_TEST_2 */
-
-#ifdef ALG_MATRIXCG_TEST_3
-typedef enum _AlgMatrixTestMtd
-{
-  ALG_MATRIX_TST_MTD_CG,
-  ALG_MATRIX_TST_MTD_LSQR,
-  ALG_MATRIX_TST_MTD_SV
-} AlgMatrixTestMtd;
-
-extern int	getopt(int argc, char * const *argv, const char *optstring);
-
-extern char	*optarg;
-extern int	optind,
-		opterr,
-		optopt;
-
-int		main(int argc, char *argv[])
-{
-  int		id0,
-  		id1,
-		rpt,
-		option,
-		ok = 1,
-		sz = 100,
-  		nRpt = 1,
-  		itr = 1000,
-		verbose = 0;
-  AlgMatrixTestMtd mtd = ALG_MATRIX_TST_MTD_CG;
-  AlgMatrixType	aType = ALG_MATRIX_RECT;
-  double 	del;
-  double	**a0,
-  		**a1,
-  		**w;
-  double	*b0,
-  		*b1,
-  		*x0,
-		*i0,
-		*r0;
-  AlgError	errCode = ALG_ERR_NONE;
-  const double	tol = 0.000001;
-  const char	*optList = "CLSRYvr:s:";
-
-  while(ok && ((option = getopt(argc, argv, optList)) != -1))
-  {
-    switch(option)
-    {
-      case 'C':
-        mtd = ALG_MATRIX_TST_MTD_CG;
-	break;
-      case 'L':
-        mtd = ALG_MATRIX_TST_MTD_LSQR;
-	break;
-      case 'S':
-        mtd = ALG_MATRIX_TST_MTD_SV;
-	break;
-      case 'R':
-        aType = ALG_MATRIX_RECT;
-	break;
-      case 'Y':
-        aType = ALG_MATRIX_SYM;
-	break;
-      case 'r':
-        if((sscanf(optarg, "%d", &nRpt) != 1) || (nRpt < 0))
-	{
-	  ok = 0;
-	}
-	break;
-      case 's':
-        if((sscanf(optarg, "%d", &sz) != 1) || (sz < 1))
-	{
-	  ok = 0;
-	}
-	break;
-      case 'v':
-        verbose = 1;
-	break;
-      default:
-        ok = 0;
-	break;
-    }
-  }
-  if(ok)
-  {
-    if((mtd == ALG_MATRIX_TST_MTD_SV) && (aType != ALG_MATRIX_RECT))
-    {
-      ok = 0;
-      (void )fprintf(stderr,
-                     "%s: Non-rectangular matrices can be used with the\n"
-      		     "conjugate gradient method\n",
-		     argv[0]);
-    }
-  }
-  if(ok)
-  {
-    switch(aType)
-    {
-      case ALG_MATRIX_RECT:
-        (void )AlcDouble2Malloc(&a0, sz, sz);
-	break;
-      case ALG_MATRIX_SYM:
-        (void )AlcSymDouble2Malloc(&a0, sz);
-	break;
-      default:
-        break;
-    }
-    if(mtd == ALG_MATRIX_TST_MTD_SV)
-    {
-      (void )AlcDouble2Malloc(&a1, sz, sz);
-    }
-    if(verbose)
-    {
-      r0 = (double *)AlcMalloc(sz * sizeof(double));
-    }
-    (void )AlcDouble2Malloc(&w, 4, sz);
-    b0 = (double *)AlcMalloc(sz * sizeof(double));
-    b1 = (double *)AlcMalloc(sz * sizeof(double));
-    x0 = (double *)AlcMalloc(sz * sizeof(double));
-    i0 = (double *)AlcMalloc(sz * sizeof(double));
-    for(id1 = 0; id1 < sz; ++id1)
-    {
-      switch(aType)
-      {
-        case ALG_MATRIX_RECT:
-	  for(id0 = 0; id0 <= id1; ++id0)
-	  {
-	    a0[id1][id0] = a0[id0][id1] = ((id0 + id1) % 5) * 0.1;
-	  }
-	  a0[id1][id1] += 1.0;
-	  break;
-        case ALG_MATRIX_SYM:
-	  for(id0 = 0; id0 <= id1; ++id0)
-	  {
-	    a0[id1][id0] = ((id0 + id1) % 5) * 0.1;
-	  }
-	  a0[id1][id1] += 1.0;
-	  break;
-        default:
-	  break;
-      }
-      *(b0 + id1) = ((id1) % 3) * 0.1;
-      *(i0 + id1) = 1.0;
-    }
-    if(verbose != 0)
-    {
-      AlgVectorCopy(b1, b0, sz);
-      (void )fprintf(stderr, "A = [\n");
-      switch(aType)
-      {
-	case ALG_MATRIX_RECT:
-	  for(id1 = 0; id1 < sz; ++id1)
-	  {
-	    for(id0 = 0; id0 < sz; ++id0)
-	    {
-	      (void )fprintf(stderr, "%g", a0[id1][id0]);
-	      if(id0 < (sz - 1))
-	      {
-	        (void )fprintf(stderr, ", ");
-	      }
-	    }
-	    if(id1 < (sz -1))
-	    {
-	      (void )fprintf(stderr, ";\n");
-	    }
-	    else
-	    {
-	      (void )fprintf(stderr, "]\nb = [\n");
-	    }
-	  }
-	  break;
-	case ALG_MATRIX_SYM:
-	  for(id1 = 0; id1 < sz; ++id1)
-	  {
-	    for(id0 = 0; id0 <= id1; ++id0)
-	    {
-	      (void )fprintf(stderr, "%g, ", a0[id1][id0]);
-	    }
-	    if(id1 < (sz - 1))
-	    {
-	      (void )fprintf(stderr, ";\n");
-	    }
-	    else
-	    {
-	      (void )fprintf(stderr, "]\nb = [\n");
-	    }
-	  }
-	  break;
-	default:
-	  break;
-      }
-      (void )fprintf(stderr, "]\nb = [\n");
-      for(id0 = 0; id0 < sz; ++id0)
-      {
-	if(id0 < (sz - 1))
-	{
-	  (void )fprintf(stderr, "%g;\n",  b0[id0]);
-	}
-	else
-	{
-	  (void )fprintf(stderr, "%g]\n",  b0[id0]);
-	}
-      }
-    }
-    for(rpt = 0; rpt < nRpt; ++rpt)
-    {
-      long tL;
-
-      switch(mtd)
-      {
-	case ALG_MATRIX_TST_MTD_CG:
-	  del = tol;
-	  AlgVectorCopy(x0, i0, sz);
-	  errCode = AlgMatrixCGSolve(aType, (double **)a0,
-				     (double *)x0, (double *)b0,
-				     (double **)w, sz, NULL, NULL,
-				     tol, itr, &del, &itr);
-	  break;
-	case ALG_MATRIX_TST_MTD_LSQR:
-	  errCode = AlgMatrixSolveLSQR(aType, (double **)a0,
-				       sz, sz, (double *)b0, (double *)x0,
-				       1.0e-10, 1.0e-10, 1.0e-10, itr, 0,
-				       NULL, &tL, NULL, NULL, NULL,
-				       NULL, NULL);
-	  itr = tL;
-	  break;
-	case ALG_MATRIX_TST_MTD_SV:
-	  AlgVectorCopy(x0, b0, sz);
-	  AlgMatrixCopy(a1, a0, sz, sz);
-	  errCode = AlgMatrixSVSolve((double **)a1, sz, sz, x0, tol, NULL);
-	  break;
-	default:
-	  break;
-      }
-    }
-    if(verbose != 0)
-    {
-      (void )fprintf(stderr, "x = [\n");
-      for(id1 = 0; id1 < sz; ++id1)
-      {
-        (void )fprintf(stderr, "%g", *(x0 + id1));
-	if(id1 < (sz - 1))
-	{
-	  (void )fprintf(stderr, ";\n");
-	}
-	else
-	{
-	  (void )fprintf(stderr, "]\n");
-	}
-      }
-      AlgMatrixVectorMul(r0, aType, (double **)a0, x0, sz, sz);
-      AlgVectorSub(r0, r0, b1, sz);
-      (void )fprintf(stderr, "r = [\n");
-      for(id1 = 0; id1 < sz; ++id1)
-      {
-        (void )fprintf(stderr, "%g", *(r0 + id1));
-	if(id1 < (sz - 1))
-	{
-	  (void )fprintf(stderr, ";\n");
-	}
-	else
-	{
-	  (void )fprintf(stderr, "]\n");
-	}
-      }
-    }
-    else
-    {
-      for(id1 = 0; id1 < sz; ++id1)
-      {
-	(void )printf("%g\n", *(x0 + id1));
-      }
-    }
-  }
-  else
-  {
-    (void )fprintf(stderr,
-                   "Usage: %s [-C] [-S] [-R] [-Y] [-s #] [-r #] [-v]\n%s",
-		   *argv,
-		   "Test for timing solution of Ax = b using the Conjugate\n"
-		   "Gradient and Singular Value Decomposition algorithms.\n"
-                   "  -C  Use the Conjugate Gradient algorithm.\n"
-		   "  -L  Use the LSQR algorithm.\n"
-                   "  -S  Use the Singular Value Decomposition algorithm.\n"
-		   "  -R  Use a rectangular matrix.\n"
-		   "  -Y  Use a symetric matrix.\n"
-                   "  -s  matrix size.\n"
-                   "  -r  Number of repeat solutions.\n"
-		   "  -v  Verbose output (matching MATLAB) with residuals.\n");
-  }
-  exit(errCode);
-}
-#endif /* ALG_MATRIXCG_TEST_3 */

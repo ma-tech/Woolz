@@ -41,7 +41,6 @@ static char _AlgMatrixRSEigen_c[] = "MRC HGU $Id$";
 * \todo		-
 * \bug          None known.
 */
-
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -59,7 +58,7 @@ static void			AlgMatrixRSEigenSort(
 * \ingroup      AlgMatrix
 * \brief        Determines the eigenvalues and eigenvectors of a
 *		real symmetric matrix by calling AlgMatrixRSTDiag()
-*		to create a tridiagonal symetric matrix and then
+*		to create a tridiagonal symmetric matrix and then
 *		AlgMatrixTDiagQLI() to compute its eigenvalues and
 *		eigenvectors. The eigenvectors and eigenvalues 
 *		are returned in descending eigenvalue order.
@@ -70,39 +69,46 @@ static void			AlgMatrixRSEigenSort(
 *					in it's columns on return if
 *					required.
 * \param        aSz 		        Size of the array.
-* \param	vM 			Given array for the return of the
+* \param	vM 			Given vector for the return of the
 * 					eigenvalues.
 * \param	reqEV			Non zero if the eigenvectors are
 *					required.
 */
-AlgError	AlgMatrixRSEigen(double **aM, int aSz, double *vM, int reqEV)
+AlgError	AlgMatrixRSEigen(AlgMatrix aM, double *vM, int reqEV)
 {
   double	*oM = NULL;
   AlgError	errCode = ALG_ERR_NONE;
 
 
-  if((aM == NULL) || (*aM == NULL) || (aSz < 2) || (vM == NULL))
+  if((aM.core == NULL) || (aM.core->type != ALG_MATRIX_RECT) ||
+     (aM.core->nR <= 0) || (aM.core->nR != aM.core->nC) || (vM == NULL))
   {
     errCode = ALG_ERR_FUNC;
   }
-  else if((oM = (double *)AlcMalloc(sizeof(double) * aSz)) == NULL)
+  else
   {
-    errCode = ALG_ERR_MALLOC;
-  }
-  if(errCode == ALG_ERR_NONE)
-  {
-    if((errCode = AlgMatrixRSTDiag(aM, aSz, vM, oM)) == ALG_ERR_NONE)
+    if((oM = (double *)AlcMalloc(sizeof(double) * aM.core->nR)) == NULL)
     {
-      errCode = AlgMatrixTDiagQLI(vM, oM, aSz, reqEV? aM: NULL);
+      errCode = ALG_ERR_MALLOC;
     }
-  }
-  if(errCode == ALG_ERR_NONE)
-  {
-    AlgMatrixRSEigenSort(aM, vM, aSz, reqEV);
-  }
-  if(oM)
-  {
-    AlcFree(oM);
+    if(errCode == ALG_ERR_NONE)
+    {
+      if((errCode = AlgMatrixRSTDiag(aM, vM, oM)) == ALG_ERR_NONE)
+      {
+	AlgMatrix rM;
+
+	rM.core = (reqEV == 0)? NULL: aM.core;
+	errCode = AlgMatrixTDiagQLI(vM, oM, aM.core->nR, rM);
+      }
+    }
+    if(errCode == ALG_ERR_NONE)
+    {
+      AlgMatrixRSEigenSort(aM.rect->array, vM, aM.core->nR, reqEV);
+    }
+    if(oM)
+    {
+      AlcFree(oM);
+    }
   }
   return(errCode);
 }
@@ -161,123 +167,3 @@ static void	AlgMatrixRSEigenSort(double **vM, double *xM, int n, int reqEV)
     }
   }
 }
-
-#ifdef ALG_MATRIXRSEIGEN_TEST
-extern char	*optarg;
-extern int	optind,
-		opterr,
-		optopt;
-
-int		main(int argc, char *argv[])
-{
-  int		idC,
-  		idR,
-		idV,
-  		nC = 0,
-		nR = 0,
-		option,
-		ok = 1,
-		usage = 0,
-		reqEV = 1;
-  double	**aM = NULL;
-  double	*dP0,
-  		*vM = NULL;
-  static char	optList[] = "hn";
-
-  opterr = 0;
-  /* Parse command line. */
-  while(ok && ((option = getopt(argc, argv, optList)) != -1))
-  {
-    switch(option)
-    {
-      case 'n':
-        reqEV = 0;
-	break;
-      case 'h': /* FALLTHROUGH */
-      default:
-        usage = 1;
-	ok = 0;
-	break;
-    }
-  }
-  /* Read matrix from stdin. */
-  if(AlcDouble2ReadAsci(stdin, &aM, &nR, &nC) != ALC_ER_NONE)
-  {
-    ok = 0;
-    (void )fprintf(stderr, "%s: Failed to read matrix\n", *argv);
-  }
-  if(ok)
-  {
-    if(nR != nC)
-    {
-      ok = 0;
-      (void )fprintf(stderr, "%s: Input matrix is not square\n", *argv);
-    }
-    else if(nR < 2)
-    {
-      ok = 0;
-      (void )fprintf(stderr, "%s: Input matrix smaller than 2x2\n", *argv);
-    }
-  }
-  /* Create space for the eigen values. */
-  if(ok)
-  {
-    if((vM = (double *)AlcMalloc(sizeof(double) * nR)) == NULL)
-    {
-      ok = 0;
-      (void )fprintf(stderr, "%s: Failed to allocate storage.\n", *argv);
-    }
-  }
-  /* Find the eigenvalues and eigenvectors. */
-  if(ok)
-  {
-    if(AlgMatrixRSEigen(aM, nR, vM, reqEV) != ALG_ERR_NONE)
-    {
-      ok = 0;
-      (void )fprintf(stderr,
-      		     "%s: Failed to compute eigenvalues and eigenvectors.\n",
-		     *argv);
-    }
-  }
-  if(aM)
-  {
-    AlcDouble2Free(aM);
-  }
-  if(vM)
-  {
-    AlcFree(vM);
-  }
-  /* Output the eigenvalues and eigenvectors. */
-  if(ok)
-  {
-    for(idR = 0, idV = 0; idR < nR; ++idR)
-    {
-      (void )printf("%g\n", vM[idR]);
-    }
-    if(reqEV)
-    {
-      for(idR = 0, idV = 0; idR < nR; ++idR)
-      {
-	for(idC = 0; idC < nC; ++idC)
-	{
-	  (void )printf("%g ", aM[idR][idC]);
-	}
-	(void )printf("\n");
-      }
-    }
-  }
-  if(usage)
-  {
-    (void )fprintf(stderr,
-    "Usage: %s [-h] [-n]\n%s",
-    *argv,
-    "Options:\n"
-    "  -h  Show this usage message.\n"
-    "  -n  Dont compute the eigen vectors.\n"
-    "Test for AlgMatrixRSEigen(). Reads white space separated, ascii\n"
-    "encoded, floating point matrix values from the standard input and\n"
-    "then prints the matrix's eigen values followed by it's eigen vectors.\n");
-  }
-  return(!ok);
-}
-#endif /* ALG_MATRIXRSEIGEN_TEST */
