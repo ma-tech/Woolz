@@ -1400,12 +1400,18 @@ extern WlzCMeshElm3D		*WlzCMeshNextElm3D(
 /************************************************************************
 * WlzCMeshSurfMap.c                                                   *
 ************************************************************************/
-extern WlzObject		*WlzCMeshCompSurfMapConformal(
+extern WlzObject		*WlzCMeshCompSurfMap(
 				  WlzObject *inObj,
 				  int nDV,
 				  WlzDVertex3 *dV,
 				  int nSV,
 				  WlzDVertex3 *sV,
+				  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzCMeshCompSurfMapIdx(
+				  WlzCMesh2D5 *mesh,
+				  int nP,
+				  WlzDVertex3 *dPV,
+				  int *pIdx,
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzCMeshToContour(
 				  WlzObject *mObj,
@@ -1424,6 +1430,7 @@ extern WlzObject		*WlzCMeshCompSurfMapConformalIdx(
 				  int nPN,
 				  WlzDVertex3 *dPV,
 				  int *pIdx,
+				  double minA,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
