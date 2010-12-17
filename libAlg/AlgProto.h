@@ -352,224 +352,279 @@ extern int             		AlgHeapSortInvCmpIdxDFn(
 				  int id0,
 				  int id1);
 
+/* From AlgMatrix.c */
+extern void			AlgMatrixFree(
+				  AlgMatrix mat);
+extern void			AlgMatrixRectFree(
+				  AlgMatrixRect *mat);
+extern void			AlgMatrixSymFree(
+				  AlgMatrixSym *mat);
+extern void			AlgMatrixLLRFree(
+				  AlgMatrixLLR *mat);
+extern AlgMatrixLLRE		*AlgMatrixLLRENew(
+				  AlgMatrixLLR *mat);
+extern void			AlgMatrixLLREFree(
+				  AlgMatrixLLR *mat,
+				  AlgMatrixLLRE *p);
+extern AlgMatrix		AlgMatrixNew(
+				  AlgMatrixType aType,
+				  size_t nR,
+				  size_t nC,
+				  size_t nE,
+				  double tol,
+				  AlgError *dstErr);
+extern AlgMatrixRect   		*AlgMatrixRectNew(
+				  size_t nR,
+				  size_t nC,
+				  AlgError *dstErr);
+extern AlgMatrixSym   		*AlgMatrixSymNew(
+				  size_t nN,
+				  AlgError *dstErr);
+extern AlgMatrixLLR		*AlgMatrixLLRNew(
+				  size_t nR,
+				  size_t nC,
+				  size_t nE,
+				  double tol,
+				  AlgError *dstErr);
+extern AlgError			AlgMatrixLLRCopyInPlace(
+				  AlgMatrixLLR *aM,
+				  AlgMatrixLLR *bM);
+extern void            		AlgMatrixRectZero(
+				  AlgMatrixRect *mat);
+extern void            		AlgMatrixSymZero(
+				  AlgMatrixSym *mat);
+extern void            		AlgMatrixLLRZero(
+				  AlgMatrixLLR *mat);
+extern void			AlgMatrixLLRERemove(
+				  AlgMatrixLLR *mat,
+				  size_t row,
+				  size_t col);
+extern AlgError			AlgMatrixSet(
+				  AlgMatrix mat,
+                                  size_t row,
+				  size_t col,
+				  double val);
+extern AlgError			AlgMatrixLLRSet(
+				  AlgMatrixLLR *mat,
+                                  size_t row,
+				  size_t col,
+				  double val);
+extern double			AlgMatrixValue(
+				  AlgMatrix mat,
+				  size_t row,
+				  size_t col);
+extern double			AlgMatrixLLRValue(
+				  AlgMatrixLLR *mat,
+				  size_t row,
+				  size_t col);
+extern AlgError			AlgMatrixLLRExpand(
+				  AlgMatrixLLR *mat,
+				  size_t nE);
+extern AlgMatrix		AlgMatrixReadAscii(
+				  AlgMatrixType mType,
+				  double tol,
+				  FILE *fP,
+				  const char *fSep,
+				  size_t recMax,
+				  AlgError *dstErr);
+extern AlgError        		AlgMatrixWriteAscii(
+				  AlgMatrix mat,
+				  FILE *fP);
+
+
 /* From AlgMatrixGauss.c */
 extern AlgError			AlgMatrixGaussSolve(
-				  double **abMat,
-				  int aSz,
+				  AlgMatrix aMat,
 				  double *xMat);
 
 /* From AlgMatrixLSQR.c */
-extern AlgError			AlgMatrixSolveLSQR(
-				  AlgMatrixType aType,
-				   double **aM,
-				   size_t nR,
-				   size_t nC,
-				   double *bV,
-				   double *xV,
-				   double damping,
-				   double relErrA,
-				   double relErrB,
-				   long maxItr,
-				   long condLim,
-				   int *dstTerm,
-				   long *dstItr,
-				   double *dstFNorm,
-				   double *dstCondN,
-				   double *dstResNorm,
-				   double *dstResNormA,
-				   double *dstNormX);
+extern AlgError        		AlgMatrixSolveLSQR(
+				  AlgMatrix aM,
+				  double *bV,
+				  double *xV,
+				  double damping,
+				  double relErrA,
+				  double relErrB,
+				  long maxItr,
+				  long condLim,
+				  int *dstTerm,
+				  long *dstItr,
+				  double *dstFNorm,
+				  double *dstCondN,
+				  double *dstResNorm,
+				  double *dstResNormA,
+				  double *dstNormX);
+
 /* From AlgMatrixLU.c */
-extern AlgError			AlgMatrixLUSolve(
-				  double **aMat,
-				  int aSz,
-				  double *bMat,
+extern AlgError        		AlgMatrixLUSolveRaw3(
+				  double **aM,
+				  double *bV,
 				  int bSz);
-extern AlgError			AlgMatrixLUInvert(
-				  double **aMat,
+extern AlgError        		AlgMatrixLUSolveRaw4(
+				  double **aM,
+				  double *bV,
+				  int bSz);
+extern AlgError        		AlgMatrixLUSolve(
+				  AlgMatrix aM,
+				  double *bV,
+				  int bSz);
+extern AlgError        		AlgMatrixLUSolveRaw(
+				  double **aM,
+				  int aSz,
+				  double *bV,
+				  int bSz);
+extern AlgError        		AlgMatrixLUInvertRaw3(
+				  double **aM);
+extern AlgError        		AlgMatrixLUInvertRaw4(
+				  double **aM);
+extern AlgError        		AlgMatrixLUInvert(
+				  AlgMatrix aM);
+extern AlgError        		AlgMatrixLUInvertRaw(
+				  double **aM,
 				  int aSz);
-extern AlgError			AlgMatrixLUDeterm(
-				  double **aMat,
+extern AlgError        		AlgMatrixLUDetermRaw3(
+				  double **aM,
+				  double *det);
+extern AlgError        		AlgMatrixLUDetermRaw4(
+				  double **aM,
+				  double *det);
+extern AlgError        		AlgMatrixLUDeterm(
+				  AlgMatrix aM,
+				  double *det);
+extern AlgError        		AlgMatrixLUDetermRaw(
+				  double **aM,
 				  int aSz,
-				  double *determ);
-extern AlgError			AlgMatrixLUDecomp(
-				  double **aMat,
-				  int aSz,
-				  int *idxVec,
+				  double *det);
+extern AlgError        		AlgMatrixLUDecomp(
+				  AlgMatrix aM,
+				  int *iV,
 				  double *evenOdd);
-extern AlgError			AlgMatrixLUBackSub(
-				  double **aMat,
+extern AlgError        		AlgMatrixLUDecompRaw(
+				  double **aM,
 				  int aSz,
-				  int *idxVec,
-				  double *bMat);
+				  int *iV,
+				  double *evenOdd);
+extern AlgError        		AlgMatrixLUBackSub(
+				  AlgMatrix aM,
+				  int *iV,
+				  double *bV);
+extern AlgError        		AlgMatrixLUBackSubRaw(
+				  double **aM,
+				  int aSz,
+				  int *iV,
+				  double *bV);
+
 /* From AlgMatrixMath.c */
 extern void			AlgMatrixAdd(
-				  double **aM,
-				  double **bM,
-				  double **cM,
-				  size_t nR,
-				  size_t nC);
-extern void            		AlgMatrixSub(
-				  double **aM,
-				  double **bM,
-				  double **cM,
-				  size_t nR,
-				  size_t nC);
-extern void            		AlgMatrixScale(
-				  double **aM,
-				  double **bM,
-				  double sv,
-				  size_t nR,
-				  size_t nC);
-extern void			AlgMatrixVectorScale(
-				  double *aV,
-				  double *bV,
-				  double sv,
-				  size_t nV);
-extern void			AlgMatrixScaleAdd(
-				  double **aM,
-				  double **bM,
-				  double **cM,
-				  double sv,
-				  size_t nR,
-				  size_t nC);
-extern void            		AlgMatrixMul(
-				  double **aM,
-				  double **bM,
-				  double **cM,
-				  size_t bR,
-				  size_t bC,
-				  size_t cC);
+				  AlgMatrix aM,
+				  AlgMatrix bM,
+				  AlgMatrix cM);
+extern void			AlgMatrixSub(
+				  AlgMatrix aM,
+				  AlgMatrix bM,
+				  AlgMatrix cM);
+extern void 			AlgMatrixMul(
+				  AlgMatrix aM,
+				  AlgMatrix bM,
+				  AlgMatrix cM);
 extern double          		AlgMatrixTrace(
-				  double **aM,
-				  size_t nRC);
-extern void            		AlgMatrixTranspose(
-				  double **aM,
-				  double **bM,
-				  size_t bR,
-				  size_t bC);
-extern void            		AlgMatrixCopy(
-				  double **aM,
-				  double **bM,
-				  size_t nR,
-				  size_t nC);
-extern void			AlgMatrixVectorCopy(
-				  double *aV,
-				  double *bV,
-				  size_t nV);
+				  AlgMatrix aM);
+extern void 			AlgMatrixTranspose(
+				  AlgMatrix aM,
+				  AlgMatrix bM);
+extern void			AlgMatrixCopy(
+				  AlgMatrix aM,
+				  AlgMatrix bM);
+extern void 			AlgMatrixScale(
+				  AlgMatrix aM,
+				  AlgMatrix bM,
+				  double sv);
+extern void			AlgMatrixScaleAdd(
+				  AlgMatrix aM,
+				  AlgMatrix bM,
+				  AlgMatrix cM,
+                                  double sv);
 extern void			AlgMatrixScalar(
-				  double **aM,
-				  double sv,
-				  size_t nRC);
-extern void			AlgMatrixZero(
-				  double **aM,
-				  size_t nR,
-				  size_t nC);
-extern void			AlgMatrixVectorZero(
-				  double *aV,
-				  size_t nV);
+				  AlgMatrix aM,
+				  double sv);
 extern void			AlgMatrixVectorMul(
 				  double *aV,
-				  AlgMatrixType bType,
-				  double **bM,
-				  double *cV,
-				  size_t nR,
-				  size_t nC);
+				  AlgMatrix bM,
+				  double *cV);
 extern void			AlgMatrixVectorMulAdd(
 				  double *aV,
-				  AlgMatrixType bType,
-				  double **bM,
+				  AlgMatrix bM,
 				  double *cV,
-				  double *dV,
-				  size_t nR,
-				  size_t nC);
-extern void			AlgMatrixVectorMulWAdd(
+				  double *dV);
+extern void 			AlgMatrixVectorMulWAdd(
 				  double *aV,
-				  AlgMatrixType bType,
-				  double **bM,
+				  AlgMatrix bM,
 				  double *cV,
 				  double *dV,
-				  size_t nR,
-				  size_t nC,
 				  double s,
 				  double t);
-extern void			AlgMatrixTVectorMul(
+extern void 			AlgMatrixTVectorMul(
 				  double *aV,
-                                  AlgMatrixType bType,
-				  double **bM,
-				  double *cV,
-				  size_t nR,
-				  size_t nC);
+				  AlgMatrix bM,
+				  double *cV);
 extern void			AlgMatrixTVectorMulAdd(
 				  double *aV,
-                                  AlgMatrixType bType,
-				  double **bM,
+				  AlgMatrix bM,
 				  double *cV,
-				  double *dV,
-				  size_t nR,
-				  size_t nC);
-extern double          		AlgMatrixVectorNorm(
-				  double *aV,
-				  size_t nV);
+				  double *dV);
+extern void			AlgMatrixZero(
+				  AlgMatrix mat);
 
 /* From AlgMatrixCG.c */
 extern AlgError			AlgMatrixCGSolve(
-				  AlgMatrixType aType,
-				  double **aM,
-				  double *xV,
+				  AlgMatrix aM,
+                                  double *xV, 
 				  double *bV,
-				  double **wM,
-				  size_t n,
-				  void (*pFn)(void *,
-				              double **, 
-				  	      double *,
-					      double *,
-					      size_t),
-				  void *pDat,
+                                  AlgMatrix wM,
+                                  void (*pFn)(void *,
+				              AlgMatrix,
+                                              double *,
+					      double *),
+                                  void *pDat,
 				  double tol,
 				  int maxItr,
-				  double *dstTol,
+                                  double *dstTol,
 				  int *dstItr);
 
 /* From AlgMatrixRSEigen.c */
-extern AlgError			AlgMatrixRSEigen(
-				  double **aM,
-				  int aSz,
+extern AlgError        		AlgMatrixRSEigen(
+				  AlgMatrix aM,
 				  double *vM,
 				  int reqEV);
 
 /* From AlgMatrixRSTDiag.c */
 extern AlgError			AlgMatrixRSTDiag(
-				  double **aM,
-				  int aSz,
-				  double *dM,
-				  double *oM);
+				  AlgMatrix aMat,
+				  double *dVec,
+				  double *oVec);
 
 /* From AlgMatrixSV.c */
 extern AlgError			AlgMatrixSVSolve(
-				  double **aMat,
-				  int nM,
-				  int nN,
-				  double *bMat,
+				  AlgMatrix aMat,
+				  double *bVec,
 				  double tol,
 				  int *dstIC);
-extern AlgError			AlgMatrixSVDecomp(double **aMat,
-				  int nM,
-				  int nN,
-				  double *wMat,
-				  double **vMat);
-extern AlgError			AlgMatrixSVBackSub(double **uMat,
-				  int nM,
-				  int nN,
-				  double *wMat,
-				  double **vMat,
-				  double *bMat);
+extern AlgError			AlgMatrixSVDecomp(
+				  AlgMatrix aMat,
+				  double *wVec,
+				  AlgMatrix vMat);
+extern AlgError			AlgMatrixSVBackSub(
+				  AlgMatrix uMat,
+				  double *wVec,
+				  AlgMatrix vMat,
+				  double *bVec);
 
 /* From AlgMatrixTDiagQLI.c */
 extern AlgError			AlgMatrixTDiagQLI(
 				  double *dM,
 				  double *oM,
 				  int aSz,
-				  double **zM);
+				  AlgMatrix zM);
 
 /* From AlgMixture.c */
 AlgError			AlgMixtureMLG(
@@ -691,6 +746,9 @@ extern void            		AlgVectorAdd(
 				  double *bV,
 				  double *cV,
 				  size_t n);
+extern void 			AlgVectorZero(
+				  double *aV,
+				  size_t n);
 extern void            		AlgVectorSub(
 				  double *aV,
 				  double *bV,
@@ -699,6 +757,11 @@ extern void            		AlgVectorSub(
 extern void            		AlgVectorCopy(
 				  double *aV,
 				  double *bV,
+				  size_t n);
+extern void            		AlgVectorScale(
+				  double *aV,
+				  double *bV,
+				  double s,
 				  size_t n);
 extern void            		AlgVectorScaleAdd(
 				  double *aV,
