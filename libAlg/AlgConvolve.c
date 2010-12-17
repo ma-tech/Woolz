@@ -191,30 +191,3 @@ AlgError	AlgConvolve(int sizeArrayCnv, double *arrayCnv,
   return(errCode);
 }
 
-#ifdef ALGCONVOLVE_TEST0
-int		main(int argc, char *argv[])
-{
-  int		idx;
-  AlgPadType 	pad  = ALG_PAD_NONE;
-  AlgError	errCode = ALG_ERR_NONE;
-  static double	dat[25],
-  		krn[5] = {0.50, 0.87, 1.00, 0.87, 0.50},
-		cnv[25];
-  const int	datSz = 25,
-		krnSz = 5,
-		cnvSz = 25;
-
-  for(idx = 0; idx < krnSz; ++idx)
-  {
-    krn[idx] /= 3.74;
-  }
-  for(idx = 0; idx < datSz; ++idx)
-  {
-    dat[idx] = 1.0;
-  }
-  dat[0] = 2.0;
-  dat[13] = 2.0;
-  dat[24] = 2.0;
-  errCode = AlgConvolve(25, cnv, 5, krn, 25, dat, pad);
-}
-#endif /* ALGCONVOLVE_TEST0 */
