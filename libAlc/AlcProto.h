@@ -602,12 +602,23 @@ extern void			*AlcVectorToArray1D(
 				  size_t fIdx,
 				  size_t lIdx,
 				  AlcErrno *dstErr);
-void				**AlcVectorToArray2D(
+extern void			**AlcVectorToArray2D(
 				  AlcVector *vec,
-				  size_t fIdx,
-				  size_t lIdx,
 				  size_t nR,
 				  size_t nC,
+				  AlcErrno *dstErr);
+extern AlcVector		*AlcVecReadDouble1Asci(
+				  FILE *fP,
+				  const char *fSep,
+				  size_t recMax,
+				  size_t *dstNV,
+				  AlcErrno *dstErr);
+extern AlcVector		*AlcVecReadDouble2Asci(
+				  FILE *fP,
+				  const char *fSep,
+				  size_t recMax,
+                                  size_t *dstNR,
+				  size_t *dstNC,
 				  AlcErrno *dstErr);
 #ifdef __cplusplus
 }
