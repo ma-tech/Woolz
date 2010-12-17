@@ -4901,49 +4901,52 @@ static int 	WlzGeomTriTri3DCoplanar(WlzDVertex3 n,
 * 					value(s), must not be NULL. If nC == 2
 * 					then the values atr Gaussian followed
 * 					by mean curvature.
-* \param	n			Normal at the first vertex.
+* \param	nrm			Normal at the first vertex.
 * \param	nV			Number of vertices, must be >= 3.
-* \param	v			Array of vertex positions, the first of
+* \param	vtx			Array of vertex positions, the first of
 * 					which must be the vertex at which the
 * 					curvature is to be computed. The
 * 					array contents are modified by this
 * 					function. Must not be NULL.
 */
-WlzErrorNum	WlzGeomCurvature(int nC, double *dstC, WlzDVertex3 n,
-                                 int nV, WlzDVertex3 *v)
+WlzErrorNum	WlzGeomCurvature(int nC, double *dstC, WlzDVertex3 nrm,
+                                 int nV, WlzDVertex3 *vtx)
 {
   int		idV;
   double	det,
   		len;
-  double	*vecB= NULL;
-  double	**matA = NULL;
+  double	*bV= NULL;
+  double	**aA;
+  AlgMatrix	aM;
   WlzDVertex3   t;
   WlzDVertex3   b[3],
   		r[3];
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
+  aM.core = NULL;
   if((nV < 3) || (nC < 1) || (nC > 2) ||
-     ((len = WLZ_VTX_3_LENGTH(n)) < ALG_DBL_TOLLERANCE))
+     ((len = WLZ_VTX_3_LENGTH(nrm)) < ALG_DBL_TOLLERANCE))
   {
     errNum = WLZ_ERR_PARAM_DATA;
   }
-  else if(((vecB = (double *)AlcMalloc(sizeof(double) * nV)) == NULL) ||
-	  (AlcDouble2Malloc(&matA, nV, 3) != ALC_ER_NONE))
+  else if(((bV = (double *)AlcMalloc(sizeof(double) * nV)) == NULL) ||
+	  ((aM.rect = AlgMatrixRectNew(nV, 3, NULL)) == NULL))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
   else
   {
-    /* Make b[2] = n  / |n|. */
+    aA = aM.rect->array;
+    /* Make b[2] = nrm  / |nrm|. */
     len = 1.0 / len;
-    WLZ_VTX_3_SCALE(b[2], n, len);
-    /* Shift st v[0] is at the origin. */
+    WLZ_VTX_3_SCALE(b[2], nrm, len);
+    /* Shift st vtx[0] is at the origin. */
     for(idV = 1; idV < nV; ++idV)
     {
-      WLZ_VTX_3_SUB(v[idV], v[idV], v[0]);
+      WLZ_VTX_3_SUB(vtx[idV], vtx[idV], vtx[0]);
     }
     /* Find a unit vector b[0] that is perpendicular to b[2]. */
-    WLZ_VTX_3_SET(b[1], fabs(n.vtX), fabs(n.vtY), fabs(n.vtZ));
+    WLZ_VTX_3_SET(b[1], fabs(nrm.vtX), fabs(nrm.vtY), fabs(nrm.vtZ));
     if(b[1].vtX < b[1].vtY)
     {
       if(b[1].vtX < b[1].vtZ)
@@ -4993,29 +4996,28 @@ WlzErrorNum	WlzGeomCurvature(int nC, double *dstC, WlzDVertex3 n,
     /* Rotate the shifted vertices about the first using the rotation
      * matrix r and fill in the matrices ready to compute the least squares
      * estimate of the parameters a,b,c in z = ax^2 + bxy + cy^2. */
-    matA[0][0] = 0.0;
-    matA[0][1] = 0.0;
-    matA[0][2] = 0.0;
-    vecB[0] = 0.0;
+    aA[0][0] = 0.0;
+    aA[0][1] = 0.0;
+    aA[0][2] = 0.0;
+    bV[0] = 0.0;
     for(idV = 1; idV < nV; ++idV)
     {
-      t.vtX = WLZ_VTX_3_DOT(v[idV], r[0]);
-      t.vtY = WLZ_VTX_3_DOT(v[idV], r[1]);
-      t.vtZ = WLZ_VTX_3_DOT(v[idV], r[2]);
-      matA[idV][0] = t.vtX * t.vtX;
-      matA[idV][1] = t.vtX * t.vtY;
-      matA[idV][2] = t.vtY * t.vtY;
-      vecB[idV] = t.vtZ;
+      t.vtX = WLZ_VTX_3_DOT(vtx[idV], r[0]);
+      t.vtY = WLZ_VTX_3_DOT(vtx[idV], r[1]);
+      t.vtZ = WLZ_VTX_3_DOT(vtx[idV], r[2]);
+      aA[idV][0] = t.vtX * t.vtX;
+      aA[idV][1] = t.vtX * t.vtY;
+      aA[idV][2] = t.vtY * t.vtY;
+      bV[idV] = t.vtZ;
     }
     /* Solve for a, b, c ie matrix x. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVSolve(matA, nV, 3, vecB, 1.0e-06,
-                                              NULL));
+    errNum = WlzErrorFromAlg(AlgMatrixSVSolve(aM, bV, 1.0e-06, NULL));
   }
   /* Compute the curmatures values, Gaussian = 4ac - b^2, mean = a + c. */
-  dstC[0] = 4.0 * vecB[0] * vecB[2] - vecB[1] * vecB[1];
-  dstC[1] = vecB[0] + vecB[2];
+  dstC[0] = 4.0 * bV[0] * bV[2] - bV[1] * bV[1];
+  dstC[1] = bV[0] + bV[2];
   /* Free allocated storage. */
-  AlcFree(vecB);
-  (void )Alc2Free((void **)matA);
+  AlcFree(bV);
+  AlgMatrixFree(aM);
   return(errNum);
 }

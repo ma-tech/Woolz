@@ -48,8 +48,7 @@ static char _WlzAffineTransformLSq_c[] = "MRC HGU $Id$";
 
 
 static WlzErrorNum 		WlzAffineTransformLSqLinSysSolve(
-				  double **aM,
-				  int nN,
+				  AlgMatrix aM,
 				  double *bV,
 				  double tol);
 
@@ -546,13 +545,17 @@ WlzAffineTransform *WlzAffineTransformLSqGen2D(WlzDVertex2 *vT,
 {
   int		idx;
   double	wSq;
-  double	**aM = NULL,
-		**trM = NULL;
+  double	**aA,
+		**trA;
   double	bV[4],
   		sums[12];
+  AlgMatrix	aM,
+  		trM;
   WlzAffineTransform *tr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  aM.core = NULL;
+  trM.core = NULL;
   if(nV <= 0)
   {
     errNum = WLZ_ERR_PARAM_DATA; 
@@ -607,42 +610,44 @@ WlzAffineTransform *WlzAffineTransformLSqGen2D(WlzDVertex2 *vT,
       }
     }
     /* Allocate workspace */
-    if((AlcDouble2Malloc(&aM, 3, 3) != ALC_ER_NONE) ||
-	(AlcDouble2Malloc(&trM, 4, 4) != ALC_ER_NONE))
+    if(((aM.rect = AlgMatrixRectNew(3, 3, NULL)) == NULL) ||
+       ((trM.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
+    trA = trM.rect->array;
     /* Determine the least square transformation matrix values */
     /* x parameters first */
-    aM[0][0] = sums[0];  aM[0][1] = sums[1];  aM[0][2] = sums[2];
-    aM[1][0]  = sums[1];  aM[1][1] = sums[3];  aM[1][2] = sums[4];
-    aM[2][0]  = sums[2];  aM[2][1] = sums[4];  aM[2][2] = sums[5];
+    aA[0][0] = sums[0];  aA[0][1] = sums[1];  aA[0][2] = sums[2];
+    aA[1][0]  = sums[1];  aA[1][1] = sums[3];  aA[1][2] = sums[4];
+    aA[2][0]  = sums[2];  aA[2][1] = sums[4];  aA[2][2] = sums[5];
     bV[0] = sums[6];     bV[1] = sums[7];     bV[2] = sums[8];
-    errNum = WlzAffineTransformLSqLinSysSolve(aM, 3, bV, 0.000001);
-    trM[0][0] = bV[0]; trM[0][1] = bV[1]; trM[0][2] = bV[2];
+    errNum = WlzAffineTransformLSqLinSysSolve(aM, bV, 0.000001);
+    trA[0][0] = bV[0]; trA[0][1] = bV[1]; trA[0][2] = bV[2];
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Now y parameters */
-    aM[0][0] = sums[0];  aM[0][1] = sums[1];  aM[0][2] = sums[2];
-    aM[1][0] = sums[1];  aM[1][1] = sums[3];  aM[1][2] = sums[4];
-    aM[2][0] = sums[2];  aM[2][1] = sums[4];  aM[2][2] = sums[5];
+    aA[0][0] = sums[0];  aA[0][1] = sums[1];  aA[0][2] = sums[2];
+    aA[1][0] = sums[1];  aA[1][1] = sums[3];  aA[1][2] = sums[4];
+    aA[2][0] = sums[2];  aA[2][1] = sums[4];  aA[2][2] = sums[5];
     bV[0] = sums[9];     bV[1] = sums[10];    bV[2] = sums[11];
-    errNum = WlzAffineTransformLSqLinSysSolve(aM, 3, bV, 0.000001);
-    trM[1][0] = bV[0]; trM[1][1] = bV[1]; trM[1][2] = bV[2];
+    errNum = WlzAffineTransformLSqLinSysSolve(aM, bV, 0.000001);
+    trA[1][0] = bV[0]; trA[1][1] = bV[1]; trA[1][2] = bV[2];
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Make the transform */
-    trM[2][0] = 0; trM[2][1] = 0; trM[2][2] = 1;
-    tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, trM,
+    trA[2][0] = 0; trA[2][1] = 0; trA[2][2] = 1;
+    tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, trA,
 				      &errNum);
   }
-  (void )AlcDouble2Free(aM);
-  (void )AlcDouble2Free(trM);
+  AlgMatrixFree(aM);
+  AlgMatrixFree(trM);
   if(dstErr)
   {
     *dstErr = errNum;
@@ -739,14 +744,18 @@ WlzAffineTransform *WlzAffineTransformLSqGen3D(WlzDVertex3 *vT,
 {
   int		idx;
   double	wSq;
-  double	**aM = NULL,
-		**trM = NULL;
+  double	**aA,
+		**trA;
   double	bV[4],
   		sums[22];
-  const double	eps = 0.000000001;
+  AlgMatrix	aM,
+  		trM;
   WlzAffineTransform *tr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	eps = 0.000000001;
 
+  aM.core = NULL;
+  trM.core = NULL;
   if(nV <= 0)
   {
     errNum = WLZ_ERR_PARAM_DATA; 
@@ -822,73 +831,75 @@ WlzAffineTransform *WlzAffineTransformLSqGen3D(WlzDVertex3 *vT,
       }
     }
     /* Allocate workspace */
-    if((AlcDouble2Malloc(&aM, 4, 4) != ALC_ER_NONE) ||
-	(AlcDouble2Malloc(&trM, 4, 4) != ALC_ER_NONE))
+    if(((aM.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL) ||
+       ((trM.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
+    trA = trM.rect->array;
     /* Determine the least square transformation matrix values */
     /* x parameters first */
-    aM[0][0] = sums[0];  aM[0][1] = sums[1];
-    aM[0][2] = sums[2];  aM[0][3] = sums[3];
-    aM[1][0] = sums[1];  aM[1][1] = sums[4];
-    aM[1][2] = sums[5];  aM[1][3] = sums[6];
-    aM[2][0] = sums[2];  aM[2][1] = sums[5];
-    aM[2][2] = sums[7];  aM[2][3] = sums[8];
-    aM[3][0] = sums[3];  aM[3][1] = sums[6];
-    aM[3][2] = sums[8];  aM[3][3] = sums[9];
+    aA[0][0] = sums[0];  aA[0][1] = sums[1];
+    aA[0][2] = sums[2];  aA[0][3] = sums[3];
+    aA[1][0] = sums[1];  aA[1][1] = sums[4];
+    aA[1][2] = sums[5];  aA[1][3] = sums[6];
+    aA[2][0] = sums[2];  aA[2][1] = sums[5];
+    aA[2][2] = sums[7];  aA[2][3] = sums[8];
+    aA[3][0] = sums[3];  aA[3][1] = sums[6];
+    aA[3][2] = sums[8];  aA[3][3] = sums[9];
     bV[0] =    sums[10]; bV[1] = sums[11];
     bV[2] =    sums[12]; bV[3] = sums[13];
-    errNum = WlzAffineTransformLSqLinSysSolve(aM, 4, bV, eps);
-    trM[0][0] = bV[0]; trM[0][1] = bV[1];
-    trM[0][2] = bV[2]; trM[0][3] = bV[3];
+    errNum = WlzAffineTransformLSqLinSysSolve(aM, bV, eps);
+    trA[0][0] = bV[0]; trA[0][1] = bV[1];
+    trA[0][2] = bV[2]; trA[0][3] = bV[3];
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Now y parameters */
-    aM[0][0] = sums[0];  aM[0][1] = sums[1];
-    aM[0][2] = sums[2];  aM[0][3] = sums[3];
-    aM[1][0] = sums[1];  aM[1][1] = sums[4];
-    aM[1][2] = sums[5];  aM[1][3] = sums[6];
-    aM[2][0] = sums[2];  aM[2][1] = sums[5];
-    aM[2][2] = sums[7];  aM[2][3] = sums[8];
-    aM[3][0] = sums[3];  aM[3][1] = sums[6];
-    aM[3][2] = sums[8];  aM[3][3] = sums[9];
+    aA[0][0] = sums[0];  aA[0][1] = sums[1];
+    aA[0][2] = sums[2];  aA[0][3] = sums[3];
+    aA[1][0] = sums[1];  aA[1][1] = sums[4];
+    aA[1][2] = sums[5];  aA[1][3] = sums[6];
+    aA[2][0] = sums[2];  aA[2][1] = sums[5];
+    aA[2][2] = sums[7];  aA[2][3] = sums[8];
+    aA[3][0] = sums[3];  aA[3][1] = sums[6];
+    aA[3][2] = sums[8];  aA[3][3] = sums[9];
     bV[0] =    sums[14]; bV[1] = sums[15];
     bV[2] =    sums[16]; bV[3] = sums[17];
-    errNum = WlzAffineTransformLSqLinSysSolve(aM, 4, bV, eps);
-    trM[1][0] = bV[0]; trM[1][1] = bV[1];
-    trM[1][2] = bV[2]; trM[1][3] = bV[3];
+    errNum = WlzAffineTransformLSqLinSysSolve(aM, bV, eps);
+    trA[1][0] = bV[0]; trA[1][1] = bV[1];
+    trA[1][2] = bV[2]; trA[1][3] = bV[3];
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Finaly z parameters */
-    aM[0][0] = sums[0];  aM[0][1] = sums[1];
-    aM[0][2] = sums[2];  aM[0][3] = sums[3];
-    aM[1][0] = sums[1];  aM[1][1] = sums[4];
-    aM[1][2] = sums[5];  aM[1][3] = sums[6];
-    aM[2][0] = sums[2];  aM[2][1] = sums[5];
-    aM[2][2] = sums[7];  aM[2][3] = sums[8];
-    aM[3][0] = sums[3];  aM[3][1] = sums[6];
-    aM[3][2] = sums[8];  aM[3][3] = sums[9];
+    aA[0][0] = sums[0];  aA[0][1] = sums[1];
+    aA[0][2] = sums[2];  aA[0][3] = sums[3];
+    aA[1][0] = sums[1];  aA[1][1] = sums[4];
+    aA[1][2] = sums[5];  aA[1][3] = sums[6];
+    aA[2][0] = sums[2];  aA[2][1] = sums[5];
+    aA[2][2] = sums[7];  aA[2][3] = sums[8];
+    aA[3][0] = sums[3];  aA[3][1] = sums[6];
+    aA[3][2] = sums[8];  aA[3][3] = sums[9];
     bV[0] =    sums[18]; bV[1] = sums[19];
     bV[2] =    sums[20]; bV[3] = sums[21];
-    errNum = WlzAffineTransformLSqLinSysSolve(aM, 4, bV, eps);
-    trM[2][0] = bV[0]; trM[2][1] = bV[1];
-    trM[2][2] = bV[2]; trM[2][3] = bV[3];
+    errNum = WlzAffineTransformLSqLinSysSolve(aM, bV, eps);
+    trA[2][0] = bV[0]; trA[2][1] = bV[1];
+    trA[2][2] = bV[2]; trA[2][3] = bV[3];
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Make the transform */
-    trM[3][0] = 0; trM[3][1] = 0; trM[3][2] = 0; trM[3][3] = 1;
-    tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE, trM,
+    trA[3][0] = 0; trA[3][1] = 0; trA[3][2] = 0; trA[3][3] = 1;
+    tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE, trA,
 				      &errNum);
   }
-  (void )AlcDouble2Free(aM);
-  (void )AlcDouble2Free(trM);
+  AlgMatrixFree(aM);
+  AlgMatrixFree(trM);
   if(dstErr)
   {
     *dstErr = errNum;
@@ -944,23 +955,28 @@ WlzAffineTransform *WlzAffineTransformLSqReg2D(WlzDVertex2 *vT,
   		cen1,
 		rel0,
 		rel1;
-  double	wM[2];
-  double	**hM = NULL,
-  		**vM = NULL,
-		**trM = NULL;
+  double	wV[2];
+  double	**hA,
+		**vA,
+  		**trA = NULL;
+  AlgMatrix	hM,
+  		vM;
   WlzAffineTransform *tr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const double	tol = 1.0E-06;
 
-  wM[0] = wM[1] = 0.0;
-  if((AlcDouble2Calloc(&hM, 2, 2) !=  ALC_ER_NONE) ||
-     (AlcDouble2Malloc(&vM, 2, 2) !=  ALC_ER_NONE) ||
-     (AlcDouble2Malloc(&trM, 4, 4) !=  ALC_ER_NONE))
+  wV[0] = wV[1] = 0.0;
+  hM.core = vM.core = NULL;
+  if(((hM.rect = AlgMatrixRectNew(2, 2, NULL)) == NULL) ||
+     ((vM.rect = AlgMatrixRectNew(2, 2, NULL)) == NULL) ||
+     (AlcDouble2Malloc(&trA, 4, 4) !=  ALC_ER_NONE))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    hA = hM.rect->array;
+    vA = vM.rect->array;
     /* Compute weighted centroids (cen0 and cen1) and a mean of squares of
      * distance * between the weighted vertices. */
     if(vW)
@@ -1021,46 +1037,46 @@ WlzAffineTransform *WlzAffineTransformLSqReg2D(WlzDVertex2 *vT,
 	}
 	WLZ_VTX_2_SUB(rel0, p0, cen0);
 	WLZ_VTX_2_SUB(rel1, p1, cen1);
-	hM[0][0] += rel0.vtX * rel1.vtX;
-	hM[0][1] += rel0.vtX * rel1.vtY;
-	hM[1][0] += rel0.vtY * rel1.vtX;
-	hM[1][1] += rel0.vtY * rel1.vtY;
+	hA[0][0] += rel0.vtX * rel1.vtX;
+	hA[0][1] += rel0.vtX * rel1.vtY;
+	hA[1][0] += rel0.vtY * rel1.vtX;
+	hA[1][1] += rel0.vtY * rel1.vtY;
       }
-      /* Compute the SVD of the 2x2 matrix, hM = hM.wM.vM. */
-      errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(hM, 2, 2, wM, vM));
+      /* Compute the SVD of the 2x2 matrix, hM = hM.wV.vM. */
+      errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(hM, wV, vM));
       if(errNum == WLZ_ERR_NONE)
       {
-	/* Compute 2x2 rotation matrix trM = vM'.hM, where vM' is the
+	/* Compute 2x2 rotation matrix trA = vM'.hM, where vM' is the
 	 * transpose of vM. */
-	trM[0][0] = (vM[0][0] * hM[0][0]) + (vM[0][1] * hM[0][1]);
-	trM[0][1] = (vM[1][0] * hM[0][0]) + (vM[1][1] * hM[0][1]);
-	trM[1][0] = (vM[0][0] * hM[1][0]) + (vM[0][1] * hM[1][1]);
-	trM[1][1] = (vM[1][0] * hM[1][0]) + (vM[1][1] * hM[1][1]);
+	trA[0][0] = (vA[0][0] * hA[0][0]) + (vA[0][1] * hA[0][1]);
+	trA[0][1] = (vA[1][0] * hA[0][0]) + (vA[1][1] * hA[0][1]);
+	trA[1][0] = (vA[0][0] * hA[1][0]) + (vA[0][1] * hA[1][1]);
+	trA[1][1] = (vA[1][0] * hA[1][0]) + (vA[1][1] * hA[1][1]);
 	/* Test for degeneracy using the determinant of the rotation matrix. */
-	tD0 = (trM[0][0] * trM[1][1]) - (trM[0][1] * trM[1][0]);
+	tD0 = (trA[0][0] * trA[1][1]) - (trA[0][1] * trA[1][0]);
 	if(tD0 < 0.0)
 	{
 	  /* Are source vertices (rel0) colinear? They are iff one of the 2
-	   * singular values of hM in wM is zero. If the source vertices
+	   * singular values of hM in wV is zero. If the source vertices
 	   * are not coplanar, the the solution of the SVD is correct. */
-	  tI0 = (fabs(*(wM + 0)) >= DBL_EPSILON) |
-		((fabs(*(wM + 1)) >= DBL_EPSILON) << 1);
+	  tI0 = (fabs(*(wV + 0)) >= DBL_EPSILON) |
+		((fabs(*(wV + 1)) >= DBL_EPSILON) << 1);
 	  if(tI0)
 	  {
 	    /* Source vertices are colinear and there exists an infinity of
 	     * solutions. But select the identity rotation matrix */
-	    trM[0][0] = trM[1][1] = trM[2][2] = 1.0;
-	    trM[0][1] = trM[0][2] =
-	    trM[1][0] = trM[1][2] =
-	    trM[2][0] = trM[2][1] = 0.0;
+	    trA[0][0] = trA[1][1] = trA[2][2] = 1.0;
+	    trA[0][1] = trA[0][2] =
+	    trA[1][0] = trA[1][2] =
+	    trA[2][0] = trA[2][1] = 0.0;
 	  }
 	}
       }
       if(errNum == WLZ_ERR_NONE)
       {
 	/* Fill in other matrix elements. */
-	trM[2][0] = trM[2][1] = 0.0;
-	trM[2][2] = 1.0;
+	trA[2][0] = trA[2][1] = 0.0;
+	trA[2][2] = 1.0;
 	/* Compute the translation by applying the rotation to the source
 	 * tie points before computing the translation \f$\mathbf{T}\f$
 	 * using:
@@ -1075,17 +1091,17 @@ WlzAffineTransform *WlzAffineTransformLSqReg2D(WlzDVertex2 *vT,
 	 * target vertices, \f$\mathbf{p}_i\f$ are the source vertices
 	 and \f$\mathbf{R}\f$ is the rotation matrix.
 	 */
-        trM[0][2] = cen0.vtX - (cen1.vtX * trM[0][0] + cen1.vtY * trM[0][1]);
-        trM[1][2] = cen0.vtY - (cen1.vtX * trM[1][0] + cen1.vtY * trM[1][1]);
+        trA[0][2] = cen0.vtX - (cen1.vtX * trA[0][0] + cen1.vtY * trA[0][1]);
+        trA[1][2] = cen0.vtY - (cen1.vtX * trA[1][0] + cen1.vtY * trA[1][1]);
 	/* Build affine transform. */
-	tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, trM,
+	tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, trA,
 	    				  &errNum);
       }
     }
   }
-  (void )AlcDouble2Free(hM);
-  (void )AlcDouble2Free(vM);
-  (void )AlcDouble2Free(trM);
+  AlgMatrixFree(hM);
+  AlgMatrixFree(vM);
+  (void )AlcDouble2Free(trA);
   if(dstErr)
   {
     *dstErr = errNum;
@@ -1094,26 +1110,23 @@ WlzAffineTransform *WlzAffineTransformLSqReg2D(WlzDVertex2 *vT,
 }
 
 
-/* function:     WlzAffineTransformLSqScale2D    */
 /*! 
+* \return       Affine transform or NULL on error.
 * \ingroup      WlzTransform
 * \brief        Computes the 2D transform to rescale the source vertices.
-The assumption is that the source vertices have a different "spread" to the
-target and this re-scaling transform can be used in conjunction with the
-rigid-body (registration) tansform to determine a re-scaled shape-preserving
-transform i.e. no-shear. It is called by WlzAffineTransformLSq2D when
-transform type WLZ_TRANSFORM_2D_NOSHEAR is requested.
-The algorithm compares the mean distance from the centroid of each set of 
-vertices.
-*
-* \return       wlz affine transform
-* \param    vT	target vertices
-* \param    vS	source vertices
-* \param    vW	vertex weights
-* \param    nVtx	number of vertices
-* \param    dstErr	error return
-* \par      Source:
-*                WlzAffineTransformLSq.c
+* 		The assumption is that the source vertices have a different
+* 		"spread" to the target and this re-scaling transform can be
+* 		used in conjunction with the rigid-body (registration)
+* 		tansform to determine a re-scaled shape-preserving transform
+* 		i.e. no-shear. It is called by WlzAffineTransformLSq2D when
+* 		transform type WLZ_TRANSFORM_2D_NOSHEAR is requested. The
+* 		algorithm compares the mean distance from the centroid of
+* 		each set of vertices.
+* \param    	vT			Target vertices
+* \param    	vS			Source vertices
+* \param    	vW			Vertex weights
+* \param    	nVtx			Number of vertices
+* \param    	dstErr			Destination error pointer, may be NULL.
 */
 WlzAffineTransform *WlzAffineTransformLSqScale2D(WlzDVertex2 *vT,
 		    		WlzDVertex2 *vS, double *vW, int nVtx,
@@ -1161,7 +1174,6 @@ WlzAffineTransform *WlzAffineTransformLSqScale2D(WlzDVertex2 *vT,
   tD0 = 1.0 / nVtx;
   WLZ_VTX_2_SCALE(cen0, cen0, tD0);
   WLZ_VTX_2_SCALE(cen1, cen1, tD0);
-
   /* Compute the sum of weighted distances from each centroid 
    * dist0 and dist1. */
   dist0 = 0.0;
@@ -1258,23 +1270,28 @@ WlzAffineTransform  *WlzAffineTransformLSqReg3D(WlzDVertex3 *vT,
   		cen1,
 		rel0,
 		rel1;
-  double	*wM = NULL;
-  double	**hM = NULL,
-  		**vM = NULL,
-		**trM = NULL;
+  double	*wV = NULL;
+  double	**hA,
+		**vA,
+  		**trM = NULL;
+  AlgMatrix	hM,
+  		vM;
   WlzAffineTransform *tr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const double	tol = 1.0E-06;
 
-  if(((wM = (double *)AlcCalloc(sizeof(double), 3)) == NULL) ||
-     (AlcDouble2Calloc(&hM, 3, 3) !=  ALC_ER_NONE) ||
-     (AlcDouble2Malloc(&vM, 3, 3) !=  ALC_ER_NONE) ||
+  hM.core = vM.core = NULL;
+  if(((hM.rect = AlgMatrixRectNew(3, 3, NULL)) == NULL) ||
+     ((vM.rect = AlgMatrixRectNew(3, 3, NULL)) == NULL) ||
+     ((wV = (double *)AlcCalloc(sizeof(double), 3)) == NULL) ||
      (AlcDouble2Malloc(&trM, 4, 4) !=  ALC_ER_NONE))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    hA = hM.rect->array;
+    vA = vM.rect->array;
     /* Compute weighted centroids (cen0 and cen1) and a mean of squares of
      * distance * between the weighted vertices. */
     if(vW)
@@ -1335,40 +1352,40 @@ WlzAffineTransform  *WlzAffineTransformLSqReg3D(WlzDVertex3 *vT,
 	}
 	WLZ_VTX_3_SUB(rel0, p0, cen0);
 	WLZ_VTX_3_SUB(rel1, p1, cen1);
-	hM[0][0] += rel0.vtX * rel1.vtX;
-	hM[0][1] += rel0.vtX * rel1.vtY;
-	hM[0][2] += rel0.vtX * rel1.vtZ;
-	hM[1][0] += rel0.vtY * rel1.vtX;
-	hM[1][1] += rel0.vtY * rel1.vtY;
-	hM[1][2] += rel0.vtY * rel1.vtZ;
-	hM[2][0] += rel0.vtZ * rel1.vtX;
-	hM[2][1] += rel0.vtZ * rel1.vtY;
-	hM[2][2] += rel0.vtZ * rel1.vtZ;
+	hA[0][0] += rel0.vtX * rel1.vtX;
+	hA[0][1] += rel0.vtX * rel1.vtY;
+	hA[0][2] += rel0.vtX * rel1.vtZ;
+	hA[1][0] += rel0.vtY * rel1.vtX;
+	hA[1][1] += rel0.vtY * rel1.vtY;
+	hA[1][2] += rel0.vtY * rel1.vtZ;
+	hA[2][0] += rel0.vtZ * rel1.vtX;
+	hA[2][1] += rel0.vtZ * rel1.vtY;
+	hA[2][2] += rel0.vtZ * rel1.vtZ;
       }
-      /* Compute the SVD of the 3x3 matrix, hM = hM.wM.vM. */
-      errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(hM, 3, 3, wM, vM));
+      /* Compute the SVD of the 3x3 matrix, hM = hM.wV.vM. */
+      errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(hM, wV, vM));
       if(errNum == WLZ_ERR_NONE)
       {
 	/* Compute 3x3 rotation matrix trM = vM'.hM, where vM' is the
 	 * transpose of vM. */
-	trM[0][0] = (vM[0][0] * hM[0][0]) + (vM[0][1] * hM[0][1]) +
-	            (vM[0][2] * hM[0][2]);
-	trM[0][1] = (vM[1][0] * hM[0][0]) + (vM[1][1] * hM[0][1]) +
-	            (vM[1][2] * hM[0][2]);
-	trM[0][2] = (vM[2][0] * hM[0][0]) + (vM[2][1] * hM[0][1]) +
-	            (vM[2][2] * hM[0][2]);
-	trM[1][0] = (vM[0][0] * hM[1][0]) + (vM[0][1] * hM[1][1]) +
-	            (vM[0][2] * hM[1][2]);
-	trM[1][1] = (vM[1][0] * hM[1][0]) + (vM[1][1] * hM[1][1]) +
-	            (vM[1][2] * hM[1][2]);
-	trM[1][2] = (vM[2][0] * hM[1][0]) + (vM[2][1] * hM[1][1]) +
-	            (vM[2][2] * hM[1][2]);
-	trM[2][0] = (vM[0][0] * hM[2][0]) + (vM[0][1] * hM[2][1]) +
-	            (vM[0][2] * hM[2][2]);
-	trM[2][1] = (vM[1][0] * hM[2][0]) + (vM[1][1] * hM[2][1]) +
-	            (vM[1][2] * hM[2][2]);
-	trM[2][2] = (vM[2][0] * hM[2][0]) + (vM[2][1] * hM[2][1]) +
-	            (vM[2][2] * hM[2][2]);
+	trM[0][0] = (vA[0][0] * hA[0][0]) + (vA[0][1] * hA[0][1]) +
+	            (vA[0][2] * hA[0][2]);
+	trM[0][1] = (vA[1][0] * hA[0][0]) + (vA[1][1] * hA[0][1]) +
+	            (vA[1][2] * hA[0][2]);
+	trM[0][2] = (vA[2][0] * hA[0][0]) + (vA[2][1] * hA[0][1]) +
+	            (vA[2][2] * hA[0][2]);
+	trM[1][0] = (vA[0][0] * hA[1][0]) + (vA[0][1] * hA[1][1]) +
+	            (vA[0][2] * hA[1][2]);
+	trM[1][1] = (vA[1][0] * hA[1][0]) + (vA[1][1] * hA[1][1]) +
+	            (vA[1][2] * hA[1][2]);
+	trM[1][2] = (vA[2][0] * hA[1][0]) + (vA[2][1] * hA[1][1]) +
+	            (vA[2][2] * hA[1][2]);
+	trM[2][0] = (vA[0][0] * hA[2][0]) + (vA[0][1] * hA[2][1]) +
+	            (vA[0][2] * hA[2][2]);
+	trM[2][1] = (vA[1][0] * hA[2][0]) + (vA[1][1] * hA[2][1]) +
+	            (vA[1][2] * hA[2][2]);
+	trM[2][2] = (vA[2][0] * hA[2][0]) + (vA[2][1] * hA[2][1]) +
+	            (vA[2][2] * hA[2][2]);
 	/* Test for degeneracy using the determinant of the rotation matrix. */
 	tD0 = (trM[0][0] * trM[1][1] * trM[2][2]) -
 	      (trM[0][0] * trM[1][2] * trM[2][1]) +
@@ -1379,11 +1396,11 @@ WlzAffineTransform  *WlzAffineTransformLSqReg3D(WlzDVertex3 *vT,
 	if(tD0 < 0.0)
 	{
 	  /* Are source vertices (rel0) coplanar? They are iff one of the 3
-	   * singular values of hM in wM is zero. If the source vertices
+	   * singular values of hM in wV is zero. If the source vertices
 	   * are not coplanar, the the solution of the SVD is correct. */
-	  tI0 = (fabs(*(wM + 0)) >= DBL_EPSILON) |
-	        ((fabs(*(wM + 1)) >= DBL_EPSILON) << 1) |
-	        ((fabs(*(wM + 2)) >= DBL_EPSILON) << 2);
+	  tI0 = (fabs(*(wV + 0)) >= DBL_EPSILON) |
+	        ((fabs(*(wV + 1)) >= DBL_EPSILON) << 1) |
+	        ((fabs(*(wV + 2)) >= DBL_EPSILON) << 2);
 	  switch(tI0)
 	  {
 	    case 0:
@@ -1413,9 +1430,9 @@ WlzAffineTransform  *WlzAffineTransformLSqReg3D(WlzDVertex3 *vT,
 	      {
 		for(idK = 0; idK < 3; ++idK)
 		{
-		  trM[idR][idK] = vM[idR][0] * hM[idK][0] + 
-		    vM[idR][1] * hM[idK][1] -
-		    vM[idR][2] * hM[idK][2];
+		  trM[idR][idK] = vA[idR][0] * hA[idK][0] + 
+		    vA[idR][1] * hA[idK][1] -
+		    vA[idR][2] * hA[idK][2];
 		}
 	      }
 	      break;
@@ -1464,25 +1481,12 @@ WlzAffineTransform  *WlzAffineTransformLSqReg3D(WlzDVertex3 *vT,
 	tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE, trM,
 	    &errNum);
       }
-      /* Clear up on error. */
-      if(wM)
-      {
-	(void )AlcFree(wM);
-      }
-      if(hM)
-      {
-	(void )AlcDouble2Free(hM);
-      }
-      if(vM)
-      {
-	(void )AlcDouble2Free(vM);
-      }
-      if(trM)
-      {
-	(void )AlcDouble2Free(trM);
-      }
     }
   }
+  (void )AlcFree(wV);
+  (void )AlcDouble2Free(trM);
+  AlgMatrixFree(hM);
+  AlgMatrixFree(vM);
   if(dstErr)
   {
     *dstErr = errNum;
@@ -1511,73 +1515,74 @@ WlzAffineTransform *WlzAffineTransformLSqRegWlz2D(WlzDVertex2 *vT,
 {
   int		idx;
   double	s;
-  double	**a,
-		**trM;
-  double	*b;
+  double	**aA = NULL,
+		**trA = NULL;
+  double	*bV = NULL;
   WlzAffineTransform *tr;
-  double	A[12];
+  double	aV[12];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* Initialise the array */
   for(idx=0; idx < 12; idx++)
   {
-    A[idx] = 0;
+    aV[idx] = 0;
   }
   /* accumulate values */
   for(idx = 0; idx < nV; ++idx, ++vS, ++vT)
   {
-    A[0]  += 1;
-    A[1]  += vS->vtX;
-    A[2]  += vS->vtY;
-    A[3]  += vS->vtX * vS->vtX;
-    /* A[4]  += vS->vtX * vS->vtY;*/
-    A[5]  += vS->vtY * vS->vtY;
-    A[6]  += vT->vtX;
-    A[7]  += vS->vtX * vT->vtX;
-    A[8]  += vS->vtY * vT->vtX;
-    A[9]  += vT->vtY;
-    A[10] += vS->vtX * vT->vtY;
-    A[11] += vS->vtY * vT->vtY;
+    aV[0]  += 1;
+    aV[1]  += vS->vtX;
+    aV[2]  += vS->vtY;
+    aV[3]  += vS->vtX * vS->vtX;
+    /* aV[4]  += vS->vtX * vS->vtY;*/
+    aV[5]  += vS->vtY * vS->vtY;
+    aV[6]  += vT->vtX;
+    aV[7]  += vS->vtX * vT->vtX;
+    aV[8]  += vS->vtY * vT->vtX;
+    aV[9]  += vT->vtY;
+    aV[10] += vS->vtX * vT->vtY;
+    aV[11] += vS->vtY * vT->vtY;
   }
   /* Allocate workspace */
-  if((AlcDouble2Malloc(&a, 4, 4) != ALC_ER_NONE) ||
-      (AlcDouble1Malloc(&b, 4) != ALC_ER_NONE) ||
-      (AlcDouble2Malloc(&trM, 4, 4) != ALC_ER_NONE))
+  if((AlcDouble2Malloc(&aA, 4, 4) != ALC_ER_NONE) ||
+      (AlcDouble1Malloc(&bV, 4) != ALC_ER_NONE) ||
+      (AlcDouble2Malloc(&trA, 4, 4) != ALC_ER_NONE))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Determine the least square transformation matrix values */
-    a[0][0] = A[0];        a[0][1] = A[1];
-    a[0][2] = A[2];        a[0][3] = 0;
-    a[1][0] = A[1];        a[1][1] = A[3] + A[5];
-    a[1][2] = 0;           a[1][3] = A[2];
-    a[2][0] = A[2];        a[2][1] = 0;
-    a[2][2] = A[3] + A[5]; a[2][3] = -A[1];
-    a[3][0] = 0;           a[3][1] = A[2];
-    a[3][2] = -A[1];       a[3][3]= A[0];
-    b[0] = A[6];    b[1] = A[7] + A[11];   b[2] = A[8] - A[10];   b[3] = A[9];
-    errNum = WlzErrorFromAlg(AlgMatrixLUSolve(a, 4, b, 1));
+    aA[0][0] = aV[0];          aA[0][1] = aV[1];
+    aA[0][2] = aV[2];          aA[0][3] = 0;
+    aA[1][0] = aV[1];          aA[1][1] = aV[3] + aV[5];
+    aA[1][2] = 0;              aA[1][3] = aV[2];
+    aA[2][0] = aV[2];          aA[2][1] = 0;
+    aA[2][2] = aV[3] + aV[5];  aA[2][3] = -aV[1];
+    aA[3][0] = 0;              aA[3][1] = aV[2];
+    aA[3][2] = -aV[1];         aA[3][3] = aV[0];
+    bV[0]    = aV[6];          bV[1]    = aV[7] + aV[11];
+    bV[2]    = aV[8] - aV[10]; bV[3]    = aV[9];
+    errNum = WlzErrorFromAlg(AlgMatrixLUSolveRaw4(aA, bV, 1));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Check for scale constraint - this is a kludge */
-    s = sqrt(b[1]*b[1] + b[2]*b[2]);
-    b[1] /= s;
-    b[2] /= s;
-    b[0] = (A[6] - A[1] * b[1] - A[2] * b[2]) / A[0];
-    b[3] = (A[9] + A[1] * b[2] - A[2] * b[1]) / A[0];
+    s = sqrt(bV[1]*bV[1] + bV[2]*bV[2]);
+    bV[1] /= s;
+    bV[2] /= s;
+    bV[0] = (aV[6] - aV[1] * bV[1] - aV[2] * bV[2]) / aV[0];
+    bV[3] = (aV[9] + aV[1] * bV[2] - aV[2] * bV[1]) / aV[0];
     /* Make the transformation */
-    trM[0][0] = b[1];  trM[0][1] = b[2]; trM[0][2] = b[0];
-    trM[1][0] = -b[2]; trM[1][1] = b[1]; trM[1][2] = b[3];
-    trM[2][0] = 0;     trM[2][1] = 0;    trM[2][2] = 1;
-    tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, trM,
+    trA[0][0] = bV[1];  trA[0][1] = bV[2]; trA[0][2] = bV[0];
+    trA[1][0] = -bV[2]; trA[1][1] = bV[1]; trA[1][2] = bV[3];
+    trA[2][0] = 0;      trA[2][1] = 0;     trA[2][2] = 1;
+    tr = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, trA,
 					 &errNum);
   }
-  (void )AlcDouble2Free(a);
-  (void )AlcFree((void *)b);
-  (void )AlcDouble2Free(trM);
+  (void )AlcDouble2Free(aA);
+  (void )AlcFree((void *)bV);
+  (void )AlcDouble2Free(trA);
   if(dstErr)
   {
     *dstErr = errNum;
@@ -1631,31 +1636,49 @@ WlzAffineTransform *WlzAffineTransformLSqDQ2D(int nV, double *vW,
 		t33D,
 		t34D,
 		t44D;
-  double	rM[4];
-  double	**aM = NULL,		/* Walker's A */
-  		**t0M = NULL,		/* Working matrix */
-  		**t1M = NULL,		/* Working matrix */
-  		**t2M = NULL,		/* Working matrix */
-		**c1M = NULL,		/* Walker's C_1 */
-		**c3M = NULL;		/* Walker's C_3 */
+  double	rV[4];
+  double	**aA,
+  		**t0A,
+  		**t1A,
+  		**t2A,
+		**c1A,
+		**c3A;
+  AlgMatrix	aM,	 		/* Walker's A */
+  		t0M,	 		/* Working matrix */
+  		t1M,	 		/* Working matrix */
+  		t2M,	 		/* Working matrix */
+		c1M,	 		/* Walker's C_1 */
+		c3M;	 		/* Walker's C_3 */
   WlzDVertex3	t0V,
   		t1V;
   WlzAffineTransform *trans = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   
+  aM.core = NULL;
+  c1M.core = NULL;
+  c3M.core = NULL;
+  t0M.core = NULL;
+  t1M.core = NULL;
+  t2M.core = NULL;
   /* Allocate matricies required to compute c1M, c2M and c3M. */
-  if((AlcDouble2Calloc(&aM, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Calloc(&c1M, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Calloc(&c3M, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Calloc(&t0M, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Calloc(&t1M, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Calloc(&t2M, 4, 4) != ALC_ER_NONE))
+  if(((aM.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL) ||
+     ((c1M.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL) ||
+     ((c3M.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL) ||
+     ((t0M.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL) ||
+     ((t1M.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL) ||
+     ((t2M.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
   /* Compute c1M, c2M and c3M (see Walker's paper). */
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
+    c1A = c1M.rect->array;
+    c3A = c3M.rect->array;
+    t0A = t0M.rect->array;
+    t1A = t1M.rect->array;
+    t2A = t2M.rect->array;
     if(vW)
     {
       sumVW = 0.0;
@@ -1679,17 +1702,17 @@ WlzAffineTransform *WlzAffineTransformLSqDQ2D(int nV, double *vW,
       t12D = t0V.vtX * t1V.vtY;
       t21D = t0V.vtY * t1V.vtX;
       t22D = t0V.vtY * t1V.vtY;
-      c1M[0][0] += wt * ( t11D - t22D);
-      c1M[1][1] += wt * (-t11D + t22D);
-      c1M[2][2] += wt * (-t11D - t22D);
-      c1M[3][3] += wt * ( t11D + t22D);
-      t0D = wt * ( t12D + t21D); c1M[0][1] += t0D; c1M[1][0] += t0D;
-      t0D = wt * (-t12D + t21D); c1M[2][3] += t0D; c1M[3][2] += t0D;
+      c1A[0][0] += wt * ( t11D - t22D);
+      c1A[1][1] += wt * (-t11D + t22D);
+      c1A[2][2] += wt * (-t11D - t22D);
+      c1A[3][3] += wt * ( t11D + t22D);
+      t0D = wt * ( t12D + t21D); c1A[0][1] += t0D; c1A[1][0] += t0D;
+      t0D = wt * (-t12D + t21D); c1A[2][3] += t0D; c1A[3][2] += t0D;
       /* Update c3M: Compute \beta_i(W(v_i_s) - Q(v_i^t)) */
-      t0D = wt * (-t1V.vtY - t0V.vtY); c3M[0][2] += t0D; c3M[2][0] -= t0D; 
-      t0D = wt * ( t1V.vtX - t0V.vtX); c3M[0][3] += t0D; c3M[3][0] -= t0D;
-      t0D = wt * ( t1V.vtX + t0V.vtX); c3M[1][2] += t0D; c3M[2][1] -= t0D;
-      t0D = wt * ( t1V.vtY - t0V.vtY); c3M[1][3] += t0D; c3M[3][1] -= t0D;
+      t0D = wt * (-t1V.vtY - t0V.vtY); c3A[0][2] += t0D; c3A[2][0] -= t0D; 
+      t0D = wt * ( t1V.vtX - t0V.vtX); c3A[0][3] += t0D; c3A[3][0] -= t0D;
+      t0D = wt * ( t1V.vtX + t0V.vtX); c3A[1][2] += t0D; c3A[2][1] -= t0D;
+      t0D = wt * ( t1V.vtY - t0V.vtY); c3A[1][3] += t0D; c3A[3][1] -= t0D;
     }
     for(id0 = 0; id0 < nN; ++id0)
     {
@@ -1701,15 +1724,15 @@ WlzAffineTransform *WlzAffineTransformLSqDQ2D(int nV, double *vW,
       t12D = t0V.vtX * t1V.vtY;
       t21D = t0V.vtY * t1V.vtX;
       t22D = t0V.vtY * t1V.vtY;
-      c1M[0][0] += wt * ( t11D - t22D);
-      c1M[1][1] += wt * (-t11D + t22D);
-      c1M[2][2] += wt * (-t11D - t22D);
-      c1M[3][3] += wt * ( t11D + t22D);
-      t0D = wt * ( t12D + t21D); c1M[0][1] += t0D; c1M[1][0] += t0D;
-      t0D = wt * (-t12D + t21D); c1M[2][3] += t0D; c1M[3][2] += t0D;
+      c1A[0][0] += wt * ( t11D - t22D);
+      c1A[1][1] += wt * (-t11D + t22D);
+      c1A[2][2] += wt * (-t11D - t22D);
+      c1A[3][3] += wt * ( t11D + t22D);
+      t0D = wt * ( t12D + t21D); c1A[0][1] += t0D; c1A[1][0] += t0D;
+      t0D = wt * (-t12D + t21D); c1A[2][3] += t0D; c1A[3][2] += t0D;
     }
-    AlgMatrixScale(c1M, c1M, -2.0, 4, 4);
-    AlgMatrixScale(c3M, c3M, 2.0, 4, 4);
+    AlgMatrixScale(c1M, c1M, -2.0);
+    AlgMatrixScale(c3M, c3M, 2.0);
     if(sumVW < DBL_EPSILON)
     {
       errNum = WLZ_ERR_PARAM_DATA;
@@ -1718,66 +1741,66 @@ WlzAffineTransform *WlzAffineTransformLSqDQ2D(int nV, double *vW,
   /* Now compute A from C1, C3 and \sum_i^n{\beta_i} */
   if(errNum == WLZ_ERR_NONE)
   {
-    AlgMatrixTranspose(t0M, c3M, 4, 4);		/* T0 = C3^T */
-    AlgMatrixMul(t1M, t0M, c3M, 4, 4, 4); 	/* T1 = C3^T C3 */
+    AlgMatrixTranspose(t0M, c3M);			/* T0 = C3^T */
+    AlgMatrixMul(t1M, t0M, c3M);	  		/* T1 = C3^T C3 */
     t0D = 1.0 / (4.0 * sumVW);
-    AlgMatrixScale(t1M, t1M, t0D, 4, 4);		
-    AlgMatrixSub(aM, t1M, c1M, 4, 4);
+    AlgMatrixScale(t1M, t1M, t0D);
+    AlgMatrixSub(aM, t1M, c1M);
     /* Find the eigenvector of A which has the greatest eigenvalue.
      * This is returned in the first column of aM. */
-    errNum = WlzErrorFromAlg(AlgMatrixRSEigen(aM, 4, rM, 1));
+    errNum = WlzErrorFromAlg(AlgMatrixRSEigen(aM, rV, 1));
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    rM[0] = aM[0][0]; rM[1] = aM[1][0];
-    rM[2] = aM[2][0]; rM[3] = aM[3][0];
+    rV[0] = aA[0][0]; rV[1] = aA[1][0];
+    rV[2] = aA[2][0]; rV[3] = aA[3][0];
     /* Compute the transform's rotation elements from the eigen vector. */
-    t11D = rM[0] * rM[0];
-    t22D = rM[1] * rM[1];
-    t33D = rM[2] * rM[2];
-    t44D = rM[3] * rM[3];
-    t12D = 2.0 * rM[0] * rM[1];
-    t34D = 2.0 * rM[2] * rM[3];
-    aM[0][0] = t44D + t11D - t22D - t33D;
-    aM[0][1] = t12D - t34D;
-    aM[1][0] = t12D + t34D;
-    aM[1][1] = t44D - t11D + t22D - t33D;
+    t11D = rV[0] * rV[0];
+    t22D = rV[1] * rV[1];
+    t33D = rV[2] * rV[2];
+    t44D = rV[3] * rV[3];
+    t12D = 2.0 * rV[0] * rV[1];
+    t34D = 2.0 * rV[2] * rV[3];
+    aA[0][0] = t44D + t11D - t22D - t33D;
+    aA[0][1] = t12D - t34D;
+    aA[1][0] = t12D + t34D;
+    aA[1][1] = t44D - t11D + t22D - t33D;
     /* Compute the translation elements from the eigen vector r, the sum of the
      * vertex weights \sum_i{\beta_i} and matrix C3. */
     /* Set t0M[0] to r (see Walker's paper). */
-    t0M[0][0] = rM[0]; t0M[1][0] = rM[1]; t0M[2][0] = rM[2]; t0M[3][0] = rM[3];
+    t0A[0][0] = rV[0]; t0A[1][0] = rV[1]; t0A[2][0] = rV[2]; t0A[3][0] = rV[3];
     /* Compute s in t1M[0], but don't scale with -1/(2\sum_i{\beta_i} yet (see
      * Walker's paper). */
-    AlgMatrixMul(t1M, c3M, t0M, 4, 4, 1);
+    t0M.rect->nC = 1; AlgMatrixMul(t1M, c3M, t0M); t0M.rect->nC = 4;
     /* Set t0M to be W^T(r) (see Walker's paper). */
-    t0M[0][0] =  rM[3]; t0M[0][1] =  rM[2];
-    t0M[0][2] =  rM[1]; t0M[0][3] = -rM[0];
-    t0M[1][0] = -rM[2]; t0M[1][1] =  rM[3];
-    t0M[1][2] =  rM[0]; t0M[1][3] = -rM[1];
-    t0M[2][0] =  rM[1]; t0M[2][1] = -rM[0];
-    t0M[2][2] =  rM[3]; t0M[2][3] = -rM[2];
-    t0M[3][0] =  rM[0]; t0M[3][1] =  rM[1];
-    t0M[3][2] =  rM[2]; t0M[3][3] =  rM[3];
+    t0A[0][0] =  rV[3]; t0A[0][1] =  rV[2];
+    t0A[0][2] =  rV[1]; t0A[0][3] = -rV[0];
+    t0A[1][0] = -rV[2]; t0A[1][1] =  rV[3];
+    t0A[1][2] =  rV[0]; t0A[1][3] = -rV[1];
+    t0A[2][0] =  rV[1]; t0A[2][1] = -rV[0];
+    t0A[2][2] =  rV[3]; t0A[2][3] = -rV[2];
+    t0A[3][0] =  rV[0]; t0A[3][1] =  rV[1];
+    t0A[3][2] =  rV[2]; t0A[3][3] =  rV[3];
     /* Compute the product W^T(r) s (see Walker's paper). */
-    AlgMatrixMul(t1M, t0M, t1M, 4, 4, 1);
+    t1M.rect->nC = 1; AlgMatrixMul(t1M, t0M, t1M); t1M.rect->nC = 4;
     /* Extract the translation components and scale by -1/(2\sum_i{\beta_i}
      * (see Walker's paper). */
     t0D = -1.0 / (2.0 * sumVW);
-    aM[0][2] = t0D * t1M[0][0];
-    aM[1][2] = t0D * t1M[1][0];
+    aA[0][2] = t0D * t1A[0][0];
+    aA[1][2] = t0D * t1A[1][0];
     /* Set the transform's perspective and scale elements. */
-    aM[2][0] = aM[2][1] = 0.0;
-    aM[2][2] = 1.0;
+    aA[2][0] = aA[2][1] = 0.0;
+    aA[2][2] = 1.0;
     /* Create the affine transform. */
-    trans = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, aM, &errNum);
+    trans = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_2D_AFFINE, aA, &errNum);
   }
   /* Free the matricies. */
-  (void )AlcDouble2Free(aM);
-  (void )AlcDouble2Free(c1M);
-  (void )AlcDouble2Free(c3M);
-  (void )AlcDouble2Free(t0M);
-  (void )AlcDouble2Free(t1M);
-  (void )AlcDouble2Free(t2M);
+  AlgMatrixFree(aM);
+  AlgMatrixFree(c1M);
+  AlgMatrixFree(c3M);
+  AlgMatrixFree(t0M);
+  AlgMatrixFree(t1M);
+  AlgMatrixFree(t2M);
   if(dstErr)
   {
     *dstErr = errNum;
@@ -1898,31 +1921,43 @@ WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
 		t33D,
 		t34D,
 		t44D;
-  double	rM[4];
-  double	**aM = NULL,		/* Walker's A */
-  		**t0M = NULL,		/* Working matrix */
-  		**t1M = NULL,		/* Working matrix */
-  		**t2M = NULL,		/* Working matrix */
-		**c1M = NULL,		/* Walker's C_1 */
-		**c3M = NULL;		/* Walker's C_3 */
+  double	rV[4];
+  double	**aA,
+  		**t0A,
+  		**t1A,
+  		**t2A,
+		**c1A,
+		**c3A;
   WlzDVertex3	t0V,
   		t1V;
+  AlgMatrix	aM, 			/* Walker's A */
+  		t0M,			/* Working matrix */
+  		t1M,			/* Working matrix */
+  		t2M,			/* Working matrix */
+		c1M,			/* Walker's C_1 */
+		c3M;			/* Walker's C_3 */
   WlzAffineTransform *trans = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   
   /* Allocate matricies required to compute c1M, c2M and c3M. */
-  if((AlcDouble2Calloc(&aM, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Calloc(&c1M, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Calloc(&c3M, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Calloc(&t0M, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Calloc(&t1M, 4, 4) != ALC_ER_NONE) ||
-     (AlcDouble2Calloc(&t2M, 4, 4) != ALC_ER_NONE))
+  if(((aM.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL)||
+     ((c1M.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL)||
+     ((c3M.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL)||
+     ((t0M.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL)||
+     ((t1M.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL)||
+     ((t2M.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
   /* Compute c1M, c2M and c3M (see Walker's paper). */
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
+    t0A = t0M.rect->array;
+    t1A = t1M.rect->array;
+    t2A = t2M.rect->array;
+    c1A = c1M.rect->array;
+    c3A = c3M.rect->array;
     sumVW = 0.0;
     for(id0 = 0; id0 < nV; ++id0)
     {
@@ -1941,23 +1976,23 @@ WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
       t31D = t0V.vtZ * t1V.vtX;
       t32D = t0V.vtZ * t1V.vtY;
       t33D = t0V.vtZ * t1V.vtZ;
-      c1M[0][0] += wt * ( t11D - t22D - t33D);
-      c1M[1][1] += wt * (-t11D + t22D - t33D);
-      c1M[2][2] += wt * (-t11D - t22D + t33D);
-      c1M[3][3] += wt * ( t11D + t22D + t33D);
-      t0D = wt * ( t12D + t21D); c1M[0][1] += t0D; c1M[1][0] += t0D;
-      t0D = wt * ( t13D + t31D); c1M[0][2] += t0D; c1M[2][0] += t0D;
-      t0D = wt * (-t23D + t32D); c1M[0][3] += t0D; c1M[3][0] += t0D;
-      t0D = wt * ( t23D + t32D); c1M[1][2] += t0D; c1M[2][1] += t0D;
-      t0D = wt * ( t13D - t31D); c1M[1][3] += t0D; c1M[3][1] += t0D;
-      t0D = wt * (-t12D + t21D); c1M[2][3] += t0D; c1M[3][2] += t0D;
+      c1A[0][0] += wt * ( t11D - t22D - t33D);
+      c1A[1][1] += wt * (-t11D + t22D - t33D);
+      c1A[2][2] += wt * (-t11D - t22D + t33D);
+      c1A[3][3] += wt * ( t11D + t22D + t33D);
+      t0D = wt * ( t12D + t21D); c1A[0][1] += t0D; c1A[1][0] += t0D;
+      t0D = wt * ( t13D + t31D); c1A[0][2] += t0D; c1A[2][0] += t0D;
+      t0D = wt * (-t23D + t32D); c1A[0][3] += t0D; c1A[3][0] += t0D;
+      t0D = wt * ( t23D + t32D); c1A[1][2] += t0D; c1A[2][1] += t0D;
+      t0D = wt * ( t13D - t31D); c1A[1][3] += t0D; c1A[3][1] += t0D;
+      t0D = wt * (-t12D + t21D); c1A[2][3] += t0D; c1A[3][2] += t0D;
       /* Update c3M: Compute \beta_i(W(v_i_s) - Q(v_i^t)) */
-      t0D = wt * ( t1V.vtZ + t0V.vtZ); c3M[0][1] += t0D; c3M[1][0] -= t0D; 
-      t0D = wt * (-t1V.vtY - t0V.vtY); c3M[0][2] += t0D; c3M[2][0] -= t0D; 
-      t0D = wt * ( t1V.vtX - t0V.vtX); c3M[0][3] += t0D; c3M[3][0] -= t0D;
-      t0D = wt * ( t1V.vtX + t0V.vtX); c3M[1][2] += t0D; c3M[2][1] -= t0D;
-      t0D = wt * ( t1V.vtY - t0V.vtY); c3M[1][3] += t0D; c3M[3][1] -= t0D;
-      t0D = wt * ( t1V.vtZ - t0V.vtZ); c3M[2][3] += t0D; c3M[3][2] -= t0D;
+      t0D = wt * ( t1V.vtZ + t0V.vtZ); c3A[0][1] += t0D; c3A[1][0] -= t0D; 
+      t0D = wt * (-t1V.vtY - t0V.vtY); c3A[0][2] += t0D; c3A[2][0] -= t0D; 
+      t0D = wt * ( t1V.vtX - t0V.vtX); c3A[0][3] += t0D; c3A[3][0] -= t0D;
+      t0D = wt * ( t1V.vtX + t0V.vtX); c3A[1][2] += t0D; c3A[2][1] -= t0D;
+      t0D = wt * ( t1V.vtY - t0V.vtY); c3A[1][3] += t0D; c3A[3][1] -= t0D;
+      t0D = wt * ( t1V.vtZ - t0V.vtZ); c3A[2][3] += t0D; c3A[3][2] -= t0D;
     }
     for(id0 = 0; id0 < nN; ++id0)
     {
@@ -1974,19 +2009,19 @@ WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
       t31D = t0V.vtZ * t1V.vtX;
       t32D = t0V.vtZ * t1V.vtY;
       t33D = t0V.vtZ * t1V.vtZ;
-      c1M[0][0] += wt * ( t11D - t22D - t33D);
-      c1M[1][1] += wt * (-t11D + t22D - t33D);
-      c1M[2][2] += wt * (-t11D - t22D + t33D);
-      c1M[3][3] += wt * ( t11D + t22D + t33D);
-      t0D = wt * ( t12D + t21D); c1M[0][1] += t0D; c1M[1][0] += t0D;
-      t0D = wt * ( t13D + t31D); c1M[0][2] += t0D; c1M[2][0] += t0D;
-      t0D = wt * (-t23D + t32D); c1M[0][3] += t0D; c1M[3][0] += t0D;
-      t0D = wt * ( t23D + t32D); c1M[1][2] += t0D; c1M[2][1] += t0D;
-      t0D = wt * ( t13D - t31D); c1M[1][3] += t0D; c1M[3][1] += t0D;
-      t0D = wt * (-t12D + t21D); c1M[2][3] += t0D; c1M[3][2] += t0D;
+      c1A[0][0] += wt * ( t11D - t22D - t33D);
+      c1A[1][1] += wt * (-t11D + t22D - t33D);
+      c1A[2][2] += wt * (-t11D - t22D + t33D);
+      c1A[3][3] += wt * ( t11D + t22D + t33D);
+      t0D = wt * ( t12D + t21D); c1A[0][1] += t0D; c1A[1][0] += t0D;
+      t0D = wt * ( t13D + t31D); c1A[0][2] += t0D; c1A[2][0] += t0D;
+      t0D = wt * (-t23D + t32D); c1A[0][3] += t0D; c1A[3][0] += t0D;
+      t0D = wt * ( t23D + t32D); c1A[1][2] += t0D; c1A[2][1] += t0D;
+      t0D = wt * ( t13D - t31D); c1A[1][3] += t0D; c1A[3][1] += t0D;
+      t0D = wt * (-t12D + t21D); c1A[2][3] += t0D; c1A[3][2] += t0D;
     }
-    AlgMatrixScale(c1M, c1M, -2.0, 4, 4);
-    AlgMatrixScale(c3M, c3M, 2.0, 4, 4);
+    AlgMatrixScale(c1M, c1M, -2.0);
+    AlgMatrixScale(c3M, c3M, 2.0);
     if(sumVW < DBL_EPSILON)
     {
       errNum = WLZ_ERR_PARAM_DATA;
@@ -1995,76 +2030,76 @@ WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
   /* Now compute A from C1, C3 and \sum_i^n{\beta_i} */
   if(errNum == WLZ_ERR_NONE)
   {
-    AlgMatrixTranspose(t0M, c3M, 4, 4);		/* T0 = C3^T */
-    AlgMatrixMul(t1M, t0M, c3M, 4, 4, 4); 	/* T1 = C3^T C3 */
+    AlgMatrixTranspose(t0M, c3M);		/* T0 = C3^T */
+    AlgMatrixMul(t1M, t0M, c3M);	 	/* T1 = C3^T C3 */
     t0D = 1.0 / (4.0 * sumVW);
-    AlgMatrixScale(t1M, t1M, t0D, 4, 4);		
-    AlgMatrixSub(aM, t1M, c1M, 4, 4);
+    AlgMatrixScale(t1M, t1M, t0D);		
+    AlgMatrixSub(aM, t1M, c1M);
     /* Find the eigenvector of A which has the greatest eigenvalue.
      * This is returned in the first column of aM. */
-    errNum = WlzErrorFromAlg(AlgMatrixRSEigen(aM, 4, rM, 1));
+    errNum = WlzErrorFromAlg(AlgMatrixRSEigen(aM, rV, 1));
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    rM[0] = aM[0][0]; rM[1] = aM[1][0];
-    rM[2] = aM[2][0]; rM[3] = aM[3][0];
+    rV[0] = aA[0][0]; rV[1] = aA[1][0];
+    rV[2] = aA[2][0]; rV[3] = aA[3][0];
     /* Compute the transform's rotation elements from the eigen vector. */
-    t11D = rM[0] * rM[0];
-    t22D = rM[1] * rM[1];
-    t33D = rM[2] * rM[2];
-    t44D = rM[3] * rM[3];
-    t12D = 2.0 * rM[0] * rM[1];
-    t13D = 2.0 * rM[0] * rM[2];
-    t14D = 2.0 * rM[0] * rM[3];
-    t23D = 2.0 * rM[1] * rM[2];
-    t24D = 2.0 * rM[1] * rM[3];
-    t34D = 2.0 * rM[2] * rM[3];
-    aM[0][0] = t44D + t11D - t22D - t33D;
-    aM[0][1] = t12D - t34D;
-    aM[0][2] = t13D + t24D;
-    aM[1][0] = t12D + t34D;
-    aM[1][1] = t44D - t11D + t22D - t33D;
-    aM[1][2] = t23D - t14D;
-    aM[2][0] = t13D - t24D;
-    aM[2][1] = t23D + t14D;
-    aM[2][2] = t44D - t11D - t22D + t33D;
+    t11D = rV[0] * rV[0];
+    t22D = rV[1] * rV[1];
+    t33D = rV[2] * rV[2];
+    t44D = rV[3] * rV[3];
+    t12D = 2.0 * rV[0] * rV[1];
+    t13D = 2.0 * rV[0] * rV[2];
+    t14D = 2.0 * rV[0] * rV[3];
+    t23D = 2.0 * rV[1] * rV[2];
+    t24D = 2.0 * rV[1] * rV[3];
+    t34D = 2.0 * rV[2] * rV[3];
+    aA[0][0] = t44D + t11D - t22D - t33D;
+    aA[0][1] = t12D - t34D;
+    aA[0][2] = t13D + t24D;
+    aA[1][0] = t12D + t34D;
+    aA[1][1] = t44D - t11D + t22D - t33D;
+    aA[1][2] = t23D - t14D;
+    aA[2][0] = t13D - t24D;
+    aA[2][1] = t23D + t14D;
+    aA[2][2] = t44D - t11D - t22D + t33D;
     /* Compute the translation elements from the eigen vector r, the sum of the
      * vertex weights \sum_i{\beta_i} and matrix C3. */
     /* Set t0M[0] to r (see Walker's paper). */
-    t0M[0][0] = rM[0]; t0M[1][0] = rM[1]; t0M[2][0] = rM[2]; t0M[3][0] = rM[3];
+    t0A[0][0] = rV[0]; t0A[1][0] = rV[1]; t0A[2][0] = rV[2]; t0A[3][0] = rV[3];
     /* Compute s in t1M[0], but don't scale with -1/(2\sum_i{\beta_i} yet (see
      * Walker's paper). */
-    AlgMatrixMul(t1M, c3M, t0M, 4, 4, 1);
+    t0M.rect->nC = 1; AlgMatrixMul(t1M, c3M, t0M); t0M.rect->nC = 4;
     /* Set t0M to be W^T(r) (see Walker's paper). */
-    t0M[0][0] =  rM[3]; t0M[0][1] =  rM[2];
-    t0M[0][2] =  rM[1]; t0M[0][3] = -rM[0];
-    t0M[1][0] = -rM[2]; t0M[1][1] =  rM[3];
-    t0M[1][2] =  rM[0]; t0M[1][3] = -rM[1];
-    t0M[2][0] =  rM[1]; t0M[2][1] = -rM[0];
-    t0M[2][2] =  rM[3]; t0M[2][3] = -rM[2];
-    t0M[3][0] =  rM[0]; t0M[3][1] =  rM[1];
-    t0M[3][2] =  rM[2]; t0M[3][3] =  rM[3];
+    t0A[0][0] =  rV[3]; t0A[0][1] =  rV[2];
+    t0A[0][2] =  rV[1]; t0A[0][3] = -rV[0];
+    t0A[1][0] = -rV[2]; t0A[1][1] =  rV[3];
+    t0A[1][2] =  rV[0]; t0A[1][3] = -rV[1];
+    t0A[2][0] =  rV[1]; t0A[2][1] = -rV[0];
+    t0A[2][2] =  rV[3]; t0A[2][3] = -rV[2];
+    t0A[3][0] =  rV[0]; t0A[3][1] =  rV[1];
+    t0A[3][2] =  rV[2]; t0A[3][3] =  rV[3];
     /* Compute the product W^T(r) s (see Walker's paper). */
-    AlgMatrixMul(t1M, t0M, t1M, 4, 4, 1);
+    t1M.rect->nC = 1; AlgMatrixMul(t1M, t0M, t1M); t1M.rect->nC = 4;
     /* Extract the translation components and scale by -1/(2\sum_i{\beta_i}
      * (see Walker's paper). */
     t0D = -1.0 / (2.0 * sumVW);
-    aM[0][3] = t0D * t1M[0][0];
-    aM[1][3] = t0D * t1M[1][0];
-    aM[2][3] = t0D * t1M[2][0];
+    aA[0][3] = t0D * t1A[0][0];
+    aA[1][3] = t0D * t1A[1][0];
+    aA[2][3] = t0D * t1A[2][0];
     /* Set the transform's perspective and scale elements. */
-    aM[3][0] = aM[3][1] = aM[3][2] = 0.0;
-    aM[3][3] = 1.0;
+    aA[3][0] = aA[3][1] = aA[3][2] = 0.0;
+    aA[3][3] = 1.0;
     /* Create the affine transform. */
-    trans = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE, aM, &errNum);
+    trans = WlzAffineTransformFromMatrix(WLZ_TRANSFORM_3D_AFFINE, aA, &errNum);
   }
   /* Free the matricies. */
-  (void )AlcDouble2Free(aM);
-  (void )AlcDouble2Free(c1M);
-  (void )AlcDouble2Free(c3M);
-  (void )AlcDouble2Free(t0M);
-  (void )AlcDouble2Free(t1M);
-  (void )AlcDouble2Free(t2M);
+  AlgMatrixFree(aM);
+  AlgMatrixFree(c1M);
+  AlgMatrixFree(c3M);
+  AlgMatrixFree(t0M);
+  AlgMatrixFree(t1M);
+  AlgMatrixFree(t2M);
   if(dstErr)
   {
     *dstErr = errNum;
@@ -2079,46 +2114,43 @@ WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
 *		first using an SVD solver. If the design matrix is
 *		ill-conditioned then the estimate is improved using an
 *		itterative conjugate gradient solver.
-* \param	aM			Matrix A.
-* \param	nN			Number of rows and columns in
-*					square matrix A.
+* \param	aM			Square matrix A.
 * \param	bV			Column matrix b, overwritten
 *					by matrix x on return.
 * \param	tol			Tolerance for singular values,
 					1.0e-06 should be suitable as
 					a default value.
 */
-static WlzErrorNum WlzAffineTransformLSqLinSysSolve(double **aM, int nN,
+static WlzErrorNum WlzAffineTransformLSqLinSysSolve(AlgMatrix aM,
 					double *bV, double tol)
 {
   int		iCon;
   double	*bCV = NULL;
-  double	**aCM = NULL,
-  		**wCM = NULL;
+  AlgMatrix	aCM,
+  		wCM;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	itr = 1000;
 
-  if((AlcDouble2Calloc(&aCM, (size_t )nN, (size_t )nN) != ALC_ER_NONE) ||
-     (AlcDouble2Calloc(&wCM, (size_t )4, (size_t )nN) != ALC_ER_NONE) ||
-     ((bCV = (double *)AlcMalloc((size_t )nN * sizeof(double))) == NULL))
+  if(((aCM.rect = AlgMatrixRectNew(aM.core->nR, aM.core->nC, NULL)) == NULL) ||
+     ((wCM.rect = AlgMatrixRectNew(4, aM.core->nC, NULL)) == NULL) ||
+     ((bCV = (double *)AlcMalloc(aM.core->nR * sizeof(double))) == NULL))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    AlgVectorCopy(bCV, bV, (size_t )nN);
-    AlgMatrixCopy(aCM, aM, (size_t )nN, (size_t )nN);
-    errNum = WlzErrorFromAlg(AlgMatrixSVSolve(aM, nN, nN, bV, tol, &iCon));
+    AlgVectorCopy(bCV, bV, aM.core->nR);
+    AlgMatrixCopy(aCM, aM);
+    errNum = WlzErrorFromAlg(AlgMatrixSVSolve(aM, bV, tol, &iCon));
   }
   if((errNum == WLZ_ERR_NONE) && (iCon > 0))
   {
-    errNum = WlzErrorFromAlg(AlgMatrixCGSolve(ALG_MATRIX_RECT,
-    					      aCM, bV, bCV, wCM, (size_t )nN,
+    errNum = WlzErrorFromAlg(AlgMatrixCGSolve(aCM, bV, bCV, wCM,
     					      NULL, NULL, tol, itr,
 					      NULL, NULL));
   }
-  (void )AlcDouble2Free(aCM);
-  (void )AlcDouble2Free(wCM);
   AlcFree(bCV);
+  AlgMatrixFree(aCM);
+  AlgMatrixFree(wCM);
   return(errNum);
 }

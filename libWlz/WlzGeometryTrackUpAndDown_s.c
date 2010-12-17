@@ -57,6 +57,14 @@ static char _WlzGeometryTrackUpAndDown_s_c[] = "MRC HGU $Id$";
 
 
 
+static void 			svbksb(
+				  double **u,
+				  double w[],
+				  double **v,
+				  int m,
+				  int n,
+				  double b[],
+				  double x[]);
 static void testConsistencyBreakDownTheGM(  WlzGMModel *gModel[], 
                         int numOf2DWlzFiles,
 			int sectionLength_N,
@@ -692,11 +700,11 @@ WlzDVertex3  *WlzGeometryTrackUpAndDown_s(
 	  datD[2] = 0.;
           /*  printf("Point %lg %lg\n",datD[0], datD[1]); */
           node    = AlcKDTGetNN(tTreeArray[i], datD, minDis, NULL, &errNo);
-     	  if(  node && (errNum == ALC_ER_NONE) )
+     	  if(  node && (errNo == ALC_ER_NONE) )
   	  {
              printf("tracked\n");
 	     printf("%lg  %lg\n", *(node->key.kD), *(node->key.kD + 1) );
-	     printf("index %d\n", node->idx );
+	     printf("index %zd\n", node->idx );
   	  }
 	  else
 	  {
@@ -3321,7 +3329,7 @@ static void GetTrackedSamplePointsFromOneLoopOfGM( WlzGMModel  *gM2,
 	  datD[2] = 0.;
           /*  printf("Point %lg %lg\n",datD[0], datD[1]); */
           node    = AlcKDTGetNN(tTree, datD, minDis, NULL, &errNo);
-     	  if(  node && (errNum == ALC_ER_NONE) )
+     	  if(  node && (errNo == ALC_ER_NONE) )
   	  {
              TrackedSampleP[i].vtX = *(node->key.kD);
              TrackedSampleP[i].vtY = *(node->key.kD + 1);
@@ -6487,7 +6495,7 @@ void nrerror(char error_text[])
 	exit(1);
 }
 
-void svbksb(double **u, double w[], double **v, int m, int n, double b[], double x[])
+static void svbksb(double **u, double w[], double **v, int m, int n, double b[], double x[])
 {
 	int jj,j,i;
 	double s, *tmp, *vector();

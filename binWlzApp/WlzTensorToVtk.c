@@ -212,11 +212,14 @@ static WlzErrorNum WlzTensorToVtk(FILE *outFile, WlzObject *objT11,
   int                   numpoints,
                         k,
                         l;
-  double                **aM,
+  AlgMatrix		aM;
+  double                **aA,
                         vM[2];
   float                 norm,
                         eccentricity;
  
+  aM.core = NULL;
+
   /* initialise workspaces */
   if ((errNum = WlzInitGreyScan(objT11, &iWspT11, &gWspT11)) == WLZ_ERR_NONE)
   {
@@ -326,8 +329,9 @@ static WlzErrorNum WlzTensorToVtk(FILE *outFile, WlzObject *objT11,
   }
   if (errNum == WLZ_ERR_NONE)
   {
-    if (AlcDouble2Calloc(&aM, 2, 2) == ALC_ER_NONE)
+    if ((aM.rect = AlgMatrixRectNew(2, 2, NULL)) != NULL)
     {
+      aA = aM.rect->array;
       fprintf(outFile, "%s %s %s\n","SCALARS","scalars", "float" );
       fprintf(outFile, "%s %s\n","LOOKUP_TABLE","default");
       while(((errNum = WlzNextGreyInterval(&iWspT11)) == WLZ_ERR_NONE) &&
@@ -350,11 +354,11 @@ static WlzErrorNum WlzTensorToVtk(FILE *outFile, WlzObject *objT11,
 	  }
 	  else
 	    norm = 1.0;
-	  aM[0][0] = *(gPixT11.flp) / norm;
-	  aM[0][1] = *(gPixT12.flp) / norm;
-	  aM[1][0] = *(gPixT12.flp) / norm;
+	  aA[0][0] = *(gPixT11.flp) / norm;
+	  aA[0][1] = *(gPixT12.flp) / norm;
+	  aA[1][0] = *(gPixT12.flp) / norm;
 
-	  AlgMatrixRSEigen(aM, 2, vM, 1);
+	  AlgMatrixRSEigen(aM, vM, 1);
 	  if (vM[0] < 0)
 	    vM[0] = -vM[0];
 	  if (vM[1] < 0)
@@ -370,7 +374,7 @@ static WlzErrorNum WlzTensorToVtk(FILE *outFile, WlzObject *objT11,
 	  ++(gPixT12.flp);
 	}
       }
-      (void )AlcDouble2Free(aM);
+      AlgMatrixFree(aM);
     }
   }
 

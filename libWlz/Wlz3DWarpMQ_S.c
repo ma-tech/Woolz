@@ -1020,29 +1020,35 @@ void WlzMakeAffine3D4pointsTrFn( WlzDVertex3 sr0,
 			         double **Affine3D4pointsTrFun )
 {
   int            i, j, idN;
-  double	*bMx = NULL,
-  		*wMx = NULL;
-  double       **aMx = NULL,
-               **vMx = NULL;
+  double	*bV = NULL,
+  		*wV = NULL;
+  double       **aA,
+               **vA;
   double        wMax;	       
   int           nSys = 4;
   int           thresh;
   const double  tol  = 1.0e-06;
+  AlgMatrix	aM,
+  		vM;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
 
+  aM.core = NULL;
+  vM.core = NULL;
   /*------- allocate memory --------*/
   if (
-      ((wMx = (double *)AlcCalloc(sizeof(double), nSys))  == NULL) ||
-      ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
-      (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE)         || 
-      (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE)        )
+      ((wV = (double *)AlcCalloc(sizeof(double), nSys))  == NULL) ||
+      ((bV = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+      ((aM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL) ||
+      ((vM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL))
   {
       errNum = WLZ_ERR_MEM_ALLOC;
   }
   
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
+    vA = vM.rect->array;
     /* fill the a-matrix  where a is:
    
       x0 y0 z0  1
@@ -1054,55 +1060,55 @@ void WlzMakeAffine3D4pointsTrFn( WlzDVertex3 sr0,
    
     */
 
-    *(*(aMx + 0 ) + 0 ) = sr0.vtX;
-    *(*(aMx + 0 ) + 1 ) = sr0.vtY;
-    *(*(aMx + 0 ) + 2 ) = sr0.vtZ;
-    *(*(aMx + 0 ) + 3 ) = 1.0;
+    *(*(aA + 0 ) + 0 ) = sr0.vtX;
+    *(*(aA + 0 ) + 1 ) = sr0.vtY;
+    *(*(aA + 0 ) + 2 ) = sr0.vtZ;
+    *(*(aA + 0 ) + 3 ) = 1.0;
 
-    *(*(aMx + 1 ) + 0 ) = sr1.vtX;
-    *(*(aMx + 1 ) + 1 ) = sr1.vtY;
-    *(*(aMx + 1 ) + 2 ) = sr1.vtZ;
-    *(*(aMx + 1 ) + 3 ) = 1.0;
+    *(*(aA + 1 ) + 0 ) = sr1.vtX;
+    *(*(aA + 1 ) + 1 ) = sr1.vtY;
+    *(*(aA + 1 ) + 2 ) = sr1.vtZ;
+    *(*(aA + 1 ) + 3 ) = 1.0;
 
-    *(*(aMx + 2 ) + 0 ) = sr2.vtX;
-    *(*(aMx + 2 ) + 1 ) = sr2.vtY;
-    *(*(aMx + 2 ) + 2 ) = sr2.vtZ;
-    *(*(aMx + 2 ) + 3 ) = 1.0;
+    *(*(aA + 2 ) + 0 ) = sr2.vtX;
+    *(*(aA + 2 ) + 1 ) = sr2.vtY;
+    *(*(aA + 2 ) + 2 ) = sr2.vtZ;
+    *(*(aA + 2 ) + 3 ) = 1.0;
 
-    *(*(aMx + 3 ) + 0 ) = sr3.vtX;
-    *(*(aMx + 3 ) + 1 ) = sr3.vtY;
-    *(*(aMx + 3 ) + 2 ) = sr3.vtZ;
-    *(*(aMx + 3 ) + 3 ) = 1.0;
+    *(*(aA + 3 ) + 0 ) = sr3.vtX;
+    *(*(aA + 3 ) + 1 ) = sr3.vtY;
+    *(*(aA + 3 ) + 2 ) = sr3.vtZ;
+    *(*(aA + 3 ) + 3 ) = 1.0;
 
     /* get a11 a12 a13 and a14 */
     
     /* fill the u */
-    *(bMx + 0 ) = targ0.vtX - sr0.vtX;
-    *(bMx + 1 ) = targ1.vtX - sr1.vtX;
-    *(bMx + 2 ) = targ2.vtX - sr2.vtX;
-    *(bMx + 3 ) = targ3.vtX - sr3.vtX;
+    *(bV + 0 ) = targ0.vtX - sr0.vtX;
+    *(bV + 1 ) = targ1.vtX - sr1.vtX;
+    *(bV + 2 ) = targ2.vtX - sr2.vtX;
+    *(bV + 3 ) = targ3.vtX - sr3.vtX;
 
     /* */
     for(i=0;i<4; i++)
     {
-      *(wMx+i) = 0.0;
+      *(wV+i) = 0.0;
       for(j=0;j<4;j++)
       {
-        *(*(vMx+i)+j) = 0.0;
+        *(*(vA+i)+j) = 0.0;
       }
     }
    
     /* Perform singular value decomposition of matrix a. */
    
-    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aM, wV, vM));
     /* */
     /*  
       for(i=0;i<4;i++)
       {
-        printf("%f\n",*(wMx+i));
+        printf("%f\n",*(wV+i));
         for(j=0;j<4;j++)
         {
-          printf("%f   ",*(*(vMx+i) +j) );
+          printf("%f   ",*(*(vA+i) +j) );
           printf("\n");
         }
        }
@@ -1118,22 +1124,21 @@ void WlzMakeAffine3D4pointsTrFn( WlzDVertex3 sr0,
       wMax = 0.0;
       for(idN = 0; idN < nSys; ++idN)
       {
-        if(*(wMx + idN) > wMax)
+        if(*(wV + idN) > wMax)
         {
-	  wMax = *(wMx + idN);
+	  wMax = *(wV + idN);
         }
       }
       thresh = tol * wMax;
       for(idN = 0; idN < nSys; ++idN)
       {
-        if(*(wMx + idN) < thresh)
+        if(*(wV + idN) < thresh)
         {
-	  *(wMx + idN) = 0.0;
+	  *(wV + idN) = 0.0;
         }
       }
       /* Solve for the X conponents  */
-      errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+      errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
     }
 
     if(errNum != WLZ_ERR_NONE)
@@ -1143,20 +1148,19 @@ void WlzMakeAffine3D4pointsTrFn( WlzDVertex3 sr0,
     }
     {
       /* Store the a11, a12, a13, a14 */
-       *(*(Affine3D4pointsTrFun + 0 )+ 0 ) = *(bMx + 0);
-       *(*(Affine3D4pointsTrFun + 0 )+ 1 ) = *(bMx + 1);
-       *(*(Affine3D4pointsTrFun + 0 )+ 2 ) = *(bMx + 2);
-       *(*(Affine3D4pointsTrFun + 0 )+ 3 ) = *(bMx + 3);
+       *(*(Affine3D4pointsTrFun + 0 )+ 0 ) = *(bV + 0);
+       *(*(Affine3D4pointsTrFun + 0 )+ 1 ) = *(bV + 1);
+       *(*(Affine3D4pointsTrFun + 0 )+ 2 ) = *(bV + 2);
+       *(*(Affine3D4pointsTrFun + 0 )+ 3 ) = *(bV + 3);
      
       /* Now set for y  conponents */
-       *(bMx + 0 ) = targ0.vtY - sr0.vtY;
-       *(bMx + 1 ) = targ1.vtY - sr1.vtY;
-       *(bMx + 2 ) = targ2.vtY - sr2.vtY;
-       *(bMx + 3 ) = targ3.vtY - sr3.vtY;
+       *(bV + 0 ) = targ0.vtY - sr0.vtY;
+       *(bV + 1 ) = targ1.vtY - sr1.vtY;
+       *(bV + 2 ) = targ2.vtY - sr2.vtY;
+       *(bV + 3 ) = targ3.vtY - sr3.vtY;
    
       /* Solve for the Y conponents */
-      errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    				        	vMx, bMx));
+      errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
     }
 
     if(errNum != WLZ_ERR_NONE)
@@ -1167,20 +1171,19 @@ void WlzMakeAffine3D4pointsTrFn( WlzDVertex3 sr0,
  
     {
       /* Store the a21, a22, a23, a24 */
-       *(*(Affine3D4pointsTrFun + 1 )+ 0 ) = *(bMx + 0);
-       *(*(Affine3D4pointsTrFun + 1 )+ 1 ) = *(bMx + 1);
-       *(*(Affine3D4pointsTrFun + 1 )+ 2 ) = *(bMx + 2);
-       *(*(Affine3D4pointsTrFun + 1 )+ 3 ) = *(bMx + 3);
+       *(*(Affine3D4pointsTrFun + 1 )+ 0 ) = *(bV + 0);
+       *(*(Affine3D4pointsTrFun + 1 )+ 1 ) = *(bV + 1);
+       *(*(Affine3D4pointsTrFun + 1 )+ 2 ) = *(bV + 2);
+       *(*(Affine3D4pointsTrFun + 1 )+ 3 ) = *(bV + 3);
      
       /* Now set for z  conponents */
-       *(bMx + 0 ) = targ0.vtZ - sr0.vtZ;
-       *(bMx + 1 ) = targ1.vtZ - sr1.vtZ;
-       *(bMx + 2 ) = targ2.vtZ - sr2.vtZ;
-       *(bMx + 3 ) = targ3.vtZ - sr3.vtZ;
+       *(bV + 0 ) = targ0.vtZ - sr0.vtZ;
+       *(bV + 1 ) = targ1.vtZ - sr1.vtZ;
+       *(bV + 2 ) = targ2.vtZ - sr2.vtZ;
+       *(bV + 3 ) = targ3.vtZ - sr3.vtZ;
    
       /* Solve for the Z conponents */
-       errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+       errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
     }
 
     if(errNum != WLZ_ERR_NONE)
@@ -1190,29 +1193,15 @@ void WlzMakeAffine3D4pointsTrFn( WlzDVertex3 sr0,
     }
     {
       /* Store the a31, a32, a33, a34 */
-       *(*(Affine3D4pointsTrFun + 2 )+ 0 ) = *(bMx + 0);
-       *(*(Affine3D4pointsTrFun + 2 )+ 1 ) = *(bMx + 1);
-       *(*(Affine3D4pointsTrFun + 2 )+ 2 ) = *(bMx + 2);
-       *(*(Affine3D4pointsTrFun + 2 )+ 3 ) = *(bMx + 3);
+       *(*(Affine3D4pointsTrFun + 2 )+ 0 ) = *(bV + 0);
+       *(*(Affine3D4pointsTrFun + 2 )+ 1 ) = *(bV + 1);
+       *(*(Affine3D4pointsTrFun + 2 )+ 2 ) = *(bV + 2);
+       *(*(Affine3D4pointsTrFun + 2 )+ 3 ) = *(bV + 3);
     }
-
-    if(bMx)
-    {
-      AlcFree(bMx);
-    }
-    if(wMx)
-    {
-      AlcFree(wMx);
-    }
-    if(aMx)
-    {
-      (void )AlcDouble2Free(aMx);
-    }
-    if(vMx)
-    {
-      (void )AlcDouble2Free(vMx);
-    }
-
+    AlcFree(bV);
+    AlcFree(wV);
+    AlgMatrixFree(aM);
+    AlgMatrixFree(vM);
   }
  
 }
@@ -3827,29 +3816,35 @@ void static WlzMakeAffine2D5With3PointsTrFn( WlzDVertex2 sr0,
 			         double **Affine2D5With3PointsTrFun )
 {
   int            i, j, idN;
-  double	*bMx = NULL,
-  		*wMx = NULL;
-  double       **aMx = NULL,
-               **vMx = NULL;
+  double	*bV = NULL,
+  		*wV = NULL;
+  double       **aA,
+               **vA;
   double        wMax;	       
   int           nSys = 3;
   int           thresh;
+  AlgMatrix	aM,
+  		vM;
   const double  tol  = 1.0e-06;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
 
+  aM.core = NULL;
+  vM.core = NULL;
   /*------- allocate memory --------*/
   if (
-      ((wMx = (double *)AlcCalloc(sizeof(double), nSys))  == NULL) ||
-      ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
-      (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE)         || 
-      (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE)        )
+      ((wV = (double *)AlcCalloc(sizeof(double), nSys))  == NULL) ||
+      ((bV = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+      ((aM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL) ||
+      ((vM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL))
   {
       errNum = WLZ_ERR_MEM_ALLOC;
   }
   
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
+    vA = vM.rect->array;
     /* fill the a-matrix  where a is:
    
       x0 y0  1
@@ -3860,46 +3855,46 @@ void static WlzMakeAffine2D5With3PointsTrFn( WlzDVertex2 sr0,
    
     */
 
-    *(*(aMx + 0 ) + 0 ) = sr0.vtX;
-    *(*(aMx + 0 ) + 1 ) = sr0.vtY;
-    *(*(aMx + 0 ) + 2 ) = 1.0;
+    *(*(aA + 0 ) + 0 ) = sr0.vtX;
+    *(*(aA + 0 ) + 1 ) = sr0.vtY;
+    *(*(aA + 0 ) + 2 ) = 1.0;
 
-    *(*(aMx + 1 ) + 0 ) = sr1.vtX;
-    *(*(aMx + 1 ) + 1 ) = sr1.vtY;
-    *(*(aMx + 1 ) + 2 ) = 1.0;
+    *(*(aA + 1 ) + 0 ) = sr1.vtX;
+    *(*(aA + 1 ) + 1 ) = sr1.vtY;
+    *(*(aA + 1 ) + 2 ) = 1.0;
 
-    *(*(aMx + 2 ) + 0 ) = sr2.vtX;
-    *(*(aMx + 2 ) + 1 ) = sr2.vtY;
-    *(*(aMx + 2 ) + 2 ) = 1.0;
+    *(*(aA + 2 ) + 0 ) = sr2.vtX;
+    *(*(aA + 2 ) + 1 ) = sr2.vtY;
+    *(*(aA + 2 ) + 2 ) = 1.0;
 
     /* get a11 a12  and a13 */
     
     /* fill the u */
-    *(bMx + 0 ) = targ0.vtX - sr0.vtX;
-    *(bMx + 1 ) = targ1.vtX - sr1.vtX;
-    *(bMx + 2 ) = targ2.vtX - sr2.vtX;
+    *(bV + 0 ) = targ0.vtX - sr0.vtX;
+    *(bV + 1 ) = targ1.vtX - sr1.vtX;
+    *(bV + 2 ) = targ2.vtX - sr2.vtX;
 
     /* */
     for(i=0;i<3; i++)
     {
-      *(wMx+i) = 0.0;
+      *(wV+i) = 0.0;
       for(j=0;j<3;j++)
       {
-        *(*(vMx+i)+j) = 0.0;
+        *(*(vA+i)+j) = 0.0;
       }
     }
    
     /* Perform singular value decomposition of matrix a. */
    
-    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aM, wV, vM));
     /* */
     /*  
       for(i=0;i<4;i++)
       {
-        printf("%f\n",*(wMx+i));
+        printf("%f\n",*(wV+i));
         for(j=0;j<4;j++)
         {
-          printf("%f   ",*(*(vMx+i) +j) );
+          printf("%f   ",*(*(vA+i) +j) );
           printf("\n");
         }
        }
@@ -3915,22 +3910,21 @@ void static WlzMakeAffine2D5With3PointsTrFn( WlzDVertex2 sr0,
       wMax = 0.0;
       for(idN = 0; idN < nSys; ++idN)
       {
-        if(*(wMx + idN) > wMax)
+        if(*(wV + idN) > wMax)
         {
-	  wMax = *(wMx + idN);
+	  wMax = *(wV + idN);
         }
       }
       thresh = tol * wMax;
       for(idN = 0; idN < nSys; ++idN)
       {
-        if(*(wMx + idN) < thresh)
+        if(*(wV + idN) < thresh)
         {
-	  *(wMx + idN) = 0.0;
+	  *(wV + idN) = 0.0;
         }
       }
       /* Solve for the X conponents  */
-      errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+      errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
     }
 
     if(errNum != WLZ_ERR_NONE)
@@ -3940,18 +3934,17 @@ void static WlzMakeAffine2D5With3PointsTrFn( WlzDVertex2 sr0,
     }
     {
       /* Store the a11, a12, a13 */
-       *(*(Affine2D5With3PointsTrFun + 0 )+ 0 ) = *(bMx + 0);
-       *(*(Affine2D5With3PointsTrFun + 0 )+ 1 ) = *(bMx + 1);
-       *(*(Affine2D5With3PointsTrFun + 0 )+ 2 ) = *(bMx + 2);
+       *(*(Affine2D5With3PointsTrFun + 0 )+ 0 ) = *(bV + 0);
+       *(*(Affine2D5With3PointsTrFun + 0 )+ 1 ) = *(bV + 1);
+       *(*(Affine2D5With3PointsTrFun + 0 )+ 2 ) = *(bV + 2);
      
       /* Now set for y  conponents */
-       *(bMx + 0 ) = targ0.vtY - sr0.vtY;
-       *(bMx + 1 ) = targ1.vtY - sr1.vtY;
-       *(bMx + 2 ) = targ2.vtY - sr2.vtY;
+       *(bV + 0 ) = targ0.vtY - sr0.vtY;
+       *(bV + 1 ) = targ1.vtY - sr1.vtY;
+       *(bV + 2 ) = targ2.vtY - sr2.vtY;
    
       /* Solve for the Y conponents */
-      errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    				        	vMx, bMx));
+      errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
     }
 
     if(errNum != WLZ_ERR_NONE)
@@ -3962,18 +3955,17 @@ void static WlzMakeAffine2D5With3PointsTrFn( WlzDVertex2 sr0,
  
     {
       /* Store the a21, a22, a23 */
-       *(*(Affine2D5With3PointsTrFun + 1 )+ 0 ) = *(bMx + 0);
-       *(*(Affine2D5With3PointsTrFun + 1 )+ 1 ) = *(bMx + 1);
-       *(*(Affine2D5With3PointsTrFun + 1 )+ 2 ) = *(bMx + 2);
+       *(*(Affine2D5With3PointsTrFun + 1 )+ 0 ) = *(bV + 0);
+       *(*(Affine2D5With3PointsTrFun + 1 )+ 1 ) = *(bV + 1);
+       *(*(Affine2D5With3PointsTrFun + 1 )+ 2 ) = *(bV + 2);
      
       /* Now set for z  conponents */
-       *(bMx + 0 ) = targ0.vtZ;
-       *(bMx + 1 ) = targ1.vtZ;
-       *(bMx + 2 ) = targ2.vtZ;
+       *(bV + 0 ) = targ0.vtZ;
+       *(bV + 1 ) = targ1.vtZ;
+       *(bV + 2 ) = targ2.vtZ;
    
       /* Solve for the Z conponents */
-       errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+       errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
     }
 
     if(errNum != WLZ_ERR_NONE)
@@ -3983,28 +3975,14 @@ void static WlzMakeAffine2D5With3PointsTrFn( WlzDVertex2 sr0,
     }
     {
       /* Store the a31, a32, a33 */
-       *(*(Affine2D5With3PointsTrFun + 2 )+ 0 ) = *(bMx + 0);
-       *(*(Affine2D5With3PointsTrFun + 2 )+ 1 ) = *(bMx + 1);
-       *(*(Affine2D5With3PointsTrFun + 2 )+ 2 ) = *(bMx + 2);
+       *(*(Affine2D5With3PointsTrFun + 2 )+ 0 ) = *(bV + 0);
+       *(*(Affine2D5With3PointsTrFun + 2 )+ 1 ) = *(bV + 1);
+       *(*(Affine2D5With3PointsTrFun + 2 )+ 2 ) = *(bV + 2);
     }
-
-    if(bMx)
-    {
-      AlcFree(bMx);
-    }
-    if(wMx)
-    {
-      AlcFree(wMx);
-    }
-    if(aMx)
-    {
-      (void )AlcDouble2Free(aMx);
-    }
-    if(vMx)
-    {
-      (void )AlcDouble2Free(vMx);
-    }
-
+    AlcFree(bV);
+    AlcFree(wV);
+    AlgMatrixFree(aM);
+    AlgMatrixFree(vM);
   }
  
 }

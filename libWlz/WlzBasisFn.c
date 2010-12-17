@@ -50,8 +50,8 @@ static char _WlzBasisFn_c[] = "MRC HGU $Id$";
 #include <Wlz.h>
 
 static void			WlzBasisFnEditSV(
-				  int nV,
-				  double *vMx);
+				  int n,
+				  double *vV);
 static void			WlzBasisFnVxExtent2D(
 				  WlzDBox2 *extentDB,
 				  WlzDVertex2 *vx0,
@@ -1014,10 +1014,11 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts, WlzDVertex2 *dPts,
 		deltaRg,
 		deltaSq,
 		range;
-  double	*bMx = NULL,
-  		*wMx = NULL;
-  double	**aMx = NULL,
-  		**vMx = NULL;
+  double	*bV = NULL,
+  		*wV = NULL;
+  double	**aA;
+  AlgMatrix	aM,
+  		vM;
   WlzVertex	sPt;
   WlzDBox2	extentDB;
   WlzBasisFn	*newBasisFn = NULL;
@@ -1026,6 +1027,8 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts, WlzDVertex2 *dPts,
 
   nSys = nPts + 3;
   deltaSq = delta * delta;
+  aM.core = NULL;
+  vM.core = NULL;
   if(mesh != NULL)
   {
     if((mesh->type != WLZ_CMESH_2D) ||
@@ -1185,16 +1188,17 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts, WlzDVertex2 *dPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Allocate matrices for solving basis function design equation. */
-    if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
-       ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
-       (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
-       (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE))
+    if(((wV = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
+       ((bV = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+       ((aM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL) ||
+       ((vM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
     /* Compute range of displacements. */
     WlzBasisFnVxExtent2D(&extentDB, dPts, sPts, nPts);
     tD0 = extentDB.xMax - extentDB.xMin;
@@ -1228,22 +1232,22 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts, WlzDVertex2 *dPts,
     {
       for(idX = 0; idX < 3; ++idX)
       {
-	*(*(aMx + idY) + idX) = 0.0;
+	*(*(aA + idY) + idX) = 0.0;
       }
-      *(bMx + idY) = 0.0;
+      *(bV + idY) = 0.0;
     }
     for(idY = 0; idY < nPts; ++idY)
     {
       idY3 = idY + 3;
       tD0 = (dPts + idY)->vtX;
       tD1 = (dPts + idY)->vtY;
-      *(bMx + idY3) = (sPts + idY)->vtX - tD0;
-      *(*(aMx + idY3) + 0) = 1.0;
-      *(*(aMx + idY3) + 1) = tD0;
-      *(*(aMx + idY3) + 2) = tD1;
-      *(*(aMx + 0) + idY3) = 1.0;
-      *(*(aMx + 1) + idY3) = tD0;
-      *(*(aMx + 2) + idY3) = tD1;
+      *(bV + idY3) = (sPts + idY)->vtX - tD0;
+      *(*(aA + idY3) + 0) = 1.0;
+      *(*(aA + idY3) + 1) = tD0;
+      *(*(aA + idY3) + 2) = tD1;
+      *(*(aA + 0) + idY3) = 1.0;
+      *(*(aA + 1) + idY3) = tD0;
+      *(*(aA + 2) + idY3) = tD1;
       for(idX = 0; idX < idY; ++idX)
       {
 	sPt.d2 = dPts[idX];
@@ -1251,59 +1255,45 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts, WlzDVertex2 *dPts,
 	tD0 *= deltaRg;
 	tD1 = (tD0 > DBL_EPSILON)? exp(tD0): 1.0;
 	idX3 = idX + 3;
-	*(*(aMx + idY3) + idX3) = tD1;
-	*(*(aMx + idX3) + idY3) = tD1;
+	*(*(aA + idY3) + idX3) = tD1;
+	*(*(aA + idX3) + idY3) = tD1;
       }
-      *(*(aMx + idY3) + idY3) = 1.0;
+      *(*(aA + idY3) + idY3) = 1.0;
     }
     /* Perform singular value decomposition of matrix A. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aM, wV, vM));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    WlzBasisFnEditSV(nSys, wMx);
+    WlzBasisFnEditSV(nSys, wV);
     /* Solve for lambda and the X polynomial coefficients. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover lambda and the x polynomial coefficients, then set up for mu
        and the y polynomial coefficients. */
-    WlzBasisFnGauss2DCoef(newBasisFn, bMx, 1);
-    *(bMx + 0) = 0.0;
-    *(bMx + 1) = 0.0;
-    *(bMx + 2) = 0.0;
+    WlzBasisFnGauss2DCoef(newBasisFn, bV, 1);
+    *(bV + 0) = 0.0;
+    *(bV + 1) = 0.0;
+    *(bV + 2) = 0.0;
     for(idY = 0; idY < nPts; ++idY)
     {
       idY3 = idY + 3;
-      *(bMx + idY3) = (sPts + idY)->vtY - (dPts + idY)->vtY;
+      *(bV + idY3) = (sPts + idY)->vtY - (dPts + idY)->vtY;
     }
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover mu and the y polynomial coefficients. */
-    WlzBasisFnGauss2DCoef(newBasisFn, bMx, 0);
+    WlzBasisFnGauss2DCoef(newBasisFn, bV, 0);
   }
-  if(bMx)
-  {
-    AlcFree(bMx);
-  }
-  if(wMx)
-  {
-    AlcFree(wMx);
-  }
-  if(aMx)
-  {
-    (void )AlcDouble2Free(aMx);
-  }
-  if(vMx)
-  {
-    (void )AlcDouble2Free(vMx);
-  }
+  AlcFree(bV);
+  AlcFree(wV);
+  AlgMatrixFree(aM);
+  AlgMatrixFree(vM);
   if(errNum != WLZ_ERR_NONE)
   {
     (void )WlzBasisFnFree(newBasisFn);
@@ -1335,15 +1325,18 @@ WlzBasisFn *WlzBasisFnPoly2DFromCPts(int nPts, int order,
 		idX,
   		idY,
 		nCoef;
-  double	*bMx = NULL,
-  		*wMx = NULL;
-  double	**aMx = NULL,
-  		**vMx = NULL;
+  double	*bV = NULL,
+  		*wV = NULL;
+  double	**aA;
+  AlgMatrix	aM,
+  		vM;
   WlzDVertex2	powVx,
   		sVx;
   WlzBasisFn *basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  aM.core = NULL;
+  vM.core = NULL;
   if((order < 0) || (nPts <= 0))
   {
     errNum = WLZ_ERR_PARAM_DATA;
@@ -1362,10 +1355,10 @@ WlzBasisFn *WlzBasisFnPoly2DFromCPts(int nPts, int order,
   if(errNum == WLZ_ERR_NONE)
   {
     nCoef = (order + 1) * (order + 1);
-    if(((wMx = (double *)AlcCalloc(sizeof(double), nCoef)) == NULL) ||
-       ((bMx = (double *)AlcMalloc(sizeof(double) * nPts)) == NULL) ||
-       (AlcDouble2Malloc(&vMx, nPts, nCoef) != ALC_ER_NONE) ||
-       (AlcDouble2Malloc(&aMx, nPts, nCoef) !=  ALC_ER_NONE) ||
+    if(((wV = (double *)AlcCalloc(sizeof(double), nCoef)) == NULL) ||
+       ((bV = (double *)AlcMalloc(sizeof(double) * nPts)) == NULL) ||
+       ((vM.rect = AlgMatrixRectNew(nPts, nCoef, NULL)) == NULL) ||
+       ((aM.rect = AlgMatrixRectNew( nPts, nCoef, NULL)) == NULL) ||
        ((basisFn->poly.v = AlcMalloc(sizeof(WlzDVertex2) * nCoef)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
@@ -1373,6 +1366,7 @@ WlzBasisFn *WlzBasisFnPoly2DFromCPts(int nPts, int order,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
     /* Fill matrix A. */
     for(idM = 0; idM < nPts; ++idM)
     {
@@ -1384,27 +1378,26 @@ WlzBasisFn *WlzBasisFnPoly2DFromCPts(int nPts, int order,
 	powVx.vtX = 1.0;
 	for(idX = 0; idX <= basisFn->nPoly; ++idX)
 	{
-	  *(*(aMx + idM) + idN++) = powVx.vtX * powVx.vtY;
+	  *(*(aA + idM) + idN++) = powVx.vtX * powVx.vtY;
 	  powVx.vtX *= sVx.vtX;
 	}
 	powVx.vtY *= sVx.vtY;
       }
     }
     /* Perform singular value decomposition of matrix A. */
-    errNum= WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nPts, nCoef, wMx, vMx));
+    errNum= WlzErrorFromAlg(AlgMatrixSVDecomp(aM, wV, vM));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    WlzBasisFnEditSV(nCoef, wMx);
+    WlzBasisFnEditSV(nCoef, wV);
     /* Fill matrix b for x coordinate */
     for(idM = 0; idM < nPts; ++idM)
     {
-      *(bMx + idM) = (sPts + idM)->vtX - (dPts + idM)->vtX;
+      *(bV + idM) = (sPts + idM)->vtX - (dPts + idM)->vtX;
     }
     /* Solve for x polynomial coefficients. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nPts, nCoef, wMx, vMx,
-    					        bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1412,39 +1405,26 @@ WlzBasisFn *WlzBasisFnPoly2DFromCPts(int nPts, int order,
        y coordinate and re-solve. */
     for(idN = 0; idN < nCoef; ++idN)
     {
-      (basisFn->poly.d2 + idN)->vtX = *(bMx + idN);
+      (basisFn->poly.d2 + idN)->vtX = *(bV + idN);
     }
     for(idM = 0; idM < nPts; ++idM)
     {
-      *(bMx + idM) = (sPts + idM)->vtY - (dPts + idM)->vtY;
+      *(bV + idM) = (sPts + idM)->vtY - (dPts + idM)->vtY;
     }
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nPts, nCoef, wMx, vMx,
-    						bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Copy out the ypolynomial coefficients. */
     for(idN = 0; idN < nCoef; ++idN)
     {
-      (basisFn->poly.d2 + idN)->vtY = *(bMx + idN);
+      (basisFn->poly.d2 + idN)->vtY = *(bV + idN);
     }
   }
-  if(bMx)
-  {
-    AlcFree(bMx);
-  }
-  if(wMx)
-  {
-    AlcFree(wMx);
-  }
-  if(aMx)
-  {
-    (void )AlcDouble2Free(aMx);
-  }
-  if(vMx)
-  {
-    (void )AlcDouble2Free(vMx);
-  }
+  AlcFree(bV);
+  AlcFree(wV);
+  AlgMatrixFree(aM);
+  AlgMatrixFree(vM);
   if(errNum != WLZ_ERR_NONE)
   {
     (void )WlzBasisFnFree(basisFn);
@@ -1476,12 +1456,14 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
 		idX,
   		idY,
 		nCoef;
-  double	*bMx = NULL,
-  		*wMx = NULL;
-  double	**aMx = NULL,
-  		**vMx = NULL;
+  double	*bV = NULL,
+  		*wV = NULL;
+  double	**aA;
+  AlgMatrix	aM,
+  		vM;
   WlzDVertex2	sVx;
-  ComplexD	z, zPow;
+  ComplexD	z,
+  		zPow;
   WlzBasisFn *basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1504,10 +1486,10 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
   if(errNum == WLZ_ERR_NONE)
   {
     nCoef = (order + 1) + (order + 1);
-    if(((wMx = (double *)AlcCalloc(sizeof(double), nCoef)) == NULL) ||
-       ((bMx = (double *)AlcMalloc(sizeof(double) * 2 * nPts)) == NULL) ||
-       (AlcDouble2Malloc(&vMx, 2*nPts, nCoef) != ALC_ER_NONE) ||
-       (AlcDouble2Malloc(&aMx, 2*nPts, nCoef) !=  ALC_ER_NONE) ||
+    if(((wV = (double *)AlcCalloc(sizeof(double), nCoef)) == NULL) ||
+       ((bV = (double *)AlcMalloc(sizeof(double) * 2 * nPts)) == NULL) ||
+       ((vM.rect = AlgMatrixRectNew(2 * nPts, nCoef, NULL)) == NULL) ||
+       ((aM.rect = AlgMatrixRectNew(2 * nPts, nCoef, NULL)) == NULL) ||
        ((basisFn->poly.v = AlcMalloc(sizeof(WlzDVertex2) * nCoef)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
@@ -1515,6 +1497,7 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
     /* Fill matrix A. */
     for(idM = 0; idM < nPts; ++idM)
     {
@@ -1526,55 +1509,42 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
       for(idY = 0, idX = basisFn->nPoly + 1; idY <= basisFn->nPoly;
           ++idY, idX++)
       {
-	aMx[idM][idY] = zPow.re;
-	aMx[idM][idX] = -zPow.im;
-	aMx[idM + nPts][idY] = zPow.im;
-	aMx[idM + nPts][idX] = zPow.re;
+	aA[idM][idY] = zPow.re;
+	aA[idM][idX] = -zPow.im;
+	aA[idM + nPts][idY] = zPow.im;
+	aA[idM + nPts][idX] = zPow.re;
 	zPow = AlgCMult(zPow, z);
       }
    }
     /* Perform singular value decomposition of matrix A. */
-    errNum= WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nPts, nCoef, wMx, vMx));
+    errNum= WlzErrorFromAlg(AlgMatrixSVDecomp(aM, wV, vM));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    WlzBasisFnEditSV(nCoef, wMx);
+    WlzBasisFnEditSV(nCoef, wV);
     /* Fill matrix b for x coordinate */
     for(idM = 0; idM < nPts; ++idM)
     {
-      *(bMx + idM) = (sPts + idM)->vtX - (dPts + idM)->vtX;
-      *(bMx + idM + nPts) = (sPts + idM)->vtY - (dPts + idM)->vtY;
+      *(bV + idM) = (sPts + idM)->vtX - (dPts + idM)->vtX;
+      *(bV + idM + nPts) = (sPts + idM)->vtY - (dPts + idM)->vtY;
     }
     /* Solve for conformal polynomial coefficients. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nPts, nCoef, wMx, vMx,
-    					        bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Copy out the conformal polynomial coefficients */
     for(idN = 0; idN < (order + 1); ++idN)
     {
-      (basisFn->poly.d2 + idN)->vtX = *(bMx + idN);
-      (basisFn->poly.d2 + idN)->vtY = *(bMx + idN + order + 1);
+      (basisFn->poly.d2 + idN)->vtX = *(bV + idN);
+      (basisFn->poly.d2 + idN)->vtY = *(bV + idN + order + 1);
     }
   }
-  if(bMx)
-  {
-    AlcFree(bMx);
-  }
-  if(wMx)
-  {
-    AlcFree(wMx);
-  }
-  if(aMx)
-  {
-    (void )AlcDouble2Free(aMx);
-  }
-  if(vMx)
-  {
-    (void )AlcDouble2Free(vMx);
-  }
+  AlcFree(bV);
+  AlcFree(wV);
+  AlgMatrixFree(aM);
+  AlgMatrixFree(vM);
   if(errNum != WLZ_ERR_NONE)
   {
     (void )WlzBasisFnFree(basisFn);
@@ -1638,10 +1608,11 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
 		deltaRg,
 		deltaSq,
 		range;
-  double	*bMx = NULL,
-  		*wMx = NULL;
-  double	**aMx = NULL,
-  		**vMx = NULL;
+  double	*bV = NULL,
+  		*wV = NULL;
+  double	**aA;
+  AlgMatrix	aM,
+  		vM;
   WlzVertex	sPt;
   WlzDVertex2	tV0;
   WlzDBox2	extentDB;
@@ -1649,6 +1620,8 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	stepVx = 10;
 
+  aM.core = NULL;
+  vM.core = NULL;
   nSys = nPts + 3;
   deltaSq = delta * delta;
   if(mesh != NULL)
@@ -1813,16 +1786,17 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Allocate matrices for solving basis function the design equation. */
-    if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
-       ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
-       (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
-       (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE))
+    if(((wV = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
+       ((bV = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+       ((vM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL) ||
+       ((aM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
     WlzBasisFnVxExtent2D(&extentDB, dPts, sPts, nPts);
     tD0 = extentDB.xMax - extentDB.xMin;
     tD1 = extentDB.yMax - extentDB.yMin;
@@ -1853,15 +1827,15 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
     {
       for(idX = 0; idX < 3; ++idX)
       {
-	*(*(aMx + idY) + idX) = 0.0;
+	*(*(aA + idY) + idX) = 0.0;
       }
-      *(bMx + idY) = 0.0;
+      *(bV + idY) = 0.0;
     }
     for(idY = 0; idY < nPts; ++idY)
     {
       idY3 = idY + 3;
       tD0 = (dPts + idY)->vtX;
-      *(bMx + idY3) = (sPts + idY)->vtX - tD0;
+      *(bV + idY3) = (sPts + idY)->vtX - tD0;
       if(newBasisFn->distMap != NULL)
       {
 	tD1 = (dPts + idY)->vtY;
@@ -1871,12 +1845,12 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
 	tD0 = (tD0 - extentDB.xMin) / range;
 	tD1 = ((dPts + idY)->vtY - extentDB.yMin) / range;
       }
-      *(*(aMx + idY3) + 0) = 1.0;
-      *(*(aMx + idY3) + 1) = tD0;
-      *(*(aMx + idY3) + 2) = tD1;
-      *(*(aMx + 0) + idY3) = 1.0;
-      *(*(aMx + 1) + idY3) = tD0;
-      *(*(aMx + 2) + idY3) = tD1;
+      *(*(aA + idY3) + 0) = 1.0;
+      *(*(aA + idY3) + 1) = tD0;
+      *(*(aA + idY3) + 2) = tD1;
+      *(*(aA + 0) + idY3) = 1.0;
+      *(*(aA + 1) + idY3) = tD0;
+      *(*(aA + 2) + idY3) = tD1;
       for(idX = 0; idX < idY; ++idX)
       {
 	if(newBasisFn->distMap)
@@ -1894,61 +1868,47 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
 	}
 	tD1 = (tD0 > DBL_EPSILON)? sqrt(tD0 + deltaSq): delta;
 	idX3 = idX + 3;
-	*(*(aMx + idY3) + idX3) = tD1;
-	*(*(aMx + idX3) + idY3) = tD1;
+	*(*(aA + idY3) + idX3) = tD1;
+	*(*(aA + idX3) + idY3) = tD1;
       }
-      *(*(aMx + idY3) + idY3) = delta;
+      *(*(aA + idY3) + idY3) = delta;
     }
     /* Perform singular value decomposition of matrix A. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aM, wV, vM));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    WlzBasisFnEditSV(nSys, wMx);
+    WlzBasisFnEditSV(nSys, wV);
     /* Solve for lambda and the X polynomial coefficients. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover lambda and the x polynomial coefficients, then set up for mu
        and the y polynomial coefficients. */
-    WlzBasisFnMQCoexff2D(newBasisFn, bMx,  &extentDB, range,
+    WlzBasisFnMQCoexff2D(newBasisFn, bV,  &extentDB, range,
     			 0, (newBasisFn->distFn)? 0: 1);
-    *(bMx + 0) = 0.0;
-    *(bMx + 1) = 0.0;
-    *(bMx + 2) = 0.0;
+    *(bV + 0) = 0.0;
+    *(bV + 1) = 0.0;
+    *(bV + 2) = 0.0;
     for(idY = 0; idY < nPts; ++idY)
     {
       idY3 = idY + 3;
-      *(bMx + idY3) = (sPts + idY)->vtY - (dPts + idY)->vtY;
+      *(bV + idY3) = (sPts + idY)->vtY - (dPts + idY)->vtY;
     }
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover mu and the y polynomial coefficients. */
-    WlzBasisFnMQCoexff2D(newBasisFn, bMx,  &extentDB, range,
+    WlzBasisFnMQCoexff2D(newBasisFn, bV,  &extentDB, range,
     			 1, (newBasisFn->distFn)? 0: 1);
   }
-  if(bMx)
-  {
-    AlcFree(bMx);
-  }
-  if(wMx)
-  {
-    AlcFree(wMx);
-  }
-  if(aMx)
-  {
-    (void )AlcDouble2Free(aMx);
-  }
-  if(vMx)
-  {
-    (void )AlcDouble2Free(vMx);
-  }
+  AlcFree(bV);
+  AlcFree(wV);
+  AlgMatrixFree(aM);
+  AlgMatrixFree(vM);
   if(errNum != WLZ_ERR_NONE)
   {
     if(newBasisFn)
@@ -2003,10 +1963,11 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
 		deltaRg,
 		deltaSq,
 		range;
-  double	*bMx = NULL,
-  		*wMx = NULL;
-  double	**aMx = NULL,
-  		**vMx = NULL;
+  double	*bV = NULL,
+  		*wV = NULL;
+  double	**aA;
+  AlgMatrix	aM,
+  		vM;
   WlzVertex	sPt;
   WlzDVertex3	tDVx0;
   WlzDBox3	extentDB;
@@ -2014,6 +1975,8 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	stepVx = 10;
 
+  aM.core = NULL;
+  vM.core = NULL;
   nSys = nPts + 4;
   deltaSq = delta * delta;
   if(mesh != NULL)
@@ -2178,16 +2141,17 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Allocate matrices for solving basis function the design equation. */
-    if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
-       ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
-       (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
-       (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE))
+    if(((wV = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
+       ((bV = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+       ((vM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL) ||
+       ((aM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
     WlzBasisFnVxExtent3D(&extentDB, dPts, sPts, nPts);
     tD0 = extentDB.xMax - extentDB.xMin;
     tD1 = extentDB.yMax - extentDB.yMin;
@@ -2223,15 +2187,15 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
     {
       for(idX = 0; idX < 4; ++idX)
       {
-        *(*(aMx + idY) + idX) = 0.0;
+        *(*(aA + idY) + idX) = 0.0;
       }
-      *(bMx + idY) = 0.0;
+      *(bV + idY) = 0.0;
     }
     for(idY = 0; idY < nPts; ++idY)
     {
       idY4 = idY + 4;
       tD0 = (dPts + idY)->vtX;
-      *(bMx + idY4) = (sPts + idY)->vtX - tD0;
+      *(bV + idY4) = (sPts + idY)->vtX - tD0;
       if(newBasisFn->distMap != NULL)
       {
         tD1 = (dPts + idY)->vtY;
@@ -2243,14 +2207,14 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
 	tD1 = ((dPts + idY)->vtY - extentDB.yMin) / range;
 	tD2 = ((dPts + idY)->vtZ - extentDB.zMin) / range;
       }
-      *(*(aMx + idY4) + 0) = 1.0;
-      *(*(aMx + idY4) + 1) = tD0;
-      *(*(aMx + idY4) + 2) = tD1;
-      *(*(aMx + idY4) + 3) = tD2;
-      *(*(aMx + 0) + idY4) = 1.0;
-      *(*(aMx + 1) + idY4) = tD0;
-      *(*(aMx + 2) + idY4) = tD1;
-      *(*(aMx + 3) + idY4) = tD2;
+      *(*(aA + idY4) + 0) = 1.0;
+      *(*(aA + idY4) + 1) = tD0;
+      *(*(aA + idY4) + 2) = tD1;
+      *(*(aA + idY4) + 3) = tD2;
+      *(*(aA + 0) + idY4) = 1.0;
+      *(*(aA + 1) + idY4) = tD0;
+      *(*(aA + 2) + idY4) = tD1;
+      *(*(aA + 3) + idY4) = tD2;
       for(idX = 0; idX < idY; ++idX)
       {
 	if(newBasisFn->distMap)
@@ -2270,81 +2234,66 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
 	}
         tD1 = (tD0 > DBL_EPSILON)? sqrt(tD0 + deltaSq): delta;
 	idX4 = idX + 4;
-	*(*(aMx + idY4) + idX4) = tD1;
-	*(*(aMx + idX4) + idY4) = tD1;
+	*(*(aA + idY4) + idX4) = tD1;
+	*(*(aA + idX4) + idY4) = tD1;
       }
-      *(*(aMx + idY4) + idY4) = delta;
+      *(*(aA + idY4) + idY4) = delta;
     }
     /* Perform singular value decomposition of matrix A. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aM, wV, vM));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    WlzBasisFnEditSV(nSys, wMx);
+    WlzBasisFnEditSV(nSys, wV);
     /* Solve for lambda and the X polynomial coefficients. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover lambda and the x polynomial coefficients, then set up for mu
      * and the y polynomial coefficients. */
-    WlzBasisFnMQCoeff3D(newBasisFn, bMx,  &extentDB, range,
+    WlzBasisFnMQCoeff3D(newBasisFn, bV,  &extentDB, range,
     			0, (newBasisFn->distFn)? 0: 1);
-    *(bMx + 0) = 0.0;
-    *(bMx + 1) = 0.0;
-    *(bMx + 2) = 0.0;
-    *(bMx + 3) = 0.0;
+    *(bV + 0) = 0.0;
+    *(bV + 1) = 0.0;
+    *(bV + 2) = 0.0;
+    *(bV + 3) = 0.0;
      for(idY = 0; idY < nPts; ++idY)
     {
       idY4 = idY + 4;
-      *(bMx + idY4) = (sPts + idY)->vtY - (dPts + idY)->vtY;
+      *(bV + idY4) = (sPts + idY)->vtY - (dPts + idY)->vtY;
     }
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
 
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover mu and the y polynomial coefficients, then set up for nu
      * and the z polynomial coefficients */
-    WlzBasisFnMQCoeff3D(newBasisFn, bMx,  &extentDB, range,
+    WlzBasisFnMQCoeff3D(newBasisFn, bV,  &extentDB, range,
     			1, (newBasisFn->distFn)? 0: 1);
-    *(bMx + 0) = 0.0;
-    *(bMx + 1) = 0.0;
-    *(bMx + 2) = 0.0;
-    *(bMx + 3) = 0.0;
+    *(bV + 0) = 0.0;
+    *(bV + 1) = 0.0;
+    *(bV + 2) = 0.0;
+    *(bV + 3) = 0.0;
      for(idY = 0; idY < nPts; ++idY)
     {
       idY4 = idY + 4;
-      *(bMx + idY4) = (sPts + idY)->vtZ - (dPts + idY)->vtZ;
+      *(bV + idY4) = (sPts + idY)->vtZ - (dPts + idY)->vtZ;
     }
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover nu and the z polynomial coefficients. */
-    WlzBasisFnMQCoeff3D(newBasisFn, bMx,  &extentDB, range,
+    WlzBasisFnMQCoeff3D(newBasisFn, bV,  &extentDB, range,
     			2, (newBasisFn->distFn)? 0: 1);
   }
-  if(bMx)
-  {
-    AlcFree(bMx);
-  }
-  if(wMx)
-  {
-    AlcFree(wMx);
-  }
-  if(aMx)
-  {
-    (void )AlcDouble2Free(aMx);
-  }
-  if(vMx)
-  {
-    (void )AlcDouble2Free(vMx);
-  }
+  AlcFree(bV);
+  AlcFree(wV);
+  (void )AlgMatrixFree(aM);
+  (void )AlgMatrixFree(vM);
   if(errNum != WLZ_ERR_NONE)
   {
     if(newBasisFn)
@@ -2411,10 +2360,11 @@ WlzBasisFn *WlzBasisFnIMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
 		tD2,
 		deltaSq,
 		range;
-  double	*bMx = NULL,
-  		*wMx = NULL;
-  double	**aMx = NULL,
-  		**vMx = NULL;
+  double	*bV = NULL,
+  		*wV = NULL;
+  double	**aA;
+  AlgMatrix	aM,
+  		vM;
   WlzVertex	sPt;
   WlzDVertex2	tV0;
   WlzDBox2	extentDB;
@@ -2432,6 +2382,8 @@ WlzBasisFn *WlzBasisFnIMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
     delta = val;
   }
 #endif /* WLZ_BASISFN_DELTA_ENV */
+  aM.core = NULL;
+  vM.core = NULL;
   nSys = nPts + 3;
   if(mesh != NULL)
   {
@@ -2595,16 +2547,17 @@ WlzBasisFn *WlzBasisFnIMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Allocate matrices for solving basis function the design equation. */
-    if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
-       ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
-       (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
-       (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE))
+    if(((wV = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
+       ((bV = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+       ((aM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL) ||
+       ((vM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
     WlzBasisFnVxExtent2D(&extentDB, dPts, sPts, nPts);
     tD0 = extentDB.xMax - extentDB.xMin;
     tD1 = extentDB.yMax - extentDB.yMin;
@@ -2636,22 +2589,22 @@ WlzBasisFn *WlzBasisFnIMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
     {
       for(idX = 0; idX < 3; ++idX)
       {
-	*(*(aMx + idY) + idX) = 0.0;
+	*(*(aA + idY) + idX) = 0.0;
       }
-      *(bMx + idY) = 0.0;
+      *(bV + idY) = 0.0;
     }
     for(idY = 0; idY < nPts; ++idY)
     {
       idY3 = idY + 3;
       tD0 = (dPts + idY)->vtX;
-      *(bMx + idY3) = (sPts + idY)->vtX - tD0;
+      *(bV + idY3) = (sPts + idY)->vtX - tD0;
       tD1 = (dPts + idY)->vtY;
-      *(*(aMx + idY3) + 0) = 1.0;
-      *(*(aMx + idY3) + 1) = tD0;
-      *(*(aMx + idY3) + 2) = tD1;
-      *(*(aMx + 0) + idY3) = 1.0;
-      *(*(aMx + 1) + idY3) = tD0;
-      *(*(aMx + 2) + idY3) = tD1;
+      *(*(aA + idY3) + 0) = 1.0;
+      *(*(aA + idY3) + 1) = tD0;
+      *(*(aA + idY3) + 2) = tD1;
+      *(*(aA + 0) + idY3) = 1.0;
+      *(*(aA + 1) + idY3) = tD0;
+      *(*(aA + 2) + idY3) = tD1;
       for(idX = 0; idX < idY; ++idX)
       {
 	if(newBasisFn->distMap)
@@ -2670,59 +2623,45 @@ WlzBasisFn *WlzBasisFnIMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
 	tD1 = (tD0 > DBL_EPSILON)? sqrt(tD0 + deltaSq): delta;
 	tD2 = 1.0 / tD1;
 	idX3 = idX + 3;
-	*(*(aMx + idY3) + idX3) = tD2;
-	*(*(aMx + idX3) + idY3) = tD2;
+	*(*(aA + idY3) + idX3) = tD2;
+	*(*(aA + idX3) + idY3) = tD2;
       }
-      *(*(aMx + idY3) + idY3) = 1.0 / delta;
+      *(*(aA + idY3) + idY3) = 1.0 / delta;
     }
     /* Perform singular value decomposition of matrix A. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aM, wV, vM));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    WlzBasisFnEditSV(nSys, wMx);
+    WlzBasisFnEditSV(nSys, wV);
     /* Solve for lambda and the X polynomial coefficients. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover lambda and the x polynomial coefficients, then set up for mu
        and the y polynomial coefficients. */
-    WlzBasisFnMQCoexff2D(newBasisFn, bMx,  &extentDB, range, 0, 0);
-    *(bMx + 0) = 0.0;
-    *(bMx + 1) = 0.0;
-    *(bMx + 2) = 0.0;
+    WlzBasisFnMQCoexff2D(newBasisFn, bV,  &extentDB, range, 0, 0);
+    *(bV + 0) = 0.0;
+    *(bV + 1) = 0.0;
+    *(bV + 2) = 0.0;
     for(idY = 0; idY < nPts; ++idY)
     {
       idY3 = idY + 3;
-      *(bMx + idY3) = (sPts + idY)->vtY - (dPts + idY)->vtY;
+      *(bV + idY3) = (sPts + idY)->vtY - (dPts + idY)->vtY;
     }
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover mu and the y polynomial coefficients. */
-    WlzBasisFnMQCoexff2D(newBasisFn, bMx,  &extentDB, range, 1, 0);
+    WlzBasisFnMQCoexff2D(newBasisFn, bV,  &extentDB, range, 1, 0);
   }
-  if(bMx)
-  {
-    AlcFree(bMx);
-  }
-  if(wMx)
-  {
-    AlcFree(wMx);
-  }
-  if(aMx)
-  {
-    (void )AlcDouble2Free(aMx);
-  }
-  if(vMx)
-  {
-    (void )AlcDouble2Free(vMx);
-  }
+  AlcFree(bV);
+  AlcFree(wV);
+  AlgMatrixFree(aM);
+  AlgMatrixFree(vM);
   if(errNum != WLZ_ERR_NONE)
   {
     if(newBasisFn)
@@ -2776,10 +2715,11 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
                 tD2,
 		deltaSq,
 		range;
-  double	*bMx = NULL,
-  		*wMx = NULL;
-  double	**aMx = NULL,
-  		**vMx = NULL;
+  double	*bV = NULL,
+  		*wV = NULL;
+  double	**aA;
+  AlgMatrix	aM,
+  		vM;
   WlzVertex	sPt;
   WlzDVertex3	tDVx0;
   WlzDBox3	extentDB;
@@ -2797,6 +2737,8 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
     delta = val;
   }
 #endif /* WLZ_BASISFN_DELTA_ENV */
+  aM.core = NULL;
+  vM.core = NULL;
   nSys = nPts + 4;
   if(mesh != NULL)
   {
@@ -2975,16 +2917,17 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Allocate matrices for solving basis function the design equation. */
-    if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
-       ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
-       (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
-       (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE))
+    if(((wV = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
+       ((bV = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+       ((vM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL) ||
+       ((aM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
     WlzBasisFnVxExtent3D(&extentDB, dPts, sPts, nPts);
     tD0 = extentDB.xMax - extentDB.xMin;
     tD1 = extentDB.yMax - extentDB.yMin;
@@ -3021,9 +2964,9 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
     {
       for(idX = 0; idX < 4; ++idX)
       {
-        *(*(aMx + idY) + idX) = 0.0;
+        *(*(aA + idY) + idX) = 0.0;
       }
-      *(bMx + idY) = 0.0;
+      *(bV + idY) = 0.0;
     }
     for(idY = 0; idY < nPts; ++idY)
     {
@@ -3031,15 +2974,15 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
       tD0 = (dPts + idY)->vtX;
       tD1 = (dPts + idY)->vtY;
       tD2 = (dPts + idY)->vtZ;
-      *(bMx + idY4) = (sPts + idY)->vtX - tD0;
-      *(*(aMx + idY4) + 0) = 1.0;
-      *(*(aMx + idY4) + 1) = tD0;
-      *(*(aMx + idY4) + 2) = tD1;
-      *(*(aMx + idY4) + 3) = tD2;
-      *(*(aMx + 0) + idY4) = 1.0;
-      *(*(aMx + 1) + idY4) = tD0;
-      *(*(aMx + 2) + idY4) = tD1;
-      *(*(aMx + 3) + idY4) = tD2;
+      *(bV + idY4) = (sPts + idY)->vtX - tD0;
+      *(*(aA + idY4) + 0) = 1.0;
+      *(*(aA + idY4) + 1) = tD0;
+      *(*(aA + idY4) + 2) = tD1;
+      *(*(aA + idY4) + 3) = tD2;
+      *(*(aA + 0) + idY4) = 1.0;
+      *(*(aA + 1) + idY4) = tD0;
+      *(*(aA + 2) + idY4) = tD1;
+      *(*(aA + 3) + idY4) = tD2;
       for(idX = 0; idX < idY; ++idX)
       {
 	if(newBasisFn->distMap)
@@ -3060,78 +3003,63 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
         tD1 = (tD0 > DBL_EPSILON)? sqrt(tD0 + deltaSq): delta;
 	tD2 = 1.0 / tD1;
 	idX4 = idX + 4;
-	*(*(aMx + idY4) + idX4) = tD2;
-	*(*(aMx + idX4) + idY4) = tD2;
+	*(*(aA + idY4) + idX4) = tD2;
+	*(*(aA + idX4) + idY4) = tD2;
       }
-      *(*(aMx + idY4) + idY4) = 1.0 / delta;
+      *(*(aA + idY4) + idY4) = 1.0 / delta;
     }
     /* Perform singular value decomposition of matrix A. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aM, wV, vM));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    WlzBasisFnEditSV(nSys, wMx);
+    WlzBasisFnEditSV(nSys, wV);
     /* Solve for lambda and the X polynomial coefficients. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover lambda and the x polynomial coefficients, then set up for mu
      * and the y polynomial coefficients. */
-    WlzBasisFnMQCoeff3D(newBasisFn, bMx,  &extentDB, range, 0, 0);
-    *(bMx + 0) = 0.0;
-    *(bMx + 1) = 0.0;
-    *(bMx + 2) = 0.0;
-    *(bMx + 3) = 0.0;
+    WlzBasisFnMQCoeff3D(newBasisFn, bV,  &extentDB, range, 0, 0);
+    *(bV + 0) = 0.0;
+    *(bV + 1) = 0.0;
+    *(bV + 2) = 0.0;
+    *(bV + 3) = 0.0;
      for(idY = 0; idY < nPts; ++idY)
     {
       idY4 = idY + 4;
-      *(bMx + idY4) = (sPts + idY)->vtY - (dPts + idY)->vtY;
+      *(bV + idY4) = (sPts + idY)->vtY - (dPts + idY)->vtY;
     }
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
 
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover mu and the y polynomial coefficients, then set up for nu
      * and the z polynomial coefficients */
-    WlzBasisFnMQCoeff3D(newBasisFn, bMx,  &extentDB, range, 1, 0);
-    *(bMx + 0) = 0.0;
-    *(bMx + 1) = 0.0;
-    *(bMx + 2) = 0.0;
-    *(bMx + 3) = 0.0;
+    WlzBasisFnMQCoeff3D(newBasisFn, bV,  &extentDB, range, 1, 0);
+    *(bV + 0) = 0.0;
+    *(bV + 1) = 0.0;
+    *(bV + 2) = 0.0;
+    *(bV + 3) = 0.0;
      for(idY = 0; idY < nPts; ++idY)
     {
       idY4 = idY + 4;
-      *(bMx + idY4) = (sPts + idY)->vtZ - (dPts + idY)->vtZ;
+      *(bV + idY4) = (sPts + idY)->vtZ - (dPts + idY)->vtZ;
     }
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Recover nu and the z polynomial coefficients. */
-    WlzBasisFnMQCoeff3D(newBasisFn, bMx,  &extentDB, range, 2, 0);
+    WlzBasisFnMQCoeff3D(newBasisFn, bV,  &extentDB, range, 2, 0);
   }
-  if(bMx)
-  {
-    AlcFree(bMx);
-  }
-  if(wMx)
-  {
-    AlcFree(wMx);
-  }
-  if(aMx)
-  {
-    (void )AlcDouble2Free(aMx);
-  }
-  if(vMx)
-  {
-    (void )AlcDouble2Free(vMx);
-  }
+  AlcFree(bV);
+  AlcFree(wV);
+  AlgMatrixFree(aM);
+  AlgMatrixFree(vM);
   if(errNum != WLZ_ERR_NONE)
   {
     if(newBasisFn)
@@ -3187,10 +3115,11 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   double	tD0,
 		tD1,
 		range;
-  double	*bMx = NULL,
-  		*wMx = NULL;
-  double	**aMx = NULL,
-  		**vMx = NULL;
+  double	*bV = NULL,
+  		*wV = NULL;
+  double	**aA;
+  AlgMatrix	aM,
+  		vM;
   WlzVertex	sPt;
   WlzDVertex2	tDVx0;
   WlzDBox2	extentDB;
@@ -3198,6 +3127,8 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int     stepVx = 10;
 
+  aM.core = NULL;
+  vM.core = NULL;
   nSys = nPts + 3;
   if(mesh != NULL)
   {
@@ -3355,16 +3286,17 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Allocate matrices for solving basis function the design equation. */
-    if(((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
-       ((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
-       (AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
-       (AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE))
+    if(((wV = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
+       ((bV = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+       ((aM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL) ||
+       ((vM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    aA = aM.rect->array;
     WlzBasisFnVxExtent2D(&extentDB, dPts, sPts, nPts);
     tD0 = extentDB.xMax - extentDB.xMin;
     tD1 = extentDB.yMax - extentDB.yMin;
@@ -3392,23 +3324,23 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
     {
       for(idX = 0; idX < 3; ++idX)
       {
-	*(*(aMx + idY) + idX) = 0.0;
+	*(*(aA + idY) + idX) = 0.0;
       }
-      *(bMx + idY) = 0.0;
+      *(bV + idY) = 0.0;
     }
     for(idY = 0; idY < nPts; ++idY)
     {
       idY3 = idY + 3;
       tD0 = (dPts + idY)->vtX;
-      *(bMx + idY3) = (sPts + idY)->vtX - tD0;
+      *(bV + idY3) = (sPts + idY)->vtX - tD0;
       tD0 = (tD0 - extentDB.xMin) / range;
       tD1 = ((dPts + idY)->vtY - extentDB.yMin) / range;
-      *(*(aMx + idY3) + 0) = 1.0;
-      *(*(aMx + idY3) + 1) = tD0;
-      *(*(aMx + idY3) + 2) = tD1;
-      *(*(aMx + 0) + idY3) = 1.0;
-      *(*(aMx + 1) + idY3) = tD0;
-      *(*(aMx + 2) + idY3) = tD1;
+      *(*(aA + idY3) + 0) = 1.0;
+      *(*(aA + idY3) + 1) = tD0;
+      *(*(aA + idY3) + 2) = tD1;
+      *(*(aA + 0) + idY3) = 1.0;
+      *(*(aA + 1) + idY3) = tD0;
+      *(*(aA + 2) + idY3) = tD1;
       for(idX = 0; idX < idY; ++idX)
       {
 	if(newBasisFn->distFn)
@@ -3427,55 +3359,41 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
 	}
 	tD1 = (tD0 > DBL_EPSILON)? tD0 * log(tD0): 0.0;
 	idX3 = idX + 3;
-	*(*(aMx + idY3) + idX3) = tD1;
-	*(*(aMx + idX3) + idY3) = tD1;
+	*(*(aA + idY3) + idX3) = tD1;
+	*(*(aA + idX3) + idY3) = tD1;
       }
-      *(*(aMx + idY3) + idY3) = 0.0;
+      *(*(aA + idY3) + idY3) = 0.0;
     }
     /* Perform singular value decomposition of matrix A. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aM, wV, vM));
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    WlzBasisFnEditSV(nSys, wMx);
+    WlzBasisFnEditSV(nSys, wV);
     /* Solve for lambda and the X polynomial coefficients. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    WlzBasisFnTPS2DCoef(newBasisFn, bMx,  &extentDB, range, 1);
-    *(bMx + 0) = 0.0;
-    *(bMx + 1) = 0.0;
-    *(bMx + 2) = 0.0;
+    WlzBasisFnTPS2DCoef(newBasisFn, bV,  &extentDB, range, 1);
+    *(bV + 0) = 0.0;
+    *(bV + 1) = 0.0;
+    *(bV + 2) = 0.0;
     for(idY = 0; idY < nPts; ++idY)
     {
-      *(bMx + idY + 3) = (sPts + idY)->vtY - (dPts + idY)->vtY;
+      *(bV + idY + 3) = (sPts + idY)->vtY - (dPts + idY)->vtY;
     }
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-				    		vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    WlzBasisFnTPS2DCoef(newBasisFn, bMx,  &extentDB, range, 0);
+    WlzBasisFnTPS2DCoef(newBasisFn, bV,  &extentDB, range, 0);
   }
-  if(bMx)
-  {
-    AlcFree(bMx);
-  }
-  if(wMx)
-  {
-    AlcFree(wMx);
-  }
-  if(aMx)
-  {
-    (void )AlcDouble2Free(aMx);
-  }
-  if(vMx)
-  {
-    (void )AlcDouble2Free(vMx);
-  }
+  AlcFree(bV);
+  AlcFree(wV);
+  AlgMatrixFree(aM);
+  AlgMatrixFree(vM);
   if(errNum != WLZ_ERR_NONE)
   {
     if(newBasisFn)
@@ -3641,23 +3559,26 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
 		phi0,
 		delta,
 		tau;
-  double	*bMx = NULL;
+  double	*bV = NULL;
 #ifdef WLZ_BASISFN_MOS_SOLVER_SVD
   double	wMax;
-  double  	*wMx = NULL;
-  double  	**vMx = NULL;
+  double  	*wV = NULL;
+  double  	**vA;
+  AlgMatrix	vM;
 #else
-  double  	**wMx = NULL;
-  double	*xMx = NULL;
+  double  	**wA;
+  double	*xV = NULL;
+  AlgMatrix	wM;
 #endif
-  double	**aMx = NULL;
+  double	**aA;
+  AlgMatrix	aM;
   WlzBasisFn	*basisFn = NULL;
   WlzDVertex3	tV0,
   		tV1,
 		tV2;
   WlzHistogramDomain *evalData = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  
+
   delta = *(param + 0);
   tau = *(param + 1);
   if((delta < DBL_EPSILON) || (tau < DBL_EPSILON) ||
@@ -3674,14 +3595,14 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
     nSys = nPts + 1;
     if(
 #ifdef WLZ_BASISFN_MOS_SOLVER_SVD
-        ((wMx = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
-	(AlcDouble2Malloc(&vMx, nSys, nSys) !=  ALC_ER_NONE) ||
+        ((wV = (double *)AlcCalloc(sizeof(double), nSys)) == NULL) ||
+	((vM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL) ||
 #else
-        (AlcDouble2Malloc(&wMx, 4, nSys) !=  ALC_ER_NONE) ||
-	((xMx = (double *)AlcCalloc(nSys, sizeof(double))) == NULL) ||
+	((wM.rect = AlgMatrixRectNew(4, nSys, NULL)) == NULL) ||
+	((xV = (double *)AlcCalloc(nSys, sizeof(double))) == NULL) ||
 #endif
-	((bMx = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
-	(AlcDouble2Malloc(&aMx, nSys, nSys) !=  ALC_ER_NONE) ||
+	((bV = (double *)AlcMalloc(sizeof(double) * nSys)) == NULL) ||
+	((aM.rect = AlgMatrixRectNew(nSys, nSys, NULL)) == NULL) ||
 	((basisFn = (WlzBasisFn *)
 	  AlcCalloc(sizeof(WlzBasisFn), 1)) == NULL) ||
 	((basisFn->poly.v = AlcMalloc(sizeof(double) * 1)) == NULL) ||
@@ -3695,6 +3616,12 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+#ifdef WLZ_BASISFN_MOS_SOLVER_SVD
+    vA = vM.rect->array;
+#else
+    wA = wM.rect->array;
+#endif
+    aA = aM.rect->array;
     *((double *)(basisFn->param) + 0) = delta;
     *((double *)(basisFn->param) + 1) = tau;
     basisFn->type = WLZ_FN_BASIS_SCALAR_3DMOS;
@@ -3704,13 +3631,13 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
     basisFn->evalFn = WlzBasisFnScalarMOS3DEvalFn; /* Don't set to avoid LUT */
     basisFn->evalData = evalData;
     WlzValueCopyDVertexToDVertex3(basisFn->vertices.d3, cPts, nPts);
-    *(*(aMx + 0) + 0) = 0.0;
+    *(*(aA + 0) + 0) = 0.0;
     for(idX = 0; idX < nPts; ++idX)
     {
       idX1 = idX + 1;
-      *(*(aMx + 0) + idX1) = 1.0;
+      *(*(aA + 0) + idX1) = 1.0;
     }
-    *(bMx + 0) = 0.0;
+    *(bV + 0) = 0.0;
     phi0 = basisFn->evalFn?
     	   basisFn->evalFn((void *)basisFn, 0.0):
 	   WlzBasisFnValueMOSPhi(0.0, delta, tau);
@@ -3718,8 +3645,8 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
     {
       idY1 = idY + 1;
       tV0 = *(cPts + idY);
-      *(bMx + idY1) = *(cVal + idY);
-      *(*(aMx + idY1) + 0) = 1.0;
+      *(bV + idY1) = *(cVal + idY);
+      *(*(aA + idY1) + 0) = 1.0;
       for(idX = 0; idX < idY; ++idX)
       {
 	idX1 = idX + 1;
@@ -3729,28 +3656,27 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
         tD0 = basisFn->evalFn? 
 	      basisFn->evalFn((void *)basisFn, rad):
 	      WlzBasisFnValueMOSPhi(rad, delta, tau);
-	*(*(aMx + idY1) + idX1) = *(*(aMx + idX1) + idY1) = tD0;
+	*(*(aA + idY1) + idX1) = *(*(aA + idX1) + idY1) = tD0;
       }
-      *(*(aMx + idY1) + idY1) = phi0 + *(alpha + idY);
+      *(*(aA + idY1) + idY1) = phi0 + *(alpha + idY);
     }
 #ifdef WLZ_BASISFNSCALARMOS3DFROMCPTS_DEBUG
     {
       FILE	*fP;
-      fP = fopen("DEBUG_aMx.num", "w");
-      AlcDouble2WriteAsci(fP, aMx, nSys, nSys);
+      fP = fopen("DEBUG_aM.num", "w");
+      AlgMatrixWriteAscii(aM, fP);
       fclose(fP);
-      fP = fopen("DEBUG_bMx.num", "w");
-      AlcDouble1WriteAsci(fP, bMx, nSys);
+      fP = fopen("DEBUG_bV.num", "w");
+      AlcDouble1WriteAsci(fP, bV, nSys);
       fclose(fP);
     }
 #endif
     /* Solve the design equation. */
 #ifdef WLZ_BASISFN_MOS_SOLVER_SVD
-    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aMx, nSys, nSys, wMx, vMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(aM, wV, vM));
 #else
     errNum = WlzErrorFromAlg(
-    	     AlgMatrixCGSolve(ALG_MATRIX_RECT,
-	     		      aMx, xMx, bMx, wMx, nSys, NULL, NULL, 0.000001,
+    	     AlgMatrixCGSolve(aM, xV, bV, wM, NULL, NULL, 0.000001,
 	                      1000, NULL, NULL));
 #endif
   }
@@ -3758,63 +3684,50 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Edit the singular values. */
-    WlzBasisFnEditSV(nSys, wMx);
+    WlzBasisFnEditSV(nSys, wV);
     /* Solve for lambda and the polynomial coefficients. */
-    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aMx, nSys, nSys, wMx,
-    						vMx, bMx));
+    errNum = WlzErrorFromAlg(AlgMatrixSVBackSub(aM, wV, vM, bV));
   }
 #ifdef WLZ_BASISFNSCALARMOS3DFROMCPTS_DEBUG
     {
       FILE	*fP;
       fP = fopen("DEBUG_bMxBS.num", "w");
-      AlcDouble1WriteAsci(fP, bMx, nSys);
+      AlcDouble1WriteAsci(fP, bV, nSys);
       fclose(fP);
     }
 #endif
   if(errNum == WLZ_ERR_NONE)
   {
-    *(double *)(basisFn->poly.v) = *bMx;	      /* Only constant used. */
+    *(double *)(basisFn->poly.v) = *bV;	              /* Only constant used. */
     for(idY = 0; idY < nPts; ++idY)
     {
       idY1 = idY + 1;
-      *((double *)(basisFn->basis.v) + idY) = *(bMx + idY1);
+      *((double *)(basisFn->basis.v) + idY) = *(bV + idY1);
     }
   }
-  if(wMx)
+  if(wV)
   {
-    AlcFree(wMx);
+    AlcFree(wV);
   }
-  if(vMx)
-  {
-    (void )AlcDouble2Free(vMx);
-  }
+  AlgMatrixFree(vM);
 #else
   if(errNum == WLZ_ERR_NONE)
   {
-    *(double *)(basisFn->poly.v) = *xMx;	      /* Only constant used. */
+    *(double *)(basisFn->poly.v) = *xV;	              /* Only constant used. */
     for(idY = 0; idY < nPts; ++idY)
     {
       idY1 = idY + 1;
-      *((double *)(basisFn->basis.v) + idY) = *(xMx + idY1);
+      *((double *)(basisFn->basis.v) + idY) = *(xV + idY1);
     }
   }
-  if(xMx)
+  if(xV)
   {
-    AlcFree(xMx);
+    AlcFree(xV);
   }
-  if(wMx)
-  {
-    (void )AlcDouble2Free(wMx);
-  }
+  AlgMatrixFree(wM);
 #endif
-  if(bMx)
-  {
-    AlcFree(bMx);
-  }
-  if(aMx)
-  {
-    (void )AlcDouble2Free(aMx);
-  }
+  AlcFree(bV);
+  AlgMatrixFree(aM);
   if(errNum != WLZ_ERR_NONE)
   {
     if(basisFn)
@@ -4466,29 +4379,29 @@ static WlzDVertex3 WlzBasisFnValueRedPoly3D(WlzDVertex3 *poly,
 * \ingroup	WlzFunction
 * \brief	Edits the 1D array of potentialy singular values,
 *		maxing those that are close to zero zero.
-* \param	nV			Number of values.
-* \param	vMx			Array of values.
+* \param	n			Number of values.
+* \param	vV			Array of values.
 */
-static void	WlzBasisFnEditSV(int nV, double *vMx)
+static void	WlzBasisFnEditSV(int n, double *vV)
 {
   int		idN;
   double	thresh,
   		vMax = 0.0;
   const double	tol = 1.0e-09;
 
-  for(idN = 0; idN < nV; ++idN)
+  for(idN = 0; idN < n; ++idN)
   {
-    if(*(vMx + idN) > vMax)
+    if(*(vV + idN) > vMax)
     {
-      vMax = *(vMx + idN);
+      vMax = *(vV + idN);
     }
   }
   thresh = tol * vMax;
-  for(idN = 0; idN < nV; ++idN)
+  for(idN = 0; idN < n; ++idN)
   {
-    if(*(vMx + idN) < thresh)
+    if(*(vV + idN) < thresh)
     {
-      *(vMx + idN) = 0.0;
+      *(vV + idN) = 0.0;
     }
   }
 }
