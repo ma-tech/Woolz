@@ -877,7 +877,7 @@ WlzDVertex2 Wlz3DViewGetIntersectionPoint(
 	b[2] = t1->mat[2][2]*d1 + t1->mat[2][3]
 	  - t2->mat[2][2]*d2 - t2->mat[2][3];
 
-	if( AlgMatrixLUSolve(a, 3, b, 1) ){
+	if( AlgMatrixLUSolveRaw3(a, b, 1) ){
 	  rtnVtx.vtX = -1.0;
 	  rtnVtx.vtY = -1.0;
 	  errNum = WLZ_ERR_ALG;
