@@ -2951,7 +2951,7 @@ WlzAffineTransform	*WlzAffineTransformInverse(WlzAffineTransform *tr,
   if(errNum == WLZ_ERR_NONE)
   {
     dim = WlzAffineTransformDimension(tr, NULL);
-    if(AlgMatrixLUInvert(invTr->mat, dim + 1) != ALG_ERR_NONE)
+    if(AlgMatrixLUInvertRaw(invTr->mat, dim + 1) != ALG_ERR_NONE)
     {
       errNum = WLZ_ERR_TRANSFORM_DATA;
     }
