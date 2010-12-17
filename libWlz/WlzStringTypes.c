@@ -1647,6 +1647,10 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
     errStr = "WLZ_ERR_ALG";
     msgStr = "Numerical algorithm error";
     break;
+  case WLZ_ERR_ALG_CONDITION:
+    errStr = "WLZ_ERR_ALG_CONDITION";
+    msgStr = "Numerical algorithm matrix condition number";
+    break;
   case WLZ_ERR_ALG_SINGULAR:
     errStr = "WLZ_ERR_ALG_SINGULAR";
     msgStr = "Numerical algorithm singular matrix";
