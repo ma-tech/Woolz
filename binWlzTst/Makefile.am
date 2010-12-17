@@ -44,7 +44,6 @@ LDADD 			= -L$(top_srcdir)/libWlz/.libs -lWlz \
 			  -lm
 
 bin_PROGRAMS		= \
-			  WlzTstAlgCrossCorr \
 			  WlzTstCMeshCellStats \
 			  WlzTstCMeshDist \
 			  WlzTstCMeshGen \
@@ -62,9 +61,6 @@ bin_PROGRAMS		= \
 			  WlzTstVxInSimplex \
 			  WlzTstGeomVtxOnLineSegment
 
-
-WlzTstAlgCrossCorr_LDADD		= $(LDADD)
-WlzTstAlgCrossCorr_LDFLAGS		= $(AM_LFLAGS)
 
 WlzTstCMeshCellStats_SOURCES		= WlzTstCMeshCellStats.c
 WlzTstCMeshCellStats_LDADD		= $(LDADD)
