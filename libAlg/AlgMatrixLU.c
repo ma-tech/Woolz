@@ -52,53 +52,180 @@ static char _AlgMatrixLU_c[] = "MRC HGU $Id$";
 * \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Solves the matrix equation A.x = b for x, where A is a
+*		3x3 libAlc double array matrix.
+*		On return the matrix A is overwritten with its LU
+*		decomposition and the column vector b is overwritten
+*		with the solution column matrix x.
+* \param	aM			Raw 3x3 array matrix A.
+* \param	bV			Column vector b.
+* \param	bSz			Size (number of columns) of vector b
+* 					(and x).
+*/
+AlgError	AlgMatrixLUSolveRaw3(double **aM, double *bV, int bSz)
+{
+  int		wSpace[3];
+  AlgError	errCode = ALG_ERR_NONE;
+
+  if((errCode = AlgMatrixLUDecompRaw(aM, 3, wSpace, NULL)) == ALG_ERR_NONE)
+  {
+    /* Having found the LU decomposition, now perform back substitution */
+    (void )AlgMatrixLUBackSubRaw(aM, 3, wSpace, bV +  0);
+    (void )AlgMatrixLUBackSubRaw(aM, 3, wSpace, bV +  3);
+    (void )AlgMatrixLUBackSubRaw(aM, 3, wSpace, bV +  6);
+  }
+  return(errCode);
+}
+
+/*!
+* \return	Error code.
+* \ingroup      AlgMatrix
+* \brief	Solves the matrix equation A.x = b for x, where A is a
+*		4x4 libAlc double array matrix.
+*		On return the matrix A is overwritten with its LU
+*		decomposition and the column vector b is overwritten
+*		with the solution column matrix x.
+* \param	aM			Raw 4x4 array matrix A.
+* \param	bV			Column vector b.
+* \param	bSz			Size (number of columns) of vector b
+* 					(and x).
+*/
+AlgError	AlgMatrixLUSolveRaw4(double **aM, double *bV, int bSz)
+{
+  int		wSpace[4];
+  AlgError	errCode = ALG_ERR_NONE;
+
+  if((errCode = AlgMatrixLUDecompRaw(aM, 4, wSpace, NULL)) == ALG_ERR_NONE)
+  {
+    /* Having found the LU decomposition, now perform back substitution */
+    (void )AlgMatrixLUBackSubRaw(aM, 4, wSpace, bV +  0);
+    (void )AlgMatrixLUBackSubRaw(aM, 4, wSpace, bV +  4);
+    (void )AlgMatrixLUBackSubRaw(aM, 4, wSpace, bV +  8);
+    (void )AlgMatrixLUBackSubRaw(aM, 4, wSpace, bV + 12);
+  }
+  return(errCode);
+}
+
+/*!
+* \return	Error code.
+* \ingroup      AlgMatrix
+* \brief	Solves the matrix equation A.x = b for x, where A is a
 *		square matrix.
 *		On return the matrix A is overwritten with its LU
-*		decomposition and the column matrix b is overwitte
+*		decomposition and the column vector b is overwritten
 *		with the solution column matrix x.
-* \param	aMat			Matrix A.
-* \param	aSz			Size of matrix A
-* \param	bMat			Column matrix b.
-* \param	bSz			Size of matrix b (and x).
+* \param	aM			Square matrix.
+* \param	bV			Column vector b.
+* \param	bSz			Size (number of columns) of vector b
+* 					(and x).
 */
-AlgError	AlgMatrixLUSolve(double **aMat, int aSz,
-				 double *bMat, int bSz)
+AlgError	AlgMatrixLUSolve(AlgMatrix aM, double *bV, int bSz)
+{
+  AlgError	errCode = ALG_ERR_NONE;
+
+  if(aM.core == NULL)
+  {
+    errCode = ALG_ERR_FUNC;
+  }
+  else if(aM.core->type != ALG_MATRIX_RECT)
+  {
+    errCode = ALG_ERR_MATRIX_TYPE;
+  }
+  else
+  {
+    errCode = AlgMatrixLUSolveRaw(aM.rect->array, aM.rect->nR, bV, bSz);
+  }
+  return(errCode);
+}
+/*!
+* \return	Error code.
+* \ingroup      AlgMatrix
+* \brief	Solves the matrix equation A.x = b for x, where A is a
+*		square libAlc double array matrix.
+*		On return the matrix A is overwritten with its LU
+*		decomposition and the column vector b is overwritten
+*		with the solution column matrix x.
+* \param	aM			Square libalc array matrix.
+* \param	aSz			Size of matrix A
+* \param	bV			Column vector b.
+* \param	bSz			Size (number of columns) of vector b
+* 					(and x).
+*/
+AlgError	AlgMatrixLUSolveRaw(double **aM, int aSz, double *bV, int bSz)
 {
   int		count,
   		offset;
   int		*wSpace = NULL;
-  AlgError	errCode = ALG_ERR_FUNC;
+  AlgError	errCode = ALG_ERR_NONE;
 
-  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixLUSolve FE 0x%lx %d 0x%lx %d\n",
-	   (unsigned long )aMat, aSz, (unsigned long )bMat, bSz));
-  if(aMat && *aMat && (aSz > 0) && bMat && (bSz > 0))
+  if((aM == NULL) || (*aM == NULL) || (aSz <= 0) || 
+     (bV == NULL) || (bSz <= 0))
   {
-    errCode = ALG_ERR_NONE;
+    errCode = ALG_ERR_FUNC;
+  }
+  if(errCode == ALG_ERR_NONE)
+  {
     if((wSpace = (int *)AlcMalloc(sizeof(int) * aSz)) == NULL)
     {
       errCode = ALG_ERR_MALLOC;
     }
-    else if((errCode = AlgMatrixLUDecomp(aMat, aSz, wSpace,
-					 NULL)) == ALG_ERR_NONE)
+    else if((errCode = AlgMatrixLUDecompRaw(aM, aSz, wSpace,
+					    NULL)) == ALG_ERR_NONE)
     {
       /* Having found the LU decomposition, now perform back substitution */
       count = bSz;
       offset = 0;
       while((errCode == ALG_ERR_NONE) && (count-- > 0))
       {
-	errCode = AlgMatrixLUBackSub(aMat, aSz, wSpace, bMat + offset);
+	errCode = AlgMatrixLUBackSubRaw(aM, aSz, wSpace, bV + offset);
 	offset += aSz;
       }
     }
-    if(wSpace)
-    {
-      AlcFree(wSpace);
-    }
+    AlcFree(wSpace);
   }
-  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixLUSolve FX %d\n",
-	   (int )errCode));
+  return(errCode);
+}
+
+/*!
+* \return	Error code.
+* \ingroup      AlgMatrix
+* \brief	Calculates the inverse of a 3x3 libAlc double array matrix.
+* \param	aM			Raw double array of size 3x3.
+*/
+AlgError	AlgMatrixLUInvertRaw3(double **aM)
+{
+  double	w[16];
+  AlgError	errCode = ALG_ERR_NONE;
+
+  w[0] = 1.0; w[1] = 0.0; w[2] = 0.0;
+  w[3] = 0.0; w[4] = 1.0; w[5] = 0.0;
+  w[6] = 0.0; w[7] = 0.0; w[8] = 1.0;
+  errCode = AlgMatrixLUSolveRaw3(aM, w, 3);
+  aM[0][0] = w[0]; aM[0][1] = w[1]; aM[0][2] = w[2];
+  aM[1][0] = w[3]; aM[1][1] = w[4]; aM[1][2] = w[5];
+  aM[2][0] = w[6]; aM[2][1] = w[7]; aM[2][2] = w[8];
+  return(errCode);
+}
+
+/*!
+* \return	Error code.
+* \ingroup      AlgMatrix
+* \brief	Calculates the inverse of a 4x4 libAlc double array matrix.
+* \param	aM			Raw double array of size 4x4.
+*/
+AlgError	AlgMatrixLUInvertRaw4(double **aM)
+{
+  double	w[16];
+  AlgError	errCode = ALG_ERR_NONE;
+
+  w[ 0] = 1.0; w[ 1] = 0.0; w[ 2] = 0.0; w[ 3] = 0.0;
+  w[ 4] = 0.0; w[ 5] = 1.0; w[ 6] = 0.0; w[ 7] = 0.0;
+  w[ 8] = 0.0; w[ 9] = 0.0; w[10] = 1.0; w[11] = 0.0;
+  w[12] = 0.0; w[13] = 0.0; w[14] = 0.0; w[15] = 1.0;
+  errCode = AlgMatrixLUSolveRaw4(aM, w, 4);
+  aM[0][0] = w[ 0]; aM[0][1] = w[ 1]; aM[0][2] = w[ 2]; aM[0][3] = w[3];
+  aM[1][0] = w[ 4]; aM[1][1] = w[ 5]; aM[1][2] = w[ 6]; aM[1][3] = w[7];
+  aM[2][0] = w[ 8]; aM[2][1] = w[ 9]; aM[2][2] = w[10]; aM[2][3] = w[11];
+  aM[3][0] = w[12]; aM[3][1] = w[13]; aM[3][2] = w[14]; aM[3][3] = w[15];
   return(errCode);
 }
 
@@ -106,23 +233,48 @@ AlgError	AlgMatrixLUSolve(double **aMat, int aSz,
 * \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Calculates the inverse of a square matrix.
-* \param	aMat			Given matrix A.
+* \param	aM			Square libAlc double array matrix A.
+*/
+AlgError	AlgMatrixLUInvert(AlgMatrix aM)
+{
+  AlgError	errCode = ALG_ERR_NONE;
+
+  if(aM.core == NULL)
+  {
+    errCode = ALG_ERR_FUNC;
+  }
+  else if(aM.core->type != ALG_MATRIX_RECT)
+  {
+    errCode = ALG_ERR_MATRIX_TYPE;
+  }
+  else
+  {
+    errCode = AlgMatrixLUInvertRaw(aM.rect->array, aM.rect->nR);
+  }
+  return(errCode);
+}
+
+/*!
+* \return	Error code.
+* \ingroup      AlgMatrix
+* \brief	Calculates the inverse of a square matrix.
+* \param	aM			Square libAlc double array matrix A.
 * \param	aSz			Size of matrix A.
 */
-AlgError	AlgMatrixLUInvert(double **aMat, int aSz)
+AlgError	AlgMatrixLUInvertRaw(double **aM, int aSz)
 {
   int		idx0,
   		idx1,
   		offset;
   double	*wSpace = NULL;
-  AlgError	errCode = ALG_ERR_FUNC;
+  AlgError	errCode = ALG_ERR_NONE;
 
-  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixLUInvert FE 0x%lx %d\n",
-	   (unsigned long )aMat, aSz));
-  if(aMat && *aMat && (aSz > 0))
+  if((aM == NULL) || (*aM == NULL) || (aSz <= 0))
   {
-    errCode = ALG_ERR_NONE;
+    errCode = ALG_ERR_FUNC;
+  }
+  else
+  {
     if((wSpace = (double *)AlcCalloc(sizeof(double), aSz * aSz)) == NULL)
     {
       errCode = ALG_ERR_MALLOC;
@@ -135,7 +287,7 @@ AlgError	AlgMatrixLUInvert(double **aMat, int aSz)
         *(wSpace + offset) = 1.0;	    	    /* Make it a unit matrix */
 	offset += aSz + 1;
       }
-      errCode = AlgMatrixLUSolve(aMat, aSz, wSpace, aSz);
+      errCode = AlgMatrixLUSolveRaw(aM, aSz, wSpace, aSz);
     }
     if(errCode == ALG_ERR_NONE)
     {
@@ -144,7 +296,7 @@ AlgError	AlgMatrixLUInvert(double **aMat, int aSz)
 	offset = idx0;
 	for(idx1 = 0; idx1 < aSz; ++idx1)
 	{
-	  aMat[idx0][idx1] = *(wSpace + offset);
+	  aM[idx0][idx1] = *(wSpace + offset);
 	  offset += aSz;
 	}
       }
@@ -154,48 +306,119 @@ AlgError	AlgMatrixLUInvert(double **aMat, int aSz)
       AlcFree(wSpace);
     }
   }
-  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixLUInvert FX %d\n",
-	   (int )errCode));
   return(errCode);
 }
 
 /*!
 * \return	Error code.
 * \ingroup      AlgMatrix
-* \brief	Calculates the determinant of a matrix. The matrix is
-*		overwitten with its LU decomposition on exit.
-* \param	aMat			Given matrix A.
-* \param	aSz			Size of matrix A.
-* \param	determ			Destination ptr for the
+* \brief	Calculates the determinant of a 3x3 double libAlc array matrix.
+* 		The matrix is overwitten with its LU decomposition on return.
+* \param	aM			Raw 3x3 array matrix.
+* \param	det			Destination ptr for the
 *					determinant (may be NULL).
 */
-AlgError	AlgMatrixLUDeterm(double **aMat, int aSz, double *determ)
+AlgError	AlgMatrixLUDetermRaw3(double **aM, double *det)
+{
+  int		wSpace[3];
+  AlgError	errCode = ALG_ERR_NONE;
+
+  errCode = AlgMatrixLUDecompRaw(aM, 3, wSpace, det);
+  if(det)
+  {
+    *det *= aM[0][0] * aM[1][1] * aM[2][2];
+  }
+  return(errCode);
+}
+
+/*!
+* \return	Error code.
+* \ingroup      AlgMatrix
+* \brief	Calculates the determinant of a 4x4 double libAlc array matrix.
+* 		The matrix is overwitten with its LU decomposition on return.
+* \param	aM			Raw 4x4 array matrix.
+* \param	det			Destination ptr for the
+*					determinant (may be NULL).
+*/
+AlgError	AlgMatrixLUDetermRaw4(double **aM, double *det)
+{
+  int		wSpace[4];
+  AlgError	errCode = ALG_ERR_NONE;
+
+  errCode = AlgMatrixLUDecompRaw(aM, 4, wSpace, det);
+  if(det)
+  {
+    *det *= aM[0][0] * aM[1][1] * aM[2][2] * aM[3][3];
+  }
+  return(errCode);
+}
+
+/*!
+* \return	Error code.
+* \ingroup      AlgMatrix
+* \brief	Calculates the determinant of a square matrix.
+* 		The matrix is overwitten with its LU decomposition
+* 		on return.
+* \param	aM			Matrix A.
+* \param	det			Destination ptr for the
+*					determinant (may be NULL).
+*/
+AlgError	AlgMatrixLUDeterm(AlgMatrix aM, double *det)
+{
+  AlgError	errCode = ALG_ERR_NONE;
+
+  if(aM.core == NULL)
+  {
+    errCode = ALG_ERR_FUNC;
+  }
+  else if(aM.core->type != ALG_MATRIX_RECT)
+  {
+    errCode = ALG_ERR_MATRIX_TYPE;
+  }
+  else
+  {
+    errCode = AlgMatrixLUDetermRaw(aM.rect->array, aM.rect->nR, det);
+  }
+  return(errCode);
+}
+
+/*!
+* \return	Error code.
+* \ingroup      AlgMatrix
+* \brief	Calculates the determinant of a square double libAlc array
+* 		matrix. The matrix is overwitten with its LU decomposition
+* 		on return.
+* \param	aM			Raw matrix A.
+* \param	aSz			Size of matrix A.
+* \param	det			Destination ptr for the
+*					determinant (may be NULL).
+*/
+AlgError	AlgMatrixLUDetermRaw(double **aM, int aSz, double *det)
 {
   int		idx;
   int		*wSpace = NULL;
-  AlgError	errCode = ALG_ERR_FUNC;
+  AlgError	errCode = ALG_ERR_NONE;
 
-  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixLUDeterm FE 0x%lx %d 0x%lx\n",
-	   (unsigned long )aMat, aSz, (unsigned long )determ));
-  if(aMat && *aMat && (aSz > 0))
+  if((aM == NULL) || (*aM == NULL) || (aSz <= 0))
   {
-    errCode = ALG_ERR_NONE;
+    errCode = ALG_ERR_FUNC;
+  }
+  else
+  {
     if((wSpace = (int *)AlcMalloc(sizeof(int) * aSz)) == NULL)
     {
       errCode = ALG_ERR_MALLOC;
     }
     else
     {
-        errCode = AlgMatrixLUDecomp(aMat, aSz, wSpace, determ);
+        errCode = AlgMatrixLUDecompRaw(aM, aSz, wSpace, det);
     }
-    if((errCode == ALG_ERR_NONE) && determ)
+    if((errCode == ALG_ERR_NONE) && det)
     {
         idx = aSz;
 	while(idx-- > 0)
 	{
-	    *determ *= aMat[idx][idx];
+	    *det *= aM[idx][idx];
 	}
     }
     if(wSpace)
@@ -203,9 +426,6 @@ AlgError	AlgMatrixLUDeterm(double **aMat, int aSz, double *determ)
       AlcFree(wSpace);
     }
   }
-  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixLUDeterm FX %d\n",
-	   (int )errCode));
   return(errCode);
 }
 
@@ -216,15 +436,47 @@ AlgError	AlgMatrixLUDeterm(double **aMat, int aSz, double *determ)
 *		of a row-wise permutation of itself.
 *		The given index vector is used to record the
 *		permutation effected by the partial pivoting.
-* \param	aMat			Given matrix A.
-* \param	aSz			Size of matrix A.
-* \param	idxVec			Index vector.
+* \param	aM			Matrix A.
+* \param	iV			Index vector.
 * \param	evenOdd			Set to +/-1.0 depending on
 *					whether the permutation was
 *					even or odd (may be NULL).
 */
-AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
-    				  int *idxVec, double *evenOdd)
+AlgError	AlgMatrixLUDecomp(AlgMatrix aM, int *iV, double *evenOdd)
+{
+  AlgError	errCode = ALG_ERR_NONE;
+
+  if(aM.core == NULL)
+  {
+    errCode = ALG_ERR_FUNC;
+  }
+  else if(aM.core->type != ALG_MATRIX_RECT)
+  {
+    errCode = ALG_ERR_MATRIX_TYPE;
+  }
+  else
+  {
+    errCode = AlgMatrixLUDecompRaw(aM.rect->array, aM.rect->nR, iV, evenOdd);
+  }
+  return(errCode);
+}
+
+/*!
+* \return	Error code.
+* \ingroup      AlgMatrix
+* \brief	Replaces the given matrix with the LU decomposition
+*		of a row-wise permutation of itself.
+*		The given index vector is used to record the
+*		permutation effected by the partial pivoting.
+* \param	aM			Given raw matrix A.
+* \param	aSz			Size of matrix A.
+* \param	iV			Index vector.
+* \param	evenOdd			Set to +/-1.0 depending on
+*					whether the permutation was
+*					even or odd (may be NULL).
+*/
+AlgError	AlgMatrixLUDecompRaw(double **aM, int aSz,
+    				     int *iV, double *evenOdd)
 {
   int		idx0,
   		idx1,
@@ -238,15 +490,14 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
   double	*tDP0,
 		*tDP1,
   		*wSpace = NULL;
-  AlgError	errCode = ALG_ERR_FUNC;
+  AlgError	errCode = ALG_ERR_NONE;
 
-  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixLUDecomp FE 0x%lx %d 0x%lx 0x%lx\n",
-	   (unsigned long )aMat, aSz, (unsigned long )idxVec,
-	   (unsigned long )evenOdd));
-  if(aMat && *aMat && (aSz > 0) && idxVec)
+  if((aM == NULL) || (*aM == NULL) || (aSz <= 0) || (iV == NULL))
   {
-    errCode = ALG_ERR_NONE;
+    errCode = ALG_ERR_FUNC;
+  }
+  else
+  {
     if((wSpace = (double *)AlcMalloc(sizeof(double) * aSz)) == NULL)
     {
       errCode = ALG_ERR_MALLOC;
@@ -259,7 +510,7 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
       while((idx0 < aSz) && (errCode == ALG_ERR_NONE))
       {
 	aaMax = 0.0;
-	tDP0 = *(aMat + idx0);
+	tDP0 = *(aM + idx0);
 	for(idx1 = 0; idx1 < aSz; ++idx1)
 	{
 	  if((tD0 = fabs(*tDP0++)) > aaMax)
@@ -269,7 +520,7 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
 	}
 	if((aaMax >= -(DBL_EPSILON)) && (aaMax <= DBL_EPSILON))
 	{
-	    errCode = ALG_ERR_SINGULAR;
+	    errCode = ALG_ERR_MATRIX_SINGULAR;
 	}
 	else
 	{
@@ -285,13 +536,13 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
 	{
 	  for(idx0 = 0; idx0 < idx1; ++idx0)
 	  {
-	    tDP0 = *(aMat + idx0);
+	    tDP0 = *(aM + idx0);
 	    sum = *(tDP0 + idx1);
 	    if(idx0 > 0)
 	    {
 	      for(idx2=0; idx2 < idx0; idx2++)
 	      {
-		sum -= *(tDP0 + idx2) * aMat[idx2][idx1];
+		sum -= *(tDP0 + idx2) * aM[idx2][idx1];
 	      }
 	      *(tDP0 + idx1) = sum;
 	    }
@@ -300,13 +551,13 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
 	aaMax = 0.0;	  	   /* Start search for largest pivot element */
 	for(idx0 = idx1; idx0 < aSz; ++idx0)
 	{
-	  tDP0 = *(aMat + idx0);
+	  tDP0 = *(aM + idx0);
 	  sum = *(tDP0 + idx1);
 	  if(idx1 > 0)
 	  {
 	    for(idx2=0; idx2 < idx1; ++idx2)
 	    {
-	      sum -= *(tDP0 + idx2) * aMat[idx2][idx1];
+	      sum -= *(tDP0 + idx2) * aM[idx2][idx1];
 	    }
 	    *(tDP0 + idx1) = sum;
 	  }
@@ -319,8 +570,8 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
 	}
 	if(idx1 != iMax)				 /* Intechange rows? */
 	{
-	  tDP0 = *(aMat + iMax);
-	  tDP1 = *(aMat + idx1);
+	  tDP0 = *(aM + iMax);
+	  tDP1 = *(aM + idx1);
 	  for(idx2 = 0; idx2 < aSz; ++idx2)
 	  {
 	    tD0 = *tDP0;
@@ -330,11 +581,10 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
 	  even = !even;
 	  wSpace[iMax] = wSpace[idx1];
 	}
-	idxVec[idx1] = iMax;
-
+	iV[idx1] = iMax;
 	if(idx1 != (aSz - 1)) 		      /* Divide by the pivot element */
 	{
-	  tDP0 =  *(aMat + idx1) + idx1;
+	  tDP0 =  *(aM + idx1) + idx1;
 	  if(((tD0 = *tDP0) >= -(DBL_EPSILON)) && (tD0 <= DBL_EPSILON))
 	  {
 	    *tDP0 = tiny;
@@ -342,14 +592,14 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
 	  tD0 = 1.0 / *tDP0;
 	  for(idx0=idx1+1; idx0 < aSz; idx0++)
 	  {
-	    aMat[idx0][idx1] *= tD0;
+	    aM[idx0][idx1] *= tD0;
 	  }
 	}
       }
-      if(((tD0 = aMat[aSz-1][aSz-1]) >= -(DBL_EPSILON)) &&
+      if(((tD0 = aM[aSz-1][aSz-1]) >= -(DBL_EPSILON)) &&
          (tD0 <= DBL_EPSILON))
       {
-	aMat[aSz-1][aSz-1] = tiny;
+	aM[aSz-1][aSz-1] = tiny;
       }
       if(evenOdd)
       {
@@ -361,9 +611,6 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
       AlcFree(wSpace);
     }
   }
-  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixLUDecomp FX %d\n",
-	   (int )errCode));
   return(errCode);
 }
 
@@ -372,17 +619,47 @@ AlgError	AlgMatrixLUDecomp(double **aMat, int aSz,
 * \ingroup      AlgMatrix
 * \brief	Solves the set of of linear equations A.x = b where
 *		A is input as its LU decomposition determined with
-*		AlgMatrixLUDecomp()
-*		of a row-wise permutation of itself.
-*		The given index vector is used to record the
+*		AlgMatrixLUDecompRaw() of a row-wise permutation of
+*		itself. The given index vector is used to record the
 *		permutation effected by the partial pivoting
-* \param	aMat			Given matrix A.
-* \param	aSz			Size of matrix A.
-* \param	idxVec			Index vector.
-* \param	bMat			Column matrix b.
+* \param	aM			Matrix A.
+* \param	iV			Index vector.
+* \param	bV			Column vector b.
 */
-AlgError	AlgMatrixLUBackSub(double **aMat, int aSz,
-    				  int *idxVec, double *bMat)
+AlgError	AlgMatrixLUBackSub(AlgMatrix aM, int *iV, double *bV)
+{
+  AlgError	errCode = ALG_ERR_NONE;
+
+  if(aM.core == NULL)
+  {
+    errCode = ALG_ERR_FUNC;
+  }
+  else if(aM.core->type != ALG_MATRIX_RECT)
+  {
+    errCode = ALG_ERR_MATRIX_TYPE;
+  }
+  else
+  {
+    errCode = AlgMatrixLUBackSubRaw(aM.rect->array, aM.rect->nR, iV, bV);
+  }
+  return(errCode);
+}
+
+/*!
+* \return	Error code.
+* \ingroup      AlgMatrix
+* \brief	Solves the set of of linear equations A.x = b where
+*		A is input as its LU decomposition determined with
+*		AlgMatrixLUDecompRaw() of a row-wise permutation of itself.
+*		The given index vector is used to record the permutation
+*		effected by the partial pivoting
+* \param	aM			Given raw libAlc array matrix A.
+* \param	aSz			Size of matrix A.
+* \param	iV			Index vector.
+* \param	bV			Column vector b.
+*/
+AlgError	AlgMatrixLUBackSubRaw(double **aM, int aSz,
+    				      int *iV, double *bV)
 {
   int 		idx0,
   		idx1,
@@ -391,23 +668,24 @@ AlgError	AlgMatrixLUBackSub(double **aMat, int aSz,
   double 	sum;
   double	*tDP0,
   		*tDP1;
-  AlgError	errCode = ALG_ERR_FUNC;
+  AlgError	errCode = ALG_ERR_NONE;
 
-  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixLUBackSub FE 0x%lx %d 0x%lx 0x%lx\n",
-	   (unsigned long )aMat, aSz, (unsigned long )idxVec,
-	   (unsigned long )bMat));
-  if(aMat && *aMat && (aSz > 0) && bMat)
+  if((aM == NULL) || (*aM == NULL) || (aSz <= 0) ||
+     (iV == NULL) || (bV == NULL))
+  {
+    errCode = ALG_ERR_FUNC;
+  }
+  else
   {
     for(idx0 = 0; idx0 < aSz; ++idx0)		     /* Forward substitution */
     {
-      tI0 = idxVec[idx0];			    /* Uncramble permutation */
-      sum = bMat[tI0];
-      bMat[tI0] = bMat[idx0];
+      tI0 = iV[idx0];			    /* Uncramble permutation */
+      sum = bV[tI0];
+      bV[tI0] = bV[idx0];
       if(ii != -1)
       {
-	tDP0 = *(aMat + idx0) + ii;
-	tDP1 = bMat + ii;
+	tDP0 = *(aM + idx0) + ii;
+	tDP1 = bV + ii;
 	for(idx1 = ii; idx1 < idx0; ++idx1)
 	{
 	  sum -= *tDP0++ * *tDP1++;
@@ -417,27 +695,23 @@ AlgError	AlgMatrixLUBackSub(double **aMat, int aSz,
       {
 	ii = idx0;
       }
-      bMat[idx0] = sum;
+      bV[idx0] = sum;
     }
     idx0 = aSz;					      /* Now backsustitution */
     while(idx0-- > 0)
     {
-      sum = bMat[idx0];
+      sum = bV[idx0];
       if(idx0 <= aSz)
       {
-	tDP0 = *(aMat + idx0) + idx0 + 1;
-	tDP1 = bMat + idx0 + 1;
+	tDP0 = *(aM + idx0) + idx0 + 1;
+	tDP1 = bV + idx0 + 1;
 	for(idx1= idx0 + 1; idx1 < aSz; ++idx1)
 	{
 	  sum -= *tDP0++ * *tDP1++;
 	}
       }
-      bMat[idx0] = sum / aMat[idx0][idx0];
+      bV[idx0] = sum / aM[idx0][idx0];
     }
-    errCode = ALG_ERR_NONE;
   }
-  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixLUBackSub FX %d\n",
-	   (int )errCode));
   return(errCode);
 }

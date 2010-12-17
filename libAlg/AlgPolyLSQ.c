@@ -74,10 +74,12 @@ AlgError	AlgPolynomialLSq(double *xVec, double *yVec,
 		*sig = NULL,
   		*xPow = NULL,
 		*sigXKy = NULL;
-  double	**tDPP0,
-  		**aMat = NULL;
+  AlgMatrix	aMat;
+  double	**aAry,
+  		**tDPP0;
   AlgError	errCode = ALG_ERR_FUNC;
 
+  aMat.core = NULL;
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
 	  ("AlgPolynomialLSq FE 0x%lx 0x%lx %d %d 0x%lx\n",
 	   (unsigned long )xVec, (unsigned long )yVec, vecSz, polyDeg,
@@ -90,13 +92,15 @@ AlgError	AlgPolynomialLSq(double *xVec, double *yVec,
     if(((sig = (double *)AlcMalloc(tI1)) == NULL) ||
        ((xPow = (double *)AlcMalloc(tI1)) == NULL) ||
        ((sigXKy  = (double *)AlcMalloc(tI0)) == NULL) ||
-       (AlcDouble2Malloc(&aMat, polyDeg2 + 1, polyDeg2 + 2) != ALC_ER_NONE))
+       ((aMat.rect = AlgMatrixRectNew(polyDeg2 + 1, polyDeg2 + 2,
+                                      NULL)) == NULL))
     {
       errCode = ALG_ERR_MALLOC;
     }
     else
     {
       *xPow = 1.0;
+      aAry = aMat.rect->array;
       for(idxI = 0; idxI < vecSz; ++idxI)
       {
 	tD0 = *(xVec + idxI);
@@ -123,7 +127,7 @@ AlgError	AlgPolynomialLSq(double *xVec, double *yVec,
       *sig = vecSz;
       for(idxI = 0; idxI <= polyDeg; ++idxI)
       {
-	tDP0 = *(aMat + idxI);
+	tDP0 = *(aAry + idxI);
 	tDP1 = sig + idxI;
 	count0 = polyDeg;
 	while(count0-- >= 0)		/*  for(j = 0; j <= polyDeg; ++j) */
@@ -133,30 +137,18 @@ AlgError	AlgPolynomialLSq(double *xVec, double *yVec,
       }
       tI0 = polyDeg + 1;
       tDP0 = sigXKy;
-      tDPP0 = aMat;
+      tDPP0 = aAry;
       count0 = polyDeg;
       while(count0-- >= 0)		/* for(k = 0; k <= polyDeg; ++k) */
       {
 	*(*(tDPP0++) + tI0) = *tDP0++;	/* aMat[k][polyDeg + 1] = sigXKy[k]; */
       }
-      errCode = AlgMatrixGaussSolve(aMat, polyDeg + 1, cVec);
+      errCode = AlgMatrixGaussSolve(aMat, cVec);
     }
-    if(sig)
-    {
-      AlcFree(sig);
-    }
-    if(xPow)
-    {
-      AlcFree(xPow);
-    }
-    if(sigXKy)
-    {
-      AlcFree(sigXKy);
-    }
-    if(aMat)
-    {
-      AlcDouble2Free(aMat);
-    }
+    AlcFree(sig);
+    AlcFree(xPow);
+    AlcFree(sigXKy);
+    AlgMatrixRectFree(aMat.rect);
   }
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
 	  ("AlgPolynomialLSq FX %d\n",

@@ -116,7 +116,9 @@ static double 			AlgMatrixLSQRNorm4(
 * \param	nC             		Number of columns in matrix A.
 * \param	bV			Vector b with nR entries which are
 * 					modified by this function.
-* \param	xV			Vector x for return with nC entries.
+* \param	xV			Vector x for with initial guess at
+* 					solution and for the return of the
+* 					solution with nC entries.
 * \param	damping			Damping parameter, set to 0.0 for no
 * 					damping.
 * \param	relErrA			An estimate of the relative error in
@@ -177,8 +179,7 @@ static double 			AlgMatrixLSQRNorm4(
 * \param	dstNormX		Destination pointer for an estimate of
 * 					the final solution vector 'x'.
 */
-AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
-        			size_t nR, size_t nC,
+AlgError 	AlgMatrixSolveLSQR(AlgMatrix aM,
 				double *bV, double *xV,
 				double damping, double relErrA, double relErrB,
 				long maxItr, long condLim,
@@ -191,6 +192,8 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
   	  	itr = 0,
 		term = 0,
           	termItr = 0;
+  size_t	nR,
+  		nC;
   double  	bnorm,
 		condNTol,
   		cs,
@@ -237,6 +240,8 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
   		*wV = NULL;
   AlgError	errNum = ALG_ERR_NONE;
 
+  nR = aM.core->nR;
+  nC = aM.core->nC;
   if(maxItr <= 0)
   {
     maxItr = nC;
@@ -264,34 +269,32 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
   if(((vV = (double *)AlcCalloc(nC, sizeof(double))) == NULL) ||
      ((wV = (double *)AlcCalloc(nC, sizeof(double))) == NULL))
   {
-    errNum = ALC_ER_ALLOC;
+    errNum = ALG_ERR_MALLOC;
   }
-  if(errNum == ALC_ER_NONE)
+  if(errNum == ALG_ERR_NONE)
   {
-    /* Initialise the result vector to zero. */
-    AlgMatrixZero(&xV, 1, nC);
     /* Set up the initial vectors u and v for bidiagonalization.  These
      * satisfy  the relations
      * beta*u = b - A*x0 
      * alpha*v = A^T*u
      */
     /* Compute Euclidean length of u and store as beta */
-    beta = AlgMatrixVectorNorm(bV, nR);
+    beta = AlgVectorNorm(bV, nR);
     if(beta > 0.0)
     {
       /* Scale vector u by the inverse of beta */
-      AlgMatrixVectorScale(bV, bV, 1.0 / beta, nR);
+      AlgVectorScale(bV, bV, 1.0 / beta, nR);
       /* Compute matrix-vector product A^T*u and store it in vector v */
-      AlgMatrixTVectorMulAdd(vV, aType, aM, bV, vV, nR, nC);
+      AlgMatrixTVectorMulAdd(vV, aM, bV, vV);
       /* Compute Euclidean length of v and store as alpha */
-      alpha = AlgMatrixVectorNorm(vV, nC);
+      alpha = AlgVectorNorm(vV, nC);
     }
     if(alpha > 0.0)
     {
       /* Scale vector v by the inverse of alpha */
-      AlgMatrixScale(&vV, &vV, 1.0 / alpha, 1, nC);
+      AlgVectorScale(vV, vV, 1.0 / alpha, nC);
       /* Copy vector v to vector w */
-      AlgMatrixVectorCopy(wV, vV, nC);
+      AlgVectorCopy(wV, vV, nC);
     }    
     resNormA = alpha * beta;
     resNorm = beta;
@@ -347,27 +350,27 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
        *                alpha*v =  A^T*u  -  beta*v.
        */      
       /* Scale vector u by -alpha */
-      AlgMatrixVectorScale(bV, bV, -alpha, nR);
+      AlgVectorScale(bV, bV, -alpha, nR);
       /* Compute A*v - alpha*u and store in vector u */
-      AlgMatrixVectorMulAdd(bV, aType, aM, vV, bV, nR, nC);
+      AlgMatrixVectorMulAdd(bV, aM, vV, bV);
       /* Compute Euclidean length of u and store as beta */
-      beta = AlgMatrixVectorNorm(bV, nR);
+      beta = AlgVectorNorm(bV, nR);
       /* Accumulate this quantity to estimate Frobenius norm of matrix A */
       bbnorm = AlgMatrixLSQRNorm4(alpha, beta, damping, bbnorm);
       if(beta > 0.0)
       {
 	/* Scale vector u by 1.0 / beta */
-	AlgMatrixVectorScale(bV, bV, 1.0 / beta, nR);
+	AlgVectorScale(bV, bV, 1.0 / beta, nR);
 	/* Scale vector v by -beta */
-	AlgMatrixVectorScale(vV, vV, -beta, nC);
+	AlgVectorScale(vV, vV, -beta, nC);
 	/* Compute A^T*u - beta*v and store in vector v */
-	AlgMatrixTVectorMulAdd(vV, aType, aM, bV, vV, nR, nC);
+	AlgMatrixTVectorMulAdd(vV, aM, bV, vV);
 	/* Compute Euclidean length of v and store as alpha */
-	alpha = AlgMatrixVectorNorm(vV, nC);
+	alpha = AlgVectorNorm(vV, nC);
 	if(alpha > 0.0)
 	{
 	  /* Scale vector v by the inverse of alpha */
-	  AlgMatrixVectorScale(vV, vV, 1.0 / alpha, nC); 
+	  AlgVectorScale(vV, vV, 1.0 / alpha, nC); 
 	}
       }
       /* Use a plane rotation to eliminate the damping parameter.
@@ -455,7 +458,7 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
       {
         /* Condition number greater than machine precision */
 	term = 6;
-	errNum = ALG_ERR_CONDITIONN;
+	errNum = ALG_ERR_MATRIX_CONDITION;
       }
       else if(stopCrit2 <= DBL_EPSILON)
       {
@@ -471,7 +474,7 @@ AlgError 	AlgMatrixSolveLSQR(AlgMatrixType aType, double **aM,
       {
         /* Condition number greater than CONLIM */
 	term = 3;
-	errNum = ALG_ERR_CONDITIONN;
+	errNum = ALG_ERR_MATRIX_CONDITION;
       }
       else if(stopCrit2 <= relErrA)
       {

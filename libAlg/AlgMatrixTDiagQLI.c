@@ -72,7 +72,7 @@ static char _AlgMatrixTDiagQLI_c[] = "MRC HGU $Id$";
 *					is returned in the i'th column
 *					of zM.
 */
-AlgError	AlgMatrixTDiagQLI(double *dM, double *oM, int aSz, double **zM)
+AlgError	AlgMatrixTDiagQLI(double *dM, double *oM, int aSz, AlgMatrix zM)
 {
   int 		id0,
   		id1,
@@ -87,16 +87,19 @@ AlgError	AlgMatrixTDiagQLI(double *dM, double *oM, int aSz, double **zM)
 		p,
   		r,
   		s;
+  double	**zA = NULL;
   AlgError	errCode = ALG_ERR_NONE;
   const int	maxItr = 100;
 
 
-  if((dM == NULL) || (oM == NULL) || (aSz < 2) || (zM && (*zM == NULL)))
+  if((dM == NULL) || (oM == NULL) || (aSz < 2) ||
+     ((zM.core != NULL) && (zM.core->type != ALG_MATRIX_RECT)))
   {
     errCode = ALG_ERR_FUNC;
   }
   else
   {
+    zA = (zM.core != NULL)? zM.rect->array: NULL;
     for(id0 = 1; id0 < aSz; ++id0)
     {
       oM[id0 - 1] = oM[id0];
@@ -157,13 +160,13 @@ AlgError	AlgMatrixTDiagQLI(double *dM, double *oM, int aSz, double **zM)
 	      p = s * r;
 	      dM[id0 + 1] = g + p;
 	      g = (c * r) - b;
-	      if(zM)
+	      if(zA)
 	      {
 		for(id2 = 0 ; id2 < aSz; ++id2)
 		{
-		  f = zM[id2][id0 + 1];
-		  zM[id2][id0 + 1] = s * zM[id2][id0] + (c * f);
-		  zM[id2][id0] = c * zM[id2][id0] - (s * f);
+		  f = zA[id2][id0 + 1];
+		  zA[id2][id0 + 1] = s * zA[id2][id0] + (c * f);
+		  zA[id2][id0] = c * zA[id2][id0] - (s * f);
 		}
 	      }
 	    }

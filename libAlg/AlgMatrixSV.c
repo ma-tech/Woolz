@@ -58,7 +58,7 @@ static double	AlgMatrixSVPythag(double, double);
 * \param	aMat			Matrix A.
 * \param	nM			Number of rows in matrix A.
 * \param	nN			Number of columns in matrix A.
-* \param	bMat			Column matrix b, overwritten
+* \param	bVec			Column matrix b, overwritten
 *					by matrix x on return.
 * \param	tol			Tolerance for singular values,
 *					1.0e-06 should be suitable as
@@ -71,30 +71,40 @@ static double	AlgMatrixSVPythag(double, double);
 *					singular value times the given
 *					threshold.
 */
-AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
-				 double *bMat, double tol, int *dstIC)
+AlgError	AlgMatrixSVSolve(AlgMatrix aMat, double *bVec, double tol,
+                                 int *dstIC)
 {
   int		cnt0,
   		cntIC;
+  size_t	nM,
+  		nN;
   double	thresh,
   		wMax;
   double	*tDP0,
-  		*wMat = NULL;
-  double	**vMat = NULL;
+  		*wVec = NULL;
+  AlgMatrix	vMat;
   AlgError	errCode = ALG_ERR_NONE;
 
-  if((aMat == NULL) || (bMat == NULL) || (nM <= 0) || (nM < nN))
+  nM = aMat.core->nR;
+  nN = aMat.core->nC;
+  vMat.core = NULL;
+  if((aMat.core == NULL) || (aMat.core->type != ALG_MATRIX_RECT) ||
+     (aMat.core->nR <= 0) || (aMat.core->nR < aMat.core->nC) ||
+     (bVec == NULL))
   {
     errCode = ALG_ERR_FUNC;
   }
-  else if(((wMat = (double *)AlcCalloc(sizeof(double), nN)) == NULL) ||
-          (AlcDouble2Malloc(&vMat, nM, nN) != ALC_ER_NONE))
+  else if((wVec = (double *)AlcCalloc(sizeof(double), aMat.rect->nC)) == NULL)
   {
     errCode = ALG_ERR_MALLOC;
   }
   else
   {
-    errCode = AlgMatrixSVDecomp(aMat, nM, nN, wMat, vMat);
+    vMat.rect = AlgMatrixRectNew(nM, nN, &errCode);
+  }
+  if(errCode == ALG_ERR_NONE)
+  {
+    errCode = AlgMatrixSVDecomp(aMat, wVec, vMat);
   }
   if(errCode == ALG_ERR_NONE)
   {
@@ -102,7 +112,7 @@ AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
     wMax = 0.0;
     cnt0 = nN;
     cntIC = 0;
-    tDP0 = wMat;
+    tDP0 = wVec;
     while(cnt0-- > 0)
     {
       if(*tDP0 > wMax)
@@ -115,7 +125,7 @@ AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
     /* Edit the singular values, replacing any less than tol * max singular
        value with 0.0. */
     cnt0 = nN;
-    tDP0 = wMat;
+    tDP0 = wVec;
     thresh = tol * wMax;
     while(cnt0-- > 0)
     {
@@ -125,16 +135,10 @@ AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
       }
       ++tDP0;
     }
-    errCode = AlgMatrixSVBackSub(aMat, nM, nN, wMat, vMat, bMat);
+    errCode = AlgMatrixSVBackSub(aMat, wVec, vMat, bVec);
   }
-  if(wMat)
-  {
-    AlcFree(wMat);
-  }
-  if(vMat)
-  {
-    AlcDouble2Free(vMat);
-  }
+  AlcFree(wVec);
+  AlgMatrixRectFree(vMat.rect);
   if(dstIC)
   {
     *dstIC = cntIC;
@@ -167,8 +171,7 @@ AlgError	AlgMatrixSVSolve(double **aMat, int nM, int nN,
 * \param	vMat			The matrix V (not it's
 *					transpose).
 */
-AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
-				  double *wMat, double **vMat)
+AlgError	AlgMatrixSVDecomp(AlgMatrix aMat, double *wVec, AlgMatrix vMat)
 {
   int		cnt0,
   		flag,
@@ -199,20 +202,30 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
   AlgError	errCode = ALG_ERR_NONE;
 
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixSVDecomp FE 0x%lx %d %d 0x%lx 0x%lx\n",
-	   (unsigned long )aMat, nM, nN, (unsigned long )wMat,
-	   (unsigned long )vMat));
-  if((aMat == NULL) || (wMat == NULL) || (vMat == NULL) ||
-     (nM <= 0) || (nM < nN))
+	  ("AlgMatrixSVDecomp FE\n"));
+  if((aMat.core == NULL) || (aMat.core->type != ALG_MATRIX_RECT) ||
+     (vMat.core == NULL) || (aMat.core->type != vMat.core->type) ||
+     (aMat.core->nR <= 0) || (aMat.core->nR < aMat.core->nC) ||
+     (aMat.core->nR != vMat.core->nR) || (aMat.core->nC != vMat.core->nC) ||
+     (wVec == NULL))
   {
     errCode = ALG_ERR_FUNC;
   }
-  else if((tDVec = (double *)AlcCalloc(sizeof(double), nN)) == NULL)
+  else if((tDVec = (double *)AlcCalloc(sizeof(double), aMat.rect->nC)) == NULL)
   {
     errCode = ALG_ERR_MALLOC;
   }
   else
   {
+    int	   nM,
+    	   nN;
+    double **aAry,
+    	   **vAry;
+
+    nM = aMat.rect->nR;
+    nN = aMat.rect->nC;
+    aAry = aMat.rect->array;
+    vAry = vMat.rect->array;
     /* Householder reduction to bidiagonal form */
     for(idI = 0; idI < nN; ++idI)
     {
@@ -224,7 +237,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
       if(idI < nM)
       {
         cnt0 = nMI;
-	tDPP0 = aMat + idI;
+	tDPP0 = aAry + idI;
 	while(cnt0-- > 0)	/* for(idK = idI; idK < nM; ++idK) */
 	{
 	  tD0 = *(*tDPP0++ + idI);
@@ -233,24 +246,24 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	if(scale > DBL_EPSILON)			   /* scale must always >= 0 */
 	{
 	  cnt0 = nMI;
-	  tDPP0 = aMat + idI;
+	  tDPP0 = aAry + idI;
 	  while(cnt0-- > 0)	/* for(idK = idI; idK < nM; ++idK) */
 	  {
 	    tDP0 = *tDPP0++ + idI;
 	    *tDP0 /= scale;	/* aMat[idK][idI] /= scale; */
 	    s += *tDP0 * *tDP0;	/* s += aMat[idK][idI] * aMat[idK][idI]; */
 	  }
-	  f = aMat[idI][idI];
+	  f = aAry[idI][idI];
 	  g = (f > 0.0)? -(sqrt(s)): sqrt(s);
 	  h = (f * g) - s;
-	  aMat[idI][idI] = f - g;
+	  aAry[idI][idI] = f - g;
 	  if(idI != (nN - 1))
 	  {
 	    for(idJ = idL; idJ < nN; ++idJ)
 	    {
 	      s = 0.0;
 	      cnt0 = nMI;
-	      tDPP0 = aMat + idI;
+	      tDPP0 = aAry + idI;
 	      while(cnt0-- > 0)	/* for(idK = idI; idK < nM; ++idK) */
 	      {
 	        s += *(*tDPP0 + idI) * *(*tDPP0 + idJ);
@@ -258,7 +271,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	      }
 	      f = s / h;
 	      cnt0 = nMI;
-	      tDPP0 = aMat + idI;
+	      tDPP0 = aAry + idI;
 	      while(cnt0-- > 0) /* for(idK = idI; idK < nM; ++idK) */
 	      {
 	        *(*tDPP0 + idJ) += f * *(*tDPP0 + idI);
@@ -267,19 +280,19 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	    }
 	  }
 	  cnt0 = nMI;
-	  tDPP0 = aMat + idI;
+	  tDPP0 = aAry + idI;
 	  while(cnt0-- > 0)	/* for(idK = idI; idK < nM; ++idK) */
 	  {
 	    *(*tDPP0++ + idI) *= scale; /* aMat[idK][idI] *= scale; */
 	  }
 	}
       }
-      wMat[idI] = scale * g;
+      wVec[idI] = scale * g;
       g = s = scale = 0.0;
       if((idI < nM) && (idI != (nN - 1)))
       {
 	cnt0 = nNL;
-	tDP0 = *(aMat + idI) + idL;
+	tDP0 = *(aAry + idI) + idL;
 	while(cnt0-- > 0)	/* for(idK = idL; idK < nN; ++idK) */
 	{
 	  scale += fabs(*tDP0++); /* scale += fabs(aMat[idI][idK]); */
@@ -287,19 +300,19 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	if(scale > DBL_EPSILON)				/* scale always >= 0 */
 	{
 	  cnt0 = nNL;
-	  tDP0 = *(aMat + idI) + idL;
+	  tDP0 = *(aAry + idI) + idL;
 	  while(cnt0-- > 0)	/* for(idK = idL; idK < nN; ++idK) */
 	  {
 	    *tDP0 /= scale;	/* aMat[idI][idK] /= scale; */
 	    tD0 = *tDP0++;
 	    s += tD0 * tD0;	/* s += aMat[idI][idK] * aMat[idI][idK]; */
 	  }
-	  f = aMat[idI][idL];
+	  f = aAry[idI][idL];
 	  g = (f > 0.0)? -(sqrt(s)): sqrt(s);
 	  h = (f * g) - s;
-	  aMat[idI][idL] = f - g;
+	  aAry[idI][idL] = f - g;
 	  cnt0 = nNL;
-	  tDP0 = *(aMat + idI) + idL;
+	  tDP0 = *(aAry + idI) + idL;
 	  tDP1 = tDVec + idL;
 	  while(cnt0-- > 0)	/* for(idK = idL; idK < nN; ++idK) */
 	  {
@@ -311,8 +324,8 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	    {
 	      s = 0.0;
 	      cnt0 = nNL;
-	      tDP0 = *(aMat + idI) + idL;
-	      tDP1 = *(aMat + idJ) + idL;
+	      tDP0 = *(aAry + idI) + idL;
+	      tDP1 = *(aAry + idJ) + idL;
 	      while(cnt0-- > 0)	/* for(idK = idL; idK < nN; ++idK) */
 	      {
 	        s += *tDP1++ * *tDP0++; /* s += aMat[idJ][idK] *
@@ -320,7 +333,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	      }
 	      cnt0 = nNL;
 	      tDP0 = tDVec + idL; 
-	      tDP1 = *(aMat + idJ) + idL;
+	      tDP1 = *(aAry + idJ) + idL;
 	      while(cnt0-- > 0)	/* for(idK = idL; idK < nN; ++idK) */
 	      {
 	        *tDP1++ += s * *tDP0++; /* aMat[idJ][idK] += s * tDVec[idK]; */
@@ -328,14 +341,14 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	    }
 	  }
 	  cnt0 = nNL;
-	  tDP0 = *(aMat + idI) + idL;
+	  tDP0 = *(aAry + idI) + idL;
 	  while(cnt0-- > 0)	/* for(idK = idL; idK < nN; ++idK) */
 	  {
 	    *tDP0++ *= scale;	/* aMat[idI][idK] *= scale; */
 	  }
 	}
       }
-      if((tD0 = fabs(wMat[idI]) + fabs(tDVec[idI])) > aNorm)
+      if((tD0 = fabs(wVec[idI]) + fabs(tDVec[idI])) > aNorm)
       {
         aNorm = tD0;
       }
@@ -349,9 +362,9 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	if(fabs(g) > DBL_EPSILON)
 	{
 	  cnt0 = nNL;
-	  tDP0 = *(aMat + idI) + idL;
+	  tDP0 = *(aAry + idI) + idL;
 	  tD0 = *tDP0;
-	  tDPP0 = vMat + idL;
+	  tDPP0 = vAry + idL;
 	  while(cnt0-- > 0)	/* for(idJ = idL; idJ < nN; ++idJ) */
 	  {
 	    			/* vMat[idJ][idI] = (aMat[idI][idJ] /
@@ -363,15 +376,15 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	  {
 	    s = 0.0;
 	    cnt0 = nNL;
-	    tDP0 = *(aMat + idI) + idL;
-	    tDPP0 = vMat + idL;
+	    tDP0 = *(aAry + idI) + idL;
+	    tDPP0 = vAry + idL;
 	    while(cnt0-- > 0)	/* for(idK = idL; idK < nN; ++idK) */
 	    {
 	      s += *tDP0++ * *(*tDPP0++ + idJ); /* s += aMat[idI][idK] *
 	      						vMat[idK][idJ]; */
 	    }
 	    cnt0 = nNL;
-	    tDPP0 = vMat + idL;
+	    tDPP0 = vAry + idL;
 	    while(cnt0-- > 0)	
 	    {
 	      tDP0 = *tDPP0++;
@@ -381,15 +394,15 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	  }
 	}
 	cnt0 = nNL;
-	tDP0 = *(vMat + idI) + idL;
-	tDPP0 = vMat + idL;
+	tDP0 = *(vAry + idI) + idL;
+	tDPP0 = vAry + idL;
 	while(cnt0-- > 0)	/* for(idJ = idL; idJ < nN; ++idJ) */
 	{
 	  *tDP0++ = 0.0;	   /* vMat[idI][idJ] = 0.0 */
 	  *(*tDPP0++ + idI) = 0.0; /* vMat[idJ][idI] = 0.0; */
 	}
       }
-      vMat[idI][idI] = 1.0;
+      vAry[idI][idI] = 1.0;
       g = tDVec[idI];
       idL = idI;
     }
@@ -399,11 +412,11 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
       idL = idI + 1;
       nNL = nN - idL;
       nMI = nM - idI;
-      g = wMat[idI];
+      g = wVec[idI];
       if(idI < (nN - 1))
       {
 	cnt0 = nNL;
-	tDP0 = *(aMat + idI) + idL;
+	tDP0 = *(aAry + idI) + idL;
 	while(cnt0-- > 0)	/* for(idJ = idL; idJ < nN; ++idJ) */
 	{
 	  *tDP0++ = 0.0;	/* aMat[idI][idJ] = 0.0; */
@@ -418,16 +431,16 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	  {
 	    s = 0.0;
 	    cnt0 = nMI - 1;
-	    tDPP0 = aMat + idL;
+	    tDPP0 = aAry + idL;
 	    while(cnt0-- > 0)	/* for(idK = idL; idK < nM; ++idK) */
 	    {
 	      tDP0 = *tDPP0++;
 	      s +=  *(tDP0 + idI) * *(tDP0 + idJ); /* s += aMat[idK][idI] * 
 	      						   aMat[idK][idJ]; */
 	    }
-	    f = (s / aMat[idI][idI]) * g;
+	    f = (s / aAry[idI][idI]) * g;
 	    cnt0 = nMI;
-	    tDPP0 = aMat + idI;
+	    tDPP0 = aAry + idI;
 	    while(cnt0-- > 0)   /* for(idK = idI; idK < nM; ++idK) */
 	    {
 	      tDP0 = *tDPP0++;
@@ -436,7 +449,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	  }
 	}
 	cnt0 = nMI;
-	tDPP0 = aMat + idI;
+	tDPP0 = aAry + idI;
 	while(cnt0-- > 0)   /* for(idJ = idI; idJ < nM; ++idJ) */
 	{
 	  *(*tDPP0++ + idI) *= g; /* aMat[idJ][idI] *= g; */
@@ -445,13 +458,13 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
       else
       {
 	cnt0 = nMI;
-	tDPP0 = aMat + idI;
+	tDPP0 = aAry + idI;
 	while(cnt0-- > 0)	/* for(idJ = idI; idJ < nM; ++idJ) */
 	{
 	  *(*tDPP0++ + idI) = 0.0; /* aMat[idJ][idI] = 0.0; */
 	}
       }
-      aMat[idI][idI] += 1.0;
+      aAry[idI][idI] += 1.0;
     }
     /* Diagonalize the bidiagonal form. */
     for(idK = nN - 1; (idK >= 0) && (errCode == ALG_ERR_NONE); --idK)
@@ -467,7 +480,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	    flag = 0;
 	    break;
 	  }
-	  if((fabs(wMat[nNM]) + aNorm) == aNorm)
+	  if((fabs(wVec[nNM]) + aNorm) == aNorm)
 	  {
 	    break;
 	  }
@@ -481,14 +494,14 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	    f = s * tDVec[idI];
 	    if(fabs(f) + aNorm != aNorm)
 	    {
-	      g = wMat[idI];
+	      g = wVec[idI];
 	      h = AlgMatrixSVPythag(f, g);
-	      wMat[idI] = h;
+	      wVec[idI] = h;
 	      h = 1.0 / h;
 	      c = g * h;
 	      s = (-f * h);
 	      cnt0 = nM;
-	      tDPP0 = aMat;
+	      tDPP0 = aAry;
 	      while(cnt0-- > 0)	/* for(idJ = 0; idJ < nM; ++idJ) */
 	      {
 	        tDP0 = *tDPP0 + nNM;
@@ -504,14 +517,14 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	  }
 	}
 	/* Test for convergence. */
-	z = wMat[idK];
+	z = wVec[idK];
 	if(idL == idK)
 	{
 	  if(z < 0.0)
 	  {
-	    wMat[idK] = -z;
+	    wVec[idK] = -z;
 	    cnt0 = nN;
-	    tDPP0 = vMat;
+	    tDPP0 = vAry;
 	    while(cnt0-- > 0)	/* for(idJ = 0; idJ < nN; ++idJ) */
 	    {
 	      tDP0 = *tDPP0++ + idK;
@@ -522,13 +535,13 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	}
 	if(its >= maxIts)
 	{
-	  errCode = ALG_ERR_SINGULAR;
+	  errCode = ALG_ERR_MATRIX_SINGULAR;
 	}
 	else
 	{
-	  x = wMat[idL];
+	  x = wVec[idL];
 	  nNM = idK - 1;
-	  y = wMat[nNM];
+	  y = wVec[nNM];
 	  g = tDVec[nNM];
 	  h = tDVec[idK];
 	  f = ((y - z) * (y + z) + (g - h) * (g + h)) / (2.0 * h * y);
@@ -540,7 +553,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	  {
 	    idI = idJ + 1;
 	    g = tDVec[idI];
-	    y = wMat[idI];
+	    y = wVec[idI];
 	    h = s * g;
 	    g = c * g;
 	    z = AlgMatrixSVPythag(f, h);
@@ -552,7 +565,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	    h = y * s;
 	    y = y * c;
 	    cnt0 = nN;
-	    tDPP0 = vMat;
+	    tDPP0 = vAry;
 	    while(cnt0-- > 0)	/* for(idM = 0; idM < nN; ++idM) */
 	    {
 	      tDP0 = *tDPP0 + idJ;
@@ -565,7 +578,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	      						     (x * s); */
 	    }
 	    z = AlgMatrixSVPythag(f, h);
-	    wMat[idJ] = z;
+	    wVec[idJ] = z;
 	    if(z > DBL_EPSILON)			       /* Can only be >= 0.0 */
 	    {
 	      z = 1.0 / z;
@@ -575,7 +588,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	    f = (c * g) + (s * y);
 	    x = (c * y) - (s * g);
 	    cnt0 = nM;
-	    tDPP0 = aMat;
+	    tDPP0 = aAry;
 	    while(cnt0-- > 0)   /* for(idM = 0; idM < nM; ++idM) */
 	    {
 	      tDP0 = *tDPP0 + idJ;
@@ -590,7 +603,7 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 	  }
 	  tDVec[idL] = 0.0;
 	  tDVec[idK] = f;
-	  wMat[idK] = x;
+	  wVec[idK] = x;
         }
       }
     }
@@ -617,16 +630,15 @@ AlgError	AlgMatrixSVDecomp(double **aMat, int nM, int nN,
 * \param	nN 			Number of columns in matricies
 *					U and V, also the number of
 *					elements in matricies W and x.
-* \param	wMat			The diagonal matrix of singular
+* \param	wVec			The diagonal matrix of singular
 *					values, returned as a vector.
 * \param	vMat			The matrix V (not it's
 *					transpose).
-* \param	bMat			Column matrix b, overwritten by
+* \param	bVec			Column matrix b, overwritten by
 *					column matrix x on return.
 */
-AlgError	AlgMatrixSVBackSub(double **uMat, int nM, int nN,
-				   double *wMat, double **vMat,
-				   double *bMat)
+AlgError	AlgMatrixSVBackSub(AlgMatrix uMat, double *wVec, AlgMatrix vMat,
+				   double *bVec)
 {
   int		cnt0,
   		idJ;
@@ -637,37 +649,44 @@ AlgError	AlgMatrixSVBackSub(double **uMat, int nM, int nN,
   double	**tDPP0;
   AlgError	errCode = ALG_ERR_NONE;
 
-  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixSVBackSub FE 0x%lx %d %d 0x%lx 0x%lx 0x%lx\n",
-	   (unsigned long )uMat, nM, nN,
-	   (unsigned long )wMat, (unsigned long)vMat,
-	   (unsigned long )bMat));
-
-  if((uMat == NULL) || (wMat == NULL) || (vMat == NULL) ||
-     (bMat == NULL) || (vMat == NULL) || (nM <= 0) || (nM < nN))
+  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1), ("AlgMatrixSVBackSub FE\n"));
+  if((uMat.core == NULL) || (uMat.core->type != ALG_MATRIX_RECT) ||
+     (vMat.core == NULL) || (vMat.core->type != vMat.core->type) ||
+     (uMat.core->nR <= 0) || (uMat.core->nR < uMat.core->nC) ||
+     (uMat.core->nR != vMat.core->nR) || (uMat.core->nC != vMat.core->nC) ||
+     (wVec == NULL) || (bVec == NULL))
   {
     errCode = ALG_ERR_FUNC;
   }
-  else if((tDVec = (double *)AlcCalloc(sizeof(double), nN)) == NULL)
+  else if((tDVec = (double *)AlcCalloc(sizeof(double), uMat.rect->nC)) == NULL)
   {
     errCode = ALG_ERR_MALLOC;
   }
   else
   {
+    int	   nM,
+    	   nN;
+    double **uAry,
+    	   **vAry;
+
+    nM = uMat.rect->nR;
+    nN = uMat.rect->nC;
+    uAry = uMat.rect->array;
+    vAry = vMat.rect->array;
     for(idJ = 0; idJ < nN; ++idJ) 
     {
       s = 0.0;
-      if(fabs(wMat[idJ]) > DBL_EPSILON)
+      if(fabs(wVec[idJ]) > DBL_EPSILON)
       {
 	cnt0 = nM;
-	tDPP0 = uMat;
-	tDP0 = bMat;
+	tDPP0 = uAry;
+	tDP0 = bVec;
 	while(cnt0-- > 0)	/* for(idI = 0; idI < nM; ++idI) */
 	{
 	  s += *(*tDPP0++ + idJ) * *tDP0++; /* s += uMat[idI][idJ] *
-	  					    bMat[idI]; */
+	  					    bVec[idI]; */
 	}
-	s /= wMat[idJ];
+	s /= wVec[idJ];
       }
       tDVec[idJ] = s;
     }
@@ -675,13 +694,13 @@ AlgError	AlgMatrixSVBackSub(double **uMat, int nM, int nN,
     {
       s = 0.0;
       cnt0 = nN;
-      tDP0 = *(vMat + idJ);
+      tDP0 = *(vAry + idJ);
       tDP1 = tDVec;
       while(cnt0-- > 0)		/* for(idI = 0; idI < nN; ++idI) */
       {
         s += *tDP0++ * *tDP1++; /* s += vMat[idJ][idI] * tDVec[idI]; */
       }
-      bMat[idJ] = s;
+      bVec[idJ] = s;
     }
     AlcFree(tDVec);
   }

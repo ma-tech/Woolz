@@ -63,8 +63,7 @@ static char _AlgMatrixGauss_c[] = "MRC HGU $Id$";
 * \param	xMat			On exit contains the solution
 *					matrix x.
 */
-AlgError	AlgMatrixGaussSolve(double **abMat, int aSz,
-			            double *xMat)
+AlgError	AlgMatrixGaussSolve(AlgMatrix aMat, double *xMat)
 {
   int		idxI,
 		idxK,
@@ -76,17 +75,22 @@ AlgError	AlgMatrixGaussSolve(double **abMat, int aSz,
   double	*tDP0,
   		*tDP1;
   double	**tDPP0;
+  size_t	aSz;
+  double	**abMat;
   AlgError	errCode = ALG_ERR_NONE;
 
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgMatrixGaussSolve FE 0x%lx %d 0x%lx\n",
-	   (unsigned long )abMat, aSz, (unsigned long )xMat));
-  if((abMat == NULL) || (*abMat == NULL) || (aSz <= 0) || (xMat == NULL))
+	  ("AlgMatrixGaussSolve FE\n"));
+  if((aMat.core == NULL) || (aMat.core->type != ALG_MATRIX_RECT) ||
+     (aMat.core->nR < 1) || (aMat.core->nC < 1) ||
+     (aMat.core->nR != aMat.core->nC) || (xMat == NULL))
   {
     errCode = ALG_ERR_FUNC;
   }
   else
   {
+    aSz = aMat.rect->nR;
+    abMat = aMat.rect->array;
     /* Determine homogeneity */
     tDPP0 = abMat;
     count0 = aSz;
@@ -112,7 +116,7 @@ AlgError	AlgMatrixGaussSolve(double **abMat, int aSz,
       }
       if(maxPivot <= DBL_EPSILON)
       {
-	errCode = ALG_ERR_SINGULAR;
+	errCode = ALG_ERR_MATRIX_SINGULAR;
       }
       else
       {
@@ -162,7 +166,7 @@ AlgError	AlgMatrixGaussSolve(double **abMat, int aSz,
 	{
 	  *tDP0++ = 0.0;
 	}
-	errCode = ALG_ERR_HOMOGENEOUS;
+	errCode = ALG_ERR_MATRIX_HOMOGENEOUS;
       }
       else
       {
