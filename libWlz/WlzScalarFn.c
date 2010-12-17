@@ -463,19 +463,22 @@ static void	WlzScalarFnItvMod(WlzGreyP gValP, WlzGreyType gType, int len)
     case WLZ_GREY_LONG:
       for(idx = 0; idx < len; ++idx)
       {
-        *(gValP.lnp)++ = labs(*(gValP.lnp));
+        *(gValP.lnp) = labs(*(gValP.lnp));
+	(gValP.lnp)++;
       }
       break;
     case WLZ_GREY_INT:
       for(idx = 0; idx < len; ++idx)
       {
-        *(gValP.inp)++ = abs(*(gValP.inp));
+        *(gValP.inp) = abs(*(gValP.inp));
+	(gValP.inp)++;
       }
       break;
     case WLZ_GREY_SHORT:
       for(idx = 0; idx < len; ++idx)
       {
-        *(gValP.shp)++ = (short )abs(*(gValP.shp));
+        *(gValP.shp) = (short )abs(*(gValP.shp));
+	(gValP.shp)++;
       }
       break;
     case WLZ_GREY_UBYTE:
@@ -484,13 +487,15 @@ static void	WlzScalarFnItvMod(WlzGreyP gValP, WlzGreyType gType, int len)
     case WLZ_GREY_FLOAT:
       for(idx = 0; idx < len; ++idx)
       {
-        *(gValP.flp)++ = fabsf(*(gValP.flp));
+        *(gValP.flp) = fabsf(*(gValP.flp));
+        (gValP.flp)++;
       }
       break;
     case WLZ_GREY_DOUBLE:
       for(idx = 0; idx < len; ++idx)
       {
-        *(gValP.dbp)++ = fabs(*(gValP.dbp));
+        *(gValP.dbp) = fabs(*(gValP.dbp));
+        (gValP.dbp)++;
       }
       break;
     case WLZ_GREY_RGBA:

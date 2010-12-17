@@ -2254,8 +2254,8 @@ static int	WlzLBTIdxCmpFn(void *datum0, void *datum1)
   		i1,
 		cmp;
 
-  i0 = (int )datum0;
-  i1 = (int )datum1;
+  i0 = (char *)datum0 - (char *)0;
+  i1 = (char *)datum1 - (char *)0;
   cmp = i0 - i1;
   return(cmp);
 }
@@ -2274,7 +2274,7 @@ static unsigned WlzLBTIdxHashFn(void *datum)
   		 p1 = 599999,
   		 p2 = 999983;
 
-  dVal = (unsigned )datum;
+  dVal = (char *)datum - (char *)0;
   hVal = ((dVal + p0) * p1) % p2;
   return(hVal);
 }
@@ -2293,16 +2293,17 @@ static unsigned WlzLBTIdxHashFn(void *datum)
 static WlzErrorNum WlzLBTQueueInsert(AlcCPQQueue *pQ, AlcHashTable *hT,
 				     int sz, int idx)
 {
+  char		*v;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
 #ifdef WLZ_LBTDOMAIN_DEBUG
   (void )fprintf(stderr, "WlzLBTQueueInsert idx = %d sz = %d\n", idx, sz);
 #endif /* WLZ_LBTDOMAIN_DEBUG */ 
-  if(AlcHashItemGet(hT, (void *)idx, NULL) == NULL)
+  v = (char *)0 + idx;
+  if(AlcHashItemGet(hT, v, NULL) == NULL)
   {
-    if((AlcCPQEntryInsert(pQ, (float )sz, (void *)idx) != ALC_ER_NONE) ||
-       (AlcHashTableEntryInsert(hT, (void *)idx, (void *)idx,
-                                NULL) != ALC_ER_NONE))
+    if((AlcCPQEntryInsert(pQ, (float )sz, v) != ALC_ER_NONE) ||
+       (AlcHashTableEntryInsert(hT, v, v, NULL) != ALC_ER_NONE))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -2326,13 +2327,16 @@ static int	WlzLBTQueueUnlink(AlcCPQQueue *pQ, AlcHashTable *hT)
 
   if((pItem = AlcCPQItemUnlink(pQ)) != NULL)
   {
-    idx = (int )(pItem->entry);
+    char	*v;
+
+    v = pItem->entry;
+    idx = v - (char *)0;
     AlcCPQItemFree(pQ, pItem);
-    if((hItem = AlcHashItemGet(hT, (void *)(idx), NULL)) != NULL)
+    if((hItem = AlcHashItemGet(hT, v, NULL)) != NULL)
     {
       (void )AlcHashItemUnlink(hT, hItem, 1);
 #ifdef WLZ_LBTDOMAIN_DEBUG
-  (void )fprintf(stderr, "WlzLBTQueueUnlink idx = %d\n", idx);
+      (void )fprintf(stderr, "WlzLBTQueueUnlink idx = %d\n", idx);
 #endif /* WLZ_LBTDOMAIN_DEBUG */ 
     }
   }
