@@ -197,7 +197,8 @@ WlzIBox3	WlzBoundingBox3I(WlzObject *inObj, WlzErrorNum *dstErr)
 	{
 	  errNum = WLZ_ERR_VALUES_NULL;
 	}
-	else if(inObj->domain.core->type != WLZ_TRANSFORM_2D_AFFINE)
+	else if(inObj->domain.core->type != (WlzObjectType)
+	                                    WLZ_TRANSFORM_2D_AFFINE)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
@@ -353,7 +354,8 @@ WlzDBox3	WlzBoundingBox3D(WlzObject *inObj, WlzErrorNum *dstErr)
 	{
 	  errNum = WLZ_ERR_VALUES_NULL;
 	}
-	else if(inObj->domain.core->type != WLZ_TRANSFORM_2D_AFFINE)
+	else if(inObj->domain.core->type != (WlzObjectType )
+	                                    WLZ_TRANSFORM_2D_AFFINE)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
