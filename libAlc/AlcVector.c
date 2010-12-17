@@ -406,24 +406,16 @@ void		*AlcVectorToArray1D(AlcVector *vec, size_t fIdx, size_t lIdx,
 * \brief	Creates a 2 dimensional array which contains a copy
 *		of the vectors elements.
 * \param	vec		 	Given vector.
-* \param	fIdx	 		Index of the first element in the
-*					vector to copy, becomes the first
-*					element of the array.
-* \param	lIdx	 		Index of the last element in the
-*					vector to copy, becomes the last
-*					element of the array.
 * \param	nR			Number of rows (1D arrays).
 * \param	nC			Number of columns (elements in each
 *					1D array).
 * \param	dstErr			Destination pointer for error
 *					code, may be NULL.
 */
-void		**AlcVectorToArray2D(AlcVector *vec, size_t fIdx, size_t lIdx,
-				     size_t nR, size_t nC,
+void		**AlcVectorToArray2D(AlcVector *vec, size_t nR, size_t nC,
 				     AlcErrno *dstErr)
 {
-  size_t	iR,
-  		nRC;
+  size_t	iR;
   void		**aM = NULL;
   
   AlcErrno	errNum = ALC_ER_NONE;
@@ -432,13 +424,13 @@ void		**AlcVectorToArray2D(AlcVector *vec, size_t fIdx, size_t lIdx,
   {
     errNum = ALC_ER_NULLPTR;
   }
-  else if((lIdx < fIdx) || (nR < 1) || (nC < 1) ||
-          ((nRC = nR * nC) != lIdx - fIdx + 1))
+  else if((nR < 1) || (nC < 1))
   {
     errNum = ALC_ER_PARAM;
   }
   else if(((aM = (void **)AlcCalloc(nR, sizeof(void *))) ==  NULL) ||
-          ((*aM = (void *)AlcMalloc(sizeof(char) * nRC * vec->elmSz)) == NULL))
+          ((*aM = (void *)
+	          AlcMalloc(sizeof(char) * nR * nC * vec->elmSz)) == NULL))
   {
     errNum = ALC_ER_PARAM;
   }
@@ -447,13 +439,12 @@ void		**AlcVectorToArray2D(AlcVector *vec, size_t fIdx, size_t lIdx,
     for(iR = 0; iR < nR; ++iR)
     {
       *(aM + iR) = (void *)(*(char **)aM + (vec->elmSz * nC * iR));
-      AlcVectorSetArray1D(vec, fIdx + (iR * nC), fIdx + ((iR + 1) * nC) - 1,
-      			  *(aM + iR));
+      AlcVectorSetArray1D(vec, iR * nC, ((iR + 1) * nC) - 1, *(aM + iR));
     }
   }
   if(errNum != ALC_ER_NONE)
   {
-    if(aM)
+    if(aM != NULL)
     {
       AlcFree(*aM);
       AlcFree(aM);
@@ -465,4 +456,182 @@ void		**AlcVectorToArray2D(AlcVector *vec, size_t fIdx, size_t lIdx,
     *dstErr = errNum;
   }
   return(aM);
+}
+
+
+/*!
+* \return	Extensible vector containing values for a 1D array or
+* 		NULL on error.
+* \ingroup	AlcVector
+* \brief	Reads a 1D double array from the given numeric ASCI file.
+*		Each value should be on a seperate line.
+* \param	fP:			File pointer.
+* \param	fs			Field seperator chracter string. If
+* 					NULL whitespace assumed.
+* \param	recMax			Maximum record length.
+* \param	dstNV			Destination pointer for the number of
+*					vector values. Must not be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+AlcVector	*AlcVecReadDouble1Asci(FILE *fP, const char *fSep,
+				       size_t recMax, size_t *dstNV,
+				       AlcErrno *dstErr)
+{
+  size_t	nV = 0;
+  char		*recS = NULL;
+  const char	*iFS;
+  AlcVector	*vec = NULL;
+  AlcErrno	errNum = ALC_ER_NONE;
+  const size_t	vecCnt = 1024;		/* Initial number of elements in
+  					 * the vector */
+
+  iFS = (fSep == NULL)? " \t\n\r": fSep;
+  if((recS = AlcMalloc(sizeof(char) * recMax)) == NULL)
+  {
+    errNum = ALC_ER_ALLOC;
+  }
+  else
+  {
+    vec = AlcVectorNew(vecCnt, sizeof(double), vecCnt, &errNum);
+  }
+  while((errNum == ALC_ER_NONE) && (fgets(recS, recMax, fP) != NULL))
+  {
+    char	*tokS,
+    		*parseS;
+
+    parseS = recS;
+    while((errNum == ALC_ER_NONE) &&
+          ((tokS = (char *)strtok(parseS, iFS)) != NULL) && *tokS)
+    {
+      double	v;
+
+      if(sscanf(tokS, "%lg", &v) != 1)
+      {
+	errNum = ALC_ER_READ;
+      }
+      else
+      {
+        double	*dP0;
+
+        if((dP0 = (double *)AlcVectorExtendAndGet(vec, nV)) == NULL)
+	{
+	  errNum = ALC_ER_ALLOC;
+	}
+	else
+	{
+	  *dP0 = v;
+          ++nV;
+	}
+      }
+    }
+  }
+  AlcFree(recS);
+  if(errNum == ALC_ER_NONE)
+  {
+    *dstNV = nV;
+  }
+  else
+  {
+    (void )AlcVectorFree(vec);
+    vec = NULL;
+  }
+  return(vec);
+}
+/*!
+* \return	Extensible vector containing values for a 2D array or
+* 		NULL on error.
+* \ingroup	AlcVector
+* \brief	Reads a 2D double array from the given numeric ASCI file
+* 		into an extensible vector.
+*		The number of fields per record must be the same for all
+*		records.
+* \param	fP:			File pointer.
+* \param	fs			Field seperator chracter string. If
+* 					NULL whitespace assumed.
+* \param	recMax			Maximum record length.
+* \param	dstNR			Destination pointer for the number of
+*					rows (records) read. Must not be NULL.
+* \param	dstNC			Destination pointer for the number of
+*					columns, ie the number of elements in
+*					each 1D array (number of fields per
+*					record). Must not be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+AlcVector	*AlcVecReadDouble2Asci(FILE *fP, const char *fSep,
+				       size_t recMax, 
+                                       size_t *dstNR, size_t *dstNC,
+				       AlcErrno *dstErr)
+{
+  size_t	iF,
+  		nR = 0,
+  		nF = 0,
+		nV = 0;
+  char		*recS = NULL;
+  const char	*iFS;
+  AlcVector	*vec = NULL;
+  AlcErrno	errNum = ALC_ER_NONE;
+  const size_t	vecCnt = 1024; 		/* Initial number of elements in
+  					 * the vector */
+
+  iFS = (fSep == NULL)? " \t\n\r": fSep;
+  if((recS = AlcMalloc(sizeof(char) * recMax)) == NULL)
+  {
+    errNum = ALC_ER_ALLOC;
+  }
+  else
+  {
+    vec = AlcVectorNew(vecCnt, sizeof(double), vecCnt, &errNum);
+  }
+  while((errNum == ALC_ER_NONE) && (fgets(recS, recMax, fP) != NULL))
+  {
+    char	*tokS,
+    		*parseS;
+
+    iF = 0;
+    parseS = recS;
+    while((errNum == ALC_ER_NONE) &&
+          ((tokS = (char *)strtok(parseS, iFS)) != NULL) && *tokS)
+    {
+      double	*dP0;
+
+      parseS = NULL;
+      if((dP0 = (double *)AlcVectorExtendAndGet(vec, nV)) == NULL)
+      {
+        errNum = ALC_ER_ALLOC;
+      }
+      else if(sscanf(tokS, "%lg", dP0) != 1)
+      {
+        errNum = ALC_ER_READ;
+      }
+      else
+      {
+        ++iF;
+	++nV;
+      }
+    }
+    if((errNum == ALC_ER_NONE) && (iF > 0))
+    {
+      if(nR == 0)
+      {
+	 nF = iF;
+      }
+      else if(iF != nF)
+      {
+	errNum = ALC_ER_READ;
+      }
+      ++nR;
+    }
+  }
+  AlcFree(recS);
+  if(errNum == ALC_ER_NONE)
+  {
+    *dstNC = nF;
+    *dstNR = nR;
+  }
+  else
+  {
+    (void )AlcVectorFree(vec);
+    vec = NULL;
+  }
+  return(vec);
 }
