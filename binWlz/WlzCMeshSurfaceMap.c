@@ -50,27 +50,49 @@ static char _WlzCMeshSurfaceMap_c[] = "MRC HGU $Id$";
 WlzCMeshSurfaceMap - computes a conforming mesh transform which maps a
                      surface in 3D to a plane.
 \par Synopsis
+    "Options:\n"
+    "  -2  Output a 2D mesh rather than a 3D mesh with displacements.\n"
+    "  -h  Help, prints usage message.\n"
+    "  -i  Maximum number of itterations, 0 implies one itteration and\n"
+    "      mapping will preserve angles.\n"
+    "  -n  Weight for preserving angles, range 0.0 - 1.0.\n"
+    "  -p  Displacements file.\n"
+    "  -o  Output object file.\n"
+    "  -r  Weight for preserving areas, range 0.0 - 1.0.\n"
 \verbatim
-WlzCMeshSurfaceMap [-h] [-p<points file>] [-o<output object>] [-2]
-                   [<input object>]
+WlzCMeshSurfaceMap [-2] [-h] [-i#] [-n #] [-o<output object>] [-p<points file>]
+                   [-r#] [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr>
+    <td><b>-2</b></td>
+    <td>Output a 2D mesh rather than a 3D mesh with displacements.</td>
+  </tr>
+  <tr>
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr>
+    <td><b>-i</b></td>
+    <td>Maximum number of itterations, 0 implies one itteration and
+        mapping will preserve angles.</td>
+  </tr>
+  <tr>
+    <td><b>-n</b></td>
+    <td>Weight for preserving angles, range 0.0 - 1.0.</td>
   </tr>
   <tr>
     <td><b>-o</b></td>
     <td>Output object file.</td>
   </tr>
   <tr>
-    <td><b>-2</b></td>
-    <td>Output a 2D mesh rather than a 3D mesh with displacements.</td>
-  </tr>
-  <tr>
     <td><b>-p</b></td>
     <td>Displacements file.</td>
+  </tr>
+  <tr>
+    <td><b>-r</b></td>
+    <td>Weight for preserving areas, range 0.0 - 1.0.</td>
   </tr>
 </table>
 \par Description
@@ -127,10 +149,13 @@ extern int      optind,
 int             main(int argc, char **argv)
 {
   int		option,
+		maxItr = 0,
 		flg2D = 0,
 		nV = 0,
   		ok = 1,
 		usage = 0;
+  double	angleW = 1.0,
+  		areaW = 0.0;
   WlzDVertex3	*srcV = NULL,
   		*dstV = NULL;
   WlzObject     *inObj = NULL,
@@ -142,7 +167,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "2ho:p:",
+  static char	optList[] = "2hi:n:o:p:r:",
   		fileStrDef[] = "-";
 
   opterr = 0;
@@ -155,11 +180,30 @@ int             main(int argc, char **argv)
     {
       case '2':
         flg2D = 1;
+	break;
+      case 'i':
+        if(sscanf(optarg, "%d", &maxItr) != 1)
+	{
+	  usage = 1;
+	}
+	break;
+      case 'n':
+        if(sscanf(optarg, "%lg", &angleW) != 1)
+	{
+	  usage = 1;
+	}
+	break;
       case 'o':
         outObjFileStr = optarg;
 	break;
       case 'p':
         ptsFileStr = optarg;
+	break;
+      case 'r':
+        if(sscanf(optarg, "%lg", &areaW) != 1)
+	{
+	  usage = 1;
+	}
 	break;
       case 'h': /* FALLTHROUGH */
       default:
@@ -244,8 +288,7 @@ int             main(int argc, char **argv)
   /* Compute mapping transform. */
   if(ok)
   {
-    mapObj = WlzCMeshCompSurfMapConformal(inObj, nV, dstV, nV, srcV,
-                                          &errNum);
+    mapObj = WlzCMeshCompSurfMap(inObj, nV, dstV, nV, srcV, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -304,13 +347,17 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-h] [-p<points file>] [-o<output object>] [-2]\n"
-    "                          [<input object>]\n"
+    " [-2] [-h] [-i#] [-n #] [-o<output object>] [-p<points file>]\n"
+    "                          [-r#] [<input object>]\n"
     "Options:\n"
+    "  -2  Output a 2D mesh rather than a 3D mesh with displacements.\n"
     "  -h  Help, prints usage message.\n"
+    "  -i  Maximum number of itterations, 0 implies one itteration and\n"
+    "      mapping will preserve angles.\n"
+    "  -n  Weight for preserving angles, range 0.0 - 1.0.\n"
     "  -p  Displacements file.\n"
     "  -o  Output object file.\n"
-    "  -2  Output a 2D mesh rather than a 3D mesh with displacements.\n"
+    "  -r  Weight for preserving areas, range 0.0 - 1.0.\n"
     "Computes a conforming mesh transform which maps the surface defined by\n"
     "the 2D5 conforming mesh onto another surface defined by the mesh with\n"
     "displacements. The given displacements are used to compute the least\n"
