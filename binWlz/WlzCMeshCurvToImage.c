@@ -35,7 +35,9 @@ static char _WlzCMeshCurvToImage_c[] = "MRC HGU $Id$";
 * License along with this program; if not, write to the Free
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
-* \brief	Creates a contour from a conforming mesh.
+* \brief	Creates a 2D domain object (image) in which the values are
+*               the curvature of the 2D5 CMesh. The given CMesh must have
+*               displacements that will flatten the mesh already computed.
 * \ingroup	BinWlz
 *
 * \par Binary
