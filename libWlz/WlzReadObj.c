@@ -387,186 +387,188 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
   type = WlzReadObjType(fp, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
+    if(type == (WlzObjectType )EOF)
+    {
+      errNum = WLZ_ERR_READ_EOF;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     switch(type)
     {
+      case WLZ_NULL:	/* signifies no more objects - not a true error */
+	errNum = WLZ_ERR_EOO;
+	break;
 
-    case (WlzObjectType) EOF:
-      errNum = WLZ_ERR_READ_EOF;
-      break;
+      case WLZ_EMPTY_OBJ:
+	obj =  WlzMakeMain(WLZ_EMPTY_OBJ, domain, values, NULL,
+			   NULL, &errNum);
+	break;
 
-    case WLZ_NULL:	/* signifies no more objects - not a true error */
-      errNum = WLZ_ERR_EOO;
-      break;
-
-    case WLZ_EMPTY_OBJ:
-      obj =  WlzMakeMain(WLZ_EMPTY_OBJ, domain, values, NULL,
-			 NULL, &errNum);
-      break;
-
-    case WLZ_2D_DOMAINOBJ:
-      if(((domain.i = WlzReadIntervalDomain(fp, &errNum)) != NULL) &&
-	 ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
-	                     &errNum)) != NULL))
-      {
-	if((errNum = WlzReadGreyValues(fp, obj)) == WLZ_ERR_NONE)
+      case WLZ_2D_DOMAINOBJ:
+	if(((domain.i = WlzReadIntervalDomain(fp, &errNum)) != NULL) &&
+	   ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
+			       &errNum)) != NULL))
 	{
-	  obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
-					     NULL);
-	}
-	/* Don't clear up on error return, instead partial object as it may be
-	 * salvagable. */
-      }
-      break;
-
-    case WLZ_3D_DOMAINOBJ:
-      if(((domain.p = WlzReadPlaneDomain(fp, &errNum)) != NULL) &&
-	 ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
-	                     &errNum)) != NULL ))
-      {
-	if((errNum = WlzReadDomObjValues3D(fp, obj)) == WLZ_ERR_NONE)
-	{
-	  obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
-					     NULL);
-	}
-	/* Don't clear up on error, instead return partial object as it may be
-	 * salvagable. */
-      }
-      break;
-
-    case WLZ_TRANS_OBJ:
-      if((domain.t = WlzReadAffineTransform( fp, &errNum)) != NULL){
-	if((values.obj = WlzReadObj( fp, &errNum)) != NULL){
-	  if((obj = WlzMakeMain(WLZ_TRANS_OBJ, domain, values,
-				NULL, NULL, &errNum)) != NULL){
+	  if((errNum = WlzReadGreyValues(fp, obj)) == WLZ_ERR_NONE)
+	  {
 	    obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
 					       NULL);
-	  } else {
+	  }
+	  /* Don't clear up on error return, instead partial object as it may
+	   * be salvagable. */
+	}
+	break;
+
+      case WLZ_3D_DOMAINOBJ:
+	if(((domain.p = WlzReadPlaneDomain(fp, &errNum)) != NULL) &&
+	   ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
+			       &errNum)) != NULL ))
+	{
+	  if((errNum = WlzReadDomObjValues3D(fp, obj)) == WLZ_ERR_NONE)
+	  {
+	    obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
+					       NULL);
+	  }
+	  /* Don't clear up on error, instead return partial object as it may
+	   * be salvagable. */
+	}
+	break;
+
+      case WLZ_TRANS_OBJ:
+	if((domain.t = WlzReadAffineTransform( fp, &errNum)) != NULL){
+	  if((values.obj = WlzReadObj( fp, &errNum)) != NULL){
+	    if((obj = WlzMakeMain(WLZ_TRANS_OBJ, domain, values,
+				  NULL, NULL, &errNum)) != NULL){
+	      obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
+						 NULL);
+	    } else {
+	      WlzFreeAffineTransform(domain.t);
+	      WlzFreeObj(values.obj);
+	    }
+	  }
+	  else {
 	    WlzFreeAffineTransform(domain.t);
-	    WlzFreeObj(values.obj);
 	  }
 	}
-	else {
-	  WlzFreeAffineTransform(domain.t);
+	break;
+
+      case WLZ_3D_WARP_TRANS:
+	if((wtrans3d = WlzRead3DWarpTrans(fp, &errNum)) != NULL){
+	  wtrans3d->plist = WlzAssignPropertyList(
+	    WlzReadPropertyList(fp, NULL), NULL);
 	}
-      }
-      break;
+	obj = (WlzObject *) wtrans3d;
+	break;
 
-    case WLZ_3D_WARP_TRANS:
-      if((wtrans3d = WlzRead3DWarpTrans(fp, &errNum)) != NULL){
-	wtrans3d->plist = WlzAssignPropertyList(
-	  WlzReadPropertyList(fp, NULL), NULL);
-      }
-      obj = (WlzObject *) wtrans3d;
-      break;
-
-    case WLZ_2D_POLYGON:
-      if((domain.poly = WlzReadPolygon(fp, &errNum)) != NULL){
-	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
-      }
-      break;
-
-    case WLZ_BOUNDLIST:
-      if((domain.b = WlzReadBoundList(fp, &errNum)) != NULL){
-	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
-      }
-      break;
-
-    case WLZ_HISTOGRAM:
-      if((domain.hist = WlzReadHistogramDomain(fp, &errNum)) != NULL){
-	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
-      }
-      break;
-
-    case WLZ_CONTOUR:
-      if((domain.ctr = WlzReadContour(fp, &errNum)) != NULL){
-	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
-      }
-      break;
-
-    case WLZ_CMESH_2D:
-      if(((domain.cm2 = WlzReadCMesh2D(fp, &errNum)) != NULL) &&
-         ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
-	                     &errNum)) != NULL)){
-        if((errNum = WlzReadIndexedvValues(fp, obj)) == WLZ_ERR_NONE){
-	  obj->plist = WlzAssignPropertyList(
-	               WlzReadPropertyList(fp, NULL), NULL);
+      case WLZ_2D_POLYGON:
+	if((domain.poly = WlzReadPolygon(fp, &errNum)) != NULL){
+	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
 	}
-      }
-      break;
+	break;
 
-    case WLZ_CMESH_2D5:
-      if(((domain.cm2d5 = WlzReadCMesh2D5(fp, &errNum)) != NULL) &&
-         ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
-	                     &errNum)) != NULL)){
-        if((errNum = WlzReadIndexedvValues(fp, obj)) == WLZ_ERR_NONE){
-	  obj->plist = WlzAssignPropertyList(
-	               WlzReadPropertyList(fp, NULL), NULL);
+      case WLZ_BOUNDLIST:
+	if((domain.b = WlzReadBoundList(fp, &errNum)) != NULL){
+	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
 	}
-      }
-      break;
+	break;
 
-    case WLZ_CMESH_3D:
-      if(((domain.cm3 = WlzReadCMesh3D(fp, &errNum)) != NULL) &&
-         ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
-	                     &errNum)) != NULL)){
-        if((errNum = WlzReadIndexedvValues(fp, obj)) == WLZ_ERR_NONE){
-	  obj->plist = WlzAssignPropertyList(
-	               WlzReadPropertyList(fp, NULL), NULL);
+      case WLZ_HISTOGRAM:
+	if((domain.hist = WlzReadHistogramDomain(fp, &errNum)) != NULL){
+	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
 	}
-      }
-      break;
+	break;
 
-    case WLZ_RECTANGLE:
-      if((domain.r = WlzReadRect(fp, &errNum)) != NULL){
-	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
-      }
-      break;
+      case WLZ_CONTOUR:
+	if((domain.ctr = WlzReadContour(fp, &errNum)) != NULL){
+	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+	}
+	break;
 
-    case WLZ_AFFINE_TRANS:
-      if((domain.t = WlzReadAffineTransform(fp, &errNum)) != NULL){
-	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
-      }
-      break;
+      case WLZ_CMESH_2D:
+	if(((domain.cm2 = WlzReadCMesh2D(fp, &errNum)) != NULL) &&
+	   ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
+			       &errNum)) != NULL)){
+	  if((errNum = WlzReadIndexedvValues(fp, obj)) == WLZ_ERR_NONE){
+	    obj->plist = WlzAssignPropertyList(
+			 WlzReadPropertyList(fp, NULL), NULL);
+	  }
+	}
+	break;
 
-    case WLZ_WARP_TRANS:
-      obj = (WlzObject *) WlzReadWarpTrans(fp, &errNum);
-      break;
+      case WLZ_CMESH_2D5:
+	if(((domain.cm2d5 = WlzReadCMesh2D5(fp, &errNum)) != NULL) &&
+	   ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
+			       &errNum)) != NULL)){
+	  if((errNum = WlzReadIndexedvValues(fp, obj)) == WLZ_ERR_NONE){
+	    obj->plist = WlzAssignPropertyList(
+			 WlzReadPropertyList(fp, NULL), NULL);
+	  }
+	}
+	break;
 
-#ifdef WLZ_OLD_CMESH_TRANS_SUPPORT
-    case WLZ_CMESH_TRANS:
-      obj = WlzReadOldCMeshTransform(fp, &errNum);
-      break;
-#endif
+      case WLZ_CMESH_3D:
+	if(((domain.cm3 = WlzReadCMesh3D(fp, &errNum)) != NULL) &&
+	   ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
+			       &errNum)) != NULL)){
+	  if((errNum = WlzReadIndexedvValues(fp, obj)) == WLZ_ERR_NONE){
+	    obj->plist = WlzAssignPropertyList(
+			 WlzReadPropertyList(fp, NULL), NULL);
+	  }
+	}
+	break;
 
-    case WLZ_FMATCHOBJ:
-      obj = (WlzObject *) WlzReadFMatchObj(fp, &errNum);
-      break;
+      case WLZ_RECTANGLE:
+	if((domain.r = WlzReadRect(fp, &errNum)) != NULL){
+	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+	}
+	break;
 
-    case WLZ_COMPOUND_ARR_1:
-    case WLZ_COMPOUND_ARR_2:
-      obj = (WlzObject *) WlzReadCompoundA(fp, type, &errNum);
-      break;
+      case WLZ_AFFINE_TRANS:
+	if((domain.t = WlzReadAffineTransform(fp, &errNum)) != NULL){
+	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+	}
+	break;
 
-    case WLZ_PROPERTY_OBJ:
-      obj = WlzMakeMain(type, domain, values,
-			WlzReadPropertyList(fp, NULL), NULL, &errNum);
-      break;
-    case WLZ_MESH_TRANS:
-      if((domain.mt = WlzReadMeshTransform2D(fp, &errNum)) != NULL){
-	obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
-      }
-      break;
-    /* orphans and not yet implemented object types for I/O */
-    case WLZ_CONV_HULL:
-    case WLZ_3D_POLYGON:
-    case WLZ_CONVOLVE_INT:
-    case WLZ_CONVOLVE_FLOAT:
-    case WLZ_TEXT:
-    case WLZ_COMPOUND_LIST_1:
-    case WLZ_COMPOUND_LIST_2:
-    default:
-      errNum = WLZ_ERR_OBJECT_TYPE;
-      break;
+      case WLZ_WARP_TRANS:
+	obj = (WlzObject *) WlzReadWarpTrans(fp, &errNum);
+	break;
+
+  #ifdef WLZ_OLD_CMESH_TRANS_SUPPORT
+      case WLZ_CMESH_TRANS:
+	obj = WlzReadOldCMeshTransform(fp, &errNum);
+	break;
+  #endif
+
+      case WLZ_FMATCHOBJ:
+	obj = (WlzObject *) WlzReadFMatchObj(fp, &errNum);
+	break;
+
+      case WLZ_COMPOUND_ARR_1:
+      case WLZ_COMPOUND_ARR_2:
+	obj = (WlzObject *) WlzReadCompoundA(fp, type, &errNum);
+	break;
+
+      case WLZ_PROPERTY_OBJ:
+	obj = WlzMakeMain(type, domain, values,
+			  WlzReadPropertyList(fp, NULL), NULL, &errNum);
+	break;
+      case WLZ_MESH_TRANS:
+	if((domain.mt = WlzReadMeshTransform2D(fp, &errNum)) != NULL){
+	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+	}
+	break;
+      /* orphans and not yet implemented object types for I/O */
+      case WLZ_CONV_HULL:
+      case WLZ_3D_POLYGON:
+      case WLZ_CONVOLVE_INT:
+      case WLZ_CONVOLVE_FLOAT:
+      case WLZ_TEXT:
+      case WLZ_COMPOUND_LIST_1:
+      case WLZ_COMPOUND_LIST_2:
+      default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
     }
   }
 
@@ -982,22 +984,26 @@ static WlzIntervalDomain *WlzReadIntervalDomain(FILE *fP,
 
 type = (WlzObjectType) getc(fP);
 
-  if( type == (WlzObjectType) EOF ){
+  if(type == (WlzObjectType )EOF)
+  {
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
-  else if( type == WLZ_NULL ){
+  else if(type == WLZ_NULL)
+  {
     errNum = WLZ_ERR_EOO;
   }
-
-  if( errNum == WLZ_ERR_NONE ){
+  if(errNum == WLZ_ERR_NONE)
+  {
     l1 = getword(fP);
     ll = getword(fP);
     k1 = getword(fP);
     kl = getword(fP);
-    if( feof(fP) != 0 ){
+    if( feof(fP) != 0 )
+    {
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-    else {
+    else
+    {
       idmn = WlzMakeIntervalDomain(type, l1, ll, k1, kl, &errNum);
     }
   }
@@ -1097,31 +1103,36 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
   type = (WlzObjectType) getc(fp);
 
 
-  if( type == (WlzObjectType) EOF ){
+  if(type == (WlzObjectType )EOF)
+  {
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
-  else if( type == WLZ_NULL ){
+  else if(type == WLZ_NULL)
+  {
     errNum = WLZ_ERR_EOO;
   }
-  else if( type == (WlzObjectType) 2 ){
+  else if(type == (WlzObjectType )2)
+  {
     /* some old object files have this old value - now converted
        silently but we must continue to read these files */
     type = WLZ_PLANEDOMAIN_DOMAIN;
   }
 
-  if( errNum == WLZ_ERR_NONE ){
-	p1 = getword(fp);
+  if( errNum == WLZ_ERR_NONE )
+  {
+    p1 = getword(fp);
     pl = getword(fp);
     l1 = getword(fp);
     ll = getword(fp);
     k1 = getword(fp);
     kl = getword(fp);
-
-    if(feof(fp) != 0){
+    if(feof(fp) != 0)
+    {
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
     else if((planedm = WlzMakePlaneDomain(type, p1, pl, l1, ll, k1, kl,
-					  &errNum)) != NULL){
+	    &errNum)) != NULL)
+    {
       domains = planedm->domains;
       (planedm->voxel_size)[0] = getfloat(fp);
       (planedm->voxel_size)[1] = getfloat(fp);
@@ -1130,10 +1141,12 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
 
       /* object format includes redundant plane positions -
 	 read and discard */
-      for(i=0; i < nplanes; i++){
+      for(i=0; i < nplanes; i++)
+      {
 	(void) getfloat(fp);
       }
-      if (feof(fp) != 0){
+      if(feof(fp) != 0)
+      {
 	WlzFreePlaneDomain(planedm);
 	planedm = NULL;
 	errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -1253,7 +1266,7 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
 
   type = (WlzObjectType) getc(fp);
 
-  if( type == (WlzObjectType) EOF )
+  if( type == (WlzObjectType )EOF )
   {
     return WLZ_ERR_READ_INCOMPLETE;
   }
@@ -2194,126 +2207,121 @@ static WlzProperty WlzReadProperty(
 
   type = (WlzObjectType )getc(fp);
 
-  switch( type ){
-
-  case (WlzObjectType) EOF:
+  if(type == (WlzObjectType )EOF)
+  {
     errNum = WLZ_ERR_READ_INCOMPLETE;
-    break;
-
-    /* a NULL property could be allowed */
-  case WLZ_NULL:
-    break;
-
-  case WLZ_PROPERTY_SIMPLE:
-    /* read size */
-    si = getword(fp);
-    if( feof(fp) != 0 || si < 0 ){
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-      break;
-    }
-
-    /* create property list with space for the data */
-    if( (rtnProp.simple = WlzMakeSimpleProperty(si, &errNum)) == NULL ){
-      break;
-    }
-
-    /* The size is now correct for the amount of data */
-    if( si > 0 ){
-      fread(rtnProp.simple->prop, si, 1, fp);
-    }
-    if( feof(fp) != 0 ){
-      WlzFreeSimpleProperty( rtnProp.simple );
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-    }
-    break;
-
-  case WLZ_PROPERTY_EMAP:
-    /* create an empty property */
-    if( (rtnProp.emap =
-	 WlzMakeEMAPProperty(WLZ_EMAP_PROPERTY_GREY_MODEL,
-			     NULL, NULL, NULL, NULL, NULL,
-			     NULL, NULL, NULL, NULL, NULL,
-			     &errNum)) == NULL ){
-      break;
-    }
-
-    /* read the property values */
-
-    rtnProp.emap->emapType = (WlzEMAPPropertyType )getc(fp);
-
-    fread(rtnProp.emap->modelUID,
-	  EMAP_PROPERTY_UID_LENGTH, 1, fp);
-    fread(rtnProp.emap->anatomyUID,
-	  EMAP_PROPERTY_UID_LENGTH, 1, fp);
-    fread(rtnProp.emap->targetUID,
-	  EMAP_PROPERTY_UID_LENGTH, 1, fp);
-    fread(rtnProp.emap->targetVersion,
-	  EMAP_PROPERTY_VERSION_LENGTH, 1, fp);
-    fread(rtnProp.emap->stage,
-	  EMAP_PROPERTY_STAGE_LENGTH, 1, fp);
-    fread(rtnProp.emap->subStage,
-	  EMAP_PROPERTY_STAGE_LENGTH, 1, fp);
-    fread(rtnProp.emap->modelName,
-	  EMAP_PROPERTY_MODELNAME_LENGTH, 1, fp);
-    fread(rtnProp.emap->version,
-	  EMAP_PROPERTY_VERSION_LENGTH, 1, fp);
-    rtnProp.emap->creationTime = getword(fp);
-    fread(rtnProp.emap->creationAuthor,
-	  EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp);
-    fread(rtnProp.emap->creationMachineName,
-	  EMAP_PROPERTY_MACHINENAME_LENGTH, 1, fp);
-    rtnProp.emap->modificationTime = getword(fp);
-    fread(rtnProp.emap->modificationAuthor,
-	  EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp);
-
-    /* now the variable length bits */
-    si = getword(fp);
-    if( si > 0 ){
-      rtnProp.emap->fileName = (char *) AlcMalloc(sizeof(char) *
-						  (si+1));
-      fread(rtnProp.emap->fileName, si, 1, fp);
-      rtnProp.emap->fileName[si] = '\0';
-      rtnProp.emap->freeptr = AlcFreeStackPush(rtnProp.emap->freeptr,
-					       rtnProp.emap->fileName,
-					       NULL);
-    }
-    else {
-      rtnProp.emap->fileName = NULL;
-    }
-
-    si = getword(fp);
-    if( si > 0 ){
-      rtnProp.emap->comment = (char *) AlcMalloc(sizeof(char) *
-						 (si+1));
-      fread(rtnProp.emap->comment, si, 1, fp);
-      rtnProp.emap->comment[si] = '\0';
-      rtnProp.emap->freeptr = AlcFreeStackPush(rtnProp.emap->freeptr,
-					       rtnProp.emap->comment,
-					       NULL);
-    }
-    else {
-      rtnProp.emap->comment = NULL;
-    }
-    break;
-  case WLZ_PROPERTY_NAME:
-    if((errNum = WlzReadStr(fp, &name)) == WLZ_ERR_NONE)
+  }
+  else
+  {
+    switch( type )
     {
-      rtnProp.name = WlzMakeNameProperty(name, &errNum);
-      AlcFree(name);
+      case WLZ_NULL:
+	/* a NULL property could be allowed */
+	break;
+      case WLZ_PROPERTY_SIMPLE:
+	/* read size */
+	si = getword(fp);
+	if( feof(fp) != 0 || si < 0 ){
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	  break;
+	}
+	/* create property list with space for the data */
+	if( (rtnProp.simple = WlzMakeSimpleProperty(si, &errNum)) == NULL ){
+	  break;
+	}
+	/* The size is now correct for the amount of data */
+	if( si > 0 ){
+	  fread(rtnProp.simple->prop, si, 1, fp);
+	}
+	if( feof(fp) != 0 ){
+	  WlzFreeSimpleProperty( rtnProp.simple );
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+	break;
+      case WLZ_PROPERTY_EMAP:
+	/* create an empty property */
+	if( (rtnProp.emap =
+	      WlzMakeEMAPProperty(WLZ_EMAP_PROPERTY_GREY_MODEL,
+		NULL, NULL, NULL, NULL, NULL,
+		NULL, NULL, NULL, NULL, NULL,
+		&errNum)) == NULL ){
+	  break;
+	}
+	/* read the property values */
+	rtnProp.emap->emapType = (WlzEMAPPropertyType )getc(fp);
+	fread(rtnProp.emap->modelUID,
+	    EMAP_PROPERTY_UID_LENGTH, 1, fp);
+	fread(rtnProp.emap->anatomyUID,
+	    EMAP_PROPERTY_UID_LENGTH, 1, fp);
+	fread(rtnProp.emap->targetUID,
+	    EMAP_PROPERTY_UID_LENGTH, 1, fp);
+	fread(rtnProp.emap->targetVersion,
+	    EMAP_PROPERTY_VERSION_LENGTH, 1, fp);
+	fread(rtnProp.emap->stage,
+	    EMAP_PROPERTY_STAGE_LENGTH, 1, fp);
+	fread(rtnProp.emap->subStage,
+	    EMAP_PROPERTY_STAGE_LENGTH, 1, fp);
+	fread(rtnProp.emap->modelName,
+	    EMAP_PROPERTY_MODELNAME_LENGTH, 1, fp);
+	fread(rtnProp.emap->version,
+	    EMAP_PROPERTY_VERSION_LENGTH, 1, fp);
+	rtnProp.emap->creationTime = getword(fp);
+	fread(rtnProp.emap->creationAuthor,
+	    EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp);
+	fread(rtnProp.emap->creationMachineName,
+	    EMAP_PROPERTY_MACHINENAME_LENGTH, 1, fp);
+	rtnProp.emap->modificationTime = getword(fp);
+	fread(rtnProp.emap->modificationAuthor,
+	    EMAP_PROPERTY_AUTHORNAME_LENGTH, 1, fp);
+	/* now the variable length bits */
+	si = getword(fp);
+	if( si > 0 ){
+	  rtnProp.emap->fileName = (char *) AlcMalloc(sizeof(char) *
+	      (si+1));
+	  fread(rtnProp.emap->fileName, si, 1, fp);
+	  rtnProp.emap->fileName[si] = '\0';
+	  rtnProp.emap->freeptr = AlcFreeStackPush(rtnProp.emap->freeptr,
+	      rtnProp.emap->fileName,
+	      NULL);
+	}
+	else {
+	  rtnProp.emap->fileName = NULL;
+	}
+
+	si = getword(fp);
+	if( si > 0 ){
+	  rtnProp.emap->comment = (char *) AlcMalloc(sizeof(char) *
+	      (si+1));
+	  fread(rtnProp.emap->comment, si, 1, fp);
+	  rtnProp.emap->comment[si] = '\0';
+	  rtnProp.emap->freeptr = AlcFreeStackPush(rtnProp.emap->freeptr,
+	      rtnProp.emap->comment,
+	      NULL);
+	}
+	else {
+	  rtnProp.emap->comment = NULL;
+	}
+	break;
+      case WLZ_PROPERTY_NAME:
+	if((errNum = WlzReadStr(fp, &name)) == WLZ_ERR_NONE)
+	{
+	  rtnProp.name = WlzMakeNameProperty(name, &errNum);
+	  AlcFree(name);
+	}
+	break;
+      case WLZ_PROPERTY_GREY:
+	if((errNum = WlzReadStr(fp, &name)) == WLZ_ERR_NONE)
+	{
+	  if((errNum = WlzReadPixelV(fp, &pV, 1)) == WLZ_ERR_NONE)
+	  {
+	    rtnProp.greyV = WlzMakeGreyProperty(name, pV, &errNum);
+	  }
+	  AlcFree(name);
+	}
+	break;
+      default:
+	break;
     }
-    break;
-  case WLZ_PROPERTY_GREY:
-    if((errNum = WlzReadStr(fp, &name)) == WLZ_ERR_NONE)
-    {
-      if((errNum = WlzReadPixelV(fp, &pV, 1)) == WLZ_ERR_NONE)
-      {
-	rtnProp.greyV = WlzMakeGreyProperty(name, pV, &errNum);
-      }
-      AlcFree(name);
-    }
-    break;
-  default:
-    break;
   }
 
   if( dstErr ){
@@ -2342,88 +2350,92 @@ static WlzPropertyList *WlzReadPropertyList(FILE *fp, WlzErrorNum *dstErr)
 
   type = (WlzObjectType )getc(fp);
 
-  switch(type)
+  if(type == (WlzObjectType )EOF)
   {
-    case (WlzObjectType )EOF:
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-      break;
-    case WLZ_NULL:
-      errNum = WLZ_ERR_EOO;
-      break;
-    case (WlzObjectType )1:
-      /* For backward compatibility this corresponds to the old format
-       * for a simple property so convert here to a property list. */
-      /* Read size: Old format had a funny size definition. */
-      pSz = getword(fp) - sizeof(int);
-      if((feof(fp) != 0) || (pSz < 0))
-      {
-	errNum = WLZ_ERR_READ_INCOMPLETE;
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else
+  {
+    switch(type)
+    {
+      case WLZ_NULL:
+	errNum = WLZ_ERR_EOO;
 	break;
-      }
-      /* Create property with space for the data */
-      if((prop.simple = WlzMakeSimpleProperty(pSz, &errNum)) != NULL)
-      {
-	/* The size is now correct for the amount of data */
-	if(pSz > 0)
+      case (WlzObjectType )1:
+	/* For backward compatibility this corresponds to the old format
+	 * for a simple property so convert here to a property list. */
+	/* Read size: Old format had a funny size definition. */
+	pSz = getword(fp) - sizeof(int);
+	if((feof(fp) != 0) || (pSz < 0))
 	{
-	  (void )fread(prop.simple->prop, pSz, 1, fp);
-	}
-	if(feof(fp) != 0)
-	{
-	  WlzFreeSimpleProperty(prop.simple);
 	  errNum = WLZ_ERR_READ_INCOMPLETE;
-	  prop.core = NULL;
+	  break;
 	}
-      }
-      /* Create a list with the simple property as it's only item. */
-      if(errNum == WLZ_ERR_NONE)
-      {
-	(void )WlzAssignProperty(prop, NULL);
-	if(((pList = WlzMakePropertyList(NULL)) == NULL) ||
-	    (AlcDLPListEntryAppend(pList->list, NULL, (void *)(prop.core),
-				   WlzFreePropertyListEntry) != ALC_ER_NONE))
+	/* Create property with space for the data */
+	if((prop.simple = WlzMakeSimpleProperty(pSz, &errNum)) != NULL)
 	{
-	  errNum = WLZ_ERR_MEM_ALLOC;
-	  (void )WlzFreePropertyList(pList);
-	  pList = NULL;
+	  /* The size is now correct for the amount of data */
+	  if(pSz > 0)
+	  {
+	    (void )fread(prop.simple->prop, pSz, 1, fp);
+	  }
+	  if(feof(fp) != 0)
+	  {
+	    WlzFreeSimpleProperty(prop.simple);
+	    errNum = WLZ_ERR_READ_INCOMPLETE;
+	    prop.core = NULL;
+	  }
 	}
-      }
-      break;
-    case (WlzObjectType )2:
-      /* The new style property list. */
-      numProps = getword(fp);
-      if((feof(fp) != 0) || (numProps < 0))
-      {
-	errNum = WLZ_ERR_READ_INCOMPLETE;
-      }
-      /* Make a property list without any items. */
-      if((errNum == WLZ_ERR_NONE) && (numProps > 0))
-      {
-	if((pList = WlzMakePropertyList(NULL)) == NULL)
-	{
-	  errNum = WLZ_ERR_MEM_ALLOC;
-	}
-      }
-      /* Now read each property in turn and append it to the list. */
-      while((errNum == WLZ_ERR_NONE) && (numProps-- > 0))
-      {
-	prop = WlzReadProperty(fp, &errNum);
-	if(prop.core)
+	/* Create a list with the simple property as it's only item. */
+	if(errNum == WLZ_ERR_NONE)
 	{
 	  (void )WlzAssignProperty(prop, NULL);
-	  if(AlcDLPListEntryAppend(pList->list, NULL, (void *)prop.core,
-				   WlzFreePropertyListEntry) != ALC_ER_NONE)
+	  if(((pList = WlzMakePropertyList(NULL)) == NULL) ||
+	      (AlcDLPListEntryAppend(pList->list, NULL, (void *)(prop.core),
+				     WlzFreePropertyListEntry) != ALC_ER_NONE))
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	    (void )WlzFreePropertyList(pList);
 	    pList = NULL;
 	  }
 	}
-      }
-      break;
-    default:
-      errNum = WLZ_ERR_PROPERTY_TYPE;
-      break;
+	break;
+      case (WlzObjectType )2:
+	/* The new style property list. */
+	numProps = getword(fp);
+	if((feof(fp) != 0) || (numProps < 0))
+	{
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+	/* Make a property list without any items. */
+	if((errNum == WLZ_ERR_NONE) && (numProps > 0))
+	{
+	  if((pList = WlzMakePropertyList(NULL)) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	}
+	/* Now read each property in turn and append it to the list. */
+	while((errNum == WLZ_ERR_NONE) && (numProps-- > 0))
+	{
+	  prop = WlzReadProperty(fp, &errNum);
+	  if(prop.core)
+	  {
+	    (void )WlzAssignProperty(prop, NULL);
+	    if(AlcDLPListEntryAppend(pList->list, NULL, (void *)prop.core,
+		  WlzFreePropertyListEntry) != ALC_ER_NONE)
+	    {
+	      errNum = WLZ_ERR_MEM_ALLOC;
+	      (void )WlzFreePropertyList(pList);
+	      pList = NULL;
+	    }
+	  }
+	}
+	break;
+      default:
+	errNum = WLZ_ERR_PROPERTY_TYPE;
+	break;
+    }
   }
   if(dstErr)
   {
@@ -2450,18 +2462,19 @@ static WlzPolygonDomain *WlzReadPolygon(FILE *fp, WlzErrorNum *dstErr)
 
   type = (WlzObjectType) getc(fp);
 
-  if( type == (WlzObjectType) EOF ){
+  if( type == (WlzObjectType )EOF )
+  {
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
-  if( type == WLZ_NULL ){
+  if( type == WLZ_NULL )
+  {
     errNum = WLZ_ERR_EOO;
   }
-
   nvertices = getword(fp);
-  if( feof(fp) != 0 ){
+  if( feof(fp) != 0 )
+  {
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
-
   if((errNum == WLZ_ERR_NONE) &&
      (poly = WlzMakePolygonDomain(type, 0, NULL, nvertices, 1, &errNum)) ){
     poly->nvertices = nvertices;
@@ -2523,74 +2536,76 @@ static WlzBoundList *WlzReadBoundList(FILE *fp, WlzErrorNum *dstErr)
 
   type = (WlzObjectType) getc(fp);
 
-  switch( type ){
-
-  case (WlzObjectType) EOF:
+  if(type == EOF)
+  {
     errNum = WLZ_ERR_READ_INCOMPLETE;
-    break;
+  }
+  else
+  {
+    switch(type)
+    {
+      case WLZ_NULL:
+	errNum = WLZ_ERR_EOO;
+	break;
+      /* dummy type written by WriteBoundList, real type read next */
+      case (WlzObjectType) 1:
 
-  case WLZ_NULL:
-    errNum = WLZ_ERR_EOO;
-    break;
+	type = (WlzObjectType) getc(fp);
 
-    /* dummy type written by WriteBoundList, real type read next */
-  case (WlzObjectType) 1:
+	if( (blist = WlzMakeBoundList(type, 0, NULL, &errNum)) == NULL ){
+	  break;
+	}
 
-    type = (WlzObjectType) getc(fp);
+	if((tmpblist = WlzReadBoundList(fp, &errNum)) != NULL){
+	  blist->next = WlzAssignBoundList(tmpblist, NULL);
+	}
+	else if( errNum == WLZ_ERR_EOO){
+	  blist->next = NULL;
+	  errNum = WLZ_ERR_NONE;
+	}
+	else {
+	  WlzFreeBoundList(blist);
+	  blist = NULL;
+	  break;
+	}
 
-    if( (blist = WlzMakeBoundList(type, 0, NULL, &errNum)) == NULL ){
-      break;
-    }
+	if((tmpblist = WlzReadBoundList(fp, &errNum)) != NULL){
+	  blist->down = WlzAssignBoundList(tmpblist, NULL);
+	}
+	else if( errNum == WLZ_ERR_EOO){
+	  blist->down = NULL;
+	  errNum = WLZ_ERR_NONE;
+	}
+	else {
+	  WlzFreeBoundList(blist);
+	  blist = NULL;
+	  break;
+	}
 
-    if((tmpblist = WlzReadBoundList(fp, &errNum)) != NULL){
-      blist->next = WlzAssignBoundList(tmpblist, NULL);
-    }
-    else if( errNum == WLZ_ERR_EOO){
-      blist->next = NULL;
-      errNum = WLZ_ERR_NONE;
-    }
-    else {
-      WlzFreeBoundList(blist);
-      blist = NULL;
-      break;
-    }
+	blist->wrap = getword(fp);
+	if((tmppoly = WlzReadPolygon(fp, &errNum)) != NULL){
+	  blist->poly = WlzAssignPolygonDomain(tmppoly, NULL);
+	}
+	else if( errNum == WLZ_ERR_EOO){
+	  blist->poly = NULL;
+	  errNum = WLZ_ERR_NONE;
+	}
+	else{
+	  WlzFreeBoundList(blist);
+	  blist = NULL;
+	  break;
+	}
 
-    if((tmpblist = WlzReadBoundList(fp, &errNum)) != NULL){
-      blist->down = WlzAssignBoundList(tmpblist, NULL);
-    }
-    else if( errNum == WLZ_ERR_EOO){
-      blist->down = NULL;
-      errNum = WLZ_ERR_NONE;
-    }
-    else {
-      WlzFreeBoundList(blist);
-      blist = NULL;
-      break;
-    }
+	if( feof(fp) != 0 ){
+	  WlzFreeBoundList(blist);
+	  blist = NULL;
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+	break;
 
-    blist->wrap = getword(fp);
-    if((tmppoly = WlzReadPolygon(fp, &errNum)) != NULL){
-      blist->poly = WlzAssignPolygonDomain(tmppoly, NULL);
+      default:
+	break;
     }
-    else if( errNum == WLZ_ERR_EOO){
-      blist->poly = NULL;
-      errNum = WLZ_ERR_NONE;
-    }
-    else{
-      WlzFreeBoundList(blist);
-      blist = NULL;
-      break;
-    }
-
-    if( feof(fp) != 0 ){
-      WlzFreeBoundList(blist);
-      blist = NULL;
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-    }
-    break;
-
-  default:
-    break;
   }
 
   if( dstErr ){
@@ -2617,54 +2632,56 @@ static WlzIRect *WlzReadRect(FILE *fp, WlzErrorNum *dstErr)
 
   type = (WlzObjectType) getc(fp);
 
-  switch( type ){
-
-  case (WlzObjectType) EOF:
+  if(type == EOF)
+  {
     errNum = WLZ_ERR_READ_INCOMPLETE;
-    break;
+  }
+  else
+  {
+    switch(type)
+    {
+      case WLZ_NULL:
+	errNum = WLZ_ERR_EOO;
+	break;
+      case WLZ_RECTANGLE_DOMAIN_INT:
+	if((ir = (WlzIRect *) AlcMalloc (sizeof(WlzIRect))) == NULL){
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	  break;
+	}
+	ir->type = type;
+	ir->linkcount = 0;
+	ir->freeptr = NULL;
+	for(i=0; i < 4; i++){
+	  ir->irk[i] = getword(fp);
+	}
+	for(i=0; i < 4; i++){
+	  ir->irl[i] = getword(fp);
+	}
+	ir->rangle = getfloat(fp);
+	break;
 
-  case WLZ_NULL:
-    errNum = WLZ_ERR_EOO;
-    break;
+      case WLZ_RECTANGLE_DOMAIN_FLOAT:
+	if((fr = (WlzFRect *) AlcMalloc (sizeof(WlzFRect))) == NULL){
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	  break;
+	}
+	fr->type = type;
+	fr->linkcount = 0;
+	fr->freeptr = NULL;
+	for(i=0; i < 4; i++){
+	  fr->frk[i] = getfloat(fp);
+	}
+	for(i=0; i < 4; i++){
+	  fr->frl[i] = getfloat(fp);
+	}
+	fr->rangle = getfloat(fp);
+	ir = (WlzIRect *) fr;
+	break;
 
-  case WLZ_RECTANGLE_DOMAIN_INT:
-    if((ir = (WlzIRect *) AlcMalloc (sizeof(WlzIRect))) == NULL){
-      errNum = WLZ_ERR_MEM_ALLOC;
-      break;
+      default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
     }
-    ir->type = type;
-    ir->linkcount = 0;
-    ir->freeptr = NULL;
-    for(i=0; i < 4; i++){
-      ir->irk[i] = getword(fp);
-    }
-    for(i=0; i < 4; i++){
-      ir->irl[i] = getword(fp);
-    }
-    ir->rangle = getfloat(fp);
-    break;
-
-  case WLZ_RECTANGLE_DOMAIN_FLOAT:
-    if((fr = (WlzFRect *) AlcMalloc (sizeof(WlzFRect))) == NULL){
-      errNum = WLZ_ERR_MEM_ALLOC;
-      break;
-    }
-    fr->type = type;
-    fr->linkcount = 0;
-    fr->freeptr = NULL;
-    for(i=0; i < 4; i++){
-      fr->frk[i] = getfloat(fp);
-    }
-    for(i=0; i < 4; i++){
-      fr->frl[i] = getfloat(fp);
-    }
-    fr->rangle = getfloat(fp);
-    ir = (WlzIRect *) fr;
-    break;
-
-  default:
-    errNum = WLZ_ERR_OBJECT_TYPE;
-    break;
   }
 
   if((errNum == WLZ_ERR_NONE) && (feof(fp) != 0) ){
@@ -3031,8 +3048,9 @@ static WlzWarpTrans *WlzReadWarpTrans(FILE *fp, WlzErrorNum *dstErr)
   if( errNum == WLZ_ERR_NONE ){
     if( (obj->eltlist = (WlzTElement *)
 	 AlcMalloc(sizeof(WlzTElement) * obj->nelts)) == NULL ){
-      AlcFree((void *)(obj->nodes));
       AlcFree((void *)(obj->ncoords));
+      AlcFree((void *)(obj->eltlist));
+      AlcFree((void *)(obj->displacements));
       AlcFree((void *)obj);
       obj = NULL;
       errNum = WLZ_ERR_MEM_ALLOC;
@@ -3059,9 +3077,9 @@ static WlzWarpTrans *WlzReadWarpTrans(FILE *fp, WlzErrorNum *dstErr)
 
   /* check if EOF error has been set */
   if( (errNum == WLZ_ERR_NONE) && (feof(fp) != 0) ){
-    AlcFree( (void *) obj->eltlist );
-    AlcFree( (void *) obj->nodes );
     AlcFree( (void *) obj->ncoords );
+    AlcFree( (void *) obj->eltlist );
+    AlcFree( (void *) obj->displacements );
     AlcFree((void *) obj);
     obj = NULL;
     errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -3226,29 +3244,32 @@ static WlzContour *WlzReadContour(FILE *fP, WlzErrorNum *dstErr)
 
 
   cType = (WlzObjectType )getc(fP);
-
-  switch(cType)
+  if(cType == (WlzObjectType )EOF)
   {
-    case EOF:
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-      break;
-    case WLZ_NULL:
-      errNum = WLZ_ERR_EOO;
-      break;
-    case WLZ_CONTOUR:
-      if((ctr = WlzMakeContour(&errNum)) != NULL)
-      {
-        ctr->model = WlzAssignGMModel(WlzReadGMModel(fP, &errNum), NULL);
-        if(errNum != WLZ_ERR_NONE)
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else
+  {
+    switch(cType)
+    {
+      case WLZ_NULL:
+	errNum = WLZ_ERR_EOO;
+	break;
+      case WLZ_CONTOUR:
+	if((ctr = WlzMakeContour(&errNum)) != NULL)
 	{
-	  WlzFreeContour(ctr);
-	  ctr = NULL;
+	  ctr->model = WlzAssignGMModel(WlzReadGMModel(fP, &errNum), NULL);
+	  if(errNum != WLZ_ERR_NONE)
+	  {
+	    WlzFreeContour(ctr);
+	    ctr = NULL;
+	  }
 	}
-      }
-      break;
-    default:
-      errNum = WLZ_ERR_DOMAIN_TYPE;
-      break;
+	break;
+      default:
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
   }
   if(dstErr)
   {
@@ -3288,34 +3309,36 @@ static WlzGMModel *WlzReadGMModel(FILE *fP, WlzErrorNum *dstErr)
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   mType = (WlzGMModelType )getc(fP);
-
-  switch(mType)
+  if((mType == (WlzGMModelType )EOF) || (mType == (WlzGMModelType )NULL))
   {
-    case EOF: /* FALLTHROUGH */
-    case WLZ_NULL:
-      errNum = WLZ_ERR_READ_INCOMPLETE;
-      break;
-    case WLZ_GMMOD_2I:
-      vgElmSz = sizeof(WlzIVertex2);
-      break;
-    case WLZ_GMMOD_2D:
-      vgElmSz = sizeof(WlzDVertex2);
-      break;
-    case WLZ_GMMOD_2N:
-      vgElmSz = 2 * sizeof(WlzDVertex2);
-      break;
-    case WLZ_GMMOD_3I:
-      vgElmSz = sizeof(WlzIVertex3);
-      break;
-    case WLZ_GMMOD_3D:
-      vgElmSz = sizeof(WlzDVertex3);
-      break;
-    case WLZ_GMMOD_3N:
-      vgElmSz = 2 * sizeof(WlzDVertex3);
-      break;
-    default:
-      errNum = WLZ_ERR_DOMAIN_TYPE;
-      break;
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else
+  {
+    switch(mType)
+    {
+      case WLZ_GMMOD_2I:
+	vgElmSz = sizeof(WlzIVertex2);
+	break;
+      case WLZ_GMMOD_2D:
+	vgElmSz = sizeof(WlzDVertex2);
+	break;
+      case WLZ_GMMOD_2N:
+	vgElmSz = 2 * sizeof(WlzDVertex2);
+	break;
+      case WLZ_GMMOD_3I:
+	vgElmSz = sizeof(WlzIVertex3);
+	break;
+      case WLZ_GMMOD_3D:
+	vgElmSz = sizeof(WlzDVertex3);
+	break;
+      case WLZ_GMMOD_3N:
+	vgElmSz = 2 * sizeof(WlzDVertex3);
+	break;
+      default:
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
