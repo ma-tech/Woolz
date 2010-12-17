@@ -36,8 +36,14 @@ SUBDIRS =	\
 		libAlc \
 		libAlg \
 		libWlz \
-		binWlz \
+		binWlz
+
+if  BUILD_TEST
+  SUBDIRS +=	\
+		binAlgTst \
 		binWlzTst
+endif
+
 if  BUILD_EXTFF
   SUBDIRS +=	\
 		libbibfile \
