@@ -150,6 +150,7 @@ typedef enum _WlzErrorNum
   				     matrix or value. */
   WLZ_ERR_ALG_HOMOGENEOUS,	/*!< Algorithm failure due to a homogeneous
   				     matrix. */
+  WLZ_ERR_ALG_CONDITION,	/*!< Algorithm matrix condition number. */
   WLZ_ERR_ALG_CONVERGENCE,	/*!< Algorithm convergence failure. */
   WLZ_ERR_ALG_NONGLOBAL,	/*!< Algorithm convergence to local not
                                      global solution. */

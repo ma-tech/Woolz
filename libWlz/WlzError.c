@@ -60,26 +60,38 @@ WlzErrorNum	WlzErrorFromAlg(AlgError algErr)
     case ALG_ERR_NONE:
       wlzErr = WLZ_ERR_NONE;
       break;
+    case ALG_ERR_CONVERGENCE:
+      wlzErr = WLZ_ERR_ALG_CONVERGENCE;
+      break;
+    case ALG_ERR_DIVZERO:
+      wlzErr = WLZ_ERR_ALG;
+      break;
     case ALG_ERR_FUNC:
       wlzErr = WLZ_ERR_PARAM_DATA;
       break;
     case ALG_ERR_MALLOC:
       wlzErr = WLZ_ERR_MEM_ALLOC;
       break;
-    case ALG_ERR_SINGULAR:
-      wlzErr = WLZ_ERR_ALG_SINGULAR;
+    case ALG_ERR_MATRIX_CONDITION:
+      wlzErr = WLZ_ERR_ALG_CONDITION;
       break;
-    case ALG_ERR_HOMOGENEOUS:
+    case ALG_ERR_MATRIX_HOMOGENEOUS:
       wlzErr = WLZ_ERR_ALG_HOMOGENEOUS;
       break;
-    case ALG_ERR_CONVERGENCE:
-      wlzErr = WLZ_ERR_ALG_CONVERGENCE;
+    case ALG_ERR_MATRIX_SINGULAR:
+      wlzErr = WLZ_ERR_ALG_SINGULAR;
+      break;
+    case ALG_ERR_MATRIX_TYPE:
+      wlzErr = WLZ_ERR_PARAM_TYPE;
       break;
     case ALG_ERR_NONGLOBAL:
       wlzErr = WLZ_ERR_ALG_NONGLOBAL;
       break;
-    case ALG_ERR_DIVZERO:
-      wlzErr = WLZ_ERR_ALG;
+    case ALG_ERR_READ:
+      wlzErr = WLZ_ERR_READ_INCOMPLETE;
+      break;
+    case ALG_ERR_WRITE:
+      wlzErr = WLZ_ERR_WRITE_INCOMPLETE;
       break;
     default:
       wlzErr = WLZ_ERR_ALG;
