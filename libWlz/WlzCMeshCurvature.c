@@ -64,7 +64,7 @@ static char _WlzCMeshCurvature_c[] = "MRC HGU $Id$";
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, int meanCrv,
-					WlzErrorNum *dstErr)
+				     WlzErrorNum *dstErr)
 {
   WlzObject	*crvObj = NULL,
 		*domObj = NULL,
