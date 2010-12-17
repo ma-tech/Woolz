@@ -48,6 +48,22 @@ static char _AlgVectorMath_c[] = "MRC HGU $Id$";
 #include <Alg.h>
 
 /*!
+* \ingroup	AlgVector
+* \brief	sets all elements of the given vector to zero.
+* \param	aV			Given vector.
+* \param	n			Number of elements.
+*/
+void            AlgVectorZero(double *aV, size_t n)
+{
+  size_t	idx;
+
+  for(idx = 0; idx < n; ++idx)
+  {
+    aV[idx] = 0.0;
+  }
+}
+
+/*!
 * \return	Norm of the vector.
 * \ingroup	AlgVector
 * \brief	Computes the norm of the given vector \f$\mathbf{a}\f$
@@ -159,7 +175,40 @@ void		AlgVectorSub(double *aV, double *bV, double *cV, size_t n)
 */
 void		AlgVectorCopy(double *aV, double *bV, size_t n)
 {
-  memcpy(aV, bV, sizeof(double) * n);
+  memmove(aV, bV, sizeof(double) * n);
+}
+
+/*!
+* \return
+* \brief	Scales a vector \f$\mathbf{b}\f$.
+*		Computes \f$a_i = b_i s, \forall i \in [0\ldots n - 1]\f$.
+* \note		For efficiency the given parameters are not checked.
+* \note		Vector size is limited only by address space.
+* \param	aV			Vector \f$\mathbf{a}\f$.
+* \param	bV			Vector \f$\mathbf{b}\f$.
+* \param	s			Scalar scale  \f$s\f$.
+* \param	n			Number of elements in each of
+*					the vectors.
+*/
+void		AlgVectorScale(double *aV, double *bV, double s, size_t n)
+{
+#ifdef _OPENMP
+  int		id0,
+  		oN;
+#else
+  size_t	id0;
+#endif
+
+#ifdef _OPENMP
+  oN = n;
+  #pragma omp parallel for default(shared)
+  for(id0 = 0; id0 < oN; ++id0)
+#else
+  for(id0 = 0; id0 < n; ++id0)
+#endif
+  {
+    *(aV + id0) = (*(bV + id0) * s);
+  }
 }
 
 /*!
