@@ -102,23 +102,33 @@ typedef enum _AlgMatrixType
   				     for each element. These matrices should
 				     be allocated using the libAlc array
 				     allocation functions. */
-  ALG_MATRIX_SYM,		/*!< Symetric matrix, with storage
+  ALG_MATRIX_SYM,		/*!< Symmetric matrix, with storage
   				     for the upper triangle only. These
 				     matrices should be allocated using the
-				     libAlc symetric array allocation
+				     libAlc symmetric array allocation
 				     functions. */
-  ALG_MATRIX_CSR		/*!< Sparse matrix stored in compressed sparse
+  ALG_MATRIX_LLR		/*!< Sparse matrix stored in linked list
                                      row format. */
 } AlgMatrixType;
 
+/*!
+* \struct	_AlgMatrix
+* \brief	A union of all valid matrix types.
+* 		Typedef: ::AlgMatrix..
+*/
 typedef union _AlgMatrix
 {
   struct _AlgMatrixCore	*core;
   struct _AlgMatrixRect	*rect;
   struct _AlgMatrixSym	*sym;
-  struct _AlgMatrixCSR	*csr;
-} Algmatrix;
+  struct _AlgMatrixLLR	*llr;
+} AlgMatrix;
 
+/*!
+* \struct	_AlgMatrixCore
+* \brief	A core matrix type with members common to all matrix types.
+* 		Typedef: ::AlgMatrixCore.
+*/
 typedef struct _AlgMatrixCore
 {
   AlgMatrixType	type;		/*!< Matrix type. */
@@ -126,14 +136,24 @@ typedef struct _AlgMatrixCore
   size_t	nC;		/*!< Number of columns. */
 } AlgmatrixCore;
 
+/*!
+* \struct	_AlgMatrixRect
+* \brief	Rectangular matrix.
+* 		Typedef: ::AlgMatrixRect.
+*/
 typedef struct _AlgMatrixRect
 {
   AlgMatrixType	type;		/*!< From AlgmatrixCore. */
   size_t	nR;		/*!< From AlgmatrixCore. */
   size_t	nC;		/*!< From AlgmatrixCore. */
-  double	**array;
+  double	**array;	/* Array of elements. */
 } AlgMatrixRect;
 
+/*!
+* \struct	_AlgMatrixSym
+* \brief	Symmetric matrix.
+* 		Typedef: ::AlgMatrixRect.
+*/
 typedef struct _AlgMatrixSym
 {
   AlgMatrixType	type;		/*!< From AlgmatrixCore. */
@@ -142,20 +162,51 @@ typedef struct _AlgMatrixSym
   double	**array;
 } AlgMatrixSym;
 
-typedef struct _AlgMatrixCSR
+/*!
+* \struct	_AlgMatrixLLRE
+* \brief	Entry in the linked list row matrix.
+* 		Typedef: ::AlgMatrixLLRE.
+*/
+typedef struct _AlgMatrixLLRE
+{
+  size_t	col;		/*!< Column in matrix. */
+  double	val;		/*!< Value in the row, column. */
+  struct _AlgMatrixLLRE *nxt;   /*!< Next entry either in the value list or
+                                     the free list. */
+} AlgMatrixLLRE;
+
+/*!
+* \struct	_AlgMatrixLLRE
+* \brief	Linked list row matrix, in which the values are stored
+* 		in linked lists, with a linked list for each row of
+* 		the matrix. This can be very efficient if the matrix
+* 		is very sparse, but is very ineffiecient if the matrix
+* 		is dense. The cross over is around 5 percent values
+* 		being non-zero. At 1 percent of values being non-zero
+* 		the linked list matrix is faster than a rectangular matrix
+* 		(eg for matrix multiplication) by about a factor of ten.
+*/
+typedef struct _AlgMatrixLLR
 {
   AlgMatrixType type;		/*!< From AlgmatrixCore. */
   size_t	nR;		/*!< From AlgmatrixCore. */
   size_t	nC;		/*!< From AlgmatrixCore. */
-  size_t	nDat;
-  size_t	nCol;
-  size_t	nRow;
-  size_t	nBuf;
-  double	*dat;
-  double	*col;
-  double	*row;
-  double	*buf;
-} AlgMatrixCSR;
+  size_t	numEnt;		/*!< Number of (no-zero) entries. */
+  size_t	maxEnt;		/*!< Maximum number of entries. */
+  double	tol;		/*!< Lowest absolute non-zero value. */
+  void		*blk;	        /*!< Stack of blocks of triples allocated
+  				     managed using AlcFreeStack. */
+  AlgMatrixLLRE *freeStk;	/*!< Stack of free linked list entries. */
+  AlgMatrixLLRE **tbl;		/*!< Table of matrix linked lists with a list
+  				     for each row of the matrix. */
+} AlgMatrixLLR;
+
+typedef struct _AlgMatrixTriple
+{
+  size_t	row;		/*!< Row in matrix. */
+  size_t	col;		/*!< Column in matrix. */
+  double	val;		/*!< Value in the row, column. */
+} AlgMatrixTriple;
 
 /*!
 * \enum		_AlgPadType
@@ -189,15 +240,18 @@ typedef struct _ComplexD
 typedef enum _AlgError
 {
   ALG_ERR_NONE		= (0),
+  ALG_ERR_CONVERGENCE,		/*!< Failure to converge. */
+  ALG_ERR_DIVZERO,   		/*!< Divide by zero. */
   ALG_ERR_FUNC,			/*!< Function parameters invalid. */
   ALG_ERR_MALLOC,		/*!< Memory allocation failure. */
-  ALG_ERR_SINGULAR,		/*!< Singular matrix. */
-  ALG_ERR_HOMOGENEOUS,		/*!< Homogeneous matrix. */
-  ALG_ERR_CONVERGENCE,		/*!< Failure to converge. */
+  ALG_ERR_MATRIX_CONDITION,   	/*!< Matrix condition number out of range. */
+  ALG_ERR_MATRIX_HOMOGENEOUS,	/*!< Homogeneous matrix. */
+  ALG_ERR_MATRIX_SINGULAR,	/*!< Singular matrix. */
+  ALG_ERR_MATRIX_TYPE,		/*!< Invalid matrix type given. */
   ALG_ERR_NONGLOBAL,   		/*!< Finds local solution, but fails to global
   				     solution. */
-  ALG_ERR_DIVZERO,   		/*!< Divide by zero. */
-  ALG_ERR_CONDITIONN,   	/*!< Matrix condition number out of range. */
+  ALG_ERR_READ,			/*!< Read failure. */
+  ALG_ERR_WRITE,		/*!< Write failure. */
   ALG_ERR_MAX
 } AlgError;
 
