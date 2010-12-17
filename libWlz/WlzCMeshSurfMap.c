@@ -42,6 +42,7 @@ static char _WlzCMeshSurfMap_c[] = "MRC HGU $Id$";
 
 #include<Wlz.h>
 #include <stdlib.h>
+#include <float.h>
 
 static int			WlzCMeshSurfMapIdxCmpFn(
 				  const void *p0,
@@ -60,7 +61,7 @@ static WlzGMModel 		*WlzCMeshToGMModel2D5(
 * \ingroup	WlzTransform
 * \brief	Computes a least squares conformal transformation which
 * 		maps the source surface to a destination plane with z
-* 		coordinate zero. See WlzCMeshCompSurfMapConformalIdx().
+* 		coordinate zero. See WlzCMeshCompSurfMapIdx().
 * \param	inObj			Input conforming mesh object which
 * 					must be of type WLZ_CMESH_2D5.
 * \param	nDV			Number of destination vertices.
@@ -70,7 +71,7 @@ static WlzGMModel 		*WlzCMeshToGMModel2D5(
 * \param	sV			Source vertices.
 * \param	dstErr			Woolz error code, may be NULL.
 */
-WlzObject	*WlzCMeshCompSurfMapConformal(WlzObject *inObj,
+WlzObject	*WlzCMeshCompSurfMap(WlzObject *inObj,
 				int nDV, WlzDVertex3 *dV,
 				int nSV, WlzDVertex3 *sV,
 				WlzErrorNum *dstErr)
@@ -123,7 +124,7 @@ WlzObject	*WlzCMeshCompSurfMapConformal(WlzObject *inObj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    rtnObj = WlzCMeshCompSurfMapConformalIdx(mesh, nDV, dV, nodTb, &errNum);
+    rtnObj = WlzCMeshCompSurfMapIdx(mesh, nDV, dV, nodTb, &errNum);
   }
   AlcFree(nodTb);
   if(dstErr != NULL)
@@ -139,7 +140,6 @@ WlzObject	*WlzCMeshCompSurfMapConformal(WlzObject *inObj,
 * \brief	Computes a least squares conformal transformation which
 * 		maps the source surface to a destination plane with z
 * 		coordinate zero.
-* 		TODO
 * \param	mesh			Input conforming mesh which must be
 * 					of type WLZ_CMESH_2D5.
 * \param	nPN			Number of pinned nodes.
@@ -154,27 +154,35 @@ WlzObject	*WlzCMeshCompSurfMapConformal(WlzObject *inObj,
 * 					increase monotonically.
 * \param	dstErr			Woolz error code, may be NULL.
 */
-WlzObject	*WlzCMeshCompSurfMapConformalIdx(WlzCMesh2D5 *mesh,
+WlzObject	*WlzCMeshCompSurfMapIdx(WlzCMesh2D5 *mesh,
 				int nP, WlzDVertex3 *dPV, int *pIdx,
-				WlzErrorNum *dstErr)
+				 WlzErrorNum *dstErr)
 {
   int		mE,
   		nE,
+		nE2,
+		nP2,
 		mN,
-		nN;
+		nN,
+		nN2;
   int		*pIdxSortTb = NULL,
      		*pIdxIdxTb = NULL,
   		*eIdxTb = NULL,
   		*nIdxTb = NULL,
 		*pIdxSorted = NULL;
-  double	*bM = NULL,
-  		*bUM = NULL,
-		*xM = NULL;
-  double	**aM = NULL,
-  		**bPM = NULL;
-  WlzObject	*rtnObj = NULL;
+  double	*bV = NULL,
+  		*bUV = NULL,
+		*xV = NULL;
+  AlgMatrix	aM,
+  		bPM;
+  WlzObject	*mapObj = NULL;
+  WlzIndexedValues *ixv = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	delta = 0.000001,
+  		tol = 0.000001;
 
+  aM.core = NULL;
+  bPM.core = NULL;
   if(mesh == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
@@ -195,24 +203,49 @@ WlzObject	*WlzCMeshCompSurfMapConformalIdx(WlzCMesh2D5 *mesh,
     mN = mesh->res.nod.maxEnt;
     nN = mesh->res.nod.numEnt;
     nE = mesh->res.elm.numEnt;
-    if((AlcDouble2Calloc(&aM, nE * 2, nN * 2) != ALC_ER_NONE) ||
-       (AlcDouble2Calloc(&bPM, nE * 2, nP * 2) != ALC_ER_NONE) ||
-       ((bUM = AlcMalloc(sizeof(double) * nP * 2)) == NULL) ||
-       ((bM = AlcMalloc(sizeof(double) * nE * 2)) == NULL) ||
-       ((xM = AlcMalloc(sizeof(double) * nN * 2)) == NULL) ||
-       ((pIdxSortTb = AlcMalloc(sizeof(int) * nP)) == NULL) ||
-       ((pIdxIdxTb = AlcMalloc(sizeof(int) * mN)) == NULL) ||
-       ((pIdxSorted = AlcMalloc(sizeof(int) * nP)) == NULL) ||
-       ((eIdxTb = AlcMalloc(sizeof(int) * mE)) == NULL) ||
-       ((nIdxTb = AlcMalloc(sizeof(int) * mN)) == NULL))
+    nE2 = 2 * nE;
+    nN2 = 2 * nN;
+    nP2 = 2 * nP;
+    if(((aM.llr = AlgMatrixLLRNew(nE2, nN2, 6 * nE, tol, NULL)) == NULL) ||
+       ((bPM.llr = AlgMatrixLLRNew(nE2, nP2, 6 * nE, tol, NULL)) == NULL) ||
+       ((bUV = (double *)AlcMalloc(sizeof(double) * nP2)) == NULL) ||
+       ((bV = (double *)AlcMalloc(sizeof(double) * nE2)) == NULL) ||
+       ((xV = (double *)AlcCalloc(nE2, sizeof(double))) == NULL) ||
+       ((pIdxSortTb = (int *)AlcMalloc(sizeof(int) * nP)) == NULL) ||
+       ((pIdxIdxTb = (int *)AlcMalloc(sizeof(int) * mN)) == NULL) ||
+       ((pIdxSorted = (int *)AlcMalloc(sizeof(int) * nP)) == NULL) ||
+       ((eIdxTb = (int *)AlcMalloc(sizeof(int) * mE)) == NULL) ||
+       ((nIdxTb = (int *)AlcMalloc(sizeof(int) * mN)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
+  /* Create return object. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzDomain	dom;
+    WlzValues	val;
+
+    dom.cm2d5 = mesh;
+    val.core = NULL;
+    mapObj = WlzMakeMain(WLZ_CMESH_2D5, dom, val, NULL, NULL, &errNum);
+  }
+  /* Allocate indexed values. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		dim = 3;
+    WlzValues	val;
+
+    val.x = WlzMakeIndexedValues(mapObj, 1, &dim, WLZ_GREY_DOUBLE,
+	                         WLZ_VALUE_ATTACH_NOD, &errNum);
+    ixv = val.x;
+    mapObj->values = WlzAssignValues(val, NULL);
+  }
+  /* Create the mapping. */
   if(errNum == WLZ_ERR_NONE)
   {
     int		idE,
-    		idN;
+		idN;
 
     for(idN = 0; idN < nP; ++idN)
     {
@@ -235,7 +268,7 @@ WlzObject	*WlzCMeshCompSurfMapConformalIdx(WlzCMesh2D5 *mesh,
       elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
-        int  	idN;
+	int  	idN;
 	double	a2;
 	WlzDVertex3 v[3],
 		    p[3];
@@ -260,18 +293,18 @@ WlzObject	*WlzCMeshCompSurfMapConformalIdx(WlzCMesh2D5 *mesh,
 	{
 	  int    idT;
 	  double d,
-	  	 l0,
-	  	 l2;
+		 l0,
+		 l2;
 	  double wR[3],
 		 wI[3];
 	  WlzDVertex2 q2;
 	  WlzDVertex3 u[3]; /* Basis vectors within the plane of the current
-	                       triangular element. */
+			       triangular element. */
 
+	  idT = eIdxTb[elm->idx];
 	  d = 1.0 / sqrt(a2);
 	  l0 = WLZ_VTX_3_LENGTH(v[0]);
 	  l2 = a2; /* WLZ_VTX_3_LENGTH(v[2]) */
-	  idT = eIdxTb[elm->idx];
 	  /* Compute the orthonormal basis vectors for this element. */
 	  WLZ_VTX_3_SCALE(u[0], v[0], 1.0 / l0);
 	  WLZ_VTX_3_SCALE(u[2], v[2], 1.0 / l2);
@@ -291,126 +324,97 @@ WlzObject	*WlzCMeshCompSurfMapConformalIdx(WlzCMesh2D5 *mesh,
 
 	    idV = nIdxTb[nod[idN]->idx];
 	    if((idPP = bsearch(&(nod[idN]->idx), pIdxSorted, nP, sizeof(int),
-	                       WlzCMeshSurfMapIdxCmpFn)) != NULL)
+		    WlzCMeshSurfMapIdxCmpFn)) != NULL)
 	    {
 	      int idQ,
-	      	  idP;
+	      idP;
 
 	      /* Node is pinned. */
-	      idQ = idPP - pIdxSorted;      /* Index into table pinned node. */
+	      idQ = idPP - pIdxSorted;    /* Index into table pinned node. */
 	      idP = pIdxIdxTb[nod[idN]->idx];
-	      bPM[idT     ][idQ     ] =  wR[idN];
-	      bPM[idT + nE][idQ     ] = -wI[idN];
-	      bPM[idT     ][idQ + nP] =  wI[idN];
-	      bPM[idT + nE][idQ + nP] =  wR[idN];
-	      bUM[idQ     ] = dPV[idP].vtX;
-	      bUM[idQ + nP] = dPV[idP].vtY;
+	      (void )AlgMatrixSet(bPM, idT,      idQ,       wR[idN]);
+	      (void )AlgMatrixSet(bPM, idT + nE, idQ,      -wI[idN]);
+	      (void )AlgMatrixSet(bPM, idT,      idQ + nP,  wI[idN]);
+	      (void )AlgMatrixSet(bPM, idT + nE, idQ + nP,  wR[idN]);
+	      bUV[idQ     ] = dPV[idP].vtX;
+	      bUV[idQ + nP] = dPV[idP].vtY;
 	    }
 	    else
 	    {
 	      /* Node is free. */
-	      aM[idT     ][idV     ] =  wR[idN];
-	      aM[idT + nE][idV     ] = -wI[idN];
-	      aM[idT     ][idV + nN] =  wI[idN];
-	      aM[idT + nE][idV + nN] =  wR[idN];
+	      (void )AlgMatrixSet(aM, idT,      idV,       wR[idN]);
+	      (void )AlgMatrixSet(aM, idT + nE, idV,      -wI[idN]);
+	      (void )AlgMatrixSet(aM, idT,      idV + nN,  wI[idN]);
+	      (void )AlgMatrixSet(aM, idT + nE, idV + nN,  wR[idN]);
 	    }
 	  }
 	}
       }
     }
-  }
-  AlcFree(pIdxSortTb);
-  AlcFree(pIdxIdxTb);
-  /* Compute bM and solve for mapped vertices. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    AlgMatrixVectorMul(bM, ALG_MATRIX_RECT, bPM, bUM, nE * 2, nP * 2);
-    /* AlgMatrixScale(&bM, &bM, -1.0, 1, nE * 2); */
-#ifdef WLZ_CMESH_SM_DEBUG
-    (void )fprintf(stderr, "WlzCMeshCompSurfMapConformalIdx() aM =\n[\n");
-    (void )AlcDouble2WriteAsci(stderr, aM, nE * 2, nN * 2);
-    (void )fprintf(stderr, "]\n");
-    (void )fprintf(stderr, "WlzCMeshCompSurfMapConformalIdx() bM =\n[\n");
-    (void )AlcDouble1WriteAsci(stderr, bM, nE * 2);
-    (void )fprintf(stderr, "]\n");
-#endif 
-    errNum = WlzErrorFromAlg(
-	     AlgMatrixSolveLSQR(ALG_MATRIX_RECT, aM, nE * 2, nN * 2, bM, xM,
-	                        1.0e-10, 1.0e-10, 1.0e-10, 1000, 0,
-				NULL, NULL, NULL, NULL, NULL, NULL, NULL));
-  }
-  AlcFree(bUM);
-  AlcFree(eIdxTb);
-  Alc2Free((void **)bPM);
-  Alc2Free((void **)aM);
-  /* Create return object. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    WlzDomain	dom;
-    WlzValues	val;
-
-#ifdef WLZ_CMESH_SM_DEBUG
-    (void )fprintf(stderr, "WlzCMeshCompSurfMapConformalIdx() xM =\n[\n");
-    (void )AlcDouble1WriteAsci(stderr, xM, nN * 2);
-    (void )fprintf(stderr, "]\n");
-#endif 
-    dom.cm2d5 = mesh;
-    val.core = NULL;
-    rtnObj = WlzMakeMain(WLZ_CMESH_2D5, dom, val, NULL, NULL, &errNum);
-  }
-  /* Allocate indexed values. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    int		dim = 3;
-    WlzValues	val;
-
-    val.x = WlzMakeIndexedValues(rtnObj, 1, &dim, WLZ_GREY_DOUBLE,
-                                 WLZ_VALUE_ATTACH_NOD, &errNum);
-    rtnObj->values = WlzAssignValues(val, NULL);
-  }
-  /* Set displacements for the indexed values. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    int		idN;
-    double 	*dsp;
-    WlzIndexedValues *ixv;
-
-    ixv = rtnObj->values.x;
-    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    /* Compute bV and solve for mapped vertices. */
+    if(errNum == WLZ_ERR_NONE)
     {
-      WlzCMeshNod2D5 *nod;
+      AlgMatrixVectorMul(bV, bPM, bUV);
+#ifdef WLZ_CMESH_SM_DEBUG
+      (void )fprintf(stderr, "WlzCMeshCompSurfMapIdx() aM =\n[\n");
+      AlgMatrixWriteAscii(aM, stderr);
+      (void )fprintf(stderr, "]\n");
+      (void )fprintf(stderr, "WlzCMeshCompSurfMapIdx() bV =\n[\n");
+      (void )AlcDouble1WriteAsci(stderr, bV, nE * 2);
+      (void )fprintf(stderr, "]\n");
+#endif 
+      errNum = WlzErrorFromAlg(
+	  AlgMatrixSolveLSQR(aM, bV, xV, 1.0e-10, 1.0e-10, 1.0e-10, 1000, 0,
+	    NULL, NULL, NULL, NULL, NULL, NULL, NULL));
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int		idN;
+      double 	*dsp;
 
-      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
-      if(nod->idx >= 0)
+      /* Set displacements for the indexed values. */
+      for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
       {
-	int	idV;
+	WlzCMeshNod2D5 *nod;
 
-	dsp = (double *)WlzIndexedValueGet(ixv, nod->idx);
-	idV = nIdxTb[nod->idx];
-	if(bsearch(&(nod->idx), pIdxSorted, nP, sizeof(int),
-	           WlzCMeshSurfMapIdxCmpFn) != NULL)
+	nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	if(nod->idx >= 0)
 	{
-	  dsp[0] = 0.0;
-	  dsp[1] = 0.0;
+	  int	idV;
+
+	  dsp = (double *)WlzIndexedValueGet(ixv, nod->idx);
+	  idV = nIdxTb[nod->idx];
+	  if(bsearch(&(nod->idx), pIdxSorted, nP, sizeof(int),
+		WlzCMeshSurfMapIdxCmpFn) != NULL)
+	  {
+	    dsp[0] = 0.0;
+	    dsp[1] = 0.0;
+	  }
+	  else
+	  {
+	    dsp[0] = -(xV[idV     ] + nod->pos.vtX);
+	    dsp[1] = -(xV[idV + nN] + nod->pos.vtY);
+	  }
+	  dsp[2] = -(nod->pos.vtZ);
 	}
-	else
-	{
-	  dsp[0] = -(xM[idV     ] + nod->pos.vtX);
-	  dsp[1] = -(xM[idV + nN] + nod->pos.vtY);
-	}
-	dsp[2] = -(nod->pos.vtZ);
       }
     }
   }
-  AlcFree(xM);
-  AlcFree(bM);
+  AlcFree(xV);
+  AlcFree(bV);
+  AlcFree(bUV);
   AlcFree(nIdxTb);
+  AlcFree(eIdxTb);
+  AlgMatrixFree(aM);
+  AlgMatrixFree(bPM);
+  AlcFree(pIdxIdxTb);
+  AlcFree(pIdxSortTb);
   AlcFree(pIdxSorted);
   if(dstErr != NULL)
   {
     *dstErr = errNum;
   }
-  return(rtnObj);
+  return(mapObj);
 }
 
 /*!
@@ -548,7 +552,7 @@ WlzGMModel	*WlzCMeshToGMModel(WlzObject *mObj, int disp,
 * \brief	Creates a new 2D conforming mesh object by flattening the given
 * 		2D5 conforming mesh object. This is done by applying the
 * 		2D5 object's indexed values which are assumed to be valid
-* 		displacements to a plane. See WlzCMeshCompSurfMapConformal().
+* 		displacements to a plane. See WlzCMeshCompSurfMap().
 * \param	gObj			Given 2D5 conforming mesh object
 * 					with valid displacements.
 * \param	dstErr			Destination error pointer, may be NULL.
