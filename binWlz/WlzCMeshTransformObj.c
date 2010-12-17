@@ -9,7 +9,7 @@ static char _WlzCMeshTransformObj_c[] = "MRC HGU $Id$";
 #endif
 /*!
 * \file         binWlz/WlzCMeshTransformObj.c
-* \author       Zsolt Husz
+* \author       Zsolt Husz, Bill Hill
 * \date         December 2009
 * \version      $Id$
 * \par
@@ -139,9 +139,9 @@ extern char     *optarg;
 
 int		main(int argc, char *argv[])
 {
-  int		dim = 0,
-  		inv = 0,
+  int		inv = 0,
   		ok = 1,
+		objCnt,
   		option,
   		usage = 0;
   FILE		*inFP = NULL,
@@ -154,20 +154,20 @@ int		main(int argc, char *argv[])
                 outObjFileStr[FILENAME_MAX];
 
   const char	*errMsgStr;
-  WlzObject	*tx = NULL,
+  WlzObject	*trObj = NULL,
                 *inObj = NULL,
                 *outObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  static char   optList[] = "iho:t:s:x:nb:e:";
+  static char   optList[] = "iho:t:s:x:Lb:e:";
   const char    txFileStrDef[] = "-",
   		inFileStrDef[] = "-",
                 outFileStrDef[] = "-",
                 outObjFileExtStrDef[] = "wlz";
 
   double        transition = 1.0;
-  int           stepsno  = 1;
+  int           nStep  = 1;
   int           useStep = 0;
-  WlzInterpolationType interp = WLZ_INTERPOLATION_LINEAR;
+  WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
 
   opterr = 0;
   txFileStr = (char *)txFileStrDef;
@@ -186,16 +186,16 @@ int		main(int argc, char *argv[])
 	break;
       case 't':
         txFileStr = optarg;
-        useStep = 0;
         break;
       case 'x':
         transition = strtod(optarg, NULL);
+        useStep = 0;
         break;
-      case 'n':
-        interp = WLZ_INTERPOLATION_NEAREST;
+      case 'L':
+        interp = WLZ_INTERPOLATION_LINEAR;
         break;
       case 's':
-        stepsno = atoi(optarg);
+        nStep = atoi(optarg);
         useStep = 1;
         break;
       case 'b':
@@ -222,7 +222,8 @@ int		main(int argc, char *argv[])
     }
   }
   ok = usage == 0;
-  if(useStep && ok && (transition<0 || transition>1)) {
+  if(useStep && ok && (transition < 0 || transition > 1.0))
+  {
       ok = 0;
       (void )fprintf(stderr,
           "%s: Error: transition must be between 0 and 1.\n",
@@ -234,7 +235,7 @@ int		main(int argc, char *argv[])
   {
     ok = 0;
     (void )fprintf(stderr,
-                   "%s: output filename length exceeded!\n",
+                   "%s: Output filename length exceeded!\n",
                    *argv);
   }
 
@@ -242,7 +243,7 @@ int		main(int argc, char *argv[])
   {
     if(((inFP = (strcmp(txFileStr, "-")?
 	        fopen(txFileStr, "r"): stdin)) == NULL) ||
-       ((tx = WlzAssignObject(WlzReadObj(inFP, &errNum), NULL)) == NULL))
+       ((trObj = WlzAssignObject(WlzReadObj(inFP, &errNum), NULL)) == NULL))
     {
       if(errNum == WLZ_ERR_NONE)
       {
@@ -251,13 +252,11 @@ int		main(int argc, char *argv[])
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      switch(tx->type)
+      switch(trObj->type)
       {
-        case WLZ_CMESH_2D:
-	  dim = 2;
-	  break;
+        case WLZ_CMESH_2D:  /* FALLTHROUGH */
+        case WLZ_CMESH_2D5: /* FALLTHROUGH */
 	case WLZ_CMESH_3D:
-	  dim = 3;
 	  break;
         default:
 	  errNum = WLZ_ERR_OBJECT_TYPE;
@@ -278,148 +277,167 @@ int		main(int argc, char *argv[])
       (void )fclose(inFP); inFP = NULL;
     }
   }
-  if(ok)
-  {
-      errNum = WLZ_ERR_READ_EOF;
-      if(((inFP = (strcmp(inFileStr, "-")?
-                  fopen(inFileStr, "r"): stdin)) == NULL) ||
-         ((inObj = WlzAssignObject(WlzReadObj(inFP, &errNum), NULL)) == NULL))
-      {
-        if(errNum == WLZ_ERR_NONE)
-        {
-          errNum = WLZ_ERR_READ_INCOMPLETE;
-        }
-      }
-
-      if(errNum != WLZ_ERR_NONE)
-      {
-        ok = 0;
-        (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-        (void )fprintf(stderr,
-            "%s: Failed to open input object file %s (%s).\n",
-            *argv, inFileStr, errMsgStr);
-      }
-      if((inFP != NULL) && strcmp(inFileStr, "-"))
-      {
-        (void )fclose(inFP); inFP = NULL;
-      }
-  }
   if(ok && inv)
   {
-    if((errNum = WlzCMeshTransformInvert(tx)) != WLZ_ERR_NONE)
+    if((errNum = WlzCMeshTransformInvert(trObj)) != WLZ_ERR_NONE)
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsgStr);
       (void )fprintf(stderr,
                      "%s Failed to invert transform (%s).\n",
-                     argv[0],
-                     errMsgStr);
+                     argv[0], errMsgStr);
     }
   }
-
-
-  if(ok) {
-      if (useStep) {
-        int step = FILENAME_MAX;
-        WlzObject *trobj = NULL;
-        step = 0;
-        for  (step = 0; step < stepsno && ok; step++) {
-
-           (void )sprintf(outObjFileStr,
-                    "%s%06d.%s", outObjFileBodyStr, step, outObjFileExtStr);
-
-           trobj = WlzCopyScaleCMeshValue((double)step/(double)(stepsno-1), tx, &errNum);
-
-           if (errNum != WLZ_ERR_NONE)
-               break;
-
-           trobj = WlzAssignObject(trobj, &errNum);
-           if (errNum != WLZ_ERR_NONE)
-               break;
-
-           if(errNum == WLZ_ERR_NONE)
-              outObj = WlzCMeshTransformObj( inObj, trobj, interp, &errNum);  //volume transform
-
-           if(errNum != WLZ_ERR_NONE)
-           {
-             ok = 0;
-             (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-             (void )fprintf(stderr,
-                 "%s: Failed to apply transform (%s).\n",
-                 *argv, errMsgStr);
-             errNum = WLZ_ERR_NONE; // error already handled
-           }
-           if(outObjFileBodyStr) {
-               if((outFP = fopen(outObjFileStr, "w")) == NULL)
-               {
-                 ok = 0;
-                 (void )fprintf(stderr,
-                                "%s: failed to open output file %s.\n",
-                                *argv, outObjFileStr);
-               }
-           }
-           else
-           {
-               outFP = stdout;
-           }
-           if((errNum = WlzWriteObj(outFP, outObj)) != WLZ_ERR_NONE)
-           {
-             ok = 0;
-             (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-             (void )fprintf(stderr,
-                            "%s: failed to write output object (%s).\n",
-                            *argv, errMsgStr);
-           }
-           WlzFreeObj(trobj);
-           WlzFreeObj(outObj);
-       }
-       if(errNum != WLZ_ERR_NONE && ok)
-       {
-           ok = 0;
-           (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-           (void )fprintf(stderr,
-               "%s: Failed to create object sequence (%s).\n",
-               *argv, errMsgStr);
-       }
-      } else {
-        WlzObject *trobj = tx;
-        errNum = WlzScaleCMeshValue (transition, trobj);
-        if(errNum == WLZ_ERR_NONE)
-        {
-            outObj = WlzCMeshTransformObj( inObj, trobj, interp, &errNum);  //volume transform
-            if(errNum != WLZ_ERR_NONE)
-            {
-              ok = 0;
-              (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-              (void )fprintf(stderr,
-                  "%s: Failed to apply transform (%s).\n",
-                  *argv, errMsgStr);
-            }
-         }
-          if(ok)
-          {
-            errNum = WLZ_ERR_WRITE_EOF;
-            if(((outFP  = (strcmp(outFileStr, "-")?
-                      fopen(outFileStr, "w"):
-                      stdout)) == NULL) ||
-               ((errNum = WlzWriteObj(outFP , outObj)) != WLZ_ERR_NONE))
-            {
-              ok = 0;
-              (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-              (void )fprintf(stderr,
-                             "%s: Failed to write output object %s (%s).\n",
-                             *argv, outFileStr, errMsgStr);
-            }
-            if(outFP && strcmp(outFileStr, "-"))
-            {
-              (void )fclose(outFP);
-            }
-          }
+  inFP = NULL;
+  if(ok)
+  {
+      if((inFP = (strcmp(inFileStr, "-")?
+                 fopen(inFileStr, "r"): stdin)) == NULL)
+      {
+	errNum = WLZ_ERR_READ_INCOMPLETE;
       }
   }
-  (void )WlzFreeObj(tx);
-  (void )WlzFreeObj(inObj);
-  (void )WlzFreeObj(outObj);
+  if(ok)
+  {
+    objCnt = 0;
+    while(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WLZ_ERR_READ_EOF;
+      if((inObj = WlzAssignObject(WlzReadObj(inFP, &errNum), NULL)) == NULL)
+      {
+	if(objCnt > 0)
+	{
+	  errNum = WLZ_ERR_EOO;
+	}
+	else
+	{
+	  (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+	  (void )fprintf(stderr,
+	      "%s: Failed to open input object file %s (%s).\n",
+	      *argv, inFileStr, errMsgStr);
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	if(useStep)
+	{
+	  int step = FILENAME_MAX;
+
+	  step = 0;
+	  while((step < nStep) && (errNum == WLZ_ERR_NONE))
+	  {
+	    WlzObject *stepTrObj = NULL;
+
+	    (void )sprintf(outObjFileStr, "%s%04d%04d.%s",
+			   outObjFileBodyStr, objCnt, step, outObjFileExtStr);
+	    stepTrObj = WlzAssignObject(
+			WlzCopyScaleCMeshValue(
+			  (double )step / (double )(nStep -1),
+			  trObj, &errNum), NULL);
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      outObj = WlzCMeshTransformObj(inObj, stepTrObj, interp, &errNum);
+	      if(errNum != WLZ_ERR_NONE)
+	      {
+		(void )WlzStringFromErrorNum(errNum, &errMsgStr);
+		(void )fprintf(stderr,
+		    "%s: Failed to apply transform (%s).\n",
+		    *argv, errMsgStr);
+	      }
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      if(outObjFileBodyStr)
+	      {
+		if((outFP = fopen(outObjFileStr, "w")) == NULL)
+		{
+		  (void )fprintf(stderr,
+		      "%s: Failed to open output file %s.\n",
+		      *argv, outObjFileStr);
+		}
+	      }
+	      else
+	      {
+		outFP = stdout;
+	      }
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      if((errNum = WlzWriteObj(outFP, outObj)) != WLZ_ERR_NONE)
+	      {
+		(void )WlzStringFromErrorNum(errNum, &errMsgStr);
+		(void )fprintf(stderr,
+		    "%s: Failed to write output object (%s).\n",
+		    *argv, errMsgStr);
+	      }
+	    }
+	    WlzFreeObj(stepTrObj);
+	    WlzFreeObj(outObj);
+	    ++step;
+	  }
+	  if(errNum != WLZ_ERR_NONE && ok)
+	  {
+	    (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+	    (void )fprintf(stderr,
+		"%s: Failed to create object sequence (%s).\n",
+		*argv, errMsgStr);
+	  }
+	}
+	else
+	{
+	  errNum = WlzScaleCMeshValue(transition, trObj);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    outObj = WlzCMeshTransformObj(inObj, trObj, interp, &errNum);
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+	      (void )fprintf(stderr,
+		  "%s: Failed to apply transform (%s).\n",
+		  *argv, errMsgStr);
+	    }
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WLZ_ERR_WRITE_EOF;
+	    if(((outFP  = (strcmp(outFileStr, "-")?
+		      fopen(outFileStr, "w"):
+		      stdout)) == NULL) ||
+		((errNum = WlzWriteObj(outFP , outObj)) != WLZ_ERR_NONE))
+	    {
+	      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+	      (void )fprintf(stderr,
+		  "%s: Failed to write output object %s (%s).\n",
+		  *argv, outFileStr, errMsgStr);
+	    }
+	    if(outFP && strcmp(outFileStr, "-"))
+	    {
+	      (void )fclose(outFP);
+	    }
+	  }
+	  (void )WlzFreeObj(outObj);
+	}
+      }
+      (void )WlzFreeObj(inObj);
+      ++objCnt;
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      if(errNum == WLZ_ERR_EOO)
+      {
+	errNum = WLZ_ERR_NONE;
+      }
+      else
+      {
+	ok = 0;
+      }
+    }
+  }
+  (void )WlzFreeObj(trObj);
+  if((inFP != NULL) && strcmp(inFileStr, "-"))
+  {
+    (void )fclose(inFP); inFP = NULL;
+  }
   if(usage)
   {
       fprintf(stderr,
@@ -428,19 +446,19 @@ int		main(int argc, char *argv[])
             "  [-s<number of interpolations> [-b <output body>] \n"
             "    [-e <output extension>]] ] [<input object>]\n"
             "Reads a constrained mesh transform object, applies it\n"
-            "to an object and generates the outputs transformed object.\n"
-            "Partly transformed object can be generated if\n"
-            "interpolation value between 0 and 1 (0 means no \n"
-            "transformation). Alternatively a set of interpolations\n"
-            "covering the full range of transformation is computed\n"
-            "if the number of interpolations are given. For this,.\n"
-            "the output base filename and its extension are\n"
-            "separately given.\n"
+            "to objects generating output transformed objects.\n"
+            "Partly transformed object can be generated if interpolation\n"
+            "values between 0 and 1 are given(0 means no transformation)\n"
+            "Alternatively a set of interpolations covering the full range\n"
+	    "of transformation is computed if the number of interpolations\n"
+	    "is given. For this, the output base filename and its extension\n"
+	    "are must be supplied.\n"
             "Options are:\n"
             "  -h  Help, prints this usage message.\n"
             "  -t  Transform object.\n"
             "  -i  Invert the transform after reading.\n"
-            "  -n  Use WLZ_INTERPOLATION_NEAREST (default WLZ_INTERPOLATION_LINEAR).\n"
+            "  -L  Use WLZ_INTERPOLATION_LINEAR (instead of the default\n"
+	    "      WLZ_INTERPOLATION_NEAREST).\n"
             "  -x  Interpolation value, with 0 <= ivalue <= 1.\n"
             "  -o  Output object file\n"
             "  -s  Number of intermediate interpolations.\n"
