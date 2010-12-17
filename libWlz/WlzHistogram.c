@@ -2920,7 +2920,8 @@ WlzErrorNum	WlzHistogramEqualiseObj(WlzObject *srcObj, int smoothing,
 	  count = histDom->nBins;
 	  while(count-- > 0)
 	  {
-	    *map++ = WLZ_NINT(*map * normFac);
+	    *map = WLZ_NINT(*map * normFac);
+	    ++map;
 	  }
           errNum = WlzHistogramMapValues(srcObj, histObj, dither);
 	}
