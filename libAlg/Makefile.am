@@ -53,6 +53,7 @@ libAlg_la_SOURCES 	= \
 			  AlgGamma.c \
 			  AlgHeapSort.c \
 			  AlgLinearFit.c \
+			  AlgMatrix.c \
 			  AlgMatrixCG.c \
 			  AlgMatrixGauss.c \
 			  AlgMatrixLSQR.c \
