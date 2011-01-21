@@ -1648,9 +1648,9 @@ static void 	WlzCMeshInterpolate2DLinear(WlzGreyP dst,
       switch(ixv->vType)
       {
 	case WLZ_GREY_LONG:
-	  d[0] = *(long *)WlzIndexedValueGet(ixv, nod[0]->idx);
-	  d[1] = *(long *)WlzIndexedValueGet(ixv, nod[1]->idx);
-	  d[2] = *(long *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  d[0] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[0]->idx);
+	  d[1] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[1]->idx);
+	  d[2] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[2]->idx);
 	  d[3] = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
 			nod[2]->pos, d[0], d[1], d[2], pos);
 	  *(dst.lnp + idI) = WLZ_NINT(d[3]);
@@ -1707,7 +1707,7 @@ static void 	WlzCMeshInterpolate2DLinear(WlzGreyP dst,
       switch(ixv->vType)
       {
 	case WLZ_GREY_LONG:
-	  *(dst.lnp + idI) = *(long *)WlzIndexedValueGet(ixv, nod->idx);
+	  *(dst.lnp + idI) = *(WlzLong *)WlzIndexedValueGet(ixv, nod->idx);
 	  break;
 	case WLZ_GREY_INT:
 	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, nod->idx);
@@ -1781,10 +1781,10 @@ static void 	WlzCMeshInterpolate3DLinear(WlzGreyP dst,
       switch(ixv->vType)
       {
 	case WLZ_GREY_LONG:
-	  d[0] = *(long *)WlzIndexedValueGet(ixv, nod[0]->idx);
-	  d[1] = *(long *)WlzIndexedValueGet(ixv, nod[1]->idx);
-	  d[2] = *(long *)WlzIndexedValueGet(ixv, nod[2]->idx);
-	  d[3] = *(long *)WlzIndexedValueGet(ixv, nod[3]->idx);
+	  d[0] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[0]->idx);
+	  d[1] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[1]->idx);
+	  d[2] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  d[3] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[3]->idx);
 	  d[4] = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
 			nod[2]->pos, nod[3]->pos,
 			d[0], d[1], d[2], d[3], pos);
@@ -1851,7 +1851,7 @@ static void 	WlzCMeshInterpolate3DLinear(WlzGreyP dst,
       switch(ixv->vType)
       {
 	case WLZ_GREY_LONG:
-	  *(dst.lnp + idI) = *(long *)WlzIndexedValueGet(ixv, nod->idx);
+	  *(dst.lnp + idI) = *(WlzLong *)WlzIndexedValueGet(ixv, nod->idx);
 	  break;
 	case WLZ_GREY_INT:
 	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, nod->idx);

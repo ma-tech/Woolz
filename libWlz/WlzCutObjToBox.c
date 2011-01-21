@@ -129,11 +129,9 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
   WlzGreyWSpace	gWSp;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzCutObjToValBox2D FE 0x%lx {%d %d %d %d} %d 0x%lx 0x%lx\n",
-	   (unsigned long )sObj,
-	   cutBox.xMin, cutBox.yMin, cutBox.xMax, cutBox.yMax,
-	   (int )dGreyType, (unsigned long )gValP,
-	   (unsigned long )dstErrNum));
+	  ("WlzCutObjToValBox2D FE %p {%d %d %d %d} %d %p %p\n",
+	   sObj, cutBox.xMin, cutBox.yMin, cutBox.xMax, cutBox.yMax,
+	   (int )dGreyType, gValP, dstErrNum));
   dBkgPix.type = dGreyType;
   dValP.inp = NULL;
   if(sObj == NULL)
@@ -375,8 +373,8 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
     }
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzCutObjToValBox2D FX 0x%lx\n",
-	   (unsigned long )dObj));
+	  ("WlzCutObjToValBox2D FX %p\n",
+	   dObj));
   return(dObj);
 }
 
@@ -464,12 +462,9 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzCutObjToValBox3D FE 0x%lx {%d %d %d %d %d %d} %d 0x%lx 0x%lx\n",
-	   (unsigned long )sObj,
-	   cutBox.xMin, cutBox.yMin, cutBox.zMin, cutBox.xMax,
-	   cutBox.yMax, cutBox.zMax,
-	   (int )dGreyType, (unsigned long )gValP,
-	   (unsigned long )dstErrNum));
+	  ("WlzCutObjToValBox3D FE %p {%d %d %d %d %d %d} %d %p %p\n",
+	   sObj, cutBox.xMin, cutBox.yMin, cutBox.zMin, cutBox.xMax,
+	   cutBox.yMax, cutBox.zMax, (int )dGreyType, gValP, dstErrNum));
   dDom.core = NULL;
   dVal.core = NULL;
   dValP.inp = NULL;
@@ -688,8 +683,8 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 	  ("WlzCutObjToValBox3D 03 %d\n",
 	   (int )errNum));
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzCutObjToValBox3D FX 0x%lx\n",
-	   (unsigned long )dObj));
+  	  ("WlzCutObjToValBox3D FX %p\n",
+	   dObj));
   return(dObj);
 }
 
@@ -716,7 +711,7 @@ static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
       while(count-- > 0)
       {
 	noise = AlgRandNormal(mu, sigma);
-	*(vec.lnp)++ = (long )(WLZ_CLAMP(noise, INT_MIN, INT_MAX));
+	*(vec.lnp)++ = (WlzLong )(WLZ_CLAMP(noise, LLONG_MIN, LLONG_MAX));
       }
       break;
     case WLZ_GREY_INT:

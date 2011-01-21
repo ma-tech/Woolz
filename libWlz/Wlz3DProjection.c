@@ -170,7 +170,7 @@ WlzObject *WlzGetProjectionFromObject(
     srcGType = WlzGreyTypeFromObj(obj, &errNum);
     switch( srcGType ){
     case WLZ_GREY_LONG:
-      size = sizeof(long)*length;
+      size = sizeof(WlzLong)*length;
       break;
     case WLZ_GREY_INT:
       size = sizeof(int)*length;

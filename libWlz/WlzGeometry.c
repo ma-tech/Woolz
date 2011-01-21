@@ -1845,29 +1845,17 @@ unsigned int	WlzGeomHashVtx3D(WlzDVertex3 pos, double tol)
   fF = floor(fF / tol) * tol;
   fI *= pX;
   fF *= pY * pZ;
-#ifdef _BORLAND_FOR_JATLASVIEWER
-  hVal ^= ((long)fI + (long)fF) & UINT_MAX;
-#else
-  hVal = ((long long)fI + (long long)fF) & UINT_MAX;
-#endif
+  hVal = ((WlzLong )fI + (WlzLong )fF) & UINT_MAX;
   fF = modf(pos.vtY, &fI);
   fF = floor(fF / tol) * tol;
   fI *= pY;
   fF *= pZ * pX;
-#ifdef _BORLAND_FOR_JATLASVIEWER
-  hVal ^= ((long)fI + (long)fF) & UINT_MAX;
-#else
-  hVal ^= ((long long)fI + (long long)fF) & UINT_MAX;
-#endif
+  hVal ^= ((WlzLong )fI + (WlzLong )fF) & UINT_MAX;
   fF = modf(pos.vtZ, &fI);
   fF = floor(fF / tol) * tol;
   fI *= pZ;
   fF *= pX * pY;
-#ifdef _BORLAND_FOR_JATLASVIEWER
-  hVal ^= ((long)fI + (long)fF) & UINT_MAX;
-#else
-  hVal ^= ((long long)fI + (long long)fF) & UINT_MAX;
-#endif
+  hVal ^= ((WlzLong )fI + (WlzLong )fF) & UINT_MAX;
   return(hVal);
 }
 
@@ -1892,20 +1880,12 @@ unsigned int	WlzGeomHashVtx2D(WlzDVertex2 pos, double tol)
   fF = floor(fF / tol) * tol;
   fI *= pX;
   fF *= pY * pZ;
-#ifdef _BORLAND_FOR_JATLASVIEWER
-  hVal = ((long)fI + (long)fF) & UINT_MAX;
-#else
-  hVal = ((long long)fI + (long long)fF) & UINT_MAX;
-#endif
+  hVal = ((WlzLong )fI + (WlzLong )fF) & UINT_MAX;
   fF = modf(pos.vtY, &fI);
   fF = floor(fF / tol) * tol;
   fI *= pY;
   fF *= pZ * pX;
-#ifdef _BORLAND_FOR_JATLASVIEWER
-  hVal ^= ((long)fI + (long)fF) & UINT_MAX;
-#else
-  hVal ^= ((long long)fI + (long long)fF) & UINT_MAX;
-#endif
+  hVal ^= ((WlzLong )fI + (WlzLong )fF) & UINT_MAX;
   return(hVal);
 }
 
