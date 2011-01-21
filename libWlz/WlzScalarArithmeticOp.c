@@ -43,10 +43,28 @@ static char _WlzScalarArithmeticOp_c[] = "MRC HGU $Id$";
 */
 
 #include <stdlib.h>
+#include <float.h>
+#include <limits.h>
 #include <Wlz.h>
 
+static WlzObject 		*WlzScalarMulAdd2D(
+				  WlzObject *iObj,
+				  WlzPixelV m,
+				  WlzPixelV a,
+				  WlzGreyType rGType,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzScalarMulAdd3D(
+				  WlzObject *iObj,
+				  WlzPixelV m,
+				  WlzPixelV a,
+				  WlzGreyType rGType,
+				  WlzErrorNum *dstErr);
+static WlzErrorNum 		WlzScalarMulAddSet2D(
+				  WlzObject *rObj,
+				  WlzObject *iObj,
+				  double m,
+				  double a);
 
-/* function:     WlzScalarBinaryOp2    */
 /*! 
 * \ingroup      WlzArithmetic
 * \brief        Apply a binary operation (add subtract etc) to
@@ -83,8 +101,8 @@ WlzObject *WlzScalarBinaryOp2(
   if( errNum == WLZ_ERR_NONE ){
     switch( o1->type ){
 
-    case WLZ_2D_DOMAINOBJ:
-    case WLZ_3D_DOMAINOBJ:
+    case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
+    case WLZ_3D_DOMAINOBJ: /* FALLTHROUGH */
     case WLZ_TRANS_OBJ:
       break;
 
@@ -167,9 +185,9 @@ WlzObject *WlzScalarBinaryOp2(
       }
       old_bckgrnd = WlzGetBackground(o1, NULL);
       switch( WlzGreyTableTypeToGreyType(o1->values.core->type, NULL) ){
-      case WLZ_GREY_INT:
-      case WLZ_GREY_SHORT:
-      case WLZ_GREY_FLOAT:
+      case WLZ_GREY_INT:   /* FALLTHROUGH */
+      case WLZ_GREY_SHORT: /* FALLTHROUGH */
+      case WLZ_GREY_FLOAT: /* FALLTHROUGH */
       case WLZ_GREY_DOUBLE:
 	new_grey_type = WlzGreyTableTypeToGreyType(o1->values.core->type,
 						   NULL);
@@ -203,9 +221,9 @@ WlzObject *WlzScalarBinaryOp2(
       /* now a new destination voxeltable */
       old_bckgrnd = WlzGetBackground(o1, NULL);
       switch( old_bckgrnd.type ){
-      case WLZ_GREY_INT:
-      case WLZ_GREY_SHORT:
-      case WLZ_GREY_FLOAT:
+      case WLZ_GREY_INT:   /* FALLTHROUGH */
+      case WLZ_GREY_SHORT: /* FALLTHROUGH */
+      case WLZ_GREY_FLOAT: /* FALLTHROUGH */
       case WLZ_GREY_DOUBLE:
 	new_grey_type = old_bckgrnd.type;
 	new_bckgrnd = old_bckgrnd;
@@ -296,6 +314,7 @@ WlzObject *WlzScalarAdd(
 {
   return WlzScalarBinaryOp2(o1, pval, WLZ_BO_ADD, dstErr);
 }
+
 /* function:     WlzScalarSubtract    */
 /*! 
 * \ingroup      WlzArithmetic
@@ -315,6 +334,7 @@ WlzObject *WlzScalarSubtract(
 {
   return WlzScalarBinaryOp2(o1, pval, WLZ_BO_SUBTRACT, dstErr);
 }
+
 /* function:     WlzScalarMultiply    */
 /*! 
 * \ingroup      WlzArithmetic
@@ -334,6 +354,7 @@ WlzObject *WlzScalarMultiply(
 {
   return WlzScalarBinaryOp2(o1, pval, WLZ_BO_MULTIPLY, dstErr);
 }
+
 /* function:     WlzScalarDivide    */
 /*! 
 * \ingroup      WlzArithmetic
@@ -352,4 +373,397 @@ WlzObject *WlzScalarDivide(
   WlzErrorNum	*dstErr)
 {
   return WlzScalarBinaryOp2(o1, pval, WLZ_BO_DIVIDE, dstErr);
+}
+
+/*!
+* \return	New woolz object or NULL on error.
+* \ingroup	WlzArithmetic
+* \brief	Scales the values of the given Woolz object so that
+*               \f$v_{new} = m v_{given} + a.\f$
+* \param	iObj			Given object.
+* \param	m			Value to multiply object values by.
+* \param	a			Value to add to product.
+* \param	rGType			Required grey type for returned object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzScalarMulAdd(WlzObject *iObj, WlzPixelV m, WlzPixelV a,
+				WlzGreyType rGType, WlzErrorNum *dstErr)
+{
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(iObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(iObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(iObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    switch(iObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+        rObj = WlzScalarMulAdd2D(iObj, m, a, rGType, &errNum);
+	break;
+      case WLZ_3D_DOMAINOBJ:
+        rObj = WlzScalarMulAdd3D(iObj, m, a, rGType, &errNum);
+	break;
+      /* TODO */
+      default:
+        break;
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
+* \return	New woolz object or NULL on error.
+* \ingroup	WlzArithmetic
+* \brief	Scales the values of the given 2D Woolz object so that
+* 		\f$v_{new} = m v_{given} + a.\f$ The input object is known
+* 		to be a valid 2D domain object with grey values.
+* \param	iObj			Given object.
+* \param	m			Value to multiply object values by.
+* \param	a			Value to add to product.
+* \param	rGType			Required grey type for returned object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject *WlzScalarMulAdd2D(WlzObject *iObj, WlzPixelV m, WlzPixelV a,
+				WlzGreyType rGType, WlzErrorNum *dstErr)
+{
+  WlzValues	rValues;
+  WlzObjectType rVType;
+  WlzPixelV	bgdV;
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  rValues.core = NULL;
+  bgdV = WlzGetBackground(iObj, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rVType = WlzGreyTableTypeToTableType(iObj->values.v->type, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rVType = WlzGreyTableType(rVType, rGType, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rValues.v = WlzNewValueTb(iObj, rVType, bgdV, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, iObj->domain, rValues,
+    		       iObj->plist, iObj->assoc, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(rGType)
+    {
+      case WLZ_GREY_INT:   /* FALLTHROUGH */
+      case WLZ_GREY_SHORT: /* FALLTHROUGH */
+      case WLZ_GREY_UBYTE: /* FALLTHROUGH */
+      case WLZ_GREY_RGBA:  /* FALLTHROUGH */
+      case WLZ_GREY_FLOAT: /* FALLTHROUGH */
+      case WLZ_GREY_DOUBLE:
+	WlzValueConvertPixel(&m, m, WLZ_GREY_DOUBLE);
+	WlzValueConvertPixel(&a, a, WLZ_GREY_DOUBLE);
+	errNum = WlzScalarMulAddSet2D(rObj, iObj, m.v.dbv, a.v.dbv);
+	break;
+      default:
+        errNum = WLZ_ERR_GREY_TYPE;
+	break;
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(rObj == NULL)
+    {
+      (void )WlzFreeValueTb(rValues.v);
+    }
+    else
+    {
+      (void )WlzFreeObj(rObj);
+      rObj = NULL;
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
+* \return	New woolz object or NULL on error.
+* \ingroup	WlzArithmetic
+* \brief	Scales the values of the given 3D Woolz object so that
+* 		\f$v_{new} = m v_{given} + a.\f$ The input object is known
+* 		to be a valid 3D domain object with grey values.
+* \param	iObj			Given object.
+* \param	m			Value to multiply object values by.
+* \param	a			Value to add to product.
+* \param	rGType			Required grey type for returned object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject *WlzScalarMulAdd3D(WlzObject *iObj, WlzPixelV m, WlzPixelV a,
+				WlzGreyType rGType, WlzErrorNum *dstErr)
+{
+  WlzValues	rValues;
+  WlzObjectType rVType;
+  WlzPixelV	bgdV;
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  rValues.core = NULL;
+  bgdV = WlzGetBackground(iObj, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rVType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, rGType, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rValues.vox = WlzNewValuesVox(iObj, rVType, bgdV, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idP,
+    		plMin,
+    		plMax;
+    WlzPlaneDomain *iPDom;
+    WlzVoxelValues *iVox,
+    		*rVox;
+
+    iPDom = iObj->domain.p;
+    iVox = iObj->values.vox;
+    rVox = rValues.vox;
+    plMin = iPDom->plane1;
+    plMax = iPDom->lastpl;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(idP = plMin; idP <= plMax; ++idP)
+    {
+      WlzErrorNum errNum2D = WLZ_ERR_NONE;
+
+      if(errNum == WLZ_ERR_NONE)
+      {
+	int	      idO;
+	WlzDomain *iDom2D;
+	WlzValues *iVal2D,
+		  *rVal2D;
+
+	idO = idP - iPDom->plane1;
+	if(((iDom2D = iPDom->domains + idO) != NULL) &&
+	   ((iVal2D = iVox->values + idO) != NULL) &&
+	   ((rVal2D = rVox->values + idO) != NULL))
+	{
+	  WlzObject *iObj2D = NULL,
+		    *rObj2D = NULL;
+	  
+	  if((iObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *iDom2D, *iVal2D,
+				   NULL, NULL, &errNum2D)) != NULL)
+	  {
+	    rObj2D = WlzScalarMulAdd2D(iObj2D, m, a, rGType, &errNum2D);
+	  }
+	  if(errNum2D == WLZ_ERR_NONE)
+	  {
+	    *rVal2D = WlzAssignValues(rObj2D->values, NULL);
+	  }
+	  (void )WlzFreeObj(iObj2D);
+	  (void )WlzFreeObj(rObj2D);
+	}
+      }
+#ifdef _OPENMP
+#pragma omp critical
+      {
+#endif
+	if(errNum2D != WLZ_ERR_NONE)
+	{
+	  errNum = errNum2D;
+	}
+#ifdef _OPENMP
+      }
+#endif
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, iObj->domain, rValues,
+    		       iObj->plist, iObj->assoc, &errNum);
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(rObj == NULL)
+    {
+      (void )WlzFreeVoxelValueTb(rValues.vox);
+    }
+    else
+    {
+      (void )WlzFreeObj(rObj);
+      rObj = NULL;
+    }
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArithmetic
+* \brief	Sets the values of the return object from the input object
+* 		using simple linear scaling, see WlzScalarMulAdd(). The
+* 		objects are known to be 2D, have the same domain.
+* \param	rObj
+* \param	iObj
+* \param	m
+* \param	a
+*/
+static WlzErrorNum WlzScalarMulAddSet2D(WlzObject *rObj, WlzObject *iObj,
+				     double m, double a)
+{
+  int		bufLen;
+  WlzGreyWSpace iGWSp,
+  		rGWSp;
+  WlzIntervalWSpace iIWSp,
+  		    rIWSp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  bufLen = iObj->domain.i->lastkl - iObj->domain.i->kol1 + 1;
+  if((bufLen != iObj->domain.i->lastkl - iObj->domain.i->kol1 + 1) ||
+     (bufLen < 0))
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else if(bufLen > 0)
+  {
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzInitGreyScan(iObj, &iIWSp, &iGWSp);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzInitGreyScan(rObj, &rIWSp, &rGWSp);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      double	*buf = NULL;
+
+      if((buf = AlcMalloc(sizeof(double) * bufLen)) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else
+      {
+	while((errNum = WlzNextGreyInterval(&iIWSp)) == WLZ_ERR_NONE)
+	{
+	  int	t,
+	  	idN,
+	  	itvLen;
+	  double f;
+
+
+	  itvLen = iIWSp.colrmn;
+	  (void )WlzNextGreyInterval(&rIWSp);
+	  switch(iGWSp.pixeltype)
+	  {
+	    case WLZ_GREY_INT:
+	      WlzValueCopyIntToDouble(buf, iGWSp.u_grintptr.inp, itvLen);
+	      break;
+	    case WLZ_GREY_SHORT:
+	      WlzValueCopyShortToDouble(buf, iGWSp.u_grintptr.shp, itvLen);
+	      break;
+	    case WLZ_GREY_UBYTE:
+	      WlzValueCopyUByteToDouble(buf, iGWSp.u_grintptr.ubp, itvLen);
+	      break;
+	    case WLZ_GREY_FLOAT:
+	      WlzValueCopyFloatToDouble(buf, iGWSp.u_grintptr.flp, itvLen);
+	      break;
+	    case WLZ_GREY_DOUBLE:
+	      WlzValueCopyDoubleToDouble(buf, iGWSp.u_grintptr.dbp, itvLen);
+	      break;
+	    case WLZ_GREY_RGBA:
+	      WlzValueCopyRGBAToDouble(buf, iGWSp.u_grintptr.rgbp, itvLen);
+	      break;
+	    default:
+	      break;
+	  }
+	  switch(rGWSp.pixeltype)
+	  {
+	    case WLZ_GREY_UBYTE:
+	      for(idN = 0; idN < itvLen; ++idN)
+	      {
+		f = (buf[idN] * m) + a;
+		f = WLZ_CLAMP(f, 0, 255);
+		rGWSp.u_grintptr.ubp[idN] = WLZ_NINT(f);
+	      }
+	      break;
+	    case WLZ_GREY_SHORT:
+	      for(idN = 0; idN < itvLen; ++idN)
+	      {
+		f = (buf[idN] * m) + a;
+		f = WLZ_CLAMP(f, SHRT_MIN, SHRT_MAX);
+		rGWSp.u_grintptr.shp[idN] = WLZ_NINT(f);
+	      }
+	      break;
+	    case WLZ_GREY_INT:
+	      for(idN = 0; idN < itvLen; ++idN)
+	      {
+		f = (buf[idN] * m) + a;
+		f = WLZ_CLAMP(f, INT_MIN, INT_MAX);
+		rGWSp.u_grintptr.inp[idN] = WLZ_NINT(f);
+	      }
+	      break;
+	    case WLZ_GREY_RGBA:
+	      for(idN = 0; idN < itvLen; ++idN)
+	      {
+		WlzUInt	u;
+
+		f = (buf[idN] * m) + a;
+		f = WLZ_CLAMP(f, 0, 255);
+		t = WLZ_NINT(f);
+                WLZ_RGBA_RGBA_SET(u, t, t, t, 255);
+		rGWSp.u_grintptr.inp[idN] = u;
+	      }
+	    case WLZ_GREY_FLOAT:
+	      for(idN = 0; idN < itvLen; ++idN)
+	      {
+		double	t;
+
+		t = (buf[idN] * m) + a;
+		rGWSp.u_grintptr.flp[idN] = WLZ_CLAMP(t, -(FLT_MAX), FLT_MAX);
+	      }
+	      break;
+	    case WLZ_GREY_DOUBLE:
+	      for(idN = 0; idN < itvLen; ++idN)
+	      {
+		rGWSp.u_grintptr.dbp[idN] = (buf[idN] * m) + a;
+	      }
+	      break;
+	    default:
+	      break;
+	  }
+	}
+	if(errNum == WLZ_ERR_EOO)
+	{
+	  errNum = WLZ_ERR_NONE;
+	}
+      }
+      AlcFree(buf);
+    }
+  }
+  return(errNum);
 }
