@@ -1947,7 +1947,7 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    long long	off[2];
+    WlzLong	off[2];
 
     off[0] = getword(fP);
     off[1] = getword(fP);
@@ -2071,14 +2071,14 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
     (void )fprintf(stderr, "WlzReadTiledValues() tVal->nIdx = %d, %d, %d\n",
                    tVal->nIdx[0], tVal->nIdx[1],
 		   (tVal->dim == 2)? 0: tVal->nIdx[2]);
-    (void )fprintf(stderr, "WlzReadTiledValues() tVal->indices = 0x%lx\n",
-                   (long )(tVal->indices));
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->indices = %p\n",
+                   tVal->indices);
     (void )fprintf(stderr, "WlzReadTiledValues() tVal->fd = %d\n",
                    tVal->fd);
     (void )fprintf(stderr, "WlzReadTiledValues() tVal->tileOffset = %ld\n",
                    tVal->tileOffset);
-    (void )fprintf(stderr, "WlzReadTiledValues() tVal->tiles.v = 0x%lx\n",
-                   (long )(tVal->tiles.v));
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->tiles.v = %p\n",
+                   tVal->tiles.v);
     (void )fprintf(stderr, "WlzReadTiledValues() errno = %s\n",
                    strerror(errno));
   }
@@ -2199,7 +2199,8 @@ static WlzProperty WlzReadProperty(
   WlzObjectType	type;
   WlzProperty	rtnProp;
   int		si;
-  char		*name;
+  char		*name,
+  		*text;
   WlzPixelV	pV;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
@@ -2315,6 +2316,17 @@ static WlzProperty WlzReadProperty(
 	  if((errNum = WlzReadPixelV(fp, &pV, 1)) == WLZ_ERR_NONE)
 	  {
 	    rtnProp.greyV = WlzMakeGreyProperty(name, pV, &errNum);
+	  }
+	  AlcFree(name);
+	}
+	break;
+      case WLZ_PROPERTY_TEXT:
+	if((errNum = WlzReadStr(fp, &name)) == WLZ_ERR_NONE)
+	{
+	  if((errNum = WlzReadStr(fp, &text)) == WLZ_ERR_NONE)
+	  {
+	    rtnProp.greyV = WlzMakeTextProperty(name, text, &errNum);
+	    AlcFree(text);
 	  }
 	  AlcFree(name);
 	}
