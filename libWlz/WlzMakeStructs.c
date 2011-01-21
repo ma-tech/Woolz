@@ -384,23 +384,19 @@ WlzMakeMain(WlzObjectType 	type,
 
     case WLZ_2D_DOMAINOBJ:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-	      ("Makestructs - Obj 0x%lx type %d idom 0x%lx dl %d val 0x%lx"
-	       " vl %d plist 0x%lx ass 0x%lx\n",
-	       (unsigned long) obj, obj->type,
-	       (unsigned long) (obj->domain.core), 
+	      ("Makestructs - Obj %p type %d idom %p dl %d val %p"
+	       " vl %d plist %p ass %p\n",
+	       obj, obj->type, obj->domain.core, 
 	       (obj->domain.core ? obj->domain.core->linkcount: 0),
-	       (unsigned long) (obj->values.core), 
+	       obj->values.core, 
 	       (obj->values.core ? obj->values.core->linkcount: 0),
-	       (unsigned long) (obj->plist),
-	       (unsigned long) (obj->assoc)));
+	       obj->plist, obj->assoc));
       break;
 
     case WLZ_2D_POLYGON:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-	      ("Makestructs - Obj 0x%lx type %d pdom 0x%lx ass 0x%lx\n",
-	       (unsigned long) obj, obj->type,
-	       (unsigned long) (obj->domain.core),
-	       (unsigned long) (obj->assoc)));
+	      ("Makestructs - Obj %p type %d pdom %p ass %p\n",
+	       obj, obj->type, obj->domain.core, obj->assoc));
       break;
 
     default:

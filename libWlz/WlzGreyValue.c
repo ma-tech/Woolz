@@ -141,8 +141,8 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-  	   ("WlzGreyValueMakeWSp FE 0x%lx 0x%lx\n",
-	    (unsigned long )obj, (unsigned long )dstErrNum));
+  	   ("WlzGreyValueMakeWSp FE %p %p\n",
+	    obj, dstErrNum));
   if(obj == NULL)
   {
     errNum = WLZ_ERR_PARAM_DATA;
@@ -430,8 +430,8 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
     *dstErrNum = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzGreyValueMakeWSp FX 0x%lx\n",
-	   (unsigned long )gVWSp));
+  	  ("WlzGreyValueMakeWSp FX %p\n",
+	   gVWSp));
   return(gVWSp);
 }
 
@@ -445,8 +445,8 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
 void		WlzGreyValueFreeWSp(WlzGreyValueWSpace *gVWSp)
 {
   WLZ_DBG((WLZ_DBG_LVL_1),
-  	   ("WlzGreyValueFreeWSp FE 0x%lx\n",
-	    (unsigned long )gVWSp));
+  	   ("WlzGreyValueFreeWSp FE %p\n",
+	    gVWSp));
   if(gVWSp)
   {
     (void )WlzFreeAffineTransform(gVWSp->invTrans);
@@ -623,7 +623,7 @@ int		WlzGreyValueGetI(WlzGreyValueWSpace *gVWSp,
     switch(gVWSp->gType)
     {
       case WLZ_GREY_LONG:
-        val = WLZ_CLAMP(gVWSp->gVal[0].lnv, INT_MIN, INT_MAX);
+        val = WLZ_CLAMP(gVWSp->gVal[0].lnv, LLONG_MIN, LLONG_MAX);
         break;
       case WLZ_GREY_INT:
         val = gVWSp->gVal[0].inv;

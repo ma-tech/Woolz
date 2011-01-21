@@ -68,10 +68,8 @@ WlzErrorNum	WlzExplode3D(int *dstExpObjCount,
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzExplode3D FE 0x%lx  0x%lx 0x%lx\n",
-	   (unsigned long )dstExpObjCount,
-	   (unsigned long )dstExpObjVecP,
-	   (unsigned long )srcObj));
+  	  ("WlzExplode3D FE %p  %p %p\n",
+	   dstExpObjCount, dstExpObjVecP, srcObj));
   if((dstExpObjVecP == NULL) || (dstExpObjCount == NULL) ||(srcObj == NULL))
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -93,7 +91,7 @@ WlzErrorNum	WlzExplode3D(int *dstExpObjCount,
   */
   else if((objCount = srcDom.p->lastpl - srcDom.p->plane1 + 1) >= 1)
   {
-    if((objVec = (WlzObject **)AlcMalloc((unsigned long )objCount *
+    if((objVec = (WlzObject **)AlcMalloc((size_t )objCount *
                                          sizeof(WlzObject *))) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
