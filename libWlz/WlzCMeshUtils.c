@@ -632,6 +632,9 @@ int		WlzCMeshSetBoundNodFlags(WlzCMeshP mesh)
       case WLZ_CMESH_2D:
         nBnd = WlzCMeshSetBoundNodFlags2D(mesh.m2);
 	break;
+      case WLZ_CMESH_2D5:
+        nBnd = WlzCMeshSetBoundNodFlags2D5(mesh.m2d5);
+	break;
       case WLZ_CMESH_3D:
         nBnd = WlzCMeshSetBoundNodFlags3D(mesh.m3);
 	break;
@@ -678,6 +681,38 @@ int		WlzCMeshSetBoundNodFlags2D(WlzCMesh2D *mesh)
 * \return	Number of boundary nodes.
 * \ingroup	WlzMesh
 * \brief	Sets or clears the boundary node flag bit for all nodes
+*		of the 2D5 mesh.
+* \param	mesh			Given mesh.
+*/
+int		WlzCMeshSetBoundNodFlags2D5(WlzCMesh2D5 *mesh)
+{
+  int		idN,
+  		nBnd = 0;
+  WlzCMeshNod2D5 *nod;
+
+  if(mesh && (mesh->type == WLZ_CMESH_2D5))
+  {
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	nod->flags &= ~(WLZ_CMESH_NOD_FLAG_BOUNDARY);
+	if(WlzCMeshNodIsBoundary2D5(nod))
+	{
+	  ++nBnd;
+	  nod->flags |= WLZ_CMESH_NOD_FLAG_BOUNDARY;
+	}
+      }
+    }
+  }
+  return(nBnd);
+}
+
+/*!
+* \return	Number of boundary nodes.
+* \ingroup	WlzMesh
+* \brief	Sets or clears the boundary node flag bit for all nodes
 *		of the 3D mesh.
 * \param	mesh			Given mesh.
 */
@@ -707,6 +742,262 @@ int		WlzCMeshSetBoundNodFlags3D(WlzCMesh3D *mesh)
 }
 
 /*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Gets the indeces of the boundary nodes of the mesh.
+* \param	mesh			Given mesh.
+* \param	dstNNod			Return pointer for number of boundary
+* 					nodes, must be non NULL.
+* \param	dstNod			Return pointer for array of boundary
+* 					node indices, must be non NULL.
+*/
+WlzErrorNum	WlzCMeshGetBoundNodes(WlzCMeshP mesh, int *dstNNod,
+				int **dstNod)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(mesh.v == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(mesh.m2->type)
+    {
+      case WLZ_CMESH_2D:
+        errNum = WlzCMeshGetBoundNodes2D(mesh.m2, dstNNod, dstNod);
+	break;
+      case WLZ_CMESH_2D5:
+        errNum = WlzCMeshGetBoundNodes2D5(mesh.m2d5, dstNNod, dstNod);
+	break;
+      case WLZ_CMESH_3D:
+        errNum = WlzCMeshGetBoundNodes3D(mesh.m3, dstNNod, dstNod);
+	break;
+      default:
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+        break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Gets the indeces of the boundary nodes of the 2D mesh.
+* \param	mesh			Given mesh.
+* \param	dstNNod			Return pointer for number of boundary
+* 					nodes, must be non NULL.
+* \param	dstNod			Return pointer for array of boundary
+* 					node indices, must be non NULL.
+*/
+WlzErrorNum	WlzCMeshGetBoundNodes2D(WlzCMesh2D *mesh, int *dstNNod,
+				        int **dstNod)
+{
+  int		nNod = 0;
+  int		*nodes = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((dstNNod == NULL) || (dstNod == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_2D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    nNod = WlzCMeshCountBoundNodes2D(mesh);
+    if(nNod > 0)
+    {
+      if((nodes = AlcMalloc(sizeof(int) * nNod)) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(nodes != NULL)
+    {
+      int	idB,
+      		idN;
+
+      idB = 0;
+      for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+      {
+	WlzCMeshNod2D *nod;
+
+	nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	if(nod->idx >= 0)
+	{
+	  if(WlzCMeshNodIsBoundary2D(nod))
+	  {
+	    nodes[idB] = nod->idx;
+	    ++idB;
+	  }
+	}
+      }
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    nNod = 0;
+    AlcFree(nodes);
+    nodes = NULL;
+  }
+  *dstNNod = nNod;
+  *dstNod = nodes;
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Gets the indeces of the boundary nodes of the 2D5 mesh.
+* \param	mesh			Given mesh.
+* \param	dstNNod			Return pointer for number of boundary
+* 					nodes, must be non NULL.
+* \param	dstNod			Return pointer for array of boundary
+* 					node indices, must be non NULL.
+*/
+WlzErrorNum	WlzCMeshGetBoundNodes2D5(WlzCMesh2D5 *mesh, int *dstNNod,
+				        int **dstNod)
+{
+  int		nNod = 0;
+  int		*nodes = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((dstNNod == NULL) || (dstNod == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_2D5)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    nNod = WlzCMeshCountBoundNodes2D5(mesh);
+    if(nNod > 0)
+    {
+      if((nodes = AlcMalloc(sizeof(int) * nNod)) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(nodes != NULL)
+    {
+      int	idB,
+      		idN;
+
+      idB = 0;
+      for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+      {
+	WlzCMeshNod2D5 *nod;
+
+	nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	if(nod->idx >= 0)
+	{
+	  if(WlzCMeshNodIsBoundary2D5(nod))
+	  {
+	    nodes[idB] = nod->idx;
+	    ++idB;
+	  }
+	}
+      }
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    nNod = 0;
+    AlcFree(nodes);
+    nodes = NULL;
+  }
+  *dstNNod = nNod;
+  *dstNod = nodes;
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Gets the indeces of the boundary nodes of the 3D mesh.
+* \param	mesh			Given mesh.
+* \param	dstNNod			Return pointer for number of boundary
+* 					nodes, must be non NULL.
+* \param	dstNod			Return pointer for array of boundary
+* 					node indices, must be non NULL.
+*/
+WlzErrorNum	WlzCMeshGetBoundNodes3D(WlzCMesh3D *mesh, int *dstNNod,
+				        int **dstNod)
+{
+  int		nNod = 0;
+  int		*nodes = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(mesh == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((dstNNod == NULL) || (dstNod == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_3D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    nNod = WlzCMeshCountBoundNodes3D(mesh);
+    if(nNod > 0)
+    {
+      if((nodes = AlcMalloc(sizeof(int) * nNod)) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(nodes != NULL)
+    {
+      int	idB,
+      		idN;
+
+      idB = 0;
+      for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+      {
+	WlzCMeshNod3D *nod;
+
+	nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	if(nod->idx >= 0)
+	{
+	  if(WlzCMeshNodIsBoundary3D(nod))
+	  {
+	    nodes[idB] = nod->idx;
+	    ++idB;
+	  }
+	}
+      }
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    nNod = 0;
+    AlcFree(nodes);
+    nodes = NULL;
+  }
+  *dstNNod = nNod;
+  *dstNod = nodes;
+  return(errNum);
+}
+
+/*!
 * \return	Number of boundary nodes.
 * \ingroup	WlzMesh
 * \brief	Counts the number of boundary nodes of the mesh.
@@ -721,6 +1012,9 @@ int		WlzCMeshCountBoundNodes(WlzCMeshP mesh)
     {
       case WLZ_CMESH_2D:
         nBnd = WlzCMeshCountBoundNodes2D(mesh.m2);
+	break;
+      case WLZ_CMESH_2D5:
+        nBnd = WlzCMeshCountBoundNodes2D5(mesh.m2d5);
 	break;
       case WLZ_CMESH_3D:
         nBnd = WlzCMeshCountBoundNodes3D(mesh.m3);
@@ -752,6 +1046,35 @@ int		WlzCMeshCountBoundNodes2D(WlzCMesh2D *mesh)
       if(nod->idx >= 0)
       {
 	if(WlzCMeshNodIsBoundary2D(nod))
+	{
+	  ++nBnd;
+	}
+      }
+    }
+  }
+  return(nBnd);
+}
+
+/*!
+* \return	Number of boundary nodes.
+* \ingroup	WlzMesh
+* \brief	Counts the number of boundary nodes of the 2D5 mesh.
+* \param	mesh			Given mesh.
+*/
+int		WlzCMeshCountBoundNodes2D5(WlzCMesh2D5 *mesh)
+{
+  int		idN,
+  		nBnd = 0;
+  WlzCMeshNod2D5 *nod;
+
+  if(mesh && (mesh->type == WLZ_CMESH_2D5))
+  {
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->idx >= 0)
+      {
+	if(WlzCMeshNodIsBoundary2D5(nod))
 	{
 	  ++nBnd;
 	}
