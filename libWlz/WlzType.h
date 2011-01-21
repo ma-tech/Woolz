@@ -54,12 +54,20 @@ extern "C" {
 * \brief	An eight bit unsigned integer.
 */
 typedef unsigned char WlzUByte;
+
 /*!
 * \typedef	WlzUInt
 * \ingroup	WlzType
 * \brief        A 32 bit unsigned integer.
 */
 typedef unsigned int  WlzUInt;
+
+/*!
+* \typedef	WlzLong
+* \ingroup	WlzType
+* \brief        A 64 bit integer.
+*/
+typedef long long  WlzLong;
 
 /*!
 * \enum		_WlzGreyType
@@ -69,26 +77,26 @@ typedef unsigned int  WlzUInt;
 */
 typedef enum _WlzGreyType
 {
-  WLZ_GREY_LONG			= 0,	/*!< Signed long integer. */
+  WLZ_GREY_LONG			= 0,	/*!< Signed WlzLong integer. */
   WLZ_GREY_INT			= 1,	/*!< Signed integer. */
   WLZ_GREY_SHORT		= 2,	/*!< Signed short. */
-  WLZ_GREY_UBYTE		= 3,	/*!< Unsigned byte. */
+  WLZ_GREY_UBYTE		= 3,	/*!< Unsigned WlzUByte integer. */
   WLZ_GREY_FLOAT		= 4,	/*!< Single precision floating
-  					    point. */
+  					     point. */
   WLZ_GREY_DOUBLE		= 5,	/*!< Double precision floating
-  					    point. */
+  					     point. */
   WLZ_GREY_BIT			= 6,	/*!< Single bit. */
   WLZ_GREY_RGBA			= 7,	/*!< Eight bit red, green, blue and
-  					    alpha components packed into an
-					    unsigned 32 bit integer, with:
-					    v = r|(g<<8)|(b<<16)|(a<<24),
-					    where r, g, b and a are the
-					    unsigned byte red, green, blue
-					    and alpha components of the
-					    value. */
+  					     alpha components packed into an
+					     unsigned 32 bit integer, with:
+					     v = r|(g<<8)|(b<<16)|(a<<24),
+					     where r, g, b and a are the
+					     unsigned byte red, green, blue
+					     and alpha components of the
+					     value. */
   WLZ_GREY_ERROR			/*!< An invalid grey type used to
-  					    return error conditions.
-					    Always the last enumerator! */
+  					     return error conditions.
+					     Always the last enumerator! */
 } WlzGreyType;
 
 /*!
@@ -344,6 +352,7 @@ typedef enum _WlzObjectType
   WLZ_PROPERTY_EMAP		= 181,	/*!< EMAP property. */
   WLZ_PROPERTY_NAME		= 182,	/*!< Ascii name property. */
   WLZ_PROPERTY_GREY		= 183,	/*!< Grey value property. */
+  WLZ_PROPERTY_TEXT		= 184,	/*!< Text property. */
   /**********************************************************************
   * Points domain types.
   **********************************************************************/
@@ -1140,14 +1149,14 @@ typedef union _WlzBox
 */
 typedef union _WlzGreyP
 {
-  void *v; 				/*!< Can save a cast when assigning. */
-  long *lnp;
-  int  *inp;
-  short *shp;
-  WlzUByte *ubp;
-  float *flp;
-  double *dbp;
-  WlzUInt *rgbp;
+  void    	*v; 			/*!< Can save a cast when assigning. */
+  WlzLong 	*lnp;
+  int     	*inp;
+  short   	*shp;
+  WlzUByte 	*ubp;
+  float   	*flp;
+  double  	*dbp;
+  WlzUInt 	*rgbp;
 } WlzGreyP;
 
 /*!
@@ -1158,13 +1167,13 @@ typedef union _WlzGreyP
 */
 typedef union _WlzGreyV
 {
-  long lnv;
-  int inv;
-  short shv;
-  WlzUByte ubv;
-  float flv;
-  double dbv;
-  WlzUInt rgbv;
+  WlzLong 	lnv;
+  int 		inv;
+  short 	shv;
+  WlzUByte 	ubv;
+  float 	flv;
+  double 	dbv;
+  WlzUInt 	rgbv;
 } WlzGreyV;
 
 /*!
@@ -2292,6 +2301,22 @@ typedef struct _WlzGreyProperty
 } WlzGreyProperty;
 
 /*!
+* \struct	_WlzTextProperty
+* \ingroup	WlzProperty
+* \brief	A pair of simple null terminated ASCII strings one for the
+*               property name and one for it's value.
+*		Typedef: ::WlzTextProperty.
+*/
+typedef struct _WlzTextProperty
+{
+  WlzObjectType		type;			/*!< Type. */
+  int			linkcount;		/*!< linkcount. */
+  void			*freeptr;		/*!< Free pointer. */
+  char			*name;			/*!< Name string. */
+  char			*text;			/*!< Text string. */
+} WlzTextProperty;
+
+/*!
 * \union	_WlzProperty
 * \ingroup	WlzProperty
 * \brief	A union of pointers for properties.
@@ -2304,6 +2329,7 @@ typedef union _WlzProperty
   struct _WlzEMAPProperty	*emap;
   struct _WlzNameProperty	*name;
   struct _WlzGreyProperty	*greyV;
+  struct _WlzTextProperty	*text;
 } WlzProperty;
 
 /************************************************************************
