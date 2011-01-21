@@ -1865,7 +1865,6 @@ static void	 WlzMeshElemFindVxForce(WlzMeshTransform *mesh,
   int		tstId = 0,
 		extFlg = 0,
 		fndId = -1;
-  double	tD0;
   int		*eNdP;
   WlzMeshElem	*elm;
   WlzDVertex2	eVx0,
