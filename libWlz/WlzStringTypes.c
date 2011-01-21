@@ -678,6 +678,9 @@ const char	*WlzStringFromPropertyType(WlzProperty prop,
       case WLZ_PROPERTY_GREY:
         pTypeStr = "WLZ_PROPERTY_GREY";
 	break;
+      case WLZ_PROPERTY_TEXT:
+        pTypeStr = "WLZ_PROPERTY_TEXT";
+	break;
       default:
         errNum = WLZ_ERR_PROPERTY_TYPE;
 	break;
@@ -710,6 +713,7 @@ WlzObjectType WlzStringToPropertyType(const char *pStr, WlzErrorNum *dstErr)
 			 "WLZ_PROPERTY_EMAP", WLZ_PROPERTY_EMAP,
 			 "WLZ_PROPERTY_NAME", WLZ_PROPERTY_NAME,
 			 "WLZ_PROPERTY_GREY", WLZ_PROPERTY_GREY,
+			 "WLZ_PROPERTY_TEXT", WLZ_PROPERTY_TEXT,
 			 NULL))
   {
     pType = (WlzObjectType )tI0;

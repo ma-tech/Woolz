@@ -253,7 +253,77 @@ WlzGreyProperty *WlzMakeGreyProperty(char *name, WlzPixelV val,
   return(prop);
 }
 
-/* function:     WlzMakeEMAPProperty    */
+/*!
+* \return	New text property.
+* \ingroup	WlzProperty
+* \brief	Makes a text property from the given name and text strings
+* 		which are copied.
+* \param	name			Optional name string, may be NULL.
+* \param	text			Given text string.
+* \param	dstErr			Destination pointer for error number,
+*					may be NULL.
+*/
+WlzTextProperty *WlzMakeTextProperty(char *name, char *text,
+					WlzErrorNum *dstErr)
+{
+  WlzTextProperty *prop = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((prop = (WlzTextProperty *)
+  	     AlcCalloc(1, sizeof(WlzTextProperty))) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    if(name)
+    {
+      if((prop->name = AlcStrDup(name)) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else
+      {
+        if((prop->freeptr = AlcFreeStackPush(prop->freeptr, prop->name,
+					     NULL)) == NULL)
+        {
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    prop->type = WLZ_PROPERTY_TEXT;
+    if(text)
+    {
+      if((prop->text = AlcStrDup(text)) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else
+      {
+        if((prop->freeptr = AlcFreeStackPush(prop->freeptr, prop->text,
+					     NULL)) == NULL)
+        {
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+    }
+  }
+  if((errNum != WLZ_ERR_NONE) && (prop != NULL))
+  {
+    AlcFree(prop->name);
+    AlcFree(prop);
+    prop = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(prop);
+}
+
 /*! 
 * \ingroup      WlzProperty
 * \brief         Make an EMAP property structure.
