@@ -56,6 +56,77 @@ static WlzGMModel 		*WlzCMeshToGMModel2D5(
 				  int disp,
 				  WlzErrorNum *dstErr);
 
+WlzObject	*WlzCMeshCompSurfMapToCircle(WlzObject *inObj,
+				WlzErrorNum *dstErr)
+{
+  int		nBN;
+  int		*gBN = NULL;
+  WlzDVertex3	*dBV = NULL,
+  		*gBV = NULL;
+  WlzCMesh2D5	*mesh;
+  WlzObject	*rtnObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Check object. */
+  if(inObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(inObj->type != WLZ_CMESH_2D5)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if((mesh = inObj->domain.cm2d5) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_2D5)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else
+  {
+    errNum = WlzCMeshGetBoundNodes2D5(mesh, &nBN, &gBN);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(((dBV = AlcMalloc(nBN * sizeof(WlzDVertex3))) == NULL) ||
+       ((gBV = AlcMalloc(nBN * sizeof(WlzDVertex3))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idN;
+    AlcVector	*vec;
+
+    /* Gather boundary node positions. */
+    vec =  mesh->res.nod.vec;
+    for(idN = 0; idN < nBN; ++idN)
+    {
+      WlzCMeshNod2D5 *nod;
+
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(vec, idN);
+      gBV[idN] = nod->pos;
+    }
+    /* Fit plane to the given mesh boundary nodes while finding the
+     * centre of mass of the nodes. */
+    /* TODO HACK TODO */
+  }
+  /* Compute displacements for the boundary nodes onto the circle
+   * which is in the computed plane, centred on the centre of mass
+   * and which just encloses all boundary nodes. */
+  /* TODO HACK TODO */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rtnObj = WlzCMeshCompSurfMap(inObj, nBN, dBV, nBN, gBV, &errNum);
+  }
+  AlcFree(dBV);
+  AlcFree(gBV);
+  return(rtnObj);
+}
+
 /*!
 * \return	New mesh object with displacements set or NULL on error.
 * \ingroup	WlzTransform
@@ -66,7 +137,7 @@ static WlzGMModel 		*WlzCMeshToGMModel2D5(
 * 					must be of type WLZ_CMESH_2D5.
 * \param	nDV			Number of destination vertices.
 * \param	dV			Destination vertices.
-* \param	nSV			Number of destination vertices
+* \param	nSV			Number of source vertices
 * 					which must be the same as nDV.
 * \param	sV			Source vertices.
 * \param	dstErr			Woolz error code, may be NULL.
