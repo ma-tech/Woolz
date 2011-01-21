@@ -314,7 +314,7 @@ WlzErrorNum	WlzScalarFeatures2D(WlzObject *obj,
       }
     }
   }
-  if(errNum == ALC_ER_NONE)
+  if(errNum == WLZ_ERR_NONE)
   {
     *dstNFeat = fCnt;
     *dstFeat = fCoords.i2;
