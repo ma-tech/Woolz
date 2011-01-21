@@ -142,6 +142,16 @@ extern WlzObject 		*WlzEffReadObjIcs(
 				  const char *gvnFileName,
 				  WlzErrorNum *dstErr);
 
+/* From WlzExtFFNifti.c */
+extern WlzObject 		*WlzEffReadObjNifti(
+				  const char *gvnFileName,
+				  int spatialTr,
+				  int greySc,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum 		WlzEffWriteObjNifti(
+				  const char *gvnFileName,
+				  WlzObject *obj);
+
 /* From WlzExtFFNodeEle.c */
 extern WlzErrorNum 		WlzEffNodeEleFileNames(
 				  char **fileBody,

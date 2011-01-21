@@ -69,6 +69,7 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "jpeg",  WLZEFF_FORMAT_JPEG,
 			 "jpg",   WLZEFF_FORMAT_JPEG,
 			 "mesh",  WLZEFF_FORMAT_MESH,
+			 "nii",   WLZEFF_FORMAT_NIFTI,
 			 "node",  WLZEFF_FORMAT_NODEELE,
 			 "obj",   WLZEFF_FORMAT_OBJ,
 			 "pgm",   WLZEFF_FORMAT_PNM,
@@ -101,28 +102,29 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
   unsigned int	fileFmt;
 
   if(WlzStringMatchValue((int *)&fileFmt, fmtStr,
-		     "Amira Lattice", WLZEFF_FORMAT_AM,
-		     "ANALYZE 7.5", WLZEFF_FORMAT_ANL,
-		     "BioRad Confocal", WLZEFF_FORMAT_PIC,
-		     "Graphics Interchange Format", WLZEFF_FORMAT_GIF,
-		     "GRUMMP VMESH", WLZEFF_FORMAT_VMESH,
-		     "Image Cytometry Standard", WLZEFF_FORMAT_ICS,
-		     "IPLab", WLZEFF_FORMAT_IPL,
-		     "JPEG", WLZEFF_FORMAT_JPEG,
-		     "Microsoft Bitmap", WLZEFF_FORMAT_BMP,
-		     "NETGEN tetrahedral mesh", WLZEFF_FORMAT_MESH,
-		     "Jonathan Shewchuk's mesh format", WLZEFF_FORMAT_NODEELE,
-		     "OBJ", WLZEFF_FORMAT_OBJ,
-		     "PNM", WLZEFF_FORMAT_PNM,
-		     "Raw", WLZEFF_FORMAT_RAW,
-		     "Riken PLY2", WLZEFF_FORMAT_PLY2,
-		     "SLC", WLZEFF_FORMAT_SLC,
-		     "Stanford Density", WLZEFF_FORMAT_DEN,
-		     "Sunvision VFF", WLZEFF_FORMAT_VFF,
-		     "Text", WLZEFF_FORMAT_TXT,
-		     "Tiff", WLZEFF_FORMAT_TIFF,
-		     "Visualization Toolkit", WLZEFF_FORMAT_VTK,
-		     "Woolz", WLZEFF_FORMAT_WLZ,
+	 "Amira Lattice", WLZEFF_FORMAT_AM,
+	 "ANALYZE 7.5", WLZEFF_FORMAT_ANL,
+	 "BioRad Confocal", WLZEFF_FORMAT_PIC,
+	 "Graphics Interchange Format", WLZEFF_FORMAT_GIF,
+	 "GRUMMP VMESH", WLZEFF_FORMAT_VMESH,
+	 "Image Cytometry Standard", WLZEFF_FORMAT_ICS,
+	 "IPLab", WLZEFF_FORMAT_IPL,
+	 "JPEG", WLZEFF_FORMAT_JPEG,
+	 "Microsoft Bitmap", WLZEFF_FORMAT_BMP,
+	 "NETGEN tetrahedral mesh", WLZEFF_FORMAT_MESH,
+	 "Neuroimaging Informatics Technology Initiative", WLZEFF_FORMAT_NIFTI,
+	 "Jonathan Shewchuk's mesh format", WLZEFF_FORMAT_NODEELE,
+	 "OBJ", WLZEFF_FORMAT_OBJ,
+	 "PNM", WLZEFF_FORMAT_PNM,
+	 "Raw", WLZEFF_FORMAT_RAW,
+	 "Riken PLY2", WLZEFF_FORMAT_PLY2,
+	 "SLC", WLZEFF_FORMAT_SLC,
+	 "Stanford Density", WLZEFF_FORMAT_DEN,
+	 "Sunvision VFF", WLZEFF_FORMAT_VFF,
+	 "Text", WLZEFF_FORMAT_TXT,
+	 "Tiff", WLZEFF_FORMAT_TIFF,
+	 "Visualization Toolkit", WLZEFF_FORMAT_VTK,
+	 "Woolz", WLZEFF_FORMAT_WLZ,
 		     NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -162,6 +164,8 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*fmtJpegStr = "JPEG",
 		*extMeshStr = "mesh",
 		*fmtMeshStr = "NETGEN tetrahedral mesh",
+		*extNiftiStr = "nii",
+		*fmtNiftiStr = "Neuroimaging Informatics Technology Initiative",
 		*extNodeEleStr = "node",
 		*fmtNodeEleStr = "Jonathan Shewchuk's mesh format",
   		*extObjStr  = "obj",
@@ -279,6 +283,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
       fmtStr = fmtTxtStr;
       extStr = extTxtStr;
       break;
+    case WLZEFF_FORMAT_NIFTI:
+      fmtStr = fmtNiftiStr;
+      extStr = extNiftiStr;
+      break;
     default:
       break;
   }
@@ -367,6 +375,7 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
       case WLZEFF_FORMAT_ANL:     /* FALLTHROUGH */
       case WLZEFF_FORMAT_BMP:     /* FALLTHROUGH */
       case WLZEFF_FORMAT_ICS:     /* FALLTHROUGH */
+      case WLZEFF_FORMAT_NIFTI: /* FALLTHROUGH */
       case WLZEFF_FORMAT_NODEELE: /* FALLTHROUGH */
       case WLZEFF_FORMAT_PNM:     /* FALLTHROUGH */
       case WLZEFF_FORMAT_TIFF:
@@ -416,6 +425,9 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
 	break;
       case WLZEFF_FORMAT_VFF:
 	obj = WlzEffReadObjVff(fP, &errNum);
+	break;
+      case WLZEFF_FORMAT_NIFTI:
+	obj = WlzEffReadObjNifti(fName, 1, 1, &errNum);
 	break;
       case WLZEFF_FORMAT_NODEELE:
 	obj = WlzEffReadObjNodeEle(fName, &errNum);
@@ -492,6 +504,7 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
       case WLZEFF_FORMAT_BMP:     /* FALLTHROUGH */
       case WLZEFF_FORMAT_ICS:     /* FALLTHROUGH */
       case WLZEFF_FORMAT_PNM:     /* FALLTHROUGH */
+      case WLZEFF_FORMAT_NIFTI: /* FALLTHROUGH */
       case WLZEFF_FORMAT_NODEELE: /* FALLTHROUGH */
       case WLZEFF_FORMAT_TIFF:
         break;
@@ -582,6 +595,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 	break;
       case WLZEFF_FORMAT_ANL:
 	errNum = WlzEffWriteObjAnl(fName, obj);
+	break;
+      case WLZEFF_FORMAT_NIFTI:
+	errNum = WlzEffWriteObjNifti(fName, obj);
 	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;

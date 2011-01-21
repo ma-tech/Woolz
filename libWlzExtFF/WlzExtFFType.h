@@ -86,6 +86,8 @@ typedef enum _WlzEffFormat
   WLZEFF_FORMAT_PLY2,           /*!< Riken PLY2 mesh format. */
   WLZEFF_FORMAT_OBJ,            /*!< Wavefront geometry format. */
   WLZEFF_FORMAT_TXT,		/*!< Simple ASCII text listing, csv format. */
+  WLZEFF_FORMAT_NIFTI,		/*!< Neuroimaging Informatics Technology
+  				     Initiative format based on Analyze 7.5. */
   WLZEFF_FORMAT_COUNT 		/*!< Keep last: Number of formats (including
   				     WLZEFF_FORMAT_NONE). */
 } WlzEffFormat;
