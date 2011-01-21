@@ -49,7 +49,8 @@ LDADD 			= -L$(top_srcdir)/libWlzExtFF/.libs -lWlzExtFF \
 			  -L$(top_srcdir)/libAlg/.libs -lAlg \
 			  -L$(top_srcdir)/libAlc/.libs -lAlc \
 			  -L$(libdir) \
-			  ${LIBS_EXTFF} ${LIBS}
+			  ${LIBS_EXTFF} \
+			  ${LIBS}
 
 bin_PROGRAMS		= \
 			  WlzExtFFConstruct3D \
