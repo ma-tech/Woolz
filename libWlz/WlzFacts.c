@@ -986,6 +986,15 @@ static WlzErrorNum WlzObjFactsProperty(WlzObjFactsData *fData,
   	    errNum = WlzObjFactsPixelV(fData, "Grey", prop.greyV->value);
 	  }
 	  break;
+	case WLZ_PROPERTY_TEXT:
+	  errNum = WlzObjFactsAppend(fData, "Name: %s.\n",
+	  		    	prop.text->name? prop.text->name: "NULL");
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsAppend(fData, "Text: %s.\n",
+				  prop.text->text? prop.text->text: "NULL");
+	  }
+	  break;
 	default:
 	  break;
       }
@@ -1165,17 +1174,17 @@ static WlzErrorNum WlzObjFactsTiledTab(WlzObjFactsData *fData,
     if(errNum == WLZ_ERR_NONE)
     {
       errNum = WlzObjFactsAppend(fData, "Values tile size: %ld\n",
-				 (long )(val.t->tileSz));
+				 (WlzLong )(val.t->tileSz));
     }
     if(errNum == WLZ_ERR_NONE)
     {
       errNum = WlzObjFactsAppend(fData, "Values tile width: %ld\n",
-				 (long )(val.t->tileWidth));
+				 (WlzLong )(val.t->tileWidth));
     }
     if(errNum == WLZ_ERR_NONE)
     {
       errNum = WlzObjFactsAppend(fData, "Values num tiles: %ld\n",
-				 (long )(val.t->numTiles));
+				 (WlzLong )(val.t->numTiles));
     }
     if(errNum == WLZ_ERR_NONE)
     {
@@ -1185,7 +1194,7 @@ static WlzErrorNum WlzObjFactsTiledTab(WlzObjFactsData *fData,
     if(errNum == WLZ_ERR_NONE)
     {
       errNum = WlzObjFactsAppend(fData, "Values tile offset: %ld\n",
-				 (long )(val.t->tileOffset));
+				 (WlzLong )(val.t->tileOffset));
     }
   }
   --(fData->indent);
