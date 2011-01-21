@@ -484,7 +484,7 @@ int             main(int argc, char **argv)
     {
       char *fmtStr = NULL;
 
-      fmtStr = WlzEffFormatTable(2, 40, 10, NULL);
+      fmtStr = WlzEffFormatTable(2, 50, 10, NULL);
       (void )fprintf(
 	stderr,
 	"Usage: %s%s%s%s%s%s%s%s%s\n",
@@ -510,8 +510,8 @@ int             main(int argc, char **argv)
 	"  -y#   Y voxel/pixel size.\n"
 	"  -z#   Z voxel/pixel size.\n"
 	"The known file formats are:\n"
-	"  Description                             Extension\n"
-	"  ***********                             *********\n",
+	"  Description                                       Extension\n"
+	"  ***********                                       *********\n",
 	fmtStr,
 	"Simple example:\n  ",
 	*argv,
