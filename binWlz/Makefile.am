@@ -164,6 +164,7 @@ bin_PROGRAMS		= \
 			  WlzScalarDivide \
 			  WlzScalarFeatures \
 			  WlzScalarFnObj \
+			  WlzScalarScale \
 			  WlzSelect1InN \
 			  WlzSetBackground \
 			  WlzSetVoxelSize \
@@ -670,6 +671,10 @@ WlzScalarFeatures_LDFLAGS		= $(AM_LFLAGS)
 WlzScalarFnObj_SOURCES			= WlzScalarFnObj.c
 WlzScalarFnObj_LDADD			= $(LDADD)
 WlzScalarFnObj_LDFLAGS			= $(AM_LFLAGS)
+
+WlzScalarScale_SOURCES			= WlzScalarScale.c
+WlzScalarScale_LDADD			= $(LDADD)
+WlzScalarScale_LDFLAGS			= $(AM_LFLAGS)
 
 WlzSelect1InN_SOURCES			= WlzSelect1InN.c
 WlzSelect1InN_LDADD			= $(LDADD)
