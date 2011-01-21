@@ -321,9 +321,9 @@ int		AlgHeapSortCmpIFn(void *datum0, void *datum1)
 }
 
 /*!
-* \return	*((long *)datum0) - *((long *)datum1)
+* \return	*((long long *)datum0) - *((long long *)datum1)
 * \ingroup	AlgSort
-* \brief	Long comparison function for AlgHeapSort().
+* \brief	Long long comparison function for AlgHeapSort().
 *		Sorted data will have smallest entry first and greatest last.
 * \param	datum0			First data pointer.
 * \param	datum1			Second data pointer.
@@ -332,7 +332,7 @@ int		AlgHeapSortCmpLFn(void *datum0, void *datum1)
 {
   int		cmp;
 
-  cmp = *((long *)datum0) - *((long *)datum1);
+  cmp = *((long long *)datum0) - *((long long *)datum1);
   return(cmp);
 }
 
@@ -451,9 +451,9 @@ int		AlgHeapSortInvCmpIFn(void *datum0, void *datum1)
 }
 
 /*!
-* \return	*((long *)datum1) - *((long *)datum0)
+* \return	*((long long *)datum1) - *((long long *)datum0)
 * \ingroup	AlgSort
-* \brief	Inverse long comparison function for AlgHeapSort().
+* \brief	Inverse long long comparison function for AlgHeapSort().
 *		Sorted data will have greatest entry first and smallest last.
 * \param	datum0			First data pointer.
 * \param	datum1			Second data pointer.
@@ -462,7 +462,7 @@ int		AlgHeapSortInvCmpLFn(void *datum0, void *datum1)
 {
   int		cmp;
 
-  cmp = *((long *)datum1) - *((long *)datum0);
+  cmp = *((long long *)datum1) - *((long long *)datum0);
   return(cmp);
 }
 
@@ -594,8 +594,8 @@ int		AlgHeapSortCmpIdxIFn(void *data, int *idx, int id0, int id1)
 }
 
 /*!
-* \return	*((long *)data + *(idx + id0)) -
-*		*((long *)data + *(idx + id1))
+* \return	*((long long *)data + *(idx + id0)) -
+*		*((long long *)data + *(idx + id1))
 * \ingroup	AlgSort
 * \brief	Long comparison function for AlgHeapSortIdx().
 *		Sorted data will have smallest entry first and greatest last.
@@ -608,7 +608,8 @@ int		AlgHeapSortCmpIdxLFn(void *data, int *idx, int id0, int id1)
 {
   int		cmp;
 
-  cmp = *((long *)data + *(idx + id0)) - *((long *)data + *(idx + id1));
+  cmp = *((long long *)data + *(idx + id0)) -
+        *((long long *)data + *(idx + id1));
   return(cmp);
 }
 
@@ -749,7 +750,7 @@ int		AlgHeapSortInvCmpIdxIFn(void *data, int *idx, int id0, int id1)
 * \return	*((long *)data + *(idx + id1)) -
 *		*((long *)data + *(idx + id0))
 * \ingroup	AlgSort
-* \brief	Inverse long comparison function for AlgHeapSortIdx().
+* \brief	Inverse long long comparison function for AlgHeapSortIdx().
 *		Sorted data will have greatest entry first and smallest last.
 * \param	data			Data array.
 * \param	idx			Index array.
@@ -760,7 +761,8 @@ int		AlgHeapSortInvCmpIdxLFn(void *data, int *idx, int id0, int id1)
 {
   int		cmp;
 
-  cmp = *((long *)data + *(idx + id1)) - *((long *)data + *(idx + id0));
+  cmp = *((long long *)data + *(idx + id1)) -
+        *((long long *)data + *(idx + id0));
   return(cmp);
 }
 
