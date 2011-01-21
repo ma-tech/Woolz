@@ -53,13 +53,15 @@ USE_CTAGS=1
 USE_ETAGS=0
 ENABLE_EXTFF="no"
 HAVE_JPEG="no"
-JPEG_DIR="none"
+JPEG_DIR="no"
+HAVE_NIFTI="no"
+NIFTI_DIR="no"
 HAVE_TIFF="no"
-TIFF_DIR="none"
+TIFF_DIR="no"
 ENABLE_JAVA="no"
 HAVE_JNI="no"
-JDK_DIR="none"
-JAVACC="none"
+JDK_DIR="no"
+JAVACC="no"
 ENABLE_TEST="no"
 AC_SUBST(ENABLE_EXTFF)
 
@@ -156,8 +158,10 @@ AM_CONDITIONAL(HAVE_DOXYGEN, test x$HAVE_DOXYGEN = xyes)
 
 # Compilation and linking flags
 CFLAGS=""
-LIBS_EXTFF=""
+INCL_EXTFF=""
+LIBS_EXTFF="-lz"
 AC_SUBST(LIBS_EXTFF)
+AC_SUBST(INCL_EXTFF)
 
 AC_PROG_CC
 
@@ -321,10 +325,27 @@ AC_CONFIG_FILES([	Makefile \
 
 if test x${ENABLE_EXTFF} = "xyes"
 then
+  AC_ARG_WITH(nifti, [  --with-nifti=DIR         Directory containing NIfTI
+                          lib and include directories.],
+	      NIFTI_DIR=$withval, NIFTI_DIR=no)
+  if test ${NIFTI_DIR} = "no"
+  then
+    AC_CHECK_HEADER(nifti1_io.h,
+		    AC_CHECK_LIB(nifti, nifti_simple_init_nim,
+				 [
+				   HAVE_NIFTI=yes
+				   LIBS_EXTFF="-lniftiio -lznz ${LIBS_EXTFF}"
+				 ]))
+  else
+    HAVE_NIFTI=yes
+    INCL_EXTFF="-I${NIFTI_DIR}/include ${INCL_EXTFF}"
+    LIBS_EXTFF="-L${NIFTI_DIR}/lib -lniftiio -lznz ${LIBS_EXTFF}"
+  fi
+
   AC_ARG_WITH(tiff, [  --with-tiff=DIR         Directory containing the tiff
                           lib and include directories.],
-	      TIFF_DIR=$withval)
-  if test ${TIFF_DIR} == "none"
+	      TIFF_DIR=$withval, TIFF_DIR=no)
+  if test ${TIFF_DIR} = "no"
   then
     AC_CHECK_HEADER(tiff.h,
 		    AC_CHECK_LIB(tiff, TIFFOpen,
@@ -334,12 +355,13 @@ then
 				 ]))
   else
     HAVE_TIFF=yes
-    LIBS_EXTFF="-L${TIFF_DIR} -ltiff ${LIBS_EXTFF}"
+    INCL_EXTFF="-I${TIFF_DIR}/include ${INCL_EXTFF}"
+    LIBS_EXTFF="-L${TIFF_DIR}/lib -ltiff ${LIBS_EXTFF}"
   fi
   AC_ARG_WITH(jpeg, [  --with-jpeg=DIR         Directory containing the jpeg
                           lib and include directories.],
-	      JPEG_DIR=$withval)
-  if test ${JPEG_DIR} == "none"
+	      JPEG_DIR=$withval, JPEG_DIR=no)
+  if test ${JPEG_DIR} = "no"
   then
     AC_CHECK_HEADER(jpeglib.h,
 		    AC_CHECK_LIB(jpeg, jpeg_CreateCompress,
@@ -349,7 +371,8 @@ then
 				 ]))
   else
     HAVE_JPEG=yes
-    LIBS_EXTFF="-L${JPEG_DIR} -ljpeg ${LIBS_EXTFF}"
+    INCL_EXTFF="-I${JPEG_DIR}/include ${INCL_EXTFF}"
+    LIBS_EXTFF="-L${JPEG_DIR}/lib -ljpeg ${LIBS_EXTFF}"
   fi
   AC_CONFIG_FILES([	libbibfile/Makefile \
 			libhguDlpList/Makefile \
@@ -364,8 +387,8 @@ then
   AC_ARG_WITH(jdk, [  --with-jdk=DIR          Directory with Java development
                           kit defaults to the value of the JAVA_HOME
 			  environment variable.],
-		     JDK_DIR=$withval, JDK_DIR=none)
-  if test ${JDK_DIR} = "none"
+		     JDK_DIR=$withval, JDK_DIR=no)
+  if test ${JDK_DIR} = "no"
   then
       # no --with-jdk argument given
       if test x${JAVA_HOME} = "x"
@@ -378,8 +401,8 @@ then
   AC_ARG_WITH(javacc, [  --with-javacc=PATH      Full path of the javacc
                           executable, by default the standard paths are
 			  searched.],
-		     JAVACC=$withval, JAVACC=none)
-  if test ${JAVACC} = "none"
+		     JAVACC=$withval, JAVACC=no)
+  if test ${JAVACC} = "no"
   then
     AC_PATH_PROG(JAVACC, javacc)
     if test x${JAVACC} = "x"
@@ -403,7 +426,7 @@ Woolz core has been configured on ${host} with
   Linker:                           ${LD}
   Archiver:                         ${AR}
   CFLAGS:                         ${CFLAGS}
-  LIBS needed for configure:      ${LIBS_EXTFF} ${LIBS}
+  LIBS needed for configure:       ${LIBS_EXTFF} ${LIBS}
   Woolz external file format code:  ${ENABLE_EXTFF}
   Java Woolz binding:               ${ENABLE_JAVA}
   Test programs:                    ${ENABLE_TEST}
