@@ -1634,12 +1634,16 @@ extern int			WlzCMeshCountBoundNodes(
 				  WlzCMeshP mesh);
 extern int			WlzCMeshCountBoundNodes2D(
 				  WlzCMesh2D *mesh);
+extern int			WlzCMeshCountBoundNodes2D5(
+				  WlzCMesh2D5 *mesh);
 extern int			WlzCMeshCountBoundNodes3D(
 				  WlzCMesh3D *mesh);
 extern int			WlzCMeshSetBoundNodFlags(
 				  WlzCMeshP mesh);
 extern int			WlzCMeshSetBoundNodFlags2D(
 				  WlzCMesh2D *mesh);
+extern int			WlzCMeshSetBoundNodFlags2D5(
+				  WlzCMesh2D5 *mesh);
 extern int			WlzCMeshSetBoundNodFlags3D(
 				  WlzCMesh3D *mesh);
 extern int			WlzCMeshSetBoundElmFlags(
@@ -1720,6 +1724,22 @@ extern WlzErrorNum		WlzCMeshLaplacianSmooth(
 				  double alpha,
 				  int doBnd,
 				  int update);
+extern WlzErrorNum		WlzCMeshGetBoundNodes(
+				  WlzCMeshP mesh,
+				  int *dstSizeArrayNod,
+				  int **dstArrayNod);
+extern WlzErrorNum		WlzCMeshGetBoundNodes2D(
+				  WlzCMesh2D *mesh,
+				  int *dstSizeArrayNod,
+				  int **dstArrayNod);
+extern WlzErrorNum		WlzCMeshGetBoundNodes2D5(
+				  WlzCMesh2D5 *mesh,
+				  int *dstSizeArrayNod,
+				  int **dstArrayNod);
+extern WlzErrorNum		WlzCMeshGetBoundNodes3D(
+				  WlzCMesh3D *mesh,
+				  int *dstSizeArrayNod,
+				  int **dstArrayNod);
 extern WlzErrorNum		WlzCMeshLaplacianSmooth2D(
 				  WlzCMesh2D *mesh,
 				  int itr,
@@ -3724,6 +3744,10 @@ extern WlzGreyProperty 		*WlzMakeGreyProperty(
 				  char *name,
 				  WlzPixelV val,
 				  WlzErrorNum *dstErr);
+extern WlzTextProperty 		*WlzMakeTextProperty(
+				  char *name,
+				  char *text,
+				  WlzErrorNum *dstErr);
 extern WlzErrorNum              WlzChangeEMAPProperty(
                                   WlzEMAPProperty *prop,
                                   WlzEMAPPropertyType type,
@@ -4841,6 +4865,12 @@ extern WlzObject		*WlzScalarBinaryOp2(
 				  WlzObject *o1,
 				  WlzPixelV pval,
 				  WlzBinaryOperatorType op,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzScalarMulAdd(
+				  WlzObject *obj,
+				  WlzPixelV m,
+				  WlzPixelV a,
+				  WlzGreyType gType,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
