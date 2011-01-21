@@ -523,7 +523,8 @@ static void	WlzScalarFnItvExp(WlzGreyP gValP, WlzGreyType gType, int len)
     case WLZ_GREY_DOUBLE:
       for(idx = 0; idx < len; ++idx)
       {
-        *(gValP.dbp)++ = exp(*(gValP.dbp));
+        *(gValP.dbp) = exp(*(gValP.dbp));
+	++(gValP.dbp);
       }
     default:
       /* Should only have WLZ_GREY_DOUBLE! */
