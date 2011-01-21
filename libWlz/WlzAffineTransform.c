@@ -2488,8 +2488,8 @@ WlzErrorNum	WlzAffineTransformMatrixSet(WlzAffineTransform *trans,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformMatrixSet FE 0x%lx 0x%lx\n",
-	   (unsigned long )trans, (unsigned long )matrix));
+	  ("WlzAffineTransformMatrixSet FE %p %p\n",
+	   trans, matrix));
   if(trans == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
@@ -2572,8 +2572,8 @@ WlzErrorNum	WlzAffineTransformPrimValSet(WlzAffineTransform *tr,
 
   WLZ_DBG((WLZ_DBG_LVL_1),
 	  ("WlzAffineTransformPrimValSet2D FE "
-	  "0x%lx %g %g %g %g %g %g %g %g %g %d\n",
-	   (unsigned long )tr, trX, trY, trZ, trScale, trTheta, trPhi,
+	  "%p %g %g %g %g %g %g %g %g %g %d\n",
+	   tr, trX, trY, trZ, trScale, trTheta, trPhi,
 	   trAlpha, trPsi, trXsi, trInvert));
   if(tr == NULL)
   {
@@ -2618,9 +2618,8 @@ WlzAffineTransform *WlzAffineTransformFromMatrix(WlzTransformType type,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformFromMatrix FE %d 0x%lx 0x%lx\n",
-	   (int )type, (unsigned long )matrix,
-	   (unsigned long )dstErr));
+	  ("WlzAffineTransformFromMatrix FE %d %p %p\n",
+	   (int )type, matrix, dstErr));
   if(matrix == NULL)
   {
     errNum = WLZ_ERR_PARAM_DATA;
@@ -2641,8 +2640,7 @@ WlzAffineTransform *WlzAffineTransformFromMatrix(WlzTransformType type,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformFromMatrix FX 0x%lx\n",
-	   (unsigned long )newTr));
+	  ("WlzAffineTransformFromMatrix FX %p\n", newTr));
   return(newTr);
 }
 
@@ -2679,9 +2677,9 @@ WlzAffineTransform *WlzAffineTransformFromPrimVal(WlzTransformType type,
 
   WLZ_DBG((WLZ_DBG_LVL_1),
 	  ("WlzAffineTransformFromPrimVal FE "
-	  "%d %g %g %g %g %g %g %g %g %g %d 0x%lx\n",
+	  "%d %g %g %g %g %g %g %g %g %g %d %p\n",
 	   (int )type, trX, trY, trZ, trScale, trTheta, trPhi,
-	   trAlpha, trPsi, trXsi, trInvert, (unsigned long )dstErr));
+	   trAlpha, trPsi, trXsi, trInvert, dstErr));
   if((newTr = WlzMakeAffineTransform(type, &errNum)) != NULL)
   {
     errNum = WlzAffineTransformPrimValSet(newTr, trX, trY, trZ,
@@ -2699,8 +2697,8 @@ WlzAffineTransform *WlzAffineTransformFromPrimVal(WlzTransformType type,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformFromPrimVal FX 0x%lx\n",
-	   (unsigned long )newTr));
+	  ("WlzAffineTransformFromPrimVal FX %p\n",
+	   newTr));
   return(newTr);
 }
 /*!
@@ -2727,7 +2725,7 @@ WlzAffineTransform *WlzAffineTransformFromSpin(double spX, double spY,
   WlzAffineTransform *newTrans;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-          ("WlzAffineTransformFromSpin %g %g %g 0x%lx\n",
+          ("WlzAffineTransformFromSpin %g %g %g %p\n",
 	   spX, spY, spTheta, dstErr));
   sinTheta = sin(spTheta);
   cosTheta = cos(spTheta);
@@ -2738,8 +2736,8 @@ WlzAffineTransform *WlzAffineTransformFromSpin(double spX, double spY,
 					   1.0, spTheta, 0.0, 0.0,
 					   0.0, 0.0, 0, dstErr);
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformFromSpin FX 0x%lx\n",
-	   (unsigned long )newTrans));
+	  ("WlzAffineTransformFromSpin FX %p\n",
+	   newTrans));
   return(newTrans);
 }
 
@@ -2770,7 +2768,7 @@ WlzAffineTransform *WlzAffineTransformFromSpinSqueeze(double spX, double spY,
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-          ("WlzAffineTransformFromSpinSqueeze %g %g %g %g %g 0x%lx\n",
+          ("WlzAffineTransformFromSpinSqueeze %g %g %g %g %g %p\n",
 	   spX, spY, spTheta, sqX, sqY, dstErr));
   if((newTr = WlzMakeAffineTransform(WLZ_TRANSFORM_2D_AFFINE,
   				     &errNum)) == NULL)
@@ -2793,8 +2791,8 @@ WlzAffineTransform *WlzAffineTransformFromSpinSqueeze(double spX, double spY,
   }
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformFromSpinSqueeze FX 0x%lx\n",
-	   (unsigned long )newTr));
+	  ("WlzAffineTransformFromSpinSqueeze FX %p\n",
+	   newTr));
   if( dstErr ){
     *dstErr = errNum;
   }
@@ -2816,8 +2814,8 @@ WlzAffineTransform *WlzAffineTransformCopy(WlzAffineTransform *tr,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformCopy FE 0x%lx 0x%lx\n",
-	   (unsigned long )tr, (unsigned long )dstErr));
+	  ("WlzAffineTransformCopy FE %p %p\n",
+	   tr, dstErr));
   if(tr == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
@@ -2831,8 +2829,8 @@ WlzAffineTransform *WlzAffineTransformCopy(WlzAffineTransform *tr,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformCopy FX 0x%lx\n",
-	   (unsigned long )newTr));
+	  ("WlzAffineTransformCopy FX %p\n",
+	   newTr));
   return(newTr);
 }
 
@@ -2859,9 +2857,8 @@ WlzAffineTransform *WlzAffineTransformProduct(WlzAffineTransform *tr0,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformProduct FE 0x%lx 0x%lx 0x%lx\n",
-	   (unsigned long )tr0, (unsigned long )tr1,
-	   (unsigned long )dstErr));
+	  ("WlzAffineTransformProduct FE %p %p %p\n",
+	   tr0, tr1, dstErr));
   if((tr0 == NULL) || (tr1 == NULL))
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
@@ -2916,8 +2913,8 @@ WlzAffineTransform *WlzAffineTransformProduct(WlzAffineTransform *tr0,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformProduct FX 0x%lx\n",
-	   (unsigned long )prodTr));
+	  ("WlzAffineTransformProduct FX %p\n",
+	   prodTr));
   return(prodTr);
 }
 
@@ -2938,8 +2935,8 @@ WlzAffineTransform	*WlzAffineTransformInverse(WlzAffineTransform *tr,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformInverse FE 0x%lx 0x%lx\n",
-	   (unsigned long )tr, (unsigned long )dstErr));
+	  ("WlzAffineTransformInverse FE %p %p\n",
+	   tr, dstErr));
   if(tr == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
@@ -2961,8 +2958,8 @@ WlzAffineTransform	*WlzAffineTransformInverse(WlzAffineTransform *tr,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformInverse FX 0x%lx\n",
-	   (unsigned long )invTr));
+	  ("WlzAffineTransformInverse FX %p\n",
+	   invTr));
   return(invTr);
 }
 
@@ -2985,8 +2982,8 @@ int		WlzAffineTransformIsIdentity(WlzAffineTransform *trans,
   const double	tol = 1.0e-06;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformIsIdentity FE 0x%lx 0x%lx\n",
-	   (unsigned long )trans, (unsigned long )dstErr));
+	  ("WlzAffineTransformIsIdentity FE %p %p\n",
+	   trans, dstErr));
 
   isIdentity = WlzAffineTransformIsIdentityTol(trans, tol, tol, dstErr);
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
@@ -3138,10 +3135,8 @@ WlzObject	*WlzAffineTransformObjCb(WlzObject *srcObj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformObj FE 0x%lx 0x%lx %d 0x%lx 0x%lx 0x%lx\n",
-	   (unsigned long )srcObj, (unsigned long )trans,
-	   (int )interp, (unsigned long )cbData, (unsigned long )cbFn,
-	   (unsigned long )dstErr));
+	  ("WlzAffineTransformObj FE %p %p %d %p %p %p\n",
+	   srcObj, trans, (int )interp, cbData, cbFn, dstErr));
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
@@ -3334,8 +3329,8 @@ WlzObject	*WlzAffineTransformObjCb(WlzObject *srcObj,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzAffineTransformObj FX 0x%lx\n",
-	   (unsigned long )dstObj));
+	  ("WlzAffineTransformObj FX %p\n",
+	   dstObj));
   return(dstObj);
 }
 

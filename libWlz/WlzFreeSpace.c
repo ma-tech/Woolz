@@ -61,8 +61,8 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
   WlzErrorNum		errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzFreeObj FE 0x%lx\n",
-	   (unsigned long )obj));
+  	  ("WlzFreeObj FE %p\n",
+	   obj));
 
   /* check the object pointer and linkcount */
   if (obj == NULL){
@@ -75,14 +75,13 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_2D_DOMAINOBJ:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-	      ("WlzFreeObj 01 0x%lx WLZ_2D_DOMAINOBJ "
-	       "0x%lx %d 0x%lx %d 0x%lx\n",
-	       (unsigned long )obj,
-	       (unsigned long )(obj->domain.i),
+	      ("WlzFreeObj 01 %p WLZ_2D_DOMAINOBJ "
+	       "%p %d %p %d %p\n",
+	       obj, (obj->domain.i),
 	       (obj->domain.i?obj->domain.i->linkcount: 0),
-	       (unsigned long )(obj->values.core),
+	       (obj->values.core),
 	       ((obj->values.core)? obj->values.core->linkcount: 0),
-	       (unsigned long )(obj->plist)));
+	       (obj->plist)));
       errNum = WlzFreeDomain(obj->domain);
       if((errNum == WLZ_ERR_NONE) && (obj->values.core != NULL)) {
 	if(WlzGreyTableIsTiled(obj->values.core->type) == WLZ_GREY_TAB_TILED) {
@@ -102,13 +101,13 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_3D_DOMAINOBJ:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 02 0x%lx WLZ_3D_DOMAINOBJ 0x%lx, "
-	       "%d 0x%lx %d 0x%lx\n",
-	       (unsigned long )obj, (unsigned long )(obj->domain.i),
-	       (obj->domain.p?obj->domain.p->linkcount: 0),
-	       (unsigned long )(obj->values.core),
-	       (obj->values.core?obj->values.core->linkcount: 0),
-	       (unsigned long )(obj->plist)));
+      	      ("WlzFreeObj 02 %p WLZ_3D_DOMAINOBJ %p, "
+	       "%d %p %d %p\n",
+	       obj, obj->domain.i,
+	       (obj->domain.p? obj->domain.p->linkcount: 0),
+	       obj->values.core,
+	       (obj->values.core? obj->values.core->linkcount: 0),
+	       obj->plist));
       errNum = WlzFreeDomain(obj->domain);
       if((errNum == WLZ_ERR_NONE) && (obj->values.core != NULL)){
 	if(WlzGreyTableIsTiled(obj->values.core->type) == WLZ_GREY_TAB_TILED) {
@@ -128,14 +127,13 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_TRANS_OBJ:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 03 0x%lx WLZ_TRANS_OBJ 0x%lx, "
-	       "%d 0x%lx %d 0x%lx\n",
-	       (unsigned long )obj,
-	       (unsigned long )(obj->domain.t),
+      	      ("WlzFreeObj 03 %p WLZ_TRANS_OBJ %p, "
+	       "%d %p %d %p\n",
+	       obj, obj->domain.t,
 	       ((obj->domain.t)?(obj->domain.t)->linkcount: 0),
-	       (unsigned long )(obj->values.obj),
+	       obj->values.obj,
 	       ((obj->values.obj)?(obj->values.obj)->linkcount: 0),
-	       (unsigned long )(obj->plist)));
+	       obj->plist));
       if( WlzFreeAffineTransform(obj->domain.t) ||
 	  WlzFreeObj(obj->values.obj) ||
 	  WlzFreePropertyList(obj->plist) ||
@@ -146,31 +144,29 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_2D_POLYGON:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 05 0x%lx WLZ_2D_POLYGON 0x%lx\n",
-	       (unsigned long )obj, (unsigned long )(obj->domain.poly)));
+      	      ("WlzFreeObj 05 %p WLZ_2D_POLYGON %p\n",
+	       obj, obj->domain.poly));
       errNum = WlzFreePolyDmn(obj->domain.poly);
       break;
 
     case WLZ_BOUNDLIST:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 06 0x%lx WLZ_BOUNDLIST 0x%lx\n",
-	       (unsigned long )obj, (unsigned long )(obj->domain.b)));
+      	      ("WlzFreeObj 06 %p WLZ_BOUNDLIST %p\n",
+	       obj, obj->domain.b));
       errNum = WlzFreeBoundList(obj->domain.b);
       break;
 
     case WLZ_CONTOUR:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 06 0x%lx WLZ_CONTOUR 0x%lx\n",
-	       (unsigned long )obj, (unsigned long )(obj->domain.ctr)));
+      	      ("WlzFreeObj 06 %p WLZ_CONTOUR %p\n",
+	       obj, obj->domain.ctr));
       errNum = WlzFreeContour(obj->domain.ctr);
       break;
 
     case WLZ_CONV_HULL:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 07 0x%lx WLZ_CONV_HULL 0x%lx 0x%lx\n",
-	       (unsigned long )obj,
-	       (unsigned long )(obj->domain.poly),
-	       (unsigned long)(obj->values.c)));
+      	      ("WlzFreeObj 07 %p WLZ_CONV_HULL %p %p\n",
+	       obj, obj->domain.poly, obj->values.c));
       if( WlzFreePolyDmn(obj->domain.poly) ||
 	  WlzFreeConvHull(obj->values.c) ){
 	errNum = WLZ_ERR_MEM_FREE;
@@ -179,14 +175,13 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_CMESH_2D:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 03 0x%lx WLZ_CMESH_2D 0x%lx, "
-	       "%d 0x%lx %d 0x%lx\n",
-	       (unsigned long )obj,
-	       (unsigned long )(obj->domain.cm2),
-	       ((obj->domain.cm2)?(obj->domain.cm2)->linkcount: 0),
-	       (unsigned long )(obj->values.x),
-	       ((obj->values.x)?(obj->values.x)->linkcount: 0),
-	       (unsigned long )(obj->plist)));
+      	      ("WlzFreeObj 03 %p WLZ_CMESH_2D %p, "
+	       "%d %p %d %p\n",
+	       obj, obj->domain.cm2,
+	       ((obj->domain.cm2)? (obj->domain.cm2)->linkcount: 0),
+	       obj->values.x,
+	       ((obj->values.x)? (obj->values.x)->linkcount: 0),
+	       obj->plist));
       errNum = WlzCMeshFree2D(obj->domain.cm2);
       if((errNum == WLZ_ERR_NONE) && (obj->values.core != NULL))
       {
@@ -203,14 +198,13 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
       break;
     case WLZ_CMESH_2D5:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 03 0x%lx WLZ_CMESH_2D5 0x%lx, "
-	       "%d 0x%lx %d 0x%lx\n",
-	       (unsigned long )obj,
-	       (unsigned long )(obj->domain.cm2d5),
-	       ((obj->domain.cm2d5)?(obj->domain.cm2d5)->linkcount: 0),
-	       (unsigned long )(obj->values.x),
-	       ((obj->values.x)?(obj->values.x)->linkcount: 0),
-	       (unsigned long )(obj->plist)));
+      	      ("WlzFreeObj 03 %p WLZ_CMESH_2D5 %p, "
+	       "%d %p %d %p\n",
+	       obj, obj->domain.cm2d5,
+	       ((obj->domain.cm2d5)? (obj->domain.cm2d5)->linkcount: 0),
+	       obj->values.x,
+	       ((obj->values.x)? (obj->values.x)->linkcount: 0),
+	       obj->plist));
       errNum = WlzCMeshFree2D5(obj->domain.cm2d5);
       if((errNum == WLZ_ERR_NONE) && (obj->values.core != NULL))
       {
@@ -228,14 +222,13 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_CMESH_3D:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 03 0x%lx WLZ_CMESH_3D 0x%lx, "
-	       "%d 0x%lx %d 0x%lx\n",
-	       (unsigned long )obj,
-	       (unsigned long )(obj->domain.cm3),
+      	      ("WlzFreeObj 03 %p WLZ_CMESH_3D %p, "
+	       "%d %p %d %p\n",
+	       obj, obj->domain.cm3,
 	       ((obj->domain.cm3)?(obj->domain.cm3)->linkcount: 0),
-	       (unsigned long )(obj->values.x),
+	       obj->values.x,
 	       ((obj->values.x)?(obj->values.x)->linkcount: 0),
-	       (unsigned long )(obj->plist)));
+	       obj->plist));
       errNum = WlzCMeshFree3D(obj->domain.cm3);
       if((errNum == WLZ_ERR_NONE) && (obj->values.core != NULL))
       {
@@ -253,29 +246,29 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_HISTOGRAM:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 08 0x%lx WLZ_CONV_HULL 0x%lx\n",
-	       (unsigned long )obj, (unsigned long )(obj->domain.hist)));
+      	      ("WlzFreeObj 08 %p WLZ_CONV_HULL %p\n",
+	       obj, obj->domain.hist));
       errNum = WlzFreeDomain(obj->domain);
       break;
 
     case WLZ_RECTANGLE:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 09 0x%lx WLZ_RECTANGLE 0x%lx\n",
-	       (unsigned long )obj, (unsigned long )(obj->domain.r)));
+      	      ("WlzFreeObj 09 %p WLZ_RECTANGLE %p\n",
+	       obj, obj->domain.r));
       errNum = WlzFreeDomain(obj->domain);
       break;
 
     case WLZ_AFFINE_TRANS:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 12 0x%lx WLZ_AFFINE_TRANS\n",
-	       (unsigned long )obj));
+      	      ("WlzFreeObj 12 %p WLZ_AFFINE_TRANS\n",
+	       obj));
       errNum = WlzFreeAffineTransform(obj->domain.t);
       break;
 
     case WLZ_COMPOUND_ARR_1:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 15 0x%lx WLZ_COMPOUND_ARR_1\n",
-	       (unsigned long )ca));
+      	      ("WlzFreeObj 15 %p WLZ_COMPOUND_ARR_1\n",
+	       ca));
       for (i=0; i<ca->n; i++){
 	if( WlzFreeObj(ca->o[i]) != WLZ_ERR_NONE ){
 	  errNum = WLZ_ERR_MEM_FREE;
@@ -285,8 +278,8 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_COMPOUND_ARR_2:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 16 0x%lx WLZ_COMPOUND_ARR_2\n",
-	       (unsigned long )ca));
+      	      ("WlzFreeObj 16 %p WLZ_COMPOUND_ARR_2\n",
+	       ca));
       for (i=0; i<ca->n; i++){
 	if( WlzFreeObj(ca->o[i]) != WLZ_ERR_NONE ){
 	  errNum = WLZ_ERR_MEM_FREE;
@@ -296,21 +289,21 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_PROPERTY_OBJ:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 17 0x%lx WLZ_PROPERTY_OBJ\n",
-	       (unsigned long )obj));
+      	      ("WlzFreeObj 17 %p WLZ_PROPERTY_OBJ\n",
+	       obj));
       errNum = WlzFreePropertyList(obj->plist);
       break;
 
     case WLZ_EMPTY_OBJ:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 18 0x%lx WLZ_EMPTY_OBJ\n",
-	       (unsigned long )obj));
+      	      ("WlzFreeObj 18 %p WLZ_EMPTY_OBJ\n",
+	       obj));
       break;
 
     default:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 18 0x%lx %d\n",
-	       (unsigned long )obj, (int )(obj->type)));
+      	      ("WlzFreeObj 18 %p %d\n",
+	       obj, (int )(obj->type)));
       errNum = WLZ_ERR_OBJECT_TYPE;
       break;
 

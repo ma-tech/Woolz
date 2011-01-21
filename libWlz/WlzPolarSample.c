@@ -138,9 +138,9 @@ WlzObject	*WlzPolarSample(WlzObject *srcObj, WlzIVertex2 org,
   WlzIBox2	box;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzPolarSample FE 0x%lx {%d %d} %g %g %d %d 0x%lx\n",
-	   (unsigned long )srcObj, org.vtX, org.vtY, angleInc, distInc,
-	   nLines, outFlag, (unsigned long )wlzErr));
+	  ("WlzPolarSample FE %p {%d %d} %g %g %d %d %p\n",
+	   srcObj, org.vtX, org.vtY, angleInc, distInc,
+	   nLines, outFlag, wlzErr));
   dstValP.ubp = NULL;
   if(srcObj == NULL)
   {
@@ -217,35 +217,35 @@ WlzObject	*WlzPolarSample(WlzObject *srcObj, WlzIVertex2 org,
 	    switch(vType)
 	    {
 	      case WLZ_GREY_INT:
-		if((dstValP.inp = (int *)AlcMalloc((unsigned long )tI0 *
+		if((dstValP.inp = (int *)AlcMalloc((size_t )tI0 *
 						   sizeof(int))) == NULL)
 		{
 		  errNum = WLZ_ERR_MEM_ALLOC;
 		}
 		break;
 	      case WLZ_GREY_SHORT:
-		if((dstValP.shp = (short *)AlcMalloc((unsigned long )tI0 *
+		if((dstValP.shp = (short *)AlcMalloc((size_t )tI0 *
 						     sizeof(short))) == NULL)
 		{
 		  errNum = WLZ_ERR_MEM_ALLOC;
 		}
 		break;
 	      case WLZ_GREY_UBYTE:
-		if((dstValP.ubp = (WlzUByte *)AlcMalloc((unsigned long )tI0 *
+		if((dstValP.ubp = (WlzUByte *)AlcMalloc((size_t )tI0 *
 						   sizeof(WlzUByte))) == NULL)
 		{
 		  errNum = WLZ_ERR_MEM_ALLOC;
 		}
 		break;
 	      case WLZ_GREY_FLOAT:
-		if((dstValP.flp = (float *)AlcMalloc((unsigned long )tI0 *
+		if((dstValP.flp = (float *)AlcMalloc((size_t )tI0 *
 						     sizeof(float))) == NULL)
 		{
 		  errNum = WLZ_ERR_MEM_ALLOC;
 		}
 		break;
 	      case WLZ_GREY_DOUBLE:
-		if((dstValP.dbp = (double *)AlcMalloc((unsigned long )tI0 *
+		if((dstValP.dbp = (double *)AlcMalloc((size_t )tI0 *
 						      sizeof(double))) == NULL)
 		{
 		  errNum = WLZ_ERR_MEM_ALLOC;
@@ -253,7 +253,7 @@ WlzObject	*WlzPolarSample(WlzObject *srcObj, WlzIVertex2 org,
 		break;
 	      case WLZ_GREY_RGBA:
 		if((dstValP.rgbp = (WlzUInt *)
-		                   AlcMalloc((unsigned long )tI0 *
+		                   AlcMalloc((size_t )tI0 *
 					     sizeof(WlzUInt))) == NULL)
 		{
 		  errNum = WLZ_ERR_MEM_ALLOC;
@@ -346,7 +346,7 @@ WlzObject	*WlzPolarSample(WlzObject *srcObj, WlzIVertex2 org,
     *wlzErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzPolarSample FX 0x%lx\n",
-	   (unsigned long )dstObj));
+	  ("WlzPolarSample FX %p\n",
+	   dstObj));
   return (dstObj);
 }

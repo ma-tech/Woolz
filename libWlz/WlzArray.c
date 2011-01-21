@@ -358,9 +358,8 @@ WlzErrorNum	WlzToArray2D(void ***dstP, WlzObject *srcObj,
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzToArray2D FE 0x%lx  0x%lx {%d %d} {%d %d} %d %d\n",
-	   (unsigned long )dstP, (unsigned long )srcObj,
-	   size.vtX, size.vtY, origin.vtX, origin.vtY,
+  	  ("WlzToArray2D FE %p  %p {%d %d} {%d %d} %d %d\n",
+	   dstP, srcObj, size.vtX, size.vtY, origin.vtX, origin.vtY,
 	   noiseFlag, (int )dstGreyType));
   if(dstP == NULL)
   {
@@ -429,9 +428,8 @@ static WlzErrorNum WlzToArrayBit2D(WlzUByte ***dstP, WlzObject *srcObj,
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-  	  ("WlzToArrayBit2D FE 0x%lx  0x%lx {%d %d} {%d %d}\n",
-	   (unsigned long )dstP, (unsigned long )srcObj,
-	   size.vtX, size.vtY, origin.vtX, origin.vtY));
+  	  ("WlzToArrayBit2D FE %p  %p {%d %d} {%d %d}\n",
+	   dstP, srcObj, size.vtX, size.vtY, origin.vtX, origin.vtY));
 
   if(*dstP == NULL)
   {
@@ -521,9 +519,8 @@ static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-  	  ("WlzToArrayGrey2D FE 0x%lx  0x%lx {%d %d} {%d %d} %d %d\n",
-	   (unsigned long )dstP, (unsigned long )srcObj,
-	   size.vtX, size.vtY, origin.vtX, origin.vtY,
+  	  ("WlzToArrayGrey2D FE %p  %p {%d %d} {%d %d} %d %d\n",
+	   dstP, srcObj, size.vtX, size.vtY, origin.vtX, origin.vtY,
 	   noiseFlag, (int )dstGreyType));
   gValP.inp = NULL;
   cutBox.xMin = origin.vtX;
@@ -563,7 +560,7 @@ static WlzErrorNum WlzToArrayGrey2D(void ***dstP, WlzObject *srcObj,
     {
       if(gValP.inp)
       {
-	if((valPP = (void **)AlcMalloc((unsigned long )(size.vtY *
+	if((valPP = (void **)AlcMalloc((size_t )(size.vtY *
 				       sizeof(void *)))) == NULL)
 	{
 	  errNum = WLZ_ERR_MEM_ALLOC;
@@ -892,8 +889,8 @@ WlzErrorNum	WlzToArray3D(void ****dstP, WlzObject *srcObj,
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzToArray3D FE 0x%lx  0x%lx {%d %d %d} {%d %d %d} %d %d\n",
-	   (unsigned long )dstP, (unsigned long )srcObj,
+  	  ("WlzToArray3D FE %p  %p {%d %d %d} {%d %d %d} %d %d\n",
+	   dstP, srcObj,
 	   size.vtX, size.vtY, size.vtZ, origin.vtX, origin.vtY, origin.vtZ,
 	   noiseFlag, (int )dstGreyType));
   if(dstP == NULL)
@@ -969,8 +966,8 @@ static WlzErrorNum WlzToArrayBit3D(WlzUByte ****dstP, WlzObject *srcObj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-  	  ("WlzToArrayBit3D FE 0x%lx  0x%lx {%d %d %d} {%d %d %d}\n",
-	   (unsigned long )dstP, (unsigned long )srcObj,
+  	  ("WlzToArrayBit3D FE %p  %p {%d %d %d} {%d %d %d}\n",
+	   dstP, srcObj,
 	   size.vtX, size.vtY, size.vtZ, origin.vtX, origin.vtY, origin.vtZ));
 
   if((srcDom = srcObj->domain).core == NULL)
@@ -1069,8 +1066,8 @@ static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-  	  ("WlzToArrayGrey3D FE 0x%lx  0x%lx {%d %d %d} {%d %d %d} %d %d\n",
-	   (unsigned long )dstP, (unsigned long )srcObj,
+  	  ("WlzToArrayGrey3D FE %p  %p {%d %d %d} {%d %d %d} %d %d\n",
+	   dstP, srcObj,
 	   size.vtX, size.vtY, size.vtZ, origin.vtX, origin.vtY, origin.vtZ,
 	   noiseFlag, (int )dstGreyType));
   gValP.inp = NULL;
@@ -1110,9 +1107,9 @@ static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
   {
     if(gValP.inp)
     {
-      if(((valPP = (void **)AlcMalloc((unsigned long )(size.vtZ * size.vtY *
+      if(((valPP = (void **)AlcMalloc((size_t )(size.vtZ * size.vtY *
 				      sizeof(void *)))) == NULL) ||
-	 ((valPPP = (void ***)AlcMalloc((unsigned long )(size.vtZ *
+	 ((valPPP = (void ***)AlcMalloc((size_t )(size.vtZ *
 					sizeof(void **)))) == NULL))
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
@@ -1472,13 +1469,13 @@ WlzObject	*WlzFromArray2D(void **arrayP,
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzFromArray2D FE 0x%lx  {%d %d} {%d %d} "
-	   "%d %d %g %g %d %d 0x%lx\n",
-	   (unsigned long )arrayP,
+  	  ("WlzFromArray2D FE %p  {%d %d} {%d %d} "
+	   "%d %d %g %g %d %d %p\n",
+	   arrayP,
 	   arraySize.vtX, arraySize.vtY, arrayOrigin.vtX, arrayOrigin.vtY,
 	   (int )dstGreyType, (int )srcGreyType,
 	   valOffset, valScale,
-	   clampFlag, noCopyFlag, (unsigned long )dstErr));
+	   clampFlag, noCopyFlag, dstErr));
   if((arrayP == NULL) || (*arrayP == NULL) ||
      (arraySize.vtX <= 0) || (arraySize.vtY <= 0))
   {
@@ -1515,8 +1512,8 @@ WlzObject	*WlzFromArray2D(void **arrayP,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-          ("WlzFromArray2D FX 0x%lx\n",
-	   (unsigned long )dstObj));
+          ("WlzFromArray2D FX %p\n",
+	   dstObj));
   return(dstObj);
 }
 
@@ -1546,10 +1543,10 @@ static WlzObject *WlzFromArrayBit2D(WlzUByte **arrayP,
   		ivPoolTune = 32;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-          ("0x%lx {%d %d} {%d %d} 0x%lx\n",
-  	   (unsigned long )arrayP,
+          ("%p {%d %d} {%d %d} %p\n",
+  	   arrayP,
 	   arraySize.vtX, arraySize.vtY, arrayOrigin.vtX, arrayOrigin.vtY,
-	   (unsigned long )dstErr));
+	   dstErr));
   dstDom.core = NULL;
   dstDom.core = NULL;
   dstVal.core = NULL;
@@ -1611,8 +1608,8 @@ static WlzObject *WlzFromArrayBit2D(WlzUByte **arrayP,
     (void )WlzFreeIntervalDomain(dstDom.i);
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-  	  ("WlzFromArrayBit2D FX 0x%lx\n",
-	  (unsigned long )dstObj));
+  	  ("WlzFromArrayBit2D FX %p\n",
+	  dstObj));
   return(dstObj);
 }
 
@@ -1654,8 +1651,8 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
 				     WlzErrorNum *dstErr)
 {
   int		txFlag = 0;
-  unsigned long tUL0;
   double	*bufP = NULL;
+  size_t	tSz;
   WlzGreyP	dstValP,
   		srcValP;
   WlzPixelV	dstBkgPix;
@@ -1663,13 +1660,12 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
   WlzObject	*dstObj = NULL;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-  	  ("WlzFromArrayGrey2D FE 0x%lx  {%d %d} {%d %d} "
-	   "%d %d %g %g %d %d 0x%lx\n",
-	   (unsigned long )arrayP,
+  	  ("WlzFromArrayGrey2D FE %p  {%d %d} {%d %d} "
+	   "%d %d %g %g %d %d %p\n",
+	   arrayP,
 	   arraySize.vtX, arraySize.vtY, arrayOrigin.vtX, arrayOrigin.vtY,
-	   (int )dstGreyType, (int )srcGreyType,
-	   valOffset, valScale,
-	   clampFlag, noCopyFlag, (unsigned long )dstErr));
+	   (int )dstGreyType, (int )srcGreyType, valOffset, valScale,
+	   clampFlag, noCopyFlag, dstErr));
   dstValP.inp = NULL;
   dstBkgPix.type = dstGreyType;
   (void )memset(&(dstBkgPix.v), 0, sizeof(WlzGreyV));
@@ -1712,47 +1708,43 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
     }
     else
     {
-      tUL0 = (unsigned long)(arraySize.vtX * arraySize.vtY);
+      tSz = (size_t)(arraySize.vtX) * (size_t )(arraySize.vtY);
       switch(dstGreyType)
       {
 	case WLZ_GREY_INT:
-	  if((dstValP.inp = (int *)AlcMalloc(tUL0 *
-					     sizeof(int))) == NULL)
+	  if((dstValP.inp = (int *)AlcMalloc(tSz * sizeof(int))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
 	  break;
 	case WLZ_GREY_SHORT:
-	  if((dstValP.shp = (short *)AlcMalloc(tUL0 *
-					       sizeof(short))) == NULL)
+	  if((dstValP.shp = (short *)AlcMalloc(tSz * sizeof(short))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
 	  break;
 	case WLZ_GREY_UBYTE:
-	  if((dstValP.ubp = (WlzUByte *)AlcMalloc(tUL0 *
-					       sizeof(WlzUByte))) == NULL)
+	  if((dstValP.ubp = (WlzUByte *)AlcMalloc(tSz *
+					          sizeof(WlzUByte))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
 	  break;
 	case WLZ_GREY_FLOAT:
-	  if((dstValP.flp = (float *)AlcMalloc(tUL0 *
-					       sizeof(float))) == NULL)
+	  if((dstValP.flp = (float *)AlcMalloc(tSz * sizeof(float))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
 	  break;
 	case WLZ_GREY_DOUBLE:
-	  if((dstValP.dbp = (double *)AlcMalloc(tUL0 *
-						sizeof(double))) == NULL)
+	  if((dstValP.dbp = (double *)AlcMalloc(tSz * sizeof(double))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
 	  break;
 	case WLZ_GREY_RGBA:
-	  if((dstValP.rgbp = (WlzUInt *)AlcMalloc(tUL0 *
-						sizeof(WlzUInt))) == NULL)
+	  if((dstValP.rgbp = (WlzUInt *)AlcMalloc(tSz *
+						  sizeof(WlzUInt))) == NULL)
 	  {
 	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
@@ -1786,7 +1778,7 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
 	     (valScale > (1.0 + DBL_EPSILON));
     if(txFlag || clampFlag)
     {
-      if((bufP = (double *)AlcMalloc((unsigned long )(arraySize.vtX) *
+      if((bufP = (double *)AlcMalloc((size_t )(arraySize.vtX) *
       				     sizeof(double))) == NULL)
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
@@ -1828,8 +1820,8 @@ static WlzObject *WlzFromArrayGrey2D(void **arrayP,
     dstObj = NULL;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-          ("WlzFromArrayGrey2D FX 0x%lx\n",
-	   (unsigned long )dstObj));
+          ("WlzFromArrayGrey2D FX %p\n",
+	   dstObj));
   return(dstObj);
 }
 
@@ -1992,14 +1984,13 @@ WlzObject	*WlzFromArray3D(void ***arrayP,
   WlzObject	*dstObj = NULL;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzFromArray3D FE 0x%lx  {%d %d %d} {%d %d %d} "
-	   "%d %d %g %g %d %d 0x%lx\n",
-	   (unsigned long )arrayP,
-	   arraySize.vtX, arraySize.vtY, arraySize.vtZ,
+  	  ("WlzFromArray3D FE %p  {%d %d %d} {%d %d %d} "
+	   "%d %d %g %g %d %d %p\n",
+	   arrayP, arraySize.vtX, arraySize.vtY, arraySize.vtZ,
 	   arrayOrigin.vtX, arrayOrigin.vtY, arrayOrigin.vtZ,
 	   (int )dstGreyType, (int )srcGreyType,
 	   valOffset, valScale,
-	   clampFlag, noCopyFlag, (unsigned long )dstErr));
+	   clampFlag, noCopyFlag, dstErr));
 
   if((arrayP == NULL) || (*arrayP == NULL) || (**arrayP == NULL) ||
      (arraySize.vtX <= 0) || (arraySize.vtY <= 0) || (arraySize.vtZ <= 0))
@@ -2033,8 +2024,8 @@ WlzObject	*WlzFromArray3D(void ***arrayP,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-          ("WlzFromArray3D FX 0x%lx\n",
-	   (unsigned long )dstObj));
+          ("WlzFromArray3D FX %p\n",
+	   dstObj));
   return(dstObj);
 }
 
@@ -2065,11 +2056,10 @@ static WlzObject *WlzFromArrayBit3D(WlzUByte ***arrayP,
   		*dstObj = NULL;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-  	  ("WlzFromArrayBit3D FE 0x%lx  {%d %d %d} {%d %d %d} 0x%lx\n",
-	   (unsigned long )arrayP,
-	   arraySize.vtX, arraySize.vtY, arraySize.vtZ,
+  	  ("WlzFromArrayBit3D FE %p  {%d %d %d} {%d %d %d} %p\n",
+	   arrayP, arraySize.vtX, arraySize.vtY, arraySize.vtZ,
 	   arrayOrigin.vtX, arrayOrigin.vtY, arrayOrigin.vtZ,
-	   (unsigned long )dstErr));
+	   dstErr));
   dstDom.core = NULL;
   dstVal.core = NULL;
   dstDom.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
@@ -2136,8 +2126,8 @@ static WlzObject *WlzFromArrayBit3D(WlzUByte ***arrayP,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-          ("WlzFromArrayBit3D FX 0x%lx\n",
-	   (unsigned long )dstObj));
+          ("WlzFromArrayBit3D FX %p\n",
+	   dstObj));
   return(dstObj);
 }
 
@@ -2197,14 +2187,13 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
   WlzObject	*dstObj = NULL;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-  	  ("WlzFromArrayGrey3D FE 0x%lx  {%d %d %d} {%d %d %d} "
-	   "%d %d %g %g %d %d 0x%lx\n",
-	   (unsigned long )arrayP,
+  	  ("WlzFromArrayGrey3D FE %p  {%d %d %d} {%d %d %d} "
+	   "%d %d %g %g %d %d %p\n",
+	   arrayP,
 	   arraySize.vtX, arraySize.vtY, arraySize.vtZ,
 	   arrayOrigin.vtX, arrayOrigin.vtY, arrayOrigin.vtZ,
 	   (int )dstGreyType, (int )srcGreyType,
-	   valOffset, valScale,
-	   clampFlag, noCopyFlag, (unsigned long )dstErr));
+	   valOffset, valScale, clampFlag, noCopyFlag, dstErr));
   dstDom.core = NULL;
   dstValues.core = NULL;
   dstValP.inp = NULL;
@@ -2306,8 +2295,8 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 	     (valScale > (1.0 + DBL_EPSILON));
     if(txFlag || clampFlag)
     {
-      if((bufP = (double *)AlcMalloc((unsigned long )(arraySize.vtX *
-      				                     sizeof(double)))) == NULL)
+      if((bufP = (double *)AlcMalloc((size_t )(arraySize.vtX) *
+					       sizeof(double))) == NULL)
       {
         errNum = WLZ_ERR_MEM_ALLOC;
       }
@@ -2451,8 +2440,8 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-          ("WlzFromArrayGrey3D FX 0x%lx\n",
-	   (unsigned long )dstObj));
+          ("WlzFromArrayGrey3D FX %p\n",
+	   dstObj));
   return(dstObj);
 }
 
@@ -2496,13 +2485,10 @@ int		WlzArrayStats3D(void ***arrayP,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzArrayStats3D FE 0x%lx {%d %d %d} "
-	   "0x%lx 0x%lx 0x%lx 0x%lx 0x%lx 0x%lx\n",
-	   (unsigned long )arrayP,
-	   arraySize.vtX, arraySize.vtY, arraySize.vtZ,
-	   (unsigned long )dstMin, (unsigned long )dstMax,
-	   (unsigned long )dstSum, (unsigned long )dstSumSq,
-	   (unsigned long )dstMean, (unsigned long )dstStdDev));
+	  ("WlzArrayStats3D FE %p {%d %d %d} "
+	   "%p %p %p %p %p %p\n",
+	   arrayP, arraySize.vtX, arraySize.vtY, arraySize.vtZ,
+	   dstMin, dstMax, dstSum, dstSumSq, dstMean, dstStdDev));
   if((arrayP == NULL) ||
      (arraySize.vtX < 0) || (arraySize.vtY < 0) || (arraySize.vtZ < 0) ||
      ((arraySize.vtX == 0) && (arraySize.vtY == 0) && (arraySize.vtZ == 0)))
@@ -2733,12 +2719,10 @@ int		WlzArrayStats2D(void **arrayP,
   WlzIVertex3	arraySize3D;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzArrayStats2D FE 0x%lx {%d %d} "
-	   "0x%lx 0x%lx 0x%lx 0x%lx 0x%lx 0x%lx\n",
-	   (unsigned long )arrayP, arraySize.vtX, arraySize.vtY,
-	   (unsigned long )dstMin, (unsigned long )dstMax,
-	   (unsigned long )dstSum, (unsigned long )dstSumSq,
-	   (unsigned long )dstMean, (unsigned long )dstStdDev));
+	  ("WlzArrayStats2D FE %p {%d %d} "
+	   "%p %p %p %p %p %p\n",
+	   arrayP, arraySize.vtX, arraySize.vtY,
+	   dstMin, dstMax, dstSum, dstSumSq, dstMean, dstStdDev));
   arraySize3D.vtX = arraySize.vtX;
   arraySize3D.vtY = arraySize.vtY;
   arraySize3D.vtZ = 1;
@@ -2782,12 +2766,10 @@ int		WlzArrayStats1D(void *arrayP,
   WlzIVertex2	arraySize2D;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzArrayStats1D FE 0x%lx %d "
-	   "0x%lx 0x%lx 0x%lx 0x%lx 0x%lx 0x%lx\n",
-	   (unsigned long )arrayP, arraySize,
-	   (unsigned long )dstMin, (unsigned long )dstMax,
-	   (unsigned long )dstSum, (unsigned long )dstSumSq,
-	   (unsigned long )dstMean, (unsigned long )dstStdDev));
+	  ("WlzArrayStats1D FE %p %d "
+	   "%p %p %p %p %p %p\n",
+	   arrayP, arraySize, dstMin, dstMax, dstSum, dstSumSq,
+	   dstMean, dstStdDev));
   arraySize2D.vtX = arraySize;
   arraySize2D.vtY = 1;
   arrayCount = WlzArrayStats2D(&arrayP, arraySize2D, greyType,

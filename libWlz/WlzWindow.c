@@ -105,9 +105,8 @@ static void	WlzWindowApplyFn(WlzObject *obj, WlzIVertex2 center,
 		distP;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
-	  ("WlzWindowApplyFn FE 0x%lx {%d %d} {%d %d} %d\n",
-	   (unsigned long )obj, center.vtX, center.vtY, radius.vtX, radius.vtY,
-	   (int )winFn));
+	  ("WlzWindowApplyFn FE %p {%d %d} {%d %d} %d\n",
+	   obj, center.vtX, center.vtY, radius.vtX, radius.vtY, (int )winFn));
   if((winFn == WLZ_WINDOWFN_BLACKMAN) ||
      (winFn == WLZ_WINDOWFN_HAMMING) ||
      (winFn == WLZ_WINDOWFN_HANNING) ||
@@ -378,9 +377,8 @@ WlzObject	*WlzWindow(WlzObject *srcObj, WlzWindowFnType winFn,
   WlzIBox2	cutBox;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzWindow FE 0x%lx %d {%d %d} {%d %d} 0x%lx\n",
-	   (unsigned long )srcObj, winFn, org.vtX, org.vtY, rad.vtX, rad.vtY,
-	   (unsigned long )dstErr));
+	  ("WlzWindow FE %p %d {%d %d} {%d %d} %p\n",
+	   srcObj, winFn, org.vtX, org.vtY, rad.vtX, rad.vtY, dstErr));
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -444,8 +442,8 @@ WlzObject	*WlzWindow(WlzObject *srcObj, WlzWindowFnType winFn,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzWindow FX 0x%lx\n",
-	   (unsigned long )dstObj));
+	  ("WlzWindow FX %p\n",
+	   dstObj));
   return(dstObj);
 }
 

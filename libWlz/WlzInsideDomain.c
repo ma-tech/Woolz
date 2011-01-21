@@ -159,8 +159,8 @@ int		WlzInsideDomain(WlzObject *obj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-  	  ("WlzInsideDomain FE 0x%lx %g %g %g 0x%lx\n",
-	   (unsigned long )obj, plane, line, kol, (unsigned long )dstErr));
+  	  ("WlzInsideDomain FE %p %g %g %g %p\n",
+	   obj, plane, line, kol, dstErr));
   if(obj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;

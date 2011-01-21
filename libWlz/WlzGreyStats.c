@@ -63,7 +63,7 @@ size_t		WlzGreySize(WlzGreyType gType)
   switch(gType)
   {
     case WLZ_GREY_LONG:
-      sz = sizeof(long);
+      sz = sizeof(WlzLong);
       break;
     case WLZ_GREY_INT:
       sz = sizeof(int);
@@ -247,14 +247,11 @@ int		WlzGreyStats(WlzObject *srcObj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
     
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-          ("WlzGreyStats FE 0x%lx "
-	  "0x%lx 0x%lx 0x%lx 0x%lx 0x%lx 0x%lx 0x%lx 0x%lx\n",
-	  (unsigned long )srcObj,
-	  (unsigned long )dstGType,
-	  (unsigned long )dstMin, (unsigned long )dstMax,
-	  (unsigned long )dstSum, (unsigned long )dstSumSq,
-	  (unsigned long )dstMean, (unsigned long )dstStdDev,
-	  (unsigned long )dstErr));
+          ("WlzGreyStats FE %p "
+	  "%p %p %p %p %p %p %p %p\n",
+	  srcObj,
+	  dstGType, dstMin, dstMax, dstSum, dstSumSq, dstMean, dstStdDev,
+	  dstErr));
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;

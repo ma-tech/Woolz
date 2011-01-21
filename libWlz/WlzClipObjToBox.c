@@ -75,10 +75,9 @@ WlzObject	*WlzClipObjToBox2D(WlzObject *srcObj, WlzIBox2 clipBox,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzClipObjToBox2D FE 0x%lx {%d %d %d %d} 0x%lx\n",
-	   (unsigned long )srcObj,
-	   clipBox.xMin, clipBox.yMin, clipBox.xMax, clipBox.yMax,
-	   (unsigned long )dstErrNum));
+	  ("WlzClipObjToBox2D FE %p {%d %d %d %d} %p\n",
+	   srcObj, clipBox.xMin, clipBox.yMin, clipBox.xMax, clipBox.yMax,
+	   dstErrNum));
   dstDom.core = NULL;
   if(srcObj == NULL)
   {
@@ -127,7 +126,7 @@ WlzObject	*WlzClipObjToBox2D(WlzObject *srcObj, WlzIBox2 clipBox,
 		  ++itvLn;
 		}
 		if(((dstItv0 = (WlzInterval *)AlcMalloc(sizeof(WlzInterval) *
-					 (unsigned long )itvCount)) != NULL) &&
+					 (size_t )itvCount)) != NULL) &&
 		   ((dstDom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
 						      clipBox.yMin,
 						      clipBox.yMax,
@@ -227,8 +226,8 @@ WlzObject	*WlzClipObjToBox2D(WlzObject *srcObj, WlzIBox2 clipBox,
 	  ("WlzClipObjToBox2D 03 %d\n",
 	   (int )errNum));
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzClipObjToBox2D FX 0x%lx\n",
-	   (unsigned long )dstObj));
+  	  ("WlzClipObjToBox2D FX %p\n",
+	   dstObj));
   return(dstObj);
 }
 
@@ -260,11 +259,9 @@ WlzObject	*WlzClipObjToBox3D(WlzObject *srcObj, WlzIBox3 clipBox,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzClipObjToBox3D FE 0x%lx {%d %d %d %d %d %d} 0x%lx\n",
-	   (unsigned long )srcObj,
-	   clipBox.xMin, clipBox.yMin, clipBox.xMax, clipBox.yMax,
-	   clipBox.zMin, clipBox.zMax,
-	   (unsigned long )dstErrNum));
+	  ("WlzClipObjToBox3D FE %p {%d %d %d %d %d %d} %p\n",
+	   srcObj, clipBox.xMin, clipBox.yMin, clipBox.xMax, clipBox.yMax,
+	   clipBox.zMin, clipBox.zMax, dstErrNum));
   dstDom.core = NULL;
   dstValues.core = NULL;
   if(srcObj == NULL)
@@ -458,7 +455,7 @@ WlzObject	*WlzClipObjToBox3D(WlzObject *srcObj, WlzIBox3 clipBox,
       ("WlzClipObjToBox3D 03 %d\n",
        (int )errNum));
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-      ("WlzClipObjToBox3D FX 0x%lx\n",
-       (unsigned long )dstObj));
+      ("WlzClipObjToBox3D FX %p\n",
+       dstObj));
   return(dstObj);
 }

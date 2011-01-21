@@ -259,8 +259,8 @@ WlzObject *WlzObjToBoundary(
     else {
       bi->rb = &uhole;
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-	      ("%s - uhole address planted 0x%lx\n",
-	       procStr, (unsigned long) (bi->rb)));
+	      ("%s - uhole address planted %p\n",
+	       procStr, bi->rb));
       bitop = bi + icount + 1;
     }
   }
@@ -672,7 +672,7 @@ static int bnd_link(WlzBoundList *bl,
   WlzBoundList *nbr;
 
   WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-	  ("Bnd_link entry bp 0x%lx bp->type %s bl->type %s\n",
+	  ("Bnd_link entry bp %p bp->type %s bl->type %s\n",
 	   bp,
 	   (bp->type == WLZ_BOUNDLIST_HOLE)?"HOLE":"PIECE",
 	   (bl->type == WLZ_BOUNDLIST_HOLE)?"HOLE":"PIECE"));
@@ -689,7 +689,7 @@ static int bnd_link(WlzBoundList *bl,
   }
   else {
     WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-	    ("Bnd_link down not NULL (0x%lx)\n",bp->down));
+	    ("Bnd_link down not NULL (%p)\n", bp->down));
 
     nbr = bp->down;
     while (nbr->next != NULL){

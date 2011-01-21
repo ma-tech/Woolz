@@ -233,9 +233,8 @@ WlzErrorNum	WlzCompThreshold(double *dstThrVal, WlzObject *histObj,
 		smMax = 32.0;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzCompThreshold FE 0x%lx 0x%lx %d %g\n",
-	   (unsigned long )dstThrVal, (unsigned long )histObj,
-	   (int )method, extraFrac));
+	  ("WlzCompThreshold FE %p %p %d %g\n",
+	   dstThrVal, histObj, (int )method, extraFrac));
   if(histObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;

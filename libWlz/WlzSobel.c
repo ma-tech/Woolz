@@ -54,10 +54,10 @@ static char _WlzSobel_c[] = "MRC HGU $Id$";
 * 					non-zero.
 * \param	vFlag			Apply vertical edge kernel if
 * 					non-zero.
-* \param	wlzErr			Destination error pointer, may be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject	*WlzSobel(WlzObject *srcObj, int hFlag, int vFlag,
-			  WlzErrorNum *wlzErr)
+			  WlzErrorNum *dstErr)
 {
   WlzObject	*dstObj = NULL,
   		*objH = NULL,
@@ -91,8 +91,8 @@ WlzObject	*WlzSobel(WlzObject *srcObj, int hFlag, int vFlag,
   WlzConvolution sConv;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzSobel FE 0x%lx %d %d 0x%lx\n",
-	   (unsigned long )srcObj, hFlag, vFlag, (unsigned long)wlzErr));
+	  ("WlzSobel FE %p %d %d %p\n",
+	   srcObj, hFlag, vFlag, dstErr));
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -182,12 +182,12 @@ WlzObject	*WlzSobel(WlzObject *srcObj, int hFlag, int vFlag,
       (void )WlzFreeObj(objV);
     }
   }
-  if(wlzErr)
+  if(dstErr)
   {
-    *wlzErr = errNum;
+    *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzSobel FX 0x%lx\n",
-	   (unsigned long )dstObj));
+	  ("WlzSobel FX %p\n",
+	   dstObj));
   return(dstObj);
 }

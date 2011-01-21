@@ -1110,6 +1110,16 @@ static WlzErrorNum WlzWriteProperty(FILE *fP, WlzProperty property)
         errNum = WlzWritePixelV(fP, &(property.greyV->value), 1);
       }
       break;
+    case WLZ_PROPERTY_TEXT:
+      if(putc((unsigned int) WLZ_PROPERTY_TEXT, fP) == EOF)
+      {
+        errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+      else if((errNum = WlzWriteStr(fP, property.text->name)) == WLZ_ERR_NONE)
+      {
+        errNum = WlzWriteStr(fP, property.text->text);
+      }
+      break;
     default:
       errNum = WLZ_ERR_PROPERTY_TYPE;
       break;
@@ -3250,7 +3260,7 @@ static WlzErrorNum WlzWriteTiledValueTable(FILE *fP, WlzObject *obj,
   if(errNum == WLZ_ERR_NONE)
   {
     long	blks;
-    long long   off[2];
+    WlzLong     off[2];
 
     tMrk = ftell(fP) + (2 * sizeof(unsigned int ));
     blks = (tMrk + tVal->tileSz - 1) / tVal->tileSz;
@@ -3326,14 +3336,14 @@ static WlzErrorNum WlzWriteTiledValueTable(FILE *fP, WlzObject *obj,
     (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->nIdx = %d, %d, %d\n",
                    tVal->nIdx[0], tVal->nIdx[1],
 		   (tVal->dim == 2)? 0: tVal->nIdx[2]);
-    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->indices = 0x%lx\n",
-                   (long )(tVal->indices));
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->indices = %p\n",
+                   tVal->indices);
     (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->fd = %d\n",
                    tVal->fd);
     (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->tileOffset = %ld\n",
                    tVal->tileOffset);
-    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->tiles.v = 0x%lx\n",
-                   (long )(tVal->tiles.v));
+    (void )fprintf(stderr, "WlzWriteTiledValueTable() tVal->tiles.v = %p\n",
+                   tVal->tiles.v);
     (void )fprintf(stderr, "WlzWriteTiledValueTable() tMrk = %ld\n",
                    tMrk);
     (void )fprintf(stderr, "WlzWriteTiledValueTable() errno = %s\n",

@@ -4096,8 +4096,7 @@ WlzErrorNum	WlzLBTTestOutputNodesTxt(FILE *fP, WlzDomain dom)
       case WLZ_LBTDOMAIN_2D:
 	(void )fprintf(fP, "type = %d\n", (int )(dom.l2->type));
 	(void )fprintf(fP, "linkcount = %d\n", dom.l2->linkcount);
-	(void )fprintf(fP, "freeptr = 0x%lx\n",
-	               (unsigned long )(dom.l2->freeptr));
+	(void )fprintf(fP, "freeptr = %p\n", dom.l2->freeptr);
 	(void )fprintf(fP, "line1 %d\n", dom.l2->line1);
 	(void )fprintf(fP, "lastln %d\n", dom.l2->lastln);
 	(void )fprintf(fP, "kol1 %d\n", dom.l2->kol1);
@@ -4129,8 +4128,7 @@ WlzErrorNum	WlzLBTTestOutputNodesTxt(FILE *fP, WlzDomain dom)
       case WLZ_LBTDOMAIN_3D:
 	(void )fprintf(fP, "type = %d\n", (int )(dom.l3->type));
 	(void )fprintf(fP, "linkcount = %d\n", dom.l3->linkcount);
-	(void )fprintf(fP, "freeptr = 0x%lx\n",
-	               (unsigned long )(dom.l3->freeptr));
+	(void )fprintf(fP, "freeptr = %pn", dom.l3->freeptr);
 	(void )fprintf(fP, "plane1 %d\n", dom.l3->plane1);
 	(void )fprintf(fP, "lastpl %d\n", dom.l3->lastpl);
 	(void )fprintf(fP, "line1 %d\n", dom.l3->line1);

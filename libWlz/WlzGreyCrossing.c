@@ -180,9 +180,8 @@ WlzObject 	*WlzGreyCrossing(WlzObject *inObj, int newObjFlag,
   WlzGreyType	gValType;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzGreyCrossing FE 0x%lx %d %d 0x%lx\n",
-	   (unsigned long )inObj, newObjFlag, cVal,
-	   (unsigned long )dstErr));
+  	  ("WlzGreyCrossing FE %p %d %d %p\n",
+	   inObj, newObjFlag, cVal, dstErr));
   if(inObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -243,7 +242,7 @@ WlzObject 	*WlzGreyCrossing(WlzObject *inObj, int newObjFlag,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzGreyCrossing FX 0x%lx\n",
-	   (unsigned long )outObj));
+  	  ("WlzGreyCrossing FX %p\n",
+	   outObj));
   return(outObj);
 }

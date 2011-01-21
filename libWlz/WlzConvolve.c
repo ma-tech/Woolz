@@ -68,8 +68,8 @@ int 		WlzConvolveSeqParFn(WlzSeqParWSpace *spWSpace,
 		convPixVal = 0;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_3),
-  	  ("WlzConvolveSeqParFn FE 0x%lx 0x%lx\n",
-	   (unsigned long )spWSpace, (unsigned long )spData));
+  	  ("WlzConvolveSeqParFn FE %p %p\n",
+	   spWSpace, spData));
   if(spWSpace && ((conv = (WlzConvolution *)spData) != NULL) && 
       conv->divscale)
   {
@@ -126,9 +126,8 @@ WlzObject 	*WlzConvolveObj(WlzObject *inObj, WlzConvolution *conv,
   WlzPixelV	bkgVal;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzConvolveObj FE 0x%lx 0x%lx %d\n",
-	   (unsigned long )inObj, (unsigned long )conv,
-	   newObjFlag));
+  	  ("WlzConvolveObj FE %p %p %d\n",
+	   inObj, conv, newObjFlag));
   if((inObj == NULL) || (conv == NULL))
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -187,8 +186,8 @@ WlzObject 	*WlzConvolveObj(WlzObject *inObj, WlzConvolution *conv,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzConvolveObj FX 0x%lx\n",
-	   (unsigned long )outObj));
+  	  ("WlzConvolveObj FX %p\n",
+	   outObj));
   return(outObj);
 }
 

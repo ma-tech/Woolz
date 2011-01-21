@@ -210,8 +210,8 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_2),
-	  ("WlzHistogramCompute2D FE 0x%lx 0x%lx\n",
-	   (unsigned long )histDom, (unsigned long )srcObj));
+	  ("WlzHistogramCompute2D FE %p %p\n",
+	   histDom, srcObj));
   originI = (int )floor(histDom->origin + DBL_EPSILON);
   unityBinSize = (histDom->binSize >= (1.0 - DBL_EPSILON)) &&
                  (histDom->binSize <= (1.0 + DBL_EPSILON));
@@ -380,8 +380,8 @@ static void	WlzHistogramReBinUbyte(WlzHistogramDomain *histDom,
   int		oldBins[256];
 
   WLZ_DBG((WLZ_DBG_LVL_2),
-	  ("WlzHistogramReBinUbyte FE 0x%lx %d %g %g\n",
-	   (unsigned long )histDom, nBins, origin, binSize));
+	  ("WlzHistogramReBinUbyte FE %p %d %g %g\n",
+	   histDom, nBins, origin, binSize));
   if((nBins != histDom->nBins) ||
      ((tD0 = (origin - histDom->origin)) > DBL_EPSILON) ||
      (tD0 < DBL_EPSILON) ||
@@ -622,9 +622,8 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
   		greyMaxV;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramObj FE 0x%lx %d %g %g 0x%lx\n",
-	   (unsigned long )srcObj, nBins, binOrigin, binSize,
-	   (unsigned long )dstErrNum));
+	  ("WlzHistogramObj FE %p %d %g %g %p\n",
+	   srcObj, nBins, binOrigin, binSize, dstErrNum));
   dummyDom.core = NULL;
   dummyValues.core = NULL;
   if(nBins < 0)
@@ -857,8 +856,8 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 	  ("WlzHistogramObj 01 %d\n",
 	   (int )errNum));
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzHistogramObj FX 0x%lx\n",
-	   (unsigned long )histObj));
+	  ("WlzHistogramObj FX %p\n",
+	   histObj));
   return(histObj);
 }
 
@@ -883,9 +882,8 @@ WlzObject	*WlzHistogramCopy(WlzObject *srcHistObj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramCopy FE 0x%lx %d 0x%lx\n",
-	   (unsigned long )srcHistObj, (int )dstType,
-	   (unsigned long )dstErrNum));
+	  ("WlzHistogramCopy FE %p %d %p\n",
+	   srcHistObj, (int )dstType, dstErrNum));
   if((errNum = WlzHistogramCheckHistObj(srcHistObj)) == WLZ_ERR_NONE)
   {
     srcHistDom = srcHistObj->domain.hist;
@@ -913,8 +911,8 @@ WlzObject	*WlzHistogramCopy(WlzObject *srcHistObj,
 	  ("WlzHistogramCopy 01 %d\n",
 	   (int )errNum));
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzHistogramCopy FX %d\n",
-	   (unsigned long )dstHistObj));
+	  ("WlzHistogramCopy FX %p\n",
+	   dstHistObj));
   return(dstHistObj);
 }
 
@@ -956,9 +954,9 @@ WlzObject	*WlzHistogramRebin(WlzObject *srcHistObj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramRebin FE 0x%lx %d %d %d %g %g 0x%lx\n",
-	   (unsigned long )srcHistObj, (int )dstType, dstMaxBins, dstNBins,
-	   dstOrigin, dstBinSize, (unsigned long )dstErrNum));
+	  ("WlzHistogramRebin FE %p %d %d %d %g %g %p\n",
+	   srcHistObj, (int )dstType, dstMaxBins, dstNBins,
+	   dstOrigin, dstBinSize, dstErrNum));
   if((errNum = WlzHistogramCheckHistObj(srcHistObj)) == WLZ_ERR_NONE)
   {
     srcHistDom = srcHistObj->domain.hist;
@@ -1031,8 +1029,8 @@ WlzObject	*WlzHistogramRebin(WlzObject *srcHistObj,
 	  ("WlzHistogramRebin 01 %d\n",
 	   (int )errNum));
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzHistogramRebin FX %d\n",
-	   (unsigned long )dstHistObj));
+	  ("WlzHistogramRebin FX %p\n",
+	   dstHistObj));
   return(dstHistObj);
 }
 
@@ -1053,8 +1051,8 @@ WlzErrorNum     WlzHistogramRsvFilter(WlzObject *histObj, WlzRsvFilter *flt)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramRsvFilter FE 0x%lx 0x%lx\n",
-	   (unsigned long )histObj, (unsigned long )flt));
+	  ("WlzHistogramRsvFilter FE %p %p\n",
+	   histObj, flt));
   if(flt == NULL)
   {
     errNum = WLZ_ERR_PARAM_NULL;
@@ -1142,8 +1140,8 @@ WlzErrorNum     WlzHistogramConvolve(WlzObject *histObj,
   AlgError 	algErr = ALG_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramConvolve FE 0x%lx %d 0x%lx\n",
-	   (unsigned long )histObj, krnSz, (unsigned long )krn));
+	  ("WlzHistogramConvolve FE %p %d %p\n",
+	   histObj, krnSz, krn));
   if(((errNum = WlzHistogramCheckHistObj(histObj)) == WLZ_ERR_NONE) &&
      ((histDom = histObj->domain.hist)->nBins > 0))
   {
@@ -1252,8 +1250,8 @@ WlzErrorNum	WlzHistogramCnvGauss(WlzObject *histObj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramCnvGauss FE 0x%lx %g %d\n",
-	   (unsigned long )histObj, sigma, deriv));
+	  ("WlzHistogramCnvGauss FE %p %g %d\n",
+	   histObj, sigma, deriv));
   if((errNum = WlzHistogramCheckHistObj(histObj)) == WLZ_ERR_NONE)
   {
     if((sigma < DBL_EPSILON) || (deriv < 0) || (deriv > 2))
@@ -1380,8 +1378,8 @@ WlzErrorNum	WlzHistogramRsvGauss(WlzObject *histObj, double sigma,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramRsvGauss FE 0x%lx %g %d\n",
-	   (unsigned long )histObj, sigma, deriv));
+	  ("WlzHistogramRsvGauss FE %p %g %d\n",
+	   histObj, sigma, deriv));
   if((errNum = WlzHistogramCheckHistObj(histObj)) == WLZ_ERR_NONE)
   {
     if(sigma < DBL_EPSILON)
@@ -1443,8 +1441,8 @@ WlzErrorNum	WlzHistogramSmooth(WlzObject *histObj, int width)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramSmooth FE 0x%lx %d\n",
-	   (unsigned long )histObj, width));
+	  ("WlzHistogramSmooth FE %p %d\n",
+	   histObj, width));
   if(width > 0)
   {
     errNum = WlzHistogramRsvGauss(histObj, sigmaFromWidth * width, 0);
@@ -1472,8 +1470,8 @@ WlzErrorNum	WlzHistogramCummulative(WlzObject *srcHist)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramCummulative FE 0x%lx\n",
-	   (unsigned long )srcHist));
+	  ("WlzHistogramCummulative FE %p\n",
+	   srcHist));
   if((errNum = WlzHistogramCheckHistObj(srcHist)) == WLZ_ERR_NONE)
   {
     if((count = srcHist->domain.hist->nBins) > 1)
@@ -1540,9 +1538,8 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramMapValues FE 0x%lx 0x%lx %d\n",
-	   (unsigned long )srcObj, (unsigned long )mapHistObj,
-	   dither));
+	  ("WlzHistogramMapValues FE %p %p %d\n",
+	   srcObj, mapHistObj, dither));
   if(((errNum = WlzHistogramCheckDomainAndValues(&greyType,
 						 srcObj)) == WLZ_ERR_NONE) &&
      ((errNum = WlzHistogramCheckHistObj(mapHistObj)) == WLZ_ERR_NONE))
@@ -2304,8 +2301,8 @@ WlzErrorNum	WlzHistogramNorm(WlzObject *histObj, double maxVal)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramNorm FE 0x%lx %g\n",
-	   (unsigned long )histObj, maxVal));
+	  ("WlzHistogramNorm FE %p %g\n",
+	   histObj, maxVal));
   if(((errNum = WlzHistogramCheckHistObj(histObj)) == WLZ_ERR_NONE) &&
      ((histDom = histObj->domain.hist)->nBins > 0))
   {
@@ -2486,9 +2483,8 @@ double		WlzHistogramDistance(WlzObject *histObj0,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramDistance FE 0x%lx 0x%lx 0x%lx\n",
-	   (unsigned long )histObj0, (unsigned long )histObj1,
-	   (unsigned long )dstErrNum));
+	  ("WlzHistogramDistance FE %p %p %p\n",
+	   histObj0, histObj1, dstErrNum));
   if(((errNum = WlzHistogramCheckHistObj(histObj0)) == WLZ_ERR_NONE) &&
      ((errNum = WlzHistogramCheckHistObj(histObj1)) == WLZ_ERR_NONE) &&
      ((histDom0 = histObj0->domain.hist)->nBins > 0) &&
@@ -2640,8 +2636,8 @@ WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramMatchObj FE 0x%lx 0x%lx %d %g %g %d\n",
-	   (unsigned long )srcObj, (unsigned long )targetHist,
+	  ("WlzHistogramMatchObj FE %p %p %d %g %g %d\n",
+	   srcObj, targetHist,
 	   independentPlanes, minDist, maxDist, dither));
   if(((errNum = WlzHistogramCheckDomainAndValues(&greyType,
 						srcObj)) == WLZ_ERR_NONE) &&
@@ -2890,8 +2886,8 @@ WlzErrorNum	WlzHistogramEqualiseObj(WlzObject *srcObj, int smoothing,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzHistogramEqualiseObj FE 0x%lx %d %d\n",
-	   (unsigned long )srcObj, smoothing, dither));
+	  ("WlzHistogramEqualiseObj FE %p %d %d\n",
+	   srcObj, smoothing, dither));
   if((errNum = WlzHistogramCheckDomainAndValues(&greyType,
 						srcObj)) == WLZ_ERR_NONE)
   {

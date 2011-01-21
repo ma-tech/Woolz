@@ -102,9 +102,8 @@ WlzDVertex2	WlzCentreOfMass2D(WlzObject *srcObj, int binObjFlag,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzCentreOfMass2D FE 0x%lx %d 0x%lx 0x%lx\n",
-	   (unsigned long )srcObj, binObjFlag,
-	   (unsigned long )dstMass, (unsigned long )dstErr));
+	  ("WlzCentreOfMass2D FE %p %d %p %p\n",
+	   srcObj, binObjFlag, dstMass, dstErr));
   cMass.vtX = 0.0;
   cMass.vtY = 0.0;
   if(srcObj == NULL)
@@ -171,9 +170,8 @@ WlzDVertex3	WlzCentreOfMass3D(WlzObject *srcObj, int binObjFlag,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzCentreOfMass3D FE 0x%lx %d 0x%lx 0x%lx\n",
-	   (unsigned long )srcObj, binObjFlag,
-	   (unsigned long )dstMass, (unsigned long )dstErr));
+	  ("WlzCentreOfMass3D FE %p %d %p %p\n",
+	   srcObj, binObjFlag, dstMass, dstErr));
   cMass.vtX = 0.0;
   cMass.vtY = 0.0;
   cMass.vtZ = 0.0;

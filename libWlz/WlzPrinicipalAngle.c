@@ -98,8 +98,8 @@ double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzPrincipalAngle FE 0x%lx {%d %d} %d\n",
-	   (unsigned long )srcObj, cMass.vtX, cMass.vtY, binObjFlag));
+	  ("WlzPrincipalAngle FE %p {%d %d} %d\n",
+	   srcObj, cMass.vtX, cMass.vtY, binObjFlag));
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;

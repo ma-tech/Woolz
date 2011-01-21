@@ -149,11 +149,9 @@ WlzObject	*WlzSeqPar(WlzObject *srcObj,
 		*adrbase[15];
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzSeqPar FE 0x%lx %d %d %d %d %d 0x%lx 0x%lx\n",
-	   (unsigned long )srcObj,
-	   newObjFlag, sequentialFlag, (int )rasterDir, bdrSz, bkgVal,
-	   (unsigned long )transformData, (unsigned long )transformFn,
-	   (unsigned long )dstErr));
+  	  ("WlzSeqPar FE %p %d %d %d %d %d %p %p %p\n",
+	   srcObj, newObjFlag, sequentialFlag, (int )rasterDir, bdrSz, bkgVal,
+	   transformData, transformFn, dstErr));
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -455,7 +453,7 @@ filledLABEL: 					    /* LABEL! see goto above */
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzSeqPar FX 0x%lx\n",
-	   (unsigned long )dstObj));
+  	  ("WlzSeqPar FX %p\n",
+	   dstObj));
   return(dstObj);
 }

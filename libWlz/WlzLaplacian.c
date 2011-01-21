@@ -58,12 +58,12 @@ static char _WlzLaplacian_c[] = "MRC HGU $Id$";
 *                                       convolution if non zero (this
 *                                       is always the case for a WlzUByte
 *                                       object).
-* \param	wlzErr			Destination error pointer, may
+* \param	dstErr			Destination error pointer, may
 *                                       be NULL.
 */
 WlzObject	*WlzLaplacian(WlzObject *srcObj, int kSize,
 			      int newObjFlag, int modFlag,
-			      WlzErrorNum *wlzErr)
+			      WlzErrorNum *dstErr)
 {
   WlzObject	*dstObj = NULL;
   WlzGreyType	gType;
@@ -119,9 +119,8 @@ WlzObject	*WlzLaplacian(WlzObject *srcObj, int kSize,
   WlzConvolution lConv;
 
   WLZ_DBG((WLZ_DBG_LVL_1),
-	  ("WlzLaplacian FE 0x%lx %d %d %d 0x%lx\n",
-	   (unsigned long )srcObj, kSize, newObjFlag, modFlag,
-	   (unsigned long)wlzErr));
+	  ("WlzLaplacian FE %p %d %d %d %p\n",
+	   srcObj, kSize, newObjFlag, modFlag, dstErr));
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -208,12 +207,12 @@ WlzObject	*WlzLaplacian(WlzObject *srcObj, int kSize,
   {
     dstObj = WlzConvolveObj(srcObj, &lConv, newObjFlag, &errNum);
   }
-  if(wlzErr)
+  if(dstErr)
   {
-    *wlzErr = errNum;
+    *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzLaplacian FX 0x%lx\n",
-	   (unsigned long )dstObj));
+	  ("WlzLaplacian FX %p\n",
+	   dstObj));
   return(dstObj);
 }

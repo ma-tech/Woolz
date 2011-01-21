@@ -147,9 +147,8 @@ WlzObject	*WlzSampleObj(WlzObject *srcObj, WlzIVertex3 samFac,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-	  ("WlzSampleObj FE 0x%lx {%d %d} %d 0x%lx\n",
-	   (unsigned long )srcObj, samFac.vtX, samFac.vtY,
-	   (int )samFn, (unsigned long )dstErr));
+	  ("WlzSampleObj FE %p {%d %d} %d %p\n",
+	   srcObj, samFac.vtX, samFac.vtY, (int )samFn, dstErr));
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -229,8 +228,8 @@ WlzObject	*WlzSampleObj(WlzObject *srcObj, WlzIVertex3 samFac,
     *dstErr = errNum;
   }
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
-  	  ("WlzSampleObj FX 0x%lx\n",
-	   (unsigned long )dstObj));
+  	  ("WlzSampleObj FX %p\n",
+	   dstObj));
   return(dstObj);
 }
 
@@ -1111,7 +1110,7 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
   {
     if(AlcInt2Malloc(&bufData, kernelSz.vtY, srcWidth) == ALC_ER_NONE)
     {
-      if((bufMarks = (int *)AlcMalloc((unsigned long )(kernelSz.vtY) *
+      if((bufMarks = (int *)AlcMalloc((size_t )(kernelSz.vtY) *
       				      sizeof(int))) == NULL)
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
@@ -1479,7 +1478,7 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
   {
     if(AlcDouble2Malloc(&bufData, kernelSz.vtY, srcWidth) == ALC_ER_NONE)
     {
-      if((bufMarks = (int *)AlcMalloc((unsigned long )kernelSz.vtY *
+      if((bufMarks = (int *)AlcMalloc((size_t )kernelSz.vtY *
       				      sizeof(int))) == NULL)
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
@@ -1823,7 +1822,7 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
   {
     if(AlcInt2Malloc(&bufData, kernelSz.vtY, srcWidth) == ALC_ER_NONE)
     {
-      if((bufMarks = (int *)AlcMalloc((unsigned long )(kernelSz.vtY) *
+      if((bufMarks = (int *)AlcMalloc((size_t )(kernelSz.vtY) *
       				      sizeof(int))) == NULL)
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
@@ -1857,7 +1856,7 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
   if((errNum == WLZ_ERR_NONE) && (samFn == WLZ_SAMPLEFN_MEDIAN))
   {
     bufMedianSz = kernelSz.vtX * kernelSz.vtY;
-    if((bufMedian = (int *)AlcMalloc((unsigned long )bufMedianSz *
+    if((bufMedian = (int *)AlcMalloc((size_t )bufMedianSz *
     				     sizeof(int))) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
@@ -2267,7 +2266,7 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
   {
     if(AlcDouble2Malloc(&bufData, kernelSz.vtY, srcWidth) == ALC_ER_NONE)
     {
-      if((bufMarks = (int *)AlcMalloc((unsigned long )(kernelSz.vtY) *
+      if((bufMarks = (int *)AlcMalloc((size_t )(kernelSz.vtY) *
       				      sizeof(int))) == NULL)
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
@@ -2298,7 +2297,7 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
   if((errNum == WLZ_ERR_NONE) && (samFn == WLZ_SAMPLEFN_MEDIAN))
   {
     bufMedianSz = kernelSz.vtX * kernelSz.vtY;
-    if((bufMedian = (double *)AlcMalloc((unsigned long )bufMedianSz *
+    if((bufMedian = (double *)AlcMalloc((size_t )bufMedianSz *
     				        sizeof(double))) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
