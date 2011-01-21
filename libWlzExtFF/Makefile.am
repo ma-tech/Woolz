@@ -39,6 +39,7 @@ AM_CPPFLAGS		= -I. \
 			  -I$(top_srcdir)/libAlg \
 			  -I$(top_srcdir)/libAlc \
 			  -I$(includedir) \
+			  $(INCL_EXTFF) \
              		  $(all_includes)
 
 lib_LTLIBRARIES 	= libWlzExtFF.la
@@ -57,6 +58,7 @@ libWlzExtFF_la_SOURCES 	= \
 			  WlzExtFFIPL.c \
 			  WlzExtFFJpeg.c \
 			  WlzExtFFMesh.c \
+			  WlzExtFFNifti.c \
 			  WlzExtFFNodeEle.c \
 			  WlzExtFFObj.c \
 			  WlzExtFFPic.c \
