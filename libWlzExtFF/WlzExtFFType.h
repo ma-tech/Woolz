@@ -80,7 +80,7 @@ typedef enum _WlzEffFormat
   WLZEFF_FORMAT_JPEG,		/*!< Jpeg. */
   WLZEFF_FORMAT_ANL,		/*!< Analyze 7.5. */
   WLZEFF_FORMAT_GIF,		/*!< Graphics Interchange Format. */
-  WLZEFF_FORMAT_MESH,           /*!< NETGEN tetrahedral mesh format. */
+  WLZEFF_FORMAT_MESH,           /*!< Pascal Frey's tetrahedral mesh format. */
   WLZEFF_FORMAT_NODEELE,        /*!< Jonathan Shewchuk's mesh format. */
   WLZEFF_FORMAT_VMESH,          /*!< GRUMMP tetrahedral mesh format. */
   WLZEFF_FORMAT_PLY2,           /*!< Riken PLY2 mesh format. */
@@ -88,6 +88,8 @@ typedef enum _WlzEffFormat
   WLZEFF_FORMAT_TXT,		/*!< Simple ASCII text listing, csv format. */
   WLZEFF_FORMAT_NIFTI,		/*!< Neuroimaging Informatics Technology
   				     Initiative format based on Analyze 7.5. */
+  WLZEFF_FORMAT_SMESH,          /*!< GRUMMP surface mesh format. */
+  WLZEFF_FORMAT_EMT,            /*!< Netgen neutral mesh format. */
   WLZEFF_FORMAT_COUNT 		/*!< Keep last: Number of formats (including
   				     WLZEFF_FORMAT_NONE). */
 } WlzEffFormat;
