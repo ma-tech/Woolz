@@ -182,7 +182,7 @@ int		main(int argc, char *argv[])
 	        fopen(txFileStr, "r"): stdin)) == NULL) ||
        ((tx = WlzAssignObject(WlzReadObj(inFP, &errNum), NULL)) == NULL))
     {
-      if(errNum == WLZ_ERR_NONE)
+      if(errNum != WLZ_ERR_NONE)
       {
         errNum = WLZ_ERR_READ_INCOMPLETE;
       }
@@ -238,9 +238,17 @@ int		main(int argc, char *argv[])
 		     argv[0], outFileStr);
     }
   }
-  if(ok && inv)
+  if(ok && inv && tx->values.core)
   {
-    if((errNum = WlzCMeshTransformInvert(tx)) != WLZ_ERR_NONE)
+    WlzObject *nTx = NULL;
+
+    nTx = WlzCMeshTransformInvert(tx, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzFreeObj(tx);
+      tx = WlzAssignObject(nTx, NULL);
+    }
+    else
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsgStr);
@@ -270,18 +278,34 @@ int		main(int argc, char *argv[])
       }
       else
       {
-        switch(dim)
+	switch(dim)
 	{
 	  case 2:
-	    v2.vtX = v3.vtX;
-	    v2.vtY = v3.vtY;
-	    errNum = WlzCMeshTransformVtxAry2D(tx, 1, &v2);
-	    v3.vtX = v2.vtX;
-	    v3.vtY = v2.vtY;
+	    if(tx->values.core)
+	    {
+	      v2.vtX = v3.vtX;
+	      v2.vtY = v3.vtY;
+	      errNum = WlzCMeshTransformVtxAry2D(tx, 1, &v2);
+	      v3.vtX = v2.vtX;
+	      v3.vtY = v2.vtY;
+	    }
+	    else
+	    {
+	      errNum = (WlzCMeshElmEnclosingPos2D(tx->domain.cm2, -1,
+				v3.vtX, v3.vtY, 0, NULL) >= 0)? 0: 1;
+	    }
 	    v3.vtZ = 0.0;
 	    break;
 	  case 3:
-	    errNum = WlzCMeshTransformVtxAry3D(tx, 1, &v3);
+	    if(tx->values.core)
+	    {
+	      errNum = WlzCMeshTransformVtxAry3D(tx, 1, &v3);
+	    }
+	    else
+	    {
+	      errNum = (WlzCMeshElmEnclosingPos3D(tx->domain.cm3, -1,
+				v3.vtX, v3.vtY, v3.vtZ, 0, NULL) >= 0)? 0: 1;
+	    }
 	    break;
 	  default:
 	    break;
