@@ -2767,7 +2767,7 @@ typedef struct _WlzIndexedValues
 		i = (((i_z ni_y) + i_y) ni_x) + i_x \\
 		o = (((o_z nt_y) + o_y) nt_x) + o_x \\
 		g = T \left[ ( I \left[ i \right] t_s) + o \right]
-		\f{eqnarray*}
+		\f}
 *		Where \f$I\f$ is the index table and \f$T\f$ the start
 *		of the tile data.
 *
