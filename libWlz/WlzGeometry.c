@@ -4065,8 +4065,7 @@ extern double	WlzGeomInterpolateTet3D(WlzDVertex3 p0, WlzDVertex3 p1,
 * 		the plane of the triangle, such that:
 * 		\f$\mathbf{q_0} = (0,0)\f$,
 * 		\f$\mathbf{q_1} = (\|\mathbf{l_1}\|,0)\f$ and
-* 		\f$\mathbf{q_2} = (\mathbf{l_2}\cdot\mathbf{u}\f$,
- 		                   \mathbf{l_1}\cdot\mathbf{v})\f$.
+* 		\f$\mathbf{q_2} = (\mathbf{l_2}\cdot\mathbf{u}\f$.
 * 		Where:
 * 		  \f$\mathbf{l_1} = \mathbf{p_1} - \mathbf{p_0}\f$,
 * 		  \f$\mathbf{l_2} = \mathbf{p_2} - \mathbf{p_0}\f$,
@@ -4872,7 +4871,6 @@ static int 	WlzGeomTriTri3DCoplanar(WlzDVertex3 n,
 * \ingroup	WlzGeometry
 * \brief	Computes the principle curvatures of a parabolic surface
 * 		fitted to the given vertices at the first of these vertices.
-* 		TODO expand on this.
 * \param	nC			Number of curvatures required:
 * 					  1 computes the Gaussian curvature,
 * 					  2 computes both principle
@@ -4893,8 +4891,7 @@ WlzErrorNum	WlzGeomCurvature(int nC, double *dstC, WlzDVertex3 nrm,
                                  int nV, WlzDVertex3 *vtx)
 {
   int		idV;
-  double	det,
-  		len;
+  double	len;
   double	*bV= NULL;
   double	**aA;
   AlgMatrix	aM;
@@ -4909,8 +4906,8 @@ WlzErrorNum	WlzGeomCurvature(int nC, double *dstC, WlzDVertex3 nrm,
   {
     errNum = WLZ_ERR_PARAM_DATA;
   }
-  else if(((bV = (double *)AlcMalloc(sizeof(double) * nV)) == NULL) ||
-	  ((aM.rect = AlgMatrixRectNew(nV, 3, NULL)) == NULL))
+  else if(((bV = (double *)AlcMalloc(sizeof(double) * (nV - 1))) == NULL) ||
+	  ((aM.rect = AlgMatrixRectNew((nV - 1), 3, NULL)) == NULL))
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
@@ -4959,45 +4956,216 @@ WlzErrorNum	WlzGeomCurvature(int nC, double *dstC, WlzDVertex3 nrm,
     len = 1.0 / len;
     WLZ_VTX_3_SCALE(b[1], b[1], len);
     /* Compute rotation matrix R which transforms b[0], b[1], b[2] to the
-     * x, y, z axes. This is just the inverse of the vectors b[0,1,2]. */
-    det = b[0].vtX * (b[1].vtY * b[2].vtZ - b[2].vtY * b[1].vtZ) +
-          b[1].vtX * (b[2].vtY * b[0].vtZ - b[0].vtY * b[2].vtZ) +
-          b[2].vtX * (b[0].vtY * b[1].vtZ - b[1].vtY * b[0].vtZ);
-    det = 1.0 / det;
-    r[0].vtX = det * (b[1].vtY * b[2].vtZ - b[2].vtY * b[1].vtZ);
-    r[0].vtY = det * (b[2].vtX * b[1].vtZ - b[1].vtX * b[2].vtZ);
-    r[0].vtZ = det * (b[1].vtX * b[2].vtY - b[2].vtX * b[1].vtY);
-    r[1].vtX = det * (b[2].vtY * b[0].vtZ - b[0].vtY * b[2].vtZ);
-    r[1].vtY = det * (b[0].vtX * b[2].vtZ - b[2].vtX * b[0].vtZ);
-    r[1].vtZ = det * (b[2].vtX * b[0].vtY - b[0].vtX * b[2].vtY);
-    r[2].vtX = det * (b[0].vtY * b[1].vtZ - b[1].vtY * b[0].vtZ);
-    r[2].vtY = det * (b[1].vtX * b[0].vtZ - b[0].vtX * b[1].vtZ);
-    r[2].vtZ = det * (b[0].vtX * b[1].vtY - b[1].vtX * b[0].vtY);
+     * x, y, z axes, ie R = B^{-1} where B = (b_0, b_1, b_2). Inverting a
+     * 3 x 3 matrix can be done using the cross and tripple product. This
+     * gives
+     *   R = \frac{1}{b_0 . b_1 x b_2} (b_1 x b_2, b_2 * b_0, b_0 x b_1)
+     * where b_i x b_j are now row vectors.
+     * Because we've choosen b_0 = b_1 * b_2 and b_0, b_1, b_2 are unit
+     * vectors then b_0 . b_1 x b_2 = 1.
+     * This gives R = (b_1 x b_2, b_2 * b_0, b_0 x b_1). */
+    WLZ_VTX_3_CROSS(r[0], b[1], b[2]);
+    WLZ_VTX_3_CROSS(r[1], b[2], b[0]);
+    WLZ_VTX_3_CROSS(r[2], b[0], b[1]);
     /* Rotate the shifted vertices about the first using the rotation
      * matrix r and fill in the matrices ready to compute the least squares
      * estimate of the parameters a,b,c in z = ax^2 + bxy + cy^2. */
-    aA[0][0] = 0.0;
-    aA[0][1] = 0.0;
-    aA[0][2] = 0.0;
-    bV[0] = 0.0;
     for(idV = 1; idV < nV; ++idV)
     {
-      t.vtX = WLZ_VTX_3_DOT(vtx[idV], r[0]);
-      t.vtY = WLZ_VTX_3_DOT(vtx[idV], r[1]);
-      t.vtZ = WLZ_VTX_3_DOT(vtx[idV], r[2]);
-      aA[idV][0] = t.vtX * t.vtX;
-      aA[idV][1] = t.vtX * t.vtY;
-      aA[idV][2] = t.vtY * t.vtY;
-      bV[idV] = t.vtZ;
+      t.vtX = WLZ_VTX_3_DOT(r[0], vtx[idV]);
+      t.vtY = WLZ_VTX_3_DOT(r[1], vtx[idV]);
+      t.vtZ = WLZ_VTX_3_DOT(r[2], vtx[idV]);
+      aA[idV - 1][0] = t.vtX * t.vtX;
+      aA[idV - 1][1] = t.vtX * t.vtY;
+      aA[idV - 1][2] = t.vtY * t.vtY;
+      bV[idV - 1] = t.vtZ;
     }
-    /* Solve for a, b, c ie matrix x. */
+    /* Solve for a, b, c ie matrix equation for x. */
     errNum = WlzErrorFromAlg(AlgMatrixSVSolve(aM, bV, 1.0e-06, NULL));
   }
-  /* Compute the curmatures values, Gaussian = 4ac - b^2, mean = a + c. */
+  /* Compute the curvature values, Gaussian = 4ac - b^2, mean = a + c. */
   dstC[0] = 4.0 * bV[0] * bV[2] - bV[1] * bV[1];
-  dstC[1] = bV[0] + bV[2];
+  if(nC == 2)
+  {
+    dstC[1] = bV[0] + bV[2];
+  }
   /* Free allocated storage. */
   AlcFree(bV);
   AlgMatrixFree(aM);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzGeometry
+* \brief	Computes the plane which is the least squares best fit to
+* 		the given vertices, where this is with respect to the
+* 		orthogonal distance from the vertices to the plane.
+*
+* 		The orthogonal distance regression plane is an eigenvector
+* 		problem. This solution is based on one from
+* 		http://mathforum.org which is credited to Doctor George.
+* 		Starting with the distance from a point to a plane we
+* 		wish to find \f$(a,b,c,d)\f$ such as to minimise
+* 		\f[
+                f(a,b,c,d) = \sum{
+		             \frac{a x_i + b y_i + c z_i}
+			          {a^2 + b^2 + c^2}}
+*                \f]
+		setting \f$\frac{\partial f}{\partial d} = 0\f$ gives
+*		\f[
+		d = -(a x_0 + b y_0 + c z_0)
+		\f]
+*		where \f$(x_0, y_0, z_0)\f$ is the centroid of the vertices.
+*		Using the centroid
+*		\f[
+		f(a,b,c,d) = \sum{
+		             \frac{|a (x_i - x_0) +
+			            b (y_i - y_0) +
+				    c (z_i - z_0) |}
+				  {a^2 + b^2 + c^2}}
+*		\f]
+*		Define \f$v\f$ \f$M\f$ such that:
+*		\f[
+		v^T = [a \, b \, c]
+		\f]
+*		\f[
+		M = 
+		\left[
+		\begin{array}{ccc}
+		x_1 - x_0 & y_1 - y_0 & z_1 - z_0 \\
+		x_2 - x_0 & y_2 - y_0 & z_2 - z_0 \\
+		\cdots    & \cdots    & \cdots    \\
+		x_n - x_0 & y_n - y_0 & z_n - z_0
+		\end{array}
+		\right]
+		\f]
+*		\f[
+		f(v) = \frac{(v^T M^T)(M v)}{v^T v}
+		\f]
+*		\f[
+		f(v) = \frac{v^T (M^T M) v}{v^T v}
+		\f]
+*		Define \f$A\f$
+*		\f[
+*		A = M^T M
+		\f]
+*		The Rayleigh Quotient \f$f(v)\f$ is minimised by the
+*		eigenvector of \f$A\f$. However there is no need to compute
+*		the eigenvectors of \f$A\f$. The SVD of \f$M\f$ is
+*		\f[
+*		M = U S V^T
+		\f]
+*		where \f$S\f$ is a diagonal vector containing the singular
+*		values of \f$M\f$. The columns of \f$V\f$ are it's singular
+*		vectors and \f$U\f$ is an orthogonal matrix.
+*		\f[
+*		A = M M^T
+		\f]
+*		\f[
+*		A = (U S V^T)^T (U S V^T)
+		\f]
+*		\f[
+*		A = (V S^T U^T) (U S V^T)
+		\f]
+*		\f[
+*		A = V S^2 V^T
+		\f]
+*		The decomposition of \f$A\f$ diagonalises the matrix and gives
+*		an eigenvector decomposition. It means that the eigenvectors of
+*		\f$A\f$ are the squares of the singular values of \f$M\f$ and
+*		the eigenvectors of \f$A\f$ are the singular vectors of
+*		\f$M\f$. \f$M\f$ is the covarience matrix.
+* \param	dstNrm			Destination pointer for the
+* 					plane normal.
+* \param	dstCen			Destination pointer for the centroid
+* 					of the vertices which is on the plane.
+* \param	nVtx			umber of vertices.
+* \param	vtx			Vector of vertices.
+*/
+WlzErrorNum	WlzGeometryLSqOPlane(WlzDVertex3 *dstNrm, WlzDVertex3 *dstCen,
+		     	int nVtx, WlzDVertex3 *vtx)
+{
+  double	*sV = NULL;
+  WlzDVertex3	cen,
+  		nrm;
+  AlgMatrix	mM,
+  		vM;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  mM.core = NULL;
+  vM.core = NULL;
+  if(nVtx < 1)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    if(((sV = AlcMalloc(sizeof(double) * 3)) == NULL) ||
+       ((mM.rect = AlgMatrixRectNew(3, 3, NULL)) == NULL) ||
+       ((vM.rect = AlgMatrixRectNew(3, 3, NULL)) == NULL))
+    {
+      errNum = WLZ_ERR_NONE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idN;
+
+    AlgMatrixZero(mM);
+    cen = WlzCentreOfMassVtx3D(nVtx, vtx);
+    for(idN = 0; idN < nVtx; ++idN)
+    {
+      double	t;
+      double	**m;
+      WlzDVertex3 p;
+
+      m = mM.rect->array;
+      WLZ_VTX_3_SUB(p, vtx[idN], cen);
+      m[0][0] += p.vtX * p.vtX;
+      m[1][1] += p.vtY * p.vtY;
+      m[2][2] += p.vtZ * p.vtZ;
+      t = p.vtX * p.vtY; m[0][1] += t; m[1][0] += t;
+      t = p.vtX * p.vtZ; m[0][2] += t; m[2][0] += t;
+      t = p.vtY * p.vtZ; m[1][2] += t; m[2][1] += t;
+    }
+    errNum = WlzErrorFromAlg(AlgMatrixSVDecomp(mM, sV, vM));
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idN,
+    		idM;
+    double	vMin;
+    double	**v;
+
+    /* Find the smallest eigenvalue (ie singular value). */
+    idM = 0;
+    vMin = sV[idM] * sV[idM];
+    for(idN = 1; idN < 3; ++idN)
+    {
+      double	val;
+
+      if((val = sV[idN] * sV[idN]) < vMin)
+      {
+        idM = idN;
+	vMin = val;
+      }
+    }
+    v = vM.rect->array;        /* It's the transpose so index appropriately. */
+    nrm.vtX = v[0][idM];
+    nrm.vtY = v[1][idM];
+    nrm.vtZ = v[2][idM];
+    if(dstNrm != NULL)
+    {
+      *dstNrm = nrm;
+    }
+    if(dstCen != NULL)
+    {
+      *dstCen = cen;
+    }
+  }
+  AlcFree(sV);
+  AlgMatrixFree(mM);
+  AlgMatrixFree(vM);
   return(errNum);
 }
