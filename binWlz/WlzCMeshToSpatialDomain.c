@@ -53,7 +53,7 @@ WlzCMeshToSpatialDomain - computes a new spatial domain corresponding to the
 			  conforming mesh.
 \par Synopsis
 \verbatim
-WlzCMeshToSpatialDomain [-h] [-o<out obj file>] [<input mesh file>]
+WlzCMeshToSpatialDomain [-h] [-o<out obj file>] [-s#] [<input mesh file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -65,6 +65,10 @@ WlzCMeshToSpatialDomain [-h] [-o<out obj file>] [<input mesh file>]
   <tr> 
     <td><b>-o</b></td>
     <td>Output object file.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Scale factor from mesh to spatial domain.</td>
   </tr>
 </table>
 \par Description
@@ -107,6 +111,7 @@ int		main(int argc, char *argv[])
   int		option,
   		ok = 1,
   		usage = 0;
+  double	scale = 1.0;
   FILE		*fP = NULL;
   char		*inObjFileStr = NULL,
   		*outObjFileStr = NULL;
@@ -114,7 +119,8 @@ int		main(int argc, char *argv[])
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
-  static char   optList[] = "ho:";
+  static char   optList[] = "ho:s:";
+  const double	eps = 0.000001;
   const char    inObjFileStrDef[] = "-",
   	        outObjFileStrDef[] = "-";
 
@@ -128,6 +134,11 @@ int		main(int argc, char *argv[])
       case 'o':
         outObjFileStr = optarg;
 	break;
+      case 's':
+        if((sscanf(optarg, "%lg", &scale) != 1) || (fabs(scale) < eps))
+	{
+	  usage = 1;
+	}
       case 'h': /* FALLTHROUGH */
       default:
 	usage = 1;
@@ -193,7 +204,7 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    outObj = WlzCMeshToDomObj(inObj, 0, &errNum);
+    outObj = WlzCMeshToDomObj(inObj, 0, scale, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -226,13 +237,13 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     fprintf(stderr,
-      "Usage: %s [-b] [-h] [-o<out obj file>] [-r<ref obj file>]\n"
-      "                        [-s #,#,#] [<input mesh file>]\n"
+      "Usage: %s [-h] [-o<out obj file>] [-s #] [<input mesh file>]\n"
       "Constructs a 2D or 3D spatial domain object without values which\n"
-      "cvovers the given conforming mesh.\n"
+      "covers the given conforming mesh.\n"
       "Options are:\n"
       "  -h  Help, prints this usage message.\n"
-      "  -o  Output object.\n",
+      "  -o  Output object.\n"
+      "  -s  Additional scale factor from the mesh to the spatial domain\n.",
       argv[0]);
 
   }

@@ -53,7 +53,7 @@ WlzCMeshCurvToImage - creates a grey scale image from a conforming mesh in
 		      Gaussian curvature values.
 \par Synopsis
 \verbatim
-WlzCMeshCurvToImage [-h] [-m] [-o<output object>] [<input object>]
+WlzCMeshCurvToImage [-h] [-m] [-o<output object>] [-s] [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -68,6 +68,10 @@ WlzCMeshCurvToImage [-h] [-m] [-o<output object>] [<input object>]
   <tr>
     <td><b>-o</b></td>
     <td>Output object file.</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>Scale factor from mesh to spatial domain.</td>
   </tr>
 </table>
 \par Description
@@ -116,6 +120,7 @@ int             main(int argc, char **argv)
 		meanCrv = 0,
   		ok = 1,
 		usage = 0;
+  double	scale = 1.0;
   WlzObject     *inObj = NULL,
   		*outObj = NULL;
   FILE		*fP = NULL;
@@ -123,7 +128,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "hmo:",
+  static char	optList[] = "hmo:s:",
   		fileStrDef[] = "-";
 
   opterr = 0;
@@ -138,6 +143,12 @@ int             main(int argc, char **argv)
 	break;
       case 'o':
         outObjFileStr = optarg;
+	break;
+      case 's':
+        if(sscanf(optarg, "%lg", &scale) != 1)
+	{
+	  usage = 1;
+	}
 	break;
       case 'h': /* FALLTHROUGH */
       default:
@@ -179,7 +190,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    outObj = WlzCMeshCurvToImage(inObj, meanCrv, &errNum);
+    outObj = WlzCMeshCurvToImage(inObj, scale, meanCrv, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -215,16 +226,18 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-h] [-m] [-o<output object>] [<input object>]\n"
+    " [-h] [-m] [-o<output object>] [-s#] [<input object>]\n"
     "Options:\n"
     "  -h  Help, prints usage message.\n"
     "  -m  Set image values to the mean rather than the Gaussian curvature.\n"
     "  -o  Output object file.\n"
+    "  -s  Additional scale factor to be used in going from the mesh to the\n"
+    "      spatial domain.\n"
     "Creates a 2D domain object with grey values (image) in which the values\n"
     "that are interpolated from the Gaussian curvature of the mesh. The 2D\n"
     "domain is created to cover the mesh following it's displacement. The\n"
     "displaced mesh must have been computed so that the displacements\n"
-    "transform it to a plane. As for example by WlzCMeshSurfaceMap(1).\n"
+    "transform it to a plane (as by WlzCMeshSurfaceMap(1)).\n"
     "By default files are read from the standard input and written to the\n"
     "standard output.\n",
     *argv,
