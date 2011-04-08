@@ -3890,7 +3890,7 @@ static WlzCMesh2D *WlzReadCMesh2D(FILE *fp, WlzErrorNum *dstErr)
       if(errNum == WLZ_ERR_NONE)
       {
         elm = WlzCMeshNewElm2D(mesh,
-	                       nod[0], nod[1], nod[2], 0, &errNum);
+	                       nod[0], nod[1], nod[2], 1, &errNum);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -4054,7 +4054,7 @@ static WlzCMesh2D5 *WlzReadCMesh2D5(FILE *fp, WlzErrorNum *dstErr)
       if(errNum == WLZ_ERR_NONE)
       {
         elm = WlzCMeshNewElm2D5(mesh,
-	                       nod[0], nod[1], nod[2], 0, &errNum);
+	                       nod[0], nod[1], nod[2], 1, &errNum);
       }
       if(errNum == WLZ_ERR_NONE)
       {
@@ -4259,7 +4259,7 @@ static WlzCMesh3D *WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
       if(errNum == WLZ_ERR_NONE)
       {
         elm = WlzCMeshNewElm3D(mesh,
-	                       nod[0], nod[1], nod[2], nod[3], 0, &errNum);
+	                       nod[0], nod[1], nod[2], nod[3], 1, &errNum);
       }
       if(errNum == WLZ_ERR_NONE)
       {
