@@ -52,26 +52,30 @@ static char _WlzCMeshCurvature_c[] = "MRC HGU $Id$";
 * \ingroup	WlzMesh
 * \brief	Creates a new 2D domain object with double values that covers
 * 		the given WLZ_CMESH_2D5 after it has been flattened by applying
-* 		it's displacements. The displacemens of the mesh must be
+* 		it's displacements. The displacements of the mesh must be
 * 		valid for flattening the mesh as computed by
 * 		WlzCMeshCompSurfMapConformal(). The curvature values are not
 * 		normalised and are either the Gaussian or mean mesh curvatures.
 * \param	inObj			Input object which must be a
 * 					WLZ_CMESH_2D5 object.
+* \param	scale			Scale factor to use from cmesh to
+* 					2D spatial domain.
 * \param 	meanCrv			If non zero the curvatures are the
 * 					mean rather than the Gaussian
 * 					curvatures.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, int meanCrv,
-				     WlzErrorNum *dstErr)
+WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, double scale,
+				     int meanCrv, WlzErrorNum *dstErr)
 {
+  double	iScale = 1.0;
   WlzObject	*crvObj = NULL,
 		*domObj = NULL,
 		*fltObj = NULL,
   		*outObj = NULL;
   WlzValues 	val;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
+  const double	eps = 0.000001;
 
   val.core = NULL;
   if(inObj == NULL)
@@ -90,6 +94,10 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, int meanCrv,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
+  else if(fabs(scale) < eps)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
   if(errNum == WLZ_ERR_NONE)
   {
     fltObj = WlzCMeshExtract2D(inObj, 1, &errNum);
@@ -100,13 +108,14 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, int meanCrv,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    domObj = WlzCMeshToDomObj(fltObj, 0, &errNum);
+    domObj = WlzCMeshToDomObj(fltObj, 0, scale, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
     WlzPixelV bgd;
     WlzObjectType gTabType;
 
+    iScale = 1.0 / scale;
     bgd.type = WLZ_GREY_DOUBLE;
     bgd.v.dbv = 0.0;
     gTabType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
@@ -138,19 +147,18 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, int meanCrv,
       double d;
       double *c,
       	     *dst;
-      WlzIVertex2 pos;
+      WlzDVertex2 dPos;
 
       idE = -1;
       dst = gWsp.u_grintptr.dbp;
-      pos.vtY = iWsp.linpos;
+      dPos.vtY = iWsp.linpos * iScale;
       for(idK = iWsp.lftpos; idK <= iWsp.rgtpos; ++idK)
       {
-        pos.vtX = idK;
-	if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE, pos.vtX, pos.vtY,
+	dPos.vtX = idK * iScale;
+	if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE, dPos.vtX, dPos.vtY,
 					    0, &idN)) >= 0)
         {
 	  int		idC;
-	  WlzDVertex2	dPos;
 	  WlzCMeshElm2D *elm;
 	  double	crv[3];
 	  WlzCMeshNod2D *nod[3];
@@ -164,7 +172,6 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, int meanCrv,
 	    c = (double *)WlzIndexedValueGet(ixv, nod[idC]->idx);
 	    crv[idC] = (meanCrv != 0)? 0.5 * (c[0] + c[1]): c[0] * c[1];
 	  }
-	  dPos.vtX = pos.vtX; dPos.vtY = pos.vtY;
 	  d = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos, nod[2]->pos,
 			              crv[0], crv[1], crv[2], dPos);
 	}
@@ -288,10 +295,11 @@ WlzObject     	*WlzCMeshComputeNormalsElm(WlzObject *inObj,
   if(errNum == WLZ_ERR_NONE)
   {
     int		idE;
-    WlzCMeshElm2D5 *elm;
 
     for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
     {
+      WlzCMeshElm2D5 *elm;
+
       elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
@@ -527,41 +535,49 @@ WlzObject     	*WlzCMeshComputeCurvaturesFromNodNorm(WlzObject *inObj,
       nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(nodVec, idN);
       if(nod->idx >= 0)
       {
-	int	nN;
-	double *n;
-	WlzDVertex3 nrm;
+	double *crv;
 
-	/* Get edge connected neighbours of the node. */
-	n = (double *)WlzIndexedValueGet(nIxv, nod->idx);
-	nrm.vtX = n[0]; nrm.vtY = n[1]; nrm.vtZ = n[2];
-	nN = WlzCMeshNodRingNodIndices2D5(nod, &idxBufMax, &idxBuf, &errNum);
-	if(posBufMax < idxBufMax)
+	crv = (double *)WlzIndexedValueGet(cIxv, idN);
+	if(WlzCMeshNodIsBoundary2D5(nod))
 	{
-          posBufMax = idxBufMax;
-	  if((posBuf = (WlzDVertex3 *)
-		       AlcRealloc(posBuf,
-				  sizeof(WlzDVertex3) * posBufMax)) == NULL)
-	  {
-	    errNum = WLZ_ERR_MEM_ALLOC;
-	  }
+	  crv[0] = crv[1] = 0.0;
 	}
-	if(errNum == WLZ_ERR_NONE)
+	else
 	{
-	  int	 idN;
-	  double *crv;
+	  int	nN;
+	  double *n;
+	  WlzDVertex3 nrm;
 
-	  /* Get the positions of the node and it's edge connected
-	   * neighbours. */
-	  for(idN = 0; idN < nN; ++idN)
+	  /* Get edge connected neighbours of the node. */
+	  n = (double *)WlzIndexedValueGet(nIxv, nod->idx);
+	  nrm.vtX = n[0]; nrm.vtY = n[1]; nrm.vtZ = n[2];
+	  nN = WlzCMeshNodRingNodIndices2D5(nod, &idxBufMax, &idxBuf, &errNum);
+	  if(posBufMax < idxBufMax)
 	  {
-	    WlzCMeshNod2D5 *nod1;
-
-	    nod1 = (WlzCMeshNod2D5 *)AlcVectorItemGet(nodVec, idxBuf[idN]);
-	    posBuf[idN] = nod1->pos;
+	    posBufMax = idxBufMax;
+	    if((posBuf = (WlzDVertex3 *)
+			 AlcRealloc(posBuf,
+				    sizeof(WlzDVertex3) * posBufMax)) == NULL)
+	    {
+	      errNum = WLZ_ERR_MEM_ALLOC;
+	    }
 	  }
-	  /* Compute the curvature values for the node. */
-	  crv = (double *)WlzIndexedValueGet(cIxv, idN);
-	  errNum = WlzGeomCurvature(2, crv, nrm, nN, posBuf);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    int	 idN;
+
+	    /* Get the positions of the node and it's edge connected
+	     * neighbours. */
+	    for(idN = 0; idN < nN; ++idN)
+	    {
+	      WlzCMeshNod2D5 *nod1;
+
+	      nod1 = (WlzCMeshNod2D5 *)AlcVectorItemGet(nodVec, idxBuf[idN]);
+	      posBuf[idN] = nod1->pos;
+	    }
+	    /* Compute the curvature values for the node. */
+	    errNum = WlzGeomCurvature(2, crv, nrm, nN, posBuf);
+	  }
 	}
       }
     }
