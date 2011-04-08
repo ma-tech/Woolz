@@ -222,6 +222,56 @@ WlzDVertex3	WlzCentreOfMass3D(WlzObject *srcObj, int binObjFlag,
 }
 
 /*!
+* \return	Coordinates of centre of mass.
+* \ingroup	WlzFeatures
+* \brief	Computes the centre of mass of a vector of 2D vertices.
+* \param	nVtx			Number of vertices.
+* \param	vtx			The vertices.
+*/
+WlzDVertex2	WlzCentreOfMassVtx2D(int nVtx, WlzDVertex2 *vtx)
+{
+  WlzDVertex2	cen;
+
+  WLZ_VTX_2_ZERO(cen);
+  if(nVtx > 0)
+  {
+    int		idx;
+
+    for(idx = 0; idx < nVtx; ++idx)
+    {
+      WLZ_VTX_2_ADD(cen, cen, vtx[idx]);
+    }
+    WLZ_VTX_2_SCALE(cen, cen, 1.0 / nVtx);
+  }
+  return(cen);
+}
+
+/*!
+* \return	Coordinates of centre of mass.
+* \ingroup	WlzFeatures
+* \brief	Computes the centre of mass of a vector of 3D vertices.
+* \param	nVtx			Number of vertices.
+* \param	vtx			The vertices.
+*/
+WlzDVertex3	WlzCentreOfMassVtx3D(int nVtx, WlzDVertex3 *vtx)
+{
+  WlzDVertex3	cen;
+
+  WLZ_VTX_3_ZERO(cen);
+  if(nVtx > 0)
+  {
+    int		idx;
+
+    for(idx = 0; idx < nVtx; ++idx)
+    {
+      WLZ_VTX_3_ADD(cen, cen, vtx[idx]);
+    }
+    WLZ_VTX_3_SCALE(cen, cen, 1.0 / nVtx);
+  }
+  return(cen);
+}
+
+/*!
 * \return	Coordinates of center of mass.
 * \ingroup	WlzFeatures
 * \brief	Calculates the centre of mass of a WLZ_2D_DOMAIN_OBJ.
