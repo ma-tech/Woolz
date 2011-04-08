@@ -306,7 +306,8 @@ WlzObject	*WlzEffReadObjVMesh(FILE *fP, WlzErrorNum *dstErr)
         nBuf[idN] = (WlzCMeshNod3D *)
 	            AlcVectorItemGet(mesh->res.nod.vec, eBufP[1 + idN]);
       }
-      (void )WlzCMeshNewElm3D(mesh, nBuf[0], nBuf[1], nBuf[3], nBuf[2], 1, &errNum);
+      (void )WlzCMeshNewElm3D(mesh, nBuf[0], nBuf[1], nBuf[3], nBuf[2], 1,
+                              &errNum);
       if(errNum != WLZ_ERR_NONE)
       {
         break;
