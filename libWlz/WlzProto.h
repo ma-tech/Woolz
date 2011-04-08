@@ -1342,6 +1342,12 @@ extern WlzDVertex3 		WlzCentreOfMass3D(
 				  int binObjFlg,
 				  double *dstMass,
 				  WlzErrorNum *dstErr);
+extern WlzDVertex2		WlzCentreOfMassVtx2D(
+				  int nVtx,
+				  WlzDVertex2 *vtx);
+extern WlzDVertex3		WlzCentreOfMassVtx3D(
+				  int nVtx,
+				  WlzDVertex3 *vtx);
 
 /************************************************************************
 * WlzClipObjToBox.c							*
@@ -1360,6 +1366,7 @@ extern WlzObject		*WlzClipObjToBox3D(
 ************************************************************************/
 extern WlzObject		*WlzCMeshCurvToImage(
 				  WlzObject *inObj,
+				  double scale,
 				  int meanCrv,
 				  WlzErrorNum *dstErr);
 extern WlzObject       		*WlzCMeshComputeCurvatures(
@@ -1373,6 +1380,15 @@ extern WlzObject       		*WlzCMeshComputeNormalsNod(
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzCMeshComputeCurvaturesFromNodNorm(
 				  WlzObject *inObj,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzCMeshIntersect.c							*
+************************************************************************/
+extern WlzObject		*WlzCMeshIntersectDom2D5(
+				  WlzObject *sObj,
+				  WlzObject *cObj,
+				  double scale,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -1465,8 +1481,9 @@ extern WlzObject		*WlzCMeshDistance3D(
 /************************************************************************
 * WlzCMeshTransform.c							*
 ************************************************************************/
-extern WlzErrorNum		WlzCMeshTransformInvert(
-				  WlzObject *mObj);
+extern WlzObject		*WlzCMeshTransformInvert(
+				  WlzObject *mObj,
+				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzCMeshTransformFromObj(
 				  WlzObject *srcObj,
 				  WlzMeshGenMethod method,
@@ -1523,6 +1540,7 @@ extern WlzErrorNum		WlzCMeshGetNodesAndEdges(
 extern WlzObject		*WlzCMeshToDomObj(
 				  WlzObject *mObj,
 				  int trans,
+				  double scale,
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzCMeshToDomObjValues(
 				  WlzObject *dObj,
@@ -3103,6 +3121,11 @@ extern WlzErrorNum     		WlzGeomCurvature(
 				  WlzDVertex3 nrm,
                                  int sizeArrayVtx,
 				 WlzDVertex3 *arrayVtx);
+extern WlzErrorNum		WlzGeometryLSqOPlane(
+				  WlzDVertex3 *dstNrm,
+				  WlzDVertex3 *dstCen,
+				  int sizeArrayVtx,
+				  WlzDVertex3 *arrayVtx);
 
 /************************************************************************
 * WlzGreyCrossing.c							*
