@@ -53,6 +53,7 @@ libWlzExtFF_la_SOURCES 	= \
 			  WlzExtFFBmp.c \
 			  WlzExtFF.c \
 			  WlzExtFFDen.c \
+			  WlzExtFFEMT.c \
 			  WlzExtFFGif.c \
 			  WlzExtFFIcs.c \
 			  WlzExtFFIPL.c \
@@ -65,6 +66,7 @@ libWlzExtFF_la_SOURCES 	= \
 			  WlzExtFFPly2.c \
 			  WlzExtFFPnm.c \
 			  WlzExtFFSlc.c \
+			  WlzExtFFSMesh.c \
 			  WlzExtFFStack.c \
 			  WlzExtFFTiff.c \
 			  WlzExtFFTxt.c \
