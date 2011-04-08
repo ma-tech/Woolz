@@ -50,15 +50,6 @@ static char _WlzCMeshSurfaceMap_c[] = "MRC HGU $Id$";
 WlzCMeshSurfaceMap - computes a conforming mesh transform which maps a
                      surface in 3D to a plane.
 \par Synopsis
-    "Options:\n"
-    "  -2  Output a 2D mesh rather than a 3D mesh with displacements.\n"
-    "  -h  Help, prints usage message.\n"
-    "  -i  Maximum number of itterations, 0 implies one itteration and\n"
-    "      mapping will preserve angles.\n"
-    "  -n  Weight for preserving angles, range 0.0 - 1.0.\n"
-    "  -p  Displacements file.\n"
-    "  -o  Output object file.\n"
-    "  -r  Weight for preserving areas, range 0.0 - 1.0.\n"
 \verbatim
 WlzCMeshSurfaceMap [-2] [-h] [-i#] [-n #] [-o<output object>] [-p<points file>]
                    [-r#] [<input object>]
