@@ -564,9 +564,11 @@ static WlzObject *WlzScalarMulAdd3D(WlzObject *iObj, WlzPixelV m, WlzPixelV a,
 		  *rVal2D;
 
 	idO = idP - iPDom->plane1;
-	if(((iDom2D = iPDom->domains + idO) != NULL) &&
-	   ((iVal2D = iVox->values + idO) != NULL) &&
-	   ((rVal2D = rVox->values + idO) != NULL))
+	iDom2D = iPDom->domains + idO;
+	iVal2D = iVox->values + idO;
+	rVal2D = rVox->values + idO;
+	if(((*iDom2D).core != NULL) && ((*iVal2D).core != NULL) &&
+	   ((*rVal2D).core != NULL))
 	{
 	  WlzObject *iObj2D = NULL,
 		    *rObj2D = NULL;
