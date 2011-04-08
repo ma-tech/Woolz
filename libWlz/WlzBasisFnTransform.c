@@ -1211,7 +1211,8 @@ WlzObject 	*WlzBasisFnInvertMakeCMeshTr2D(
 				        WlzErrorNum *dstErr)
 {
   int		dim = 2;
-  WlzObject	*mObj = NULL;
+  WlzObject	*mObj = NULL,
+  		*rObj = NULL;
   WlzDomain	dom;
   WlzValues	val;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1234,17 +1235,14 @@ WlzObject 	*WlzBasisFnInvertMakeCMeshTr2D(
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshTransformInvert(mObj);
+    rObj = WlzCMeshTransformInvert(mObj, &errNum);
   }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    errNum = WlzCMeshFixNegativeElms2D(dom.cm2);
-  }
+  (void )WlzFreeObj(mObj);
   if(dstErr != NULL)
   {
     *dstErr = errNum;
   }
-  return(mObj);
+  return(rObj);
 }
 
 /*!
@@ -1267,7 +1265,8 @@ WlzObject 	*WlzBasisFnInvertMakeCMeshTr3D(
 				        WlzErrorNum *dstErr)
 {
   int		dim = 3;
-  WlzObject	*mObj = NULL;
+  WlzObject	*mObj = NULL,
+  		*rObj = NULL;
   WlzDomain	dom;
   WlzValues	val;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1290,17 +1289,14 @@ WlzObject 	*WlzBasisFnInvertMakeCMeshTr3D(
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzCMeshTransformInvert(mObj);
+    rObj = WlzCMeshTransformInvert(mObj, &errNum);
   }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    errNum = WlzCMeshFixNegativeElms3D(dom.cm3);
-  }
+  (void )WlzFreeObj(mObj);
   if(dstErr != NULL)
   {
     *dstErr = errNum;
   }
-  return(mObj);
+  return(rObj);
 }
 
 /*!

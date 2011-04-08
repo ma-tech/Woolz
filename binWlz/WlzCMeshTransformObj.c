@@ -279,7 +279,15 @@ int		main(int argc, char *argv[])
   }
   if(ok && inv)
   {
-    if((errNum = WlzCMeshTransformInvert(trObj)) != WLZ_ERR_NONE)
+    WlzObject *nTrObj;
+
+    nTrObj = WlzCMeshTransformInvert(trObj, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzFreeObj(trObj);
+      trObj = WlzAssignObject(nTrObj, NULL);
+    }
+    else
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsgStr);
