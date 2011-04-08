@@ -60,6 +60,7 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "am",    WLZEFF_FORMAT_AM,
 			 "bmp",   WLZEFF_FORMAT_BMP,
 			 "den",   WLZEFF_FORMAT_DEN,
+			 "emt",   WLZEFF_FORMAT_EMT,
 			 "gif",   WLZEFF_FORMAT_GIF,
 			 "hdr",   WLZEFF_FORMAT_ANL,
 			 "ics",   WLZEFF_FORMAT_ICS,
@@ -78,8 +79,9 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "pnm",   WLZEFF_FORMAT_PNM,
 			 "raw",   WLZEFF_FORMAT_RAW,
 			 "slc",   WLZEFF_FORMAT_SLC,
+			 "smesh", WLZEFF_FORMAT_SMESH,
 			 "tif",   WLZEFF_FORMAT_TIFF,
-			 "txt",    WLZEFF_FORMAT_TXT,
+			 "txt",   WLZEFF_FORMAT_TXT,
 			 "vmesh", WLZEFF_FORMAT_VMESH,
 			 "vff",   WLZEFF_FORMAT_VFF,
 			 "vtk",   WLZEFF_FORMAT_VTK,
@@ -105,13 +107,15 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
 	 "Amira Lattice", WLZEFF_FORMAT_AM,
 	 "ANALYZE 7.5", WLZEFF_FORMAT_ANL,
 	 "BioRad Confocal", WLZEFF_FORMAT_PIC,
+	 "Netgen neutral mesh format", WLZEFF_FORMAT_EMT,
 	 "Graphics Interchange Format", WLZEFF_FORMAT_GIF,
+	 "GRUMMP SMESH", WLZEFF_FORMAT_SMESH,
 	 "GRUMMP VMESH", WLZEFF_FORMAT_VMESH,
 	 "Image Cytometry Standard", WLZEFF_FORMAT_ICS,
 	 "IPLab", WLZEFF_FORMAT_IPL,
 	 "JPEG", WLZEFF_FORMAT_JPEG,
 	 "Microsoft Bitmap", WLZEFF_FORMAT_BMP,
-	 "NETGEN tetrahedral mesh", WLZEFF_FORMAT_MESH,
+	 "Pascal Frey's medit tetrahedral mesh format", WLZEFF_FORMAT_MESH,
 	 "Neuroimaging Informatics Technology Initiative", WLZEFF_FORMAT_NIFTI,
 	 "Jonathan Shewchuk's mesh format", WLZEFF_FORMAT_NODEELE,
 	 "OBJ", WLZEFF_FORMAT_OBJ,
@@ -154,6 +158,8 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*fmtBmpStr  = "Microsoft Bitmap",
   		*extDenStr  = "den",
   		*fmtDenStr  = "Stanford Density",
+		*extEMTStr = "emt",
+		*fmtEMTStr = "Netgen neutral mesh format",
 		*extGifStr  = "gif",
 		*fmtGifStr  = "Graphics Interchange Format",
   		*extIcsStr  = "ics",
@@ -163,7 +169,7 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*extJpegStr = "jpg",
 		*fmtJpegStr = "JPEG",
 		*extMeshStr = "mesh",
-		*fmtMeshStr = "NETGEN tetrahedral mesh",
+		*fmtMeshStr = "Pascal Frey's medit tetrahedral mesh format",
 		*extNiftiStr = "nii",
 		*fmtNiftiStr = "Neuroimaging Informatics Technology Initiative",
 		*extNodeEleStr = "node",
@@ -180,6 +186,8 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*fmtRawStr  = "Raw",
   		*extSlcStr  = "slc",
 		*fmtSlcStr  = "SLC",
+		*extSMeshStr = "smesh",
+		*fmtSMeshStr = "GRUMMP SMESH",
 		*extTxtStr  = "txt",
 		*fmtTxtStr  = "Text",
 		*extTiffStr = "tif",
@@ -202,6 +210,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     case WLZEFF_FORMAT_DEN:
       fmtStr = fmtDenStr;
       extStr = extDenStr;
+      break;
+    case WLZEFF_FORMAT_EMT:
+      fmtStr = fmtEMTStr;
+      extStr = extEMTStr;
       break;
     case WLZEFF_FORMAT_GIF:
       fmtStr = fmtGifStr;
@@ -286,6 +298,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     case WLZEFF_FORMAT_NIFTI:
       fmtStr = fmtNiftiStr;
       extStr = extNiftiStr;
+      break;
+    case WLZEFF_FORMAT_SMESH:
+      fmtStr = fmtSMeshStr;
+      extStr = extSMeshStr;
       break;
     default:
       break;
@@ -402,6 +418,9 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
       case WLZEFF_FORMAT_DEN:
 	obj = WlzEffReadObjDen(fP, &errNum);
 	break;
+      case WLZEFF_FORMAT_EMT:
+	obj = WlzEffReadObjEMT(fP, &errNum);
+	break;
       case WLZEFF_FORMAT_GIF:
         obj = WlzEffReadObjGif(fP, &errNum);
 	break;
@@ -458,6 +477,9 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
 	break;
       case WLZEFF_FORMAT_ANL:
         obj = WlzEffReadObjAnl(fName, &errNum);
+	break;
+      case WLZEFF_FORMAT_SMESH:
+	obj = WlzEffReadObjSMesh(fP, &errNum);
 	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
@@ -539,6 +561,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
       case WLZEFF_FORMAT_DEN:
 	errNum = WlzEffWriteObjDen(fP, obj);
 	break;
+      case WLZEFF_FORMAT_EMT:
+	errNum = WlzEffWriteObjEMT(fP, obj);
+	break;
       case WLZEFF_FORMAT_GIF:
         errNum = WLZ_ERR_UNIMPLEMENTED;
 	break;
@@ -598,6 +623,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 	break;
       case WLZEFF_FORMAT_NIFTI:
 	errNum = WlzEffWriteObjNifti(fName, obj);
+	break;
+      case WLZEFF_FORMAT_SMESH:
+	errNum = WlzEffWriteObjSMesh(fP, obj);
 	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
