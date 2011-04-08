@@ -181,6 +181,14 @@ extern WlzErrorNum 		WlzEffWriteObjObj(
 				  FILE *fP,
 				  WlzObject *obj);
 
+/* From WlzExtFFEMT.c */
+extern WlzObject 		*WlzEffReadObjEMT(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum 		WlzEffWriteObjEMT(
+				  FILE *fP,
+				  WlzObject *obj);
+
 /* From WlzExtFFPic.c */
 extern WlzObject 		*WlzEffReadObjPic(
 				  FILE *fP,
@@ -221,6 +229,14 @@ extern WlzObject 		*WlzEffReadObjSlc(
 				  FILE *fP,
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum 		WlzEffWriteObjSlc(
+				  FILE *fP,
+				  WlzObject *obj);
+
+/* From WlzExtFFSMesh.c */
+extern WlzObject 		*WlzEffReadObjSMesh(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum 		WlzEffWriteObjSMesh(
 				  FILE *fP,
 				  WlzObject *obj);
 
