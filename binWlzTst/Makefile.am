@@ -51,6 +51,7 @@ bin_PROGRAMS		= \
 			  WlzTstCMeshVtxInMesh \
 			  WlzTstGeomArcLength2D \
 			  WlzTstGeomLineTriangleIntersect \
+			  WlzTstGeomLSqOPlane \
 			  WlzTstGeomRectFromWideLine \
 			  WlzTstGeomTetraAffineSolve \
 			  WlzTstGeomTriangleAffineSolve \
@@ -89,6 +90,10 @@ WlzTstGeomArcLength2D_LDFLAGS		= $(AM_LFLAGS)
 WlzTstGeomLineTriangleIntersect_SOURCES	= WlzTstGeomLineTriangleIntersect.c
 WlzTstGeomLineTriangleIntersect_LDADD	= $(LDADD)
 WlzTstGeomLineTriangleIntersect_LDFLAGS	= $(AM_LFLAGS)
+
+WlzTstGeomLSqOPlane_SOURCES		= WlzTstGeomLSqOPlane.c
+WlzTstGeomLSqOPlane_LDADD		= $(LDADD)
+WlzTstGeomLSqOPlane_LDFLAGS		= $(AM_LFLAGS)
 
 WlzTstGeomRectFromWideLine_SOURCES	= WlzTstGeomRectFromWideLine.c
 WlzTstGeomRectFromWideLine_LDADD	= $(LDADD)
