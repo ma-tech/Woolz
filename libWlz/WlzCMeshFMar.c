@@ -296,7 +296,7 @@ WlzObject	*WlzCMeshDistance2D(WlzObject *objG,
     else
     {
       WlzObject	*objT = NULL;
-      objT = WlzCMeshToDomObj(objM, 0, &errNum);
+      objT = WlzCMeshToDomObj(objM, 0, 1.0, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
 	objR = WlzCMeshToDomObjValues(objT, objM, WLZ_INTERPOLATION_LINEAR,
@@ -422,7 +422,7 @@ WlzObject	*WlzCMeshDistance3D(WlzObject *objG,
     else
     {
       WlzObject	*objT = NULL;
-      objT = WlzCMeshToDomObj(objM, 0, &errNum);
+      objT = WlzCMeshToDomObj(objM, 0, 1.0, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
 	objR = WlzCMeshToDomObjValues(objT, objM, WLZ_INTERPOLATION_LINEAR,
