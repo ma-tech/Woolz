@@ -53,6 +53,7 @@ bin_PROGRAMS		= \
 			  WlzAutoCorrelate \
 			  WlzBasisFnTransformObj \
 			  WlzBasisFnTransformVertices \
+			  WlzBlobsToMarkers \
 			  WlzBoundaryToObj \
 			  WlzBoundaryVertices \
 			  WlzBoundingBox \
@@ -66,12 +67,14 @@ bin_PROGRAMS		= \
 			  WlzCMeshDistance \
 			  WlzCMeshFromContour \
 			  WlzCMeshGen \
+			  WlzCMeshIntersectDom \
 			  WlzCMeshSurfaceMap \
 			  WlzCMeshToContour \
 			  WlzCMeshCurvToImage \
 			  WlzCMeshToSpatialDomain \
 			  WlzCMeshTransformVtx \
 			  WlzCMeshTransformObj \
+			  WlzCMeshTransformInvert \
 			  WlzCompound \
 			  WlzCompoundArrayToScalar \
 			  WlzCompDispIncGrey \
@@ -228,6 +231,10 @@ WlzBasisFnTransformVertices_SOURCES	= WlzBasisFnTransformVertices.c
 WlzBasisFnTransformVertices_LDADD	= $(LDADD)
 WlzBasisFnTransformVertices_LDFLAGS	= $(AM_LFLAGS)
 
+WlzBlobsToMarkers_SOURCES		= WlzBlobsToMarkers.c
+WlzBlobsToMarkers_LDADD			= $(LDADD)
+WlzBlobsToMarkers_LDFLAGS		= $(AM_LFLAGS)
+
 WlzBoundaryToObj_SOURCES		= WlzBoundaryToObj.c
 WlzBoundaryToObj_LDADD			= $(LDADD)
 WlzBoundaryToObj_LDFLAGS		= $(AM_LFLAGS)
@@ -288,6 +295,10 @@ WlzCMeshCurvToImage_SOURCES		= WlzCMeshCurvToImage.c
 WlzCMeshCurvToImage_LDADD		= $(LDADD)
 WlzCMeshCurvToImage_LDFLAGS		= $(AM_LFLAGS)
 
+WlzCMeshIntersectDom_SOURCES		= WlzCMeshIntersectDom.c
+WlzCMeshIntersectDom_LDADD		= $(LDADD)
+WlzCMeshIntersectDom_LDFLAGS		= $(AM_LFLAGS)
+
 WlzCMeshSurfaceMap_SOURCES		= WlzCMeshSurfaceMap.c
 WlzCMeshSurfaceMap_LDADD		= $(LDADD)
 WlzCMeshSurfaceMap_LDFLAGS		= $(AM_LFLAGS)
@@ -296,13 +307,17 @@ WlzCMeshToSpatialDomain_SOURCES		= WlzCMeshToSpatialDomain.c
 WlzCMeshToSpatialDomain_LDADD		= $(LDADD)
 WlzCMeshToSpatialDomain_LDFLAGS		= $(AM_LFLAGS)
 
-WlzCMeshTransformVtx_SOURCES		= WlzCMeshTransformVtx.c
-WlzCMeshTransformVtx_LDADD		= $(LDADD)
-WlzCMeshTransformVtx_LDFLAGS		= $(AM_LFLAGS)
+WlzCMeshTransformInvert_SOURCES		= WlzCMeshTransformInvert.c
+WlzCMeshTransformInvert_LDADD		= $(LDADD)
+WlzCMeshTransformInvert_LDFLAGS		= $(AM_LFLAGS)
 
 WlzCMeshTransformObj_SOURCES		= WlzCMeshTransformObj.c
 WlzCMeshTransformObj_LDADD		= $(LDADD)
 WlzCMeshTransformObj_LDFLAGS		= $(AM_LFLAGS)
+
+WlzCMeshTransformVtx_SOURCES		= WlzCMeshTransformVtx.c
+WlzCMeshTransformVtx_LDADD		= $(LDADD)
+WlzCMeshTransformVtx_LDFLAGS		= $(AM_LFLAGS)
 
 WlzCompDispIncGrey_SOURCES		= WlzCompDispIncGrey.c
 WlzCompDispIncGrey_LDADD		= $(LDADD)
