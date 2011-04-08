@@ -73,6 +73,7 @@ libWlz_la_SOURCES 	= \
 			  WlzClipObjToBox.c \
 			  WlzCMeshCurvature.c \
 			  WlzCMeshFMar.c \
+			  WlzCMeshIntersect.c \
 			  WlzCMeshScan.c \
 			  WlzCMeshSurfMap.c \
 			  WlzCMeshTransform.c \
