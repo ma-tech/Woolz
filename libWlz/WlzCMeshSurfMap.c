@@ -56,6 +56,14 @@ static WlzGMModel 		*WlzCMeshToGMModel2D5(
 				  int disp,
 				  WlzErrorNum *dstErr);
 
+/*!
+* \return	Woolz object with mesh transform.
+* \ingroup	WlzTransform
+* \brief	Computes a conforming mesh transform which maps the
+* 		given surface mesh to a circular domain on a plane.
+* \param	inObj			Given surface mesh.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject	*WlzCMeshCompSurfMapToCircle(WlzObject *inObj,
 				WlzErrorNum *dstErr)
 {
@@ -63,6 +71,8 @@ WlzObject	*WlzCMeshCompSurfMapToCircle(WlzObject *inObj,
   int		*gBN = NULL;
   WlzDVertex3	*dBV = NULL,
   		*gBV = NULL;
+  WlzDVertex3	plNm,
+  		plCn;
   WlzCMesh2D5	*mesh;
   WlzObject	*rtnObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -112,12 +122,18 @@ WlzObject	*WlzCMeshCompSurfMapToCircle(WlzObject *inObj,
     }
     /* Fit plane to the given mesh boundary nodes while finding the
      * centre of mass of the nodes. */
+    errNum = WlzGeometryLSqOPlane(&plNm, &plCn, nBN, gBV);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Fit a circle to the boundary nodes projected onto the plane. */
+
+    /* For each of the boundary nodes, set it's displacement to be
+     * the closest point on the fitted circle. */
+    
     /* TODO HACK TODO */
   }
-  /* Compute displacements for the boundary nodes onto the circle
-   * which is in the computed plane, centred on the centre of mass
-   * and which just encloses all boundary nodes. */
-  /* TODO HACK TODO */
+  /* Compute conformal mapping of the mesh to the circular boundary. */
   if(errNum == WLZ_ERR_NONE)
   {
     rtnObj = WlzCMeshCompSurfMap(inObj, nBN, dBV, nBN, gBV, &errNum);
@@ -435,7 +451,7 @@ WlzObject	*WlzCMeshCompSurfMapIdx(WlzCMesh2D5 *mesh,
       (void )fprintf(stderr, "]\n");
 #endif 
       errNum = WlzErrorFromAlg(
-	  AlgMatrixSolveLSQR(aM, bV, xV, 1.0e-10, 1.0e-10, 1.0e-10, 1000, 0,
+	  AlgMatrixSolveLSQR(aM, bV, xV, 1.0e-10, 1.0e-10, 1.0e-10, 10000, 0,
 	    NULL, NULL, NULL, NULL, NULL, NULL, NULL));
     }
     if(errNum == WLZ_ERR_NONE)
