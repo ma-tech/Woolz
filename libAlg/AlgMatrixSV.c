@@ -51,13 +51,11 @@ static double	AlgMatrixSVPythag(double, double);
 * \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Solves the matrix equation A.x = b for x, where A is a
-*		matrix with at least as many columns as rows.
+*		matrix with at least as many rows as columns.
 *		On return the matrix A is overwritten by the matrix U
 *		in the singular value decomposition:
 *		  A = U.W.V'
 * \param	aMat			Matrix A.
-* \param	nM			Number of rows in matrix A.
-* \param	nN			Number of columns in matrix A.
 * \param	bVec			Column matrix b, overwritten
 *					by matrix x on return.
 * \param	tol			Tolerance for singular values,
@@ -164,8 +162,6 @@ AlgError	AlgMatrixSVSolve(AlgMatrix aMat, double *bVec, double tol,
 *		See AlgMatrixSVSolve() for a usage example.
 * \param	aMat			The given matrix A, and U on
 *					return.
-* \param	nM			Number of rows in matrix A.
-* \param	nN			Number of columns in matrix A.
 * \param	wMat			The diagonal matrix of singular
 *					values, returned as a vector.
 * \param	vMat			The matrix V (not it's

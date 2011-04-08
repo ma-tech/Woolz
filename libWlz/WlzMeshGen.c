@@ -1096,6 +1096,7 @@ WlzCMeshNod3D	*WlzCMeshNewNod3D(WlzCMesh3D *mesh, WlzDVertex3 pos,
   else
   {
     nNod->pos = pos;
+    nNod->flags = 0;
     WlzCMeshAddNodToGrid3D(mesh, nNod);
   }
   if(dstErr)
@@ -8740,8 +8741,8 @@ static WlzErrorNum WlzCMeshElmsFromLBTNode3D5(WlzCMesh3D *mesh,
 * 		weight proportional to the area.
 *
 * 		\f[
- 		   n = \sum_{i\inE} {A_i n_i}
-* 		\f]
+ 		   n = \sum_{i\in E} {A_i n_i}
+  		\f]
 * 		where \f$A_i\f$ is the area of the i'th element \f$n_i\f$
 * 		is it normal and \f$E\f$ is the set of elements that use
 * 		the node.

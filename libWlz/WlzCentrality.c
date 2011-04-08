@@ -94,7 +94,7 @@ static void			WlzCentralityUpdate2D(
 * 		centre of mass to each feature point is defined to be
 * 		\f$r_{i,j}\f$ and the mass at this point \f$m_{i,j}\f$.
 * 		The centrality of the feature domain \f$\Omega_f\f$ with
-* 		respect to the border domain \fOmega_b\f$ is defined to be
+* 		respect to the border domain \f$Omega_b\f$ is defined to be
 * 		\f[
 		c = \frac{\sum_{i,j}{m_{i,j}(R_i - r_{i,j})}}
 		         {\sum_{i,j}{m_{i,j}R}}

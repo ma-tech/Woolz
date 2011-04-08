@@ -48,18 +48,13 @@ static char _WlzRGBA_calarBinaryOp_c[] = "MRC HGU $Id:";
 #include <Wlz.h>
 
 /*!
-* \return       Woolz error.
-* \param    o1	Input object.
-* \param    pval	Operand value.
-* \param    o3	Oject for the return values. Setting equal to
- <tt>o1</tt> means values will be overwritten.
- * \param    op	Opertor to be applied.
-* \par      Source:
-*                WlzScalarBinaryOp.c
+* \return	Woolz error code.
 * \ingroup	WlzAritmetic
-* \brief	Performsscalar operation on objects with RGBA values.
-* 		See WlzScalarBinaryOp().
-* 					be NULL.
+* \brief	Performs scalar operation on objects with RGBA values.
+* \param	o1			Input object.
+* \param	pval			Operand value.
+* \param	op			Opertor to be applied.
+* \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject *WlzRGBAScalarBinaryOp(
   WlzObject		*o1,
