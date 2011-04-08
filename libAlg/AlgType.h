@@ -134,7 +134,7 @@ typedef struct _AlgMatrixCore
   AlgMatrixType	type;		/*!< Matrix type. */
   size_t	nR;		/*!< Number of rows. */
   size_t	nC;		/*!< Number of columns. */
-} AlgmatrixCore;
+} AlgMatrixCore;
 
 /*!
 * \struct	_AlgMatrixRect
