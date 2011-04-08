@@ -106,6 +106,12 @@ static WlzContour 	*WlzContourBndObj3D(
 			  WlzObject *obj,
 			  double ctrVal,
 			  WlzErrorNum *dstErr);
+static WlzContour 	*WlzContourBndCMeshObj2D(
+			  WlzObject *gObj,
+			  WlzErrorNum *dstErr);
+static WlzContour 	*WlzContourBndCMeshObj3D(
+			  WlzObject *gObj,
+			  WlzErrorNum *dstErr);
 static WlzContour 	*WlzContourFromPoints3D(
 			  WlzObject *dObj,
 			  WlzVertexType vtxType,
@@ -409,6 +415,28 @@ WlzContour	*WlzContourObj(WlzObject *srcObj, WlzContourMethod ctrMtd,
 	    ctr = WlzContourRBFBndObj3D(srcObj, 2, 2, 10, 10, 10,
 	    			        1.0, 2.0, 0.1, 0.1, 1.0,
 	    				&errNum);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_PARAM_DATA;
+	    break;
+	}
+	break;
+      case WLZ_CMESH_2D:
+        switch(ctrMtd)
+	{
+	  case WLZ_CONTOUR_MTD_BND:
+	    ctr = WlzContourBndCMeshObj2D(srcObj, &errNum);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_PARAM_DATA;
+	    break;
+	}
+	break;
+      case WLZ_CMESH_3D:
+        switch(ctrMtd)
+	{
+	  case WLZ_CONTOUR_MTD_BND:
+	    ctr = WlzContourBndCMeshObj3D(srcObj, &errNum);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_PARAM_DATA;
@@ -2063,6 +2091,191 @@ static WlzContour *WlzContourBndObj2D(WlzObject *gObj, WlzErrorNum *dstErr)
   (void )WlzFreeObj(cObj);
   (void )WlzFreeObj(dObj);
   (void )WlzFreeObj(sObj);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ctr);
+}
+
+/*!
+* \return	Woolz contour or NULL on error.
+* \ingroup	WlzContour
+* \brief	Computes a 2D contour from the boundary of the 2D conforming
+* 		mesh object.
+* \param	gObj			The given object.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
+static WlzContour *WlzContourBndCMeshObj2D(WlzObject *gObj, WlzErrorNum *dstErr)
+{
+  WlzCMesh2D	*mesh;
+  WlzGMModel 	*model;
+  WlzContour 	*ctr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((mesh = gObj->domain.cm2) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_2D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if(mesh->res.elm.numEnt < 1)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  /* Create new contour with geometric model. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((ctr = WlzMakeContour(&errNum)) != NULL)
+    {
+      model = WlzGMModelNew(WLZ_GMMOD_2D, 0, 0, &errNum);
+      ctr->model = WlzAssignGMModel(model, NULL);
+    }
+  }
+  /* Find all mesh boundary element edge uses and add them to the geometric
+   * model. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE;
+    AlcVector	*vec;
+
+    vec = mesh->res.elm.vec;
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      int	idN;
+      WlzCMeshElm2D *elm;
+
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(vec, idE);
+      if(elm->idx >= 0)
+      {
+	for(idN = 0; idN < 3; ++idN)
+	{
+	  WlzCMeshEdgU2D *edu;
+
+	  edu = elm->edu + idN;
+	  if((edu->opp == NULL) || (edu->opp == edu))
+	  {
+	    WlzDVertex2 pos[2];
+
+	    pos[0] = edu->nod->pos;
+	    pos[1] = edu->next->nod->pos;
+	    if((errNum = WlzGMModelConstructSimplex2D(model,
+	                                              pos)) != WLZ_ERR_NONE)
+	    {
+	      goto ERROR;
+	    }
+	  }
+	}
+      }
+    }
+  }
+ERROR:
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(ctr)
+    {
+      ctr = NULL;
+    }
+    else if(model)
+    {
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ctr);
+}
+
+/*!
+* \return	Woolz contour or NULL on error.
+* \ingroup	WlzContour
+* \brief	Computes a 2D contour from the boundary of the 2D conforming
+* 		mesh object.
+* \param	gObj			The given object.
+* \param	dstErr			Destination error pointer, may
+*                                       be NULL.
+*/
+static WlzContour *WlzContourBndCMeshObj3D(WlzObject *gObj, WlzErrorNum *dstErr)
+{
+  WlzCMesh3D	*mesh;
+  WlzGMModel 	*model;
+  WlzContour 	*ctr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((mesh = gObj->domain.cm3) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_3D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if(mesh->res.elm.numEnt < 1)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  /* Create new contour with geometric model. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((ctr = WlzMakeContour(&errNum)) != NULL)
+    {
+      model = WlzGMModelNew(WLZ_GMMOD_3D, 0, 0, &errNum);
+      ctr->model = WlzAssignGMModel(model, NULL);
+    }
+  }
+  /* Find all mesh boundary element edge uses and add them to the geometric
+   * model. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE;
+    AlcVector	*vec;
+
+    vec = mesh->res.elm.vec;
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      int	idF;
+      WlzCMeshElm3D *elm;
+
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(vec, idE);
+      if(elm->idx >= 0)
+      {
+	for(idF = 0; idF < 4; ++idF)
+	{
+	  WlzCMeshFace *fce;
+
+	  fce = elm->face + idF;
+	  if((fce->opp == NULL) || (fce->opp == fce))
+	  {
+	    WlzDVertex3 pos[3];
+
+	    pos[0] = fce->edu[0].nod->pos;
+	    pos[1] = fce->edu[1].nod->pos;
+	    pos[2] = fce->edu[2].nod->pos;
+	    if((errNum = WlzGMModelConstructSimplex3D(model,
+	                                              pos)) != WLZ_ERR_NONE)
+	    {
+	      goto ERROR;
+	    }
+	  }
+	}
+      }
+    }
+  }
+ERROR:
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(ctr)
+    {
+      ctr = NULL;
+    }
+    else if(model)
+    {
+    }
+  }
   if(dstErr)
   {
     *dstErr = errNum;
@@ -4790,230 +5003,3 @@ static WlzDVertex3 WlzContourItpTetSide(double valOrg, double valDst,
   itp.vtZ = ((valDst * posOrg.vtZ)  - (valOrg * posDst.vtZ)) / tD0;
   return(itp);
 }
-
-/* #define TEST_WLZCONTOUR */
-#ifdef TEST_WLZCONTOUR
-/* Test main() for WlzContourObj(). */
-
-extern int	getopt(int argc, char * const *argv, const char *optstring);
-
-extern char	*optarg;
-extern int	optind,
-		opterr,
-		optopt;
-
-int             main(int argc, char *argv[])
-{
-  int           option,
-  		ok = 1,
-		usage = 0,
-  		idN = 0,
-		nCol,
-		maxCol = 7,
-		nmECnt,
-		nmEdgeFlg = 0;
-  double	ctrVal = 100,
-  		ctrWth = 1.0;
-  FILE		*fP = NULL;
-  char		*inObjFileStr,
-  		*outFileStr;
-  WlzGMEdge	*tE;
-  WlzGMEdgeT	*tET;
-  WlzGMEdge	**nmE;
-  WlzObject     *inObj = NULL;
-  WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
-  WlzContour	*ctr = NULL;
-  WlzErrorNum   errNum = WLZ_ERR_NONE;
-  WlzDVertex3	tEGV[2];
-  WlzDVertex2	scale,
-  		offset;
-  static char	optList[] = "eghic:o:v:w:";
-  const char	outFileStrDef[] = "-",
-  		inObjFileStrDef[] = "-";
-
-  nCol = maxCol;
-  outFileStr = (char *)outFileStrDef;
-  inObjFileStr = (char *)inObjFileStrDef;
-  while(ok && ((option = getopt(argc, argv, optList)) != -1))
-  {
-    switch(option)
-    {
-      case 'e':
-        nmEdgeFlg = 1;
-	break;
-      case 'g':
-        ctrMtd = WLZ_CONTOUR_MTD_GRD;
-	break;
-      case 'h':
-        usage = 1;
-	ok = 0;
-	break;
-      case 'i':
-        ctrMtd = WLZ_CONTOUR_MTD_ISO;
-	break;
-      case 'c':
-        if(sscanf(optarg, "%d", &nCol) != 1)
-	{
-	  usage = 1;
-	  ok = 0;
-	}
-	else
-	{
-	  if(nCol < 1)
-	  {
-	    nCol = 1;
-	  }
-	  else if(nCol > maxCol)
-	  {
-	    nCol = maxCol;
-	  }
-	}
-	break;
-      case 'o':
-        outFileStr = optarg;
-	break;
-      case 'v':
-        if(sscanf(optarg, "%lg", &ctrVal) != 1)
-	{
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
-      case 'w':
-        if(sscanf(optarg, "%lg", &ctrWth) != 1)
-	{
-	  usage = 1;
-	  ok = 0;
-	}
-	break;
-      default:
-        usage = 1;
-	ok = 0;
-	break;
-    }
-  }
-  if(ok)
-  {
-    if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
-       (outFileStr == NULL) || (*outFileStr == '\0'))
-    {
-      ok = 0;
-      usage = 1;
-    }
-    if(ok && (optind < argc))
-    {
-      if((optind + 1) != argc)
-      {
-        usage = 1;
-	ok = 0;
-      }
-      else
-      {
-        inObjFileStr = *(argv + optind);
-      }
-    }
-  }
-  if(ok)
-  {
-    if((inObjFileStr == NULL) ||
-       (*inObjFileStr == '\0') ||
-       ((fP = (strcmp(inObjFileStr, "-")?
-	      fopen(inObjFileStr, "r"): stdin)) == NULL) ||
-       ((inObj= WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
-       (errNum != WLZ_ERR_NONE))
-    {
-      ok = 0;
-      (void )fprintf(stderr,
-		     "%s: failed to read object from file %s\n",
-		     *argv, inObjFileStr);
-    }
-    if(fP && strcmp(inObjFileStr, "-"))
-    {
-      fclose(fP);
-    }
-  }
-  if(ok)
-  {
-  if((fP = (strcmp(outFileStr, "-")?
-	   fopen(outFileStr, "w"): stdout)) == NULL)
-    {
-      ok = 0;
-      (void )fprintf(stderr, "%s Failed to open output file %s.\n",
-      	      	     argv[0], outFileStr);
-    }
-  }
-  if(ok)
-  {
-    ctr = WlzContourObj(inObj, ctrMtd, ctrVal, ctrWth, 0, &errNum);
-    if(errNum != WLZ_ERR_NONE)
-    {
-      ok = 0;
-      (void )fprintf(stderr, "%s Failed to compute contour.\n",
-      	     	     argv[0]);
-    }
-  }
-  if(ok && nmEdgeFlg)
-  {
-    nmE = WlzGMModelFindNMEdges(ctr->model, &nmECnt, &errNum);
-    if(errNum != WLZ_ERR_NONE)
-    {
-      ok = 0;
-      (void )fprintf(stderr,
-      		     "%s Failed to search for non-manifold edges (%d).\n",
-		     argv[0], (int )errNum);
-    }
-    else
-    {
-      for(idN = 0; idN < nmECnt; ++idN)
-      {
-        tE = *(nmE + idN);
-	tET = tE->edgeT;
-	(void )WlzGMVertexGetG3D(tET->vertexT->diskT->vertex, &tEGV[0]);
-	(void )WlzGMVertexGetG3D(tET->opp->vertexT->diskT->vertex, &tEGV[1]);
-	(void )fprintf(stderr, "%d {%g, %g, %g} {%g, %g, %g}\n",
-		       tE->idx,
-		       (tEGV + 0)->vtX, (tEGV + 0)->vtY, (tEGV + 0)->vtZ,
-		       (tEGV + 1)->vtX, (tEGV + 1)->vtY, (tEGV + 1)->vtZ);
-      }
-    }
-  }
-  if(inObj)
-  {
-    (void )WlzFreeObj(inObj);
-  }
-  if(ctr)
-  {
-    (void )WlzFreeContour(ctr);
-  }
-  if(fP && strcmp(outFileStr, "-"))
-  {
-    (void )fclose(fP);
-  }
-  if(usage)
-  {
-      (void )fprintf(stderr,
-      "Usage: %s%sExample: %s%s",
-      *argv,
-      " [-o<output object>] [-h] [-o] [-g] [-i] [-c#] [-o#] [-v#] [-w#]\n"
-      "        [<input object>]\n"
-      "Options:\n"
-      "  -h  Prints this usage information.\n"
-      "  -o  Output object file name.\n"
-      "  -g  Compute maximal gradient contours.\n"
-      "  -i  Compute iso-value contours.\n"
-      "  -c  Cycle contour colours (useful for debuging).\n"
-      "  -v  Contour iso-value.\n"
-      "  -w  Contour (Deriche) gradient operator width.\n"
-      "Computes a contour list from the given input object.\n"
-      "The input object is read from stdin and output data are written\n"
-      "to stdout unless filenames are given.\n",
-      *argv,
-      " -i -v 0.0 -n 8 in.wlz\n"
-      "The input Woolz object is read from in.wlz, and the iso-value\n"
-      "(iso-value = 1.0) contour list is written to stdout.\n"
-      "Contours with less than 8 nodes are ignored.\n");
-  }
-  return(!ok);
-}
-
-#endif /* TEST_WLZCONTOUR */
