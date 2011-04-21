@@ -4075,7 +4075,7 @@ extern double	WlzGeomInterpolateTet3D(WlzDVertex3 p0, WlzDVertex3 p1,
  		                       {\|\mathbf{l_1} \times \mathbf{l_2}\|}
 				  \mathbf{l_1} \times \mathbf{l_2}\f$
 * 		and
-* 		  \f$\mathbf{v} = \mathbf{n}} \times \mathbf{l_1}\|}\f$.
+* 		  \f$\mathbf{v} = \mathbf{n} \times \mathbf{l_1}\f$.
 *
 *		The first vertex in the plane is not returned because it's
 *		coordinates are always (0,0).
