@@ -772,6 +772,112 @@ WlzMakeValueLine(WlzRagRValues 	*vtb,
 }
 
 /*!
+* \return       New domain object without values.
+* \brief        Constructs a domain from the union of marker domains with
+*               a marker domain at each of the given vertex positions.
+* \param        nVtx                    Number of vertices.
+* \param        vtx                     Given vertices.
+* \param        mType                   Marker type.
+* \param        mSz                     Marker size. This is the radius of a
+*					sphere marker. The marker size is
+*					ignored for point markers.
+* \param        dstErr                  Destination error pointer, may be NULL.
+*/
+WlzObject 	*WlzMakeMarkers(WlzVertexType vType,
+                                int nVtx, WlzVertexP vtx,
+                                WlzMarkerType mType, int mSz,
+                                WlzErrorNum *dstErr)
+{
+  int           idx,
+                dim;
+  WlzObjectType oType;
+  WlzObject     *mObj = NULL;
+  WlzObject     *tObj[4];
+  WlzIVertex3   off;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  tObj[0] = tObj[1] = tObj[2] = tObj[3] = NULL;
+  if((nVtx <= 0) || (mSz <= 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if(vtx.v == NULL)
+  {
+    errNum = WLZ_ERR_PARAM_NULL; 
+  } 
+  else
+  {
+    switch(vType)
+    { 
+      case WLZ_VERTEX_I2:
+        dim = 2;
+        oType = WLZ_2D_DOMAINOBJ;
+        break;
+      case WLZ_VERTEX_I3:
+        dim = 3;
+        oType = WLZ_3D_DOMAINOBJ;
+        break;  
+      default:  
+        errNum = WLZ_ERR_PARAM_DATA;
+        break;
+    }
+  }                             
+  if(errNum == WLZ_ERR_NONE)    
+  {
+    switch(mType)
+    {
+      case WLZ_MARKER_POINT:
+        tObj[0] = WlzMakeSinglePixelObject(oType, 0, 0, 0, &errNum);
+        break;
+      case WLZ_MARKER_SPHERE:
+        tObj[0] = WlzMakeSphereObject(oType, mSz, 0.0, 0.0, 0.0, &errNum);
+        break;
+      default:
+        errNum = WLZ_ERR_PARAM_TYPE;
+        break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tObj[1] = WlzMakeEmpty(&errNum);
+  }
+  for(idx = 0; (idx < nVtx) && (errNum == WLZ_ERR_NONE); ++idx)
+  {
+    if(dim == 2)
+    {
+      off.vtX = (vtx.i2 + idx)->vtX;
+      off.vtY = (vtx.i2 + idx)->vtY;
+    }
+    else
+    {
+      off = *(vtx.i3 + idx);
+    }
+    tObj[2] = WlzShiftObject(tObj[0], off.vtX, off.vtY, off.vtZ, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      tObj[3] = WlzUnion2(tObj[1], tObj[2], &errNum);
+    }
+    WlzFreeObj(tObj[1]); tObj[1] = NULL;
+    WlzFreeObj(tObj[2]); tObj[2] = NULL;
+    if(errNum == WLZ_ERR_NONE)
+    {
+      tObj[1] = tObj[3];
+      tObj[3] = NULL;
+    }
+  }
+  WlzFreeObj(tObj[0]);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    mObj = tObj[1];
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(mObj);
+}
+
+/*!
 * \return	New point domain.
 * \ingroup	WlzFeatures
 * \brief	Creates a new point domain. A point domain consists of an
