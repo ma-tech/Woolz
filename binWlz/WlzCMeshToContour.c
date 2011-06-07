@@ -49,7 +49,7 @@ static char _WlzCMeshToContour_c[] = "MRC HGU $Id$";
 WlzCMeshToContour - creates a contour from a conforming mesh.
 \par Synopsis
 \verbatim
-WlzCMeshToContour [-h] [-d>] [-o<output object>] [<input object>]
+WlzCMeshToContour [-h] [-d #] [-o<output object>] [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -59,7 +59,8 @@ WlzCMeshToContour [-h] [-d>] [-o<output object>] [<input object>]
   </tr>
   <tr>
     <td><b>-d</b></td>
-    <td>Apply displacements of mesh if they exist.</td>
+    <td>Apply this scale factor to the displacements of mesh if they exist.
+        By default no mesh displacements are applied.</td>
   </tr>
   <tr>
     <td><b>-o</b></td>
@@ -105,9 +106,9 @@ extern int      optind,
 int             main(int argc, char **argv)
 {
   int		option,
-		disp = 0,
   		ok = 1,
 		usage = 0;
+  double	disp = 0.0;
   WlzObject     *inObj = NULL,
   		*outObj = NULL;
   FILE		*fP = NULL;
@@ -115,7 +116,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "hdo:",
+  static char	optList[] = "hd:o:",
   		fileStrDef[] = "-";
 
   opterr = 0;
@@ -129,7 +130,10 @@ int             main(int argc, char **argv)
         outObjFileStr = optarg;
 	break;
       case 'd':
-        disp = 1;
+	if(sscanf(optarg, "%lg", &disp) != 1)
+	{
+	  usage = 1;
+	}
 	break;
       case 'h': /* FALLTHROUGH */
       default:
@@ -207,17 +211,18 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-h] [-d] [-o<output object>] [<input object>]\n"
+    " [-h] [-d #] [-o<output object>] [<input object>]\n"
     "Options:\n"
     "  -h  Help, prints usage message.\n"
-    "  -d  Apply mesh displacements if they exist.\n"
+    "  -d  Apply given scale factor to mesh displacements if they exist.\n"
+    "      The default is no mesh displacements are applied.\n"
     "  -o  Output object file.\n"
     "Creates a contour object from a conforming mesh. This is currently\n"
     "only possible for a 2D5 conforming mesh, which results in a 3D contour\n"
     "(collection of surfaces).  By default the input file is read from the\n"
     "standard input and the output file is written to the standard output.\n",
     *argv,
-    "  -o out.wlz -d in.wlz\n"
+    "  -o out.wlz -d 1.0 in.wlz\n"
     "Reads a 2D5 conforming mesh from the file in.wlz, applies the meshes\n"
     "displacements to it's nodes and then outputs the corresponding contour\n"
     "to the file out.wlz.\n");
