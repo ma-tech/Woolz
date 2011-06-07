@@ -5926,6 +5926,8 @@ int		WlzCMeshClosestNod2D(WlzCMesh2D *mesh, WlzDVertex2 pos)
   WlzCMeshNod2D	*nod;
   WlzCMeshCell2D *cell;
 
+  /* TODO adapt as WlzCMeshClosestNod2D5() to allow for search from position
+   * outside of the cell grid. */
   if(mesh->res.nod.numEnt > 0)
   {
     idx1.vtX = idx1.vtY = 0;
@@ -5977,6 +5979,211 @@ int		WlzCMeshClosestNod2D(WlzCMesh2D *mesh, WlzDVertex2 pos)
 * 		by spiraling out from the cell containing the given
 * 		position.
 * \param	mesh			Given mesh.
+* \param	p			Given position.
+*/
+int		WlzCMeshClosestNod2D5(WlzCMesh2D5 *mesh, WlzDVertex3 p)
+{
+  int		closeNod = -1,
+		ring = 0,
+		firstRing = -1,
+		spiralCnt = 0;
+  double	minDstSq = DBL_MAX;
+  WlzIVertex3 	idx,
+	      	idx0,
+	      	idx1;
+  WlzCMeshCellGrid2D5 *cGrid;
+  const double	tol = WLZ_MESH_TOLERANCE;
+
+  cGrid = &(mesh->cGrid);
+  if(mesh->res.nod.numEnt > 0)
+  {
+    WlzDVertex3	gMin,
+    		gMax;
+
+    /* Check that the given test position is within the cell grid. */
+    WLZ_VTX_3_SET(gMin,
+                  mesh->bBox.xMin + tol,
+		  mesh->bBox.yMin + tol,
+		  mesh->bBox.zMin + tol);
+    WLZ_VTX_3_SET(gMax,
+                  mesh->bBox.xMin + (cGrid->nCells.vtX * cGrid->cellSz) - tol,
+                  mesh->bBox.yMin + (cGrid->nCells.vtY * cGrid->cellSz) - tol,
+                  mesh->bBox.zMin + (cGrid->nCells.vtZ * cGrid->cellSz) - tol);
+    if((p.vtX > gMin.vtX) && (p.vtX < gMax.vtX) &&
+       (p.vtY > gMin.vtY) && (p.vtY < gMax.vtY) &&
+       (p.vtZ > gMin.vtZ) && (p.vtZ < gMax.vtZ))
+    {
+      /* Find grid cell containing the given position. */
+      idx0 = WlzCMeshCellIdxVtx2D5(mesh, p);
+    }
+    else
+    {
+      /* Find the grid cell, the centroid of which is closest to the given
+       * position. This is done by looking for the intersection of a ray
+       * defined by kr + p with the axis aligned bounding box of the grid
+       * of cells. */
+      double	k,
+      		l,
+		lMSq = DBL_MAX;
+      WlzDVertex3 d,
+      		  q,
+		  qM,
+      		  r;
+
+      r.vtX = (0.5 * (gMin.vtX + gMax.vtX)) - p.vtX;
+      r.vtY = (0.5 * (gMin.vtY + gMax.vtY)) - p.vtY;
+      r.vtZ = (0.5 * (gMin.vtZ + gMax.vtZ)) - p.vtZ;
+      /* Look for minimum distance intersection with the grid cells. */
+      if(fabs(r.vtX) > tol)
+      {
+	/* Face x = gMin.vtX */
+        k = (gMin.vtX - p.vtX) / r.vtX;
+	WLZ_VTX_3_SET(q, gMin.vtX, p.vtY + (k * r.vtY), p.vtZ + (k * r.vtZ));
+	if((q.vtY > gMin.vtY - tol) && (q.vtY < gMax.vtY + tol) &&
+	   (q.vtZ > gMin.vtZ - tol) && (q.vtZ < gMax.vtZ + tol))
+	{
+	  WLZ_VTX_3_SUB(d, q, p);
+	  lMSq = WLZ_VTX_3_SQRLEN(d);
+	  qM = q;
+	}
+	/* Face x = gMax.vtX */
+	k = (gMax.vtX - p.vtX) / r.vtX;
+	WLZ_VTX_3_SET(q, gMax.vtX, p.vtY + (k * r.vtY), p.vtZ + (k * r.vtZ));
+	if((q.vtY > gMin.vtY - tol) && (q.vtY < gMax.vtY + tol) &&
+	   (q.vtZ > gMin.vtZ - tol) && (q.vtZ < gMax.vtZ + tol))
+	{
+	  WLZ_VTX_3_SUB(d, q, p);
+	  l = WLZ_VTX_3_SQRLEN(d);
+	  if(l < lMSq)
+	  {
+	    lMSq = l;
+	    qM = q;
+	  }
+	}
+      }
+      if(fabs(r.vtY) > tol)
+      {
+	/* Face y = gMin.vtY */
+        k = (gMin.vtY - p.vtY) / r.vtY;
+	WLZ_VTX_3_SET(q, p.vtX + (k * r.vtX), gMin.vtY, p.vtZ + (k * r.vtZ));
+	if((q.vtX > gMin.vtX - tol) && (q.vtX < gMax.vtX + tol) &&
+	   (q.vtZ > gMin.vtZ - tol) && (q.vtZ < gMax.vtZ + tol))
+	{
+	  WLZ_VTX_3_SUB(d, q, p);
+	  l = WLZ_VTX_3_SQRLEN(d);
+	  if(l < lMSq)
+	  {
+	    lMSq = l;
+	    qM = q;
+	  }
+	}
+	/* Face y = gMax.vtY */
+	k = (gMax.vtY - p.vtY) / r.vtY;
+	WLZ_VTX_3_SET(q, p.vtX + (k * r.vtX), gMax.vtY, p.vtZ + (k * r.vtZ));
+	if((q.vtX > gMin.vtX - tol) && (q.vtX < gMax.vtX + tol) &&
+	   (q.vtZ > gMin.vtZ - tol) && (q.vtZ < gMax.vtZ + tol))
+	{
+	  WLZ_VTX_3_SUB(d, q, p);
+	  l = WLZ_VTX_3_SQRLEN(d);
+	  if(l < lMSq)
+	  {
+	    lMSq = l;
+	    qM = q;
+	  }
+	}
+      }
+      if(fabs(r.vtZ) > tol)
+      {
+	/* Face z = gMin.vtZ */
+        k = (gMin.vtZ - p.vtZ) / r.vtZ;
+	WLZ_VTX_3_SET(q, p.vtX + (k * r.vtX), p.vtY + (k * r.vtY), gMin.vtY);
+	if((q.vtX > gMin.vtX - tol) && (q.vtX < gMax.vtX + tol) &&
+	   (q.vtY > gMin.vtY - tol) && (q.vtY < gMax.vtY + tol))
+	{
+	  WLZ_VTX_3_SUB(d, q, p);
+	  l = WLZ_VTX_3_SQRLEN(d);
+	  if(l < lMSq)
+	  {
+	    lMSq = l;
+	    qM = q;
+	  }
+	}
+	/* Face z = gMax.vtZ */
+	k = (gMax.vtZ - p.vtZ) / r.vtZ;
+	WLZ_VTX_3_SET(q, p.vtX + (k * r.vtX), p.vtY + (k * r.vtY), gMax.vtZ);
+	if((q.vtX > gMin.vtX - tol) && (q.vtX < gMax.vtX + tol) &&
+	   (q.vtY > gMin.vtY - tol) && (q.vtY < gMax.vtY + tol))
+	{
+	  WLZ_VTX_3_SUB(d, q, p);
+	  l = WLZ_VTX_3_SQRLEN(d);
+	  if(l < lMSq)
+	  {
+	    lMSq = l;
+	    qM = q;
+	  }
+	}
+      }
+      q.vtX = WLZ_CLAMP(qM.vtX, gMin.vtX, gMin.vtX);
+      q.vtY = WLZ_CLAMP(qM.vtY, gMin.vtY, gMin.vtY);
+      q.vtZ = WLZ_CLAMP(qM.vtZ, gMin.vtZ, gMin.vtZ);
+      idx0 = WlzCMeshCellIdxVtx2D5(mesh, q);
+    }
+    idx1.vtX = idx1.vtY = idx1.vtZ = 0;
+    do
+    {
+      WLZ_VTX_3_ADD(idx, idx0, idx1);
+      if((idx.vtX >= 0) &&
+	 (idx.vtY >= 0) &&
+	 (idx.vtZ >= 0) &&
+	 (idx.vtX < cGrid->nCells.vtX) &&
+	 (idx.vtY < cGrid->nCells.vtY) &&
+	 (idx.vtZ < cGrid->nCells.vtZ))
+      {
+	WlzCMeshNod2D5 *nod;
+	WlzCMeshCell2D5 *cell;
+
+	/* Look for closest node in this cell. */
+	cell = *(*(cGrid->cells + idx.vtZ) + idx.vtY) + idx.vtX;
+	nod = cell->nod;
+	while(nod)
+	{
+	  double	d0;
+	  WlzDVertex3	d;
+
+	  WLZ_VTX_3_SUB(d, p, nod->pos);
+	  d0 = WLZ_VTX_3_SQRLEN(d);
+	  if(d0 < minDstSq)
+	  {
+	    closeNod = nod->idx;
+	    minDstSq = d0;
+	    if(firstRing < 0)
+	    {
+	      firstRing = ring;
+	    }
+	  }
+	  nod = nod->next;
+	}
+      }
+      /* Spiral out from the initial grid cell. */
+      spiralCnt = WlzGeomItrSpiral3I(spiralCnt,
+				     &(idx1.vtX), &(idx1.vtY), &(idx1.vtZ));
+      ring = WlzGeomItrSpiralRing(spiralCnt);
+      /* Stop spiraling out when the ring after the first in which a node
+       * was found has been searched. */
+    } while((firstRing < 0) || (ring - firstRing < 2));
+  }
+  return(closeNod);
+}
+
+/*!
+* \return	Index of the closest node or a negative number on error.
+* \ingroup	WlzMesh
+* \brief	Finds the index of the closest node to the given position.
+* 		
+* 		Finds the index of the closest node to the given position
+* 		by spiraling out from the cell containing the given
+* 		position.
+* \param	mesh			Given mesh.
 * \param	pos			Given position.
 */
 int		WlzCMeshClosestNod3D(WlzCMesh3D *mesh, WlzDVertex3 pos)
@@ -5994,9 +6201,11 @@ int		WlzCMeshClosestNod3D(WlzCMesh3D *mesh, WlzDVertex3 pos)
   WlzCMeshNod3D	*nod;
   WlzCMeshCell3D *cell;
 
+  /* TODO adapt as WlzCMeshClosestNod2D5() to allow for search from position
+   * outside of the cell grid. */
   if(mesh->res.nod.numEnt > 0)
   {
-    idx1.vtX = idx1.vtY = 0;
+    idx1.vtX = idx1.vtY = idx1.vtZ = 0;
     /* Find grid cell containing the given position. */
     idx0 = WlzCMeshCellIdxVtx3D(mesh, pos);
     do
