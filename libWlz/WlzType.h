@@ -390,19 +390,59 @@ typedef enum _WlzEMAPPropertyType
 /*!
 * \enum		_WlzRasterDir
 * \ingroup	WlzAccess
-* \brief	Raster scan directions as used by WlzGreyScan().
+* \brief	Raster scan directions as used by WlzIntervalWSpace
+*               and WlzIterateWSpace. These are built using bit masks
+*               with bits set for decreasing in each of the directions.
 *		Typedef: ::WlzRasterDir.
 */
 typedef enum _WlzRasterDir
 {
-  WLZ_RASTERDIR_ILIC  = 0,		/*!< Increasing lines, increasing
-  					     columns */
-  WLZ_RASTERDIR_ILDC  = 1,		/*!< Increasing lines, decreasing
-  					     columns */
-  WLZ_RASTERDIR_DLIC  = 2,		/*!< Decreasing lines, increasing
-  					     columns */
-  WLZ_RASTERDIR_DLDC  = 3		/*!< Decreasing lines, decreasing
-  					     columns */
+  WLZ_RASTERDIR_DC    = (1),		/*!< Used to build directions . */
+  WLZ_RASTERDIR_DL    = (1 << 1),	/*!< Used to build directions. */
+  WLZ_RASTERDIR_DP    = (1 << 2),	/*!< Used to build directions. */
+  WLZ_RASTERDIR_ILIC  = (0),		/*!< Increasing lines, increasing
+  					     columns. */
+  WLZ_RASTERDIR_ILDC  = WLZ_RASTERDIR_DC,
+  					/*!< Increasing lines, decreasing
+  					     columns. */
+  WLZ_RASTERDIR_DLIC  = WLZ_RASTERDIR_DL,
+  					/*!< Decreasing lines, increasing
+  					     columns. */
+  WLZ_RASTERDIR_DLDC  = (WLZ_RASTERDIR_DL | WLZ_RASTERDIR_DC),
+                                      	/*!< Decreasing lines, decreasing
+  					     columns. */
+  WLZ_RASTERDIR_IPILIC  = WLZ_RASTERDIR_ILIC,
+  					/*!< Increasing planes,
+                                             increasing lines, increasing
+  					     columns. */
+  WLZ_RASTERDIR_IPILDC  = WLZ_RASTERDIR_ILDC,
+  					/*!< Increasing planes,
+                                             increasing lines, decreasing
+  					     columns. */
+  WLZ_RASTERDIR_IPDLIC  = WLZ_RASTERDIR_DLIC,
+  					/*!< Increasing planes,
+                                             decreasing lines, increasing
+  					     columns. */
+  WLZ_RASTERDIR_IPDLDC  = WLZ_RASTERDIR_DLDC,
+  					/*!< Increasing planes,
+                                             decreasing lines, decreasing
+  					     columns. */
+  WLZ_RASTERDIR_DPILIC  = (WLZ_RASTERDIR_DP | WLZ_RASTERDIR_ILIC),
+  					/*!< Decreasing planes,
+                                             increasing lines, increasing
+  					     columns. */
+  WLZ_RASTERDIR_DPILDC  = (WLZ_RASTERDIR_DP | WLZ_RASTERDIR_ILDC),
+  					/*!< Decreasing planes,
+                                             increasing lines, decreasing
+  					     columns. */
+  WLZ_RASTERDIR_DPDLIC  = (WLZ_RASTERDIR_DP | WLZ_RASTERDIR_DLIC),
+  					/*!< Decreasing planes,
+                                             decreasing lines, increasing
+  					     columns. */
+  WLZ_RASTERDIR_DPDLDC  = (WLZ_RASTERDIR_DP | WLZ_RASTERDIR_DLDC)
+  					/*!< Decreasing planes,
+                                             decreasing lines, decreasing
+  					     columns. */
 } WlzRasterDir;
 
 /*!
@@ -1199,6 +1239,22 @@ typedef struct _WlzPixelP
   WlzGreyType	type;			/*!< Type of grey value. */
   WlzGreyP	p;			/*!< Pointer to the grey value(s). */
 } WlzPixelP;
+
+/************************************************************************
+* Markers.
+************************************************************************/
+/*!
+* \enum		_WlzMarkerType
+* \ingroup	WlzType
+* \brief	Basic markers.
+* 		Typedef: ::WlzMarkerType.
+*/
+typedef enum _WlzMarkerType
+{
+  WLZ_MARKER_NONE       = 0,		/*!< No marker. */
+  WLZ_MARKER_POINT,			/*!< Single point, pixel or voxel. */
+  WLZ_MARKER_SPHERE			/*!< Circle or sphere. */
+} WlzMarkerType;
 
 
 /************************************************************************
@@ -3643,7 +3699,7 @@ typedef struct _WlzCMeshCellGrid2D5
   					    array in terms of the number of
 					    cells. */
   double	cellSz;			/*! Each cell is an axis aligned
-  					    square with this side length. */
+  					    cube with this side length. */
   struct _WlzCMeshCell2D5 ***cells;	/*! Array of cells. */
   WlzCMeshCellElm2D5 *freeCE;	        /*! List of free cell elements for
                                             re/use. */
@@ -3663,7 +3719,7 @@ typedef struct _WlzCMeshCellGrid3D
   					    array in terms of the number of
 					    cells. */
   double	cellSz;			/*! Each cell is an axis aligned
-  					    square with this side length. */
+  					    cube with this side length. */
   struct _WlzCMeshCell3D ***cells;	/*! Array of cells. */
   WlzCMeshCellElm3D *freeCE;	        /*! List of free cell elements for
                                             re/use. */
@@ -4420,6 +4476,44 @@ typedef struct _WlzGreyWSpace
 					     column, whatever the value of
 					     raster. */
 } WlzGreyWSpace;
+
+
+/*!
+* \struct	_WlzIterateWSpace
+* \ingroup	WlzAccess
+* \brief	A workspace structure for interval objects which allows
+* 		iteration through an object's pixels/voxels..
+*		Typedef: ::WlzIterateWSpace.
+*/
+typedef struct _WlzIterateWSpace
+{
+  WlzObject	*obj;			/*!< The object being iterated
+  					     through. */
+  WlzObject	*obj2D;                 /*!< Object for the current plane. */
+  WlzIntervalWSpace *iWSp;		/*!< Interval workspace for the current
+  					     2D object. */
+  WlzGreyWSpace *gWSp;			/*!< Grey workspace for the current
+  					     2D object. */
+  WlzRasterDir	dir;			/*!< Scanning direction. */
+  int 		grey;                   /*!< Non-zero if initialised for
+  					     grey values. */
+  int		itvPos;			/*!< Offset into the current
+  					     interval. */
+  int		plnIdx;			/*!< Offset into planes of a 3D object
+  					     for the current plane. */
+  int		plnRmn;			/*!< Number of planes remaining for
+  					     the current 2D object when
+					     iterating through a 3D object. */
+  WlzIVertex3	pos;			/*!< Current position. */
+  WlzGreyType	gType;			/*!< The current grey type. If
+  					     WLZ_GREY_ERROR then the work space
+					     has not been initialised for grey
+					     data. */
+  WlzGreyP	gP;			/*!< Pointer to current grey value
+                                             This will be NULL if grey values
+					     are not appopriate, ie gType
+					     is WLZ_GREY_ERROR. */
+} WlzIterateWSpace;
 
 /*!
 * \struct	_WlzGreyValueWSpace
