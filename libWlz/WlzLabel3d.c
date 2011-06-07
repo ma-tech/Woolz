@@ -148,7 +148,7 @@ WlzErrorNum WlzLabel3d(
       if( values ){
 	value = values[i];
       }
-      if((domain.core != NULL) && (value.core != NULL) &&
+      if((domain.core != NULL) &&
          ((tobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, value,
 			      NULL, NULL, &errNum)) != NULL)){
 	tobj = WlzAssignObject(tobj, NULL);
