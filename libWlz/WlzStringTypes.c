@@ -1414,6 +1414,71 @@ WlzValueAttach WlzStringToValuesAttachType(const char *aStr,
 /*!
 * \return	Pointer to read only string or NULL on error.
 * \ingroup      WlzStrings
+* \brief	Finds a string for the given values attachment type.
+* \param	iType			Given values attachment type.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+const char	*WlzStringFromMarkerType(WlzMarkerType mType,
+				         WlzErrorNum *dstErr)
+{
+  const char	*mStr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(mType)
+  {
+    case WLZ_MARKER_NONE:
+      mStr = "none";
+      break;
+    case WLZ_MARKER_POINT:
+      mStr = "point";
+      break;
+    case WLZ_MARKER_SPHERE:
+      mStr = "sphere";
+      break;
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(mStr);
+}
+
+/*!
+* \return       Marker type.
+* \brief        Gets a marker type from a string.
+* \param        markerStr               Given marker string.
+* \param        dstErr                  Destination error pointer, may be NULL.
+*/
+WlzMarkerType 	WlzStringToMarkerType(const char *markerStr,
+				      WlzErrorNum *dstErr)
+{
+  int           tI0;
+  WlzMarkerType markerType = WLZ_MARKER_NONE;
+  WlzErrorNum   errNum = WLZ_ERR_PARAM_TYPE;
+
+  if(WlzStringMatchValue(&tI0, markerStr,
+                         "none", WLZ_MARKER_NONE,
+                         "point", WLZ_MARKER_POINT,
+                         "sphere", WLZ_MARKER_SPHERE,
+                         NULL))
+  {
+    markerType = tI0;
+    errNum = WLZ_ERR_NONE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(markerType);
+}
+
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
 * \brief	Finds a string for the given error.
 * \param	wlzErr			Given error code.
 * \param	dstMsgStr		Destination pointer for a 'meaningful'
