@@ -49,10 +49,7 @@ static WlzObject 		*WlzGreyNewIncValues3D(
 				  WlzObject *in,
 				  int *val,
 				  WlzErrorNum *dstErr);
-static WlzErrorNum 		WlzGreySetIncValues2D(
-				  WlzObject *obj,
-				  int *val);
-static WlzErrorNum 		WlzGreySetIncValues3D(
+static WlzErrorNum 		WlzGreySetIncValuesItr(
 				  WlzObject *obj,
 				  int *val);
 
@@ -150,11 +147,9 @@ WlzErrorNum 	WlzGreySetIncValues(WlzObject *obj, int *gVal)
     val = (gVal)? *gVal: 0;
     switch(obj->type)
     {
-      case WLZ_2D_DOMAINOBJ:
-        errNum = WlzGreySetIncValues2D(obj, &val);
-	break;
+      case WLZ_2D_DOMAINOBJ: /* FALLTROUGH */
       case WLZ_3D_DOMAINOBJ:
-        errNum = WlzGreySetIncValues3D(obj, &val);
+	errNum = WlzGreySetIncValuesItr(obj, &val);
 	break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
@@ -202,7 +197,7 @@ static WlzObject *WlzGreyNewIncValues2D(WlzObject *in, int *val,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzGreySetIncValues2D(out, val);
+    errNum = WlzGreySetIncValuesItr(out, val);
   }
   if(errNum != WLZ_ERR_NONE)
   {
@@ -224,49 +219,6 @@ static WlzObject *WlzGreyNewIncValues2D(WlzObject *in, int *val,
 }
 
 /*!
-* \return	Woolz error code.
-* \ingroup	WlzValuesUtils
-* \brief	Sets the values of a 2D domain object with int values
-* 		so that they increment throughout the object in scan
-* 		order. Object values are set by incrementing the given
-* 		value in place. The given object must have WLZ_GREY_INT
-* 		values, but this is not checked.
-* \param	obj			The given object.
-* \param	val			Pointer to current value, this is
-* 					incremented in place.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-static WlzErrorNum WlzGreySetIncValues2D(WlzObject *obj, int *val)
-{
-  WlzIntervalWSpace iWSp;
-  WlzGreyWSpace gWsp;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  errNum = WlzInitGreyScan(obj, &iWSp, &gWsp);
-  if(errNum == WLZ_ERR_NONE)
-  {
-    while((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)
-    {
-      int	idV,
-      		iWidth;
-      int	*valP;
-
-      valP = gWsp.u_grintptr.inp;
-      iWidth = iWSp.rgtpos - iWSp.lftpos + 1;
-      for(idV = 0; idV < iWidth; ++idV)
-      {
-        *valP++ = (*val)++;
-      }
-    }
-    if(errNum == WLZ_ERR_EOO)
-    {
-      errNum = WLZ_ERR_NONE;
-    }
-  }
-  return(errNum);
-}
-
-/*!
 * \return	New grey value domain object with incrementing values.
 * \ingroup	WlzValuesUtils
 * \brief	Creates a new 3D domain object with integer values that
@@ -280,49 +232,24 @@ static WlzErrorNum WlzGreySetIncValues2D(WlzObject *obj, int *val)
 static WlzObject *WlzGreyNewIncValues3D(WlzObject *in, int *val,
 					WlzErrorNum *dstErr)
 {
-  int		idO,
-  		idP;
-  WlzObject     *in2D,
-  		*out2D,
-		*out = NULL;
+  WlzObjectType	gTT;
+  WlzObject     *out = NULL;
   WlzPixelV	bgd;
-  WlzValues	values,
-  		nullValues;
+  WlzValues	values;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   bgd.type = WLZ_GREY_INT;
   bgd.v.inv = 0;
-  values.core = nullValues.core =NULL;
-  values.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
-                                   in->domain.p->plane1, in->domain.p->lastpl,
-				   bgd, NULL, &errNum);
+  values.core = NULL;
+  gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, &errNum);
+  values.vox = WlzNewValuesVox(in, gTT, bgd, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     out = WlzMakeMain(in->type, in->domain, values, in->plist, NULL, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    for(idP = out->domain.p->plane1; idP <= out->domain.p->lastpl; ++idP)
-    {
-      in2D = out2D = NULL;
-      idO = idP - out->domain.p->plane1;
-      in2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *(out->domain.p->domains + idO),
-			 nullValues, NULL, NULL, &errNum);
-      if(errNum == WLZ_ERR_NONE)
-      {
-        out2D = WlzGreyNewIncValues2D(in2D, val, &errNum);
-	(void )WlzFreeObj(in2D);
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-        *(values.vox->values + idO) = WlzAssignValues(out2D->values, NULL);
-	WlzFreeObj(out2D);
-      }
-      else
-      {
-        break;
-      }
-    }
+    errNum = WlzGreySetIncValuesItr(out, val);
   }
   if(errNum != WLZ_ERR_NONE)
   {
@@ -342,43 +269,35 @@ static WlzObject *WlzGreyNewIncValues3D(WlzObject *in, int *val,
   }
   return(out);
 }
-
+	
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzValuesUtils
-* \brief	Sets the values of a 3D domain object with int values
-* 		so that they increment throughout the object in scan
-* 		order. Object values are set by incrementing the given
-* 		value in place. The given object must have WLZ_GREY_INT
-* 		values, but this is not checked.
-* \param	obj			The given object.
-* \param	val			Pointer to current value, this is
-* 					incremented in place.
-* \param	dstErr			Destination error pointer, may be NULL.
+* \brief	Sets values which increment from the given value throughout
+* 		the given objct in WLZ_RASTERDIR_IPILIC scan order.
+* \param	obj			Given object.
+* \param	val			Pointer to value, with value that is
+* 					to be set and on return next value that
+* 					would be set.
 */
-static WlzErrorNum WlzGreySetIncValues3D(WlzObject *obj, int *val)
+static WlzErrorNum WlzGreySetIncValuesItr(WlzObject *obj, int *val)
 {
-  int		idP;
+  WlzIterateWSpace *itWSp = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  for(idP = obj->domain.p->plane1; idP <= obj->domain.p->lastpl; ++idP)
+  itWSp = WlzIterateInit(obj, WLZ_RASTERDIR_IPILIC, 1, &errNum);
+  while(errNum == WLZ_ERR_NONE)
   {
-    int		idO;
-    WlzObject	*obj2D;
-    idO = idP - obj->domain.p->plane1;
-    obj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-                        *(obj->domain.p->domains + idO),
-                        *(obj->values.vox->values + idO),
-			NULL, NULL, &errNum);
-    if(errNum == WLZ_ERR_NONE)
+    if((errNum = WlzIterate(itWSp)) == WLZ_ERR_NONE)
     {
-      errNum = WlzGreySetIncValues2D(obj2D, val);
-    }
-    (void )WlzFreeObj(obj2D);
-    if(errNum != WLZ_ERR_NONE)
-    {
-      break;
+      *(itWSp->gP.inp) = *val;
+      ++*val;
     }
   }
+  if(errNum == WLZ_ERR_EOO)
+  {
+    errNum = WLZ_ERR_NONE;
+  }
+  WlzIterateWSpFree(itWSp);
   return(errNum);
 }
