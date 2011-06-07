@@ -206,12 +206,17 @@ WlzObject *WlzErosion(
   }
   if( errNum == WLZ_ERR_NONE ){
     nitv[i] = 0;
-    inttot = WlzIntervalCount(idmn, &errNum);
-    inttot += 2 * abs (inttot - i);
+    /* The total number of intervals to allocate used to be computed using:
+     *   inttot = WlzIntervalCount(idmn, &errNum);
+     *   inttot += 2 * abs (inttot - i);
+     * but I couldn't see the logic of this and it led to insufficient
+     * intervals being allocated for some large but sparce domains (for
+     * which inttot and i were close in value). 20110606 bill@hgu.mrc.ac.uk 
+     */
+    inttot = 3 * WlzIntervalCount(idmn, &errNum);
   }
   if( errNum == WLZ_ERR_NONE ){
-    if( (jp = (WlzInterval *) AlcMalloc(inttot * sizeof(WlzInterval)))
-       == NULL ){
+    if( (jp = (WlzInterval *) AlcMalloc(inttot * sizeof(WlzInterval))) == NULL ){
       AlcFree((void *) nitv);
       errNum = WLZ_ERR_MEM_ALLOC;
     }
