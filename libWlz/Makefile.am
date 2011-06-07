@@ -145,6 +145,7 @@ libWlz_la_SOURCES 	= \
 			  WlzIntervalCount.c \
 			  WlzIntervalDomScan.c \
 			  WlzIntRescaleObj.c \
+			  WlzIterate.c \
 			  WlzLabel3d.c \
 			  WlzLabel.c \
 			  WlzLaplacian.c \
