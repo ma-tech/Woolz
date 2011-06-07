@@ -5169,3 +5169,186 @@ WlzErrorNum	WlzGeometryLSqOPlane(WlzDVertex3 *dstNrm, WlzDVertex3 *dstCen,
   AlgMatrixFree(vM);
   return(errNum);
 }
+
+/*!
+* \return	Square of the minimum distance from the test vertex to the
+* 		triangle.
+* \ingroup	WlzGeometry
+* \brief	Computes the minimum distance from the test vertex to the
+* 		triangle. This algorithm is based on "Distance Between Point
+* 		and Triangle in 3D", David Eberly, Geometric Tools, 1999.
+* \param	dstPT			Destination pointer for the position
+* 					of vertex in the triangle that is
+* 					closest to the test vertex .
+* \param	dstZT			Destination pointer, the value of which
+* 					will be set to a non-zero value if the
+* 					triangle has zero area. May be NULL.
+* \param	dstIT			Destination pointer, the value of which
+* 					will be set to a non-zero value if the
+* 					projected test vertex is within the
+* 					triangle. May be NULL.
+* \param	dstL0			Destination pointer for the first
+* 					barycentric coordinates, may be NULL.
+* \param	dstL1			Destination pointer for the second
+* 					barycentric coordinates, may be NULL.
+* \param	dstL2			Destination pointer for the third
+* 					barycentric coordinates, may be NULL.
+* \param	vT			The position of the test vertex.
+* \param	v0			First vertex of the triangle.
+* \param	v1			Second vertex of the triangle.
+* \param	v2			Third vertex of the triangle.
+*/
+double	 	WlzGeomTriangleVtxDistSq3D(WlzDVertex3 *dstPT,
+					   int *dstZT, int *dstIT,
+					   double *dstL0, double *dstL1,
+					   double *dstL2,
+					   WlzDVertex3 vT, WlzDVertex3 v0,
+					   WlzDVertex3 v1, WlzDVertex3 v2)
+{
+  int		iT = 0,
+  		zT = 1;
+  double	a,
+  		b,
+		c,
+		d,
+		e,
+		f,
+		det,
+		dist = 0.0;
+  double	l[2];
+  WlzDVertex3	u1,
+  		u2,
+		uT,
+		pT;
+  const double	eps = 1.0e-10;
+
+  WLZ_VTX_3_SUB(u1, v1, v0);
+  WLZ_VTX_3_SUB(u2, v2, v0);
+  WLZ_VTX_3_SUB(uT, v0, vT);
+  a = WLZ_VTX_3_DOT(u1, u1);
+  b = WLZ_VTX_3_DOT(u1, u2);
+  c = WLZ_VTX_3_DOT(u2, u2);
+  d = WLZ_VTX_3_DOT(u1, uT);
+  e = WLZ_VTX_3_DOT(u2, uT);
+  det = (a * c) - (b * b);
+  if(fabs(det) > eps)
+  {
+    zT = 0;
+    l[0] = (b * e) - (c * d);
+    l[1] = (b * d) - (a * e);
+    if((l[0] + l[1]) < det)
+    {
+      if(l[0] < 0.0)
+      {
+	if(l[1] < 0.0)
+	{
+	  if(d < 0.0)
+	  {
+	    f = -d / a;
+	    l[0] = WLZ_CLAMP(f, 0.0, 1.0);
+	    l[1] = 0.0;
+	  }
+	  else
+	  {
+	    f = -e / c;
+	    l[0] = 0.0;
+	    l[1] = WLZ_CLAMP(f, 0.0, 1.0);
+	  }
+	}
+	else
+	{
+	  f = -e / c;
+	  l[0] = 0.0;
+	  l[1] = WLZ_CLAMP(f, 0.0, 1.0);
+	}
+      }
+      else if(l[1] < 0.0)
+      {
+	f = -d / a;
+	l[0] = WLZ_CLAMP(f, 0.0, 1.0);
+	l[1] = 0.0;
+      }
+      else
+      {
+	iT = 1;
+	f = 1.0 / det;
+	l[0] *= f;
+	l[1] *= f;
+      }
+    }
+    else
+    {
+      if(l[0] < 0.0)
+      {
+	double	g,
+		  h;
+
+	g = b + d;
+	h = c + e;
+	if(h > g)
+	{
+	  f = (h - g) / (a - (2 * b) + c);
+	  l[0] = WLZ_CLAMP(f, 0.0, 1.0);
+	  l[1] = 1.0 - l[0];
+	}
+	else
+	{
+	  f = -e / c;
+	  l[1] = WLZ_CLAMP(f, 0.0, 1.0);
+	  l[0] = 0.0;
+	}
+      }
+      else if(l[1] < 0.0)
+      {
+	if((a + d) > (b + e))
+	{
+	  f = (c + e - b - d) / (a - (2 * b) + c);
+	  l[0] = WLZ_CLAMP(f, 0.0, 1.0);
+	  l[1] = 1.0 - l[0];
+	}
+	else
+	{
+	  f = -e / c;
+	  l[0] = WLZ_CLAMP(f, 0.0, 1.0);
+	  l[1] = 0.0;
+	}
+      }
+      else
+      {
+	f = (c + e - b - d) /(a - (2 * b) + c);
+	l[0] = WLZ_CLAMP(f, 0.0, 1.0);
+	l[1] = 1.0 - l[0];
+      }
+    }
+    pT.vtX = v0.vtX + (l[0] * u1.vtX) + (l[1] * u2.vtX);
+    pT.vtY = v0.vtY + (l[0] * u1.vtY) + (l[1] * u2.vtY);
+    pT.vtZ = v0.vtZ + (l[0] * u1.vtZ) + (l[1] * u2.vtZ);
+    if(dstIT)
+    {
+      *dstIT = iT;
+    }
+    if(dstPT)
+    {
+      *dstPT = pT;
+    }
+    if(dstL0)
+    {
+      *dstL0 = 1.0 - (l[0] + l[1]);
+    }
+    if(dstL1)
+    {
+      *dstL1 = l[0];
+    }
+    if(dstL2)
+    {
+      *dstL2 = l[1];
+    }
+    WLZ_VTX_3_SUB(pT, pT, vT);
+    dist = WLZ_VTX_3_SQRLEN(pT);
+  }
+  if(dstZT)
+  {
+    *dstZT = zT;
+  }
+  return(dist);
+}
