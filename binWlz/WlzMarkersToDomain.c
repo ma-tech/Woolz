@@ -112,29 +112,13 @@ Creates a new domain with spheres or radius 3 at coordinates (10,20,30),
 #include <unistd.h>
 #include <Wlz.h>
 
-typedef enum _WlzMarkerType
-{
-  WLZ_MARKER_NONE,
-  WLZ_MARKER_SPHERE
-} WlzMarkerType;
-
 #define WLZ_CFP_READLN_LEN	(1024)
 
-static WlzMarkerType 		WlzMarkerTypeFromStr(
-				  const char *markerStr,
-				  WlzErrorNum *dstErr);
 static WlzVertexP 		WlzMTDReadVtxArray(
 				  FILE *fP,
 				  int dim,
 				  int *dstNVtx, 
 				  WlzVertexType *dstVType,
-				  WlzErrorNum *dstErr);
-static WlzObject 		*WlzRasterizeMarkers(
-				  WlzVertexType vType,
-				  int nVtx,
-				  WlzVertexP vtx,
-				  WlzMarkerType mType,
-				  int mSz,
 				  WlzErrorNum *dstErr);
 
 extern char 	*optarg;
@@ -187,13 +171,13 @@ int		main(int argc, char *argv[])
 	}
         break;
       case 't':
-	markerType = WlzMarkerTypeFromStr(optarg, &errNum);
+	markerType = WlzStringToMarkerType(optarg, &errNum);
 	if(errNum != WLZ_ERR_NONE)
 	{
 	  usage = 1;
 	}
         break;
-      case 'h':
+      case 'h': /* FALLTROUGH */
       default:
 	usage = 1;
 	break;
@@ -260,7 +244,7 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    obj = WlzRasterizeMarkers(vType, nVtx, vtx, markerType, markerSz,
+    obj = WlzMakeMarkers(vType, nVtx, vtx, markerType, markerSz,
     			      &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
@@ -414,124 +398,4 @@ static WlzVertexP 	WlzMTDReadVtxArray(FILE *fP, int dim, int *dstNVtx,
   return(datVP);
 }
 
-/*!
-* \return	Marker type.
-* \brief	Gets a marker type from a string.
-* \param	markerStr		Given marker string.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-static WlzMarkerType WlzMarkerTypeFromStr(const char *markerStr,
-				          WlzErrorNum *dstErr)
-{
-  int		tI0;
-  WlzMarkerType markerType = WLZ_MARKER_NONE;
-  WlzErrorNum	errNum = WLZ_ERR_PARAM_TYPE;
-  
-  if(WlzStringMatchValue(&tI0, markerStr,
-  			 "none", WLZ_MARKER_NONE,
-  			 "sphere", WLZ_MARKER_SPHERE,
-			 NULL))
-  {
-    markerType = tI0;
-    errNum = WLZ_ERR_NONE;
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(markerType);
-}
-
-/*!
-* \return	New domain object without values.
-* \brief	Constructs a domain from the union of marker domains with
-*		a marker domain at each of the given vertex positions.
-* \param	nVtx			Number of vertices.
-* \param	vtx			Given vertices.
-* \param	mType			Marker type.
-* \param	mSz			Marker size.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-static WlzObject *WlzRasterizeMarkers(WlzVertexType vType,
-				     int nVtx, WlzVertexP vtx,
-				     WlzMarkerType mType, int mSz,
-				     WlzErrorNum *dstErr)
-{
-  int		idx,
-  		dim;
-  WlzObjectType	oType;
-  WlzObject	*mObj = NULL;
-  WlzObject	*tObj[4];
-  WlzIVertex3	off;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  tObj[0] = tObj[1] = tObj[2] = tObj[3] = NULL;
-  if((nVtx <= 0) || (mSz <= 0))
-  {
-    errNum = WLZ_ERR_PARAM_DATA;
-  }
-  else if(vtx.v == NULL)
-  {
-    errNum = WLZ_ERR_PARAM_NULL;
-  }
-  else
-  {
-    switch(vType)
-    {
-      case WLZ_VERTEX_I2:
-	dim = 2;
-	oType = WLZ_2D_DOMAINOBJ;
-        break;
-      case WLZ_VERTEX_I3:
-        dim = 3;
-	oType = WLZ_3D_DOMAINOBJ;
-	break;
-      default:
-        errNum = WLZ_ERR_PARAM_DATA;
-	break;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    tObj[0] = WlzMakeSphereObject(oType, mSz, 0.0, 0.0, 0.0, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    tObj[1] = WlzMakeEmpty(&errNum);
-  }
-  for(idx = 0; (idx < nVtx) && (errNum == WLZ_ERR_NONE); ++idx)
-  {
-    if(dim == 2)
-    {
-      off.vtX = (vtx.i2 + idx)->vtX;
-      off.vtY = (vtx.i2 + idx)->vtY;
-    }
-    else
-    {
-      off = *(vtx.i3 + idx);
-    }
-    tObj[2] = WlzShiftObject(tObj[0], off.vtX, off.vtY, off.vtZ, &errNum);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      tObj[3] = WlzUnion2(tObj[1], tObj[2], &errNum);
-    }
-    WlzFreeObj(tObj[1]); tObj[1] = NULL;
-    WlzFreeObj(tObj[2]); tObj[2] = NULL;
-    if(errNum == WLZ_ERR_NONE)
-    {
-      tObj[1] = tObj[3];
-      tObj[3] = NULL;
-    }
-  }
-  WlzFreeObj(tObj[0]);
-  if(errNum == WLZ_ERR_NONE)
-  {
-    mObj = tObj[1];
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(mObj);
-}
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
