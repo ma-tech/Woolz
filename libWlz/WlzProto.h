@@ -1390,8 +1390,14 @@ extern WlzObject		*WlzCMeshIntersectDom2D5(
 				  WlzObject *cObj,
 				  double scale,
 				  WlzErrorNum *dstErr);
+extern WlzDVertex2		WlzCMeshClosePointDom2D5(
+				  WlzObject *sObj,
+				  WlzObject *cObj,
+				  double scale,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
+>>>>>>> 1.178
 * WlzCMeshScan.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
@@ -1431,11 +1437,11 @@ extern WlzObject       		*WlzCMeshCompSurfMapIdx(
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzCMeshToContour(
 				  WlzObject *mObj,
-				  int disp,
+				  double disp,
 				  WlzErrorNum *dstErr);
 extern WlzGMModel		*WlzCMeshToGMModel(
 				  WlzObject *mObj,
-				  int disp,
+				  double disp,
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzCMeshFlatten2D5(
 				  WlzObject *gObj,
@@ -3126,6 +3132,17 @@ extern WlzErrorNum		WlzGeometryLSqOPlane(
 				  WlzDVertex3 *dstCen,
 				  int sizeArrayVtx,
 				  WlzDVertex3 *arrayVtx);
+extern double			WlzGeomTriangleVtxDistSq3D(
+				  WlzDVertex3 *dstPT,
+				  int *dstZT,
+				  int *dstIT,
+				  double *dstL0,
+				  double *dstL1,
+				  double *dstL2,
+				  WlzDVertex3 vT,
+				  WlzDVertex3 v0,
+				  WlzDVertex3 v1,
+				  WlzDVertex3 v2);
 
 /************************************************************************
 * WlzGreyCrossing.c							*
@@ -3535,6 +3552,21 @@ extern WlzObject 		*WlzIntRescaleObj(WlzObject *obj,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzIterate.c								*
+************************************************************************/
+extern WlzRasterDir		WlzRasterDir2D(
+				  WlzRasterDir dir);
+extern void			WlzIterateWSpFree(
+				  WlzIterateWSpace *itWSp);
+extern WlzIterateWSpace		*WlzIterateInit(
+				  WlzObject *obj,
+				  WlzRasterDir dir,
+				  int grey,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzIterate(
+				  WlzIterateWSpace *itWSp);
+
+/************************************************************************
 * WlzLBTDomain.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
@@ -3805,6 +3837,13 @@ extern WlzErrorNum              WlzRemoveProperty(
  * WlzMakeStructs.c
  ************************************************************************/
 #ifndef WLZ_EXT_BIND
+extern WlzObject		*WlzMakeMarkers(
+				  WlzVertexType vType,
+				  int nVtx,
+				  WlzVertexP vtx,
+				  WlzMarkerType mType,
+				  int mSz,
+				  WlzErrorNum *dstErr);
 extern WlzPoints		*WlzMakePoints(
     				  WlzObjectType type,
 				  int nVtx,
@@ -4354,6 +4393,9 @@ extern int                      WlzCMeshLocateNod3D(
 extern int             		WlzCMeshClosestNod2D(
 				  WlzCMesh2D *mesh,
 				  WlzDVertex2 pos);
+extern int             		WlzCMeshClosestNod2D5(
+				  WlzCMesh2D5 *mesh,
+				  WlzDVertex3 pos);
 extern int             		WlzCMeshClosestNod3D(
 				  WlzCMesh3D *mesh,
 				  WlzDVertex3 pos);
@@ -5203,6 +5245,12 @@ extern const char		*WlzStringFromValueAttachType(
 extern WlzValueAttach 		WlzStringToValuesAttachType(
 				  const char *aStr,
                                   WlzErrorNum *dstErr);
+extern const char		*WlzStringFromMarkerType(
+				  WlzMarkerType mtype,
+				  WlzErrorNum *dstErr);
+extern WlzMarkerType		WlzStringToMarkerType(
+				  const char *mStr,
+				  WlzErrorNum *dstErr);
 extern const char 		*WlzStringFromErrorNum(
 				  WlzErrorNum gvnErr,
 			          const char **dstMsgStr);
