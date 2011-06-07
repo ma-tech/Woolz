@@ -49,11 +49,11 @@ static int			WlzCMeshSurfMapIdxCmpFn(
 				  const void *p1);
 static WlzGMModel 		*WlzCMeshToGMModel2D(
 				  WlzObject *mObj,
-				  int disp,
+				  double disp,
 				  WlzErrorNum *dstErr);
 static WlzGMModel 		*WlzCMeshToGMModel2D5(
 				  WlzObject *mObj,
-				  int disp,
+				  double disp,
 				  WlzErrorNum *dstErr);
 
 /*!
@@ -265,8 +265,7 @@ WlzObject	*WlzCMeshCompSurfMapIdx(WlzCMesh2D5 *mesh,
   WlzObject	*mapObj = NULL;
   WlzIndexedValues *ixv = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const double	delta = 0.000001,
-  		tol = 0.000001;
+  const double	tol = 0.000001;
 
   aM.core = NULL;
   bPM.core = NULL;
@@ -527,11 +526,12 @@ static int	WlzCMeshSurfMapIdxCmpFn(const void *p0, const void *p1)
 * \brief        Creates a contour corresponding to the given conforming mesh
 *               which must be a 2D5 mesh, ie a surface.
 * \param        mObj                    Given conforming mesh.
-* \param        disp                    Non zero if the mesh displacements
-*                                       are to be applied.
+* \param        disp                    Scale factor for the displacements, 0.0
+* 					implies no displacements, 1.0 implies
+* 					full displacement.
 * \param        dstErr                  Destination error pointer, may be NULL.
 */
-WlzObject       *WlzCMeshToContour(WlzObject *mObj, int disp,
+WlzObject       *WlzCMeshToContour(WlzObject *mObj, double disp,
                                    WlzErrorNum *dstErr)
 {
   WlzDomain dom;
@@ -582,11 +582,12 @@ WlzObject       *WlzCMeshToContour(WlzObject *mObj, int disp,
 * 		have type WLZ_GMMOD_3D (from 2D5) or WLZ_GMMOD_2D (from
 * 		2D).
 * \param        mObj                    Given conforming mesh.
-* \param        disp                    Non zero if the mesh displacements
-*                                       are to be applied.
+* \param        disp                    Scale factor for the displacements, 0.0
+* 					implies no displacements, 1.0 implies
+* 					full displacement.
 * \param        dstErr                  Destination error pointer, may be NULL.
 */
-WlzGMModel	*WlzCMeshToGMModel(WlzObject *mObj, int disp,
+WlzGMModel	*WlzCMeshToGMModel(WlzObject *mObj, double disp,
 				   WlzErrorNum *dstErr)
 {
   WlzGMModel	*model = NULL;
@@ -797,15 +798,17 @@ WlzObject	*WlzCMeshFlatten2D5(WlzObject *gObj, WlzErrorNum *dstErr)
 * 		conforming mesh which is assumed to be a 2D mesh.
 * 		The resulting model will be a WLZ_GMMOD_2D model.
 * \param        mObj                    Given conforming mesh.
-* \param        disp                    Non zero if the mesh displacements
-*                                       are to be applied.
+* \param        disp                    Scale factor for the displacements, 0.0
+* 					implies no displacements, 1.0 implies
+* 					full displacement.
 * \param        dstErr                  Destination error pointer, may be NULL.
 */
-static WlzGMModel *WlzCMeshToGMModel2D(WlzObject *mObj, int disp,
+static WlzGMModel *WlzCMeshToGMModel2D(WlzObject *mObj, double disp,
 				       WlzErrorNum *dstErr)
 {
   int		nBkSz,
   		nHTSz,
+		useDisp,
 		nNod = 0;
   WlzCMesh2D	*mesh;
   WlzGMModel	*model = NULL;
@@ -815,11 +818,12 @@ static WlzGMModel *WlzCMeshToGMModel2D(WlzObject *mObj, int disp,
   		minHTSz = 1024;
 
   mesh = mObj->domain.cm2;
+  useDisp = (fabs(disp) > WLZ_MESH_TOLERANCE)? 1: 0;
   if(((nNod = mesh->res.nod.numEnt) < 3) || (mesh->res.elm.numEnt < 1))
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
   }
-  else if(disp != 0)
+  else if(useDisp != 0)
   {
     if((ixv = mObj->values.x) == NULL)
     {
@@ -861,13 +865,13 @@ static WlzGMModel *WlzCMeshToGMModel2D(WlzObject *mObj, int disp,
 	for(idN = 0; idN < 3; ++idN)
 	{
 	  pos[idN] = elm->edu[idN].nod->pos;
-	  if(disp)
+	  if(useDisp)
 	  {
 	    double *dsp;
 	    
 	    dsp = (double *)WlzIndexedValueGet(ixv, elm->edu[idN].nod->idx);
-	    pos[idN].vtX += dsp[0];
-	    pos[idN].vtY += dsp[1];
+	    pos[idN].vtX += disp * dsp[0];
+	    pos[idN].vtY += disp * dsp[1];
 	  }
 	}
 	pos[3] = pos[0];
@@ -909,15 +913,17 @@ static WlzGMModel *WlzCMeshToGMModel2D(WlzObject *mObj, int disp,
 * 		conforming mesh which is assumed to be a 2D5 mesh.
 * 		The resulting model will be a WLZ_GMMOD_3D model.
 * \param        mObj                    Given conforming mesh.
-* \param        disp                    Non zero if the mesh displacements
-*                                       are to be applied.
+* \param        disp                    Scale factor for the displacements, 0.0
+* 					implies no displacements, 1.0 implies
+* 					full displacement.
 * \param        dstErr                  Destination error pointer, may be NULL.
 */
-static WlzGMModel *WlzCMeshToGMModel2D5(WlzObject *mObj, int disp,
+static WlzGMModel *WlzCMeshToGMModel2D5(WlzObject *mObj, double disp,
 				        WlzErrorNum *dstErr)
 {
   int		nBkSz,
   		nHTSz,
+		useDisp,
 		nNod = 0;
   WlzCMesh2D5	*mesh;
   WlzGMModel	*model = NULL;
@@ -928,13 +934,14 @@ static WlzGMModel *WlzCMeshToGMModel2D5(WlzObject *mObj, int disp,
 
   ixv = mObj->values.x;
   mesh = mObj->domain.cm2d5;
+  useDisp = (fabs(disp) > WLZ_MESH_TOLERANCE)? 1: 0;
   if(((nNod = mesh->res.nod.numEnt) < 3) || (mesh->res.elm.numEnt < 1))
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
   }
   else if(ixv == NULL)
   {
-    disp = 0;
+    useDisp = 0;
   }
   else if((ixv->rank != 1) || (ixv->dim[0] < 3))
   {
@@ -972,16 +979,16 @@ static WlzGMModel *WlzCMeshToGMModel2D5(WlzObject *mObj, int disp,
 	{
 	  pos[idN] = elm->edu[idN].nod->pos;
 	}
-	if(disp)
+	if(useDisp)
 	{
 	  for(idN = 0; idN < 3; ++idN)
 	  {
 	    double *dsp;
 	    
 	    dsp = (double *)WlzIndexedValueGet(ixv, elm->edu[idN].nod->idx);
-	    pos[idN].vtX += dsp[0];
-	    pos[idN].vtY += dsp[1];
-	    pos[idN].vtZ += dsp[2];
+	    pos[idN].vtX += disp * dsp[0];
+	    pos[idN].vtY += disp * dsp[1];
+	    pos[idN].vtZ += disp * dsp[2];
 	  }
 	}
         errNum = WlzGMModelConstructSimplex3D(model, pos);
