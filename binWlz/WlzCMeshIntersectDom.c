@@ -53,10 +53,16 @@ WlzCMeshIntersectDom - creates a grey scale image from a conforming mesh in
 		      Gaussian curvature values.
 \par Synopsis
 \verbatim
-WlzCMeshIntersectDom [-h] [-m] [-o<output object>] [-s] [<input object>]
+WlzCMeshIntersectDom [-c] [-h] [-m] [-o<output object>] [-s] [-v]
+                     [<mesh object>] [<domain object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
+  <tr>
+    <td><b>-c</b></td>
+    <td>Find the closest point on the surface to the domain if there is
+        no intersection.</td>
+  </tr>
   <tr>
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
@@ -68,6 +74,10 @@ WlzCMeshIntersectDom [-h] [-m] [-o<output object>] [-s] [<input object>]
   <tr>
     <td><b>-s</b></td>
     <td>Scale factor from the mesh to the 2D spatial domain.</td>
+  </tr>
+  <tr>
+    <td><b>-v</b></td>
+    <td>Verbose output.</td>
   </tr>
 </table>
 \par Description
@@ -112,8 +122,10 @@ extern int      optind,
 int             main(int argc, char **argv)
 {
   int		option,
+		clsPnt = 0,
   		ok = 1,
-		usage = 0;
+		usage = 0,
+		verbose = 0;
   double	scale = 1.0;
   WlzObject     *inDomObj = NULL,
   		*inMeshObj = NULL,
@@ -124,7 +136,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "ho:s:",
+  static char	optList[] = "cho:s:v",
   		fileStrDef[] = "-";
 
   opterr = 0;
@@ -135,6 +147,9 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case 'c':
+        clsPnt = 1;
+	break;
       case 'o':
         outObjFileStr = optarg;
 	break;
@@ -143,6 +158,9 @@ int             main(int argc, char **argv)
 	{
 	  usage = 1;
 	}
+	break;
+      case 'v':
+        verbose = 1;
 	break;
       case 'h': /* FALLTHROUGH */
       default:
@@ -217,6 +235,45 @@ int             main(int argc, char **argv)
   if(ok)
   {
     outObj = WlzCMeshIntersectDom2D5(inDomObj, inMeshObj, scale, &errNum);
+    if(clsPnt)
+    {
+      int	area = 0;
+      WlzDVertex2 pos;
+
+      if((outObj != NULL) && (outObj->type == WLZ_2D_DOMAINOBJ) &&
+         (outObj->domain.core != NULL))
+      {
+	area = WlzArea(outObj, &errNum);
+      }
+      if((errNum == WLZ_ERR_NONE) && (area <= 0))
+      {
+        (void )WlzFreeObj(outObj);
+	if(verbose)
+	{
+	  (void )fprintf(stderr, "%s: No intersection using closest point.\n",
+	                 *argv);
+	}
+        pos = WlzCMeshClosePointDom2D5(inDomObj, inMeshObj, scale, &errNum);
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  WlzIVertex2 iPos;
+
+	  iPos.vtX = (int )floor(pos.vtX);
+	  iPos.vtY = (int )floor(pos.vtY);
+	  outObj = WlzMakeSinglePixelObject(WLZ_2D_DOMAINOBJ,
+					    iPos.vtX, iPos.vtY, 0, &errNum);
+	}
+      }
+      if(errNum != WLZ_ERR_NONE)
+      {
+	ok = 0;
+	(void )WlzStringFromErrorNum(errNum, &errMsg);
+	(void )fprintf(stderr,
+	       "%s: Failed to compute domain of intersection (%s).\n",
+	       *argv, errMsg);
+
+      }
+    }
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -253,12 +310,15 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-h] [-s#] [<mesh object>] [<domain object>]\n"
+    " [-c] [-h] [-s#] [-v] [<mesh object>] [<domain object>]\n"
     "Options:\n"
+    "  -c  Find the closest point on the surface to the domain if there is\n"
+    "      no intersection.\n"
     "  -h  Help, prints usage message.\n"
     "  -o  Output object file.\n"
     "  -s  Additional scale factor to be used in going from the mesh to the\n"
     "      2D spatial domain.\n"
+    "  -v  Verbose output.\n"
     "Creates a 2D domain object that is the (possibly scaled) intersection\n"
     "of the given 2.5D conforming mesh and the given 3D domain, with the\n"
     "intersection mapped from 3D to 2D using the displacements of the 2.5D\n"
