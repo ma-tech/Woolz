@@ -49,14 +49,19 @@ extern "C" {
 #endif
 
 /* Standard min, max, absolute value and nearest integer macros */
-#define	ALG_MAX3(X,Y,Z)	(((X)>(Y))?(((X)>(Z))?(X):(Z)):(((Y)>(Z))?(Y):(Z)))
-#define	ALG_MIN3(X,Y,Z)	(((X)<(Y))?(((X)<(Z))?(X):(Z)):(((Y)<(Z))?(Y):(Z)))
 #define	ALG_MAX(X,Y)	(((X)>(Y))?(X):(Y))
 #define	ALG_MIN(X,Y)	(((X)<(Y))?(X):(Y))
+#define	ALG_MAXIDX(X,Y)	(((X)>(Y))?(0):(1))
+#define	ALG_MINIDX(X,Y)	(((X)<(Y))?(0):(1))
 #define	ALG_ABS(X)	(((X)>0)?(X):(-(X)))
 #define	ALG_NINT(X)	((int)(((X)<0)?((X)-(0.5)):((X)+(0.5))))
 #define	ALG_SQR(X)	((X)*(X))
-
+#define	ALG_MAX3(X,Y,Z)	(((X)>(Y))?(((X)>(Z))?(X):(Z)):(((Y)>(Z))?(Y):(Z)))
+#define	ALG_MIN3(X,Y,Z)	(((X)<(Y))?(((X)<(Z))?(X):(Z)):(((Y)<(Z))?(Y):(Z)))
+#define ALG_MAXIDX3(X,Y,Z) \
+			(((X)>(Y))?(((X)>(Z))?(0):(3)):(((Y)>(Z))?(1):(3)))
+#define	ALG_MININD3(X,Y,Z) \
+                        (((X)<(Y))?(((X)<(Z))?(0):(3)):(((Y)<(Z))?(1):(3)))
 
 /* Standard math constants */
 #define	ALG_M_E		(2.7182818284590452354)

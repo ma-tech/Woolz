@@ -574,6 +574,21 @@ extern void			AlgMatrixTVectorMulAdd(
 				  double *dV);
 extern void			AlgMatrixZero(
 				  AlgMatrix mat);
+extern AlgError			AlgMatrixRawInv2x2(
+				  double *a00,
+				  double *a01,
+				  double *a10,
+				  double *a11);
+extern AlgError			AlgMatrixRawInv3x3(
+				  double *a00,
+				  double *a01,
+				  double *a02,
+				  double *a10,
+				  double *a11,
+				  double *a12,
+				  double *a20,
+				  double *a21,
+				  double *a22);
 
 /* From AlgMatrixCG.c */
 extern AlgError			AlgMatrixCGSolve(

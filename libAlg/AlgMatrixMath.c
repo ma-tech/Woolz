@@ -1508,3 +1508,92 @@ void 		AlgMatrixTVectorMulAdd(double *aV, AlgMatrix bM,
       break;
   }
 }
+
+/*!
+* \return	Alg error code, either ALG_ERR_NONE or ALG_ERR_MATRIX_SINGULAR.
+* \ingroup	AlgMatrix
+* \brief	Inverts a raw 2 x 2 matrix. All matrix values are passed
+* 		using pointers and their values are set to those of the
+* 		inverse matrix on return. If the given matrix is singular
+* 		the ALG_ERR_MATRIX_SINGULAR error code is returned and no
+* 		values are changed.
+* \param	a00			Matrix element row 0, column 0.
+* \param	a01			Matrix element row 0, column 1.
+* \param	a10			Matrix element row 1, column 0.
+* \param	a11			Matrix element row 1, column 1.
+*/
+AlgError	AlgMatrixRawInv2x2(double *a00, double *a01,
+             	                   double *a10, double *a11)
+{
+  double 	d;
+  double	b[4];
+  const double	eps = 0.000001;
+  AlgError	errNum = ALG_ERR_MATRIX_SINGULAR;
+
+  d = (*a00 * *a11) - (*a01 * *a10);
+  if(fabs(d) > eps)
+  {
+    errNum = ALG_ERR_NONE;
+    d = 1.0 / d;
+    b[0] = d * *a00;
+    b[1] = d * *a01;
+    b[2] = d * *a10;
+    b[3] = d * *a11;
+    *a00 =  b[3];
+    *a01 = -b[1];
+    *a10 = -b[2];
+    *a11 =  b[0];
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Alg error code, either ALG_ERR_NONE or ALG_ERR_MATRIX_SINGULAR.
+* \ingroup	AlgMatrix
+* \brief	Inverts a raw 2 x 2 matrix. All matrix values are passed
+* 		using pointers and their values are set to those of the
+* 		inverse matrix on return. If the given matrix is singular
+* 		the ALG_ERR_MATRIX_SINGULAR error code is returned and no
+* 		values are changed.
+* \param	a00			Matrix element row 0, column 0.
+* \param	a01			Matrix element row 0, column 1.
+* \param	a02			Matrix element row 0, column 2.
+* \param	a10			Matrix element row 1, column 0.
+* \param	a11			Matrix element row 1, column 1.
+* \param	a12			Matrix element row 1, column 2.
+* \param	a20			Matrix element row 2, column 0.
+* \param	a21			Matrix element row 2, column 1.
+* \param	a22			Matrix element row 2, column 2.
+*/
+AlgError	AlgMatrixRawInv3x3(double *a00, double *a01, double *a02,
+				   double *a10, double *a11, double *a12,
+				   double *a20, double *a21, double *a22)
+{
+  double	d;
+  double	b[9];
+  const double	eps = 0.000001;
+  AlgError	errNum = ALG_ERR_MATRIX_SINGULAR;
+  
+  b[0] = (*a11 * *a22) - (*a12 * *a21);
+  b[1] = (*a12 * *a20) - (*a10 * *a22);
+  b[2] = (*a10 * *a21) - (*a11 * *a20);
+  d = (*a00 * b[0]) + (*a01 * b[1]) + (*a02 * b[2]); 
+  if(fabs(d) > eps)
+  {
+    errNum = ALG_ERR_NONE;
+    d = 1.0 / d;
+    b[0] *= d;
+    b[1] *= d;
+    b[2] *= d;
+    b[3] = d * ((*a02 * *a21) - (*a01 * *a22));
+    b[4] = d * ((*a00 * *a22) - (*a02 * *a20));
+    b[5] = d * ((*a01 * *a20) - (*a00 * *a21));
+    b[6] = d * ((*a01 * *a12) - (*a02 * *a11));
+    b[7] = d * ((*a02 * *a10) - (*a00 * *a12));
+    b[8] = d * ((*a00 * *a11) - (*a01 * *a10));
+    *a00 = b[0]; *a01 = b[3]; *a02 = b[6];
+    *a10 = b[1]; *a11 = b[4]; *a12 = b[7];
+    *a20 = b[2]; *a21 = b[5]; *a22 = b[8];
+  }
+  return(errNum);
+}
