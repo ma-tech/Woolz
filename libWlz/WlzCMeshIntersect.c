@@ -40,6 +40,7 @@ static char _WlzCMeshIntersect_c[] = "MRC HGU $Id$";
 * \ingroup 	WlzMesh
 */
 #include <Wlz.h>
+#include <float.h>
 
 static int			WlzIntersectDomAABBTri3D(
 				  WlzObject *dObj,
@@ -407,6 +408,149 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
     *dstErr = errNum;
   }
   return(rObj);
+}
+
+/*!
+* \return	Position of point on surface with minimum distance.
+* \ingroup	WlzMesh
+* \brief	Computes the position on a 2.5D conforming mesh which
+* 		has the least distance to the given 3D spatial domain.
+* \param	vObj			Voxel object with 3D spatial domain.
+* \param	mObj			Object with the 2D5 mesh and
+* 					displacements to a plane.
+* \param	scale			Additional scale factor from mesh
+* 					to spatial domain.
+* \param	dstNPnt			Destination pointer for the number
+* 					of points, may be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzDVertex2	WlzCMeshClosePointDom2D5(WlzObject *vObj, WlzObject *mObj,
+					 double scale, WlzErrorNum *dstErr)
+{
+  int		eIdx = -1;
+  double	mDst = DBL_MAX;
+  double	mL[3];
+  WlzDVertex2	mPos2;
+  WlzCMesh2D5	*mesh;
+  WlzIterateWSpace *itWSp = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  mL[0] = mL[1] = mL[2] = 0.0;
+  WLZ_VTX_2_SET(mPos2, 0.0, 0.0);
+  if((vObj == NULL) || (mObj == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((vObj->type != WLZ_3D_DOMAINOBJ) || (mObj->type != WLZ_CMESH_2D5))
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if((vObj->domain.core == NULL) || (mObj->domain.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((mObj->values.core == NULL))
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    mesh = mObj->domain.cm2d5;
+    itWSp = WlzIterateInit(vObj, WLZ_RASTERDIR_IPILIC, 0, &errNum);
+  }
+  /* For each voxel of the given 3D domain object. */
+  while(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzIterate(itWSp);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int	nIdx;
+      WlzDVertex3 vPos;
+
+      WLZ_VTX_3_SET(vPos, itWSp->pos.vtX, itWSp->pos.vtY, itWSp->pos.vtZ);
+      /* Find the mesh node that is closest to the voxel position, vPos. */
+      nIdx = WlzCMeshClosestNod2D5(mesh, vPos);
+      /* Find the point on the mesh surface (ie within an element) that
+       * is closest to the point. */
+      if(nIdx >= 0)
+      {
+	/* For each element which uses this node compute the minimum
+	 * distance of the element to a vertex at the given position. */
+	WlzCMeshNod2D5 *nod;
+
+	nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, nIdx);
+	if(nod->idx >= 0)
+	{
+	  WlzCMeshEdgU2D5 *edu0,
+			  *edu1;
+
+	  edu0 = edu1 = nod->edu;
+	  do
+	  {
+	    int		zT = 0;
+	    double	d;
+	    double	l[3];
+	    WlzCMeshNod2D5 *nodes[3];
+
+	    WlzCMeshElmGetNodes2D5(edu1->elm, nodes + 0, nodes + 1, nodes + 2);
+	    d = WlzGeomTriangleVtxDistSq3D(NULL, zT, NULL,
+	    		       l + 0, l + 1, l + 2, vPos,
+			       nodes[0]->pos, nodes[1]->pos, nodes[2]->pos);
+	    if((zT == 0) && (d < mDst))
+	    {
+	      mDst = d;
+	      eIdx = edu1->elm->idx;
+	      mL[0] = l[0]; mL[1] = l[1]; mL[2] = l[2];
+	    }
+	    edu1 = edu1->nnxt;
+	  } while(edu0 != edu1);
+	}
+      }
+    }
+  }
+  WlzIterateWSpFree(itWSp);
+  if(errNum == WLZ_ERR_EOO)
+  {
+    errNum = (eIdx < 0)? WLZ_ERR_DOMAIN_DATA: WLZ_ERR_NONE;
+  }
+  /* Interpolate the position in 2D using linear interpolation implimented
+   * using barycentric coordinates. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    double	*dsp;
+    double	p[9];
+    WlzCMeshElm2D5 *elm;
+    WlzCMeshNod2D5 *nodes[3];
+    WlzDVertex2	nP2[3];
+
+    /* Get the nodes of the element containing the closest point on the
+     * surface in 3D. */
+    elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, eIdx);
+    WlzCMeshElmGetNodes2D5(elm, nodes + 0, nodes + 1, nodes + 2);
+    /* Get the planar coordinates of the elements nodes. */
+    dsp = (double *)WlzIndexedValueGet(mObj->values.x, nodes[0]->idx);
+    nP2[0].vtX = nodes[0]->pos.vtX + dsp[0];
+    nP2[0].vtY = nodes[0]->pos.vtY + dsp[1];
+    dsp = (double *)WlzIndexedValueGet(mObj->values.x, nodes[1]->idx);
+    nP2[1].vtX = nodes[1]->pos.vtX + dsp[0];
+    nP2[1].vtY = nodes[1]->pos.vtY + dsp[1];
+    dsp = (double *)WlzIndexedValueGet(mObj->values.x, nodes[2]->idx);
+    nP2[2].vtX = nodes[2]->pos.vtX + dsp[0];
+    nP2[2].vtY = nodes[2]->pos.vtY + dsp[1];
+    /* Compute the planar position of the closest point using the
+     * barycentric coordinates for linear interpolation. */
+    WLZ_VTX_2_SUB(nP2[1], nP2[1], nP2[0]);
+    WLZ_VTX_2_SUB(nP2[2], nP2[2], nP2[0]);
+    mPos2.vtX = scale *
+                (nP2[0].vtX + (mL[1] * nP2[1].vtX) + (mL[2] * nP2[2].vtX));
+    mPos2.vtY = scale *
+                (nP2[0].vtY + (mL[1] * nP2[1].vtY) + (mL[2] * nP2[2].vtY));
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(mPos2);
 }
 
 /*!
