@@ -88,7 +88,83 @@ WlzErrorNum WlzWrite3DViewStruct(
 }
 
 /*!
-* \return				A new view.
+* \return	New 3D view.
+* \ingroup	WlzSectionTransform
+* \brief	Allocates and intialises a new 3D view and sets it's
+* 		parameters to those of the given view. The new transform's
+* 		look up tables are not allocated.
+* \param	given			Given view transform.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzThreeDViewStruct *WlzMake3DViewStructCopy(WlzThreeDViewStruct *given,
+  				WlzErrorNum *dstErr)
+{
+  WlzThreeDViewStruct *view = NULL;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if(given == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(given->type != WLZ_3D_VIEW_STRUCT)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if((view = (WlzThreeDViewStruct *)
+                  AlcCalloc(1, sizeof(WlzThreeDViewStruct))) == NULL)
+  { 
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    WlzAffineTransform *trans = NULL;
+
+    view->type 		= given->type;
+    view->linkcount 	= 0;
+    view->freeptr 	= NULL;
+    view->initialised   = WLZ_3DVIEWSTRUCT_INIT_NONE;
+    view->fixed.vtX 	= given->fixed.vtX;
+    view->fixed.vtY 	= given->fixed.vtY;
+    view->fixed.vtZ 	= given->fixed.vtZ;
+    view->theta 	= given->theta;
+    view->phi 		= given->phi;
+    view->zeta 		= given->zeta;
+    view->dist 		= given->dist;
+    view->scale 	= given->scale;
+    view->voxelSize[0]  = given->voxelSize[0];
+    view->voxelSize[1]  = given->voxelSize[1];
+    view->voxelSize[2]  = given->voxelSize[2];
+    view->voxelRescaleFlg = given->voxelRescaleFlg;
+    view->interp 	= given->interp;
+    view->view_mode	= given->view_mode;
+    view->up.vtX 	= given->up.vtX;
+    view->up.vtY 	= given->up.vtY;
+    view->up.vtZ 	= given->up.vtZ;
+    view->fixed_2.vtX 	= given->fixed_2.vtX;
+    view->fixed_2.vtY 	= given->fixed_2.vtY;
+    view->fixed_2.vtZ 	= given->fixed_2.vtZ;
+    view->fixed_line_angle = given->fixed_line_angle;
+    view->ref_obj 	= NULL;
+    trans = WlzMakeAffineTransform(WLZ_TRANSFORM_3D_AFFINE, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      view->trans = WlzAssignAffineTransform(trans, NULL);
+    }
+    else
+    {
+      AlcFree(view);
+      view = NULL;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(view);
+}
+
+/*!
+* \return	A new view.
 * \ingroup      WlzSectionTransform
 * \brief	Allocates and intialises a 3D view. The transform
 *		look up tables are not allocated.
@@ -182,7 +258,8 @@ WlzErrorNum WlzFree3DViewStruct(
   if( WlzUnlink(&(viewStr->linkcount), &errNum) )
   {
     /* free luts and rotation matrix if set */
-    if((viewStr->initialised & WLZ_3DVIEWSTRUCT_INIT_LUT) && (viewStr->freeptr != NULL)){
+    if((viewStr->initialised & WLZ_3DVIEWSTRUCT_INIT_LUT) &&
+       (viewStr->freeptr != NULL)){
       AlcFreeStackFree(viewStr->freeptr);
       viewStr->freeptr = NULL;
     }
