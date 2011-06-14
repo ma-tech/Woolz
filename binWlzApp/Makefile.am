@@ -84,6 +84,7 @@ bin_PROGRAMS		=  \
 			  WlzPatchObjRegister \
 			  WlzPosterProcessForStackupKeep3StraitLines \
 			  WlzProductTransform \
+			  WlzProjectDomain \
 			  WlzRawToWlz \
 			  WlzReconstruct \
 			  WlzSizeSelect \
@@ -215,6 +216,10 @@ WlzPosterProcessForStackupKeep3StraitLines_LDFLAGS = $(AM_LFLAGS)
 WlzProductTransform_SOURCES	= WlzProductTransform.c
 WlzProductTransform_LDADD	= $(LDADD)
 WlzProductTransform_LDFLAGS	= $(AM_LFLAGS)
+
+WlzProjectDomain_SOURCES	= WlzProjectDomain.c
+WlzProjectDomain_LDADD		= $(LDADD)
+WlzProjectDomain_LDFLAGS	= $(AM_LFLAGS)
 
 WlzRawToWlz_SOURCES		= WlzRawToWlz.c
 WlzRawToWlz_LDADD		= $(LDADD)
