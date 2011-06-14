@@ -172,6 +172,7 @@ libWlz_la_SOURCES 	= \
 			  WlzPolyToObj.c \
 			  WlzPolyUtils.c \
 			  WlzPrinicipalAngle.c \
+			  WlzProj3DToSection.c \
 			  WlzRank.c \
 			  WlzRaster.c \
 			  WlzReadObj.c \
