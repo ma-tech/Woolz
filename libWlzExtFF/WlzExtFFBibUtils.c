@@ -48,6 +48,57 @@ static char _WlzExtFFBibUtils_c[] = "MRC HGU $Id$";
 
 #include <WlzExtFF.h>
 
+/*!
+* \return	New view.
+* \ingroup	WlzExtFF
+* \brief	Reads a 3D view from the given file pointer.
+* \param	fP			Given file pointer.
+* \param	dstMsg			Destination pointer for bibfile
+* 					parsing error message strings, may
+* 					be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzThreeDViewStruct *WlzEffBibRead3DView(FILE *fP, char **dstMsg,
+					      WlzErrorNum *dstErr)
+{
+  BibFileRecord *bRec;
+  WlzThreeDViewStruct *view = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+  char          *errMsg = NULL;
+
+  view = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    BibFileError  bibErr;
+
+    bibErr = BibFileRecordRead(&bRec, &errMsg, fP);
+    while((bibErr == BIBFILE_ER_NONE) &&
+          ((strncmp(bRec->name, "Wlz3DSectionViewParams", 22)) != 0))
+    {
+      BibFileRecordFree(&bRec);
+      bibErr = BibFileRecordRead(&bRec, &errMsg, fP);
+    }
+    if(bibErr != BIBFILE_ER_NONE)
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzEffBibParse3DSectionViewParamsRecord(bRec, view);
+  }
+  BibFileRecordFree(&bRec);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  if(dstMsg)
+  {
+    *dstMsg = errMsg;
+  }
+  return(view);
+}
+
 /*! 
 * \ingroup      WlzExtFF
 * \brief        Write the section view parameters in the bibtex style

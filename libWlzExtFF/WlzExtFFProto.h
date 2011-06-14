@@ -385,6 +385,11 @@ extern WlzErrorNum 		WlzEffBibWriteWarpInputThresholdParamsRecord(
 extern WlzErrorNum		WlzEffBibParseWarpInputThresholdParamsRecord(
   				  BibFileRecord *bibfileRecord,
   			WlzEffBibWarpInputThresholdParamsStruct *paramStruct);
+extern WlzThreeDViewStruct 	*WlzEffBibRead3DView(
+				  FILE *fP,
+				  char **dstMsg,
+				  WlzErrorNum *dstErr);
+
 #endif /* WLZ_EXT_BIND */
 
 #ifdef  __cplusplus
