@@ -182,6 +182,9 @@ extern WlzErrorNum 		WlzWrite3DViewStruct(
 extern WlzThreeDViewStruct 	*WlzMake3DViewStruct(
 				  WlzObjectType type,
 				  WlzErrorNum *dstErr);
+extern WlzThreeDViewStruct	*WlzMake3DViewStructCopy(
+				  WlzThreeDViewStruct *given,
+				  WlzErrorNum *dstErr);
 extern WlzErrorNum 		WlzFree3DViewStruct(
 				  WlzThreeDViewStruct *viewStr);
 extern WlzErrorNum 		WlzInit3DViewStruct(
@@ -4693,6 +4696,19 @@ extern double 			WlzPrincipalAngle(
 				  WlzObject *srcObj,
 				  WlzDVertex2 cMass,
 				  int binObjFlg,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzProj3DToSection.c
+************************************************************************/
+extern WlzObject       		*WlzProj3DToSection(
+				  WlzObject *gvnObj,
+				  int nMask,
+				  WlzObject **maskObj,
+				  WlzThreeDViewStruct *prjView,
+				  int nPlnTr,
+				  WlzObject **plnTrObj,
+				  WlzThreeDViewStruct *secView,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
