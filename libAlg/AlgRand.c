@@ -43,6 +43,7 @@ static char _AlgRand_c[] = "MRC HGU $Id$";
 
 #include <stdlib.h>
 #include <math.h>
+#include <float.h>
 #include <Alg.h>
 
 /*!
@@ -83,10 +84,17 @@ double		AlgRandNormal(double mu, double sigma)
 {
   double	value;
 
-  value = AlgRandUniform() + AlgRandUniform() + AlgRandUniform() +
-  	  AlgRandUniform() + AlgRandUniform() + AlgRandUniform() +
-	  AlgRandUniform() + AlgRandUniform() + AlgRandUniform() +
-	  AlgRandUniform() + AlgRandUniform() + AlgRandUniform();
-  value = ((value - 6.0) * sigma) + mu;
+  if(fabs(sigma) > DBL_EPSILON)
+  {
+    value = AlgRandUniform() + AlgRandUniform() + AlgRandUniform() +
+	    AlgRandUniform() + AlgRandUniform() + AlgRandUniform() +
+	    AlgRandUniform() + AlgRandUniform() + AlgRandUniform() +
+	    AlgRandUniform() + AlgRandUniform() + AlgRandUniform();
+    value = ((value - 6.0) * sigma) + mu;
+  }
+  else
+  {
+    value = mu;
+  }
   return(value);
 }
