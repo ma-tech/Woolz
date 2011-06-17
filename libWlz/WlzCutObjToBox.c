@@ -47,13 +47,33 @@ static char _WlzCutObjToBox_c[] = "MRC HGU $Id$";
 #include <float.h>
 #include <Wlz.h>
 
+static WlzObject 		*WlzCutObjToValBgBox2D(
+				  WlzObject *sObj,
+				  WlzIBox2 cutBox,
+				  WlzGreyType dGreyType,
+				  void *gValP,
+				  int bgNoise,
+				  double bgMu,
+				  double bgSigma,
+				  int forceBg,
+				  WlzPixelV forcedBgPix,
+				  WlzErrorNum *dstErrNum);
+static void			WlzCutObjToBoxFillBg(
+				  WlzGreyP vec,
+				  WlzGreyType gType,
+				  int bgNoise,
+				  WlzPixelV bgPix,
+				  double mu,
+				  double sigma,
+				  int vecOff,
+				  int vecCnt);
 static void			WlzCutObjSetRand(
 				  WlzGreyP vec,
-				  int vecOff,
 				  WlzGreyType gType,
-				  int count,
 				  double mu,
-				  double sigma);
+				  double sigma,
+				  int vecOff,
+				  int count);
 
 /*!
 * \return	New object with rectangular value table or NULL on error.
@@ -63,22 +83,22 @@ static void			WlzCutObjSetRand(
 * \param	sObj			Given source object.
 * \param	cutBox			Rectangle box to cut from the object.
 * \param	dGreyType		Required grey type for the value table.
-* \param	bgdNoise		If zero background value is used
+* \param	bgNoise			If zero background value is used
 * 					otherwise if non zero the background
 *					is set using gaussian noise.
-* \param	bgdMu			Mean of background noise.
-* \param	bgdSigma		Standard deviation of the background
+* \param	bgMu			Mean of background noise.
+* \param	bgSigma			Standard deviation of the background
 * 					noise.
 * \param	dstErrNum		Destination pointer for error number,
 * 					may be NULL if not required.
 */
 WlzObject	*WlzCutObjToBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 				  WlzGreyType dGreyType,
-				  int bgdNoise, double bgdMu, double bgdSigma,
+				  int bgNoise, double bgMu, double bgSigma,
 				  WlzErrorNum *dstErrNum)
 {
   return(WlzCutObjToValBox2D(sObj, cutBox, dGreyType, NULL,
-  			     bgdNoise, bgdMu, bgdSigma,
+  			     bgNoise, bgMu, bgSigma,
 			     dstErrNum));
 }
 
@@ -95,35 +115,74 @@ WlzObject	*WlzCutObjToBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 * \param	dGreyType		Required grey type for the value table.
 * \param	gValP			If non-NULL allocated space for grey
 * 					values.
-* \param	bgdNoise		If zero background value is used
+* \param	bgNoise			If zero background value is used
 * 					otherwise if non zero the background
 *					is set using gaussian noise.
-* \param	bgdMu			Mean of background noise.
-* \param	bgdSigma		Standard deviation of the background
+* \param	bgMu			Mean of background noise.
+* \param	bgSigma			Standard deviation of the background
 * 					noise.
 * \param	dstErrNum		Destination pointer for error number,
 * 					may be NULL if not required.
 */
-WlzObject	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
+WlzObject 	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 				  WlzGreyType dGreyType, void *gValP,
-				  int bgdNoise, double bgdMu, double bgdSigma,
+				  int bgNoise, double bgMu, double bgSigma,
 				  WlzErrorNum *dstErrNum)
 {
-  int		tI0,
-		dOff,
-		sOff,
+  WlzPixelV	forcedBgPix;
+
+  forcedBgPix.type = WLZ_GREY_ERROR;
+  return(WlzCutObjToValBgBox2D(sObj, cutBox, dGreyType, gValP,
+                               bgNoise, bgMu, bgSigma, 0, forcedBgPix,
+			       dstErrNum));
+}
+
+/*!
+* \return	New object with rectangular value table or NULL on error.
+* \ingroup	WlzValuesUtils
+* \brief	Cuts a new object with a rectangular value table from
+*               the given woolz object and allows access to grey table.
+*               If the source object has no values then the destination
+*               object will always have foreground value 1 and background
+*               value 0, ie the background parameters are ignored.
+*               However if force background is set then the given value is
+*               used.
+* \param	sObj			Given source object.
+* \param	cutBox			Rectangle box to cut from the object.
+* \param	dGreyType		Required grey type for the value table.
+* \param	gValP			If non-NULL allocated space for grey
+* 					values.
+* \param	bgNoise			If zero background value is used
+* 					otherwise if non zero the background
+*					is set using gaussian noise.
+* \param	bgMu			Mean of background noise.
+* \param	bgSigma			Standard deviation of the background
+* 					noise.
+* \param	forceBg			Force the background value.
+* \param	forcedBgPix		Background value of object.
+* \param	dstErrNum		Destination pointer for error number,
+* 					may be NULL if not required.
+*/
+static WlzObject *WlzCutObjToValBgBox2D(WlzObject *sObj, WlzIBox2 cutBox,
+				  WlzGreyType dGreyType, void *gValP,
+				  int bgNoise, double bgMu, double bgSigma,
+				  int forceBg, WlzPixelV forcedBgPix,
+				  WlzErrorNum *dstErrNum)
+{
+  int		dOff,
 		dCnt,
-		dBkgCnt,
+		dBgCnt,
+		sHasDom = 0,
 		sHasVal = 0,
-  		lastFilledOff = -1;
+  		dLastOff = -1;
   size_t	tSz;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*dObj = NULL;
   WlzGreyP	dValP;
-  WlzPixelV	dFgdPix,
-  		dBkgPix,
-		sFgdPix,
-  		sBkgPix;
+  WlzPixelV	dFgPix,
+  		dBgPix,
+		sFgPix,
+  		sBgPix;
   WlzIVertex2	cutSz;
   WlzIntervalWSpace iWSp;
   WlzGreyWSpace	gWSp;
@@ -132,7 +191,7 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 	  ("WlzCutObjToValBox2D FE %p {%d %d %d %d} %d %p %p\n",
 	   sObj, cutBox.xMin, cutBox.yMin, cutBox.xMax, cutBox.yMax,
 	   (int )dGreyType, gValP, dstErrNum));
-  dBkgPix.type = dGreyType;
+  dBgPix.type = dGreyType;
   dValP.inp = NULL;
   if(sObj == NULL)
   {
@@ -151,7 +210,12 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
       case WLZ_2D_DOMAINOBJ:
 	if(sObj->domain.core == NULL)
 	{
-	  errNum = WLZ_ERR_DOMAIN_NULL;
+	  sHasDom = 0;
+	  if(forceBg != 0)
+	  {
+	    sBgPix = forcedBgPix;
+	    errNum = WlzValueConvertPixel(&dBgPix, sBgPix, dGreyType);
+	  }
 	}
 	else if((sObj->domain.core->type != WLZ_INTERVALDOMAIN_INTVL) &&
 		(sObj->domain.core->type != WLZ_INTERVALDOMAIN_RECT))
@@ -160,23 +224,31 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 	}
 	else
 	{
+	  sHasDom = 1;
 	  if(sObj->values.core == NULL)
 	  {
 	    sHasVal = 0;
-	    sFgdPix.type = WLZ_GREY_UBYTE;
-	    sBkgPix.type = WLZ_GREY_UBYTE;
-	    sBkgPix.v.ubv = 0;
-	    sFgdPix.v.ubv = 1;
-	    errNum = WlzValueConvertPixel(&dFgdPix, sFgdPix, dGreyType);
+	    sFgPix.type = WLZ_GREY_UBYTE;
+	    sFgPix.v.ubv = 1;
+	    errNum = WlzValueConvertPixel(&dFgPix, sFgPix, dGreyType);
+	    sBgPix.type = WLZ_GREY_UBYTE;
+	    sBgPix.v.ubv = 0;
 	  }
 	  else
 	  {
 	    sHasVal = 1;
-	    sBkgPix = WlzGetBackground(sObj, &errNum);
+	    if(forceBg == 0)
+	    {
+	      sBgPix = WlzGetBackground(sObj, &errNum);
+	    }
+	  }
+	  if(forceBg != 0)
+	  {
+	    sBgPix = forcedBgPix;
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    errNum = WlzValueConvertPixel(&dBkgPix, sBkgPix, dGreyType);
+	    errNum = WlzValueConvertPixel(&dBgPix, sBgPix, dGreyType);
 	  }
 	}
 	if(errNum == WLZ_ERR_NONE)
@@ -201,7 +273,7 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 	        errNum = WLZ_ERR_MEM_ALLOC;
 	      }
 	    }
-	    if(errNum == WLZ_ERR_NONE)
+	    if((errNum == WLZ_ERR_NONE) && (sHasDom != 0))
 	    {
 	      errNum = (sHasVal == 0)?
 	               WlzInitRasterScan(sObj, &iWSp, WLZ_RASTERDIR_ILIC):
@@ -209,131 +281,138 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      if(sHasVal == 0)
+	      if(sHasDom == 0)
+	      {
+	        WlzCutObjToBoxFillBg(dValP,
+				      dGreyType,
+		                      bgNoise, dBgPix, bgMu, bgSigma,
+		                      dLastOff + 1, cutSz.vtX * cutSz.vtY);
+	      }
+	      else if(sHasVal == 0)
 	      {
 	        while((errNum = WlzNextInterval(&iWSp)) == WLZ_ERR_NONE)
 		{
-		  if((iWSp.linpos >= cutBox.yMin) &&
-		     (iWSp.linpos <= cutBox.yMax) &&
+		  int	dLn;
+
+		  dLn = iWSp.linpos - cutBox.yMin;
+		  if((dLn >= 0) && (dLn < cutSz.vtY) &&
 		     (iWSp.lftpos <= cutBox.xMax) &&
 		     (iWSp.rgtpos >= cutBox.xMin))
 		  {
-		    dOff = (iWSp.linpos - cutBox.yMin) * cutSz.vtX;
-		    if((tI0 = cutBox.xMin - iWSp.lftpos) > 0)
+		    int		lft,
+			    	rgt;
+
+		    lft = iWSp.lftpos - cutBox.xMin;
+		    rgt = iWSp.rgtpos - cutBox.xMin;
+		    if(lft < 0)
 		    {
-		      sOff = tI0;
+		      lft = 0;
 		    }
-		    else
+		    if(rgt >= cutSz.vtX)
 		    {
-		      sOff = 0;
-		      dOff -= tI0;
+		      rgt = cutSz.vtX - 1;
 		    }
-		    dCnt = WLZ_MIN(iWSp.rgtpos, cutBox.xMax) -
-			       WLZ_MAX(iWSp.lftpos, cutBox.xMin) + 1;;
-		    dBkgCnt = dOff - lastFilledOff + 1;
-		    WLZ_DBG((WLZ_DBG_LVL_3),
-			    ("WlzCutObjToValBox2D 02 %d %d %d %d\n",
-			     lastFilledOff, dOff, dCnt, dBkgCnt));
-		    if(dBkgCnt > 0)
+		    dCnt = rgt - lft + 1;
+		    dOff = dLn * cutSz.vtX;
+		    dBgCnt = dOff + lft - dLastOff - 1;;
+		    if(dBgCnt > 0)
 		    {
-		      WlzValueSetGrey(dValP, lastFilledOff + 1,
-				      dBkgPix.v, dGreyType, dBkgCnt);
-		      lastFilledOff += dBkgCnt;
+		      WlzCutObjToBoxFillBg(dValP,
+					    dGreyType,
+					    bgNoise, dBgPix, bgMu, bgSigma,
+					    dLastOff + 1, dBgCnt);
+                    
 		    }
 		    if(dCnt > 0)
 		    {
-		      WlzValueSetGrey(dValP, dOff,
-				      dFgdPix.v, dGreyType, dCnt);
-		      lastFilledOff = dOff + dCnt - 1;
+		      WlzValueSetGrey(dValP, dOff + lft,
+		                      dFgPix.v, dGreyType, dCnt);
 		    }
+		    dLastOff = dOff + rgt;
+		  }
+		}
+		if(errNum == WLZ_ERR_EOO)
+		{
+		  errNum = WLZ_ERR_NONE;
+		  dBgCnt = cutSz.vtX * cutSz.vtY - dLastOff - 1;
+		  if(dBgCnt > 0)
+		  {
+		    WlzCutObjToBoxFillBg(dValP,
+					  dGreyType,
+					  bgNoise, dBgPix, bgMu, bgSigma,
+		                          dLastOff + 1, dBgCnt);
 		  }
 		}
 	      }
-	      else
+	      else /* (sHasDom !== 0) && sHasVal !== 0) */
 	      {
-		while((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)
+	        while((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)
 		{
-		  if((iWSp.linpos >= cutBox.yMin) &&
-		     (iWSp.linpos <= cutBox.yMax) &&
+		  int	dLn;
+
+		  dLn = iWSp.linpos - cutBox.yMin;
+		  if((dLn >= 0) && (dLn < cutSz.vtY) &&
 		     (iWSp.lftpos <= cutBox.xMax) &&
 		     (iWSp.rgtpos >= cutBox.xMin))
 		  {
-		    dOff = (iWSp.linpos - cutBox.yMin) * cutSz.vtX;
-		    if((tI0 = cutBox.xMin - iWSp.lftpos) > 0)
+		    int		lft,
+			    	rgt,
+				sKlOff;
+
+		    sKlOff = 0;
+		    lft = iWSp.lftpos - cutBox.xMin;
+		    rgt = iWSp.rgtpos - cutBox.xMin;
+		    if(lft < 0)
 		    {
-		      sOff = tI0;
+		      sKlOff = -lft;
+		      lft = 0;
 		    }
-		    else
+		    if(rgt >= cutSz.vtX)
 		    {
-		      sOff = 0;
-		      dOff -= tI0;
+		      rgt = cutSz.vtX - 1;
 		    }
-		    dCnt = WLZ_MIN(iWSp.rgtpos, cutBox.xMax) -
-			       WLZ_MAX(iWSp.lftpos, cutBox.xMin) + 1;;
-		    dBkgCnt = dOff - lastFilledOff + 1;
-		    WLZ_DBG((WLZ_DBG_LVL_3),
-			    ("WlzCutObjToValBox2D 03 %d %d %d %d\n",
-			     lastFilledOff, dOff, dCnt, dBkgCnt));
-		    if(dBkgCnt > 0)
+		    dCnt = rgt - lft + 1;
+		    dOff = dLn * cutSz.vtX;
+		    dBgCnt = dOff + lft - dLastOff - 1;;
+		    if(dBgCnt > 0)
 		    {
-		      if(bgdNoise)
-		      {
-			WlzCutObjSetRand(dValP, lastFilledOff + 1,
-					 dGreyType, dBkgCnt,
-					 bgdMu, bgdSigma);
-		      }
-		      else
-		      {
-			WlzValueSetGrey(dValP, lastFilledOff + 1,
-					dBkgPix.v, dGreyType, dBkgCnt);
-		      }
-		      lastFilledOff += dBkgCnt;
+		      WlzCutObjToBoxFillBg(dValP,
+					    dGreyType,
+					    bgNoise, dBgPix, bgMu, bgSigma,
+					    dLastOff + 1, dBgCnt);
+                    
 		    }
 		    if(dCnt > 0)
 		    {
-		      WlzValueCopyGreyToGrey(dValP, dOff,
+		      WlzValueCopyGreyToGrey(dValP, dOff + lft,
 					     dGreyType,
-					     gWSp.u_grintptr, sOff,
+					     gWSp.u_grintptr, sKlOff,
 					     gWSp.pixeltype,
 					     dCnt);
-		      lastFilledOff = dOff + dCnt - 1;
 		    }
+		    dLastOff = dOff + rgt;
 		  }
 		}
-	      }
-	      if(errNum == WLZ_ERR_EOO) /* Reset error from end of intervals */ 
-	      {
-		errNum = WLZ_ERR_NONE;
+		if(errNum == WLZ_ERR_EOO)
+		{
+		  errNum = WLZ_ERR_NONE;
+		  dBgCnt = cutSz.vtX * cutSz.vtY - dLastOff - 1;
+		  if(dBgCnt > 0)
+		  {
+		    WlzCutObjToBoxFillBg(dValP,
+					  dGreyType,
+					  bgNoise, dBgPix, bgMu, bgSigma,
+		                          dLastOff + 1, dBgCnt);
+		  }
+		}
 	      }
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      dBkgCnt = (cutSz.vtX * cutSz.vtY) - (lastFilledOff + 1);
-	      WLZ_DBG((WLZ_DBG_LVL_3),
-		      ("WlzCutObjToValBox2D 04 %d %d\n",
-		       lastFilledOff, dBkgCnt));
-	      if(dBkgCnt > 0)
-	      {
-		if(sHasVal == 1)
-		{
-		  WlzValueSetGrey(dValP, lastFilledOff + 1, dBkgPix.v,
-				  dGreyType, dBkgCnt);
-		}
-		else if(bgdNoise)
-		{
-		  WlzCutObjSetRand(dValP, lastFilledOff + 1,
-				   dGreyType, dBkgCnt, bgdMu, bgdSigma);
-		}
-		else
-		{
-		  WlzValueSetGrey(dValP, lastFilledOff + 1, dBkgPix.v,
-				      dGreyType, dBkgCnt);
-	        }
-	      }
 	      dObj = WlzMakeRect(cutBox.yMin, cutBox.yMax,
 				 cutBox.xMin, cutBox.xMax,
 				 dGreyType, dValP.inp,
-				 dBkgPix, NULL, NULL, &errNum);
+				 dBgPix, NULL, NULL, &errNum);
 	      if((errNum == WLZ_ERR_NONE ) &&
 	         (gValP == NULL) && (dValP.v != NULL))
 	      {
@@ -390,22 +469,22 @@ WlzObject	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 * \param	sObj			Given source object.
 * \param	cutBox			Cut box.
 * \param	dGreyType		Required grey type for the value table.
-* \param	bgdNoise		If zero background value is used
+* \param	bgNoise			If zero background value is used
 * 					otherwise if non zero the background
 *					is set using gaussian noise.
-* \param	bgdMu			Mean of background noise.
-* \param	bgdSigma		Standard deviation of the background
+* \param	bgMu			Mean of background noise.
+* \param	bgSigma			Standard deviation of the background
 * 					noise.
 * \param	dstErrNum		Destination pointer for error number,
 * 					may be NULL if not required.
 */
 WlzObject	*WlzCutObjToBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 				  WlzGreyType dGreyType,
-				  int bgdNoise, double bgdMu, double bgdSigma,
+				  int bgNoise, double bgMu, double bgSigma,
 				  WlzErrorNum *dstErrNum)
 {
   return(WlzCutObjToValBox3D(sObj, cutBox, dGreyType, NULL,
-  			     bgdNoise, bgdMu, bgdSigma,
+  			     bgNoise, bgMu, bgSigma,
 			     dstErrNum));
 }
 
@@ -422,18 +501,18 @@ WlzObject	*WlzCutObjToBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 * \param	dGreyType		Required grey type for the value table.
 * \param	gValP			If non-NULL allocated space for grey
 * 					values.
-* \param	bgdNoise		If zero background value is used
+* \param	bgNoise			If zero background value is used
 * 					otherwise if non zero the background
 *					is set using gaussian noise.
-* \param	bgdMu			Mean of background noise.
-* \param	bgdSigma		Standard deviation of the background
+* \param	bgMu			Mean of background noise.
+* \param	bgSigma			Standard deviation of the background
 * 					noise.
 * \param	dstErrNum		Destination pointer for error number,
 *                                       may be NULL if not required.
 */
 WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 				  WlzGreyType dGreyType, void *gValP,
-				  int bgdNoise, double bgdMu, double bgdSigma,
+				  int bgNoise, double bgMu, double bgSigma,
 				  WlzErrorNum *dstErrNum)
 {
   int		dPlIdx,
@@ -456,8 +535,8 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
   		sVal2D;
   WlzGreyP	dValP,
   		dVal2DP;
-  WlzPixelV	dBkgPix,
-  		sBkgPix;
+  WlzPixelV	dBgPix,
+  		sBgPix;
   WlzIBox2	cutBox2D;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -488,7 +567,7 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
         break;
       case WLZ_2D_DOMAINOBJ:
 	dObj = WlzCutObjToValBox2D(sObj, cutBox2D, dGreyType,
-				  gValP, bgdNoise, bgdMu, bgdSigma,
+				  gValP, bgNoise, bgMu, bgSigma,
 				  &errNum);
 	break;
       case WLZ_3D_DOMAINOBJ:
@@ -505,18 +584,18 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 	  if(sObj->values.core == NULL)
 	  {
 	    sHasVal = 0;
-	    sBkgPix.type = WLZ_GREY_UBYTE;
-	    sBkgPix.v.ubv = 0;
+	    sBgPix.type = WLZ_GREY_UBYTE;
+	    sBgPix.v.ubv = 0;
 	  }
 	  else
 	  {
 	    sHasVal = 1;
-	    sBkgPix = WlzGetBackground(sObj, &errNum);
+	    sBgPix = WlzGetBackground(sObj, &errNum);
 	  }
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  errNum = WlzValueConvertPixel(&dBkgPix, sBkgPix, dGreyType);
+	  errNum = WlzValueConvertPixel(&dBgPix, sBgPix, dGreyType);
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
@@ -557,7 +636,7 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 	    {
 	      dVal.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
 					     cutBox.zMin, cutBox.zMax,
-					     dBkgPix, NULL, &errNum);
+					     dBgPix, NULL, &errNum);
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
@@ -591,10 +670,11 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 		}
 		if(errNum == WLZ_ERR_NONE)
 		{
-		  dObj2D = WlzCutObjToValBox2D(sObj2D, cutBox2D,
-					       dGreyType, dVal2DP.v,
-					       bgdNoise, bgdMu, bgdSigma,
-					       &errNum);
+		  dObj2D = WlzCutObjToValBgBox2D(sObj2D, cutBox2D,
+						 dGreyType, dVal2DP.v,
+						 bgNoise, bgMu, bgSigma,
+						 1, sBgPix,
+					         &errNum);
 		}
 		(void )WlzFreeObj(sObj2D);
 		if(errNum == WLZ_ERR_NONE)
@@ -689,18 +769,52 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 }
 
 /*!
+* \ingroup	WlzValuesUtils
+* \brief	Fills contiguous values with the appropriate background
+* 		values, these may be either constant or Gaussian noise.
+* \param	vec			Vector of values.
+* \param	gType			Grey type of the values in the vector.
+* \param	bgNoise			Non-zero if noise is required.
+* \param	bgPix			Background picel value (used if
+*                                       bgNoise == 0) which must be of the
+*                                       correct grey type for the destination.
+* \param	mu			Gaussian noise mean (only used if
+* 					bgNoise != 0).
+* \param	sigma			Gaussian noise variance (only used if
+* 					bgNoise != 0).
+* \param	vecOff			Offset of first value from the start of
+* 					the given vector or values.
+* \param	vecCnt			Number of values to fill.
+*/
+static void	WlzCutObjToBoxFillBg(WlzGreyP vec, WlzGreyType gType,
+		                      int bgNoise, WlzPixelV bgPix,
+				      double mu, double sigma,
+		                      int vecOff, int vecCnt)
+{
+  if(bgNoise)
+  {
+    WlzCutObjSetRand(vec, gType, mu, sigma, vecOff, vecCnt);
+  }
+  else
+  {
+    WlzValueSetGrey(vec, vecOff, bgPix.v, gType, vecCnt);
+  }
+}
+
+/*!
 * \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Set random values from a normal distribution.
 * \param	vec			Vector of values.
-* \param	vecOff			Offset into the vector.
 * \param	gType			Grey type of the values in the vector.
-* \param	count			Number of values to set.
 * \param	mu			Mean of distribution.
 * \param	sigma			Standard deviation of distribution.
+* \param	vecOff			Offset into the vector.
+* \param	count			Number of values to set.
 */
-static void	WlzCutObjSetRand(WlzGreyP vec, int vecOff, WlzGreyType gType,
-				 int count, double mu, double sigma)
+static void	WlzCutObjSetRand(WlzGreyP vec, WlzGreyType gType,
+				 double mu, double sigma,
+				 int vecOff, int count)
 {
   double	noise;
 
