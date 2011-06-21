@@ -1506,6 +1506,11 @@ extern WlzObject		*WlzCMeshTransformObj(
 				  WlzObject *mObj,
 				  WlzInterpolationType interp,
 				  WlzErrorNum *dstErr);
+extern WlzCompoundArray		*WlzCMeshTransformManyObjAsIdx(
+				  WlzCompoundArray *srcObj,
+				  WlzObject *mObj,
+				  WlzInterpolationType interp,
+				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzCMeshTransformVtxAry2I(
 				  WlzObject *mObj,
 				  int sizeArrayVtx,
@@ -3470,6 +3475,16 @@ extern WlzObject 		*WlzImageArithmetic(
 				  WlzObject *obj1,
 			          WlzBinaryOperatorType op,
 			          int overwrite,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzIndexObj.c
+************************************************************************/
+extern WlzObject		*WlzIndexObjFromCompound(
+				  WlzCompoundArray *cObj,
+				  WlzErrorNum *dstErr);
+extern WlzCompoundArray 	*WlzIndexObjToCompound(
+				  WlzObject *gObj,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
