@@ -138,6 +138,7 @@ libWlz_la_SOURCES 	= \
 			  WlzHistogram.c \
 			  WlzHyThreshold.c \
 			  WlzImageArithmetic.c \
+			  WlzIndexObj.c \
 			  WlzInsideDomain.c \
 			  WlzIntersect2.c \
 			  WlzIntersect3d.c \
