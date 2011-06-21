@@ -59,7 +59,7 @@ WlzCompound [-n <num objects>] [-h]
 <table width="500" border="0">
   <tr>
     <td><b>-n</b></td>
-    <td>Maximum number of objects, default 100.</td>
+    <td>Maximum number of objects, default 1024.</td>
   </tr>
   <tr>
     <td><b>-h</b></td>
@@ -115,7 +115,7 @@ static void usage(char *proc_str)
 	  "\tinput objects. Objects are read from stdin and written\n"
 	  "\tto stdout. Options are:\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -n#       Maximum number of objects -default=100\n"
+	  "\t  -n#       Maximum number of objects -default=1024\n"
 	  "",
 	  proc_str);
   return;
@@ -138,7 +138,7 @@ int main(int	argc,
     
   /* read the argument list and check for an input file */
   opterr = 0;
-  nmax = 100;
+  nmax = 1024;
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
 
@@ -180,7 +180,7 @@ int main(int	argc,
       type = obj->type;
     }
 
-    if( obj->type == type ){
+    if( obj->type == type || obj->type == WLZ_EMPTY_OBJ ){
       objlist[n++] = WlzAssignObject(obj, NULL);
     } else {
       WlzFreeObj( obj );
