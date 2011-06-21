@@ -135,6 +135,8 @@ bin_PROGRAMS		= \
 			  WlzHistogramRebin \
 			  WlzHistogramSmooth \
 			  WlzImageArithmetic \
+			  WlzIndexObjFromCompound \
+			  WlzIndexObjToCompound \
 			  WlzInsideDomain \
 			  WlzIntersect \
 			  WlzIntRescaleObj \
@@ -558,6 +560,14 @@ WlzHistogramSmooth_LDFLAGS		= $(AM_LFLAGS)
 WlzImageArithmetic_SOURCES		= WlzImageArithmetic.c
 WlzImageArithmetic_LDADD		= $(LDADD)
 WlzImageArithmetic_LDFLAGS		= $(AM_LFLAGS)
+
+WlzIndexObjFromCompound_SOURCES		= WlzIndexObjFromCompound.c
+WlzIndexObjFromCompound_LDADD		= $(LDADD)
+WlzIndexObjFromCompound_LDFLAGS		= $(AM_LFLAGS)
+
+WlzIndexObjToCompound_SOURCES		= WlzIndexObjToCompound.c
+WlzIndexObjToCompound_LDADD		= $(LDADD)
+WlzIndexObjToCompound_LDFLAGS		= $(AM_LFLAGS)
 
 WlzInsideDomain_SOURCES			= WlzInsideDomain.c
 WlzInsideDomain_LDADD			= $(LDADD)
