@@ -4316,6 +4316,91 @@ WlzObject 	*WlzCMeshTransformObj(WlzObject *srcObj,
 }
 
 /*!
+* \return	Compound array with transformed object domains, NULL on error.
+* \ingroup	WlzTransform
+* \brief	Applies a conforming mesh transform to all the domains of the
+* 		given compound array, in a single pass, by creating an grey
+* 		valued index object from the domains in the compound array;
+* 		transforming the grey valued domain object and then extracting
+* 		the domains from the grey valued index object.
+* 		Because a conforming mesh transform can be comparatively slow
+* 		this can reduce the time taken to apply the same transform to
+* 		multiple domains. However it is assumed that none of the
+* 		domains intersect. If they do then the domains with higher
+* 		indices (later in the compound array) will overwrite those
+* 		with lower indices (earlier in the compound array). In many
+*		cases this assumption may be valid, eg in the case of
+*		exclusive anatomy domains or gene expression strength
+*		domains where each is known to be a subset of the preceding
+*		strength domains. Even so the results of this function may
+*		not be identical to seperate calls at the boundaries of the
+*		domains. To distinguish the domains from the background value
+*		it may be useful to make the first object of the given compound
+*		array an empty object.
+* \param	srcObj			Object to be transformed. This must
+* 					be a compound array with at least
+* 					one non empty object.
+* \param	mObj			Conforming mesh transform object.
+* \param	interp			Type of interpolation, which should
+* 					probably either be nearest neighbours
+* 					or classify. Other interpolation
+* 					methods may be allowed.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCompoundArray  *WlzCMeshTransformManyObjAsIdx(WlzCompoundArray *srcObj,
+				     WlzObject *mObj,
+				     WlzInterpolationType interp,
+				     WlzErrorNum *dstErr)
+{
+  WlzObject  	*srcGObj = NULL,
+  		*dstGObj = NULL;
+  WlzCompoundArray *dstObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+ 
+  if((srcObj == NULL) || (mObj == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(((mObj->type != WLZ_CMESH_2D) &&
+           (mObj->type != WLZ_CMESH_2D5) &&
+           (mObj->type != WLZ_CMESH_3D)) ||
+          ((srcObj->type != WLZ_COMPOUND_ARR_1) && 
+           (srcObj->type != WLZ_COMPOUND_ARR_2))||
+	  (srcObj->n < 1))
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(mObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    srcGObj = WlzIndexObjFromCompound(srcObj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstGObj = WlzCMeshTransformObj(srcGObj, mObj, interp, &errNum);
+  }
+  (void )WlzFreeObj(srcGObj);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    dstObj = WlzIndexObjToCompound(dstGObj, &errNum);
+  }
+  (void )WlzFreeObj(dstGObj);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeObj((WlzObject *)dstObj);
+    dstObj = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstObj);
+}
+
+/*!
 * \return	Transformed boundary list or NULL on error.
 * \ingroup	WlzTransform
 * \brief	Transforms the given boundary list using the given conforming
