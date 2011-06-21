@@ -417,7 +417,7 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	case WLZ_COMPOUND_ARR_1:  /* FALLTHROUGH */
 	case WLZ_COMPOUND_ARR_2:
 	  objCA = (WlzCompoundArray *)obj;
-          tStr = WlzStringFromObjTypeValue(objCA->otype, &errNum);
+          tStr = WlzStringFromObjTypeValue(objCA->otype, NULL);
 	  if(tStr)
 	  {
 	    errNum = WlzObjFactsAppend(fData, "otype: %s.\n", tStr);
