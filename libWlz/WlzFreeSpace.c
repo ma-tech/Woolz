@@ -108,7 +108,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 	       obj->values.core,
 	       (obj->values.core? obj->values.core->linkcount: 0),
 	       obj->plist));
-      errNum = WlzFreeDomain(obj->domain);
+      errNum = WlzFreePlaneDomain(obj->domain.p);
       if((errNum == WLZ_ERR_NONE) && (obj->values.core != NULL)){
 	if(WlzGreyTableIsTiled(obj->values.core->type) == WLZ_GREY_TAB_TILED) {
 	  errNum = WlzFreeTiledValues(obj->values.t);
@@ -578,6 +578,7 @@ WlzErrorNum WlzFreeVoxelValueTb(WlzVoxelValues *voxtab)
       errNum |= WlzFreeValues(*values);
       values++;
     }
+    WlzFreeVoxelValueTb(voxtab->original_table.vox);
     AlcFreeStackFree(voxtab->freeptr);
     AlcFree((char *) voxtab);
   }
