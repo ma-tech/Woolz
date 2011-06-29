@@ -200,7 +200,7 @@ int		main(int argc, char *argv[])
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
       		     "%s: failed to create index object (%s).\n",
-		     *argv, iFile, errMsg);
+		     *argv, errMsg);
     }
   }
   if(ok)
