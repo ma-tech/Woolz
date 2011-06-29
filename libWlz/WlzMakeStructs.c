@@ -920,10 +920,20 @@ WlzObject	*WlzMarkerLattice(WlzObject *gObj, WlzMarkerType mType,
     tObj = WlzMakeMain(gObj->type, gObj->domain, val, NULL, NULL, &errNum);
     if(errNum == WLZ_ERR_NONE)
     {
-      WlzIVertex3 sFac;
+      WlzTransformType trType;
+      WlzAffineTransform *tr = NULL;
 
-      sFac.vtX = sFac.vtY = sFac.vtZ = mSep;
-      sObj = WlzSampleObj(tObj, sFac, WLZ_SAMPLEFN_POINT, &errNum);
+      trType = (gObj->type == WLZ_2D_DOMAINOBJ)?
+               WLZ_TRANSFORM_2D_AFFINE: WLZ_TRANSFORM_3D_AFFINE;
+      tr = WlzAffineTransformFromPrimVal(trType, 0.0, 0.0, 0.0,
+					 1.0 / mSep, 0.0, 0.0, 0.0, 0.0, 0.0,
+      				         0, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        sObj = WlzAffineTransformObj(tObj, tr, WLZ_INTERPOLATION_NEAREST,
+	                             &errNum);
+      }
+      (void )WlzFreeAffineTransform(tr);
     }
     (void )WlzFreeObj(tObj);
   }
