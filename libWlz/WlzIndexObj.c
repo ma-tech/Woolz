@@ -202,6 +202,7 @@ WlzObject	*WlzIndexObjFromCompound(WlzCompoundArray *cObj,
 	WlzObject *tObj;
 
 	tVal.v.inv = idx;
+	(void )WlzAssignObject(rObj, NULL);
 	tObj = WlzGreyMask(rObj, cObj->o[idx], tVal, &errNum);
 	if(tObj != NULL)
 	{
@@ -310,7 +311,8 @@ WlzCompoundArray *WlzIndexObjToCompound(WlzObject *gObj, WlzErrorNum *dstErr)
     {
       if(idx < idxMin)
       {
-        cObj->o[idx] = WlzAssignObject(WlzMakeEmpty(&errNum), NULL);
+        cObj->o[idx] = WlzAssignObject(
+	               WlzMakeEmpty(&errNum), NULL);
       }
       else
       {
@@ -338,7 +340,8 @@ WlzCompoundArray *WlzIndexObjToCompound(WlzObject *gObj, WlzErrorNum *dstErr)
 	  }
 	  if(lObj == NULL)
 	  {
-	    lObj = WlzAssignObject(WlzMakeEmpty(&errNum), NULL);
+	    lObj = WlzAssignObject(
+	           WlzMakeEmpty(&errNum), NULL);
 	  }
 	}
 	if(errNum == WLZ_ERR_NONE)
