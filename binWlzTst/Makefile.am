@@ -58,6 +58,7 @@ bin_PROGRAMS		= \
 			  WlzTstItrSpiral \
 			  WlzTstLBTDomain \
 			  WlzTstRegCCor \
+			  WlzTstThreshold \
 			  WlzTstTiledValues \
 			  WlzTstVxInSimplex \
 			  WlzTstGeomVtxOnLineSegment
@@ -118,6 +119,10 @@ WlzTstLBTDomain_LDFLAGS			= $(AM_LFLAGS)
 WlzTstRegCCor_SOURCES			= WlzTstRegCCor.c
 WlzTstRegCCor_LDADD			= $(LDADD)
 WlzTstRegCCor_LDFLAGS			= $(AM_LFLAGS)
+
+WlzTstThreshold_SOURCES			= WlzTstThreshold.c
+WlzTstThreshold_LDADD			= $(LDADD)
+WlzTstThreshold_LDFLAGS			= $(AM_LFLAGS)
 
 WlzTstTiledValues_SOURCES		= WlzTstTiledValues.c
 WlzTstTiledValues_LDADD			= $(LDADD)
