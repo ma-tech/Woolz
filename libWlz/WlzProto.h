@@ -3855,6 +3855,12 @@ extern WlzErrorNum              WlzRemoveProperty(
  * WlzMakeStructs.c
  ************************************************************************/
 #ifndef WLZ_EXT_BIND
+extern WlzObject       		*WlzMarkerLattice(
+			 	  WlzObject *gObj,
+				  WlzMarkerType mType,
+                                  int  mSz,
+				  int mSep,
+				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzMakeMarkers(
 				  WlzVertexType vType,
 				  int nVtx,

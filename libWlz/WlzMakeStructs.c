@@ -773,6 +773,7 @@ WlzMakeValueLine(WlzRagRValues 	*vtb,
 
 /*!
 * \return       New domain object without values.
+* \ingroup	WlzFeatures
 * \brief        Constructs a domain from the union of marker domains with
 *               a marker domain at each of the given vertex positions.
 * \param        nVtx                    Number of vertices.
@@ -871,6 +872,112 @@ WlzObject 	*WlzMakeMarkers(WlzVertexType vType,
     mObj = tObj[1];
   }
   if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(mObj);
+}
+
+/*!
+* \return       New domain object without values.
+* \ingroup	WlzFeatures
+* \brief	icreates a new domain object that is a formed from a lattice
+* 		of markers covering the given domain.
+* \param	gObj			Given spatial domain object.
+* \param	mType			Marker type.
+* \param	mSz			Marker size.
+* \param	mSep			Marker separation.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzMarkerLattice(WlzObject *gObj, WlzMarkerType mType,
+                                  int  mSz, int mSep, WlzErrorNum *dstErr)
+{
+  int		nMrk = 0;
+  WlzVertexP	mPos;
+  WlzObject	*mObj = NULL,
+  		*sObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  mPos.v = NULL;
+  if(gObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((gObj->type != WLZ_2D_DOMAINOBJ) && (gObj->type != WLZ_3D_DOMAINOBJ))
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(gObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    WlzValues	val;
+    WlzObject	*tObj = NULL;
+
+    val.core = NULL;
+    tObj = WlzMakeMain(gObj->type, gObj->domain, val, NULL, NULL, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzIVertex3 sFac;
+
+      sFac.vtX = sFac.vtY = sFac.vtZ = mSep;
+      sObj = WlzSampleObj(tObj, sFac, WLZ_SAMPLEFN_POINT, &errNum);
+    }
+    (void )WlzFreeObj(tObj);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(gObj->type == WLZ_2D_DOMAINOBJ)
+    {
+      errNum = WlzVerticesFromObj2I(sObj, &nMrk, &(mPos.i2));
+    }
+    else
+    {
+      errNum = WlzVerticesFromObj3I(sObj, &nMrk, &(mPos.i3));
+    }
+  }
+  (void )WlzFreeObj(sObj);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int idx;
+    WlzVertexType vType;
+
+    if(gObj->type == WLZ_2D_DOMAINOBJ)
+    {
+      vType = WLZ_VERTEX_I2;
+      for(idx = 0; idx < nMrk; ++idx)
+      {
+	WlzIVertex2 *p;
+
+        p = mPos.i2 + idx;
+	p->vtX *= mSep;
+	p->vtY *= mSep;
+      }
+    }
+    else
+    {
+      vType = WLZ_VERTEX_I3;
+      for(idx = 0; idx < nMrk; ++idx)
+      {
+	WlzIVertex3 *p;
+
+        p = mPos.i3 + idx;
+	p->vtX *= mSep;
+	p->vtY *= mSep;
+	p->vtZ *= mSep;
+      }
+    }
+    mObj = WlzMakeMarkers(vType, nMrk, mPos, mType, mSz, &errNum);
+  }
+  AlcFree(mPos.v);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeObj(mObj);
+    mObj = NULL;
+  }
+  if(dstErr != NULL)
   {
     *dstErr = errNum;
   }
