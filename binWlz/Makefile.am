@@ -145,6 +145,7 @@ bin_PROGRAMS		= \
 			  WlzLaplacian \
 			  WlzMakeEmpty \
 			  WlzMakeRect \
+			  WlzMarkerLatticeFromDomain \
 			  WlzMarkersToDomain \
 			  WlzMatchICPObj \
 			  WlzMeshTransformObj \
@@ -600,6 +601,10 @@ WlzMakeEmpty_LDFLAGS			= $(AM_LFLAGS)
 WlzMakeRect_SOURCES			= WlzMakeRect.c
 WlzMakeRect_LDADD			= $(LDADD)
 WlzMakeRect_LDFLAGS			= $(AM_LFLAGS)
+
+WlzMarkerLatticeFromDomain_SOURCES	= WlzMarkerLatticeFromDomain.c
+WlzMarkerLatticeFromDomain_LDADD	= $(LDADD)
+WlzMarkerLatticeFromDomain_LDFLAGS	= $(AM_LFLAGS)
 
 WlzMarkersToDomain_SOURCES		= WlzMarkersToDomain.c
 WlzMarkersToDomain_LDADD		= $(LDADD)
