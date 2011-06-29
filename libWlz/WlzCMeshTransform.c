@@ -4376,11 +4376,13 @@ WlzCompoundArray  *WlzCMeshTransformManyObjAsIdx(WlzCompoundArray *srcObj,
   }
   else
   {
-    srcGObj = WlzIndexObjFromCompound(srcObj, &errNum);
+    srcGObj = WlzAssignObject(
+              WlzIndexObjFromCompound(srcObj, &errNum), NULL);
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    dstGObj = WlzCMeshTransformObj(srcGObj, mObj, interp, &errNum);
+    dstGObj = WlzAssignObject(
+              WlzCMeshTransformObj(srcGObj, mObj, interp, &errNum), NULL);
   }
   (void )WlzFreeObj(srcGObj);
   if(errNum == WLZ_ERR_NONE)
