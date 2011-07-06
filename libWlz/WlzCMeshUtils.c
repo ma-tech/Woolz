@@ -1219,7 +1219,7 @@ int		WlzCMeshNodIsBoundary2D(WlzCMeshNod2D *nod)
   WlzCMeshEdgU2D *edu0,
   		*edu1;
 
-  if(nod && (nod->idx >= 0))
+  if(nod && (nod->idx >= 0) && nod->edu)
   {
     edu0 = edu1 = nod->edu;
     do
@@ -1250,7 +1250,7 @@ int		WlzCMeshNodIsBoundary2D5(WlzCMeshNod2D5 *nod)
   WlzCMeshEdgU2D5 *edu0,
   		  *edu1;
 
-  if(nod && (nod->idx >= 0))
+  if(nod && (nod->idx >= 0) && nod->edu)
   {
     edu0 = edu1 = nod->edu;
     do
@@ -1282,7 +1282,7 @@ int		WlzCMeshNodIsBoundary3D(WlzCMeshNod3D *nod)
   WlzCMeshEdgU3D *edu0,
   		*edu1;
 
-  if(nod && (nod->idx >= 0))
+  if(nod && (nod->idx >= 0) && nod->edu)
   {
     edu0 = edu1 = nod->edu;
     do
