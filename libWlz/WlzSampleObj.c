@@ -651,7 +651,7 @@ WlzObject 	*WlzSampleObjPoint3D(WlzObject *srcObj, WlzIVertex3 samFac,
     sPlIdx = 0;
     dPlIdx = sPlIdx * samFac.vtZ;
     dPlCnt = dstBox.zMax - dstBox.zMin + 1;
-    while((errNum == WLZ_ERR_NONE) && (dPlCnt-- > 0))
+    while((errNum == WLZ_ERR_NONE) && (--dPlCnt > 0))
     {
       if(dstVal.vox)
       {
