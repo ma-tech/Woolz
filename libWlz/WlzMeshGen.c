@@ -1107,7 +1107,6 @@ WlzCMeshNod3D	*WlzCMeshNewNod3D(WlzCMesh3D *mesh, WlzDVertex3 pos,
 }
 
 /*!
-* \return	void
 * \ingroup	WlzMesh
 * \brief	Adds a new mesh node to the mesh's cell grid.
 *		It is assumed that the given node is not already in the
@@ -1128,7 +1127,6 @@ static void	WlzCMeshAddNodToGrid2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
 }
 
 /*!
-* \return	void
 * \ingroup	WlzMesh
 * \brief	Adds a new mesh node to the mesh's cell grid.
 *		It is assumed that the given node is not already in the
@@ -1149,7 +1147,6 @@ static void	WlzCMeshAddNodToGrid2D5(WlzCMesh2D5 *mesh, WlzCMeshNod2D5 *nod)
 }
 
 /*!
-* \return	void
 * \ingroup	WlzMesh
 * \brief	Adds a new mesh node to the mesh's cell grid.
 *		It is assumed that the given node is not already in the
@@ -1569,7 +1566,6 @@ static WlzCMeshCellElm3D *WlzCMeshNewCElm3D(WlzCMesh3D *mesh,
 }
 
 /*!
-* \return	void
 * \ingroup	WlzMesh
 * \brief	Removes a mesh node from the mesh's cell grid.
 * \param	mesh			The mesh.
@@ -1609,7 +1605,6 @@ static void	WlzCMeshRemNodFromGrid2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
 }
 
 /*!
-* \return	void
 * \ingroup	WlzMesh
 * \brief	Removes a mesh node from the mesh's cell grid.
 * \param	mesh			The mesh.
@@ -1650,7 +1645,6 @@ static void	WlzCMeshRemNodFromGrid2D5(WlzCMesh2D5 *mesh,
 }
 
 /*!
-* \return	void
 * \ingroup	WlzMesh
 * \brief	Removes a mesh node from the mesh's cell grid.
 * \param	mesh			The mesh.
@@ -2913,7 +2907,6 @@ static void	WlzCMeshEntMarkFree(int *idx)
 }
 
 /*!
-* \return	void
 * \ingroup	WlzMesh
 * \brief	Free's the given 2D mesh node. Actually just sets the
 *		node's index to mark it freed and then decrements
@@ -2931,7 +2924,6 @@ void 		WlzCMeshNodFree2D(WlzCMesh2D *mesh, WlzCMeshNod2D *nod)
 }
 
 /*!
-* \return	void
 * \ingroup	WlzMesh
 * \brief	Free's the given 2D5 mesh node. Actually just sets the
 *		node's index to mark it freed and then decrements
@@ -2949,7 +2941,6 @@ void 		WlzCMeshNodFree2D5(WlzCMesh2D5 *mesh, WlzCMeshNod2D5 *nod)
 }
 
 /*!
-* \return	void
 * \ingroup	WlzMesh
 * \brief	Free's the given 3D mesh node. Actually just sets the
 *		node's index to mark it freed and then decrements
@@ -2967,7 +2958,6 @@ void 		WlzCMeshNodFree3D(WlzCMesh3D *mesh, WlzCMeshNod3D *nod)
 }
 
 /*!
-* \return	void
 * \ingroup	WlzMesh
 * \brief	Free's the given 2D mesh element. Actually just sets the
 *		element's index to mark it freed and then decrements
@@ -2985,7 +2975,6 @@ void		WlzCMeshElmFree2D(WlzCMesh2D *mesh, WlzCMeshElm2D *elm)
 }
 
 /*!
-* \return	void
 * \ingroup	WlzMesh
 * \brief	Free's the given 2D5 mesh element. Actually just sets the
 *		element's index to mark it freed and then decrements
@@ -3003,7 +2992,6 @@ void		WlzCMeshElmFree2D5(WlzCMesh2D5 *mesh, WlzCMeshElm2D5 *elm)
 }
 
 /*!
-* \return	void
 * \ingroup	WlzMesh
 * \brief	Free's the given 3D mesh element. Actually just sets the
 *		element's index to mark it freed and then decrements
@@ -3017,6 +3005,78 @@ void		WlzCMeshElmFree3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm)
   {
     WlzCMeshEntMarkFree(&(elm->idx));
     --(mesh->res.elm.numEnt);
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Deletes any unused neodes, ie nodes that do not have edge
+* 		uses, from the given mesh.
+* \param	mesh			Given mesh.
+*/
+void 		WlzCMeshDelUnusedNodes3D(WlzCMesh3D *mesh)
+{
+  if((mesh == NULL) || (mesh->type == WLZ_CMESH_3D))
+  {
+    int		idN;
+    WlzCMeshNod3D *nod;
+
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->edu == NULL)
+      {
+        (void )WlzCMeshDelNod3D(mesh, nod);
+      }
+    }
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Deletes any unused neodes, ie nodes that do not have edge
+* 		uses, from the given mesh.
+* \param	mesh			Given mesh.
+*/
+void 		WlzCMeshDelUnusedNodes2D5(WlzCMesh2D5 *mesh)
+{
+  if((mesh == NULL) || (mesh->type == WLZ_CMESH_2D5))
+  {
+    int		idN;
+    WlzCMeshNod2D5 *nod;
+
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->edu == NULL)
+      {
+        (void )WlzCMeshDelNod2D5(mesh, nod);
+      }
+    }
+  }
+}
+
+/*!
+* \ingroup	WlzMesh
+* \brief	Deletes any unused neodes, ie nodes that do not have edge
+* 		uses, from the given mesh.
+* \param	mesh			Given mesh.
+*/
+void 		WlzCMeshDelUnusedNodes2D(WlzCMesh2D *mesh)
+{
+  if((mesh == NULL) || (mesh->type == WLZ_CMESH_2D))
+  {
+    int		idN;
+    WlzCMeshNod2D *nod;
+
+    for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+    {
+      nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+      if(nod->edu == NULL)
+      {
+        (void )WlzCMeshDelNod2D(mesh, nod);
+      }
+    }
   }
 }
 
@@ -9090,7 +9150,6 @@ WlzObject	*WlzCMeshComputeNormalsIxv2D5(WlzObject *gObj, int nrmFlg,
 }
 
 /*!
-* \return	void
 * \ingroup      WlzTransform
 * \brief	Debuging function for 2D mesh output in VTK format.
 * \param	fP			Given file pointer.
@@ -9157,7 +9216,6 @@ void		WlzCMeshDbgOutVTK2D(FILE *fP, WlzCMesh2D *mesh)
 }
 
 /*!
-* \return	void
 * \ingroup      WlzTransform
 * \brief	Debuging function for 3D mesh output in VTK format.
 * \param	fP			Given file pointer.
@@ -9248,7 +9306,6 @@ void		WlzCMeshDbgOutVTK3D(FILE *fP, WlzCMesh3D *mesh)
 }
 
 /*!
-* \return	void
 * ingroup	WlzTransform
 * \brief	Debuging function for mesh output in VTK format.
 * \param	fP			Given file pointer.

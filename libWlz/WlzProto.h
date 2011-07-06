@@ -4369,6 +4369,12 @@ extern void                     WlzCMeshElmFree2D5(
 extern void                     WlzCMeshElmFree3D(
                                   WlzCMesh3D *mesh,
                                   WlzCMeshElm3D *elm);
+extern void			WlzCMeshDelUnusedNodes3D(
+				  WlzCMesh3D *mesh);
+extern void			WlzCMeshDelUnusedNodes2D5(
+				  WlzCMesh2D5 *mesh);
+extern void			WlzCMeshDelUnusedNodes2D(
+				  WlzCMesh2D *mesh);
 extern int                      WlzCMeshMatchNNod2D(
                                   WlzCMesh2D *mesh,
                                   int nNod,
