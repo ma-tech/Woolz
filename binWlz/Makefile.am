@@ -64,6 +64,7 @@ bin_PROGRAMS		= \
 			  WlzChangeEMAPProperty \
 			  WlzClipObjToBox \
 			  WlzClosestVertices \
+			  WlzCMeshDeleteUnusedNodes \
 			  WlzCMeshDistance \
 			  WlzCMeshFromContour \
 			  WlzCMeshGen \
@@ -277,6 +278,10 @@ WlzClipObjToBox_LDFLAGS			= $(AM_LFLAGS)
 WlzClosestVertices_SOURCES		= WlzClosestVertices.c
 WlzClosestVertices_LDADD		= $(LDADD)
 WlzClosestVertices_LDFLAGS		= $(AM_LFLAGS)
+
+WlzCMeshDeleteUnusedNodes_SOURCES	= WlzCMeshDeleteUnusedNodes.c
+WlzCMeshDeleteUnusedNodes_LDADD		= $(LDADD)
+WlzCMeshDeleteUnusedNodes_LDFLAGS	= $(AM_LFLAGS)
 
 WlzCMeshDistance_SOURCES		= WlzCMeshDistance.c
 WlzCMeshDistance_LDADD			= $(LDADD)
