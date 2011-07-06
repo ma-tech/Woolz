@@ -1400,7 +1400,6 @@ extern WlzDVertex2		WlzCMeshClosePointDom2D5(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
->>>>>>> 1.178
 * WlzCMeshScan.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
