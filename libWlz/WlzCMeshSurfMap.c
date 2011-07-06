@@ -227,6 +227,9 @@ WlzObject	*WlzCMeshCompSurfMap(WlzObject *inObj,
 * \brief	Computes a least squares conformal transformation which
 * 		maps the source surface to a destination plane with z
 * 		coordinate zero.
+* 		The algorithm used here is based on the paper: Bruno L'evy,
+*               etal "Least Squares Conformal Maps for Automatic Texture
+*               Atlas Generation" SIGGRAPH 2002.
 * \param	mesh			Input conforming mesh which must be
 * 					of type WLZ_CMESH_2D5.
 * \param	nPN			Number of pinned nodes.
@@ -360,7 +363,7 @@ WlzObject	*WlzCMeshCompSurfMapIdx(WlzCMesh2D5 *mesh,
 		    p[3];
 	WlzCMeshNod2D5 *nod[3];
 
-	/* Get element vertives. */
+	/* Get element vertices. */
 	nod[0] = WLZ_CMESH_ELM2D5_GET_NODE_0(elm); p[0] = nod[0]->pos;
 	nod[1] = WLZ_CMESH_ELM2D5_GET_NODE_1(elm); p[1] = nod[1]->pos;
 	nod[2] = WLZ_CMESH_ELM2D5_GET_NODE_2(elm); p[2] = nod[2]->pos;
