@@ -261,6 +261,7 @@ WlzObject	*WlzEffReadObjEMT(FILE *fP, WlzErrorNum *dstErr)
 
     val.core = NULL;
     dom.cm3 = mesh;
+    WlzCMeshDelUnusedNodes3D(mesh);
     WlzCMeshUpdateMaxSqEdgLen3D(mesh);
     obj = WlzMakeMain(WLZ_CMESH_3D, dom, val, NULL, NULL, &errNum);
   }
