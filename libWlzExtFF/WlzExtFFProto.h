@@ -282,6 +282,13 @@ extern WlzErrorNum 		WlzEffWriteObjStack(
 				  WlzEffFormat fFmt,
 				  WlzObject *obj);
 
+/* From WlzExtFFStl.c */
+extern WlzObject       		*WlzEffReadObjStl(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum     		WlzEffWriteObjStl(
+				  FILE *fP,
+				  WlzObject *obj);
 /* From WlzExtFFIPL.c */
 extern WlzObject 		*WlzEffReadObjIPL(
 				  FILE *fP,
