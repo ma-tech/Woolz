@@ -90,6 +90,7 @@ typedef enum _WlzEffFormat
   				     Initiative format based on Analyze 7.5. */
   WLZEFF_FORMAT_SMESH,          /*!< GRUMMP surface mesh format. */
   WLZEFF_FORMAT_EMT,            /*!< Netgen neutral mesh format. */
+  WLZEFF_FORMAT_STL,            /*!< Stereolithography file format. */
   WLZEFF_FORMAT_COUNT 		/*!< Keep last: Number of formats (including
   				     WLZEFF_FORMAT_NONE). */
 } WlzEffFormat;
