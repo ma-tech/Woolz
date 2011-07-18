@@ -166,8 +166,7 @@ int main(int	argc,
 
   /* read objects accumulating compatible types */
   n = 0;
-  while( ((obj = WlzAssignObject(WlzReadObj(inFile, NULL),
-  			         NULL)) != NULL) && (n < nmax) ) {
+  while(((obj = WlzReadObj(inFile, NULL)) != NULL) && (n < nmax) ) {
 
     if( type == -1 &&
 	(obj->type == WLZ_2D_DOMAINOBJ || obj->type == WLZ_3D_DOMAINOBJ) ){
