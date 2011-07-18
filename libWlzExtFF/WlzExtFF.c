@@ -80,6 +80,7 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "raw",   WLZEFF_FORMAT_RAW,
 			 "slc",   WLZEFF_FORMAT_SLC,
 			 "smesh", WLZEFF_FORMAT_SMESH,
+			 "stl",   WLZEFF_FORMAT_STL,
 			 "tif",   WLZEFF_FORMAT_TIFF,
 			 "txt",   WLZEFF_FORMAT_TXT,
 			 "vmesh", WLZEFF_FORMAT_VMESH,
@@ -124,6 +125,7 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
 	 "Riken PLY2", WLZEFF_FORMAT_PLY2,
 	 "SLC", WLZEFF_FORMAT_SLC,
 	 "Stanford Density", WLZEFF_FORMAT_DEN,
+	 "Stereolithography format", WLZEFF_FORMAT_STL,
 	 "Sunvision VFF", WLZEFF_FORMAT_VFF,
 	 "Text", WLZEFF_FORMAT_TXT,
 	 "Tiff", WLZEFF_FORMAT_TIFF,
@@ -188,6 +190,8 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*fmtSlcStr  = "SLC",
 		*extSMeshStr = "smesh",
 		*fmtSMeshStr = "GRUMMP SMESH",
+		*extSTLStr  = "stl",
+		*fmtSTLStr  = "Stereolithography format",
 		*extTxtStr  = "txt",
 		*fmtTxtStr  = "Text",
 		*extTiffStr = "tif",
@@ -302,6 +306,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     case WLZEFF_FORMAT_SMESH:
       fmtStr = fmtSMeshStr;
       extStr = extSMeshStr;
+      break;
+    case WLZEFF_FORMAT_STL:
+      fmtStr = fmtSTLStr;
+      extStr = extSTLStr;
       break;
     default:
       break;
@@ -481,6 +489,9 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
       case WLZEFF_FORMAT_SMESH:
 	obj = WlzEffReadObjSMesh(fP, &errNum);
 	break;
+      case WLZEFF_FORMAT_STL:
+	obj = WlzEffReadObjStl(fP, &errNum);
+	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
 	break;
@@ -626,6 +637,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 	break;
       case WLZEFF_FORMAT_SMESH:
 	errNum = WlzEffWriteObjSMesh(fP, obj);
+	break;
+      case WLZEFF_FORMAT_STL:
+	errNum = WlzEffWriteObjStl(fP, obj);
 	break;
       default:
         errNum = WLZ_ERR_PARAM_DATA;
