@@ -88,7 +88,7 @@ cd Woolz/src/Core
 aclocal
 automake -a
 autoconf
-lintoolize (Linux) or glibtoolize (Mac)
+libtoolize (Linux) or glibtoolize (Mac)
 ./configure --enable-extff --enable-optimise
 make 
 
