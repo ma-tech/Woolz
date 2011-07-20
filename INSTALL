@@ -189,4 +189,5 @@ If building from CVS:
 automake -a
 aclocal
 autoconf
+libtoolize (Linux) or glibtoolize (Mac)
 ./configure --enable-extff
