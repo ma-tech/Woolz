@@ -273,11 +273,7 @@ static WlzErrorNum WlzIterateInitDomObj3D(WlzIterateWSpace *itWSp,
   (void )memset(itWSp, 0, sizeof(WlzIterateWSpace));
   itWSp->dir = dir;
   itWSp->obj = obj;
-  if(obj->values.core)
-  {
-    itWSp->grey = grey;
-  }
-  if((itWSp->iWSp = AlcMalloc(sizeof(WlzIntervalWSpace))) == NULL)
+  if((itWSp->iWSp = AlcCalloc(1, sizeof(WlzIntervalWSpace))) == NULL)
   {
     errNum = WLZ_ERR_MEM_ALLOC;
   }
@@ -288,7 +284,7 @@ static WlzErrorNum WlzIterateInitDomObj3D(WlzIterateWSpace *itWSp,
     if(grey && obj->values.core)
     {
       itWSp->grey = grey;
-      if((itWSp->gWSp = AlcMalloc(sizeof(WlzGreyWSpace))) == NULL)
+      if((itWSp->gWSp = AlcCalloc(1, sizeof(WlzGreyWSpace))) == NULL)
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
