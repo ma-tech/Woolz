@@ -250,10 +250,13 @@ WlzObject *WlzStructDilation(
   }
 
   /* Make buffers with room for the maximum number of intervals in any line
-   * x 3. This replaces a previous hard coded maximum number (300), but
-   * I'm not convinced that this is right. */
+   * x 4. This replaces a previous hard coded maximum number (300), but
+   * I'm not convinced that this is right (3 is definitely  too few). */
   if( errNum == WLZ_ERR_NONE ){
-    maxItvLn = 3 * (WlzIDomMaxItvLn(sDom.i) + WlzIDomMaxItvLn(bDom.i));
+    const int bodgeFactor = 4;
+
+    maxItvLn = bodgeFactor *
+               (WlzIDomMaxItvLn(sDom.i) + WlzIDomMaxItvLn(bDom.i));
     if(maxItvLn < 1){
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
