@@ -53,8 +53,8 @@ static char _WlzExtFFContourObj_c[] = "MRC HGU $Id$";
 WlzExtFFContourObj - computes a VTK polydata file from a Woolz object.
 \par Synopsis
 \verbatim
-WlzExtFFContourObj  [-h] [-o<output object>]
-                    [-b] [-g] [-i] [-l] [-F] [-N] [-U]
+WlzExtFFContourObj  [-h] [-o<output object>] [-f#] [-F#]
+                    [-b] [-g] [-i] [-l] [-L] [-N] [-U]
 		    [-p#] [-s#] [-n#] [-v#] [-w#] [<input object>]
 \endverbatim
 \par Options
@@ -72,6 +72,10 @@ WlzExtFFContourObj  [-h] [-o<output object>]
     <td>Compute object boundary contours.</td>
   </tr>
   <tr> 
+    <td><b>-f</b></td>
+    <td>Input file format.</td>
+  </tr>
+  <tr> 
     <td><b>-g</b></td>
     <td>Compute maximal gradient contours.</td>
   </tr>
@@ -85,6 +89,10 @@ WlzExtFFContourObj  [-h] [-o<output object>]
   </tr>
   <tr> 
     <td><b>-F</b></td>
+    <td>Output file format.</td>
+  </tr>
+  <tr> 
+    <td><b>-L</b></td>
     <td>Use geometry filter.</td>
   </tr>
   <tr> 
@@ -178,24 +186,26 @@ int             main(int argc, char **argv)
   FILE		*fP = NULL;
   char		*fStr,
 		*inObjFileStr,
-  		*outFileStr;
+  		*outObjFileStr;
   WlzObject     *inObj = NULL,
   		*outObj = NULL;
   WlzDomain	ctrDom;
   WlzValues	dumVal;
+  WlzEffFormat  inFmt = WLZEFF_FORMAT_NONE,
+                outFmt = WLZEFF_FORMAT_NONE;
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_ISO;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   const double	filterDPB = 0.25,
   		filterDSB = 0.10;
   const char	*errMsgStr;
-  static char	optList[] = "bghilmFNUo:p:s:n:v:w:";
+  static char	optList[] = "bfghilmFLNUo:p:s:n:v:w:";
   const char	outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
   opterr = 0;
   ctrDom.core = NULL;
   dumVal.core = NULL;
-  outFileStr = (char *)outFileStrDef;
+  outObjFileStr = (char *)outFileStrDef;
   inObjFileStr = (char *)inObjFileStrDef;
   while(ok && ((option = getopt(argc, argv, optList)) != -1))
   {
@@ -204,9 +214,17 @@ int             main(int argc, char **argv)
       case 'b':
         ctrMtd = WLZ_CONTOUR_MTD_BND;
 	break;
+
       case 'g':
         ctrMtd = WLZ_CONTOUR_MTD_GRD;
 	break;
+      case 'f':
+        if((inFmt = WlzEffStringExtToFormat(optarg)) == 0)
+        {
+          usage = 1;
+          ok = 0;
+        }
+        break;
       case 'h':
         usage = 1;
 	ok = 0;
@@ -221,7 +239,7 @@ int             main(int argc, char **argv)
         nrm = 1;
 	break;
       case 'o':
-        outFileStr = optarg;
+        outObjFileStr = optarg;
 	break;
       case 'v':
         if(sscanf(optarg, "%lg", &ctrVal) != 1)
@@ -252,6 +270,13 @@ int             main(int argc, char **argv)
 	}
 	break;
       case 'F':
+        if((outFmt = WlzEffStringExtToFormat(optarg)) == 0)
+        {
+          usage = 1;
+          ok = 0;
+        }
+        break;
+      case 'L':
         filterGeom = 1;
 	break;
       case 'N':
@@ -276,7 +301,7 @@ int             main(int argc, char **argv)
   if(ok)
   {
     if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
-       (outFileStr == NULL) || (*outFileStr == '\0'))
+       (outObjFileStr == NULL) || (*outObjFileStr == '\0'))
     {
       ok = 0;
       usage = 1;
@@ -296,12 +321,49 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    if((inObjFileStr == NULL) ||
-       (*inObjFileStr == '\0') ||
-       ((fP = (strcmp(inObjFileStr, "-")?
-	      fopen(inObjFileStr, "r"): stdin)) == NULL) ||
-       ((inObj= WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
-       (errNum != WLZ_ERR_NONE))
+    /* Try and determine file formats from extensions if not known already. */
+    if(inFmt == WLZEFF_FORMAT_NONE)
+    {
+      if((inFmt = WlzEffStringFormatFromFileName(inObjFileStr)) == 0)
+      {
+        usage = 1;
+        ok = 0;
+      }
+    }
+    if(outFmt == WLZEFF_FORMAT_NONE)
+    {
+      if((outFmt = WlzEffStringFormatFromFileName(outObjFileStr)) == 0)
+      {
+        usage = 1;
+        ok = 0;
+      }
+    }
+  }
+  if(ok)
+  {
+    /* If the output format is TIFF then a file name must be
+       given */
+    if((outFmt == WLZEFF_FORMAT_TIFF) && !strcmp(outObjFileStr, "-"))
+    {
+      usage = 1;
+      ok = 0;
+    }
+  }
+  if(ok)
+  {
+    if(strcmp(inObjFileStr, "-") == 0)
+    {
+      fP = stdin;
+      fStr = NULL;
+    }
+    else
+    {
+      fP = NULL;
+      fStr = inObjFileStr;
+    }
+    errNum = WLZ_ERR_READ_EOF;
+    if((inObj = WlzAssignObject(WlzEffReadObj(fP, fStr, inFmt, 0,
+                                              &errNum), NULL)) == NULL)
     {
       ok = 0;
       (void )fprintf(stderr,
@@ -312,7 +374,6 @@ int             main(int argc, char **argv)
     {
       fclose(fP);
     }
-
   }
   if(ok && unitVoxelSz)
   {
@@ -383,7 +444,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    if(strcmp(outFileStr, "-") == 0)
+    if(strcmp(outObjFileStr, "-") == 0)
     {
       fP = stdout;
       fStr = NULL;
@@ -391,12 +452,12 @@ int             main(int argc, char **argv)
     else
     {
       fP = NULL;
-      fStr = outFileStr;
+      fStr = outObjFileStr;
     }
   }
   if(ok)
   {
-    errNum = WlzEffWriteObj(fP, fStr, outObj, WLZEFF_FORMAT_VTK);
+    errNum = WlzEffWriteObj(fP, fStr, outObj, outFmt);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -418,43 +479,53 @@ int             main(int argc, char **argv)
   {
     (void )WlzFreeContour(ctrDom.ctr);
   }
-  if(fP && strcmp(outFileStr, "-"))
+  if(fP && strcmp(outObjFileStr, "-"))
   {
     (void )fclose(fP);
   }
   if(usage)
   {
-      (void )fprintf(stderr,
-      "Usage: %s%sExample: %s%s",
-      *argv,
-      " [-h] [-o<output object>] [-b] [-g] [-i] [-l]\n"
-      "        [-F] [-N] [-U] [-p#] [-s#] [-n#] [-v#] [-w#]\n"
-      "        [<input object>]\n"
-      "Options:\n"
-      "  -h  Prints this usage information.\n"
-      "  -o  Output VTK polydata file name.\n"
-      "  -b  Compute object boundary contours.\n"
-      "  -g  Compute maximal gradient contours.\n"
-      "  -i  Compute iso-value contours.\n"
-      "  -l  Flip orientation (normals will be reversed).\n"
-      "  -F  Use geometry filter.\n"
-      "  -N  Allow non manifold vertices to be filtered.\n"
-      "  -U  Use unit voxel size.\n"
-      "  -m  Generate normals (if possible).\n"
-      "  -n  Geometry filter itterations.\n"
-      "  -p  Geometry filter low band value.\n"
-      "  -s  Geometry filter stop band value.\n"
-      "  -v  Contour iso-value or minimum gradient.\n"
-      "  -w  Contour (Deriche) gradient operator width.\n"
-      "Computes a contour object from the given Woolz object and saves it\n"
-      "using the VTK ascii polydata format.\n"
-      "The input object is read from stdin and output data are written\n"
-      "to stdout unless filenames are given.\n",
-      *argv,
-      " -o out.vtk -i -v 100.0 in.wlz\n"
-      "The input Woolz object is read from in.wlz, and the iso-value\n"
-      "(iso-value = 100.0) contour is written in VTK ascii polydata format\n"
-      "to out.vtk.\n");
+    char *fmtStr = NULL;
+
+    fmtStr = WlzEffFormatTable(2, 50, 10, NULL);
+
+    (void )fprintf(stderr,
+    "Usage: %s%sExample: %s%s%s%s",
+    *argv,
+    " [-h] [-o<output object>] [-b] [-g] [-i] [-l]\n"
+    "        [-L] [-N] [-U] [-p#] [-s#] [-n#] [-v#] [-w#]\n"
+    "        [<input object>]\n"
+    "Options:\n"
+    "  -h  Prints this usage information.\n"
+    "  -o  Output VTK polydata file name.\n"
+    "  -b  Compute object boundary contours.\n"
+    "  -f  Input file format.\n"
+    "  -g  Compute maximal gradient contours.\n"
+    "  -i  Compute iso-value contours.\n"
+    "  -l  Flip orientation (normals will be reversed).\n"
+    "  -F  Ouput file format.\n"
+    "  -L  Use geometry filter.\n"
+    "  -N  Allow non manifold vertices to be filtered.\n"
+    "  -U  Use unit voxel size.\n"
+    "  -m  Generate normals (if possible).\n"
+    "  -n  Geometry filter itterations.\n"
+    "  -p  Geometry filter low band value.\n"
+    "  -s  Geometry filter stop band value.\n"
+    "  -v  Contour iso-value or minimum gradient.\n"
+    "  -w  Contour (Deriche) gradient operator width.\n",
+    "The known file formats are:\n"
+    "  Description                                       Extension\n"
+    "  ***********                                       *********\n",
+    fmtStr,
+    "Computes a contour object from the given Woolz object and saves it\n"
+    "using the VTK ascii polydata format.\n"
+    "The input object is read from stdin and output data are written\n"
+    "to stdout unless filenames are given.\n",
+    *argv,
+    " -o out.vtk -i -v 100.0 in.wlz\n"
+    "The input Woolz object is read from in.wlz, and the iso-value\n"
+    "(iso-value = 100.0) contour is written in VTK ascii polydata format\n"
+    "to out.vtk.\n");
   }
   return(!ok);
 }
