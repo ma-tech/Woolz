@@ -353,7 +353,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    /* if the output format is TIFF then a file name must be
+    /* If the output format is TIFF then a file name must be
        given */
     if((outFmt == WLZEFF_FORMAT_TIFF) && !strcmp(outObjFileStr, "-"))
     {
