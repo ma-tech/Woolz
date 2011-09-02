@@ -148,6 +148,26 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
     {
       errNum = WLZ_ERR_READ_EOF;
     }
+    else
+    {
+      /* Fix dimensions if daft. */
+      if((nim->ndim == 4) && (nim->dim[0] == 4))
+      {
+        if(nim->dim[4] < 2)
+	{
+	  nim->ndim = 3;
+	  nim->dim[0] = 3;
+	}
+      }
+      else if((nim->ndim == 3) && (nim->dim[0] == 3))
+      {
+        if(nim->dim[3] < 2)
+	{
+	  nim->ndim = 2;
+	  nim->dim[0] = 2;
+	}
+      }
+    }
   }
   /* Create basic Woolz domain object from the NIfTI image. */
   if(errNum == WLZ_ERR_NONE)
