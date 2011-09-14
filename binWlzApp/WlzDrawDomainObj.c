@@ -69,7 +69,7 @@ WlzDrawDomainObj [-2] [-a<pitch,yaw,roll>] [-f <fx,fy,fz>]
   </tr>
   <tr>
     <td><b>-a</b></td>
-    <td>Viewing angles: pitch (phi), yaw (theta) and roll (beta),
+    <td>Viewing angles: pitch (phi), yaw (theta) and roll (zeta),
         default 0.0,0.0,0.0.</td>
   </tr>
   <tr>
@@ -397,7 +397,7 @@ int             main(int argc, char **argv)
     "                 [-s <cmd str>] [<cmd str file>>]\n"
     "Options:\n"
     "  -2  Ignore the view struct and keep as a 2D object.\n"
-    "  -a  Viewing angles: pitch (phi), yaw (theta) and roll (beta),\n"
+    "  -a  Viewing angles: pitch (phi), yaw (theta) and roll (zeta),\n"
     "      default 0.0,0.0,0.0.\n"
     "  -f  Fixed point position, default 0.0,0.0,0.0.\n"
     "  -d  Distance parameter, default 0.0.\n"
