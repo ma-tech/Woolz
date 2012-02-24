@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _AlgBits_c[] = "MRC HGU $Id$";
-#endif
+static char _AlgBits_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libAlg/AlgBits.c
@@ -15,10 +11,14 @@ static char _AlgBits_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,8 +37,6 @@ static char _AlgBits_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Provides bit fiddling functions.
 * \ingroup	AlgBits
-* \todo         -
-* \bug          None known.
 */
 
 #include <Alg.h>
@@ -51,7 +49,7 @@ static char _AlgBits_c[] = "MRC HGU $Id$";
 * \brief	Counts the number of bits set in the given mask.
 * \param        gMsk			Given bit mask.
 */
-int		AlgBitSetCount(unsigned long gMsk)
+unsigned int	AlgBitSetCount(unsigned long gMsk)
 {
   int		cnt = 0;
 
@@ -61,6 +59,48 @@ int		AlgBitSetCount(unsigned long gMsk)
     gMsk >>= 1;
   }
   return(cnt);
+}
+
+/*!
+* \return	Most significant bit set in the given mask.
+* \ingroup	AlgBits
+* \brief	Finds the most significant bit set in the given mask.
+* 		The value returned will be zero if the mask was zero
+* 		one if the mask had the value 1 or higher integer
+* 		if the most significant bit set in the mask is greater.
+* \param	gMsk			Given bit mask.
+*/
+int		AlgBitMostSigSet(unsigned long gMsk)
+{
+  int		msb = 0;
+
+  while(gMsk != 0)
+  {
+    gMsk = gMsk >> 1;
+    ++msb;
+  }
+  return(msb);
+}
+
+/*!
+* \return	Most significant bit set in the given mask.
+* \ingroup	AlgBits
+* \brief	Finds the most significant bit set in the given mask.
+* 		The value returned will be zero if the mask was zero
+* 		one if the mask had the value 1 or higher integer
+* 		if the most significant bit set in the mask is greater.
+* \param	gMsk			Given bit mask.
+*/
+int		AlgBitMostSigSetLL(unsigned long long gMsk)
+{
+  int		msb = 0;
+
+  while(gMsk != 0)
+  {
+    gMsk = gMsk >> 1;
+    ++msb;
+  }
+  return(msb);
 }
 
 /*!
@@ -75,7 +115,7 @@ int		AlgBitSetCount(unsigned long gMsk)
 *					mask.
 * \param	gMsk		 	Given bit mask.
 */
-int		AlgBitSetPositions(int *posA, unsigned long gMsk)
+unsigned int 	AlgBitSetPositions(unsigned int *posA, unsigned long gMsk)
 {
   int		bIdx = 0,
   		cnt = 0;
@@ -87,6 +127,40 @@ int		AlgBitSetPositions(int *posA, unsigned long gMsk)
     gMsk >>= 1;
   }
   return(cnt);
+}
+
+/*!
+* \return	Bitmask rotated right.
+* \ingroup	AlgBits
+* \brief	Rotates the given bit mask d places to the right (towards
+* 		less significant bits) where there are n valid bits in the
+* 		given bit mask.
+* \param	g			Given bit mask.
+* \param	n			Number of valid bits in the bit mask.
+* \param	d			Number of places to rotate right.
+*/
+unsigned int	AlgBitRotateRight(unsigned int g, unsigned int n,
+				  unsigned int d)
+{
+  g = (g >> d) | (g << (n - d));
+  return(g);
+}
+
+/*
+* \return	Bitmask rotated left.
+* \ingroup	AlgBits
+* \brief	Rotates the given bit mask d places to the left (towards
+* 		more significant bits) where there are n valid bits in the
+* 		given bit mask.
+* \param	g			Given bit mask.
+* \param	n			Number of valid bits in the bit mask.
+* \param	d			Number of places to rotate left.
+*/
+unsigned int	AlgBitRotateLeft(unsigned int g, unsigned int n,
+				 unsigned int d)
+{
+  g = (g << d) | (g >> (n - d));
+  return(g);
 }
 
 /*!

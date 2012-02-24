@@ -1,24 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id:"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id:"
-#else static char _WlzDomainToTiles_c[] = "MRC HGU $Id:";
-#endif
+static char _WlzDomainToTiles_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzDomainToTiles.c
-* \author       richard <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Wed May 28 15:55:01 2008
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Address:
+* \file         binWlzApp/WlzDomainToTiles.c
+* \author       Richard Baldock
+* \date         May 2008
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \par Copyright:
-* Copyright (C) 2005 Medical research Council, UK.
+* \par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -36,12 +36,13 @@
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
 * \ingroup      BinWlzApp
-* \brief        Cut a woolz domain object into tiles or chips of equal size. With the tiff-tile option the object is reset to origin (0,0) and each tile has origin (0,0) and the tiles are ordered in the tiff-tile sequence.
+* \brief        Cut a woolz domain object into tiles or chips of equal size.
+* 		With the tiff-tile option the object is reset to origin (0,0)
+* 		and each tile has origin (0,0) and the tiles are ordered in
+* 		the tiff-tile sequence.
 *               
-* \todo         -
-* \bug          None known
-*
-* Maintenance log with most recent changes at top of list.
+* \par Binary
+* \ref wlzdomaintotiles "WlzDomainToTiles"
 */
  
 /*!

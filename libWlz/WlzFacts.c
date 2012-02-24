@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzFacts_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzFacts_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzFacts.c
@@ -15,10 +11,14 @@ static char _WlzFacts_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,8 +37,6 @@ static char _WlzFacts_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Text description (facts) of Woolz objects.
 * \ingroup	WlzDebug
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -98,6 +96,9 @@ static WlzErrorNum 		WlzObjFactsTiledTab(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj,
 				  WlzValues val);
+static WlzErrorNum	        WlzObjFacts3DViewStruct(
+				  WlzObjFactsData *fData,
+				   WlzThreeDViewStruct *vs);
 static WlzErrorNum	        WlzObjFactsAffineTrans(
 				  WlzObjFactsData *fData,
 				   WlzAffineTransform *trans);
@@ -151,6 +152,12 @@ static WlzErrorNum 		WlzFactsIndexedVal(
 				  WlzObjFactsData *fData,
 				  WlzIndexedValues *ixv,
 				  int idx);
+static WlzErrorNum 		WlzObjFactsLUTDomain(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj);
+static WlzErrorNum 		WlzObjFactsLUTValues(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj);
 
 /*!
 * \return	Woolz error code.
@@ -405,15 +412,13 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
 	  }
 	  break;
-	case WLZ_3D_WARP_TRANS:   /* FALLTHROUGH */
-	case WLZ_CONV_HULL:       /* FALLTHROUGH */
-	case WLZ_3D_POLYGON:      /* FALLTHROUGH */
-	case WLZ_RECTANGLE:       /* FALLTHROUGH */
-	case WLZ_CONVOLVE_INT:    /* FALLTHROUGH */
-	case WLZ_CONVOLVE_FLOAT:  /* FALLTHROUGH */
-	case WLZ_WARP_TRANS:      /* FALLTHROUGH */
-	case WLZ_FMATCHOBJ:       /* FALLTHROUGH */
-	case WLZ_TEXT:            /* FALLTHROUGH */
+	case WLZ_3D_VIEW_STRUCT:
+	  errNum = WlzObjFacts3DViewStruct(fData, obj->domain.vs3d);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
+	  break;
 	case WLZ_COMPOUND_ARR_1:  /* FALLTHROUGH */
 	case WLZ_COMPOUND_ARR_2:
 	  objCA = (WlzCompoundArray *)obj;
@@ -451,6 +456,26 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	case WLZ_EMPTY_OBJ:
 	  /* no more facts available */
 	  break;
+	case WLZ_LUT:
+	  errNum = WlzObjFactsLUTDomain(fData, obj);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsLUTValues(fData, obj);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
+	  break;
+	case WLZ_3D_WARP_TRANS:   /* FALLTHROUGH */
+	case WLZ_CONV_HULL:       /* FALLTHROUGH */
+	case WLZ_3D_POLYGON:      /* FALLTHROUGH */
+	case WLZ_RECTANGLE:       /* FALLTHROUGH */
+	case WLZ_CONVOLVE_INT:    /* FALLTHROUGH */
+	case WLZ_CONVOLVE_FLOAT:  /* FALLTHROUGH */
+	case WLZ_WARP_TRANS:      /* FALLTHROUGH */
+	case WLZ_FMATCHOBJ:       /* FALLTHROUGH */
+	case WLZ_TEXT:            /* FALLTHROUGH */
 	case WLZ_COMPOUND_LIST_1: /* FALLTHROUGH */
 	case WLZ_COMPOUND_LIST_2: /* FALLTHROUGH */
 	case WLZ_PROPERTY_OBJ:    /* FALLTHROUGH */
@@ -1245,6 +1270,126 @@ static WlzErrorNum WlzObjFactsVoxelTab(WlzObjFactsData *fData,
     {
       errNum = WlzObjFactsAppend(fData, "Values plane bounds: %d %d\n",
 				 val.vox->plane1, val.vox->lastpl);
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
+
+/*!
+* \return	Error number.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of an 3D view struct.
+* \param	fData			Facts data structure.
+* \param	trans			Given 3D view struct.
+*/
+static WlzErrorNum WlzObjFacts3DViewStruct(WlzObjFactsData *fData,
+				           WlzThreeDViewStruct *vs)
+{
+  const char	*tStr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromObjTypeValue(vs->type, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Transform NULL.\n");
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Transform type invalid.\n");
+    }
+  }
+  else
+  {
+    errNum = WlzObjFactsAppend(fData, "Transform type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n", vs->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "fixed: %g %g %g\n",
+		                 vs->fixed.vtX, vs->fixed.vtY, vs->fixed.vtZ);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "theta: %g\n", vs->theta);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "phi: %g\n", vs->phi);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "zeta: %g\n", vs->zeta);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "dist: %g\n", vs->dist);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "scale: %g\n", vs->scale);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "voxelSize: %g %g %g\n",
+                                 vs->voxelSize[0], vs->voxelSize[1],
+			         vs->voxelSize[2]);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "voxelRescaleFlg: %d\n",
+                                 vs->voxelRescaleFlg);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "interp: %d\n", vs->interp);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "view_mode: %d\n", vs->view_mode);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "up: %g %g %g\n",
+		                 vs->up.vtX, vs->up.vtY, vs->up.vtZ);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "fixed_2: %g %g %g\n",
+		                 vs->fixed_2.vtX, vs->fixed_2.vtY,
+				 vs->fixed_2.vtZ);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "fixed_line_angle: %g\n",
+                                 vs->fixed_line_angle);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "ref_obj: %p\n",
+                                 vs->fixed_line_angle);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "minvals: %g %g %g\n",
+		                 vs->minvals.vtX, vs->minvals.vtY,
+				 vs->minvals.vtZ);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "maxvals: %g %g %g\n",
+		                 vs->maxvals.vtX, vs->maxvals.vtY,
+				 vs->maxvals.vtZ);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAffineTrans(fData, vs->trans);
     }
   }
   --(fData->indent);
@@ -2462,5 +2607,156 @@ static WlzErrorNum WlzFactsIndexedVal(WlzObjFactsData *fData,
     }
     fData->indent = saveIndent;
   }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a look up table domain.
+* \param	fData			Facts data structure.
+* \param	obj			Object with a look up table domain.
+*/
+static WlzErrorNum WlzObjFactsLUTDomain(WlzObjFactsData *fData,
+				        WlzObject *obj)
+{
+  const char	*tStr;
+  WlzLUTDomain  *lDom;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromObjDomainType(obj, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Domain NULL.\n");
+      errNum = WLZ_ERR_NONE;
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Domain type invalid.\n");
+    }
+  }
+  else
+  {
+    lDom = obj->domain.lut;
+    errNum = WlzObjFactsAppend(fData, "Domain type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n", lDom->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "bin1: %d.\n", lDom->bin1);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "lastbin: %d.\n", lDom->lastbin);
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a look up table values data
+* 		structure.
+* \param	fData			Facts data structure.
+* \param	obj			Object with a look up table values.
+*/
+static WlzErrorNum WlzObjFactsLUTValues(WlzObjFactsData *fData,
+				        WlzObject *obj)
+{
+  const char	*tStr;
+  WlzLUTValues  *lVal;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromObjValuesType(obj, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Domain NULL.\n");
+      errNum = WLZ_ERR_NONE;
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Domain type invalid.\n");
+    }
+  }
+  else
+  {
+    lVal = obj->values.lut;
+    errNum = WlzObjFactsAppend(fData, "Values type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n", lVal->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      tStr = WlzStringFromGreyType(lVal->vType, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "vType: %s.\n", tStr);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "maxVal: %d.\n", lVal->maxVal);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "val: %p.\n", lVal->val.v);
+    }
+    if(fData->verbose)
+    {
+      int	i,
+      		n;
+      WlzUByte	rgba[4];
+      WlzLUTDomain *lDom;
+
+      lDom = obj->domain.lut;
+      n = lDom->lastbin - lDom->bin1 + 1;
+      for(i = 0; i < n; ++i)
+      {
+	switch(lVal->vType)
+	{
+	  case WLZ_GREY_LONG:
+	    errNum = WlzObjFactsAppend(fData, " %ld", lVal->val.lnp[i]);
+	    break;
+	  case WLZ_GREY_INT:
+	    errNum = WlzObjFactsAppend(fData, " %d", lVal->val.inp[i]);
+	    break;
+	  case WLZ_GREY_SHORT:
+	    errNum = WlzObjFactsAppend(fData, " %d", lVal->val.shp[i]);
+	    break;
+	  case WLZ_GREY_UBYTE:
+	    errNum = WlzObjFactsAppend(fData, " %d", lVal->val.ubp[i]);
+	    break;
+	  case WLZ_GREY_FLOAT:
+	    errNum = WlzObjFactsAppend(fData, " %g", lVal->val.flp[i]);
+	    break;
+	  case WLZ_GREY_DOUBLE:
+	    errNum = WlzObjFactsAppend(fData, " %lg", lVal->val.dbp[i]);
+	    break;
+	  case WLZ_GREY_RGBA:
+	    rgba[0] = WLZ_RGBA_RED_GET(lVal->val.rgbp[i]);
+	    rgba[1] = WLZ_RGBA_GREEN_GET(lVal->val.rgbp[i]);
+	    rgba[2] = WLZ_RGBA_BLUE_GET(lVal->val.rgbp[i]);
+	    rgba[3] = WLZ_RGBA_ALPHA_GET(lVal->val.rgbp[i]);
+	    errNum = WlzObjFactsAppend(fData, " %d,%d,%d,%d\n",
+				       rgba[0], rgba[1], rgba[2], rgba[3]);
+	    break;
+	  default:
+	    break;
+	}
+      }
+    }
+  }
+  --(fData->indent);
   return(errNum);
 }

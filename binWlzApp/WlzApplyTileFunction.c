@@ -1,25 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id:"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id:"
-#else
-static char _WlzApplyTileFunction_c[] = "MRC HGU $Id:";
-#endif
+static char _WlzApplyTileFunction_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzApplyTileFunction.c
-* \author       Richard Baldock <Richard.Baldock@hgu.mrc.ac.uk>
-* \date         Thu Oct 21 17:06:05 2010
-* \version      MRC HGU $Id$
-*               $Revision$
-*               $Name$
-* \par Address:
+* \file         binWlzApp/WlzApplyTileFunction.c
+* \author       Richard Baldock
+* \date         October 2010
+* \version      $Id$
+* \par
+* Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \par Copyright:
-* Copyright (C) 2005 Medical research Council, UK.
+* \par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,10 +36,11 @@ static char _WlzApplyTileFunction_c[] = "MRC HGU $Id:";
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
 * \ingroup      BinWlzApp
-* \brief        Apply a function for each tile to the associated image and output a vector of values.
+* \brief        Apply a function for each tile to the associated image and
+*               output a vector of values.
 *               
-*
-* Maintenance log with most recent changes at top of list.
+* \par Binary
+* ref wlzapplytilefunction "WlzApplyTileFunction"
 */
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 

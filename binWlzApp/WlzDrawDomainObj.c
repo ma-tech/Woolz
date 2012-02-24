@@ -1,24 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzDrawDomainObj_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzDrawDomainObj_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzDrawDomainObj.c
+* \file         binWlzApp/WlzDrawDomainObj.c
 * \author       Bill Hill
 * \date         September 2008
 * \version      $Id$
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2008 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -40,8 +40,9 @@ static char _WlzDrawDomainObj_c[] = "MRC HGU $Id$";
 * 		on a section plane which is defined by the view
 * 		transform.
 * \ingroup	BinWlzApp
-* \todo         -
-* \bug          None known.
+*
+* \par Binary
+* \ref wlzdrawdomainobj "WlzDrawDomainObj"
 */
 
 /*!
@@ -58,8 +59,8 @@ into 3D using the view transform.
 WlzDrawDomainObj [-2] [-a<pitch,yaw,roll>] [-f <fx,fy,fz>]
                  [-d <dist> [-b <view bib file>]
                  [-m <mode>] [-u<ux,uy,uz>]
-                 [-g <ox,oy,oz>] [-h] [-o<out>]
-                 [-s <cmd str>] [<cmd str file>>]
+                 [-g <ox,oy,oz>] [-h] [-o<output object>]
+		 [-r <ref object>] [-s <cmd str>] [<cmd str file>>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -97,6 +98,13 @@ WlzDrawDomainObj [-2] [-a<pitch,yaw,roll>] [-f <fx,fy,fz>]
     <td><b>-g</b></td>
     <td>Origin of the drawing with respect to the 2D Woolz object
         cut using the view transform, default 0.0,0.0.</td>
+  </tr>
+  <tr>
+    <td><b>-r</b></td>
+    <td>Reference object. If given this is must be a 3D spatial domain
+        object. The object is used to determine an additional offset
+        for the origin of the 2D plane with respect to the section in 3D
+        (i.e. it is added to any offset given using the -g option).</td>
   </tr>
   <tr>
     <td><b>-s</b></td>
@@ -213,14 +221,16 @@ int             main(int argc, char **argv)
   WlzDVertex3	upVector;
   WlzThreeDViewStruct *view = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzObject	*dwnObj = NULL;
+  WlzObject	*dwnObj = NULL,
+  		*refObj = NULL;
   FILE		*fP = NULL;
   char 		*errMsg0,
   		*cmdStr = NULL,
+		*refFileStr = NULL,
   		*outFileStr,
         	*inFileStr;
   const char	*errMsg;
-  static char	optList[] = "a:b:d:f:g:m:o:s:u:2h",
+  static char	optList[] = "a:b:d:f:g:m:o:r:s:u:2h",
 		outFileStrDef[] = "-",
   		inFileStrDef[] = "-";
 
@@ -306,6 +316,32 @@ int             main(int argc, char **argv)
 	case 'o':
 	  outFileStr = optarg;
 	  break;
+	case 'r':
+	  refFileStr = optarg;
+          errNum = WLZ_ERR_READ_EOF;
+	  if((refFileStr == NULL) ||
+             (*refFileStr == '\0') ||
+	     ((fP = (strcmp(refFileStr, "-")?
+		     fopen(refFileStr, "r"): stdin)) == NULL) ||
+	     ((refObj = WlzAssignObject(
+			WlzReadObj(fP, &errNum), NULL)) == NULL) ||
+	     (errNum != WLZ_ERR_NONE))
+	  {
+	    usage = 1;
+            (void )WlzStringFromErrorNum(errNum, &errMsg);
+	    (void )fprintf(stderr,
+		   "%s: failed to read 3D reference object from %s (%s)\n",
+		   *argv, refFileStr, errMsg);
+	  }
+	  if(fP)
+	  {
+	    if(strcmp(refFileStr, "-"))
+	    {
+	      (void )fclose(fP);
+	    }
+	    fP = NULL;
+	  }
+	  break;
 	case 's':
 	  if((cmdStr = AlcStrDup(optarg)) == NULL)
 	  {
@@ -340,6 +376,60 @@ int             main(int argc, char **argv)
       }
     }
     ok = usage == 0;
+  }
+  if(ok && refObj)
+  {
+    WlzObject	*sObj = NULL;
+    WlzThreeDViewStruct *v = NULL;
+
+    v = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      v->type = view->type;
+      v->fixed = view->fixed;
+      v->theta = view->theta;
+      v->phi = view->phi;
+      v->zeta = view->zeta;
+      v->dist = view->dist;
+      v->scale = view->scale;
+      v->voxelSize[0] = view->voxelSize[0];
+      v->voxelSize[1] = view->voxelSize[1];
+      v->voxelSize[2] = view->voxelSize[2];
+      v->voxelRescaleFlg = view->voxelRescaleFlg;
+      v->interp = view->interp;
+      v->view_mode = view->view_mode;
+      v->up = view->up;
+      v->fixed_2 = view->fixed_2;
+      v->fixed_line_angle = view->fixed_line_angle;
+      errNum = WlzInit3DViewStruct(v, refObj);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      sObj = WlzGetSectionFromObject(refObj, v, WLZ_INTERPOLATION_NEAREST,
+                                     &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if((sObj->type != WLZ_2D_DOMAINOBJ) || (sObj->domain.core == NULL))
+      {
+        errNum = WLZ_ERR_DOMAIN_DATA;
+      }
+      else
+      {
+        org.vtX += sObj->domain.i->kol1;
+        org.vtY += sObj->domain.i->line1;
+      }
+    }
+    (void )WlzFree3DViewStruct(v);
+    (void )WlzFreeObj(sObj); 
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsg);
+      (void )fprintf(stderr,
+                     "%s: failed find offset from reference object (%s).\n",
+		     *argv, errMsg);
+    }
   }
   if(ok)
   {
@@ -383,6 +473,7 @@ int             main(int argc, char **argv)
     }
   }
   AlcFree(cmdStr);
+  (void )WlzFreeObj(refObj);
   (void )WlzFree3DViewStruct(view);
   (void )WlzFreeObj(dwnObj);
   if(usage)
@@ -393,7 +484,8 @@ int             main(int argc, char **argv)
     " [-2] [-a<pitch,yaw,roll>] [-f <fx,fy,fz>]\n"
     "                 [-d <dist> [-b <view bib file>]\n"
     "                 [-m <mode>] [-u<ux,uy,uz>]\n"
-    "                 [-g <ox,oy,oz>] [-h] [-o<out>]\n"
+    "                 [-g <ox,oy,oz>] [-h] [-o<output>]\n"
+    "                 [-r <ref object>]\n"
     "                 [-s <cmd str>] [<cmd str file>>]\n"
     "Options:\n"
     "  -2  Ignore the view struct and keep as a 2D object.\n"
@@ -407,6 +499,10 @@ int             main(int argc, char **argv)
     "  -u  Up vector, default 0.0,0.0,1.0.\n"
     "  -g  Origin of the drawing with respect to the 2D Woolz object\n"
     "      cut using the view transform, default 0.0,0.0.\n"
+    "  -r  Reference object. If given this is must be a 3D spatial domain\n"
+    "      object. The object is used to determine an additional offset\n"
+    "      for the origin of the 2D plane with respect to the section in 3D\n"
+    "      (i.e. it is added to any offset given using the -g option).\n"
     "  -s  Drawing command string.\n"
     "  -h  Help, prints this usage message.\n"
     "  -o  Output file name.\n"
@@ -540,29 +636,25 @@ static int	WlzDrawDomObjScanTriple(char *str,
   if(str)
   {
     dP[0] = d0; dP[1] = d1; dP[2] = d2; 
-    while(*str && isspace(*str))
+    subStr[0] = str;
+    subStr[1] = strchr(subStr[0], ',');
+    subStr[2] = NULL;
+    if(subStr[1])
     {
-      ++str;
-    }
-    if(*str == ',')
-    {
-      subStr[0] = NULL;
-      subStr[1] = strtok(str, ",");
-    }
-    else
-    {
-      subStr[0] = strtok(str, ",");
-      subStr[1] = strtok(NULL, ",");
-    }
-    if((subStr[0] == NULL) && (subStr[1] == NULL))
-    {
-      cnt = -1;
-    }
-    else
-    {
-      for(idx = 0; idx < 3; ++idx)
+      *(subStr[1]) = '\0';
+      ++(subStr[1]);
+      subStr[2] = strchr(subStr[1], ',');
+      if(subStr[2])
       {
-	if(subStr[idx] && (sscanf(subStr[idx], "%lg", dP[idx]) == 1))
+        *(subStr[2]) = '\0';
+	++(subStr[2]);
+      }
+    }
+    for(idx = 0; idx < 3; ++idx)
+    {
+      if(subStr[idx] && *(subStr[idx]))
+      {
+        if(sscanf(subStr[idx], "%lg", dP[idx]) == 1)
 	{
 	  ++cnt;
 	}

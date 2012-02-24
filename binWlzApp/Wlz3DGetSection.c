@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _Wlz3DGetSection_c[] = "MRC HGU $Id$";
-#endif
+static char _Wlz3DGetSection_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         binWlzApp/Wlz3DGetSection.c
@@ -15,10 +11,14 @@ static char _Wlz3DGetSection_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,8 +37,6 @@ static char _Wlz3DGetSection_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Gets an arbitrary slice from a 3D object.
 * \ingroup	BinWlzApp
-* \todo         -
-* \bug          None known.
 *
 * \par Binary
 * \ref wlz3dgetsection "Wlz3DGetSection"
@@ -114,6 +112,13 @@ Wlz3DGetSection  [-h] [-A] [-C] [-L] [-N]
     </td>
   </tr>
   <tr> 
+    <td><b>-r</b></td>
+    <td>Voxel size rescaling mode flags:
+	 bit 1 set - use voxel-size rescaling,
+	 bit 2 set - enable global scaling,
+        default 1.0.</td>
+  </tr>
+  <tr> 
     <td><b>-s</b></td>
     <td>Scale factor, default 1.0.</td>
   </tr>
@@ -185,6 +190,10 @@ static void usage(char *proc_str)
 	  "\t                       mode = 1 - statue\n"
 	  "\t                       mode = 2 - absolute\n"
 	  "\t  -o<output file>    Output filename, default to stdout\n"
+	  "\t  -r<vox rescale>    Voxel size rescaling mode flags:\n"
+	  "\t                       bit 1 set - use voxel-size rescaling\n"
+	  "\t                       bit 2 set - enable global scaling\n"
+	  "\t                     default - 0.\n"
 	  "\t  -s<scale>          Scale factor, default - 1.0\n"
 	  "\t  -u<ux,uy,uz>       Up vector for up-is-up mode.\n"
 	  "\t			  Default: (0,0,-1)\n"
@@ -205,11 +214,13 @@ int main(int	argc,
   WlzObject	*obj, *nobj, *subDomain;
   FILE		*inFP, *outFP, *bibFP;
   char		*outFile, *bibFile;
-  char 		optList[] = "ACLNa:b:d:f:m:o:s:u:R:h";
+  char 		optList[] = "ACLNa:b:d:f:m:o:r:s:u:R:h";
   int		option;
-  int		iVal;
-  int		allFlg=0;
-  int		i, j;
+  int		i,
+  		j,
+		iVal,
+		voxRescale = 0,
+  		allFlg = 0;
   double	dist=0.0, pitch=0.0, yaw=0.0, roll=0.0;
   double	scale=1.0;
   WlzDVertex3	fixed={0.0,0.0,0.0};
@@ -307,6 +318,13 @@ int main(int	argc,
       outFile = optarg;
       break;
 
+    case 'r':
+      if( sscanf(optarg, "%d", &voxRescale) < 1 ){
+	usage(argv[0]);
+	return 1;
+      }
+      break;
+
     case 's':
       if( sscanf(optarg, "%lg", &scale) < 1 ){
 	usage(argv[0]);
@@ -396,6 +414,7 @@ int main(int	argc,
     viewStr->up = up;
     viewStr->view_mode = mode;
     viewStr->scale = scale;
+    viewStr->voxelRescaleFlg = voxRescale;
   }
 
   /* check bibfile - select first section parameters in the file */
@@ -433,6 +452,12 @@ int main(int	argc,
     {
       case WLZ_CONTOUR:
       case WLZ_3D_DOMAINOBJ:
+	if(voxRescale && obj->domain.core)
+	{
+	  viewStr->voxelSize[0] = obj->domain.p->voxel_size[0];
+	  viewStr->voxelSize[1] = obj->domain.p->voxel_size[1];
+	  viewStr->voxelSize[2] = obj->domain.p->voxel_size[2];
+	}
 	WlzInit3DViewStruct(viewStr, obj);
 	if( allFlg ){
 	  /* loop through all possible planes */

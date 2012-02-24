@@ -6,11 +6,15 @@
 # \par
 # Address:
 #               MRC Human Genetics Unit,
+#               MRC Institute of Genetics and Molecular Medicine,
+#               University of Edinburgh,
 #               Western General Hospital,
 #               Edinburgh, EH4 2XU, UK.
 # \par
-# Copyright (C) 2005 Medical research Council, UK.
-#
+# Copyright (C), [2012],
+# The University Court of the University of Edinburgh,
+# Old College, Edinburgh, UK.
+# 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -26,10 +30,7 @@
 # License along with this program; if not, write to the Free
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA  02110-1301, USA.
-#
 # \brief        Process this file with automake to produce Makefile.in
-# \todo         -
-# \bug          None known.
 ##
 
 AM_CPPFLAGS		= -I. \
@@ -144,6 +145,7 @@ bin_PROGRAMS		= \
 			  WlzIsEmpty \
 			  WlzLabel \
 			  WlzLaplacian \
+			  WlzLUTGreyTransformObj \
 			  WlzMakeEmpty \
 			  WlzMakeRect \
 			  WlzMarkerLatticeFromDomain \
@@ -598,6 +600,10 @@ WlzLabel_LDFLAGS			= $(AM_LFLAGS)
 WlzLaplacian_SOURCES			= WlzLaplacian.c
 WlzLaplacian_LDADD			= $(LDADD)
 WlzLaplacian_LDFLAGS			= $(AM_LFLAGS)
+
+WlzLUTGreyTransformObj_SOURCES		= WlzLUTGreyTransformObj.c
+WlzLUTGreyTransformObj_LDADD		= $(LDADD)
+WlzLUTGreyTransformObj_LDFLAGS		= $(AM_LFLAGS)
 
 WlzMakeEmpty_SOURCES			= WlzMakeEmpty.c
 WlzMakeEmpty_LDADD			= $(LDADD)

@@ -1,13 +1,9 @@
 #ifndef ALGPROTO_H
 #define ALGPROTO_H
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _AlgProto_h[] = "MRC HGU $Id$";
-#endif
+static char _AlgProto_h[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libAlg/AlgProto.h
@@ -17,10 +13,14 @@ static char _AlgProto_h[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -52,15 +52,27 @@ extern AlgError			AlgAutoCorrelate2D(double **data,
 				  int nX,
 				  int nY);
 /* From AlgBits.c */
-extern int			AlgBitSetCount(
+extern unsigned int		AlgBitSetCount(
 				  unsigned long gMsk);
-extern int			AlgBitSetPositions(
-				  int *posA,
+extern unsigned int		AlgBitSetPositions(
+				  unsigned int *posA,
 				  unsigned long gMsk);
 extern unsigned long		AlgBitNextNOfM(
 				  unsigned long curMsk,
 				  int n,
 				  int m);
+extern int			AlgBitMostSigSet(
+				  unsigned long gMsk);
+extern int			AlgBitMostSigSetLL(
+				  unsigned long long gMsk);
+extern unsigned int		AlgBitRotateRight(
+				  unsigned int g,
+				  unsigned int n,
+				  unsigned int d);
+extern unsigned int		AlgBitRotateLeft(
+				  unsigned int g,
+				  unsigned int n,
+				  unsigned int d);
 extern int			AlgBitNextSet(
 				  unsigned long msk,
 				  int idC);
@@ -224,6 +236,16 @@ extern AlgError			AlgLinearFitIdx1D(
 				  double *dstSigB,
 				  double *dstQ);
 
+/* From AlgGrayCode.c */
+extern unsigned int		AlgGrayCode(
+				  unsigned int g);
+extern unsigned int    		AlgGrayCodeInv(
+				  unsigned int g);
+extern unsigned long long 	AlgGrayCodeLL(
+				  unsigned long long g);
+extern unsigned long long	AlgGrayCodeInvLL(
+				  unsigned long long g);
+
 /* From AlgHeapSort.c */
 extern AlgError			AlgHeapSort(
 				  void *data,
@@ -351,6 +373,18 @@ extern int             		AlgHeapSortInvCmpIdxDFn(
 				  int *idx,
 				  int id0,
 				  int id1);
+
+/* From AlgHilbertIndex.c */
+extern void			AlgHilbertIndex(
+				  unsigned int *h,
+				  unsigned int *p,
+				  int n,
+				  int o);
+extern void			AlgHilbertIndexInv(
+				  unsigned int *h,
+				  unsigned int *p,
+				  int n,
+				  int o);
 
 /* From AlgMatrix.c */
 extern void			AlgMatrixFree(

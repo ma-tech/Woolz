@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzMakeStructs_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzMakeStructs_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzMakeStructs.c
@@ -15,10 +11,14 @@ static char _WlzMakeStructs_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,8 +37,6 @@ static char _WlzMakeStructs_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Functions for allocating woolz structures.
 * \ingroup	WlzAllocation
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -333,6 +331,7 @@ WlzMakeMain(WlzObjectType 	type,
     case WLZ_2D_DOMAINOBJ:
     case WLZ_2D_POLYGON:
     case WLZ_3D_DOMAINOBJ:
+    case WLZ_3D_VIEW_STRUCT:
     case WLZ_AFFINE_TRANS:
     case WLZ_BOUNDLIST:
     case WLZ_CMESH_TRANS:
@@ -343,6 +342,7 @@ WlzMakeMain(WlzObjectType 	type,
     case WLZ_CONV_HULL:
     case WLZ_EMPTY_OBJ:
     case WLZ_HISTOGRAM:
+    case WLZ_LUT:
     case WLZ_MESH_TRANS:
     case WLZ_POINTS:
     case WLZ_PROPERTY_OBJ:

@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzCMeshTransformObj_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzCMeshTransformObj_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         binWlz/WlzCMeshTransformObj.c
@@ -15,10 +11,14 @@ static char _WlzCMeshTransformObj_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2009 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,10 +37,9 @@ static char _WlzCMeshTransformObj_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Transforms an object using a constrained mesh transform
 * \ingroup	BinWlz
-* \todo         -
-* \bug          None known.
 *
-* \ref 		WlzCMeshTransformObj "WlzCMeshTransformObj"
+* \par Binary
+* \ref wlzcmeshtransformobj "WlzCMeshTransformObj"
 */
 
 #include <stdio.h>
@@ -51,7 +50,7 @@ static char _WlzCMeshTransformObj_c[] = "MRC HGU $Id$";
 
 /*!
 \ingroup BinWlz
-\defgroup wlzcopyobj WlzCMeshTransformObj
+\defgroup wlzcmeshtransformobj WlzCMeshTransformObj
 \par Name
 WlzCMeshTransformObj - transforms an object using a constrained mesh transform.
 \par Synopsis
@@ -139,11 +138,14 @@ extern char     *optarg;
 
 int		main(int argc, char *argv[])
 {
-  int		inv = 0,
-  		ok = 1,
-		objCnt,
+  int		objCnt,
   		option,
+  		inv = 0,
+		nStep = 1,
+		useStep = 0,
+  		ok = 1,
   		usage = 0;
+  double        transition = 1.0;
   FILE		*inFP = NULL,
   		*outFP = NULL;
   char		*txFileStr = NULL,
@@ -152,7 +154,7 @@ int		main(int argc, char *argv[])
                 *outObjFileBodyStr = NULL,
                 *outObjFileExtStr = NULL,
                 outObjFileStr[FILENAME_MAX];
-
+  WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   const char	*errMsgStr;
   WlzObject	*trObj = NULL,
                 *inObj = NULL,
@@ -164,10 +166,6 @@ int		main(int argc, char *argv[])
                 outFileStrDef[] = "-",
                 outObjFileExtStrDef[] = "wlz";
 
-  double        transition = 1.0;
-  int           nStep  = 1;
-  int           useStep = 0;
-  WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
 
   opterr = 0;
   txFileStr = (char *)txFileStrDef;
@@ -178,6 +176,12 @@ int		main(int argc, char *argv[])
   {
     switch(option)
     {
+      case 'b':
+        outObjFileBodyStr = optarg;
+        break;
+      case 'e':
+        outObjFileExtStr = optarg;
+        break;
       case 'i':
         inv = 1;
 	break;
@@ -187,22 +191,22 @@ int		main(int argc, char *argv[])
       case 't':
         txFileStr = optarg;
         break;
-      case 'x':
-        transition = strtod(optarg, NULL);
-        useStep = 0;
-        break;
       case 'L':
         interp = WLZ_INTERPOLATION_LINEAR;
         break;
       case 's':
-        nStep = atoi(optarg);
         useStep = 1;
+	if(sscanf(optarg, "%d", &nStep) != 1)
+	{
+	  usage = 1;
+	}
         break;
-      case 'b':
-        outObjFileBodyStr = optarg;
-        break;
-      case 'e':
-        outObjFileExtStr = optarg;
+      case 'x':
+        useStep = 0;
+        if(sscanf(optarg, "%lg", &transition) != 1)
+	{
+	  usage = 1;
+	}
         break;
       case 'h':
       default:

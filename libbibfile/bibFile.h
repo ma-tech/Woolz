@@ -1,13 +1,9 @@
 #ifndef BIBFILE_H
 #define BIBFILE_H
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _bibFile_h[] = "MRC HGU $Id$";
-#endif
+static char _bibFile_h[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libbibfile/bibFile.h
@@ -17,10 +13,14 @@ static char _bibFile_h[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -40,8 +40,6 @@ static char _bibFile_h[] = "MRC HGU $Id$";
 * \brief	Types and constants for the bibtex based file syntax
 *		used for serial section data, ....
 * \ingroup	bibfile
-* \todo         -
-* \bug          None known.
 */
 
 #ifdef  __cplusplus
@@ -77,31 +75,60 @@ typedef struct
 } BibFileRecord;
 
 /* From	bibFileAlloc.c */
-extern BibFileRecord *BibFileRecordMake(char *name, char *id, BibFileField *field);
-extern BibFileField *BibFileFieldMake(char *name, char *value, BibFileField *next),
-		*BibFileFieldMakeVa(char *name, char *value, ...),
-                *BibFileFieldJoin(BibFileField *field0,
-                                  BibFileField *field1, ...);
-extern void     BibFileRecordFree(BibFileRecord **record),
-                BibFileFieldFree(BibFileField **field);
-extern char	*BibFileStrDup(const char *s1);		
+extern BibFileRecord 		*BibFileRecordMake(
+				  char *name,
+				  char *id,
+				  BibFileField *field);
+extern BibFileField 		*BibFileFieldMake(
+				  char *name,
+				  char *value,
+				  BibFileField *next);
+extern BibFileField		*BibFileFieldMakeVa(
+				  char *name,
+				  char *value,
+				  ...);
+extern BibFileField         	*BibFileFieldJoin(
+				  BibFileField *field0,
+                                  BibFileField *field1,
+				  ...);
+extern void     		BibFileRecordFree(
+				  BibFileRecord **record);
+extern void               	BibFileFieldFree(
+				  BibFileField **field);
+extern char			*BibFileStrDup(
+				  const char *s1);		
 
 /* From bibFileIO.c */
-extern BibFileError BibFileRecordRead(BibFileRecord **record, char **eMsg,
-		                      FILE *fP),
-		BibFileRecordWrite(FILE *fP, char **eMsg,
-		                   BibFileRecord *record),
-		BibFileFieldRead(BibFileField **field, char **eMsg,
-		                 int *endFlag, FILE *fP),
-		BibFileFieldWrite(FILE *fP, char **eMsg,
-		                  BibFileField *field),
-                BibFileEscapeRestrictedChar(char *pString,
-					    char **outString),
-                BibFileUnEscapeRestrictedChar(char *pString,
-					      char **outString);
+extern BibFileError 		BibFileRecordRead(
+				  BibFileRecord **record,
+				  char **eMsg,
+		                  FILE *fP);
+extern BibFileError		BibFileRecordWrite(
+				  FILE *fP,
+				  char **eMsg,
+		                  BibFileRecord *record);
+extern BibFileError		BibFileFieldRead(
+				  BibFileField **field,
+				  char **eMsg,
+		                  int *endFlag,
+				  FILE *fP);
+extern BibFileError		BibFileFieldWrite(
+				  FILE *fP,
+				  char **eMsg,
+		                  BibFileField *field);
+extern BibFileError      	BibFileEscapeRestrictedChar(
+				  char *pString,
+				  char **outString);
+extern BibFileError  		BibFileUnEscapeRestrictedChar(
+				  char *pString,
+				  char **outString);
 /* From bibFileParse.c */
-int		BibFileFieldParseFmt(BibFileField *topField,
-                                     void *value, char *fmt, char *name, ...);
+int				BibFileFieldParseFmt(
+				  BibFileField *topField,
+                                  void *value,
+				  char *fmt,
+				  char *name,
+				  ...);
 
 
 #ifdef  __cplusplus

@@ -1,24 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzCMeshCurvature_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzCMeshCurvature_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzCMeshCurvature.c
+* \file         libWlz/WlzCMeshCurvature.c
 * \author       Bill Hill
 * \date         September 2010
 * \version      $Id$
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2010 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -47,6 +47,176 @@ static char _WlzCMeshCurvature_c[] = "MRC HGU $Id$";
 #include <Wlz.h>
 
 /*!
+* \return	Interpolated curvature.
+* \ingroup	WlzMesh
+* \brief	Interpolates the curvature at some position within the
+* 		given mesh element using a distance weighting of the
+* 		curvatures at the nodes of the element and those at
+* 		thier (single) edge connected neighbours.
+* 		Squares of distances are used rather than the distances
+* 		themselves to decrease the relative contribution of
+* 		distant nodes.
+* \param	elm			Given element.
+* \param	ixv			Node indexed values, used for
+* 					curvatures.
+* \param	elmNod			The nodes of the element.
+* \param	meanCrv			Non-zero if mean curvature is required
+* 					(otherwise Gaussian curvature).
+* \param	dPos			Position within the element to be
+* 					interpolated.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static double	WlzCMeshElmRingInterpolateNodCrvValue(WlzCMeshElm2D *elm,
+					WlzIndexedValues *ixv,
+					WlzCMeshNod2D **elmNod,
+					int meanCrv, WlzDVertex2 dPos,
+					WlzErrorNum *dstErr)
+{
+  int		i,
+  		j,
+		k,
+		nCnt = 0;
+  double	crv = 0.0,
+  		sWgt = 0.0;
+  int		nNI[3];
+  double	*wgt = NULL;
+  WlzCMeshNod2D **nod = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Count number of edge connected nodes that the given element has including
+   * the nodes of the element itself (this is a safe over estimate). */
+  nCnt = 3;
+  for(i = 0; i < 3; ++i)
+  {
+    WlzCMeshEdgU2D *e0,
+    		   *e1;
+
+    ++nCnt;
+    e0 = e1 = elmNod[i]->edu;
+    do
+    {
+      ++nCnt;
+      e1 = e1->nnxt;
+    } while(e1 != e0);
+  }
+  if(((nod = (WlzCMeshNod2D **)
+	     AlcMalloc(nCnt * sizeof(WlzCMeshNod2D *))) == NULL) ||
+     ((wgt = (double *)AlcMalloc(nCnt * sizeof(double))) == NULL))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  else
+  {
+    /* Collect nodes and possibly reduce the node count by checking for
+     * nodes counted more than once in the initial estimate. */
+    for(k = 0; k < 3; ++k)
+    {
+      nod[k] = elmNod[k];
+    }
+    for(i = 0; i < 3; ++i)
+    {
+      WlzCMeshEdgU2D *e0,
+		     *e1;
+
+      nNI[i] = k;
+      e0 = e1 = nod[i]->edu;
+      do
+      {
+        int	skip = 0;
+        WlzCMeshNod2D *n;
+
+	n = e1->next->nod;
+	for(j = 0; j < i; ++j)
+	{
+	  if(n == nod[j])
+	  {
+	    skip = 1;
+	    break;
+	  }
+	}
+	if(skip == 0)
+	{
+	  nod[k] = n;
+	  ++k;
+	}
+        e1 = e1->nnxt;
+      } while(e1 != e0);
+    }
+    nCnt = k;
+    /* Compute approximate geodesic distance for each node and the total
+     * approximate geodesic distance. This is the distance to a node of
+     * the enclosing element plus a edge length for the neighbouring
+     * nodes. */
+    for(i = 0; i < nCnt; ++i)
+    {
+      WlzDVertex2 d;
+
+      WLZ_VTX_2_SUB(d, nod[i]->pos, dPos);
+      wgt[i] = WLZ_VTX_2_LENGTH(d);
+      sWgt += wgt[i];
+    }
+    /*
+    for(i = 0; i < 3; ++i)
+    {
+      WlzDVertex2 d;
+
+      WLZ_VTX_2_SUB(d, nod[i]->pos, dPos);
+      wgt[i] = WLZ_VTX_2_LENGTH(d);
+    }
+    for(i = 3; i < nNI[1]; ++i)
+    {
+      WlzDVertex2 d;
+
+      WLZ_VTX_2_SUB(d, nod[i]->pos, nod[0]->pos);
+      wgt[i] = wgt[0] + WLZ_VTX_2_LENGTH(d);
+      sWgt += wgt[i];
+    }
+    for(i = nNI[1]; i < nNI[2]; ++i)
+    {
+      WlzDVertex2 d;
+
+      WLZ_VTX_2_SUB(d, nod[i]->pos, nod[1]->pos);
+      wgt[i] = wgt[1] + WLZ_VTX_2_LENGTH(d);
+      sWgt += wgt[i];
+    }
+    for(i = nNI[2]; i < nCnt; ++i)
+    {
+      WlzDVertex2 d;
+
+      WLZ_VTX_2_SUB(d, nod[i]->pos, nod[2]->pos);
+      wgt[i] = wgt[2] + WLZ_VTX_2_LENGTH(d);
+      sWgt += wgt[i];
+    }
+    sWgt += wgt[0] + wgt[1] + wgt[2];
+    */
+  }
+  /* Compute distances weights and the distance weighted curvature. */
+  if(sWgt < WLZ_MESH_TOLERANCE)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else
+  {
+    sWgt = 1.0 / sWgt;
+    for(i = 0; i < nCnt; ++i)
+    {
+      double	*c;
+
+      c = (double *)WlzIndexedValueGet(ixv, nod[i]->idx);
+      crv += ((meanCrv != 0)? 0.5 * (c[0] + c[1]): (c[0] * c[1])) *
+             (1.0 - (wgt[i] / sWgt));
+    }
+  }
+  AlcFree(nod);
+  AlcFree(wgt);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(crv);
+}
+
+/*!
 * \return	New 2D domain object with double values corresponding to the
 * 		interpolated mesh curvature or NULL on error.
 * \ingroup	WlzMesh
@@ -63,10 +233,20 @@ static char _WlzCMeshCurvature_c[] = "MRC HGU $Id$";
 * \param 	meanCrv			If non zero the curvatures are the
 * 					mean rather than the Gaussian
 * 					curvatures.
+* \param	interp			Type of interpolation to use, valid
+* 					types are: WLZ_INTERPOLATION_NEAREST
+* 					(value at nearest node of enclosing
+* 					element), WLZ_INTERPOLATION_LINEAR
+* 					(barycentric weighted value within
+* 					the element) or
+* 					WLZ_INTERPOLATION_ORDER_2 (values of
+* 					in or on 2nd ring weighted by
+* 					approximate geodesic distance).
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, double scale,
-				     int meanCrv, WlzErrorNum *dstErr)
+				     int meanCrv, WlzInterpolationType interp,
+				     WlzErrorNum *dstErr)
 {
   double	iScale = 1.0;
   WlzObject	*crvObj = NULL,
@@ -97,6 +277,19 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, double scale,
   else if(fabs(scale) < eps)
   {
     errNum = WLZ_ERR_PARAM_DATA;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(interp)
+    {
+      case WLZ_INTERPOLATION_NEAREST: /* FALLTHROUGH */
+      case WLZ_INTERPOLATION_LINEAR:  /* FALLTHROUGH */
+      case WLZ_INTERPOLATION_ORDER_2:
+        break;
+      default:
+        errNum = WLZ_ERR_PARAM_TYPE;
+	break;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -139,7 +332,8 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, double scale,
     ixv = crvObj->values.x;
     mesh = fltObj->domain.cm2;
     errNum = WlzInitGreyScan(outObj, &iWsp, &gWsp);
-    while((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE)
+    while((errNum == WLZ_ERR_NONE) &&
+          ((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE))
     {
       int    idE,
       	     idK,
@@ -148,11 +342,13 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, double scale,
       double *c,
       	     *dst;
       WlzDVertex2 dPos;
+      WlzDVertex3 del;
 
       idE = -1;
       dst = gWsp.u_grintptr.dbp;
       dPos.vtY = iWsp.linpos * iScale;
-      for(idK = iWsp.lftpos; idK <= iWsp.rgtpos; ++idK)
+      idK = iWsp.lftpos;
+      while((errNum == WLZ_ERR_NONE) && (idK <= iWsp.rgtpos))
       {
 	dPos.vtX = idK * iScale;
 	if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE, dPos.vtX, dPos.vtY,
@@ -160,7 +356,8 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, double scale,
         {
 	  int		idC;
 	  WlzCMeshElm2D *elm;
-	  double	crv[3];
+	  double	crv[3],
+	  		dst[3];
 	  WlzCMeshNod2D *nod[3];
 
 	  elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
@@ -172,8 +369,36 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, double scale,
 	    c = (double *)WlzIndexedValueGet(ixv, nod[idC]->idx);
 	    crv[idC] = (meanCrv != 0)? 0.5 * (c[0] + c[1]): c[0] * c[1];
 	  }
-	  d = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos, nod[2]->pos,
-			              crv[0], crv[1], crv[2], dPos);
+	  switch(interp)
+	  {
+	    case WLZ_INTERPOLATION_NEAREST:
+              WLZ_VTX_2_SUB(del, nod[0]->pos, dPos);
+	      dst[0] = WLZ_VTX_2_SQRLEN(del);
+              WLZ_VTX_2_SUB(del, nod[1]->pos, dPos);
+	      dst[1] = WLZ_VTX_2_SQRLEN(del);
+              WLZ_VTX_2_SUB(del, nod[2]->pos, dPos);
+	      dst[2] = WLZ_VTX_2_SQRLEN(del);
+	      if(dst[0] < dst[1])
+	      {
+		d = (dst[0] < dst[2])? crv[0]: crv[2];
+	      }
+	      else
+	      {
+		d = (dst[1] < dst[2])? crv[1]: crv[2];
+	      }
+	      break;
+	    case WLZ_INTERPOLATION_LINEAR:
+	      d = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
+	                                  nod[2]->pos, crv[0], crv[1], crv[2],
+					  dPos);
+	      break;
+	    case WLZ_INTERPOLATION_ORDER_2:
+	      d = WlzCMeshElmRingInterpolateNodCrvValue(elm, ixv, nod,
+	                                meanCrv, dPos, &errNum);
+	      break;
+	    default:
+	      break;
+	  }
 	}
 	else
 	{
@@ -188,6 +413,7 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, double scale,
 	  }
 	}
 	*dst++ = d;
+        ++idK;
       }
     }
     if(errNum == WLZ_ERR_EOO)

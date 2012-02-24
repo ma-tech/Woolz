@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzFilterNObjsValues_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzFilterNObjsValues_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         binWlz/WlzFilterNObjsValues.c
@@ -15,10 +11,14 @@ static char _WlzFilterNObjsValues_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -40,8 +40,6 @@ static char _WlzFilterNObjsValues_c[] = "MRC HGU $Id$";
 *		filtering the values of all input objects at the same
 *		position as the values of the resulting object.
 * \ingroup	BinWlz
-* \todo         -
-* \bug          None known.
 *
 * \par Binary
 * \ref wlzfilternobjsvalues "WlzFilterNObjsValues"

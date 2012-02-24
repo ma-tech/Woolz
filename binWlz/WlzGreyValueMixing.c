@@ -1,19 +1,49 @@
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-/***********************************************************************
-* \Project:      Woolz
-* \Title:        Wlz3DGreyValueMixing.c
-* \Date:         23 April 2003 
-* \Author:       J. Rao
-* \Copyright:	 2003 Medical Research Council, UK.
-*		 All rights reserved.
-* \Address: 	 MRC Human Genetics Unit,
-*		 Western General Hospital,
-*		 Edinburgh, EH4 2XU, UK.
-* \Purpose:      Woolz 3D Warping using MQ 
-*		
-* $Revision$
-* Maintenance:	Log changes below, with most recent at top of list.
-************************************************************************/
+#if defined(__GNUC__)
+#ident "University of Edinburgh $Id$"
+#else
+static char _WlzGreyValueMixing_c[] = "University of Edinburgh $Id$";
+#endif
+/*!
+* \file         WlzGreyValueMixing.c
+* \author       Jianguo Rao
+* \date         April 2003
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Produces a new object the grey values of which are a
+* 		blend of the input objects.
+* \ingroup	BinWlz
+*
+* \par Binary
+* \ref wlzgreyvaluemixing "WlzGreyValueMixing"
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>

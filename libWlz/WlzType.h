@@ -1,13 +1,9 @@
 #ifndef WLZ_TYPE_H
 #define WLZ_TYPE_H
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzType_h[] = "MRC HGU $Id$";
-#endif
+static char _WlzType_h[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzType.h
@@ -17,10 +13,14 @@ static char _WlzType_h[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -40,8 +40,6 @@ static char _WlzType_h[] = "MRC HGU $Id$";
 * \brief	Defines the Woolz types. These are enumerations and
 * 		structures which have been typedef'd.
 * \ingroup	Wlz
-* \todo         -
-* \bug          None known.
 */
 
 #ifdef  __cplusplus
@@ -67,7 +65,11 @@ typedef unsigned int  WlzUInt;
 * \ingroup	WlzType
 * \brief        A 64 bit integer.
 */
+#ifdef WLZ_EXT_BIND
+typedef long  WlzLong;
+#else /* WLZ_EXT_BIND */
 typedef long long  WlzLong;
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \enum		_WlzGreyType
@@ -161,6 +163,7 @@ typedef enum _WlzObjectType
   					     with same type. */
   WLZ_COMPOUND_LIST_2		= 83,	/*!< Linked list of objects
   					     with different type. */
+  WLZ_LUT			= 90,	/*!< Simple look up table. */
   WLZ_PROPERTY_OBJ		= 110,	/*!< An object which only has a
   					     property list. */
   WLZ_EMPTY_OBJ			= 127,	/*!< Empty object: An object which
@@ -337,7 +340,7 @@ typedef enum _WlzObjectType
   WLZ_RECTANGLE_DOMAIN_FLOAT	= 2,	/*!< Floating point rectangle
   					     domain. */
   /**********************************************************************
-  * 3D view structure types.					
+  * 3D view structure types (also used for object and domain type).
   **********************************************************************/
   WLZ_3D_VIEW_STRUCT		= 160,	/*!< 3D view structure. */
   /**********************************************************************
@@ -707,8 +710,9 @@ typedef enum _WlzInterpolationType
   WLZ_INTERPOLATION_NEAREST     = 0,	/*!< Nearest neighbour. */
   WLZ_INTERPOLATION_LINEAR,		/*!< Linear or tri-linear. */
   WLZ_INTERPOLATION_CLASSIFY_1,		/*!< Classification by probability. */
-  WLZ_INTERPOLATION_CALLBACK		/*!< Callback function computes
+  WLZ_INTERPOLATION_CALLBACK,		/*!< Callback function computes
 					     each interpolated value. */
+  WLZ_INTERPOLATION_ORDER_2		/*!< Second order interpolation. */
 } WlzInterpolationType;
 
 /*!
@@ -796,10 +800,10 @@ typedef enum _WlzPolyFillMode
 *		Typedef: ::WlzGreyTransformType.
 */
 typedef enum _WlzGreyTransformType {
-  WLZ_GREYTRANSFORMTYPE_LINEAR,		/*!< linear interpolation */
-  WLZ_GREYTRANSFORMTYPE_GAMMA,		/*!< gamma function */
-  WLZ_GREYTRANSFORMTYPE_EXPONENTIAL,	/*!< exponential function */
-  WLZ_GREYTRANSFORMTYPE_SIGMOID		/*!< sigmoid function */
+  WLZ_GREYTRANSFORMTYPE_IDENTITY,	/*!< No value change. */
+  WLZ_GREYTRANSFORMTYPE_LINEAR,		/*!< Linear interpolation. */
+  WLZ_GREYTRANSFORMTYPE_GAMMA,		/*!< Gamma function. */
+  WLZ_GREYTRANSFORMTYPE_SIGMOID		/*!< Sigmoid function. */
 } WlzGreyTransformType;
 
 /*!
@@ -1041,7 +1045,7 @@ typedef union _WlzVertexP
 * \union	_WlzVertex
 * \ingroup	WlzType
 * \brief	Union of vertex values.
-*		Typedef: ::WlzVertexV.
+*		Typedef: ::WlzVertex.
 */
 typedef union _WlzVertex
 {
@@ -1181,6 +1185,7 @@ typedef union _WlzBox
 /************************************************************************
 * Grey values.
 ************************************************************************/
+
 /*!
 * \union	_WlzGreyP
 * \ingroup	WlzType
@@ -2028,7 +2033,7 @@ typedef enum _WlzLBTNodeFlags
 * \struct       _WlzLBTNode2D
 * \ingroup      WlzType
 * \brief        A 2D linear binary tree node for spatial domain representation.
-*               Typedef: ::WlzLBTNode.
+*               Typedef: ::WlzLBTNode2D.
 */
 typedef struct _WlzLBTNode2D
 {
@@ -2047,7 +2052,7 @@ typedef struct _WlzLBTNode2D
 * \struct       _WlzLBTNode3D
 * \ingroup      WlzType
 * \brief        A 3D linear binary tree node for spatial domain representation.
-*               Typedef: ::WlzLBTNode.
+*               Typedef: ::WlzLBTNode3D.
 */
 typedef struct _WlzLBTNode3D
 {
@@ -2066,7 +2071,7 @@ typedef struct _WlzLBTNode3D
 * \struct       _WlzLBTDomain2D
 * \ingroup      WlzType
 * \brief        A 2D linear binary tree spatial domain representation.
-*               Typedef: ::WlzLBTDomain.
+*               Typedef: ::WlzLBTDomain2D.
 */
 typedef struct _WlzLBTDomain2D
 {
@@ -2092,7 +2097,7 @@ typedef struct _WlzLBTDomain2D
 * \struct       _WlzLBTDomain3D
 * \ingroup      WlzType
 * \brief        A 3D linear binary tree spatial domain representation.
-*               Typedef: ::WlzLBTDomain.
+*               Typedef: ::WlzLBTDomain3D.
 */
 typedef struct _WlzLBTDomain3D
 {
@@ -2151,6 +2156,24 @@ typedef struct _WlzContour
   					     defining the contour. */
 } WlzContour;
 
+
+/*!
+* \struct	_WlzLUTDomain
+* \ingroup	WlzType
+* \brief	A look up table domain.
+* 		Typedef: ::WlzLUTDomain.
+*/
+typedef struct _WlzLUTDomain
+{
+  WlzObjectType type;		        /*!< WLZ_LUT. */
+  int		linkcount;		/*!< Core. */
+  void		*freeptr;		/*!< Core. */
+  int		bin1;			/*!< Index of the first bin in the
+                                             LUT. */
+  int		lastbin;		/*!< Index of the last bin in the
+                                             LUT. */
+} WlzLUTDomain;
+
 /*!
 * \union	_WlzValues
 * \ingroup	WlzType
@@ -2170,6 +2193,7 @@ typedef union _WlzValues
   struct _WlzRectFeatValues *rfv;
   struct _WlzIndexedValues  *x;
   struct _WlzTiledValues    *t;
+  struct _WlzLUTValues      *lut;
 } WlzValues;
 
 /*!
@@ -2198,6 +2222,8 @@ typedef union _WlzDomain
   struct _WlzCMesh2D5	     *cm2d5;
   struct _WlzCMesh3D	     *cm3;
   struct _WlzPoints	     *pts;
+  struct _WlzLUTDomain       *lut;
+  struct _WlzThreeDViewStruct *vs3d;
 } WlzDomain;
 
 /*!
@@ -2856,7 +2882,7 @@ typedef struct _WlzTiledValues
   size_t	numTiles;		/*!< The total number of tiles. */
   int		*nIdx;			/*!< Number of index columns,
   					     lines, .... */
-  int		*indices;		/*!< Table of tile indices. */
+  unsigned int	*indices;		/*!< Table of tile indices. */
   int		fd;			/*!< File descriptor if tiles are
   					     memory mapped else -1. */
   long		tileOffset;             /*!< Offset from the start of the
@@ -2864,6 +2890,22 @@ typedef struct _WlzTiledValues
 					     set even if not memory mapped. */
   WlzGreyP 	tiles;			/*!< The tiles. */
 } WlzTiledValues;
+
+/*!
+* \struct	_WlzLUTValues
+* \ingroup	WlzType
+* \brief	Look up table values.
+* 		Typedef: ::WlzLUTValues
+*/
+typedef struct _WlzLUTValues
+{
+  WlzObjectType	type;			/*!< WLZ_LUT. */
+  int		linkcount;		/*!< From WlzCoreValues. */
+  void		*freeptr;		/*!< From WlzCoreValues. */
+  WlzGreyType	vType;			/*!< Type for the LUT values. */
+  int		maxVal;			/*!< Number of values allocated. */
+  WlzGreyP	val;			/*!< LUT values. */
+} WlzLUTValues;
 
 /************************************************************************
 * Point domains.						
@@ -3795,7 +3837,7 @@ typedef struct _WlzCMeshRes
 */
 typedef union _WlzCMeshEntP
 {
-  void			*v;		/*! Generic pointer. */
+  void			*v;		/*!< Generic pointer. */
   struct _WlzCMeshNod2D *n2;		/*!< 2D node pointer. */
   struct _WlzCMeshNod2D *n2d5;		/*!< 2D5 node pointer. */
   struct _WlzCMeshNod3D *n3;		/*!< 3D node pointer. */
@@ -3949,7 +3991,11 @@ typedef enum _WlzFnType
 * \brief	An alternative basis function evaluation function that may
 *		may be called.
 */
+#ifdef WLZ_EXT_BIND
+typedef void *WlzBasisEvalFn;
+#else /* WLZ_EXT_BIND */
 typedef double (*WlzBasisEvalFn)(void *, double);
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \typedef	WlzBasisDistFn
@@ -3957,7 +4003,11 @@ typedef double (*WlzBasisEvalFn)(void *, double);
 * \brief	An alternative basis function distance function that may
 *		may be called.
 */
+#ifdef WLZ_EXT_BIND
+typedef void *WlzBasisDistFn;
+#else /* WLZ_EXT_BIND */
 typedef double (*WlzBasisDistFn)(void *, int, WlzVertex);
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \struct	_WlzBasisFn
@@ -4053,7 +4103,11 @@ typedef struct _WlzThreshCbStr
 * \ingroup	WlzFunction
 * \brief	Callback function for the WlzCbThreshold()
 */
+#ifdef WLZ_EXT_BIND
+typedef void *WlzThreshCbFn;
+#else /* WLZ_EXT_BIND */
 typedef int (*WlzThreshCbFn)(WlzObject *, void *, WlzThreshCbStr *);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * Transforms

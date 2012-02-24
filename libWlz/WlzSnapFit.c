@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzSnapFit_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzSnapFit_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzSnapFit.c
@@ -15,10 +11,14 @@ static char _WlzSnapFit_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -38,8 +38,6 @@ static char _WlzSnapFit_c[] = "MRC HGU $Id$";
 * \brief	Functions to compute correspondences between a pair of
 * 		objects using closest points.
 * \ingroup	WlzTransform
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdio.h>

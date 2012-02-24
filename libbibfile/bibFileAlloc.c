@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _bibFileAlloc_c[] = "MRC HGU $Id$";
-#endif
+static char _bibFileAlloc_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libbibfile/bibFileAlloc.c
@@ -15,10 +11,14 @@ static char _bibFileAlloc_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -38,8 +38,6 @@ static char _bibFileAlloc_c[] = "MRC HGU $Id$";
 * \brief	Functions for allocation and freeing of the bibtex
 *		based record and field data structures.
 * \ingroup	bibfile
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdio.h>
@@ -48,13 +46,26 @@ static char _bibFileAlloc_c[] = "MRC HGU $Id$";
 #include <string.h>
 #include <bibFile.h>
 
-BibFileRecord	*BibFileRecordMake(char *name, char *id, BibFileField *field);
-BibFileField	*BibFileFieldMake(char *name, char *value, BibFileField *next),
-		*BibFileFieldMakeVa(char *name, char *value, ...),
-		*BibFileFieldJoin(BibFileField *field0,
-				  BibFileField *field1, ...);
-void		BibFileRecordFree(BibFileRecord **record),
-		BibFileFieldFree(BibFileField **field);
+BibFileRecord			*BibFileRecordMake(
+				  char *name,
+				  char *id,
+				  BibFileField *field);
+BibFileField			*BibFileFieldMake(
+				  char *name,
+				  char *value,
+				  BibFileField *next);
+BibFileField			*BibFileFieldMakeVa(
+				  char *name,
+				  char *value,
+				  ...);
+BibFileField			*BibFileFieldJoin(
+				  BibFileField *field0,
+				  BibFileField *field1,
+				  ...);
+void				BibFileRecordFree(
+				  BibFileRecord **record);
+void				BibFileFieldFree(
+				  BibFileField **field);
 
 /*!
 * \return	void

@@ -1,24 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzCMeshCurvToImage_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzCMeshCurvToImage_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzCMeshCurvToImage.c
+* \file         binWlz/WlzCMeshCurvToImage.c
 * \author       Bill Hill
 * \date         June 2010
 * \version      $Id$
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2010 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -53,13 +53,26 @@ WlzCMeshCurvToImage - creates a grey scale image from a conforming mesh in
 		      Gaussian curvature values.
 \par Synopsis
 \verbatim
-WlzCMeshCurvToImage [-h] [-m] [-o<output object>] [-s] [<input object>]
+WlzCMeshCurvToImage [-h] [-m] [-N] [-L] [-Q] [-o<output object>] [-s]
+                    [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr>
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr>
+    <td><b>-N</b></td>
+    <td>Nearest neighbour interpolation from nearest element node value.</td>
+  </tr>
+  <tr>
+    <td><b>-L</b></td>
+    <td>Linear interpolation from element node values.</td>
+  </tr>
+  <tr>
+    <td><b>-Q</b></td>
+    <td>Interpolation from nodes surrounding element.</td>
   </tr>
   <tr>
     <td><b>-m</b></td>
@@ -121,6 +134,7 @@ int             main(int argc, char **argv)
   		ok = 1,
 		usage = 0;
   double	scale = 1.0;
+  WlzInterpolationType interp = WLZ_INTERPOLATION_LINEAR;
   WlzObject     *inObj = NULL,
   		*outObj = NULL;
   FILE		*fP = NULL;
@@ -128,7 +142,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "hmo:s:",
+  static char	optList[] = "hmNLQo:s:",
   		fileStrDef[] = "-";
 
   opterr = 0;
@@ -138,6 +152,15 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case 'N':
+        interp = WLZ_INTERPOLATION_NEAREST;
+	break;
+      case 'L':
+        interp = WLZ_INTERPOLATION_LINEAR;
+	break;
+      case 'Q':
+        interp = WLZ_INTERPOLATION_ORDER_2;
+	break;
       case 'm':
         meanCrv = 1;
 	break;
@@ -190,7 +213,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    outObj = WlzCMeshCurvToImage(inObj, scale, meanCrv, &errNum);
+    outObj = WlzCMeshCurvToImage(inObj, scale, meanCrv, interp, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -226,9 +249,13 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-h] [-m] [-o<output object>] [-s#] [<input object>]\n"
+    " [-h] [-m] [-N] [-L] [-Q] [-o<output object>] [-s#]\n"
+    "      [<input object>]\n"
     "Options:\n"
     "  -h  Help, prints usage message.\n"
+    "  -N  Nearest neighbour interpolation from nearest element node value.\n"
+    "  -L  Linear interpolation from element node values.\n"
+    "  -Q  Interpolation from nodes surrounding element.\n"
     "  -m  Set image values to the mean rather than the Gaussian curvature.\n"
     "  -o  Output object file.\n"
     "  -s  Additional scale factor to be used in going from the mesh to the\n"

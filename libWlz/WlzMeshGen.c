@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzMeshGen_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzMeshGen_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzMeshGen.c
@@ -15,10 +11,14 @@ static char _WlzMeshGen_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -40,8 +40,6 @@ static char _WlzMeshGen_c[] = "MRC HGU $Id$";
 * 		to an objects boundaries.
 *
 * \ingroup	WlzMesh
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdio.h>
@@ -214,6 +212,10 @@ static int			WlzCMeshElmJumpPos2D(
 				  WlzCMesh2D *mesh,
 				  WlzDVertex2 gPos,
 				  int *dstCloseNod);
+static int			WlzCMeshElmJumpPos2D5(
+				  WlzCMesh2D5 *mesh,
+				  WlzDVertex3 pos,
+				  int *dstCloseNod);
 static int			WlzCMeshElmJumpPos3D(
 				  WlzCMesh3D *mesh,
 				  WlzDVertex3 gPos,
@@ -221,6 +223,10 @@ static int			WlzCMeshElmJumpPos3D(
 static int			WlzCMeshElmExhaustivePos2D(
 				  WlzCMesh2D *mesh,
 				  WlzDVertex2 gPos,
+				  int *dstCloseNod);
+static int			WlzCMeshElmExhaustivePos2D5(
+				  WlzCMesh2D5 *mesh,
+				  WlzDVertex3 gPos,
 				  int *dstCloseNod);
 static int			WlzCMeshElmExhaustivePos3D(
 				  WlzCMesh3D *mesh,
@@ -5583,6 +5589,54 @@ int             WlzCMeshElmEnclosingPos2D(WlzCMesh2D *mesh,
 *		For jump search to work coreectly the maximum edge
 *		length in th emesh must be valid.
 * \param        mesh			The mesh.
+* \param        dummyLastElmIdx		Last element index used to help
+* 					efficient location for 2D and 3D,
+* 					but ignored by this function.
+* \param        pX			Column coordinate of position.
+* \param        pY			Line coordinate of position.
+* \param        pZ			Plane coordinate of position.
+* \param	exhaustive		If non zero every element is the mesh
+* 					is checked to see if the position is
+* 					contained within it. This is very
+* 					slow and is probably only useful for
+* 					debuging.
+* \param	dstCloseNod		If non NULL, then the value is set
+* 					to the index of the closest node
+* 					to the given position.
+*/
+int             WlzCMeshElmEnclosingPos2D5(WlzCMesh2D5 *mesh,
+                                        int dummyLastElmIdx,
+                                        double pX, double pY, double pZ,
+					int exhaustive, int *dstCloseNod)
+{
+  WlzDVertex3	gPos;
+  int           elmIdx;
+
+  gPos.vtX = pX;
+  gPos.vtY = pY;
+  gPos.vtZ = pZ;
+  elmIdx = (exhaustive)? WlzCMeshElmExhaustivePos2D5(mesh, gPos, dstCloseNod)
+                       : WlzCMeshElmJumpPos2D5(mesh, gPos, dstCloseNod);
+  return(elmIdx);
+}
+
+/*!
+* \return       Element index or negative value if there is no enclosing
+*               element.
+* \ingroup	WlzMesh
+* \brief	Locates the element of the conforming mesh which encloses
+*		the given position.
+*
+*		If a valid last element index is given then a search is
+*		made for the enclosing element both within this element
+*		and then, if not found, within it's immediate edge
+*		neighbours.
+*		If this simple 'walk search' fails to locate the enclosing
+*		element a 'jump search' is used in which the grid cells
+*		of the conforming mesh are searched.
+*		For jump search to work coreectly the maximum edge
+*		length in th emesh must be valid.
+* \param        mesh			The mesh.
 * \param        lastElmIdx		Last element index to help efficient
 * 					location. If negative this is ignored.
 * \param        pX			Column coordinate of position.
@@ -5715,6 +5769,66 @@ static int	WlzCMeshElmExhaustivePos2D(WlzCMesh2D *mesh, WlzDVertex2 gPos,
       {
         WLZ_VTX_2_SUB(del, gPos, nod->pos);
         dstSq = WLZ_VTX_2_SQRLEN(del);
+	if(dstSq < minDstSq)
+	{
+	  minDstSq = dstSq;
+	  *dstCloseNod = nod->idx;
+	}
+      }
+    }
+  }
+  return(elmIdx);
+}
+
+/*!
+* \return	Index of the enclosing element or < 0 if no enclosing
+*		element is found.
+* \ingroup	WlzMesh
+* \brief	Performs an exhaustive search for the conforming mesh
+* 		element which encloses the given position by examining
+* 		all elements in the mesh or all elements in the mesh
+* 		until the enclosing element is found. This function is
+* 		very slow and is probably only useful for debuging.
+* \param	mesh			The conforming  mesh.
+* \param	gPos			Given position.
+* \param	dstCloseNod		If non NULL, then the value is set
+* 					to the index of the closest node
+* 					to the given position.
+*/
+static int	WlzCMeshElmExhaustivePos2D5(WlzCMesh2D5 *mesh, WlzDVertex3 gPos,
+				            int *dstCloseNod)
+{
+  int		idx,
+  		elmIdx = -1;
+  double	dstSq,
+  		minDstSq;
+  WlzDVertex3	del;
+  WlzCMeshElm2D5 *elm;
+  WlzCMeshNod2D5 *nod;
+
+  for(idx = 0; idx < mesh->res.elm.maxEnt; ++idx)
+  {
+    elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, idx);
+    if(elm->idx >= 0)
+    {
+      if(WlzCMeshElmEnclosesPos2D5(elm, gPos) != 0)
+      {
+        elmIdx = elm->idx;
+	break;
+      }
+    }
+  }
+  if(dstCloseNod)
+  {
+    *dstCloseNod = -1;
+    minDstSq = DBL_MAX;
+    for(idx = 0; idx < mesh->res.nod.maxEnt; ++idx)
+    {
+      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idx);
+      if(nod->idx >= 0)
+      {
+        WLZ_VTX_3_SUB(del, gPos, nod->pos);
+        dstSq = WLZ_VTX_3_SQRLEN(del);
 	if(dstSq < minDstSq)
 	{
 	  minDstSq = dstSq;
@@ -5887,6 +6001,75 @@ FOUND:
   if(dstCloseNod)
   {
     *dstCloseNod = WlzCMeshClosestNod2D(mesh, pos);
+  }
+  return(elmIdx);
+}
+
+/*!
+* \return	Index of the enclosing element or < 0 if no enclosing
+*		element is found.
+* \ingroup	WlzMesh
+* \brief	Finds which cell or small group of cells (if degenerate)
+* 		the given position lies within. Then searches the cell
+* 		for the first element which encloses the position.
+* 		This element may not be unique if the position is
+* 		coincident with a node or and edge of the mesh.
+* \param	mesh			The conforming  mesh.
+* \param	pos			Given position.
+* \param	dstCloseNod		If non NULL, then the value is set
+* 					to the index of the closest node
+* 					to the given position.
+* 					The function may be much faster if
+* 					dstCloseNod is NULL.
+*/
+static int	WlzCMeshElmJumpPos2D5(WlzCMesh2D5 *mesh, WlzDVertex3 pos,
+				      int *dstCloseNod)
+{
+  int		elmIdx = -1;
+  double	delta;
+  WlzDVertex3	pos0;
+  WlzIVertex3	idx,
+  		idxMin,
+		idxMax;
+  WlzCMeshCell2D5 *cell;
+  WlzCMeshCellElm2D5 *cElm;
+  const double	eps = 0.001;
+
+  /* Search within a range of cells because the vertex may be on the
+   * edge of a cell. */
+  delta = eps * mesh->cGrid.cellSz;
+  pos0.vtX = pos.vtX - delta;
+  pos0.vtY = pos.vtY - delta;
+  pos0.vtZ = pos.vtZ - delta;
+  idxMin = WlzCMeshCellIdxVtx2D5(mesh, pos0);
+  pos0.vtX = pos.vtX + delta;
+  pos0.vtY = pos.vtY + delta;
+  pos0.vtZ = pos.vtZ + delta;
+  idxMax = WlzCMeshCellIdxVtx2D5(mesh, pos0);
+  for(idx.vtZ = idxMin.vtZ; idx.vtZ <= idxMax.vtZ; ++idx.vtZ)
+  {
+    for(idx.vtY = idxMin.vtY; idx.vtY <= idxMax.vtY; ++idx.vtY)
+    {
+      for(idx.vtX = idxMin.vtX; idx.vtX <= idxMax.vtX; ++idx.vtX)
+      {
+	cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+	cElm = cell->cElm;
+	while(cElm)
+	{
+	  if(WlzCMeshElmEnclosesPos2D5(cElm->elm, pos))
+	  {
+	    elmIdx = cElm->elm->idx;
+	    goto FOUND;
+	  }
+	  cElm = cElm->next;
+	}
+      }
+    }
+  }
+FOUND:
+  if(dstCloseNod)
+  {
+    *dstCloseNod = WlzCMeshClosestNod2D5(mesh, pos);
   }
   return(elmIdx);
 }
@@ -6325,6 +6508,27 @@ int		WlzCMeshElmEnclosesPos2D(WlzCMeshElm2D *elm, WlzDVertex2 gPos)
   {
     inside = WlzGeomVxInTriangle2D(elm->edu[0].nod->pos, elm->edu[1].nod->pos,
 				   elm->edu[2].nod->pos, gPos) >= 0;
+  }
+  return(inside);
+}
+
+/*!
+* \return	Non zero if the given vertex is in the given mesh element.
+* \ingroup	WlzMesh
+* \brief	Checks whether the vertex at the given position is within
+* 		the given mesh element.
+* \param	elm			Given mesh element.
+* \param	gPos			Given vertex position.
+*/
+int		WlzCMeshElmEnclosesPos2D5(WlzCMeshElm2D5 *elm, WlzDVertex3 gPos)
+{
+  int		inside = 0;
+
+  if(elm)
+  {
+    inside = WlzGeomVxInTriangle3D(elm->edu[0].nod->pos, elm->edu[1].nod->pos,
+				   elm->edu[2].nod->pos, gPos,
+				   WLZ_MESH_TOLERANCE) >= 0;
   }
   return(inside);
 }

@@ -1,24 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzCMeshIntersectDom_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzCMeshIntersectDom_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzCMeshIntersectDom.c
+* \file         binWlz/WlzCMeshIntersectDom.c
 * \author       Bill Hill
 * \date         June 2010
 * \version      $Id$
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2010 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -62,6 +62,10 @@ WlzCMeshIntersectDom [-c] [-h] [-m] [-o<output object>] [-s] [-v]
     <td><b>-c</b></td>
     <td>Find the closest point on the surface to the domain if there is
         no intersection.</td>
+  </tr>
+  <tr>
+    <td><b>-d</b></td>
+    <td>Distance normal to the surface within which to allow intersection..</td>
   </tr>
   <tr>
     <td><b>-h</b></td>
@@ -126,7 +130,8 @@ int             main(int argc, char **argv)
   		ok = 1,
 		usage = 0,
 		verbose = 0;
-  double	scale = 1.0;
+  double	delta = 0.0,
+  		scale = 1.0;
   WlzObject     *inDomObj = NULL,
   		*inMeshObj = NULL,
   		*outObj = NULL;
@@ -136,7 +141,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "cho:s:v",
+  static char	optList[] = "cd:ho:s:v",
   		fileStrDef[] = "-";
 
   opterr = 0;
@@ -149,6 +154,12 @@ int             main(int argc, char **argv)
     {
       case 'c':
         clsPnt = 1;
+	break;
+      case 'd':
+        if(sscanf(optarg, "%lg", &delta) != 1)
+	{
+	  usage = 1;
+	}
 	break;
       case 'o':
         outObjFileStr = optarg;
@@ -234,7 +245,8 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    outObj = WlzCMeshIntersectDom2D5(inDomObj, inMeshObj, scale, &errNum);
+    outObj = WlzCMeshIntersectDom2D5(inDomObj, inMeshObj, delta, scale,
+    				     &errNum);
     if(clsPnt)
     {
       int	area = 0;
@@ -310,10 +322,11 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%sExample: %s%s",
     *argv,
-    " [-c] [-h] [-s#] [-v] [<mesh object>] [<domain object>]\n"
+    " [-c] [-d#] [-h] [-s#] [-v] [<mesh object>] [<domain object>]\n"
     "Options:\n"
     "  -c  Find the closest point on the surface to the domain if there is\n"
     "      no intersection.\n"
+    "  -d  Distance normal to the surface within which to allow intersection.\n"
     "  -h  Help, prints usage message.\n"
     "  -o  Output object file.\n"
     "  -s  Additional scale factor to be used in going from the mesh to the\n"

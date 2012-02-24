@@ -1,24 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzTiledValues_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzTiledValues_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzTiledValues.c
+* \file         libWlz/WlzTiledValues.c
 * \author       Bill Hill
 * \date         March 2010
 * \version      $Id$
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2010 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -48,6 +48,10 @@ static char _WlzTiledValues_c[] = "MRC HGU $Id$";
 #include <unistd.h>
 #include <sys/mman.h>
 #endif
+
+/* The use of Hilbert order for tiles need some testing before
+real use. */
+/* #define WLZ_TILES_USE_HILBERT */
 
 static WlzObject  		*WlzMakeTiledValuesObj2D(
 				  WlzObject *gObj,
@@ -404,13 +408,17 @@ static WlzObject  *WlzMakeTiledValuesObj2D(WlzObject *gObj, size_t tileSz,
     {
       int tileCnt = 0;
 
+#ifdef WLZ_TILES_USE_HILBERT
+      errNum = WlzGreySetHilbertRankValues(idx, &tileCnt);
+#else /* WLZ_TILES_USE_HILBERT */
       errNum = WlzGreySetIncValues(idx, &tileCnt);
+#endif /* WLZ_TILES_USE_HILBERT */
       tVal->numTiles = tileCnt;
     }
     /* Create index array from the index object. */
     if(errNum == WLZ_ERR_NONE)
     {
-      int	**idxArray = NULL;
+      unsigned int **idxArray = NULL;
       WlzIVertex2 sz,
       		  org;
 
@@ -624,13 +632,17 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
     {
       int tileCnt = 0;
 
+#ifdef WLZ_TILES_USE_HILBERT
+      errNum = WlzGreySetHilbertRankValues(idx, &tileCnt);
+#else /* WLZ_TILES_USE_HILBERT */
       errNum = WlzGreySetIncValues(idx, &tileCnt);
+#endif /* WLZ_TILES_USE_HILBERT */
       tVal->numTiles = tileCnt;
     }
     /* Create index array from the index object. */
     if(errNum == WLZ_ERR_NONE)
     {
-      int	***idxArray = NULL;
+      unsigned int ***idxArray = NULL;
       WlzIVertex3 sz,
       		  org;
 

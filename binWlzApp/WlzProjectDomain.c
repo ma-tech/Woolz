@@ -1,24 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzProjectDomain_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzProjectDomain_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzProjectDomain.c
+* \file         binWlzApp/WlzProjectDomain.c
 * \author       Bill Hill
 * \date         June 2011
 * \version      $Id$
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2011 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -38,6 +38,98 @@ static char _WlzProjectDomain_c[] = "MRC HGU $Id$";
 * \brief	Projects a 3D domain onto a single section 3D projection
 * 		as used for EMAGE wholemounts.
 * \ingroup	BinWlzApp
+*
+* \par Binary
+* \ref wlzprojectdomain "WlzProjectDomain"
+*/
+
+/*!
+\ingroup BinWlzApp
+\defgroup wlzprojectdomain WlzProjectDomain
+\par Name
+WlzProjectDomain - Projects a given 3D domain into a section.
+\par Synopsis
+\verbatim
+WlzProjectDomain [-h] [-o<out object>] [-p<proj>] [-s[<sec>]
+		 [-n#] [-m<mask1>[,<mask2>,...,<maskn>]]
+		 [-t<tr1>[,<tr2>,...,<trn>]] <input object>
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-h</b></td>
+    <td>Prints usage information.</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output file for the projected section view.</td>
+  </tr>
+  <tr>
+    <td><b>-p</b></td>
+    <td>Projection from the 3D space of the input object and mask
+        domains onto a plane. This must be defined by a bibfile (as
+        saved by MAPaint).</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>Section transform which maps the plane back into a 3D space.
+        This must be defined by a bibfile (as saved by MAPaint).</td>
+  </tr>
+  <tr>
+    <td><b>-n</b></td>
+    <td>The number of parts to be used for the projection.
+        If the number of parts is one (which is the default) then
+        no mask is required. In this case the default in-plane
+        transform is the identity transform.</td>
+  </tr>
+  <tr>
+    <td><b>-m</b></td>
+    <td>Mask domains for each of the parts. If the mask is to cover
+        the whole of the input object's domain then the string
+        "null" (without the quotes) may be used.</td>
+  </tr>
+  <tr>
+    <td><b>-t</b></td>
+    <td>Transforms withing the plane for each part. If the identity
+        transform is required then the string "null" (without
+        the quotes) may be used.</td>
+  </tr>
+</table>
+\par Description
+WlzProjectDomain
+projects the given input 3D (spatial domain) object into a section,
+as used for EMAGE wholemount views.
+The input domain may be projected and transformed in parts to allow
+the separation of regions that may otherwise be obscured in a
+projected view.
+The list of masks and in-plane transforms should be comma separated
+and a missing string represents either the universal domain or an
+identity transform.
+\par Examples
+\verbatim
+./WlzProjectDomain -o out.wlz -p prj.bib -s sec.bib domain.wlz
+\endverbatim
+The 3D domain in the file domain.wlz is projected onto a plane
+using the projecttion transform defined in the bibfile prj.bib
+this is then made a section defined by the section transform
+read from the bibfile sec.bib.
+
+\verbatim
+WlzProjectDomain -o out.wlz -p prj.bib -s sec.bib -n 2 \
+        -m body-msk.wlz,tail-msk.wlz \
+        -t body-tr.wlz,tail-tr.wlz domain.wlz
+\endverbatim
+The 3D domain in the file domain.wlz is masked using the 3D domains
+read from the files body-msk.wlz and tail-msk.wlz. The resulting
+domains are projected onto a plane using the projection defined in
+the bibfile  prj.bib. Each of these projected domains is then
+transformed independently using the transforms read from the files
+body-tr.wlz and tail-tr.wlz. The union of these transformed 2D
+domains is then made a section defined by the section transform
+read from the bibfile sec.bib.
+\par File
+\par See Also
+\ref BinWlzApp "WlzIntro(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

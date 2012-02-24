@@ -1,24 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzDomain_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzDomain_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         binWlz/WlzDomain.c
-* \author       March 1999
-* \date         Richard Baldock
+* \author       Richard Baldock
+* \date         March 1999
 * \version      $Id$
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,8 +37,6 @@ static char _WlzDomain_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Extracts the domain of an object.
 * \ingroup	BinWlz
-* \todo         -
-* \bug          None known.
 *
 * \par Binary
 * \ref wlzdomain "WlzDomain"
@@ -65,8 +63,11 @@ WlzDomain [-h] [-v] [<input file>]
   </tr>
 </table>
 \par Description
-Outputs the domain of a  woolz object, this only affects grey-level 2D and 3D
-objects and is convenient for more rapid binary image or domain processing.
+Outputs the domain of a  woolz object, this only affects
+grey-level 2D and 3D objects and conforming meshes.
+Using this function can significantly reduce the size of
+an object and reduce execution time when only the domain
+is required.
 \par Examples
 \verbatim
 \endverbatim
@@ -94,9 +95,11 @@ static void usage(char *proc_str)
 {
   fprintf(stderr,
 	  "Usage:\t%s [-h] [-v] [<input file>]\n"
-	  "\tOutput the domain of a  woolz object, this only\n"
-	  "\taffects grey-level 2D and 3D objects and is convenient\n"
-	  "\tfor more rapid binary image or domain processing.\n"
+          "\tOutputs the domain of a  woolz object, this only affects\n"
+	  "\tgrey-level 2D and 3D objects and conforming meshes.\n"
+	  "\tUsing this function can significantly reduce the size of\n"
+	  "\tan object and reduce execution time when only the domain\n"
+	  "\tis required.\n"
 	  "\tOptions are:\n"
 	  "\t  -h        help - prints this usage message\n"
 	  "\t  -v        verbose operation\n"
@@ -152,7 +155,10 @@ int main(int	argc,
     switch( obj->type )
     {
     case WLZ_2D_DOMAINOBJ:
-    case WLZ_3D_DOMAINOBJ:
+    case WLZ_3D_DOMAINOBJ: /* FALLTROUGH */
+    case WLZ_CMESH_2D: /* FALLTROUGH */
+    case WLZ_CMESH_2D5: /* FALLTROUGH */
+    case WLZ_CMESH_3D: /* FALLTROUGH */
       values.core = NULL;
       if((tmpObj = WlzMakeMain(obj->type, obj->domain, values,
 			       obj->plist, obj->assoc, &errNum)) != NULL){

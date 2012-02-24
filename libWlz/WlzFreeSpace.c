@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzFreeSpace_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzFreeSpace_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzFreeSpace.c
@@ -15,10 +11,14 @@ static char _WlzFreeSpace_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,8 +37,6 @@ static char _WlzFreeSpace_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Functions for freeing objects and their components.
 * \ingroup	WlzAllocation
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -75,7 +73,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_2D_DOMAINOBJ:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-	      ("WlzFreeObj 01 %p WLZ_2D_DOMAINOBJ "
+	      ("WlzFreeObj %p WLZ_2D_DOMAINOBJ "
 	       "%p %d %p %d %p\n",
 	       obj, (obj->domain.i),
 	       (obj->domain.i?obj->domain.i->linkcount: 0),
@@ -101,7 +99,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_3D_DOMAINOBJ:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 02 %p WLZ_3D_DOMAINOBJ %p, "
+      	      ("WlzFreeObj %p WLZ_3D_DOMAINOBJ %p, "
 	       "%d %p %d %p\n",
 	       obj, obj->domain.i,
 	       (obj->domain.p? obj->domain.p->linkcount: 0),
@@ -127,7 +125,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_TRANS_OBJ:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 03 %p WLZ_TRANS_OBJ %p, "
+      	      ("WlzFreeObj %p WLZ_TRANS_OBJ %p, "
 	       "%d %p %d %p\n",
 	       obj, obj->domain.t,
 	       ((obj->domain.t)?(obj->domain.t)->linkcount: 0),
@@ -144,28 +142,28 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_2D_POLYGON:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 05 %p WLZ_2D_POLYGON %p\n",
+      	      ("WlzFreeObj %p WLZ_2D_POLYGON %p\n",
 	       obj, obj->domain.poly));
       errNum = WlzFreePolyDmn(obj->domain.poly);
       break;
 
     case WLZ_BOUNDLIST:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 06 %p WLZ_BOUNDLIST %p\n",
+      	      ("WlzFreeObj %p WLZ_BOUNDLIST %p\n",
 	       obj, obj->domain.b));
       errNum = WlzFreeBoundList(obj->domain.b);
       break;
 
     case WLZ_CONTOUR:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 06 %p WLZ_CONTOUR %p\n",
+      	      ("WlzFreeObj %p WLZ_CONTOUR %p\n",
 	       obj, obj->domain.ctr));
       errNum = WlzFreeContour(obj->domain.ctr);
       break;
 
     case WLZ_CONV_HULL:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 07 %p WLZ_CONV_HULL %p %p\n",
+      	      ("WlzFreeObj %p WLZ_CONV_HULL %p %p\n",
 	       obj, obj->domain.poly, obj->values.c));
       if( WlzFreePolyDmn(obj->domain.poly) ||
 	  WlzFreeConvHull(obj->values.c) ){
@@ -175,7 +173,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_CMESH_2D:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 03 %p WLZ_CMESH_2D %p, "
+      	      ("WlzFreeObj %p WLZ_CMESH_2D %p, "
 	       "%d %p %d %p\n",
 	       obj, obj->domain.cm2,
 	       ((obj->domain.cm2)? (obj->domain.cm2)->linkcount: 0),
@@ -198,7 +196,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
       break;
     case WLZ_CMESH_2D5:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 03 %p WLZ_CMESH_2D5 %p, "
+      	      ("WlzFreeObj %p WLZ_CMESH_2D5 %p, "
 	       "%d %p %d %p\n",
 	       obj, obj->domain.cm2d5,
 	       ((obj->domain.cm2d5)? (obj->domain.cm2d5)->linkcount: 0),
@@ -222,7 +220,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_CMESH_3D:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 03 %p WLZ_CMESH_3D %p, "
+      	      ("WlzFreeObj %p WLZ_CMESH_3D %p, "
 	       "%d %p %d %p\n",
 	       obj, obj->domain.cm3,
 	       ((obj->domain.cm3)?(obj->domain.cm3)->linkcount: 0),
@@ -246,28 +244,39 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_HISTOGRAM:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 08 %p WLZ_CONV_HULL %p\n",
+      	      ("WlzFreeObj %p WLZ_CONV_HULL %p\n",
 	       obj, obj->domain.hist));
       errNum = WlzFreeDomain(obj->domain);
       break;
 
     case WLZ_RECTANGLE:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 09 %p WLZ_RECTANGLE %p\n",
+      	      ("WlzFreeObj %p WLZ_RECTANGLE %p\n",
 	       obj, obj->domain.r));
       errNum = WlzFreeDomain(obj->domain);
       break;
 
     case WLZ_AFFINE_TRANS:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 12 %p WLZ_AFFINE_TRANS\n",
+      	      ("WlzFreeObj %p WLZ_AFFINE_TRANS\n",
 	       obj));
       errNum = WlzFreeAffineTransform(obj->domain.t);
       break;
 
+    case WLZ_LUT:
+      WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
+              ("WlzFreeObj %p WLZ_LUT\n",
+	      obj));
+      errNum = WlzFreeDomain(obj->domain);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzFreeLUTValues(obj->values);
+      }
+      break;
+
     case WLZ_COMPOUND_ARR_1:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 15 %p WLZ_COMPOUND_ARR_1\n",
+      	      ("WlzFreeObj %p WLZ_COMPOUND_ARR_1\n",
 	       ca));
       for (i=0; i<ca->n; i++){
 	if( WlzFreeObj(ca->o[i]) != WLZ_ERR_NONE ){
@@ -278,7 +287,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_COMPOUND_ARR_2:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 16 %p WLZ_COMPOUND_ARR_2\n",
+      	      ("WlzFreeObj %p WLZ_COMPOUND_ARR_2\n",
 	       ca));
       for (i=0; i<ca->n; i++){
 	if( WlzFreeObj(ca->o[i]) != WLZ_ERR_NONE ){
@@ -289,20 +298,20 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 
     case WLZ_PROPERTY_OBJ:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 17 %p WLZ_PROPERTY_OBJ\n",
+      	      ("WlzFreeObj %p WLZ_PROPERTY_OBJ\n",
 	       obj));
       errNum = WlzFreePropertyList(obj->plist);
       break;
 
     case WLZ_EMPTY_OBJ:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 18 %p WLZ_EMPTY_OBJ\n",
+      	      ("WlzFreeObj %p WLZ_EMPTY_OBJ\n",
 	       obj));
       break;
 
     default:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
-      	      ("WlzFreeObj 18 %p %d\n",
+      	      ("WlzFreeObj %p %d\n",
 	       obj, (int )(obj->type)));
       errNum = WLZ_ERR_OBJECT_TYPE;
       break;
@@ -380,6 +389,9 @@ WlzErrorNum WlzFreeDomain(WlzDomain domain)
 	  break;
 	case WLZ_CMESH_3D:
 	  errNum = WlzCMeshFree3D(domain.cm3);
+	  break;
+	case WLZ_3D_VIEW_STRUCT:
+	  errNum = WlzFree3DViewStruct(domain.vs3d);
 	  break;
 	default:
 	  /* Most domains are are freed in the same way. */

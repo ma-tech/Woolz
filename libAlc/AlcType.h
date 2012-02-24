@@ -1,13 +1,9 @@
 #ifndef ALCTYPE_H
 #define ALCTYPE_H
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _AlcType_h[] = "MRC HGU $Id$";
-#endif
+static char _AlcType_h[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libAlc/AlcType.h
@@ -17,10 +13,14 @@ static char _AlcType_h[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -39,8 +39,6 @@ static char _AlcType_h[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief        Type definitions for the Woolz type allocation
 *		library.
-* \todo		-
-* \bug          None known.
 */
 
 #ifdef __cplusplus
@@ -85,6 +83,102 @@ typedef struct _AlcBlockStack
   struct _AlcBlockStack *next;  /*!< Next block down, remember it's a
   				     doubly linked list not a stack! */
 } AlcBlockStack;
+
+#ifndef WLZ_EXT_BIND
+/*!
+* \typedef	AlcLRUCKeyFn
+* \ingroup	AlcLRUCache
+* \brief	Function called to compute a ::AlcLRUCache item's numeric
+* 		key given it's entry.
+* 		The required function parameters are the cache and the
+* 		entry.
+*/
+struct _AlcLRUCache;
+typedef unsigned int (*AlcLRUCKeyFn)(struct _AlcLRUCache *, void *);
+
+/*!
+* \typedef	AlcLRUCCmpFn
+* \ingroup	AlcLRUCache
+* \brief	Function called to compare two entries in a ::AlcLRUCache.
+* 		This function must return zero only iff the two entries
+* 		match.
+* 		The required function parameters are the two cache entry
+* 		data structures with sufficient fields set to make a
+* 		comparison.
+*/
+typedef int	(*AlcLRUCCmpFn)(const void *, const void *);
+
+/*!
+* \typedef	AlcLRUCCmpFn
+* \ingroup	AlcLRUCache
+* \brief	Function called when a ::AlcLRUCache item is unlinked and
+* 		removed from the cache. It may be used, for example, to
+* 		free the item's entry.
+* 		The required function parameters are the cache and the
+* 		entry that will be unlinked and removed.
+*/
+struct _AlcLRUCache;
+struct _AlcLRUCItem;
+typedef void	(*AlcLRUCUnlinkFn)(struct _AlcLRUCache *, void *);
+
+/*!
+* \struct	_AlcLRUCItem
+* \ingroup	AlcLRUCache
+* \brief	A cache item for a ::AlcLRUCache.
+* 		Typedef: ::AlcLRUCItem
+*/
+typedef struct	_AlcLRUCItem
+{
+  unsigned int	key;		/*!< Numeric key used as input to a hash
+  				     function to locate the item. */
+  size_t	sz;		/*!< Size of the item's entry. */
+  void          *entry;		/*!< User supplied entry. */
+  struct _AlcLRUCItem *rankPrv; /*!< Previous item in priority rank table. */
+  struct _AlcLRUCItem *rankNxt; /*!< Next item in priority rank table. */
+  struct _AlcLRUCItem *hashNxt; /*!< Next item in hash table or free
+      				     item list. */
+} AlcLRUCItem;
+
+/*!
+* \struct	_AlcLRUCache
+* \ingroup	AlcLRUCache
+* \brief	A least recent use removal cache allowing rank and random
+* 		access to it's entries. Rank access is via a doubly linked
+* 		list (using rankPrv and rankNxt), while random access is
+* 		via hash table (using the item's key and hashNxt).
+* 		The cache will unlink items as required to maintain the
+* 		set maximum number of entries and maximum total entry
+* 		size.
+* 		Typedef: ::AlcLRUCache
+*/
+typedef struct	_AlcLRUCache
+{
+  unsigned int	numItem;	/*!< Current number of items in the cache. */
+  unsigned int	maxItem;	/*!< Maximum number of items in the cache. */
+  size_t	curSz;		/*!< Current total cache size. */
+  size_t	maxSz;		/*!< Maximum total cache size. */
+  unsigned int	hashTblSz;	/*!< Size of the hash table. */
+  unsigned int  itemBlkSz;	/*!< Number of items to allocate in a block. */
+  AlcLRUCKeyFn	keyFn;		/*!< Function called to compute a numeric
+  				     key for an entry. */
+  AlcLRUCCmpFn	cmpFn;		/*!< Function called to compare two entries,
+  				     returning zero only iff the entries
+				     match. */
+  AlcLRUCUnlinkFn unlinkFn;	/*!< Function called before unlinking and
+  				     removing an item from the cache. */
+  struct _AlcBlockStack *freeStack; /*!< Stack of blocks of items. */
+  struct _AlcLRUCItem *freeList; /*!< Head of the linked list of free cache
+  				      items available for use. */
+  struct _AlcLRUCItem *rankHead; /*!< Head of the linked list of cache items
+  				      in priority rank order. This is
+				      maintained with the most recently used
+				      item at the head and the least recently
+				      used item at the tail. */
+  struct _AlcLRUCItem *rankTail; /*!< Tail of the linked list of cache items
+  				      in rank order. */
+  struct _AlcLRUCItem **hashTbl; /*!< Hash table of cache items. */
+} AlcLRUCache;
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \struct	_AlcCPQQueue
@@ -173,8 +267,12 @@ typedef enum _AlcDirection
 */
 typedef struct _AlcDLPItem
 {
+#ifdef WLZ_EXT_BIND
+  void          *freeFn;
+#else /* WLZ_EXT_BIND */
   void          (*freeFn)(void *); /*!< Function to free list item, may be
   					NULL */
+#endif /* WLZ_EXT_BIND */
   void          *entry;	    	/*!< The list item's entry */
   struct _AlcDLPItem *next;	/*!< The next item in the list, towards the
   				     tail of the list*/
@@ -193,7 +291,7 @@ typedef struct _AlcDLPList
   AlcDLPItem *head;	    	/*!< The head of the list */
 } AlcDLPList;
 
-
+#ifndef WLZ_EXT_BIND
 /*!
 * \struct	_AlcHashItem
 * \ingroup	AlcHashTable
@@ -226,7 +324,7 @@ typedef struct _AlcHashTable
   						hash table */
   AlcHashItem	**table;		   /*!< Table of lists */
 } AlcHashTable;
-
+#endif /* WLZ_EXT_BIND */
 
 
 /*!

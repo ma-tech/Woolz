@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzWriteObj_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzWriteObj_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzWriteObj.c
@@ -15,10 +11,14 @@ static char _WlzWriteObj_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,8 +37,6 @@ static char _WlzWriteObj_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Functions for writing Woolz objects.
 * \ingroup	WlzIO
-* \todo         -
-* \bug          None known.
 */
 
 #include <errno.h>
@@ -162,6 +160,16 @@ static WlzErrorNum		WlzWriteCMesh3D(
 static WlzErrorNum		WlzWriteIndexedValues(
 				  FILE *fP,
 				  WlzObject *obj);
+static WlzErrorNum 		WlzWriteLUTDomain(
+				  FILE *fP,
+				  WlzLUTDomain *lDom);
+static WlzErrorNum 		WlzWriteLUTValues(
+				  FILE *fP,
+				  WlzObject *obj);
+static WlzErrorNum 		WlzWrite3DViewStruct(
+				  FILE *fp,
+				  WlzThreeDViewStruct *vs);
+
 #ifdef WLZ_UNUSED_FUNCTIONS
 static WlzErrorNum 		WlzWriteBox2I(
 				  FILE *fP,
@@ -424,6 +432,9 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
       case WLZ_AFFINE_TRANS:
 	errNum = WlzWriteAffineTransform(fP, obj->domain.t);
 	break;
+      case WLZ_3D_VIEW_STRUCT:
+	errNum = WlzWrite3DViewStruct(fP, obj->domain.vs3d);
+	break;
       case WLZ_WARP_TRANS:
 	errNum = WlzWriteWarpTrans(fP, (WlzWarpTrans *)obj);
 	break;
@@ -438,8 +449,8 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
 	errNum = WlzWritePropertyList(fP, obj->plist);
 	break;
       case WLZ_CONV_HULL:
-	if((errNum = WlzWritePolygon(fP, obj->domain.poly))
-	   == WLZ_ERR_NONE){
+	if((errNum = WlzWritePolygon(fP, obj->domain.poly)) == WLZ_ERR_NONE)
+	{
 	  errNum = WlzWriteConvexHullValues(fP, obj->values.c);
 	}
 	break;
@@ -447,7 +458,15 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
 	errNum = WLZ_ERR_OBJECT_TYPE;
 	break;
       case WLZ_MESH_TRANS:
-	  errNum = WlzWriteMeshTransform2D(fP, obj->domain.mt);
+	errNum = WlzWriteMeshTransform2D(fP, obj->domain.mt);
+	break;
+      case WLZ_LUT:
+        if(((errNum = WlzWriteLUTDomain(fP, 
+	                                obj->domain.lut)) == WLZ_ERR_NONE) &&
+           ((errNum = WlzWriteLUTValues(fP, obj)) == WLZ_ERR_NONE))
+	{
+	  errNum = WlzWritePropertyList(fP, obj->plist);
+	}
 	break;
       /* Orphans and not yet implemented object types for I/O */
       case WLZ_CONVOLVE_INT:    /* FALLTHROUGH */
@@ -3255,7 +3274,7 @@ static WlzErrorNum WlzWriteTiledValueTable(FILE *fP, WlzObject *obj,
       putword(tVal->nIdx[2], fP);
       nIdx *= tVal->nIdx[2];
     }
-    errNum = WlzWriteInt(fP, tVal->indices, nIdx);
+    errNum = WlzWriteInt(fP, (int *)(tVal->indices), nIdx);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -3350,5 +3369,197 @@ static WlzErrorNum WlzWriteTiledValueTable(FILE *fP, WlzObject *obj,
                    strerror(errno));
   }
 #endif /* WLZ_DEBUG_WRITEOBJ */
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes a look up table domain to the given file.
+* \param	fP			Given file.
+* \param	lDom			Look up table domain.
+*/
+static WlzErrorNum WlzWriteLUTDomain(FILE *fP, WlzLUTDomain *lDom)
+{
+  const WlzUByte version = 1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(lDom == NULL)
+  {
+    if(putc(0, fP) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_EOF;
+    }
+  }
+  else
+  {
+    if((putc(lDom->type, fP) == EOF) ||
+       (putc(version, fP) == EOF) ||
+       (putword(lDom->bin1, fP) == 0) ||
+       (putword(lDom->lastbin, fP) == 0))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes look up table values to the given file.
+* \param	fP			Given file.
+* \param	obj			Look up table object.
+*/
+static WlzErrorNum WlzWriteLUTValues(FILE *fP, WlzObject *obj)
+{
+  const WlzUByte version = 1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(obj->values.core == NULL)
+  {
+    if(putc(0,fP) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_EOF;
+    }
+  }
+  else
+  {
+    WlzLUTDomain *lutDom;
+    WlzLUTValues *lutVal;
+
+    lutDom = obj->domain.lut;
+    lutVal = obj->values.lut;
+    if(lutVal->type != WLZ_LUT)
+    {
+      errNum = WLZ_ERR_VALUES_TYPE;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(putc((unsigned int )(lutVal->type), fP) == 0)
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int	i,
+      		n;
+      WlzGreyP	gP;
+
+      gP = lutVal->val;
+      (void )putc(version, fP);
+      (void )putc(lutVal->vType, fP);
+      n = lutDom->lastbin - lutDom->bin1 + 1;
+      (void )putword(n, fP);
+      switch(lutVal->vType)
+      {
+	case WLZ_GREY_INT:
+	  for(i = 0; i < n; ++i)
+	  {
+	    (void )putword(gP.inp[i], fP);
+	  }
+	  break;
+	case WLZ_GREY_SHORT:
+	  for(i = 0; i < n; ++i)
+	  {
+	    (void )putshort(gP.shp[i], fP);
+	  }
+	  break;
+	case WLZ_GREY_UBYTE:
+	  for(i = 0; i < n; ++i)
+	  {
+	    (void )putc(gP.ubp[i], fP);
+	  }
+	  break;
+	case WLZ_GREY_FLOAT:
+	  for(i = 0; i < n; ++i)
+	  {
+	    (void )putfloat(gP.flp[i], fP);
+	  }
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  for(i = 0; i < n; ++i)
+	  {
+	    (void )putdouble(gP.dbp[i], fP);
+	  }
+	  break;
+	case WLZ_GREY_RGBA:
+	  for(i = 0; i < n; ++i)
+	  {
+	    (void )putword(gP.rgbp[i], fP);
+	  }
+	  break;
+	default:
+	  break;
+      }
+      if(feof(fP))
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Writes a 3D section structure to the given open file.
+* \param	fP			Given file.
+* \param	vs			Given view.
+*/
+static WlzErrorNum WlzWrite3DViewStruct(FILE *fP, WlzThreeDViewStruct *vs)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* check for NULL */
+  if(vs == NULL)
+  {
+    if(putc((unsigned int )0, fP) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_EOF;
+    }
+  }
+  else
+  {
+    if(putc((unsigned int) vs->type, fP) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_EOF;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzWriteVertex3D(fP, &(vs->fixed), 1);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(!putdouble(vs->theta, fP) ||
+         !putdouble(vs->phi, fP) ||
+         !putdouble(vs->zeta, fP) ||
+         !putdouble(vs->dist, fP) ||
+         !putdouble(vs->scale, fP) ||
+         !putdouble(vs->voxelSize[0], fP) ||
+         !putdouble(vs->voxelSize[1], fP) ||
+         !putdouble(vs->voxelSize[2], fP) ||
+         !putword(vs->voxelRescaleFlg, fP) ||
+         (putc((unsigned int)vs->interp, fP) == EOF) ||
+         (putc((unsigned int)vs->view_mode, fP) == EOF))
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzWriteVertex3D(fP, &(vs->up), 1);
+    }
+  }
   return(errNum);
 }

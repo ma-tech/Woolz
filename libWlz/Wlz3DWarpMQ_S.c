@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _Wlz3DWarpMQ_S_c[] = "MRC HGU $Id$";
-#endif
+static char _Wlz3DWarpMQ_S_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/Wlz3DWarpMQ_S.c
@@ -15,10 +11,14 @@ static char _Wlz3DWarpMQ_S_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,8 +37,6 @@ static char _Wlz3DWarpMQ_S_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Generates a regular tetrahedral mesh for a 3D domain.
 * \ingroup	WlzTransform
-* \todo         -
-* \bug          None known.
 */
 
 /* This code started at 13/09/2001 by J. Rao 13/09/2001 
@@ -1208,7 +1206,7 @@ void WlzMakeAffine3D4pointsTrFn( WlzDVertex3 sr0,
 
 /*!
 * \return   None
-* \ingroup  WlzIO
+* \ingroup  WlzGeometry
 * \brief    output the orginal mesh.
 * \param    fp               pointer pointing to a specific file.
 * \param    wmt3D            mesh transform.
@@ -1286,7 +1284,7 @@ void WlzEffWriteMeshTransform3DWithoutDisplacementVTK(FILE *fp,
 
 /*!
 * \return   None
-* \ingroup  WlzIO
+* \ingroup  WlzGeometry
 * \brief    output the transformed mesh.
 * \param    fp               pointer pointing to a specific file.
 * \param    wmt3D            mesh transform.
@@ -1366,7 +1364,7 @@ void WlzEffWriteMeshTransform3DWithDisplacementVTK(FILE *fp,
 
 /*!
 * \return   None
-* \ingroup  WlzIO
+* \ingroup  WlzGeometry
 * \brief    output the cut plane in VTK format to a file.
 * \param    fp               pointer pointing to a specific file.
 * \param    wmt3D            mesh transform.
@@ -1454,7 +1452,7 @@ void static  WlzEffWriteCutplanTetrahedronVTK(FILE *fp,
 
 /*!
 * \return   None
-* \ingroup  WlzIO
+* \ingroup  WlzGeometry
 * \brief    output the original surface correspoinding to a cut plane in VTK format.
 * \param    fp               pointer pointing to a specific file.
 * \param    planepointsO     the  mesh array.
@@ -1843,7 +1841,7 @@ int static IsNeighbour(int *n, int *np, int *it)
 
 /* function:     write_Wlz2D5Mesh     */
 /*! 
-* \ingroup      WlzIO
+* \ingroup      WlzGeometry
 * \brief        Write 2D5 mesh for inspections.
 * \return       woolz error number
 * \param    fp	FILE pointer opened for writing.
@@ -2224,7 +2222,7 @@ static int	WlzMeshScanTriElm(WlzMeshScanWSp2D5 *mSnWSp,
 }
 
 /*! 
-* \ingroup      WlzIO
+* \ingroup      WlzGeometry
 * \brief        Write the section view parameters in the bibtex style
 *               record using the bibFile library.
 *
@@ -2591,7 +2589,7 @@ void  static Make2D5MeshDisplacement(WlzMeshTransform2D5 *wmt2D5,
 
 /*!
 * \return   None
-* \ingroup  WlzIO
+* \ingroup  WlzGeometry
 * \brief    output the orginal surface corresponding to the cut plane represented by the postion of
 *           the same mesh.
 * \param    fp               pointer pointing to a specific file.
@@ -2631,7 +2629,7 @@ void WlzEffWriteOriginalPlaneVTKByDis(FILE *fp, WlzMeshTransform2D5 *wmt2D5)
 
 /*!
 * \return   None
-* \ingroup  WlzIO
+* \ingroup  WlzGeometry
 * \brief    output the cutted plane.
 * \param    fp               pointer pointing to a specific file.
 * \param    wmt2D5           mesh transform.
@@ -3324,6 +3322,7 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 
 			 
 	                 case WLZ_INTERPOLATION_NEAREST:
+	                 case WLZ_INTERPOLATION_ORDER_2:
 	                   /* get grey value   */
 			   /*
 			      give them a back ground value.
@@ -3477,6 +3476,7 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 		        case WLZ_INTERPOLATION_CLASSIFY_1:
 		        case WLZ_INTERPOLATION_CALLBACK:
 	                case WLZ_INTERPOLATION_NEAREST:
+			case WLZ_INTERPOLATION_ORDER_2:
 	                  /* get grey value   */
 			  /*
 		          printf("xs: %f ys: %f zs %f\n",xs, ys, zs);
@@ -3534,6 +3534,7 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 		         case WLZ_INTERPOLATION_CLASSIFY_1:
 		         case WLZ_INTERPOLATION_CALLBACK:
 	                 case WLZ_INTERPOLATION_NEAREST:
+			 case WLZ_INTERPOLATION_ORDER_2:
 	                   /* get grey value   */
 			   /*
 			      give them a back ground value.
@@ -4958,7 +4959,7 @@ void static GetIntersectionTable( const int nxmax, const int nymax, const int nz
 /*!
 * - Project:      Woolz
 * - Return:       none 
-* - Ingroup:      WlzIO
+* - Ingroup:      WlzGeometry
 * - Title:        Read tiepoints
 * - Date:         18 January 2002 
 * - Author:       J. Rao, R. Baldock and B. Hill

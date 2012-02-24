@@ -1,24 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzExtFFAnl_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzExtFFNifti_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         libWlzExtFF/WlzExtFFAnl.c
+* \file         libWlzExtFF/WlzExtFFNifti.c
 * \author       Bill Hill
-* \date         February 2005
+* \date         February 2011
 * \version      $Id$
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -36,10 +36,8 @@ static char _WlzExtFFAnl_c[] = "MRC HGU $Id$";
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
 * \brief	Functions for reading and writting Woolz objects to
-* 		the ANALYZE 7.5 format file.
+* 		the NIfTI format.
 * \ingroup	WlzExtFF
-* \todo         -
-* \bug          None known.
 */
 
 #include <errno.h>
@@ -48,6 +46,7 @@ static char _WlzExtFFAnl_c[] = "MRC HGU $Id$";
 #include <string.h>
 #include <Wlz.h>
 #include <WlzExtFF.h>
+#if HAVE_NIFTI != 0
 #include <nifti1_io.h>
 
 static void			WlzEffNiftiCopyToObj1D(
@@ -95,6 +94,8 @@ static WlzErrorNum		WlzEffNiftiToWlzType(
 				  nifti_image *nim,
 				  int *dstNVPP,
 				  WlzGreyType *dstWGType);
+#endif
+
 /*!
 * \return	New Woolz object or NULL on error.
 * \ingroup	WlzExtFF
@@ -130,6 +131,18 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
 				    int spatialTr,
 				    int greySc,
 				    WlzErrorNum *dstErr)
+#if HAVE_NIFTI == 0
+{
+  WlzObject	*obj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
+
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(obj);
+}
+#else
 {
   nifti_image	*nim = NULL;
   WlzObject	*obj = NULL;
@@ -466,6 +479,7 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
   }
   return(obj);
 }
+#endif
 
 /*!
 * \return	Woolz error code.
@@ -477,6 +491,13 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
 * \param	obj			Given woolz object.
 */
 WlzErrorNum	WlzEffWriteObjNifti(const char *gvnFileName, WlzObject *obj)
+#if HAVE_NIFTI == 0
+{
+  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
+  
+  return(errNum);
+}
+#else
 {
   int		nDType;
   nifti_image	*nim = NULL;
@@ -710,7 +731,9 @@ WlzErrorNum	WlzEffWriteObjNifti(const char *gvnFileName, WlzObject *obj)
   }
   return(errNum);
 }
+#endif
 
+#if HAVE_NIFTI != 0
 /*!
 * \return	New Woolz object or NULL on error.
 * \ingroup	WlzExtFF
@@ -1317,3 +1340,4 @@ static int 	WlzEffNiftiFromWlzGType(WlzGreyType wGType, WlzErrorNum *dstErr)
   }
   return(nDType);
 }
+#endif

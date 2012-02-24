@@ -1,24 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzTstVxInSimplex_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzTstVxInSimplex_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzTstVxInSimplex.c
+* \file         binWlzTst/WlzTstVxInSimplex.c
 * \author       Bill Hill
 * \date         July 2007
 * \version      $Id$
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2007 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,9 +37,7 @@ static char _WlzTstVxInSimplex_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Test program for WlzGeomVxInTriangle() and
 * 		WlzGeomVxInTetrahedron().
-* \ingroup	WlzTst
-* \todo         -
-* \bug          None known.
+* \ingroup	BinWlzTst
 */
 
 #include <stdio.h>
@@ -67,14 +65,16 @@ int		main(int argc, char *argv[])
   int		inside,
   		option,
   		dim = 2,
+		tri = 0,
   		ok = 1,
   		usage = 0,
 		verbose = 0;
+  double	eps = 1.0e-6;
   WlzDVertex3	vP;
   WlzDVertex2	vP2;
   WlzDVertex3	v[4];
   WlzDVertex2	v2[3];
-  static char   optList[] = "23hvp:";
+  static char   optList[] = "23htvp:";
 
 
   while((usage == 0) && ((option = getopt(argc, argv, optList)) != EOF))
@@ -93,6 +93,9 @@ int		main(int argc, char *argv[])
 	  usage = 1;
 	}
         break;
+      case 't':
+        tri = 1;
+	break;
       case 'v':
         verbose = 1;
 	break;
@@ -105,8 +108,15 @@ int		main(int argc, char *argv[])
   ok = usage == 0;
   if(ok)
   {
-    if(((optind + dim + 1) != argc) ||
-       (WlzTstInGetPosition(dim + 1, &(v[0]), dim, argv + optind) != dim + 1))
+    int	nv;
+
+    if(dim == 2)
+    {
+      tri = 1;
+    }
+    nv = (tri != 0)? 3: 4;
+    if(((optind + nv) != argc) ||
+       (WlzTstInGetPosition(nv, &(v[0]), dim, argv + optind) != nv))
     {
       usage = 1;
       ok = 0;
@@ -124,7 +134,7 @@ int		main(int argc, char *argv[])
       if(verbose)
       {
 	(void )printf("(%g,%g) is %s triangle (%g,%g), "
-	              "(%g,%g), (%g,%g).\n",
+		      "(%g,%g), (%g,%g).\n",
 		       vP2.vtX, vP2.vtY,
 		       WlzTstInValueToStr(inside),
 		       v2[0].vtX, v2[0].vtY,
@@ -134,28 +144,50 @@ int		main(int argc, char *argv[])
       }
       else
       {
-        (void )printf("%d", inside);
+	(void )printf("%d", inside);
       }
     }
     else /* dim == 3 */
     {
-      inside = WlzGeomVxInTetrahedron(v[0], v[1], v[2], v[3],
-                                      vP);
-      if(verbose)
+      if(tri == 0)
       {
-	(void )printf("(%g,%g,%g) is %s tetrahedron (%g,%g,%g), "
-	               "(%g,%g,%g), (%g,%g,%g), (%g,%g,%g).\n",
-		       vP.vtX, vP.vtY, vP.vtZ,
-		       WlzTstInValueToStr(inside),
-		       v[0].vtX, v[0].vtY, v[0].vtZ,
-		       v[1].vtX, v[1].vtY, v[1].vtZ,
-		       v[2].vtX, v[2].vtY, v[2].vtZ,
-		       v[3].vtX, v[3].vtY, v[3].vtZ);
+	inside = WlzGeomVxInTetrahedron(v[0], v[1], v[2], v[3],
+					vP);
+	if(verbose)
+	{
+	  (void )printf("(%g,%g,%g) is %s tetrahedron (%g,%g,%g), "
+			 "(%g,%g,%g), (%g,%g,%g), (%g,%g,%g).\n",
+			 vP.vtX, vP.vtY, vP.vtZ,
+			 WlzTstInValueToStr(inside),
+			 v[0].vtX, v[0].vtY, v[0].vtZ,
+			 v[1].vtX, v[1].vtY, v[1].vtZ,
+			 v[2].vtX, v[2].vtY, v[2].vtZ,
+			 v[3].vtX, v[3].vtY, v[3].vtZ);
 
+	}
+	else
+	{
+	  (void )printf("%d", inside);
+	}
       }
       else
       {
-        (void )printf("%d", inside);
+	inside = WlzGeomVxInTriangle3D(v[0], v[1], v[2], vP, eps);
+	if(verbose)
+	{
+	  (void )printf("(%g,%g,%g) is %s triangle (%g,%g,%g), "
+			 "(%g,%g,%g), (%g,%g,%g).\n",
+			 vP.vtX, vP.vtY, vP.vtZ,
+			 WlzTstInValueToStr(inside),
+			 v[0].vtX, v[0].vtY, v[0].vtZ,
+			 v[1].vtX, v[1].vtY, v[1].vtZ,
+			 v[2].vtX, v[2].vtY, v[2].vtZ);
+
+	}
+	else
+	{
+	  (void )printf("%d", inside);
+	}
       }
     }
   }
@@ -165,9 +197,11 @@ int		main(int argc, char *argv[])
     "Usage: %s [-2|3] [-p <query vertex position>] [-v]\n"
     "                         <vertex position list>\n"
     "Options are:\n"
-    " -2  Simplex is a triangle.\n"
-    " -3  simplex is a tetrahedron.\n"
+    " -2  Simplex is in 2D, this implies that the simplex is a triangle.\n"
+    " -3  Simplex is in 3D and may either be a triangle or tetrahedron.\n"
     " -p  Query position.\n"
+    " -t  Forces the simplex to be a triangle (rather than the default\n"
+    "     tetrahedron) if dimension is 3.\n"
     " -v  Verbose output.\n"
     "Each psoition must be given as a comma seperated list of floating point\n"
     "point values and the vertices of the vertex position list must be\n"

@@ -1,13 +1,9 @@
 #ifndef ALCPROTO_H
 #define ALCPROTO_H
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _AlcProto_h[] = "MRC HGU $Id$";
-#endif
+static char _AlcProto_h[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libAlc/AlcProto.h
@@ -17,10 +13,14 @@ static char _AlcProto_h[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -39,8 +39,6 @@ static char _AlcProto_h[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief        Function prototypes for the Woolz type allocation 
 *		library.
-* \todo		-
-* \bug          None known.
 */
 
 #ifdef __cplusplus
@@ -385,6 +383,7 @@ extern AlcCPQItem               *AlcCPQItemUnlink(
 /************************************************************************
 * AlcDLPList.c
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern AlcDLPList 		*AlcDLPListNew(
 				  AlcErrno *dstErr);
 extern AlcErrno			AlcDLPListFree(
@@ -434,6 +433,7 @@ extern AlcErrno			AlcDLPListSort(
 				  AlcDLPList *list,
 				  int (*entryCompFn)(void *,
 				                     void *));
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * AlcFreeStack.c
@@ -452,6 +452,7 @@ extern AlcErrno			AlcFreeStackFree(
 /************************************************************************
 * AlcHashTable.c
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern AlcHashTable		*AlcHashTableNew(
 				  size_t tableSz,
 				  int (*keyCmp)(void *, void *),
@@ -501,6 +502,8 @@ extern int			AlcHashItemOrder(
 				  AlcHashTable *hTbl,
 				  AlcHashItem *item0,
 				  AlcHashItem *item1);
+#endif /* WLZ_EXT_BIND */
+
 /************************************************************************
 * AlcHeap.c
 ************************************************************************/
@@ -566,10 +569,72 @@ extern AlcKDTNode	       *AlcKDTGetNN(
 				  AlcErrno *dstErr);
 
 /************************************************************************
+* AlcLRUCache.c
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern AlcLRUCache     		*AlcLRUCacheNew(
+				  unsigned int maxItem,
+				  size_t maxSz,
+				  AlcLRUCKeyFn keyFn,
+				  AlcLRUCCmpFn cmpFn,
+				  AlcLRUCUnlinkFn unlinkFn,
+				  AlcErrno *dstErr);
+extern AlcLRUCItem    		*AlcLRUCEntryAdd(
+				  AlcLRUCache *cache,
+				  size_t entrySz,
+				  void *entry,
+				  int *dstNewFlg);
+extern AlcLRUCItem    		*AlcLRUCEntryAddWithKey(
+				  AlcLRUCache *cache,
+				  size_t entrySz,
+				  void *entry,
+				  unsigned int key,
+				  int *dstNewFlg);
+extern AlcLRUCItem 		*AlcLRUCItemFind(
+				  AlcLRUCache *cache,
+				  unsigned int key,
+				  void *entry);
+extern unsigned int		AlcLRUCKeyGetNHashItem(
+				  AlcLRUCache *cache,
+				  unsigned int key);
+extern void            		*AlcLRUCEntryGet(
+				  AlcLRUCache *cache,
+				  void *entry);
+extern void            		*AlcLRUCEntryGetWithKey(
+				  AlcLRUCache *cache,
+				  unsigned int key,
+				  void *entry);
+extern void            		AlcLRUCacheFree(
+				  AlcLRUCache *cache,
+				  int unlink);
+extern void            		AlcLRUCEntryRemove(
+				  AlcLRUCache *cache,
+				  void *entry);
+extern void            		AlcLRUCEntryRemoveWithKey(
+				  AlcLRUCache *cache,
+				  unsigned int key,
+				  void *entry);
+extern void            		AlcLRUCEntryRemoveAll(
+				  AlcLRUCache *cache);
+extern void            		AlcLRUCacheMaxSz(
+				  AlcLRUCache *cache,
+				  size_t newMaxSz);
+extern void    			AlcLRUCacheFacts(
+				  AlcLRUCache *cache,
+				  FILE *fP);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
 * AlcString.c
 ************************************************************************/
 extern char			*AlcStrDup(
-				  const char *srcStr);
+				  const char *sStr);
+extern char			*AlcStrCat3(
+				  const char *s0Str,
+				  const char *s1Str,
+				  const char *s2Str);
+extern unsigned int    		AlcStrSFHash(
+				  const char *sStr);
 
 /************************************************************************
 * AlcVector.c
@@ -625,3 +690,4 @@ extern AlcVector		*AlcVecReadDouble2Asci(
 #endif /* __cplusplus */
 
 #endif /* ALCPROTO_H */
+

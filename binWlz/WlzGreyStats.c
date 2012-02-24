@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzGreyStats_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzGreyStats_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         binWlz/WlzGreyStats.c
@@ -15,10 +11,14 @@ static char _WlzGreyStats_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,13 +37,10 @@ static char _WlzGreyStats_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Calculates simple statistics for a domain object's grey values.
 * \ingroup	BinWlz
-* \todo         -
-* \bug          None known.
 *
 * \par Binary
 * \ref wlzgreystats "WlzGreyStats"
 */
-
 
 /*!
 \ingroup      BinWlz
@@ -253,12 +250,12 @@ int             main(int argc, char **argv)
 	  (void )fprintf(fP,
 			 "area        %d\n"
 			 "grey type   %s\n"
-			 "min         (%g, %g, %g, %g)\n"
-			 "max         (%g, %g, %g, %g)\n"
-			 "sum         (%g, %g, %g, %g)\n"
-			 "sum sq      (%g, %g, %g, %g)\n"
-			 "mean        (%g, %g, %g, %g)\n"
-			 "std dev     (%g, %g, %g, %g)\n",
+			 "min         (%lg, %lg, %lg, %lg)\n"
+			 "max         (%lg, %lg, %lg, %lg)\n"
+			 "sum         (%lg, %lg, %lg, %lg)\n"
+			 "sum sq      (%lg, %lg, %lg, %lg)\n"
+			 "mean        (%lg, %lg, %lg, %lg)\n"
+			 "std dev     (%lg, %lg, %lg, %lg)\n",
 			 area, WlzStringFromGreyType(gType, NULL),
 			 minA[0], minA[1], minA[2], minA[3],
 			 maxA[0], maxA[1], maxA[2], maxA[3],
@@ -270,9 +267,9 @@ int             main(int argc, char **argv)
 	else
 	{
 	  (void )fprintf(fP,
-			 "%d %s (%g,%g,%g,%g) (%g %g %g %g)\n"
-			 "(%g,%g,%g,%g) (%g %g %g %g)\n"
-			 "(%g,%g,%g,%g) (%g %g %g %g)\n",
+			 "%d %s (%lg,%lg,%lg,%lg) (%lg %lg %lg %lg)\n"
+			 "(%lg,%lg,%lg,%lg) (%lg %lg %lg %lg)\n"
+			 "(%lg,%lg,%lg,%lg) (%lg %lg %lg %lg)\n",
 			 area, WlzStringFromGreyType(gType, NULL),
 			 minA[0], minA[1], minA[2], minA[3],
 			 maxA[0], maxA[1], maxA[2], maxA[3],
@@ -282,7 +279,8 @@ int             main(int argc, char **argv)
 			 stdDevA[0], stdDevA[1], stdDevA[2], stdDevA[3]);
 	}
       }
-      else {
+      else
+      {
 	if(verbose)
 	{
 	  (void )fprintf(fP,
@@ -299,7 +297,7 @@ int             main(int argc, char **argv)
 	}
 	else
 	{
-	  (void )fprintf(fP, "%d %s %g %g %g %g %g %g\n",
+	  (void )fprintf(fP, "%d %s %lg %lg %lg %lg %lg %lg\n",
 			 area, WlzStringFromGreyType(gType, NULL),
 			 min, max, sum, sumSq, mean, stdDev);
 	}

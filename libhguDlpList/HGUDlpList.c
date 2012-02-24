@@ -1,24 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _HGUDlpList_c[] = "MRC HGU $Id$";
-#endif
+static char _HGUDlpList_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         HGUDlpList.c
+* \file         libhguDlpList/HGUDlpList.c
 * \author       Bill Hill
 * \date         March 1999
 * \version      $Id$
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -38,8 +38,6 @@ static char _HGUDlpList_c[] = "MRC HGU $Id$";
 * \brief	Data structures and functions for doubly linked lists
 * 		of pointers.
 * \ingroup	hguDlpList
-* \todo         -
-* \bug          None known.
 */
 
 #define HGUDLPLIST_C
@@ -52,14 +50,24 @@ static char _HGUDlpList_c[] = "MRC HGU $Id$";
 #include <assert.h>
 #include <HGUDlpList.h>
 
-static HGUDlpListItem *HGUDlpListPvItemCreate(void *, void (*)(void *));
-static int	HGUDlpListPvUnlock(HGUDlpList *),
-		HGUDlpListPvLock(HGUDlpList *);
-static void	HGUDlpListPvDeleteAll(HGUDlpList *),
-		HGUDlpListPvSort(HGUDlpListItem *, HGUDlpListItem *, int, int,
-				 int (*)(void *, void *));
-static HGUDlpListItem *HGUDlpListPvDelRmItem(HGUDlpList *, HGUDlpListItem *,
-					     int);
+static HGUDlpListItem 		*HGUDlpListPvItemCreate(
+				  void *, void (*)(void *));
+static int			HGUDlpListPvUnlock(
+				  HGUDlpList *);
+static int			HGUDlpListPvLock(
+				  HGUDlpList *);
+static void			HGUDlpListPvDeleteAll(
+				  HGUDlpList *);
+static void			HGUDlpListPvSort(
+				  HGUDlpListItem *,
+				  HGUDlpListItem *,
+				  int,
+				  int,
+				  int (*)(void *, void *));
+static HGUDlpListItem 		*HGUDlpListPvDelRmItem(
+				  HGUDlpList *,
+				  HGUDlpListItem *,
+				  int);
 
 /*!
 * \return	List data structure, or NULL on error.

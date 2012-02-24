@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzStringTypes_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzStringTypes_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzStringTypes.c
@@ -15,10 +11,14 @@ static char _WlzStringTypes_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -38,8 +38,6 @@ static char _WlzStringTypes_c[] = "MRC HGU $Id$";
 * \brief	Functions for converting between Woolz data types and
 * 		string representations (names) of the types.
 * \ingroup	WlzStrings
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -173,6 +171,12 @@ const char	*WlzStringFromObjTypeValue(WlzObjectType objType,
     case WLZ_CMESH_TRANS:
       oTypeStr = "WLZ_CMESH_TRANS";
       break;
+    case WLZ_LUT:
+      oTypeStr = "WLZ_LUT";
+      break;
+    case WLZ_3D_VIEW_STRUCT:
+      oTypeStr = "WLZ_3D_VIEW_STRUCT";
+      break;
     default:
       errNum = WLZ_ERR_OBJECT_TYPE;
       break;
@@ -227,6 +231,8 @@ WlzObjectType	WlzStringToObjType(const char *oTypeStr,
 		"WLZ_EMPTY_OBJ", WLZ_EMPTY_OBJ,
 		"WLZ_MESH_TRANS", WLZ_MESH_TRANS,
 		"WLZ_CMESH_TRANS", WLZ_CMESH_TRANS,
+		"WLZ_LUT", WLZ_LUT,
+		"WLZ_3D_VIEW_STRUCT", WLZ_3D_VIEW_STRUCT,
 		NULL))
   {
     oType = (WlzObjectType )tI0;
@@ -400,6 +406,12 @@ const char	*WlzStringFromObjDomainType(WlzObject *obj,
 	    break;
 	}
         break;
+      case WLZ_LUT:
+        oDomTypeStr = "WLZ_LUT";
+	break;
+      case WLZ_3D_VIEW_STRUCT:
+	oDomTypeStr = "WLZ_3D_VIEW_STRUCT";
+	break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
         break;
@@ -451,6 +463,7 @@ WlzObjectType	WlzStringToObjDomainType(const char *oDomTypeStr,
 		"WLZ_HISTOGRAMDOMAIN_FLOAT", WLZ_HISTOGRAMDOMAIN_FLOAT,
 		"WLZ_RECTANGLE_DOMAIN_INT", WLZ_RECTANGLE_DOMAIN_INT,
 		"WLZ_RECTANGLE_DOMAIN_FLOAT", WLZ_RECTANGLE_DOMAIN_FLOAT,
+		"WLZ_LUT", WLZ_LUT,
 		NULL))
   {
     oDomType = (WlzObjectType )tI0;
@@ -488,6 +501,9 @@ const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
   {
     switch(obj->values.core->type)
     {
+      case WLZ_LUT:
+        oValTypeStr = "WLZ_LUT";
+	break;
       case WLZ_INDEXED_VALUES:
 	oValTypeStr = "WLZ_INDEXED_VALUES";
         break;
@@ -573,6 +589,7 @@ WlzObjectType	WlzStringToObjValuesType(const char *oValTypeStr,
 		"WLZ_GREY_TAB_RECT", WLZ_GREY_TAB_RECT,
 		"WLZ_GREY_TAB_INTL", WLZ_GREY_TAB_INTL,
 		"WLZ_VOXELVALUETABLE_GREY", WLZ_VOXELVALUETABLE_GREY,
+		"WLZ_LUT", WLZ_LUT,
 		NULL))
   {
     oValType = (WlzObjectType )tI0;

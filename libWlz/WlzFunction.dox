@@ -1,29 +1,42 @@
-#pragma ident "MRC HGU $Id$"
 /*!
-* \file         WlzFunction.dox
+* \file         libWlz/WlzFunction.dox
 * \author       Bill Hill
-* \date         January 2003
+* \date         February 2012
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief        Documentation for the WlzFunction module.
-* \todo         -
-* \bug          None known.
-*/
-
-/*!
-* \ingroup	Wlz
-* \defgroup	WlzFunction	WlzFunction
+* \par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Defines Doxygen group WlzFunction.
 *
 * A basis function is the sum of a set of radialy symetric
 * component functions. With each component function defined by node
 * and some set of parameters which specify the value of points
 * distant from the node, the values having radial symmetry. 
+* \ingroup	Wlz
+* \defgroup	WlzFunction	WlzFunction
 */
 

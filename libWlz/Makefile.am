@@ -1,16 +1,20 @@
 ##
-# \file         Makefile.am
+# \file         libWlz/Makefile.am
 # \author       Bill Hill
-# \date         November 2007
+# \date         February 2012
 # \version      $Id$
 # \par
 # Address:
 #               MRC Human Genetics Unit,
+#               MRC Institute of Genetics and Molecular Medicine,
+#               University of Edinburgh,
 #               Western General Hospital,
 #               Edinburgh, EH4 2XU, UK.
 # \par
-# Copyright (C) 2005 Medical research Council, UK.
-#
+# Copyright (C), [2012],
+# The University Court of the University of Edinburgh,
+# Old College, Edinburgh, UK.
+# 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -26,7 +30,6 @@
 # License along with this program; if not, write to the Free
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA  02110-1301, USA.
-#
 # \brief        Process this file with automake to produce Makefile.in
 # \todo         -
 # \bug          None known.
@@ -85,6 +88,7 @@ libWlz_la_SOURCES 	= \
 			  WlzContour.c \
 			  WlzConvertPix.c \
 			  WlzConvexHull.c \
+			  WlzConvexHullClarkson.c \
 			  WlzConvolve.c \
 			  WlzCopy.c \
 			  WlzCutObjToBox.c \
@@ -124,6 +128,7 @@ libWlz_la_SOURCES 	= \
 			  WlzGreyNormalise.c \
 			  WlzGreyRange.c \
 			  WlzGreyScan.c \
+			  WlzGreySetHilbert.c \
 			  WlzGreySetRange.c \
 			  WlzGreySetRangeLut.c \
 			  WlzGreySetIncValues.c \
@@ -152,6 +157,7 @@ libWlz_la_SOURCES 	= \
 			  WlzLaplacian.c \
 			  WlzLBTDomain.c \
 			  WlzLineArea.c \
+			  WlzLUT.c \
 			  WlzMakeAffineTransform.c \
 			  WlzMakeCompound.c \
 			  WlzMakeIntervalValues.c \

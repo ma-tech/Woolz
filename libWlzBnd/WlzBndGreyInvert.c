@@ -1,30 +1,44 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzBndGreyInvert_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzBndGreyInvert_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzBndGreyInvert.c
+* \file         libWlzBnd/WlzBndGreyInvert.c
 * \author       Guangjie Feng
 * \date         August 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief
-* \todo         -
-* \bug          None known.
+* \par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Binding for Woolz grey inversion.
+* \ingroup	LibWlzBnd
 */
+
 #include <WlzBnd.h>
 
 /*!
@@ -35,21 +49,6 @@ static char _WlzBndGreyInvert_c[] = "MRC HGU $Id$";
 *		grey range as in the Woolz binary.
 * \param	obj			Given object.
 */
-/*
-WlzErrorNum	WlzBndGreyInvert(WlzObject *obj)
-{
-  WlzPixelV	min,
-  		max;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if((errNum = WlzGreyRange(obj, &min, &max)) == WLZ_ERR_NONE)
-  {
-    errNum = WlzGreyInvertMinMax(obj, min, max);
-  }
-  return(errNum);
-}
-*/
-
 WlzErrorNum	WlzBndGreyInvert(WlzObject *obj)
 {
   WlzPixelV	min, max, gmin, gmax;

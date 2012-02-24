@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _Wlz3DViewStructUtils_c[] = "MRC HGU $Id$";
-#endif
+static char _Wlz3DViewStructUtils_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/Wlz3DViewStructUtils.c
@@ -15,10 +11,14 @@ static char _Wlz3DViewStructUtils_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,8 +37,6 @@ static char _Wlz3DViewStructUtils_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Utility functions associated with 3D views.
 * \ingroup	WlzSectionTransform
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -53,38 +51,6 @@ static double viewStructAtan2(
     return 0.0;
   }
   return atan2(x, y);
-}
-
-/*!
-* \return				The 3D view or NULL on error.
-* \ingroup      WlzSectionTransform
-* \brief	Reads a 3D section structure from a file.
-* \param	fp			Input file pointer.
-* \param	dstErr			Destination pointer for an error
-*					code, may be NULL.
-*/
-WlzThreeDViewStruct *WlzRead3DViewStruct(
-  FILE		*fp,
-  WlzErrorNum	*dstErr)
-{
-  if( dstErr ){
-    *dstErr = WLZ_ERR_UNSPECIFIED;
-  }
-  return NULL;
-}
-
-/*!
-* \return				Woolz error code.
-* \ingroup      WlzSectionTransform
-* \brief	Writes a 3D section structure to a file.
-* \param	fp			Output file pointer.
-* \param	viewstr			Given view.
-*/
-WlzErrorNum WlzWrite3DViewStruct(
-  FILE			*fp,
-  WlzThreeDViewStruct	*viewstr)
-{
-  return WLZ_ERR_UNSPECIFIED ;
 }
 
 /*!
@@ -314,16 +280,14 @@ static void setupEulerRotationMatrix(
 /*!
 * \return				Woolz error code.
 * \ingroup      WlzSectionTransform
-* \brief	Sets up the affine transform of the given view including scale.
-*               This does not require any initialisation. The intialisation mask
-*               will have the WLZ_3DVIEWSTRUCT_INIT_TRANS bit set.
-*               
-*               By default the scale parameters are not used. Scaling is enabled
-*               by setting bits in the voxelRescaleFlg: setting bit 1 will switch
-*               on voxel-size rescaling; setting bit 2 will enable global scaling.
-*               
-*               
-*               
+* \brief	Sets up the affine transform of the given view including
+* 		scale. This does not require any initialisation. The
+* 		intialisation mask will have the WLZ_3DVIEWSTRUCT_INIT_TRANS
+* 		bit set.
+* 		By default the scale parameters are not used. Scaling is
+* 		enabled by setting bits in the voxelRescaleFlg:
+* 		  setting bit 1 will switch on voxel-size rescaling;
+* 		  setting bit 2 will enable global scaling.
 * \param	viewStr			Given view.
 */
 WlzErrorNum WlzInit3DViewStructAffineTransform(

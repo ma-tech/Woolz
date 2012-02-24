@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzGreyValue_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzGreyValue_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzGreyValue.c
@@ -15,10 +11,14 @@ static char _WlzGreyValue_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -38,8 +38,6 @@ static char _WlzGreyValue_c[] = "MRC HGU $Id$";
 * \brief	Provides functions for random access to the grey values
 * 		of 2D and 3D domain objects.
 * \ingroup	WlzAccess
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -1126,40 +1124,43 @@ static void	WlzGreyValueGet2D1(WlzGreyValueWSpace *gVWSp,
   WlzIntervalLine *itvLn;
 
   gVWSp->bkdFlag = 0;
-  kol1 = gVWSp->iDom2D->kol1;
-  if((gVWSp->values2D.core) && 
-     (kol >= kol1) && (kol <= gVWSp->iDom2D->lastkl))
+  if(gVWSp->iDom2D != NULL)
   {
-    if((line >= gVWSp->iDom2D->line1) && (line <= gVWSp->iDom2D->lastln))
+    kol1 = gVWSp->iDom2D->kol1;
+    if((gVWSp->values2D.core) && 
+       (kol >= kol1) && (kol <= gVWSp->iDom2D->lastkl))
     {
-      if(gVWSp->iDom2D->type == WLZ_INTERVALDOMAIN_RECT)
+      if((line >= gVWSp->iDom2D->line1) && (line <= gVWSp->iDom2D->lastln))
       {
-	valSet = 1;
-	WlzGreyValueComputeGreyP2D(&baseGVP, &offset, gVWSp, line, kol);
-	WlzGreyValueSetGreyP(gVWSp->gVal, gVWSp->gPtr, gVWSp->gType,
-			     baseGVP, offset);
-      }
-      else	          /* gVWSp->iDom2D->type == WLZ_INTERVALDOMAIN_INTVL */
-      {
-	itvLn = gVWSp->iDom2D->intvlines + line - gVWSp->iDom2D->line1;
-	count = itvLn->nintvs;
-	itv = itvLn->intvs;
-	kolRel = kol - kol1;
-	while(count-- > 0)
+	if(gVWSp->iDom2D->type == WLZ_INTERVALDOMAIN_RECT)
 	{
-	  if(kolRel < itv->ileft)
+	  valSet = 1;
+	  WlzGreyValueComputeGreyP2D(&baseGVP, &offset, gVWSp, line, kol);
+	  WlzGreyValueSetGreyP(gVWSp->gVal, gVWSp->gPtr, gVWSp->gType,
+			       baseGVP, offset);
+	}
+	else	          /* gVWSp->iDom2D->type == WLZ_INTERVALDOMAIN_INTVL */
+	{
+	  itvLn = gVWSp->iDom2D->intvlines + line - gVWSp->iDom2D->line1;
+	  count = itvLn->nintvs;
+	  itv = itvLn->intvs;
+	  kolRel = kol - kol1;
+	  while(count-- > 0)
 	  {
-	    break;
+	    if(kolRel < itv->ileft)
+	    {
+	      break;
+	    }
+	    else if(kolRel <= itv->iright)
+	    {
+	      valSet = 1;
+	      WlzGreyValueComputeGreyP2D(&baseGVP, &offset, gVWSp, line, kol);
+	      WlzGreyValueSetGreyP(gVWSp->gVal, gVWSp->gPtr, gVWSp->gType,
+				   baseGVP, offset);
+	      break;
+	    }
+	    ++itv;
 	  }
-	  else if(kolRel <= itv->iright)
-	  {
-	    valSet = 1;
-	    WlzGreyValueComputeGreyP2D(&baseGVP, &offset, gVWSp, line, kol);
-	    WlzGreyValueSetGreyP(gVWSp->gVal, gVWSp->gPtr, gVWSp->gType,
-	    			 baseGVP, offset);
-	    break;
-	  }
-	  ++itv;
 	}
       }
     }

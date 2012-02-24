@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzCopy_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzCopy_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzCopy.c
@@ -15,10 +11,14 @@ static char _WlzCopy_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,8 +37,6 @@ static char _WlzCopy_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Functions to make 'deep' copies of objects.
 * \ingroup	WlzAllocation
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -48,6 +46,9 @@ static char _WlzCopy_c[] = "MRC HGU $Id$";
 
 static WlzSimpleProperty  	*WlzCopySimpleProperty(
 				  WlzSimpleProperty *PList,
+				  WlzErrorNum *dstErr);
+static WlzLUTValues 		*WlzCopyLUTValues(
+				  WlzLUTValues *inVal,
 				  WlzErrorNum *dstErr);
 static WlzErrorNum 		WlzCopyObjectGreyValues2D(
 				  WlzObject *dObj,
@@ -101,15 +102,17 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
   {
     switch(inObj->type)
     {
-      case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
-      case WLZ_3D_DOMAINOBJ: /* FALLTHROUGH */
-      case WLZ_TRANS_OBJ:    /* FALLTHROUGH */
-      case WLZ_AFFINE_TRANS:
-      case WLZ_HISTOGRAM:
-      case WLZ_PROPERTY_OBJ:
-      case WLZ_2D_POLYGON:
-      case WLZ_BOUNDLIST:
-      case WLZ_CONTOUR:
+      case WLZ_2D_DOMAINOBJ:   /* FALLTHROUGH */
+      case WLZ_3D_DOMAINOBJ:   /* FALLTHROUGH */
+      case WLZ_3D_VIEW_STRUCT: /* FALLTHROUGH */
+      case WLZ_TRANS_OBJ:      /* FALLTHROUGH */
+      case WLZ_AFFINE_TRANS:   /* FALLTHROUGH */
+      case WLZ_HISTOGRAM:      /* FALLTHROUGH */
+      case WLZ_PROPERTY_OBJ:   /* FALLTHROUGH */
+      case WLZ_2D_POLYGON:     /* FALLTHROUGH */
+      case WLZ_BOUNDLIST:      /* FALLTHROUGH */
+      case WLZ_CONTOUR:        /* FALLTHROUGH */
+      case WLZ_LUT:
 	dom = WlzCopyDomain(inObj->type, inObj->domain, &errNum);
 	if(inObj->values.core)
 	{
@@ -128,18 +131,18 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
       case WLZ_EMPTY_OBJ:
         outObj = WlzMakeEmpty(&errNum);
 	break;
-      case WLZ_CONV_HULL:
-      case WLZ_3D_WARP_TRANS:
-      case WLZ_3D_POLYGON:
-      case WLZ_RECTANGLE:
-      case WLZ_CONVOLVE_INT:
-      case WLZ_CONVOLVE_FLOAT:
-      case WLZ_WARP_TRANS:
-      case WLZ_FMATCHOBJ:
-      case WLZ_TEXT:
-      case WLZ_COMPOUND_ARR_1:
-      case WLZ_COMPOUND_ARR_2:
-      case WLZ_COMPOUND_LIST_1:
+      case WLZ_CONV_HULL:       /* FALLTHROUGH */
+      case WLZ_3D_WARP_TRANS:   /* FALLTHROUGH */
+      case WLZ_3D_POLYGON:      /* FALLTHROUGH */
+      case WLZ_RECTANGLE:       /* FALLTHROUGH */
+      case WLZ_CONVOLVE_INT:    /* FALLTHROUGH */
+      case WLZ_CONVOLVE_FLOAT:  /* FALLTHROUGH */
+      case WLZ_WARP_TRANS:      /* FALLTHROUGH */
+      case WLZ_FMATCHOBJ:       /* FALLTHROUGH */
+      case WLZ_TEXT:            /* FALLTHROUGH */
+      case WLZ_COMPOUND_ARR_1:  /* FALLTHROUGH */
+      case WLZ_COMPOUND_ARR_2:  /* FALLTHROUGH */
+      case WLZ_COMPOUND_LIST_1: /* FALLTHROUGH */
       case WLZ_COMPOUND_LIST_2:
       default:
 	errNum = WLZ_ERR_OBJECT_TYPE;
@@ -244,6 +247,9 @@ WlzDomain	 WlzCopyDomain(WlzObjectType inObjType, WlzDomain inDom,
 	  outDom.core = NULL;
 	}
 	break;
+      case WLZ_3D_VIEW_STRUCT:
+	outDom.vs3d = WlzMake3DViewStructCopy(inDom.vs3d, &errNum);
+        break;
       case WLZ_TRANS_OBJ: /* FALLTHROUGH */
       case WLZ_AFFINE_TRANS:
         outDom.t = WlzAffineTransformCopy(inDom.t, &errNum);
@@ -324,6 +330,10 @@ WlzDomain	 WlzCopyDomain(WlzObjectType inObjType, WlzDomain inDom,
       case WLZ_CMESH_3D:
         outDom.cm3 = WlzCMeshCopy3D(inDom.cm3, 0, 0, NULL, NULL, &errNum);
 	break;
+      case WLZ_LUT:
+	outDom.lut = WlzMakeLUTDomain(inDom.lut->bin1, inDom.lut->lastbin,
+	                              &errNum);
+        break;
       case WLZ_3D_WARP_TRANS:
       case WLZ_CONV_HULL:
       case WLZ_3D_POLYGON:
@@ -458,6 +468,9 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
 	break;
       case WLZ_TRANS_OBJ:
         outVal.obj = WlzCopyObject(inVal.obj, &errNum);
+	break;
+      case WLZ_LUT:
+        outVal.lut = WlzCopyLUTValues(inVal.lut, &errNum);
 	break;
       case WLZ_3D_WARP_TRANS:
       case WLZ_CONV_HULL:
@@ -1131,4 +1144,40 @@ static WlzErrorNum WlzCopyObjectGreyValuesGVWSp2D(
     }
   }
   return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Copies the LUT values of the source object.
+* \param	obj			Source LUT object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzLUTValues *WlzCopyLUTValues(WlzLUTValues *inVal, WlzErrorNum *dstErr)
+{
+  WlzLUTValues	*outVal = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(inVal == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(inVal->type != WLZ_LUT)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else
+  {
+    outVal = WlzMakeLUTValues(inVal->vType, inVal->maxVal, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzValueCopyGreyToGrey(outVal->val, 0, outVal->vType,
+			   inVal->val,  0, inVal->vType, inVal->maxVal);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(outVal);
 }

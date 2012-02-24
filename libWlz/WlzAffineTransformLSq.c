@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzAffineTransformLSq_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzAffineTransformLSq_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzAffineTransformLSq.c
@@ -15,10 +11,14 @@ static char _WlzAffineTransformLSq_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -39,8 +39,6 @@ static char _WlzAffineTransformLSq_c[] = "MRC HGU $Id$";
 * 		give the best fit, in a least squares sense, when
 * 		used to transform one set of vertices to another.
 * \ingroup	WlzTransform
-* \todo         -
-* \bug          None known.
 */
 #include <stdio.h>
 #include <float.h>
@@ -424,6 +422,7 @@ WlzAffineTransform  *WlzAffineTransformLSqTrans3D(WlzDVertex3 *vT,
   WlzAffineTransform *tr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  sum.vtX = sum.vtY = sum.vtZ = 0.0;
   if(nV <= 0)
   {
     errNum = WLZ_ERR_PARAM_DATA; 
@@ -1939,6 +1938,7 @@ WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
   WlzAffineTransform *trans = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   
+  aM.core = t0M.core = t1M.core = t2M.core = c1M.core = c3M.core = NULL;
   /* Allocate matricies required to compute c1M, c2M and c3M. */
   if(((aM.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL)||
      ((c1M.rect = AlgMatrixRectNew(4, 4, NULL)) == NULL)||

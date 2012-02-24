@@ -6,11 +6,15 @@
 # \par
 # Address:
 #               MRC Human Genetics Unit,
+#               MRC Institute of Genetics and Molecular Medicine,
+#               University of Edinburgh,
 #               Western General Hospital,
 #               Edinburgh, EH4 2XU, UK.
 # \par
-# Copyright (C) 2005 Medical research Council, UK.
-#
+# Copyright (C), [2012],
+# The University Court of the University of Edinburgh,
+# Old College, Edinburgh, UK.
+# 
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
 # as published by the Free Software Foundation; either version 2
@@ -26,10 +30,7 @@
 # License along with this program; if not, write to the Free
 # Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 # Boston, MA  02110-1301, USA.
-#
 # \brief        Process this file with autoconf to produce a configure script.
-# \todo         -
-# \bug          None known.
 ##
 
 m4_define([WOOLZ_VERSION], [1.0])
@@ -373,6 +374,12 @@ then
     HAVE_JPEG=yes
     INCL_EXTFF="-I${JPEG_DIR}/include ${INCL_EXTFF}"
     LIBS_EXTFF="-L${JPEG_DIR}/lib -ljpeg ${LIBS_EXTFF}"
+  fi
+  if test ${NIFTI_DIR} = "no"
+  then
+    CFLAGS="${CFLAGS} -DHAVE_NIFTI=0"
+  else
+    CFLAGS="${CFLAGS} -DHAVE_NIFTI=1"
   fi
   AC_CONFIG_FILES([	libbibfile/Makefile \
 			libhguDlpList/Makefile \

@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzValueUtils_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzValueUtils_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzValueUtils.c
@@ -15,10 +11,14 @@ static char _WlzValueUtils_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -38,8 +38,6 @@ static char _WlzValueUtils_c[] = "MRC HGU $Id$";
 * \brief	Many small functions for setting, copying and converting
 * 		values.
 * \ingroup	WlzValuesUtils
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -2822,4 +2820,26 @@ double		WlzValueMedianDouble(double *values, int nVal)
     medVal = *(values + 1);
   }
   return(medVal);
+}
+
+/*!
+* \return	Dithered value.
+* \ingroup	WlzValueUtils
+* \brief	Given three consecutive values, possibly in an integer
+* 		look up table, this function returns a value dithered
+* 		to lie between the means of the first and last pairs
+* 		of values with equal probability. Because this function
+* 		calls AlgRandUniform() is may be slow.
+* \param	p0			First integral value.
+* \param	p1			Second integral value.
+* \param	p2			Third integral value.
+*/
+int             WlzValueDitherI(int p0, int p1, int p2)
+{
+  int           v;
+  double        d;
+
+  d = ((AlgRandUniform() * (double )(p2 - p0)) - (double )(p1 - p0)) * 0.5;
+  v = p1 + WLZ_NINT(d);
+  return(v);
 }

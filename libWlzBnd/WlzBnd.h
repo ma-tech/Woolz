@@ -1,33 +1,45 @@
 #ifndef WLZBND_H
 #define WLZBND_H
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzBnd_h[] = "MRC HGU $Id$";
-#endif
+static char _WlzBnd_h[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzBnd.h
+* \file         libWlzBnd/WlzBnd.h
 * \author       Bill Hill
 * \date         August 2003
 * \version      $Id$
-* \note
-*               Copyright
-*               2003 Medical Research Council, UK.
-*               All rights reserved.
-*               All rights reserved.
-* \par Address:
+* \par
+* Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
-* \brief	Main (top-level) Woolz binding header file which includes
-*		all other header files required by the Woolz binding
-*		library.
-* \todo         -
-* \bug          None known.
+* \par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Main header for the Woolz binding which includes all other
+* 		header files required by the Woolz binding library.
+* \ingroup	LibWlzBnd
 */
 
 #ifdef __cplusplus
@@ -51,7 +63,7 @@ extern "C"
 #endif
 
 /*!
-* \defgroup    WlzBnd	WlzBnd
+* \defgroup    LibWlzBnd	LibWlzBnd
 */
 
 #endif	/* !WLZBND_H Don't put anything after this line */

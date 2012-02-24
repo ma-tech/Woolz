@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzGeometry_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzGeometry_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzGeometry.c
@@ -15,10 +11,14 @@ static char _WlzGeometry_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,8 +37,6 @@ static char _WlzGeometry_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Geometric utility functions.
 * \ingroup	WlzGeometry
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -95,6 +93,10 @@ static int			WlzGeomTriTriPlaneTest(
 				  double *d0d2,
 				  WlzDVertex3 s[],
 				  WlzDVertex3 t[]);
+static double			WlzGeomCot2D3(
+				  WlzDVertex2 a,
+				  WlzDVertex2 b,
+				  WlzDVertex2 c);
 
 /*!
 * \return	Zero if the circumcentre of the triangle lies at infinity,
@@ -176,7 +178,7 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 *		  0   if the vertex is on an edge of the triangle and
 *		  -ve if the vertex is outside the triangle.
 * \ingroup	WlzGeometry
-* \brief	Test's to set if the given vertex lies within the given
+* \brief	Tests to set if the given vertex lies within the given
 *		triangle using a barycentric coordinates test.
 *
 *		If a triangle has vertices \f$p_0, p_1, p_2\f$, then any point
@@ -197,30 +199,24 @@ int		 WlzGeomVxInTriangle2D(WlzDVertex2 p0, WlzDVertex2 p1,
 				       WlzDVertex2 p2, WlzDVertex2 pP)
 {
   int		inside = 0;
-  double	tA,
-  		tB,
-		tC,
-		tD,
-		tE,
-		tF,
-		l0,
+  double	l0,
 		l1,
 		l2,
 		delta;
+  WlzDVertex2	q0,
+  		q1,
+		qP;
   const double	eps = 1.0e-10;
 
-  tA = p0.vtX - p2.vtX;
-  tB = p1.vtX - p2.vtX;
-  tD = p0.vtY - p2.vtY;
-  tE = p1.vtY - p2.vtY;
-  delta = (tA * tE) - (tB * tD);
+  WLZ_VTX_2_SUB(q0, p0, p2);
+  WLZ_VTX_2_SUB(q1, p1, p2);
+  delta = (q0.vtX * q1.vtY) - (q1.vtX * q0.vtY);
   if(fabs(delta) > eps)
   {
     delta = 1.0 / delta;
-    tC = pP.vtX - p2.vtX;
-    tF = pP.vtY - p2.vtY;
-    l0 = delta * ((tC * tE) - (tB * tF));
-    l1 = delta * ((tA * tF) - (tC * tD));
+    WLZ_VTX_2_SUB(qP, pP, p2);
+    l0 = delta * ((qP.vtX * q1.vtY) - (q1.vtX * qP.vtY));
+    l1 = delta * ((q0.vtX * qP.vtY) - (qP.vtX * q0.vtY));
     l2 = 1.0 - (l0 + l1);
     if((l0 < -eps) || (l1 < -eps) || (l2 < -eps))
     {
@@ -236,12 +232,95 @@ int		 WlzGeomVxInTriangle2D(WlzDVertex2 p0, WlzDVertex2 p1,
 
 /*!
 * \return	Value indicating the position of the vertex with respect
+*               to the triangle:
+*		  +ve if the vertex is inside the triangle,
+*		  0   if the vertex is on an edge of the triangle and
+*		  -ve if the vertex is outside the triangle.
+* \ingroup	WlzGeometry
+* \brief	First finds the closest point on the plane of the triangle
+* 		to the given point. Then if the distance from the point
+* 		to the plane is less than the given tolerance vvalue tests
+* 		to set if the given vertex lies within the given triangle
+* 		using a barycentric coordinates test (see
+* 		WlzGeomVxInTriangle2D()).
+* \param	v0			First vertex of triangle.
+* \param	v1			Second vertex of triangle.
+* \param	v2			Third vertex of triangle.
+* \param	vQ			Given query vertex.
+* \param	vvMax			Maximum plane vertex distance.
+*/
+int		 WlzGeomVxInTriangle3D(WlzDVertex3 v0, WlzDVertex3 v1,
+				       WlzDVertex3 v2, WlzDVertex3 vQ,
+				       double vPMax)
+{
+  int		inside = -1;
+  double	lnn;
+  WlzDVertex3	n,
+  		u0,
+  		u1,
+		uQ;
+  const double	eps = 1.0e-10;
+
+  WLZ_VTX_3_SUB(u0, v0, v2);
+  WLZ_VTX_3_SUB(u1, v1, v2);
+  WLZ_VTX_3_CROSS(n, u0, u1);
+  lnn = WLZ_VTX_3_SQRLEN(n);
+  if(lnn > eps)
+  {
+    double	d,
+    		ln;
+    WlzDVertex3 t0,
+		t1,
+		t2;
+
+    lnn = 1.0 / lnn;
+    WLZ_VTX_3_SUB(uQ, vQ, v2);
+    /* Make uQ closest point in plane of triangle and compute distance d
+     * from uQ to vQ. */
+    ln = sqrt(lnn);
+    WLZ_VTX_3_SCALE(t0, n, ln);
+    d = WLZ_VTX_3_DOT(uQ, t0);
+    if(fabs(d) < vPMax + eps)
+    {
+      double	l0,
+		l1,
+		l2;
+
+      inside = 0;
+      WLZ_VTX_3_SCALE(t1, t0, d);
+      WLZ_VTX_3_SUB(uQ, uQ, t1);
+      /* Now have triangle (O, u0, u1) and query vertex uQ all on a plane.
+       * Compute the barycentric ccordinates \f$\lambda_0\f$ \f£lambda_1\f$
+       * and \f$\lambda_2\f$.
+       */
+      WLZ_VTX_3_SUB(t0, u1, u0);
+      WLZ_VTX_3_SUB(t1, uQ, u0);
+      WLZ_VTX_3_CROSS(t2, t0, t1);
+      l0 = WLZ_VTX_3_DOT(n, t2) * lnn;
+      WLZ_VTX_3_CROSS(t2, u0, uQ);
+      l1 = WLZ_VTX_3_DOT(n, t2) * lnn;
+      l2 = 1.0 - (l0 + l1);
+      if((l0 < -eps) || (l1 < -eps) || (l2 < -eps))
+      {
+	inside = -1;
+      }
+      else if((l0 > eps) && (l1 > eps) && (l2 > eps))
+      {
+	inside = 1;
+      }
+    }
+  }
+  return(inside);
+}
+
+/*!
+* \return	Value indicating the position of the vertex with respect
 *               to the tetrahedron:
 *		  +ve if the vertex is inside the tetrahedron,
 *		  0   if the vertex is on an edge of the tetrahedron and
 *		  -ve if the vertex is outside the tetrahedron.
 * \ingroup	WlzGeometry
-* \brief	Test's to set if the given vertex lies within the given
+* \brief	Tests to set if the given vertex lies within the given
 *		tetrahedron using a barycentric coordinates test.
 *
 *		If a tetrahedron has vertices \f$p_0, p_1, p_2, p_3\f$,
@@ -3536,7 +3615,7 @@ WlzDVertex3	WlzGeomLinePlaneIntersection(WlzDVertex3 v,
 *		  <li>2 if the vertex is inside the triangle.</li>
 *		</ul>
 * \ingroup	WlzGeometry
-* \brief	Test's to set if a line directed from a given origin
+* \brief	Tests to set if a line directed from a given origin
 * 		intersects a triangle in 3D space. This function is
 * 		based on the algorithm: Tomas Moller and Ben Trumbore,
 * 		"Fast, Minimum Storage Ray/Triangle Intersection",
@@ -3979,6 +4058,228 @@ extern double	WlzGeomInterpolateTri2D(WlzDVertex2 p0, WlzDVertex2 p1,
     val = (v0 + v1 + v2) / 3.0;
   }
   return(val);
+}
+
+/*!
+* \return       Interpolated value.
+* \ingroup	WlzGeometry
+* \brief	Given the vertex coordinates of an irregular possible
+* 		non-convex 2D polygon ordered counter-clockwise and a set
+* 		of values at each of these vertices, this function
+* 		interpolates the value at the given position which must be
+* 		inside the convex hull of the polygon, on an edge of the
+* 		convex hull of the polygon or coincident with one of the
+* 		vertices of it's convex hull.
+* 		This function first calls WlzConvHullClarkson2D() to compute
+* 		the convex hull and then WlzGeomInterpolateConvexPoly2D()
+* 		to perform the interpolation. If the polygonis known to be
+* 		convex then WlzGeomInterpolateConvexPoly2D() should be called
+* 		directly since temporary workspaces are allocated.
+* \param	n			Number of polygon vertices, which is
+* 					the same as the number of values and
+* 					generalised barycentric coordinates.
+* \param	p			The vertices of the convex polygon
+* 					(ordered counter-clockwise).
+* \param        v			Values at the corresponding polygon
+* 					vertices.
+* \param	w			Used to compute and return the
+* 					generalised barycentric coordinates
+* 					of the given position.
+* 					The coordinate values of vertices
+* 					outside the polygon's convex hull will
+* 					be zero.
+* \param	q			Given position, which is must be
+* 					within or on the convex hull of the
+* 					polygon.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+extern double	WlzGeomInterpolatePoly2D(int n, WlzDVertex2 *p,
+				         double *v, double *w,
+					 WlzDVertex2 q, WlzErrorNum *dstErr)
+{
+  int		m;
+  double	rVal = 0.0;
+  int		*idx = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Compute the convex hull of thge given polygon. */
+  m = WlzConvHullClarkson2D(p, n, &idx, &errNum);
+  if(m == n)
+  {
+    /* Polygon is convex. */
+    rVal = WlzGeomInterpolateConvexPoly2D(n, p, v, w, q);
+  }
+  else if(m > 0)
+  {
+    /* Polygon is not convex so use it's convex hull for interpolation. */
+    double 	*vC = NULL,
+		*wC = NULL;
+    WlzDVertex2	*pC = NULL;
+
+    if(((pC = (WlzDVertex2 *)AlcMalloc(m * sizeof(WlzDVertex2))) == NULL) ||
+       ((vC = (double *)AlcMalloc(m * sizeof(double))) == NULL) ||
+       ((wC = (double *)AlcMalloc(m * sizeof(double))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      int	i;
+
+      for(i = 0; i < m; ++i)
+      {
+        pC[i] = p[idx[i]];
+        vC[i] = v[idx[i]];
+      }
+      rVal = WlzGeomInterpolateConvexPoly2D(m, pC, vC, wC, q);
+      for(i = 0; i < m; ++i)
+      {
+        w[idx[i]] = wC[i];
+      }
+      for(i = 0; i < m; ++i)
+      {
+        w[idx[i]] = wC[i];
+      }
+    }
+    AlcFree(pC);
+    AlcFree(vC);
+    AlcFree(wC);
+  }
+  AlcFree(idx);
+  return(rVal);
+}
+
+/*!
+* \return       Interpolated value.
+* \ingroup	WlzGeometry
+* \brief	Given the vertex coordinates of an irregular convex 2D
+* 		polygon ordered counter-clockwise and a set of values at
+* 		each of these vertices, this function interpolates the value
+* 		at the given position which must be inside the polygon, on
+* 		an edge of the polygon or coincident with one of it's vertices.
+* 		This is implimented using general barycentric coordinates,
+* 		see the paper: "Generalized Barycentric Coordinates on
+* 		Irregular Polygons" Mark Mayer, etal, Journal of Graphics
+* 		Tools 2002. All parameters of this function must be valid.
+* \param	n			Number of polygon vertices, which is
+* 					the same as the number of values and
+* 					generalised barycentric coordinates.
+* \param	p			The vertices of the convex polygon
+* 					(ordered counter-clockwise).
+* \param        v			Values at the corresponding polygon
+* 					vertices.
+* \param	w			Used to compute and return the
+* 					generalised barycentric coordinates
+* 					of the given position.
+* \param	q			Given position, which is must be
+* 					in or on the polygon.
+*/
+extern double	WlzGeomInterpolateConvexPoly2D(int n, WlzDVertex2 *p,
+				        double *v, double *w,
+					WlzDVertex2 q)
+{
+  int		i,
+		iPrv,
+		iNxt,
+  		qOnP = -1,
+		qOnE = -1;
+  double 	a = 0.0,
+  		s = 0.0;
+  WlzDVertex2	d[2];
+  double	l[3];
+  const double	tol = 1.0e-10;
+
+  for(i = 0; i < n; ++i)
+  {
+    iPrv = (i + n - 1) % n;
+    iNxt = (i + 1) % n;
+    WLZ_VTX_2_SUB(d[0], q, p[i]);
+    l[0] = WLZ_VTX_2_SQRLEN(d[0]);
+    if(l[0] < tol)
+    {
+      /* The given position is coincident with the current vertex of the
+       * polygon. */
+      qOnP = i;
+      break;
+    }
+    /* Check for given position on edge between p[i] and p[iNxt] using
+     * squares of lengths to avoid expensive sqrt(). */
+    WLZ_VTX_2_SUB(d[1], p[iNxt], p[i]);
+    l[1] = ((d[0].vtX * d[1].vtY) - (d[0].vtY - d[1].vtX));
+    l[1] *= l[1];
+    l[2] = WLZ_VTX_2_SQRLEN(d[1]);
+    if(l[1] < tol * l[2])
+    {
+      /* Position is the edge from the current to the next vertex of the
+       * polygon. */
+      qOnE = i;
+      break;
+    }
+    w[i] = (WlzGeomCot2D3(q, p[i], p[iPrv]) +
+            WlzGeomCot2D3(q, p[i], p[iNxt]) / l[0]);
+    s += w[i];
+  }
+  if(qOnP >= 0)
+  {
+    /* The given position is coincident with a vertex of the polygon. */
+    for(i = 0; i < n; ++i)
+    {
+      w[i] = 0.0;
+    }
+    w[qOnP] = 1.0;
+    a = v[qOnP];
+  }
+  else if(qOnE >= 0)
+  {
+    /* The given position is coincident with the edge p[i], p[iNxt] of the
+     * polygon. */
+    for(i = 0; i < n; ++i)
+    {
+      w[i] = 0.0;
+    }
+    l[0] = WLZ_VTX_2_LENGTH(d[0]);
+    l[1] = WLZ_VTX_2_LENGTH(d[1]);
+    s = 1.0 / (l[0] + l[1]);
+    w[i] = l[1] * s;
+    w[iNxt] = l[0] * s;
+    a = (v[i] * w[i]) + (v[iNxt] * w[iNxt]);
+  }
+  else
+  {
+    s = 1.0 / s;
+    for(i = 0; i < n; ++i)
+    {
+      w[i] *= s;
+      a += v[i] * w[i];
+    }
+  }
+  return(a);
+}
+
+/*!
+* \return	Cotangent of the angle.
+* \ingroup	WlzGeometry
+* \brief	Computes the cotangent of the angle at B within the
+* 		triable A,B,C.
+* \param	a			Position of triangle vertex A.
+* \param	b			Position of triangle vertex B.
+* \param	c			Position of triangle vertex C.
+*/
+static double	WlzGeomCot2D3(WlzDVertex2 a, WlzDVertex2 b, WlzDVertex2 c)
+{
+  double	d,
+  		e;
+  const double	tol = 1.0e-10;
+
+  WLZ_VTX_2_SUB(a, a, b);
+  WLZ_VTX_2_SUB(c, c, b);
+  d = WLZ_VTX_2_DOT(a, c);
+  if(fabs(d) > tol)
+  {
+    e = fabs((a.vtX * b.vtY) - (a.vtY * b.vtX));
+    d = (e > tol)? d / e: DBL_MAX;
+  }
+  return(d);
 }
 
 /*!

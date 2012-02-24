@@ -1,5 +1,42 @@
+#if defined(__GNUC__)
+#ident "University of Edinburgh $Id$"
+#else
+static char _binWlzExtFF_dox[] = "University of Edinburgh $Id$";
+#endif
 /*!
-\defgroup BinWlzExtFF Data Format Conversion
+* \file         binWlzExtFF/binWlzExtFF.dox
+* \author       Richard Baldock
+* \date         February 2012
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Defines module BinWlzExtFF.
+* \defgroup BinWlzExtFF Data Format Conversion
 */
 
 /*!
@@ -10,23 +47,35 @@ Command line binaries that involve reading or writing non-native woolz
  (ExtFF) heading. These binaries typically match procedures in the
  WlzExtFF library. Supported formats can be determined by running
  the programme WlzExtFFConvert with the flag "-h" and are:
-\verbatim
-  Description                 Fmt     Extension
-  ***********                 ***     *********
-  Amira Lattice               am      .am
-  Microsoft Bitmap            bmp     .bmp
-  Stanford Density            den     .den
-  ICS                         ics     .ics/.ids
-  PNM                         pnm     .pgm
-  BioRad Confocal             pic     .pic
-  SLC                         slc     .slc
-  Sunvision VFF               vff     .vff
-  Visualization Toolkit VTK   vtk     .vtk
-  IPLab                       ipl     .ipl
-  Tiff                        tif     .tif
-  Jpeg                        jpg     .jpg
-  MRC HGU Woolz               wlz     .wlz
-\endverbatim
+
+<table border="1">
+<tr><td>Description                               </td><td>Extension</td></tr>
+<tr><td>Amira Lattice                                 </td><td>am</td></tr>
+<tr><td>Microsoft Bitmap                              </td><td>bmp</td></tr>
+<tr><td>Stanford Density                              </td><td>den</td></tr>
+<tr><td>Netgen neutral mesh format                    </td><td>emt</td></tr>
+<tr><td>Graphics Interchange Format                   </td><td>gif</td></tr>
+<tr><td>ANALYZE HDR                                   </td><td>hdr</td></tr>
+<tr><td>Image Cytometry Standard                      </td><td>ics</td></tr>
+<tr><td>IPLab                                         </td><td>ipl</td></tr>
+<tr><td>JPEG                                          </td><td>jpg</td></tr>
+<tr><td>Pascal Frey's medit tetrahedral mesh format   </td><td>mesh</td></tr>
+<tr><td>Neuroimaging Informatics Technology Initiative</td><td>nii</td></tr>
+<tr><td>Jonathan Shewchuk's mesh format               </td><td>node</td></tr>
+<tr><td>Wavefront                                     </td><td>obj</td></tr>
+<tr><td>BioRad Confocal                               </td><td>pic</td></tr>
+<tr><td>Riken PLY2                                    </td><td>ply2</td></tr>
+<tr><td>PNM                                           </td><td>pnm</td></tr>
+<tr><td>Raw                                           </td><td>raw</td></tr>
+<tr><td>SLC                                           </td><td>slc</td></tr>
+<tr><td>GRUMMP SMESH                                  </td><td>smesh</td></tr>
+<tr><td>Stereolithography format                      </td><td>stl</td></tr>
+<tr><td>Tiff                                          </td><td>tif</td></tr>
+<tr><td>Text                                          </td><td>txt</td></tr>
+<tr><td>Sunvision VFF                                 </td><td>vff</td></tr>
+<tr><td>GRUMMP VMESH                                  </td><td>vmesh</td></tr>
+<tr><td>Visualization Toolkit VTK                     </td><td>vtk</td></tr>
+</table> 
 
 Other programmes in this group convert a few special formats for
  contours and particualar applications. For conversio of raw data

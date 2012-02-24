@@ -1,24 +1,24 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzCMeshIntersect_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzCMeshIntersect_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzCMeshIntersect.c
+* \file         libWlz/WlzCMeshIntersect.c
 * \author       Bill Hill
-* Mon 14 Feb 2011 09:51:48 GMTate         February 2011
+* \date         February 2012
 * \version      $Id$
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2011 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -42,17 +42,24 @@ static char _WlzCMeshIntersect_c[] = "MRC HGU $Id$";
 #include <Wlz.h>
 #include <float.h>
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 static int			WlzIntersectDomAABBTri3D(
 				  WlzObject *dObj,
 				  WlzDVertex3 p0,
 				  WlzDVertex3 p1,
 				  WlzDVertex3 p2,
 				  WlzErrorNum *dstErr);
+#endif /* WLZ_UNUSED_FUNCTIONS */
 static int			WlzCMeshIntersectSortVtx2D(
 				  void *data,
 				  int *idx,
 				  int id0,
 				  int id1);
+static int			WlzCMeshIntersectDomIsInside3D(
+				  WlzObject *sObj,
+				  WlzDVertex3 q,
+				  WlzDVertex3 nrm,
+				  double delta);
 
 /*!
 * \return	New 2D spatial domain obect.
@@ -64,12 +71,15 @@ static int			WlzCMeshIntersectSortVtx2D(
 * \param	sObj			Object with 3D spatial domain.
 * \param	cObj			Object with the 2D5 mesh and
 * 					displacements to a plane.
+* \param	delta			Distance normal to the surface
+* 					within which intersection is allowed.
 * \param	scale			Additional scale factor from mesh
 * 					to spatial domain.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
-				double scale, WlzErrorNum *dstErr)
+					double delta, double scale,
+					WlzErrorNum *dstErr)
 {
   int		idN;
   WlzCMesh2D5	*mesh;
@@ -81,6 +91,7 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const double 	eps = WLZ_MESH_TOLERANCE;
 
+  delta = fabs(delta);
   for(idN = 0; idN < 5; ++idN)
   {
     tObj[idN] = NULL;
@@ -178,21 +189,42 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
       elm = (WlzCMeshElm2D5 *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
-	WlzDVertex3 pos3[3];
+	WlzDVertex3 nrm;
+	WlzDVertex3 dLim[2],
+		    pos3[3];
 	WlzCMeshNod2D5 *nod[3];
+
 
 	WlzCMeshElmGetNodes2D5(elm, nod + 0, nod + 1, nod + 2);
 	pos3[0]= nod[0]->pos; pos3[1]= nod[1]->pos; pos3[2]= nod[2]->pos;
-	if(WlzIntersectDomAABBTri3D(sObj, pos3[0], pos3[1], pos3[2],
-	                            NULL) != 0)
+	dLim[0].vtX = sObj->domain.p->kol1;
+	dLim[0].vtY = sObj->domain.p->line1;
+	dLim[0].vtZ = sObj->domain.p->plane1;
+	dLim[1].vtX = sObj->domain.p->lastkl;
+	dLim[1].vtY = sObj->domain.p->lastln;
+	dLim[1].vtZ = sObj->domain.p->lastpl;
+	if(delta > WLZ_MESH_TOLERANCE)
+	{
+          WlzDVertex3 dNrm;
+
+	  nrm = WlzGeomTriangleNormal(pos3[0], pos3[1], pos3[2]);
+	  WLZ_VTX_3_SCALE(dNrm, nrm, delta);
+	  WLZ_VTX_3_SUB(dLim[0], dLim[0], dNrm);
+	  WLZ_VTX_3_ADD(dLim[1], dLim[1], dNrm);
+	}
+	/* If the element does not intersect the bounding box of the
+	 * spatial domain (expanded by the normal's projection scaled by
+	 * delta) then there can be no intersection. */
+        if(WlzGeomTriangleAABBIntersect3D(pos3[0], pos3[1], pos3[2],
+	                                  dLim[0], dLim[1], 0) != 0)
 	{
 	  double	d,
 		  	x2,
 			y2;
 	  int 		idx[3];
 	  WlzDVertex2 	p2[4], /* Positions of the 2D vertices, sorted by
-				    line then column, first is absolute,
-				    rest are relative to the first. */
+				  line then column, first is absolute,
+				  rest are relative to the first. */
 			  pos2[3]; /* Positions of the 2D vertices. */
 	  WlzDVertex3	p3[3];
 
@@ -246,7 +278,7 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 		               "WlzCMeshIntersectDom2D5 1 %g %g %g %g %g\n",
 		               p2[0].vtX, p2[0].vtY, q3.vtX, q3.vtY, q3.vtZ);
 #endif
-		if(WlzInsideDomain(sObj, q3.vtZ, q3.vtY, q3.vtX, NULL))
+                if(WlzCMeshIntersectDomIsInside3D(sObj, q3, nrm, delta))
 		{
 		  WlzGreyValueGet(gVWSp, 0.0, p2[0].vtY, p2[0].vtX);
 		  *((*(gVWSp->gPtr)).ubp) = 1;
@@ -282,7 +314,7 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 #endif
 		  
 		}
-		if(WlzInsideDomain(sObj, q3.vtZ, q3.vtY, q3.vtX, NULL))
+                if(WlzCMeshIntersectDomIsInside3D(sObj, q3, nrm, delta))
 		{
 		  WlzGreyValueGet(gVWSp, 0.0, p2[0].vtY, p2[0].vtX);
 		  *((*(gVWSp->gPtr)).ubp) = 1;
@@ -309,7 +341,7 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 		               p2[0].vtX, p2[0].vtY, q3.vtX, q3.vtY, q3.vtZ);
 #endif
 		}  
-		if(WlzInsideDomain(sObj, q3.vtZ, q3.vtY, q3.vtX, NULL))
+                if(WlzCMeshIntersectDomIsInside3D(sObj, q3, nrm, delta))
 		{
 		  WlzGreyValueGet(gVWSp, 0.0, p2[0].vtY, p2[0].vtX);
 		  *((*(gVWSp->gPtr)).ubp) = 1;
@@ -371,10 +403,10 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 		               "WlzCMeshIntersectDom2D5 3 %g %g %g %g %g\n",
 		               q2.vtX, q2.vtY, q3.vtX, q3.vtY, q3.vtZ);
 #endif
-		if(WlzInsideDomain(sObj, q3.vtZ, q3.vtY, q3.vtX, NULL))
+                if(WlzCMeshIntersectDomIsInside3D(sObj, q3, nrm, delta))
 		{
 		  WlzGreyValueGet(gVWSp, 0.0,
-		                  q2.vtY + p2[0].vtY, q2.vtX + p2[0].vtX);
+				  q2.vtY + p2[0].vtY, q2.vtX + p2[0].vtX);
 		  *((*(gVWSp->gPtr)).ubp) = 1;
 		}
 	      }
@@ -408,6 +440,54 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
     *dstErr = errNum;
   }
   return(rObj);
+}
+
+/*!
+* \return	Non-zero if the position is inside the domain.
+* \ingroup	WlzMesh
+* \brief	Checks to see if the given position is within the given 3D
+* 		spatial domain. The delta value must be >= 0.0. If delta is
+* 		> 0.0 then a check is made along in the direction of the given
+* 		normal over a distance equal to delta.
+* \param	sObj			Given 3D spatial domain object.
+* \param	q			Given position.
+* \param	nrm			Unit normal.
+* \param	delta			Distance in normal direction.
+*/
+static int	WlzCMeshIntersectDomIsInside3D(WlzObject *sObj, WlzDVertex3 q,
+					WlzDVertex3 nrm, double delta)
+{
+  int 		in = 0;
+
+  if(WlzInsideDomain(sObj, q.vtZ, q.vtY, q.vtX, NULL))
+  {
+    in = 1;
+  }
+  else if(delta > WLZ_MESH_TOLERANCE)
+  {
+    double        d;
+    WlzDVertex3   q0,
+		  q1,
+		  dNrm;
+
+    d = delta;
+    WLZ_VTX_3_SCALE(dNrm, nrm, delta);
+    WLZ_VTX_3_SUB(q0, q, dNrm);
+    WLZ_VTX_3_ADD(q1, q, dNrm);
+    do
+    {
+      if((WlzInsideDomain(sObj, q0.vtZ, q0.vtY, q0.vtX, NULL)) ||
+	 (WlzInsideDomain(sObj, q1.vtZ, q1.vtY, q1.vtX, NULL)))
+      {
+	in = 1;
+	break;
+      }
+      d -=  1.0;
+      WLZ_VTX_3_ADD(q0, q0, nrm);
+      WLZ_VTX_3_SUB(q1, q1, nrm);
+    } while(d > 0);
+  }
+  return(in);
 }
 
 /*!
@@ -493,7 +573,7 @@ WlzDVertex2	WlzCMeshClosePointDom2D5(WlzObject *vObj, WlzObject *mObj,
 	    WlzCMeshNod2D5 *nodes[3];
 
 	    WlzCMeshElmGetNodes2D5(edu1->elm, nodes + 0, nodes + 1, nodes + 2);
-	    d = WlzGeomTriangleVtxDistSq3D(NULL, zT, NULL,
+	    d = WlzGeomTriangleVtxDistSq3D(NULL, &zT, NULL,
 	    		       l + 0, l + 1, l + 2, vPos,
 			       nodes[0]->pos, nodes[1]->pos, nodes[2]->pos);
 	    if((zT == 0) && (d < mDst))
@@ -518,7 +598,6 @@ WlzDVertex2	WlzCMeshClosePointDom2D5(WlzObject *vObj, WlzObject *mObj,
   if(errNum == WLZ_ERR_NONE)
   {
     double	*dsp;
-    double	p[9];
     WlzCMeshElm2D5 *elm;
     WlzCMeshNod2D5 *nodes[3];
     WlzDVertex2	nP2[3];
@@ -552,6 +631,54 @@ WlzDVertex2	WlzCMeshClosePointDom2D5(WlzObject *vObj, WlzObject *mObj,
   }
   return(mPos2);
 }
+
+/*!
+* \return	Position of point in mesh with minimum distance.
+* \ingroup	WlzMesh
+* \brief	Computes the position in the 3D conforming mesh which
+* 		has the least distance to the given position.
+* \param	mObj			Object with the 3D mesh.
+* \param	gPos			Given position.
+* \param	dstCEI			Destination pointer for index to
+* 					element that the closest point is
+* 					within, may be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzDVertex3	WlzCMeshClosestPoint3D(WlzObject *mObj, WlzDVertex3 gPos,
+				       int *dstCEI, WlzErrorNum *dstErr)
+{
+  WlzDVertex3	rPos;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+#ifdef NEW_CODE_HACK
+  /* First just look to see if a mesh element encloses the given point. */
+  cEI = WlzCMeshElmJumpPos3D(mObj->mesh, gPos, NULL, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(eEI > 0)
+    {
+      rPos = gPos;
+    }
+    else
+    {
+      /* TODO  HACK
+	 Find closest grid cell to point.
+	 While grid cell is empty spiral out.
+	 */
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && (dstCEI != NULL) && (cE != NULL))
+  {
+    dstCEI = cE->idx;
+  }
+#endif
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rPos);
+}
+
 
 /*!
 * \return	Signed sort indicator.
@@ -596,6 +723,7 @@ static int	WlzCMeshIntersectSortVtx2D(void *data, int *idx,
   return(cmp);
 }
 
+#ifdef WLZ_UNUSED_FUNCTIONS
 /*!
 * \return	Zero if no intersection is possible otherwise non-zero.
 * \ingroup	WlzGeometry
@@ -632,3 +760,4 @@ static int	WlzIntersectDomAABBTri3D(WlzObject *dObj, WlzDVertex3 p0,
   }
   return(isn);
 }
+#endif /* WLZ_UNUSED_FUNCTIONS */

@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzReadObj_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzReadObj_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzReadObj.c
@@ -15,10 +11,14 @@ static char _WlzReadObj_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -37,8 +37,6 @@ static char _WlzReadObj_c[] = "MRC HGU $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Reads a Woolz object from a file stream.
 * \ingroup	WlzIO
-* \todo         - 
-* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -169,6 +167,15 @@ static WlzCMesh3D		*WlzReadCMesh3D(
 static WlzErrorNum 		WlzReadIndexedvValues(
 				  FILE *fP,
 				  WlzObject *obj);
+static WlzLUTDomain		*WlzReadLUTDomain(
+				  FILE *fp,
+				  WlzErrorNum *dstErr);
+static WlzErrorNum		WlzReadLUTValues(
+				  FILE *fp,
+				  WlzObject *obj);
+static WlzThreeDViewStruct 	*WlzRead3DViewStruct(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
 #ifdef WLZ_OLD_CMESH_TRANS_SUPPORT
 static WlzObject 		*WlzReadOldCMeshTransform(
 				  FILE *fP,
@@ -518,6 +525,17 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 	}
 	break;
 
+      case WLZ_LUT:
+	if(((domain.lut = WlzReadLUTDomain(fp, &errNum)) != NULL) &&
+	   ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
+			       &errNum)) != NULL)){
+	  if((errNum = WlzReadLUTValues(fp, obj)) == WLZ_ERR_NONE){
+	    obj->plist = WlzAssignPropertyList(
+			 WlzReadPropertyList(fp, NULL), NULL);
+	  }
+	}
+	break;
+
       case WLZ_RECTANGLE:
 	if((domain.r = WlzReadRect(fp, &errNum)) != NULL){
 	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
@@ -526,6 +544,12 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 
       case WLZ_AFFINE_TRANS:
 	if((domain.t = WlzReadAffineTransform(fp, &errNum)) != NULL){
+	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+	}
+	break;
+
+      case WLZ_3D_VIEW_STRUCT:
+	if((domain.vs3d = WlzRead3DViewStruct(fp, &errNum)) != NULL){
 	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
 	}
 	break;
@@ -1936,13 +1960,14 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
     tVal->nIdx[1] = getword(fP);
     tVal->nIdx[2] = getword(fP);
     nIdx = tVal->nIdx[0] * tVal->nIdx[1]  * tVal->nIdx[2];
-    if((tVal->indices = (int *)AlcMalloc(nIdx * sizeof(int))) == NULL)
+    if((tVal->indices = (unsigned int *)
+                        AlcMalloc(nIdx * sizeof(unsigned int))) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
     else
     {
-      errNum = WlzReadInt(fP, tVal->indices, nIdx);
+      errNum = WlzReadInt(fP, (int *)(tVal->indices), nIdx);
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -2325,7 +2350,7 @@ static WlzProperty WlzReadProperty(
 	{
 	  if((errNum = WlzReadStr(fp, &text)) == WLZ_ERR_NONE)
 	  {
-	    rtnProp.greyV = WlzMakeTextProperty(name, text, &errNum);
+	    rtnProp.text = WlzMakeTextProperty(name, text, &errNum);
 	    AlcFree(text);
 	  }
 	  AlcFree(name);
@@ -4431,6 +4456,227 @@ static WlzErrorNum WlzReadIndexedvValues(FILE *fP, WlzObject *obj)
   return(errNum);
 }
 
+/*!
+* \return	New LUT domain.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz LUT domain.
+* \param	fP			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzLUTDomain *WlzReadLUTDomain(FILE *fP, WlzErrorNum *dstErr)
+{
+  int		type,
+     		bin1,
+  		version,
+  		lastbin;
+  WlzLUTDomain	*lutDom = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((type = getc(fP)) == EOF)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if(type != (int )WLZ_LUT)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((version = getc(fP)) == EOF)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if(version != 1)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else
+  {
+    bin1 = getword(fP);
+    lastbin = getword(fP);
+    if(feof(fP) != 0)
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+    else if(lastbin < bin1)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    lutDom = WlzMakeLUTDomain(bin1, lastbin, &errNum);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(lutDom);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz LUT values data structure.
+* 		This function ignores the current values of the given object,
+* 		overwritting the values with new LUT vales.
+* \param	fP			File pointer.
+* \param	obj			Object that the LUT values will be
+* 					added to.
+*/
+static WlzErrorNum WlzReadLUTValues(FILE *fP, WlzObject *obj)
+{
+  int		nBin,
+  		type,
+  		version;
+  WlzGreyType	gType;
+  WlzValues	val;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  val.core = NULL;
+  if((type = getc(fP)) == EOF)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if(type != (int )WLZ_LUT)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else if((version = getc(fP)) == EOF)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if(version != 1)
+  {
+    errNum = WLZ_ERR_VALUES_DATA;
+  }
+  else
+  {
+    int 	t;
+
+    gType = (WlzGreyType )getc(fP);
+    nBin = getword(fP);
+    if(feof(fP) != 0)
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+    else if(nBin < (t = obj->domain.lut->lastbin - obj->domain.lut->bin1 + 1))
+    {
+      errNum = WLZ_ERR_VALUES_DATA;
+    }
+    nBin = t;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    val.lut = WlzMakeLUTValues(gType, nBin, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		i;
+    WlzGreyP	gP;
+
+    gP = val.lut->val;
+    switch(val.lut->vType)
+    {
+      case WLZ_GREY_INT:
+	for(i = 0; i < nBin; ++i)
+	{
+	  gP.inp[i] = getword(fP);
+	}
+	break;
+      case WLZ_GREY_SHORT:
+	for(i = 0; i < nBin; ++i)
+	{
+	  gP.shp[i] = getshort(fP);
+	}
+	break;
+      case WLZ_GREY_UBYTE:
+	for(i = 0; i < nBin; ++i)
+	{
+	  gP.ubp[i] = getc(fP);
+	}
+	break;
+      case WLZ_GREY_FLOAT:
+	for(i = 0; i < nBin; ++i)
+	{
+	  gP.flp[i] = getfloat(fP);
+	}
+	break;
+      case WLZ_GREY_DOUBLE:
+	for(i = 0; i < nBin; ++i)
+	{
+	  gP.dbp[i] = getdouble(fP);
+	}
+	break;
+      case WLZ_GREY_RGBA:
+	for(i = 0; i < nBin; ++i)
+	{
+	  gP.rgbp[i] = (unsigned int )getword(fP);
+	}
+	break;
+      default:
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    obj->values = WlzAssignValues(val, NULL);
+  }
+  else if(val.core != NULL)
+  {
+    (void )WlzFreeLUTValues(val);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	New affine transform.
+* \ingroup	WlzIO
+* \brief	Reads a woolz transform from the input file.
+* \param	fP			Open input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzThreeDViewStruct *WlzRead3DViewStruct(FILE *fP, WlzErrorNum *dstErr)
+{
+  WlzObjectType	type;
+  WlzThreeDViewStruct *vs = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((type = (WlzObjectType )getc(fP)) == EOF)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if(type == (WlzTransformType )WLZ_NULL)
+  {
+    errNum = WLZ_ERR_EOO;
+  }
+  else
+  {
+    if((vs = WlzMake3DViewStruct(type, &errNum)) != NULL)
+    {
+      errNum = WlzReadVertex3D(fP, &(vs->fixed), 1);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      vs->theta           = getdouble(fP);
+      vs->phi             = getdouble(fP);
+      vs->zeta            = getdouble(fP);
+      vs->dist            = getdouble(fP);
+      vs->scale           = getdouble(fP);
+      vs->voxelSize[0]    = getdouble(fP);
+      vs->voxelSize[1]    = getdouble(fP);
+      vs->voxelSize[2]    = getdouble(fP);
+      vs->voxelRescaleFlg = getword(fP);
+      vs->interp = getc(fP);
+      vs->view_mode = getc(fP);
+      errNum = WlzReadVertex3D(fP, &(vs->up), 1);
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vs);
+}
+	
 #ifdef WLZ_OLD_CMESH_TRANS_SUPPORT
 /*!
 * \return	New Woolz constrained mesh object.

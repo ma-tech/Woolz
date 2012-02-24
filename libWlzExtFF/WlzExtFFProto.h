@@ -1,13 +1,9 @@
 #ifndef WLZEXTFF_PROTO_H
 #define WLZEXTFF_PROTO_H
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzExtFFProto_h[] = "MRC HGU $Id$";
-#endif
+static char _WlzExtFFProto_h[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlzExtFF/WlzExtFFProto.h
@@ -17,10 +13,14 @@ static char _WlzExtFFProto_h[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -40,8 +40,6 @@ static char _WlzExtFFProto_h[] = "MRC HGU $Id$";
 * \brief	Header file with function prototypes for external data file
 *		format support for the MRC Human Genetics Unit Woolz library.
 * \ingroup	WlzExtFF
-* \todo         -
-* \bug          None known.
 */
 
 #ifdef  __cplusplus
@@ -72,9 +70,9 @@ extern WlzErrorNum 		WlzEffWriteObj(
 				  WlzEffFormat fFmt);
 extern int			WlzEffNumberOfFormats(void);
 extern char			*WlzEffFormatTable(
-				  unsigned indWth,
-                                  unsigned desWth,
-				  unsigned fmtWth,
+				  WlzUInt indWth,
+                                  WlzUInt desWth,
+				  WlzUInt fmtWth,
 				  WlzErrorNum *dstErr);
 
 #ifndef WLZ_EXT_BIND

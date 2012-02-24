@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzGreyStats_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzGreyStats_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzGreyStats.c
@@ -15,10 +11,14 @@ static char _WlzGreyStats_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2005 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -38,8 +38,6 @@ static char _WlzGreyStats_c[] = "MRC HGU $Id$";
 * \brief	Calculates simple statistics about an object's 
 * 		grey values.
 * \ingroup	WlzFeatures
-* \todo         -
-* \bug          None known.
 */
 
 #include <stdlib.h>
@@ -307,7 +305,7 @@ int		WlzGreyStats(WlzObject *srcObj,
 
 	      srcObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom[pIdx], val[pIdx],
 				     NULL, NULL, &errNum2D);
-	      if(errNum == WLZ_ERR_NONE)
+	      if(errNum2D == WLZ_ERR_NONE)
 	      {
 		area2D = WlzGreyStats2D(srcObj2D, &gType,
 					&min2D, &max2D, &sum2D, &sumSq2D,

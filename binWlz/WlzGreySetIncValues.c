@@ -1,11 +1,7 @@
 #if defined(__GNUC__)
-#ident "MRC HGU $Id$"
+#ident "University of Edinburgh $Id$"
 #else
-#if defined(__SUNPRO_C) || defined(__SUNPRO_CC)
-#pragma ident "MRC HGU $Id$"
-#else
-static char _WlzGreySetIncValues_c[] = "MRC HGU $Id$";
-#endif
+static char _WlzGreySetIncValues_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         binWlz/WlzGreySetIncValues.c
@@ -15,10 +11,14 @@ static char _WlzGreySetIncValues_c[] = "MRC HGU $Id$";
 * \par
 * Address:
 *               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C) 2008 Medical research Council, UK.
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
 * 
 * This program is free software; you can redistribute it and/or
 * modify it under the terms of the GNU General Public License
@@ -38,8 +38,9 @@ static char _WlzGreySetIncValues_c[] = "MRC HGU $Id$";
 * \brief	Sets incrementing (and hence unique) values in scan
 * 		order throughout a domain object.
 * \ingroup	BinWlz
-* \todo         -
-* \bug          None known.
+*
+* \par Binary
+* \ref wlzgreysetincvalues "WlzGreySetIncValues"
 */
 
 /*!
@@ -54,6 +55,10 @@ WlzGreySetIncValues [-h] [-o<output file>] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Use Hilbert ranking.</td>
+  </tr>
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
@@ -97,7 +102,8 @@ extern char     *optarg;
 
 int		main(int argc, char *argv[])
 {
-  int		ok = 1,
+  int		hilbert = 0,
+  		ok = 1,
   		option,
   		usage = 0;
   FILE		*fP = NULL;
@@ -107,7 +113,7 @@ int		main(int argc, char *argv[])
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
-  static char   optList[] = "ho:";
+  static char   optList[] = "bho:";
   const char    inObjFileStrDef[] = "-",
   	        outObjFileStrDef[] = "-";
 
@@ -118,6 +124,9 @@ int		main(int argc, char *argv[])
   {
     switch(option)
     {
+      case 'b':
+        hilbert = 1;
+	break;
       case 'o':
         outObjFileStr = optarg;
 	break;
@@ -170,7 +179,14 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    outObj = WlzGreyNewIncValues(inObj, &errNum);
+    if(hilbert)
+    {
+      outObj = WlzGreyNewHilbertRankValues(inObj, &errNum);
+    }
+    else
+    {
+      outObj = WlzGreyNewIncValues(inObj, &errNum);
+    }
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -208,10 +224,11 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     fprintf(stderr,
-            "Usage: %s [-h] [-o<output file>] [<input file>]\n"
+            "Usage: %s [-b] [-h] [-o<output file>] [<input file>]\n"
             "Sets incrementing (and hence unique) values in scan order\n"
 	    "throughout the domain of the input object.\n"
 	    "Options are:\n"
+	    "  -b  Use Hilbert ranking.\n"
 	    "  -h  Output this usage message.\n"
 	    "  -o  Output file.\n",
 	    argv[0]);
