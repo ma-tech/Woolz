@@ -720,7 +720,7 @@ public class WlzC2Java
 	  {
 	    jPmKey = WLZ_JPM_KEY_LONG;
 	  }
-	  else if(cPmType.equals("long"))
+	  else if(cPmType.equals("long") ||cPmType.equals("WlzLong"))
 	  {
 	    jPmKey = WLZ_JPM_KEY_LONG;
 	  }
@@ -818,7 +818,7 @@ public class WlzC2Java
 	  }
 	  break;
 	case 1:
-	  if(cPmType.equals("long"))
+	  if(cPmType.equals("long") || cPmType.equals("WlzLong"))
 	  {
 	    if(cPmIdent.startsWith("array"))
 	    {
@@ -1065,7 +1065,7 @@ public class WlzC2Java
 	  }
 	  break;
 	case 2:
-	  if(cPmType.equals("long"))
+	  if(cPmType.equals("long") || cPmType.equals("WlzLong"))
 	  {
 	    if(cPmIdent.startsWith("array"))
 	    {
@@ -1201,7 +1201,7 @@ public class WlzC2Java
 	  }
 	  break;
 	case 3:
-	  if(cPmType.equals("long"))
+	  if((cPmType.equals("long")) || cPmType.equals("WlzLong"))
 	  {
 	    if(cPmIdent.startsWith("array"))
 	    {
@@ -1316,7 +1316,7 @@ public class WlzC2Java
 	  }
 	  break;
 	case 4:
-	  if(cPmType.equals("long"))
+	  if(cPmType.equals("long") || cPmType.equals("WlzLong"))
 	  {
 	    if(cPmIdent.startsWith("dstArray"))
 	    {
@@ -1419,7 +1419,7 @@ public class WlzC2Java
 	  {
 	    jPmKey = WLZ_JPM_KEY_VOID;
 	  }
-	  else if(cFnType.equals("long"))
+	  else if(cFnType.equals("long") || cFnType.equals("WlzLong"))
 	  {
 	    jPmKey = WLZ_JPM_KEY_LONG;
 	  }
@@ -1532,7 +1532,7 @@ public class WlzC2Java
 	  }
 	  break;
 	case 1:
-	  if(cFnType.equals("long"))
+	  if(cFnType.equals("long") || cFnType.equals("WlzLong"))
 	  {
 	    jPmKey = WLZ_JPM_KEY_LONG_PTR1;
 	  }
@@ -1923,7 +1923,8 @@ public class WlzC2Java
   // C to Java parameter conversion.
   public static WlzJParamTypes jFnParam = new WlzJParamTypes();
   // Set the debug level for debug output: 0 = none, 1 = lots, 2 = more
-  public static int debugLevel = 0;
+  // HACK public static int debugLevel = 0;
+  public static int debugLevel = 0; // HACK
 
   /**********************************************************************
   * Purpose:	Looks in the types hash table to see if the given string
@@ -2093,7 +2094,7 @@ public class WlzC2Java
     }
     catch(IOException e)
     {
-      System.err.println("WlzC2Java: failed to open file " + fName + ".");
+      System.err.println("WlzC2Java: failed to open enum file " + fName + ".");
       System.exit(1);
     }
   }
@@ -2126,7 +2127,8 @@ public class WlzC2Java
       }
       catch(IOException e)
       {
-        System.err.println("WlzC2Java: failed to open file " + fName + ".");
+        System.err.println("WlzC2Java: failed to open struct file " +
+	                   fName + ".");
 	System.exit(1);
       }
     }
@@ -2808,6 +2810,7 @@ public class WlzC2Java
       addType("FILE");
       addType("WlzUByte");
       addType("WlzUInt");
+      addType("WlzLong");
       addType("size_t");
       if(optIdx == args.length)
       {
