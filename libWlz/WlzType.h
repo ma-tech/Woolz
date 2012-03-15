@@ -723,8 +723,9 @@ typedef enum _WlzInterpolationType
 */
 typedef enum _WlzThresholdType
 {
-  WLZ_THRESH_LOW		= 0, /*!< Threshold < thresh_value */
-  WLZ_THRESH_HIGH		     /*!< Threshold >= thresh_value */
+  WLZ_THRESH_LOW		= 0, /*!< Threshold <  given value */
+  WLZ_THRESH_HIGH,		     /*!< Threshold >= given value */
+  WLZ_THRESH_EQUAL		     /*!< Threshold == given value */
 } WlzThresholdType;
 
 

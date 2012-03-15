@@ -5,7 +5,7 @@ static char _WlzThreshold_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzThreshold.c
-* \author       Richard Baldock
+* \author       Richard Baldock, Bill Hill
 * \date         March 1999
 * \version      $Id$
 * \par
@@ -48,6 +48,329 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
 				 WlzErrorNum	*dstErr);
 
 /*!
+* \ingroup	WlzThreshold
+* \brief	Computes the number of intervals for WlzThreshold()
+* 		from integral grey values or floating point if not
+* 		comparing equality. The following parameters are
+* 		required:
+*  		<ul>
+*  		  <li>N</li> Number of intervals to be computed: nints.
+*  		  <li>NL1</li> Minimum line coordinate: nl1.
+*  		  <li>NLL</li> Maximum line coordinate: nll.
+*  		  <li>NK1</li> Minimum column coordinate nk1.
+*  		  <li>NKL</li> Maximum column coordinate nkl.
+*  		  <li>G</li>   The grey pointer: g.
+*  		  <li>IWS</li> The interval workspace: iwsp.
+*  		  <li>TV</li>  The threshold value: thresh_i.
+*  		  <li>P</li>   The grey pointer union member: eg ubp.
+*  		  <li>OP</li>  The comparison operator: < for WLZ_THRESH_LOW,
+*  		  	       >= for WLZ_THRESH_HIGH and == for
+*  		  	       WLZ_THRESH_EQUAL.
+*		  <li>K</li>   Column index: colno.
+*                 <li>OV</li>   Over interval: over.
+*  		</ul>
+*/
+#define WLZ_THRESH_ADD_ITV_1(N,NL1,NLL,NK1,NKL,G,IWS,TV,P,OP,K,OV) \
+{ \
+  for((K)=((IWS).lftpos);(K)<=((IWS).rgtpos);++(K)) \
+  { \
+    if(*((G).P)OP(TV)) \
+    { \
+      if(!(OV)) \
+      { \
+	(OV)=1; \
+	if(((IWS).linpos)<(NL1)) \
+	{ \
+	  (NL1)=((IWS).linpos); \
+	} \
+	if(((IWS).linpos)>(NLL)) \
+	{ \
+	  (NLL)=((IWS).linpos); \
+	} \
+	if((K)<(NK1)) \
+	{ \
+	  (NK1)=(K); \
+	} \
+      } \
+    } \
+    else \
+    { \
+      if(OV) \
+      { \
+	if((K)>(NKL)) \
+	{ \
+	  (NKL)=(K); \
+	} \
+	(OV)=0; \
+	++(N); \
+      } \
+    } \
+    ++((G).P); \
+  } \
+}
+
+/*!
+* \ingroup	WlzThreshold
+* \brief	Computes the number of intervals for WlzThreshold()
+* 		from floating point grey values using an equality
+* 		operator. The following parameters are
+* 		required:
+*  		<ul>
+*  		  <li>N</li> Number of intervals to be computed: nints.
+*  		  <li>NL1</li> Minimum line coordinate: nl1.
+*  		  <li>NLL</li> Maximum line coordinate: nll.
+*  		  <li>NK1</li> Minimum column coordinate nk1.
+*  		  <li>NKL</li> Maximum column coordinate nkl.
+*  		  <li>G</li>   The grey pointer: g.
+*  		  <li>IWS</li> The interval workspace: iwsp.
+*  		  <li>TV</li>  The threshold value: thresh_i.
+*  		  <li>P</li>   The grey pointer union member: eg ubp.
+*  		  <li>E</li>   The epsilon value for floating point
+*  		  	       comparison, should be > 0.0.
+*		  <li>K</li>   Column index: colno.
+*                 <li>OV</li>   Over interval: over.
+*  		</ul>
+*/
+#define WLZ_THRESH_ADD_ITV_FE_1(N,NL1,NLL,NK1,NKL,G,IWS,TV,P,E,K,OV) \
+{ \
+  for((K)=((IWS).lftpos);(K)<=((IWS).rgtpos);++(K)) \
+  { \
+    if((*((G).P)<((TV)-(E)))||(*((G).P)>((TV)+(E)))) \
+    { \
+      if(OV) \
+      { \
+	if((K)>(NKL)) \
+	{ \
+	  (NKL)=(K); \
+	} \
+	(OV)=0; \
+	++(N); \
+      } \
+    } \
+    else \
+    { \
+      if(!(OV)) \
+      { \
+	(OV)=1; \
+	if(((IWS).linpos)<(NL1)) \
+	{ \
+	  (NL1)=((IWS).linpos); \
+	} \
+	if(((IWS).linpos)>(NLL)) \
+	{ \
+	  (NLL)=((IWS).linpos); \
+	} \
+	if((K)<(NK1)) \
+	{ \
+	  (NK1)=(K); \
+	} \
+      } \
+    } \
+    ++((G).P); \
+  } \
+}
+
+/*!
+* \ingroup	WlzThreshold
+* \brief	Computes the number of intervals for WlzThreshold()
+* 		from RGBA grey values using a modulus operator to
+* 		compute a scalar grey value from the RGBA value. The
+* 		following parameters are required:
+*  		<ul>
+*  		  <li>N</li> Number of intervals to be computed: nints.
+*  		  <li>NL1</li> Minimum line coordinate: nl1.
+*  		  <li>NLL</li> Maximum line coordinate: nll.
+*  		  <li>NK1</li> Minimum column coordinate nk1.
+*  		  <li>NKL</li> Maximum column coordinate nkl.
+*  		  <li>G</li>   The grey pointer: g.
+*  		  <li>IWS</li> The interval workspace: iwsp.
+*  		  <li>TV</li>  The threshold value: thresh_i.
+*  		  <li>OP</li>  The comparison operator: < for WLZ_THRESH_LOW,
+*  		  	       >= for WLZ_THRESH_HIGH and == for
+*  		  	       WLZ_THRESH_EQUAL.
+*		  <li>K</li>   Column index: colno.
+*                 <li>OV</li>   Over interval: over.
+*  		</ul>
+*/
+#define WLZ_THRESH_ADD_ITV_RGB_1(N,NL1,NLL,NK1,NKL,G,IWS,TV,OP,K,OV) \
+{ \
+  for((K)=((IWS).lftpos);(K)<=((IWS).rgtpos);++(K)) \
+  { \
+    if(WLZ_RGBA_MODULUS_2(*((G).rgbp))OP(TV)) \
+    { \
+      if(!(OV)) \
+      { \
+	(OV)=1; \
+	if(((IWS).linpos)<(NL1)) \
+	{ \
+	  (NL1)=((IWS).linpos); \
+	} \
+	if(((IWS).linpos)>(NLL)) \
+	{ \
+	  (NLL)=((IWS).linpos); \
+	} \
+	if((K)<(NK1)) \
+	{ \
+	  (NK1)=(K); \
+	} \
+      } \
+    } \
+    else \
+    { \
+      if(OV) \
+      { \
+	if((K)>(NKL)) \
+	{ \
+	  (NKL)=(K); \
+	} \
+	(OV)=0; \
+	++(N); \
+      } \
+    } \
+    ++((G).rgbp); \
+  } \
+}
+
+/*!
+* \ingroup	WlzThreshold
+* \brief	Constructs the intervals for WlzThreshold()
+* 		from integral grey values or floating point if not
+* 		comparing equality. The following parameters are
+* 		required:
+*  		<ul>
+*  		  <li>N</li> Number of intervals to be computed: nints.
+*  		  <li>NK1</li> Minimum column coordinate nk1.
+*  		  <li>G</li>   The grey pointer: g.
+*  		  <li>ITV</li> The interval pointer.
+*  		  <li>IWS</li> The interval workspace: iwsp.
+*  		  <li>TV</li>  The threshold value: thresh_i.
+*  		  <li>P</li>   The grey pointer union member: eg ubp.
+*  		  <li>OP</li>  The comparison operator: < for WLZ_THRESH_LOW,
+*  		  	       >= for WLZ_THRESH_HIGH and == for
+*  		  	       WLZ_THRESH_EQUAL.
+*		  <li>K</li>   Column index: colno.
+*                 <li>OV</li>   Over interval: over.
+*  		</ul>
+*/
+#define WLZ_THRESH_ADD_ITV_2(N,NK1,G,ITV,IWS,TV,P,OP,K,OV) \
+{ \
+  for((K)=((IWS).lftpos);(K)<=((IWS).rgtpos);++(K)) \
+  { \
+    if((*(G).P)OP(TV)) \
+    { \
+      if(!(OV)) \
+      { \
+	(OV)=1; \
+	((ITV)->ileft)=(K)-(NK1); \
+      } \
+    } \
+    else \
+    { \
+      if(OV) \
+      { \
+	(OV)=0; \
+	((ITV)->iright)=(K)-(NK1)-1; \
+	++(N); \
+	++(ITV); \
+      } \
+    } \
+    ++((G).P); \
+  } \
+}
+
+/*!
+* \ingroup	WlzThreshold
+* \brief	Constructs the intervals for WlzThreshold()
+* 		from floating point grey values using an equality
+* 		operator. The following parameters are required:
+*  		<ul>
+*  		  <li>N</li> Number of intervals to be computed: nints.
+*  		  <li>NK1</li> Minimum column coordinate nk1.
+*  		  <li>G</li>   The grey pointer: g.
+*  		  <li>ITV</li> The interval pointer.
+*  		  <li>IWS</li> The interval workspace: iwsp.
+*  		  <li>TV</li>  The threshold value: thresh_i.
+*  		  <li>P</li>   The grey pointer union member: eg ubp.
+*  		  <li>E</li>   The epsilon value for floating point
+*  		  	       comparison, should be > 0.0.
+*		  <li>K</li>   Column index: colno.
+*                 <li>OV</li>   Over interval: over.
+*  		</ul>
+*/
+#define WLZ_THRESH_ADD_ITV_FE_2(N,NK1,G,ITV,IWS,TV,P,E,K,OV) \
+{ \
+  for((K)=((IWS).lftpos);(K)<=((IWS).rgtpos);++(K)) \
+  { \
+    if((*((G).P)<((TV)-(E)))||(*((G).P)>((TV)+(E)))) \
+    { \
+      if(OV) \
+      { \
+	(OV)=0; \
+	((ITV)->iright)=(K)-(NK1)-1; \
+	++(N); \
+	++(ITV); \
+      } \
+    } \
+    else \
+    { \
+      if(!(OV)) \
+      { \
+	(OV)=1; \
+	((ITV)->ileft)=(K)-(NK1); \
+      } \
+    } \
+    ++((G).P); \
+  } \
+}
+
+/*!
+* \ingroup	WlzThreshold
+* \brief	Constructs the intervals for WlzThreshold()
+* 		from RGBA grey values using a modulus operator to
+* 		compute a scalar grey value from the RGBA value. The
+* 		following parameters are required:
+*  		<ul>
+*  		  <li>N</li> Number of intervals to be computed: nints.
+*  		  <li>NK1</li> Minimum column coordinate nk1.
+*  		  <li>G</li>   The grey pointer: g.
+*  		  <li>ITV</li> The interval pointer.
+*  		  <li>IWS</li> The interval workspace: iwsp.
+*  		  <li>TV</li>  The threshold value: thresh_i.
+*  		  <li>P</li>   The grey pointer union member: eg ubp.
+*  		  <li>OP</li>  The comparison operator: < for WLZ_THRESH_LOW,
+*  		  	       >= for WLZ_THRESH_HIGH and == for
+*  		  	       WLZ_THRESH_EQUAL.
+*		  <li>K</li>   Column index: colno.
+*                 <li>OV</li>   Over interval: over.
+*  		</ul>
+*/
+#define WLZ_THRESH_ADD_ITV_RGB_2(N,NK1,G,ITV,IWS,TV,P,OP,K,OV) \
+{ \
+  for((K)=((IWS).lftpos);(K)<=((IWS).rgtpos);++(K)) \
+  { \
+    if((WLZ_RGBA_MODULUS_2(*(G).P))OP(TV)) \
+    { \
+      if(!(OV)) \
+      { \
+	(OV)=1; \
+	((ITV)->ileft)=(K)-(NK1); \
+      } \
+    } \
+    else \
+    { \
+      if(OV) \
+      { \
+	(OV)=0; \
+	((ITV)->iright)=(K)-(NK1)-1; \
+	++(N); \
+	++(ITV); \
+      } \
+    } \
+    ++((G).P); \
+  } \
+}
+
+/*!
 * \return	New Woolz object or NULL on error.
 * \ingroup	WlzThreshold
 * \brief	Thresholds a woolz grey-level object, 2D or 3D.
@@ -55,11 +378,14 @@ static WlzObject *WlzThreshold3d(WlzObject	*obj,
 * \param	threshV			Threshold pixel value.
 * \param	highlow			Mode parameter with possible values:
 *					<ul>
-*					<li> WLZ_THRESH_HIGH - thresholded
-*					object is of values >= threshold value.
-*					</li>
 *					<li> WLZ_THRESH_LOW - thresholded
-*					object is of values < threshold value.
+*					object is of values < given value.
+*					</li>
+*					<li> WLZ_THRESH_HIGH - thresholded
+*					object is of values >= given value.
+*					</li>
+*					<li> WLZ_THRESH_EQUAL - thresholded
+*					object is of values == given value.
 *					</li>
 *					</ul>
 * \param	dstErr			Destination pointer for error number,
@@ -85,6 +411,8 @@ WlzObject *WlzThreshold(WlzObject	*obj,
   WlzDomain		domain;
   WlzValues		values;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
+  const float		eps_f = 1.0e-6;
+  const double		eps_d = 1.0e-12;
 
   /* check the object */
   if( obj == NULL ){
@@ -133,8 +461,9 @@ WlzObject *WlzThreshold(WlzObject	*obj,
       errNum = WLZ_ERR_PARAM_DATA;
       break;
 
-    case WLZ_THRESH_HIGH:
     case WLZ_THRESH_LOW:
+    case WLZ_THRESH_HIGH:
+    case WLZ_THRESH_EQUAL:
       break;
     }
   }
@@ -197,161 +526,103 @@ WlzObject *WlzThreshold(WlzObject	*obj,
       g = gwsp.u_grintptr;
       over = 0;
       switch(gwsp.pixeltype){
-
-      case WLZ_GREY_INT:
-	for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
-	  if((highlow == WLZ_THRESH_HIGH && *g.inp >= thresh_i) ||
-	     (highlow == WLZ_THRESH_LOW && *g.inp < thresh_i) ){
-	    if (over == 0) {
-	      over = 1;
-	      if (iwsp.linpos < nl1)
-		nl1 = iwsp.linpos;
-	      if (iwsp.linpos > nll)
-		nll = iwsp.linpos;
-	      if (colno < nk1)
-		nk1 = colno;
-	    }
-	  } else {
-	    if (over == 1) {
-	      if (colno > nkl)
-		nkl = colno;
-	      over = 0;
-	      nints++;
-	    }
+	case WLZ_GREY_INT:
+	  switch(highlow) {
+	    case WLZ_THRESH_LOW:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,inp,
+	                           <,colno,over);
+	      break;
+	    case WLZ_THRESH_HIGH:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,inp,
+	                           >=,colno,over);
+	      break;
+	    case WLZ_THRESH_EQUAL:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,inp,
+	                           ==,colno,over);
+	      break;
 	  }
-	  g.inp++;
-	}
-	break;
-
-      case WLZ_GREY_SHORT:
-	for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
-	  if((highlow == WLZ_THRESH_HIGH && *g.shp >= thresh_i) ||
-	     (highlow == WLZ_THRESH_LOW && *g.shp < thresh_i) ){
-	    if (over == 0) {
-	      over = 1;
-	      if (iwsp.linpos < nl1)
-		nl1 = iwsp.linpos;
-	      if (iwsp.linpos > nll)
-		nll = iwsp.linpos;
-	      if (colno < nk1)
-		nk1 = colno;
-	    }
-	  } else {
-	    if (over == 1) {
-	      if (colno > nkl)
-		nkl = colno;
-	      over = 0;
-	      nints++;
-	    }
+	  break;
+	case WLZ_GREY_SHORT:
+	  switch(highlow) {
+	    case WLZ_THRESH_LOW:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,shp,
+	                           <,colno,over);
+	      break;
+	    case WLZ_THRESH_HIGH:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,shp,
+	                           >=,colno,over);
+	      break;
+	    case WLZ_THRESH_EQUAL:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,shp,
+	                           ==,colno,over);
+	      break;
 	  }
-	  g.shp++;
-	}
-	break;
-
-      case WLZ_GREY_UBYTE:
-	for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
-	  if((highlow == WLZ_THRESH_HIGH && ((int) (*g.ubp)) >= thresh_i) ||
-	     (highlow == WLZ_THRESH_LOW && ((int) (*g.ubp)) < thresh_i) ){
-	    if (over == 0) {
-	      over = 1;
-	      if (iwsp.linpos < nl1)
-		nl1 = iwsp.linpos;
-	      if (iwsp.linpos > nll)
-		nll = iwsp.linpos;
-	      if (colno < nk1)
-		nk1 = colno;
-	    }
-	  } else {
-	    if (over == 1) {
-	      if (colno > nkl)
-		nkl = colno;
-	      over = 0;
-	      nints++;
-	    }
+	  break;
+	case WLZ_GREY_UBYTE:
+	  switch(highlow) {
+	    case WLZ_THRESH_LOW:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,ubp,
+	                           <,colno,over);
+	      break;
+	    case WLZ_THRESH_HIGH:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,ubp,
+	                           >=,colno,over);
+	      break;
+	    case WLZ_THRESH_EQUAL:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,ubp,
+	                           ==,colno,over);
+	      break;
 	  }
-	  g.ubp++;
-	}
-	break;
-
-      case WLZ_GREY_FLOAT:
-	for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
-	  if((highlow == WLZ_THRESH_HIGH && (*g.flp >= thresh_f)) ||
-	     (highlow == WLZ_THRESH_LOW && (*g.flp < thresh_f)) ){
-	    if (over == 0) {
-	      over = 1;
-	      if (iwsp.linpos < nl1)
-		nl1 = iwsp.linpos;
-	      if (iwsp.linpos > nll)
-		nll = iwsp.linpos;
-	      if (colno < nk1)
-		nk1 = colno;
-	    }
-	  } else {
-	    if (over == 1) {
-	      if (colno > nkl)
-		nkl = colno;
-	      over = 0;
-	      nints++;
-	    }
+	  break;
+	case WLZ_GREY_FLOAT:
+	  switch(highlow) {
+	    case WLZ_THRESH_LOW:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,flp,
+	                           <,colno,over);
+	      break;
+	    case WLZ_THRESH_HIGH:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,flp,
+	                           >=,colno,over);
+	      break;
+	    case WLZ_THRESH_EQUAL:
+	      WLZ_THRESH_ADD_ITV_FE_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,flp,
+				      eps_f,colno,over);
+	      break;
 	  }
-	  g.flp++;
-	}
-	break;
-
-      case WLZ_GREY_DOUBLE:
-	for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
-	  if((highlow == WLZ_THRESH_HIGH && (*g.dbp >= thresh_d)) ||
-	     (highlow == WLZ_THRESH_LOW && (*g.dbp < thresh_d)) ){
-	    if (over == 0) {
-	      over = 1;
-	      if (iwsp.linpos < nl1)
-		nl1 = iwsp.linpos;
-	      if (iwsp.linpos > nll)
-		nll = iwsp.linpos;
-	      if (colno < nk1)
-		nk1 = colno;
-	    }
-	  } else {
-	    if (over == 1) {
-	      if (colno > nkl)
-		nkl = colno;
-	      over = 0;
-	      nints++;
-	    }
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  switch(highlow) {
+	    case WLZ_THRESH_LOW:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,dbp,
+	                           <,colno,over);
+	      break;
+	    case WLZ_THRESH_HIGH:
+	      WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,dbp,
+	                           >=,colno,over);
+	      break;
+	    case WLZ_THRESH_EQUAL:
+	      WLZ_THRESH_ADD_ITV_FE_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,dbp,
+				      eps_d,colno,over);
+	      break;
 	  }
-	  g.dbp++;
-	}
-	break;
-
-      case WLZ_GREY_RGBA: /* what to do - OR or AND ? choose MODULUS */
-	for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
-	  if(((highlow == WLZ_THRESH_HIGH) && 
-	      (WLZ_RGBA_MODULUS_2(*g.rgbp) >= thresh_i)) ||
-	     ((highlow == WLZ_THRESH_LOW) && 
-	      (WLZ_RGBA_MODULUS_2(*g.rgbp) < thresh_i)) ){
-	    if (over == 0) {
-	      over = 1;
-	      if (iwsp.linpos < nl1)
-		nl1 = iwsp.linpos;
-	      if (iwsp.linpos > nll)
-		nll = iwsp.linpos;
-	      if (colno < nk1)
-		nk1 = colno;
-	    }
-	  } else {
-	    if (over == 1) {
-	      if (colno > nkl)
-		nkl = colno;
-	      over = 0;
-	      nints++;
-	    }
+	case WLZ_GREY_RGBA:
+	  switch(highlow) {
+	    case WLZ_THRESH_LOW:
+	      WLZ_THRESH_ADD_ITV_RGB_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,
+	                               <,colno,over);
+	      break;
+	    case WLZ_THRESH_HIGH:
+	      WLZ_THRESH_ADD_ITV_RGB_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,
+	                               >=,colno,over);
+	      break;
+	    case WLZ_THRESH_EQUAL:
+	      WLZ_THRESH_ADD_ITV_RGB_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,
+	                               ==,colno,over);
+	      break;
 	  }
-	  g.rgbp++;
-	}
-	break;
-
-      default:
-        break;
+	  break;
+	default:
+	  break;
       }
 
       if (over == 1) {
@@ -400,133 +671,104 @@ WlzObject *WlzThreshold(WlzObject	*obj,
 	  g = gwsp.u_grintptr;
 	  over = 0;
 	  switch(gwsp.pixeltype){
-
-	  case WLZ_GREY_INT:
-	    for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
-	      if ((highlow == WLZ_THRESH_HIGH && *g.inp >= thresh_i) ||
-		  (highlow == WLZ_THRESH_LOW && *g.inp < thresh_i)) {
-		if (over == 0) {
-		  over = 1;
-		  itvl->ileft = colno - nk1;
-		}
-	      } else {
-		if (over == 1) {
-		  over = 0;
-		  itvl->iright = colno - nk1 - 1;
-		  nints++;
-		  itvl++;
-		}
+	    case WLZ_GREY_INT:
+	      switch(highlow) {
+		case WLZ_THRESH_LOW:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,inp,
+                                       <,colno,over);
+		  break;
+		case WLZ_THRESH_HIGH:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,inp,
+                                       >=,colno,over);
+		  break;
+		case WLZ_THRESH_EQUAL:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,inp,
+                                       ==,colno,over);
+		  break;
 	      }
-	      g.inp++;
-	    }
-	    break;
-
-	  case WLZ_GREY_SHORT:
-	    for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
-	      if ((highlow == WLZ_THRESH_HIGH && *g.shp >= thresh_i) ||
-		  (highlow == WLZ_THRESH_LOW && *g.shp < thresh_i)) {
-		if (over == 0) {
-		  over = 1;
-		  itvl->ileft = colno - nk1;
-		}
-	      } else {
-		if (over == 1) {
-		  over = 0;
-		  itvl->iright = colno - nk1 - 1;
-		  nints++;
-		  itvl++;
-		}
+	      break;
+	    case WLZ_GREY_SHORT:
+	      switch(highlow) {
+		case WLZ_THRESH_LOW:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,shp,
+                                       <,colno,over);
+		  break;
+		case WLZ_THRESH_HIGH:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,shp,
+                                       >=,colno,over);
+		  break;
+		case WLZ_THRESH_EQUAL:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,shp,
+                                       ==,colno,over);
+		  break;
 	      }
-	      g.shp++;
-	    }
-	    break;
-
-	  case WLZ_GREY_UBYTE:
-	    for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
-	      if((highlow == WLZ_THRESH_HIGH &&
-		  ((int) (*g.ubp)) >= thresh_i) ||
-		 (highlow == WLZ_THRESH_LOW &&
-		  ((int) (*g.ubp)) < thresh_i)) {
-		if (over == 0) {
-		  over = 1;
-		  itvl->ileft = colno - nk1;
-		}
-	      } else {
-		if (over == 1) {
-		  over = 0;
-		  itvl->iright = colno - nk1 - 1;
-		  nints++;
-		  itvl++;
-		}
+	      break;
+	    case WLZ_GREY_UBYTE:
+	      switch(highlow) {
+		case WLZ_THRESH_LOW:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,ubp,
+                                       <,colno,over);
+		  break;
+		case WLZ_THRESH_HIGH:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,ubp,
+                                       >=,colno,over);
+		  break;
+		case WLZ_THRESH_EQUAL:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,ubp,
+                                       ==,colno,over);
+		  break;
 	      }
-	      g.ubp++;
-	    }
-	    break;
-
-	  case WLZ_GREY_FLOAT:
-	    for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
-	      if ((highlow == WLZ_THRESH_HIGH && *g.flp >= thresh_f) ||
-		  (highlow == WLZ_THRESH_LOW && *g.flp < thresh_f)) {
-		if (over == 0) {
-		  over = 1;
-		  itvl->ileft = colno - nk1;
-		}
-	      } else {
-		if (over == 1) {
-		  over = 0;
-		  itvl->iright = colno - nk1 - 1;
-		  nints++;
-		  itvl++;
-		}
+	      break;
+	    case WLZ_GREY_FLOAT:
+	      switch(highlow) {
+		case WLZ_THRESH_LOW:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,flp,
+                                       <,colno,over);
+		  break;
+		case WLZ_THRESH_HIGH:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,flp,
+                                       >=,colno,over);
+		  break;
+		case WLZ_THRESH_EQUAL:
+		  WLZ_THRESH_ADD_ITV_FE_2(nints,nk1,g,itvl,iwsp,thresh_i,flp,
+					  eps_f,colno,over);
+		  break;
 	      }
-	      g.flp++;
-	    }
-	    break;
-
-	  case WLZ_GREY_DOUBLE:
-	    for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
-	      if ((highlow == WLZ_THRESH_HIGH && *g.dbp >= thresh_d) ||
-		  (highlow == WLZ_THRESH_LOW && *g.dbp < thresh_d)) {
-		if (over == 0) {
-		  over = 1;
-		  itvl->ileft = colno - nk1;
-		}
-	      } else {
-		if (over == 1) {
-		  over = 0;
-		  itvl->iright = colno - nk1 - 1;
-		  nints++;
-		  itvl++;
-		}
+	      break;
+	    case WLZ_GREY_DOUBLE:
+	      switch(highlow) {
+		case WLZ_THRESH_LOW:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,dbp,
+                                       <,colno,over);
+		  break;
+		case WLZ_THRESH_HIGH:
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,dbp,
+                                       >=,colno,over);
+		  break;
+		case WLZ_THRESH_EQUAL:
+		  WLZ_THRESH_ADD_ITV_FE_2(nints,nk1,g,itvl,iwsp,thresh_i,dbp,
+					  eps_d,colno,over);
+		  break;
 	      }
-	      g.dbp++;
-	    }
-	    break;
-
-	  case WLZ_GREY_RGBA: /* what to do - OR or AND ? choose MODULUS */
-	    for (colno = iwsp.lftpos; colno <= iwsp.rgtpos; colno++) {
-	      if(((highlow == WLZ_THRESH_HIGH) && 
-		  (WLZ_RGBA_MODULUS_2(*g.rgbp) >= thresh_i)) ||
-		 ((highlow == WLZ_THRESH_LOW) && 
-		  (WLZ_RGBA_MODULUS_2(*g.rgbp) < thresh_i)) ){
-		if (over == 0) {
-		  over = 1;
-		  itvl->ileft = colno - nk1;
-		}
-	      } else {
-		if (over == 1) {
-		  over = 0;
-		  itvl->iright = colno - nk1 - 1;
-		  nints++;
-		  itvl++;
-		}
+	      break;
+	    case WLZ_GREY_RGBA:
+	      switch(highlow) {
+		case WLZ_THRESH_LOW:
+		  WLZ_THRESH_ADD_ITV_RGB_2(nints,nk1,g,itvl,iwsp,thresh_i,dbp,
+		                           <,colno,over);
+		  break;
+		case WLZ_THRESH_HIGH:
+		  WLZ_THRESH_ADD_ITV_RGB_2(nints,nk1,g,itvl,iwsp,thresh_i,dbp,
+		                           >=,colno,over);
+		  break;
+		case WLZ_THRESH_EQUAL:
+		  WLZ_THRESH_ADD_ITV_RGB_2(nints,nk1,g,itvl,iwsp,thresh_i,dbp,
+					   ==,colno,over);
+		  break;
 	      }
-	      g.rgbp++;
-	    }
-	    break;
-
-	  default:
-	    break;
+	      break;
+	    default:
+	      break;
 	  }
 	  if (over == 1) {
 	    over = 0;
@@ -579,6 +821,9 @@ WlzObject *WlzThreshold(WlzObject	*obj,
 *					</li>
 *					<li> WLZ_THRESH_LOW - thresholded
 *					object is of values < threshold value.
+*					</li>
+*					<li> WLZ_THRESH_EQUAL - thresholded
+*					object is of values == given value.
 *					</li>
 *					</ul>
 * \param	dstErr			Destination pointer for error number,

@@ -49,7 +49,7 @@ static char _WlzThreshold_c[] = "University of Edinburgh $Id$";
 WlzThreshold - thresholds a grey-level object.
 \par Synopsis
 \verbatim
-WlzThreshold [-h] [-t#] [-v#] [-H] [-L] [<input object>]
+WlzThreshold [-h] [-t#] [-v#] [-H] [-L] [-E] [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -82,6 +82,11 @@ WlzThreshold [-h] [-t#] [-v#] [-H] [-L] [<input object>]
     <td><b>-L</b></td>
     <td>Threshold low,
         keep pixels below threshold value.</td>
+  </tr>
+  <tr> 
+    <td><b>-E</b></td>
+    <td>Threshold equal,
+        keep pixels equal to threshold value.</td>
   </tr>
 </table>
 \par Description
@@ -120,25 +125,26 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-t#] [-v#] [-H] [-L] [-h] [<input file>]\n"
-	  "\tThreshold a grey-level woolz object\n"
-	  "\twriting the new object to standard output\n"
-	  "\tOptions are:\n"
-	  "\t  -H        Threshold high, keep pixels above threshold value "
-	  "(default).\n"
-	  "\t  -L        Threshold low, keep pixels below threshold value.\n"
-	  "\t  -t#       Threshold pixel type:\n"
-	  "\t            # = %d: integer (default)\n"
-	  "\t                %d: short\n"
-	  "\t                %d: unsigned byte\n"
-	  "\t                %d: float\n"
-	  "\t                %d: double\n"
-	  "\t            Note -t option must precede -v\n"
-	  "\t  -v#       threshold value  - integer unless -t used\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "",
-	  proc_str, WLZ_GREY_INT, WLZ_GREY_SHORT, WLZ_GREY_UBYTE,
-	  WLZ_GREY_FLOAT, WLZ_GREY_DOUBLE);
+      "Usage:\t%s [-t#] [-v#] [-H] [-L] [-E] [-h] [<input file>]\n"
+      "\tThreshold a grey-level woolz object\n"
+      "\twriting the new object to standard output\n"
+      "\tOptions are:\n"
+      "\t  -H        Threshold high, keep pixels above threshold value "
+      "(default).\n"
+      "\t  -L        Threshold low, keep pixels below threshold value.\n"
+      "\t  -E        Threshold equal, keep pixels equal to threshold value.\n"
+      "\t  -t#       Threshold pixel type:\n"
+      "\t            # = %d: integer (default)\n"
+      "\t                %d: short\n"
+      "\t                %d: unsigned byte\n"
+      "\t                %d: float\n"
+      "\t                %d: double\n"
+      "\t            Note -t option must precede -v\n"
+      "\t  -v#       threshold value  - integer unless -t used\n"
+      "\t  -h        Help - prints this usage message\n"
+      "",
+      proc_str, WLZ_GREY_INT, WLZ_GREY_SHORT, WLZ_GREY_UBYTE,
+      WLZ_GREY_FLOAT, WLZ_GREY_DOUBLE);
   return;
 }
  
@@ -148,7 +154,7 @@ int main(int	argc,
 
   WlzObject	*obj, *nobj;
   FILE		*inFile;
-  char 		optList[] = "HLht:v:";
+  char 		optList[] = "HLEht:v:";
   int		option;
   WlzThresholdType highLow = WLZ_THRESH_HIGH;
   WlzGreyType	threshpixtype = WLZ_GREY_INT;
@@ -216,6 +222,10 @@ int main(int	argc,
 
     case 'L':
       highLow = WLZ_THRESH_LOW;
+      break;
+
+    case 'E':
+      highLow = WLZ_THRESH_EQUAL;
       break;
 
     case 'h':
