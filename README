@@ -2,64 +2,95 @@ Core Woolz README
 =================
 ($Id$)
 
-bill@hgu.mrc.ac.uk 2010
+Bill.Hill@igmm.mrc.ac.uk 2012
 
 Contents
 --------
 
 
-1) What is Woolz
-	a) History
-        b) Authors
-	c) Other Acknowledgements
-2) Where can I get the Woolz software?
-3) How can I build Woolz?
-	a) Install instructions
-        b) Compatibility issues
-        c) Compiler warning messages
-4) How can I write my own Woolz code?
-	a) Where to start
-
+1)  What is Woolz
+2)  Where can I get the Woolz software?
+3)  How can I build Woolz?
+4)  How can I use Woolz?
+5)  File formats.
+6)  How can I write my own Woolz code?
+6a)   The Woolz Object ("It's object orientated, sort of")
+6b)   Access Methods
+6c)   Geometric Models
+6d)   Contours
+6e)   Affine Transforms
+6f)   Basis Function Transforms
+6e)   Meshes
+7)  Documentation
 
 1) What is Woolz?
 -----------------
 
 
 Woolz is a set of software libraries and executables for image processing
-and pattern recognition. It has been written in ANSI standard C so that
-it will build and run on all computing platforms that support some basic
-requirements, such as supporting at least 32 bit integers. The software
-is know to build on GNU/Linux, MacOSX and Solaris systems. It will also
-build using MingW on Windows systems.
+and pattern recognition that was initially developed at the MRC Clinical
+Population and Cytogenetics Unit, now called the MRC Human Genetics Unit,
+for fast microscope slide scanning, chromosome image analysis, pattern
+recognition and a wide range of image processing and analysis problems.
+The original authors of the software are Dr. Denis Rutovitz and Dr Jim Piper
+although the software has developed and expanded considerably since their
+initial work.
+
+Woolz has been adopted as the standard for the Mouse Atlas Databases
+(http://www.emouseatlas.org) and is used for all the reconstructions,
+anatomical, gene-expression and spatial domains. This is because the
+interval coding provides significant computing advantages in a range of
+image processing functions specifically in set operations (such as union,
+intersection, etc.) morphological operations (erosion, dilation etc.) and
+other binary image processing such as distance transforms, skeletonization,
+segmentation and labelling. In general Woolz is very efficient with respect
+to both memory use and time.
+
+The Woolz data structures are, in general, compact and in terms of
+grey-level data minimise memory usage without compression (which in
+principle could also be applied). It is especially efficient for
+morphological and set operations because of the way it's 2 and 3D
+domain objects are encoded using intervals.
+
+Since it's adoption by the Mouse Atlas Project there have been many
+significant developments in Woolz, which have primarily been focused on
+3D reconstruction, transforms, registration and warping.
+
+ Woolz has been written in ANSI standard C so that it will build and
+run on all computing platforms that support some basic requirements,
+such as supporting at least 32 bit integers and IEEE floating point.
+The software is know to build on GNU/Linux, MacOSX and Solaris systems.
+It will also build using MingW on Windows systems.
 
 The code is partitioned into the following modules:
 
-libAlc:		Library providing generic data structures and memory allocation functions.
+libAlc:		Library providing generic data structures and memory allocation
+	        functions.
 libAlg:		Library providing basic numerical algorithms.
 libbibfile:     Library with bibfile style input/output functions.
 libhguDlpList:  Library with a generic doubly linked pointer list.
-libReconstruct: Library with code for 3D alignment of 2D section images to form a 3D image.
+libReconstruct: Library with code for 3D alignment of 2D section images to
+                form a 3D image.
 libWlz:         The Woolz image processing library.
 libWlzBnd:      Library with small functions that bind Woolz to other languages.
 libWlzExtFF:    Library for external data format input/output.
-java:           Directory structure in which the Woolz java binding can be built.
+java:           Directory structure in which the Woolz Java binding can be
+                built.
 binWlz:         Small command line based Woolz programs.
 binWlzApp:      More small command line based Woolz programs.
 binWlzExtFF:    Small command line based Woolz programs which use external file formats.
 binWlzTst:      Small command line based test programs for Woolz.
 
-1a) History
------------
-
-TODO
-
-1b) Authors
------------
-
-TODO
-
-1c) Other Acknowledgements
---------------------------
+The authors include (in sort order):
+Bill Hill
+Christophe Dubreuil
+Elizabeth Guest
+Jianguo Rao
+Jim Piper
+Konstantinos Liakos
+Margaret Stark
+Nick Burton
+Richard Baldock
 
 The skeleton for the autoconf system was shamelessly copied from Tina
 (http://www.tina-vision.net).
@@ -67,23 +98,23 @@ The skeleton for the autoconf system was shamelessly copied from Tina
 2) Where can I get the Woolz software?
 --------------------------------------
 
-While we plan to release Woolz to some public code repository, currently it can
-only be obtained (both as source code and compilled code) from the MRC Human Genetics Unit,
-Edinburgh, UK.
+While we plan to release Woolz to some public code repository, currently it
+can only be obtained (both as source code and compiled code) from:
+MRC Human Genetics Unit
+MRC IGMM, University of Edinburgh
+Western General Hospital
+Crewe Road, Edinburgh EH4 2XU, UK.
 
 3. How can I build Woolz?
 -------------------------
 
-3a) Install instructions
-------------------------
-
-Woolz should build easily on most modern systems that have the GNU Autoconf and Automake
-tools.
+Woolz should build easily on most modern systems that have the GNU Build
+system (see http://en.wikipedia.org/wiki/GNU_build_system).
 
 In most cases the following should be sufficient to build Woolz:
 
 tar -zxf Woolz.tgz
-cd Woolz/src/Core
+cd Woolz/src
 
 aclocal
 automake -a
@@ -92,30 +123,366 @@ libtoolize (Linux) or glibtoolize (Mac)
 ./configure --enable-extff --enable-optimise
 make 
 
-A prefix can be given in the configure stage to define where the programs, libraries
-etc will be installed. Use
+A prefix can be given in the configure stage to define where the programs,
+libraries etc will be installed. Use
 
 ./configure --help
 
 to see this and more options.
 
-3b) Compatibility issues
-------------------------
+4) How can I use Woolz?
+-----------------------
 
-TODO
+There are over 200 small command line programs within Woolz. All
+of these accept -h as an argument to show their usage. On unix-like
+systems it is common to combine these small programs into a single
+command line with pipes. These programs include those for:
+  applying affine, basis function and mesh based transforms
+  registration of spatial domain objects and surfaces
+  reconstruction from serial sections
+  morphological operations (erosion, dilation, etc>)
+  set operations (union, intersection etc)
+  feature extraction
+  mesh generation
+  contour generation
+  distance transforms
+  histograms
+  thresholding and labelling
+  grey and colour image value filters
 
-3c) Compiler warning messages
------------------------------
+5) File formats.
+----------------
 
-TODO
+The encoding of Woolz objects when serialised to files is defined only
+by the source code in the WlzReadObj()/WlzWriteObj() functions. For
+historical reasons there is no unique identifier (magic number) for
+Woolz objects. Woolz objects can also (usualy with some loss of information)
+be written to other (external) file formats.
 
-4) How can I write my own Woolz code?
+The program WlzExtFFConvert can be used to convert between supported
+file formats. The library functions WlzEffReadObj() and WlzEffWriteObj()
+(in libWlzExtFF) can also be used to read and write non-Woolz format
+files.
+
+
+6) How can I write my own Woolz code?
 -------------------------------------
 
-TODO
+The best way to understand Woolz is through the source code, but what
+follows attempts to give an overview and may be some help.
 
-4a) Where to start
+6a) The Woolz Object ("It's object orientated, sort of")
+---------------------------------------------------------
+
+The Woolz Object
+----------------
+
+  typedef struct _WlzObject
+  {
+    WlzObjectType      type;
+    int                linkcount;
+    WlzDomain          domain;
+    WlzValues          values;
+    WlzPropertyList    *plist;
+    struct _WlzObject  *assoc;
+  } WlzObject;
+
+The fields encode the type, link count, spatial domain,
+values, properties and any associated objects of an object.
+The type simply encodes what the object is (3D image, 2D polygon, ...).
+Object use reference counting via the linkcount makes many Woolz
+operations, such as thresholding, extremely efficient with regard to
+both space and time. The link (reference) count of an object is
+incremented when an object is assigned using WlzAssignObject() and
+decremented when an object is freed using WlzFreeObj(). Typical
+usage looks like:
+
+  WlzObject *obj;
+
+  obj = WlzAssignObject(WlzReadObj(stdin, &errNum), NULL);
+  /* Do something with obj */
+  (void> )WlzFreeObj(obj);
+
+The domain of an object is the spatial extent within which the object
+is defined, some other spatial representation (including meshes), some
+transformation or bizarrely a histogram.
+
+The values of an object are some values, such as intensities, which are
+only defined within the objects domain.
+
+There is a core Woolz object type:
+
+  typedef struct _WlzCoreObject
+  {
+    WlzObjectType type;
+    int           linkcount;
+  } WlzCoreObject;
+
+which is sufficient to determine the type of and object and to either
+assign it or free it. So, "there's inheritance too, sort of". The
+other type of top level Woolz object is an array of objects:
+
+  typedef struct _WlzCompoundArray
+  {
+    WlzObjectType type;
+    int           linkcount;
+    WlzObjectType otype;
+    int           n;
+    WlzObject     **o;
+    WlzPropertyList *plist;
+    WlzObject     *assoc;
+  } WlzCompoundArray;
+
+This is similar to the main Woolz object type but has an array of objects
+rather than a domain and values (variants of this compound object exist
+including variants with linked lists).
+
+Woolz Domains
+-------------
+
+The domain of an object is (in most cases) the spatial description of
+and object. For 2D or 3D domain objects, such as the EMAGE anatomy
+domains or the EMAGE model embryos, the domain encodes the region of
+space that the anatomical or embryo component occupies.
+Just as there is a core object there is a core domain which has the
+same uses as the core object:
+
+  typedef struct< _WlzCoreDomain
+  {
+    WlzObjectType   type;
+    int<            linkcount;
+    void            *freeptr;
+  } WlzCoreDomain;
+
+The additional field (compared to WlzCoreObject) is the free pointer.
+This is a pointer to a stack of memory blocks that have been allocated
+for the domain. The Woolz Domain is a union of the possible domains:
+
+  typedef union _WlzDomain
+  {
+    struct _WlzCoreDomain      *core;
+    struct _WlzIntervalDomain  *i;
+    struct _WlzPlaneDomain     *p;
+    struct _WlzPolygonDomain   *poly;
+    struct _WlzBoundList       *b;
+    struct _WlzHistogramDomain *hist;
+    struct _WlzRect            *r;
+    struct _WlzFRect           *fr;
+    struct _WlzAffineTransform *t;
+    struct _WlzWarpTrans       *wt;
+    struct _WlzContour         *ctr;
+    struct _WlzMeshTransform   *mt;
+    struct _WlzLBTDomain2D     *l2;
+    struct _WlzLBTDomain3D     *l3;
+    struct _WlzCMesh2D         *cm2;
+    struct _WlzCMesh2D5        *cm2d5;
+    struct _WlzCMesh3D         *cm3;
+    struct _WlzPoints          *pts;
+    struct _WlzLUTDomain       *lut;
+    struct _WlzThreeDViewStruct *vs3d;
+  } WlzDomain;
+
+These include domains for 2D and 3D spatial regions (WlzIntervalDomain
+and WlzPlaneDomain) as well as polygons, boundaries, contours, meshes
+and transforms (such as affine, basis function and mesh transforms).
+Transforms are domains since they are spatial mappings. Histograms
+are domains too (for historical reasons).
+
+Woolz Values
+------------
+
+The values of an object (again in most cases) represent the actual
+values that are embedded in the space defined by the domain. An
+object with a domain but without values is perfectly valid and are
+frequently used that way, eg to represent some anatomical region.
+The core values type is:
+
+  typedef struct _WlzCoreValues
+  {
+    WlzObjectType type;
+    int       linkcount;
+  } WlzCoreValues;
+
+The Woolz Values is (similarly to the Woolz Domain) a union of the
+possible Woolz values:
+
+  typedef union _WlzValues
+  {
+    struct _WlzCoreValues     *core;
+    struct _WlzRagRValues     *v;
+    struct _WlzRectValues     *r;
+    struct _WlzIntervalValues *i;
+    struct _WlzConvHullValues *c;
+    struct _WlzVoxelValues    *vox;
+    struct _WlzObject         *obj;
+    struct _WlzFeatValues     *fv;
+    struct _WlzRectFeatValues *rfv;
+    struct _WlzIndexedValues  *x;
+    struct _WlzTiledValues    *t;
+    struct _WlzLUTValues      *lut;
+  } WlzValues;
+
+The types of values include image values (WlzRagRValues, WlzRectValues,
+WlzIntervalValues and WlzVoxelValues), convex hulls, indexed values
+(used with meshes) look up tables and features. The top level Woolz object
+itself is also a valid values! This allows objects to be defined which
+include a spatial mapping, such as an affine transform, without computing
+the transformation of the object.
+
+Woolz Properties
+----------------
+
+Property lists are arbitrary lists of properties that are associated with
+an object such as a meaningful name. They were once used extensively,
+but have now been reinstated as genuine linked lists. Properties may
+be used to record the history of an object or object names.
+
+6b) Access Methods
 ------------------
 
-TODO
+Given that Woolz objects are complex data structures, access functions
+are required to use their elements. These access methods are for spatial
+domain objects with values (images) but simple adaptations can make the
+code applicable to spatial domain objects without values.
+
+Interval Scanning
+-----------------
+
+Processing 2D Woolz domain objects is most efficiently done by scanning
+through objects using blocks of contiguous pixels.
+
+  WlzGreyP gP,
+  WlzObject *obj;
+  WlzIntervalWSpace iWsp;
+  WlzGreyWSpace gWsp;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  errNum = WlzInitGreyScan(obj, &iWsp, &gWsp);
+  while((errNum == WLZ_ERR_NONE) &&
+        ((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE))
+  {
+    gP = gWsp.u_grintptr;
+    switch(gWsp.pixeltype)
+    {
+      case WLZ_GREY_INT:
+        for(iPos = iWsp.lftpos; iPos &lt;= iWsp.rgtpos; ++iPos)
+        {
+          *(gP.inp + iPos) /= 2;
+        }
+        break;
+      default:
+        errNum = WLZ_ERR_GREY_TYPE;
+        break;
+    }
+  }
+  if(errNum == WLZ_ERR_EOO)
+  {
+    errNum = WLZ_ERR_NONE;
+  }
+
+Random Access
+-------------
+
+There are random access functions for establishing whether some vertex
+within a spatial domain object (WlzInsideDomain()) and the value at
+some position in space, either inside or outside the object:
+
+  int       val;
+  WlzIVertex3 pos;
+  WlzObject *obj;
+  WlzGreyValueWSpace *gVWSp;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  gVWSp = WlzGreyValueMakeWSp(obj, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzGreyValueGet(gVWSp, pos.vtZ, pos.vtY pos.vtX);
+    switch(gVWSp-&gt;gType)
+    {
+      case WLZ_GREY_INT:
+        val = (*(gVWSp->gVal)).inv;
+        break;
+      default:
+        errNum = WLZ_ERR_GREY_TYPE;
+        break;
+    }
+  }
+
+Iterators
+---------
+
+Simple iterators are another way to access the values of spatial domain
+objects in scan order. Unlike WlzNextGreyInterval() the iterators work
+for both 2D and 3D. In the example below all (integer) values of the
+spatial domain object are incremented from 0.
+
+  WlzErrorNum SetInvGreyValues(WlzObject *obj)
+  {
+    int         i = 0;
+    WlzIterateWSpace *itWSp = NULL;
+    WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+    itWSp = WlzIterateInit(obj, WLZ_RASTERDIR_IPILIC, 1, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      while((errNum = WlzIterate(itWSp)) == WLZ_ERR_NONE)
+      {
+	*(itWSp->gP.inp) = i++;
+      }
+      if(errNum == WLZ_ERR_EOO)
+      {
+	errNum = WLZ_ERR_NONE;
+      }
+    }
+    WlzIterateWSpFree(itWSp);
+    return(errNum);
+  } 
+
+
+6c) Geometric Models
+--------------------
+
+Woolz geometric models provide a unified representation of both 2D and
+3D geometric models composed of simplices. They are capable of simple planar
+straight line graphs in 2D and both manifold and non-manifold surfaces
+(with non intersecting elements) in 3D.
+
+6d) Contours
+------------
+
+Woolz geometric models are used to represent contours such as iso-value
+contours extracted from domain objects.
+
+6e) Affine Transforms
+---------------------
+
+An affine transform is a transformation which preserves lines and the
+parallelism of lines, but not necessarily lengths or the angles between
+(non parallel) lines. Affine transforms in Woolz are stored as homogeneous
+3x3 and 4x4 matrices (actually 4x4 arrays are used for both but 2D
+transforms access them as if they are 3x3).
+
+6f) Basis Function Transforms
+-----------------------------
+
+Basis function transforms allow displacements at discrete points to be
+interpolated throughout an object's domain. These are the sum of radially
+symmetric component transforms, with each component transform centred on
+one of the points.
+
+6e) Meshes
+----------
+
+Data structures and methods exist within Woolz for both convex and
+conforming meshes composed of simplices in 2, 2.5 (2D topology but
+3D geometry, ie surfaces in 3D space) and 3D. Transforms may be
+built using the meshes by associating  displacements with the mesh
+nodes, in the case of conforming meshes this is done using indexed
+values.
+
+7)  Documentation
+-----------------
+
+Woolz uses Doxygen (http://www.doxygen.org) for documentation, but the
+documentation is, as always, the source code itself!
 
