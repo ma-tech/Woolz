@@ -173,9 +173,8 @@ int main(
   
   WlzObject     	*obj;
   WlzDVertex3		vtx;
-  char 	optList[] = "d:hv";
+  char 	optList[] = "d:h";
   int		option;
-  int		verboseFlg=0;
   int		dimension=2;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
@@ -192,10 +191,6 @@ int main(
 	usage(argv[0]);
 	return 1;
       }
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':
