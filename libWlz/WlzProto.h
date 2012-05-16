@@ -3183,6 +3183,12 @@ extern double			WlzGeomTriangleVtxDistSq3D(
 				  WlzDVertex3 v0,
 				  WlzDVertex3 v1,
 				  WlzDVertex3 v2);
+extern double          		WlzGeomTriangleVtxDistSq2D(
+				  WlzDVertex2 *dstU0,
+				  WlzDVertex2 vT,
+				  WlzDVertex2 v0,
+				  WlzDVertex2 v1,
+				  WlzDVertex2 v2);
 
 /************************************************************************
 * WlzGreyCrossing.c							*

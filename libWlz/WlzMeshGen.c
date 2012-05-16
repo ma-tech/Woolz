@@ -232,6 +232,24 @@ static int			WlzCMeshElmExhaustivePos3D(
 				  WlzCMesh3D *mesh,
 				  WlzDVertex3 gPos,
 				  int *dstCloseNod);
+static int			WlzCMeshElmClosestPos2D5(
+				  WlzCMesh2D5 *mesh,
+                                  WlzDVertex3 *dstPos,
+				  WlzDVertex3 pos,
+				  double dMin,
+				  double dMax);
+static int			WlzCMeshElmClosestPos3D(
+				  WlzCMesh3D *mesh,
+                                  WlzDVertex3 *dstPos,
+				  WlzDVertex3 pos,
+				  double dMin,
+				  double dMax);
+static int			WlzCMeshElmClosestPos2D(
+				  WlzCMesh2D *mesh,
+                                  WlzDVertex2 *dstPos,
+				  WlzDVertex2 pos,
+				  double dMin,
+				  double dMax);
 static double	 		WlzCMeshCompGridBSz2D(
 				  int nN,
 				  double nPB,
@@ -5677,6 +5695,206 @@ int             WlzCMeshElmEnclosingPos3D(WlzCMesh3D *mesh,
       elmIdx = WlzCMeshElmJumpPos3D(mesh, gPos, dstCloseNod);
     }
   }
+  return(elmIdx);
+}
+
+/*!
+* \return       Element index or negative value if there is no enclosing
+*               element.
+* \ingroup	WlzMesh
+* \brief	Locates the element in the conforming mesh which encloses
+*		or is closest to the vertex with the given position.
+*
+* \param        mesh			The mesh.
+* \param        dstPos			Destination pointer for found
+* 					position within element. Not set if
+* 					element returned is invalid.
+* \param        pos			Given vertex position.
+* \param        dMin			Minimum distance for found position
+* 					from a mesh boundary.
+* \param	dMax			Maximum distance for found position
+* 					from given position.
+*/
+int		WlzCMeshElmClosestPos(WlzCMeshP mesh,
+                                      WlzVertexP dstPos, WlzVertex pos,
+				      double dMin, double dMax)
+{
+  int           elmIdx = -1;
+
+  switch(mesh.m2->type)
+  {
+    case WLZ_CMESH_2D:
+      elmIdx = WlzCMeshElmClosestPos2D(mesh.m2, dstPos.d2, pos,d2,
+      				       dMin, dMax);
+      break;
+    case WLZ_CMESH_2D5:
+      elmIdx = WlzCMeshElmClosestPos2D5(mesh.m2, dstPos.d2, pos,d2,
+      				        dMin, dMax);
+      break;
+    case WLZ_CMESH_3D:
+      elmIdx = WlzCMeshElmClosestPos3D(mesh.m3, dstPos.d3, pos,d3,
+      				       dMin, dMax);
+      break;
+  }
+  return(elmIdx);
+}
+
+/*!
+* \return       Element index or negative value if there is no enclosing
+*               element.
+* \ingroup	WlzMesh
+* \brief	Locates the element in the conforming mesh which encloses
+*		or is closest to the vertex with the given position.
+*
+* \param        mesh			The mesh.
+* \param        dstPos			Destination pointer for found
+* 					position within element. Not set if
+* 					element returned is invalid.
+* \param        pos			Given vertex position.
+* \param        dMin			Minimum distance for found position
+* 					from a mesh boundary.
+* \param	dMax			Maximum distance for found position
+* 					from given position.
+*/
+static int	WlzCMeshElmClosestPos2D(WlzCMesh2D *mesh,
+                                      WlzDVertex2 *dstPos, WlzDVertex2 pos,
+				      double dMin, double dMax)
+{
+  int		ring = 0,
+  		maxRing,
+		elmIdx = -1,
+		spiralCnt = 0;
+  double	d,
+		dMaxSq,
+		minDstSq = DBL_MAX;
+  WlzIVertex2	idx,
+  		idx0,
+  		idx1;
+  WlzDVertex2	minElmPos;
+  WlzCMeshElm2D *minElm = NULL;
+  WlzCMeshCellElm2D *cElm;
+  WlzCMeshCell2D *cell;
+
+  dMaxSq = dMax * dMax;
+  if(mesh->res.nod.numEnt > 0)
+  {
+    /* First find element that either encloses or else is close to the
+     * vertex with the given position. */
+    idx1.vtX = idx1.vtY = 0;
+    maxRing = 1 + 
+              (int )ceil(1.5 * dMax / mesh->cGrid.cellSz); /* 1.5 >~ sqrt(2) */
+    /* Find grid cell containing (or close to) the vertex. */
+    idx0 = WlzCMeshCellIdxVtx2D(mesh, pos);
+    do /* For each grid cell. */
+    {
+      d = minDstSq;
+      WLZ_VTX_2_ADD(idx, idx0, idx1);
+      if((idx.vtX >= 0) &&
+	 (idx.vtY >= 0) &&
+	 (idx.vtX < mesh->cGrid.nCells.vtX) &&
+	 (idx.vtY < mesh->cGrid.nCells.vtY)) /* If grid cell in grid bbox. */
+      {
+	/* For each element that intersects this cell, find the minimum
+	 * distance from the vertex to this element and so search for
+	 * the element with the minimum distance from the vertex. */
+	cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
+	cElm = cell->cElm;
+	while(cElm && (minDstSq > WLZ_MESH_TOLERANCE_SQ))
+	{
+	  WlzDVertex2	elmPos;
+          WlzCMeshElm2D *elm;
+
+	  if((elm = cElm->elm) != NULL)
+	  {
+	    /* Square of distance but -ve if inside triangle, 0 if on it
+	     * and +ve outside of the triangle. */
+	    d = WlzGeomTriangleVtxDistSq2D(&elmPos, pos,
+	                                   elm.edu[0].nod->pos,
+	                                   elm.edu[1].nod->pos,
+	                                   elm.edu[2].nod->pos);
+	    if(d < minDstSq)
+	    {
+	      minDstSq = d;
+	      minElm = cElm->elm;
+	      minElmPos = elmPos;
+	    }
+	  }
+	  cElm = cElm->next;
+	}
+      }
+      /* Spiral out from the initial grid cell. */
+      spiralCnt = WlzGeomItrSpiral2I(spiralCnt, &(idx1.vtX), &(idx1.vtY));
+      ring = WlzGeomItrSpiralRing(spiralCnt);
+      /* Stop spiraling out when the ring after the first ontain an element
+       * has been searched or an element containing the vertex has been
+       * found. */
+    } while((minDstSq > WLZ_MESH_TOLERANCE_SQ) && (ring < maxRing));
+    if(minDstSq < dMaxSq)
+    {
+      /* Have found an element which either encloses the vertex or else
+       * is the closest and within the given maximum distance (dMax).
+       * Now find position within mesh that is at least dMin from a mesh
+       * boundary. */
+      if(minDstSq < 0)
+
+      /* HACK I AM HERE */
+      elmIdx = minElm->idx;
+    }
+  }
+  return(elmIdx);
+}
+
+/*!
+* \return       Element index or negative value if there is no enclosing
+*               element.
+* \ingroup	WlzMesh
+* \brief	Locates the element in the conforming mesh which encloses
+*		or is closest to the vertex with the given position.
+*
+* \param        mesh			The mesh.
+* \param        dstPos			Destination pointer for found
+* 					position within element. Not set if
+* 					element returned is invalid.
+* \param        pos			Given vertex position.
+* \param        dMin			Minimum distance for found position
+* 					from a mesh boundary.
+* \param	dMax			Maximum distance for found position
+* 					from given position.
+*/
+static int	WlzCMeshElmClosestPos2D5(WlzCMesh2D5 *mesh,
+					 WlzDVertex3 *dstPos, WlzDVertex3 pos,
+					 double dMin, double dMax)
+{
+  int		elmIdx = -1;
+
+  /* TODO */
+  return(elmIdx);
+}
+
+/*!
+* \return       Element index or negative value if there is no enclosing
+*               element.
+* \ingroup	WlzMesh
+* \brief	Locates the element in the conforming mesh which encloses
+*		or is closest to the vertex with the given position.
+*
+* \param        mesh			The mesh.
+* \param        dstPos			Destination pointer for found
+* 					position within element. Not set if
+* 					element returned is invalid.
+* \param        pos			Given vertex position.
+* \param        dMin			Minimum distance for found position
+* 					from a mesh boundary.
+* \param	dMax			Maximum distance for found position
+* 					from given position.
+*/
+static int	WlzCMeshElmClosestPos3D(WlzCMesh3D *mesh,
+                                      WlzDVertex3 *dstPos, WlzDVertex3 pos,
+				      double dMin, double dMax)
+{
+  int		elmIdx = -1;
+
+  /* TODO */
   return(elmIdx);
 }
 

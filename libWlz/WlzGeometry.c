@@ -5653,3 +5653,115 @@ double	 	WlzGeomTriangleVtxDistSq3D(WlzDVertex3 *dstPT,
   }
   return(dist);
 }
+
+/*!
+* \return	Signed squared distance from test vertex to triangle edge,
+* 		with the sign such that it's negative if the test vertex is
+* 		inside the triangle, zero if it's on an edge and positive if
+* 		the vertex is outside the triangle.
+* \ingroup	WlzGeometry
+* \brief	Determines the (squared) distance from the test vertex to the
+* 		closest point on a triangle edge.
+* 		The triangle vertices should be ordered as for
+* 		WlzGeomVxInTriangle2D().
+*
+* 		The method used is first to test for the vertex outside,
+* 		on or inside the triangle and then compute the (squared)
+* 		distance to each edge segment.
+*
+* 		Distance to an edge segment is computed using a parametric
+* 		representation of the triangle edge segments of the form
+* 		\[ Q(t) = t (\vec{v_1} - \vec{v_0}) + \vec{v_0}\] then
+* 		with \[\vec{v\} = \vec{v_1} - \vec{v_0}\] and
+* 		\[\vec{u\} = \vec{v_T} - \vec{v_0}\]
+* 		\[t = \frac{\vec{u} \cdot \vec{v}}{\|\vec{v}\|^2}\]
+* 		but with t clipped to the interval [0-1].
+* 		The closest point on the segment is then at
+* 		\[t \vec{v} + \vec{v_0}\]
+* 		this is returned if the destination pointer is non-null.
+* \param	dstU0			Destination pointer for the edge
+* 					intersection.
+* \param	vT			Test vertex position.
+* \param	v0			First vertex of the triangle.
+* \param	v1			Second vertex of the triangle.
+* \param	v2			Third vertex of the triangle.
+*/
+double 		WlzGeomTriangleVtxDistSq2D(WlzDVertex2 *dstU0, WlzDVertex2 vT,
+					   WlzDVertex2 v0, WlzDVertex2 v1,
+					   WlzDVertex2 v2)
+{
+  int 		inside;
+  double	dSq = 0.0;
+  WlzDVertex2	u0;
+  const double	eps = 1.0e-10;
+
+  u0 = vT;
+  inside = WlzGeomVxInTriangle2D(v0, v1, v2, vT);
+  if(inside != 0)
+  {
+    /* Vertex is not on an edge of the tringle. */
+    double	t,
+    		ds,
+    		ls;
+    WlzDVertex2	u,
+    		v,
+		p0,
+		p1;
+
+    dSq = DBL_MAX;
+    /* Side v0, v1 */
+    WLZ_VTX_2_SUB(u, vT, v0);
+    WLZ_VTX_2_SUB(v, v1, v0);
+    ls = WLZ_VTX_2_SQRLEN(v);
+    if(ls > eps)
+    {
+      t = WLZ_VTX_2_DOT(u, v) / ls;
+      t = WLZ_CLAMP(t, 0.0, 1.0);
+      WLZ_VTX_2_SCALE_ADD(p0, v, t, v0);
+      WLZ_VTX_2_SUB(p1, p0, vT);
+      u0 = p0;
+      dSq = WLZ_VTX_2_SQRLEN(p1);
+    }
+    /* Side v1, v2 */
+    WLZ_VTX_2_SUB(u, vT, v1);
+    WLZ_VTX_2_SUB(v, v2, v1);
+    ls = WLZ_VTX_2_SQRLEN(v);
+    if(ls > eps)
+    {
+      t = WLZ_VTX_2_DOT(u, v) / ls;
+      t = WLZ_CLAMP(t, 0.0, 1.0);
+      WLZ_VTX_2_SCALE_ADD(p0, v, t, v1);
+      WLZ_VTX_2_SUB(p1, p0, vT);
+      ds = WLZ_VTX_2_SQRLEN(p1);
+      if(ds < dSq)
+      {
+        u0 = p0;
+	dSq = WLZ_VTX_2_SQRLEN(p1);
+      }
+    }
+    /* Side v2, v0 */
+    WLZ_VTX_2_SUB(u, vT, v2);
+    WLZ_VTX_2_SUB(v, v0, v2);
+    ls = WLZ_VTX_2_SQRLEN(v);
+    if(ls > eps)
+    {
+      t = WLZ_VTX_2_DOT(u, v) / ls;
+      t = WLZ_CLAMP(t, 0.0, 1.0);
+      WLZ_VTX_2_SCALE_ADD(p0, v, t, v2);
+      WLZ_VTX_2_SUB(p1, p0, vT);
+      ds = WLZ_VTX_2_SQRLEN(p1);
+      if(ds < dSq)
+      {
+        u0 = p0;
+	dSq = WLZ_VTX_2_SQRLEN(p1);
+      }
+    }
+    inside *= -1;
+    dSq *= inside;
+  }
+  if(dstU0)
+  {
+    *dstU0 = u0;
+  }
+  return(dSq);
+}
