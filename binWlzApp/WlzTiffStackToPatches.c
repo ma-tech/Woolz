@@ -335,8 +335,8 @@ int main(int	argc,
 
   /* read the TIFF file */
   if( (inObj = WlzAssignObject(
-	 WlzEffReadObj(NULL, tiffFile, WLZEFF_FORMAT_TIFF, 0,
-		       &errNum), NULL)) == NULL ){
+	 WlzEffReadObj(NULL, tiffFile, WLZEFF_FORMAT_TIFF,
+	               0, 0, 0, &errNum), NULL)) == NULL ){
     usage(argv[0]);
     return errNum;
   }

@@ -74,6 +74,15 @@ WlzExtFFConstruct3D [-h] [-f] [-o<output file>] [-p #] [-s #,#,#]
     <td>Voxel size (x, y, z).</td>
   </tr>
   <tr>
+    <td><b>-G</b></td>
+    <td>Apply grey value transforms.</td>
+  </tr>
+  <tr>
+    <td><b>-S</b></td>
+    <td>Use spatial transforms to create WLZ_TRANS_OBJ objects
+    "      (by default just offsets are applied).</td>
+  </tr>
+  <tr>
     <td><b>-h</b></td>
     <td>Help - print help message</td>
   </tr>
@@ -141,7 +150,9 @@ extern char     *optarg;
 
 static WlzErrorNum 		WlzEFFConAddImg(
 				  WlzObject **objP,
-				  const char *fStr);
+				  const char *fStr,
+				  int sTrans,
+				  int gTrans);
 
 int		main(int argc, char *argv[])
 {
@@ -151,10 +162,12 @@ int		main(int argc, char *argv[])
   		usage = 0,
 		fileList = 0,
 		endOfFileList,
+		gTrans = 0,
 		nObj,
 		nObjMax,
 		nFiles,
-		plane1 = 0;
+		plane1 = 0,
+		sTrans = 0;
   FILE		*fP;
   char		*fStr,
   		*fLstStr = NULL,
@@ -166,7 +179,7 @@ int		main(int argc, char *argv[])
   WlzObject	**objs = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   char		fStrBuf[WLZEFFCON_BUF_LEN];
-  static char   optList[] = "fho:p:s:";
+  static char   optList[] = "fho:p:s:ST";
   const char    outFileStrDef[] = "-";
 
   opterr = 0;
@@ -196,6 +209,12 @@ int		main(int argc, char *argv[])
 	  usage = 1;
 	}
         break;
+      case 'G':
+        gTrans = 1;
+	break;
+      case 'S':
+        sTrans = 1;
+	break;
       case 'h':
       default:
 	usage = 1;
@@ -241,7 +260,7 @@ int		main(int argc, char *argv[])
       while((errNum == WLZ_ERR_NONE) && (idx < nFiles))
       {
 	fStr = *(argv + optind + idx);
-	errNum = WlzEFFConAddImg(objs + idx, fStr);
+	errNum = WlzEFFConAddImg(objs + idx, fStr, sTrans, gTrans);
 	++idx;
       }
       nObj = idx;
@@ -279,7 +298,7 @@ int		main(int argc, char *argv[])
 	  {
 	    if(((fStr = strtok(fStrBuf, " \t\n")) != NULL) && (*fStr != '#'))
 	    {
-	      errNum = WlzEFFConAddImg(objs + idx, fStr);
+	      errNum = WlzEFFConAddImg(objs + idx, fStr, sTrans, gTrans);
 	      ++idx;
 	    }
 	  }
@@ -365,12 +384,15 @@ int		main(int argc, char *argv[])
   {
     (void )fprintf(stderr,
     "Usage: %s [-h] [-f] [-o<output file>] [-p #] [-s #,#,#]\n"
-    "                           [<file>|<input file list>]\n"
+    "                           [-G] [-S] [<file>|<input file list>]\n"
     "  -h  Output this usage message.\n"
     "  -f  Input file is a list of image files.\n"
     "  -o  Output file name, default is the standard output.\n"
     "  -p  Coordinate of the first plane.\n"
     "  -s  Voxel size (x,y,z).\n"
+    "  -G  Apply grey value transforms.\n"
+    "  -S  Use spatial transforms to create WLZ_TRANS_OBJ objects\n"
+    "      (by default just offsets are applied).\n"
     "Given a set of 2D image files, these are read in turn and used\n"
     "to build a 3D image. The 2D image files can either be given on\n"
     "the command line or in a file.\n"
@@ -394,7 +416,8 @@ int		main(int argc, char *argv[])
   return(!ok);
 }
 
-static WlzErrorNum WlzEFFConAddImg(WlzObject **objP, const char *fStr)
+static WlzErrorNum WlzEFFConAddImg(WlzObject **objP, const char *fStr,
+				   int sTrans, int gTrans)
 {
   FILE		*fP;
   WlzEffFormat	inFmt = WLZEFF_FORMAT_NONE;
@@ -424,7 +447,8 @@ static WlzErrorNum WlzEFFConAddImg(WlzObject **objP, const char *fStr)
     else
     {
       *objP = WlzAssignObject(
-              WlzEffReadObj(fP, fStr, inFmt, 0, &errNum), NULL);
+              WlzEffReadObj(fP, fStr, inFmt, 0, sTrans, gTrans,
+	                    &errNum), NULL);
     }
   }
   return(errNum);

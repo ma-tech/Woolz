@@ -472,7 +472,7 @@ int		main(int argc, char *argv[])
       (void )fprintf(stderr, "%s DBG Reading input object from file %s\n",
                      argv[0], buffer);
     }
-    if((iObj = WlzAssignObject(WlzEffReadObj(NULL, buffer, iFileFmt, 0,
+    if((iObj = WlzAssignObject(WlzEffReadObj(NULL, buffer, iFileFmt, 0, 0, 0,
                                               &errNum), NULL)) == NULL)
     {
       ok = 0;

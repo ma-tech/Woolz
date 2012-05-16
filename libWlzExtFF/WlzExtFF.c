@@ -367,11 +367,19 @@ WlzEffFormat 	WlzEffStringFormatFromFileName(const char *fNameStr)
 * \param	split			If non zero and the file contains a
 *					index labeled image then the image
 *					is split into seperate domains.
+* \param	sTrans			If non zero and the file contains a
+* 					spatial transform then the image is
+* 					transformed otherwise a WLZ_TRANS_OBJ
+* 					may be returned.
+* \param	gTrans			If non zero and the file contains a
+* 					grey transform then the image is
+* 					transformed.
 * \param	dstErr			Destination error number ptr, may be
 * 					NULL.
 */
 WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
-			       int split, WlzErrorNum *dstErr)
+			       int split, int sTrans, int gTrans,
+			       WlzErrorNum *dstErr)
 {
   int		openFileFlag = 0;
   WlzObject	*obj = NULL;
@@ -452,7 +460,7 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
 	obj = WlzEffReadObjVff(fP, &errNum);
 	break;
       case WLZEFF_FORMAT_NIFTI:
-	obj = WlzEffReadObjNifti(fName, 1, 1, &errNum);
+	obj = WlzEffReadObjNifti(fName, sTrans, gTrans, &errNum);
 	break;
       case WLZEFF_FORMAT_NODEELE:
 	obj = WlzEffReadObjNodeEle(fName, &errNum);

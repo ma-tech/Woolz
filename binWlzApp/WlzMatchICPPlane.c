@@ -665,7 +665,7 @@ int             main(int argc, char **argv)
   {
     if(((refObj3D = WlzAssignObject(
 		    WlzEffReadObj(NULL, refObjFileStr, refObjFileType,
-				  0, &errNum), NULL)) == NULL) ||
+				  0, 0, 0, &errNum), NULL)) == NULL) ||
        (errNum != WLZ_ERR_NONE))
     {
       ok = 0;
@@ -1219,7 +1219,7 @@ static WlzErrorNum WlzMatchICPPlaneReadSecParam(FILE *fP,
 	{
 	  *dstSrcObj = WlzAssignObject(
 		       WlzEffReadObj(NULL, fileStr, fileType,
-		       		     0, &errNum), NULL);
+		       		     0, 0, 0, &errNum), NULL);
 	}
       }
     }
@@ -1236,8 +1236,8 @@ static WlzErrorNum WlzMatchICPPlaneReadSecParam(FILE *fP,
 	if(dstRefObj)
 	{
 	  *dstRefObj = WlzAssignObject(
-		       WlzEffReadObj(NULL, fileStr, fileType, 0,
-		       		     &errNum), NULL);
+		       WlzEffReadObj(NULL, fileStr, fileType,
+		       		     0, 0, 0, &errNum), NULL);
 	}
       }
     }

@@ -360,7 +360,7 @@ int             main(int argc, char **argv)
       fStr = inObjFileStr;
     }
     errNum = WLZ_ERR_READ_EOF;
-    if((inObj = WlzAssignObject(WlzEffReadObj(fP, fStr, inFmt, 0,
+    if((inObj = WlzAssignObject(WlzEffReadObj(fP, fStr, inFmt, 0, 0, 0,
                                               &errNum), NULL)) == NULL)
     {
       ok = 0;

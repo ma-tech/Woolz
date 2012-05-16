@@ -62,6 +62,8 @@ extern WlzObject 		*WlzEffReadObj(
 				  const char *fName,
 				  WlzEffFormat fFmt,
 				  int split,
+				  int sTrans,
+				  int gTrans,
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum 		WlzEffWriteObj(
 				  FILE *fP,

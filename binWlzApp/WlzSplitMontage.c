@@ -386,8 +386,8 @@ int             main(int argc, char *argv[])
     {
       sprintf(pathBuf, "%s/%s", pathDir, inFile);
     }
-    if((inObj= WlzAssignObject(WlzEffReadObj(NULL, pathBuf, inFmt, 0,
-    				             &errNum), NULL)) == NULL)
+    if((inObj= WlzAssignObject(WlzEffReadObj(NULL, pathBuf, inFmt,
+    					     0, 0, 0, &errNum), NULL)) == NULL)
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
