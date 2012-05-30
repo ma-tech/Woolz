@@ -101,6 +101,10 @@ static void 			WlzCMeshRemEntCb(
 static void			WlzCMeshNodAddEdu3D(
 				  WlzCMeshNod3D *nod,
 				  WlzCMeshEdgU3D *edu);
+static double			WlzCMeshAddTolToBndAndClamp(
+				  double b,
+				  double c,
+				  double t);
 static WlzCMeshNod2D 		*WlzCMeshComputeBoundNod2D(
 				  WlzCMesh2D *mesh,
 				  WlzObject *obj,
@@ -232,24 +236,6 @@ static int			WlzCMeshElmExhaustivePos3D(
 				  WlzCMesh3D *mesh,
 				  WlzDVertex3 gPos,
 				  int *dstCloseNod);
-static int			WlzCMeshElmClosestPos2D5(
-				  WlzCMesh2D5 *mesh,
-                                  WlzDVertex3 *dstPos,
-				  WlzDVertex3 pos,
-				  double dMin,
-				  double dMax);
-static int			WlzCMeshElmClosestPos3D(
-				  WlzCMesh3D *mesh,
-                                  WlzDVertex3 *dstPos,
-				  WlzDVertex3 pos,
-				  double dMin,
-				  double dMax);
-static int			WlzCMeshElmClosestPos2D(
-				  WlzCMesh2D *mesh,
-                                  WlzDVertex2 *dstPos,
-				  WlzDVertex2 pos,
-				  double dMin,
-				  double dMax);
 static double	 		WlzCMeshCompGridBSz2D(
 				  int nN,
 				  double nPB,
@@ -4576,9 +4562,9 @@ static WlzErrorNum WlzCMeshAllocGridCells2D5(WlzCMesh2D5 *mesh)
 {
   int		idy,
   		idz;
-  WlzCMeshCell2D5 *cellP;
-  WlzCMeshCell2D5 **cellPP;
   WlzCMeshCellGrid2D5 *cGrid;
+  WlzCMeshCell2D5 *cellP = NULL;
+  WlzCMeshCell2D5 **cellPP = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   if(mesh == NULL)
@@ -5700,65 +5686,64 @@ int             WlzCMeshElmEnclosingPos3D(WlzCMesh3D *mesh,
 
 /*!
 * \return       Element index or negative value if there is no enclosing
-*               element.
+*               or close element.
 * \ingroup	WlzMesh
 * \brief	Locates the element in the conforming mesh which encloses
 *		or is closest to the vertex with the given position.
-*
+*		The computed position will be inside the mesh by a
+*		distance of more than WLZ_MESH_TOLERANCE provided that
+*		an enclosing or close element is found.
 * \param        mesh			The mesh.
 * \param        dstPos			Destination pointer for found
 * 					position within element. Not set if
 * 					element returned is invalid.
 * \param        pos			Given vertex position.
-* \param        dMin			Minimum distance for found position
-* 					from a mesh boundary.
-* \param	dMax			Maximum distance for found position
-* 					from given position.
+* \param	dMax			Maximum distance to search for a
+* 					close element.
 */
-int		WlzCMeshElmClosestPos(WlzCMeshP mesh,
-                                      WlzVertexP dstPos, WlzVertex pos,
-				      double dMin, double dMax)
+int		WlzCMeshElmClosestPosIn(WlzCMeshP mesh,
+					WlzVertexP dstPos, WlzVertex pos,
+					double dMax)
 {
   int           elmIdx = -1;
 
   switch(mesh.m2->type)
   {
     case WLZ_CMESH_2D:
-      elmIdx = WlzCMeshElmClosestPos2D(mesh.m2, dstPos.d2, pos,d2,
-      				       dMin, dMax);
+      elmIdx = WlzCMeshElmClosestPosIn2D(mesh.m2, dstPos.d2, pos.d2, dMax);
       break;
     case WLZ_CMESH_2D5:
-      elmIdx = WlzCMeshElmClosestPos2D5(mesh.m2, dstPos.d2, pos,d2,
-      				        dMin, dMax);
+      elmIdx = WlzCMeshElmClosestPosIn2D5(mesh.m2d5, dstPos.d3, pos.d3, dMax);
       break;
     case WLZ_CMESH_3D:
-      elmIdx = WlzCMeshElmClosestPos3D(mesh.m3, dstPos.d3, pos,d3,
-      				       dMin, dMax);
+      elmIdx = WlzCMeshElmClosestPosIn3D(mesh.m3, dstPos.d3, pos.d3, dMax);
       break;
   }
   return(elmIdx);
 }
 
 /*!
-* \return       Element index or negative value if there is no enclosing
-*               element.
+* \return       Element index or negative value if there is no close by
+* 		enclosing element found.
 * \ingroup	WlzMesh
 * \brief	Locates the element in the conforming mesh which encloses
-*		or is closest to the vertex with the given position.
+*		or is closest to the given vertex position, provided that
+*		the distance is no more than the maximum distance. The
+*		position within the element will always be more than
+*		WLZ_MESH_TOLERANCE from the mesh boundary provided that
+*		an enclosing or close element is found.
 *
 * \param        mesh			The mesh.
 * \param        dstPos			Destination pointer for found
 * 					position within element. Not set if
 * 					element returned is invalid.
 * \param        pos			Given vertex position.
-* \param        dMin			Minimum distance for found position
-* 					from a mesh boundary.
 * \param	dMax			Maximum distance for found position
 * 					from given position.
 */
-static int	WlzCMeshElmClosestPos2D(WlzCMesh2D *mesh,
+int		WlzCMeshElmClosestPosIn2D(WlzCMesh2D *mesh,
                                       WlzDVertex2 *dstPos, WlzDVertex2 pos,
-				      double dMin, double dMax)
+				      double dMax)
 {
   int		ring = 0,
   		maxRing,
@@ -5770,10 +5755,13 @@ static int	WlzCMeshElmClosestPos2D(WlzCMesh2D *mesh,
   WlzIVertex2	idx,
   		idx0,
   		idx1;
-  WlzDVertex2	minElmPos;
+  WlzDVertex2	minInPos;
   WlzCMeshElm2D *minElm = NULL;
   WlzCMeshCellElm2D *cElm;
   WlzCMeshCell2D *cell;
+  const double	eps = ALG_DBL_TOLLERANCE,
+  		tol2 = WLZ_MESH_TOLERANCE * 10.0,
+  		tolSq = WLZ_MESH_TOLERANCE_SQ;
 
   dMaxSq = dMax * dMax;
   if(mesh->res.nod.numEnt > 0)
@@ -5801,22 +5789,29 @@ static int	WlzCMeshElmClosestPos2D(WlzCMesh2D *mesh,
 	cElm = cell->cElm;
 	while(cElm && (minDstSq > WLZ_MESH_TOLERANCE_SQ))
 	{
-	  WlzDVertex2	elmPos;
+	  WlzDVertex2	inPos;
           WlzCMeshElm2D *elm;
 
 	  if((elm = cElm->elm) != NULL)
 	  {
+	    WlzCMeshNod2D *nod[3];
+
+	    if((minElm == NULL) && (maxRing > ring + 1))
+	    {
+	      maxRing = ring + 1;
+	    }
 	    /* Square of distance but -ve if inside triangle, 0 if on it
 	     * and +ve outside of the triangle. */
-	    d = WlzGeomTriangleVtxDistSq2D(&elmPos, pos,
-	                                   elm.edu[0].nod->pos,
-	                                   elm.edu[1].nod->pos,
-	                                   elm.edu[2].nod->pos);
+	    nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+	    nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+	    nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
+	    d = WlzGeomTriangleVtxDistSq2D(&inPos, NULL, pos, nod[0]->pos,
+	                                   nod[1]->pos, nod[2]->pos);
 	    if(d < minDstSq)
 	    {
 	      minDstSq = d;
 	      minElm = cElm->elm;
-	      minElmPos = elmPos;
+	      minInPos = inPos;
 	    }
 	  }
 	  cElm = cElm->next;
@@ -5833,70 +5828,253 @@ static int	WlzCMeshElmClosestPos2D(WlzCMesh2D *mesh,
     {
       /* Have found an element which either encloses the vertex or else
        * is the closest and within the given maximum distance (dMax).
-       * Now find position within mesh that is at least dMin from a mesh
-       * boundary. */
-      if(minDstSq < 0)
-
-      /* HACK I AM HERE */
+       * Now find position within mesh that is at least tol2 from the
+       * element boundary. */
       elmIdx = minElm->idx;
+      if(dstPos)
+      {
+	if(minDstSq > -(tolSq + eps))
+	{
+	  WlzDVertex2	c;
+	  WlzCMeshNod2D *nod[3];
+
+	  nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(minElm);
+	  nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(minElm);
+	  nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(minElm);
+	  c = WlzGeomTriangleCen2D(nod[0]->pos, nod[1]->pos, nod[2]->pos);
+	  pos.vtX = WlzCMeshAddTolToBndAndClamp(minInPos.vtX, c.vtX, tol2);
+	  pos.vtY = WlzCMeshAddTolToBndAndClamp(minInPos.vtY, c.vtY, tol2);
+	}
+        *dstPos = pos;
+      }
     }
   }
   return(elmIdx);
 }
 
-/*!
-* \return       Element index or negative value if there is no enclosing
-*               element.
-* \ingroup	WlzMesh
-* \brief	Locates the element in the conforming mesh which encloses
-*		or is closest to the vertex with the given position.
-*
-* \param        mesh			The mesh.
-* \param        dstPos			Destination pointer for found
-* 					position within element. Not set if
-* 					element returned is invalid.
-* \param        pos			Given vertex position.
-* \param        dMin			Minimum distance for found position
-* 					from a mesh boundary.
-* \param	dMax			Maximum distance for found position
-* 					from given position.
-*/
-static int	WlzCMeshElmClosestPos2D5(WlzCMesh2D5 *mesh,
+int		WlzCMeshElmClosestPosIn2D5(WlzCMesh2D5 *mesh,
 					 WlzDVertex3 *dstPos, WlzDVertex3 pos,
-					 double dMin, double dMax)
+					 double dMax)
 {
   int		elmIdx = -1;
 
   /* TODO */
+  if(dstPos)
+  {
+    *dstPos = pos;
+  }
   return(elmIdx);
 }
 
 /*!
-* \return       Element index or negative value if there is no enclosing
-*               element.
+* \return       Element index or negative value if there is no close by
+* 		enclosing element found.
 * \ingroup	WlzMesh
 * \brief	Locates the element in the conforming mesh which encloses
-*		or is closest to the vertex with the given position.
+*		or is closest to the given vertex position, provided that
+*		the distance is no more than the maximum distance. The
+*		position within the element will always be more than
+*		WLZ_MESH_TOLERANCE from the mesh boundary provided that
+*		an enclosing or close element is found.
 *
 * \param        mesh			The mesh.
 * \param        dstPos			Destination pointer for found
 * 					position within element. Not set if
 * 					element returned is invalid.
 * \param        pos			Given vertex position.
-* \param        dMin			Minimum distance for found position
-* 					from a mesh boundary.
 * \param	dMax			Maximum distance for found position
 * 					from given position.
 */
-static int	WlzCMeshElmClosestPos3D(WlzCMesh3D *mesh,
+int		WlzCMeshElmClosestPosIn3D(WlzCMesh3D *mesh,
                                       WlzDVertex3 *dstPos, WlzDVertex3 pos,
-				      double dMin, double dMax)
+				      double dMax)
 {
-  int		elmIdx = -1;
+  int		ring = 0,
+  		maxRing,
+		elmIdx = -1,
+		spiralCnt = 0;
+  double	d,
+		dMaxSq,
+		minDstSq = DBL_MAX;
+  WlzIVertex3	idx,
+  		idx0,
+  		idx1;
+  WlzDVertex3	cPos,
+  		minInPos;
+  WlzCMeshElm3D *minElm = NULL;
+  WlzCMeshCellElm3D *cElm;
+  WlzCMeshCell3D *cell;
+  const double	eps = ALG_DBL_TOLLERANCE,
+  		tol2 = WLZ_MESH_TOLERANCE * 10.0,
+  		tolSq = WLZ_MESH_TOLERANCE_SQ;
 
-  /* TODO */
+  cPos = pos;
+  dMaxSq = dMax * dMax;
+  if(mesh->res.nod.numEnt > 0)
+  {
+    /* First find element that either encloses or else is close to the
+     * vertex with the given position. */
+    idx1.vtX = idx1.vtY = idx1.vtZ = 0;
+    maxRing = 1 + 
+              (int )ceil(1.5 * dMax / mesh->cGrid.cellSz); /* 1.5 >~ cbrt(3) */
+    /* Find grid cell containing (or close to) the vertex. */
+    idx0 = WlzCMeshCellIdxVtx3D(mesh, pos);
+    do /* For each grid cell. */
+    {
+      d = minDstSq;
+      WLZ_VTX_3_ADD(idx, idx0, idx1);
+      if((idx.vtX >= 0) &&
+	 (idx.vtY >= 0) &&
+	 (idx.vtZ >= 0) &&
+	 (idx.vtX < mesh->cGrid.nCells.vtX) &&
+	 (idx.vtY < mesh->cGrid.nCells.vtY) &&
+	 (idx.vtZ < mesh->cGrid.nCells.vtZ)) /* If grid cell in grid bbox. */
+      {
+	/* For each element that intersects this cell, find the minimum
+	 * distance from the vertex to this element and so search for
+	 * the element with the minimum distance from the vertex. */
+	cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+	cElm = cell->cElm;
+	while(cElm && (minDstSq > WLZ_MESH_TOLERANCE_SQ))
+	{
+	  WlzDVertex3	inPos;
+          WlzCMeshElm3D *elm;
+
+	  if((elm = cElm->elm) != NULL)
+	  {
+	    WlzCMeshNod3D *nod[4];
+
+	    if((minElm == NULL) && (maxRing > ring + 1))
+	    {
+	      maxRing = ring + 1;
+	    }
+	    /* Square of distance but -ve if inside tetrahedron, 0 if on it
+	     * and +ve outside of the tetrahedron. */
+	    nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+	    nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+	    nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+	    nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
+	    d = WlzGeomTetrahedronVtxDistSq3D(&inPos, NULL, pos, nod[0]->pos,
+	                                      nod[1]->pos, nod[2]->pos,
+	                                      nod[3]->pos);
+	    if(d < minDstSq)
+	    {
+	      minDstSq = d;
+	      minElm = cElm->elm;
+	      minInPos = inPos;
+	    }
+	  }
+	  cElm = cElm->next;
+	}
+      }
+      /* Spiral out from the initial grid cell. */
+      spiralCnt = WlzGeomItrSpiral3I(spiralCnt,
+                                     &(idx1.vtX), &(idx1.vtY), &(idx1.vtZ));
+      ring = WlzGeomItrSpiralRing(spiralCnt);
+      /* Stop spiraling out when the ring after the first ontain an element
+       * has been searched or an element containing the vertex has been
+       * found. */
+    } while((minDstSq > WLZ_MESH_TOLERANCE_SQ) && (ring < maxRing));
+    if(minDstSq < dMaxSq)
+    {
+      /* Have found an element which either encloses the vertex or else
+       * is the closest and within the given maximum distance (dMax).
+       * Now find position within mesh that is at least tol2 from the
+       * element boundary. */
+      elmIdx = minElm->idx;
+      if(dstPos)
+      {
+	if(minDstSq > -(tolSq + eps))
+	{
+	  WlzDVertex3	c;
+	  WlzCMeshNod3D *nod[4];
+
+	  nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(minElm);
+	  nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(minElm);
+	  nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(minElm);
+	  nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(minElm);
+	  c = WlzGeomTetrahedronCen3D(nod[0]->pos, nod[1]->pos,
+	                              nod[2]->pos, nod[3]->pos);
+	  cPos.vtX = WlzCMeshAddTolToBndAndClamp(minInPos.vtX, c.vtX, tol2);
+	  cPos.vtY = WlzCMeshAddTolToBndAndClamp(minInPos.vtY, c.vtY, tol2);
+	  cPos.vtZ = WlzCMeshAddTolToBndAndClamp(minInPos.vtZ, c.vtZ, tol2);
+	}
+        *dstPos = cPos;
+      }
+    }
+  }
+#ifdef WLZ_DEBUG_WLZCMESHELMCLOSESTPOSIN3D
+  if(minElm)
+  {
+    WlzDVertex3	  cen;
+    WlzCMeshNod3D *nod[4];
+
+    nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(minElm);
+    nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(minElm);
+    nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(minElm);
+    nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(minElm);
+    cen = WlzGeomTetrahedronCen3D(nod[0]->pos, nod[1]->pos,
+				  nod[2]->pos, nod[3]->pos);
+    (void )fprintf(stderr, "# vtk DataFile Version 1.0\n"
+                           "WlzCMeshElmClosestPosIn3D() debug output, elm %d\n"
+			   "ASCII\n"
+			   "DATASET POLYDATA\n"
+			   "POINTS 7 float\n"
+                           "%g %g %g\n"
+			   "%g %g %g\n"
+			   "%g %g %g\n"
+			   "%g %g %g\n"
+			   "%g %g %g\n"
+			   "%g %g %g\n"
+			   "%g %g %g\n"
+			   "POLYGONS 5 20\n"
+			   "3 0 1 2\n"
+			   "3 0 1 3\n"
+			   "3 1 2 3\n"
+			   "3 2 0 3\n"
+			   "3 4 5 6\n",
+			   elmIdx,
+			   nod[0]->pos.vtX, nod[0]->pos.vtY, nod[0]->pos.vtZ,
+			   nod[1]->pos.vtX, nod[1]->pos.vtY, nod[1]->pos.vtZ,
+			   nod[2]->pos.vtX, nod[2]->pos.vtY, nod[2]->pos.vtZ,
+			   nod[3]->pos.vtX, nod[3]->pos.vtY, nod[3]->pos.vtZ,
+			   pos.vtX, pos.vtY, pos.vtZ,
+			   cPos.vtX, cPos.vtY, cPos.vtZ,
+			   cen.vtX, cen.vtY, cen.vtZ);
+  }
+#endif
   return(elmIdx);
 }
+
+/*!
+* \return	Clamped displaced boundary coordinate.
+* \ingroup	WlzMesh
+* \brief	Given a boundary coordinate, a centre coordinate and a
+* 		small displacement. The boundary value is displace toward
+* 		the centre coordinate by the small displacement unless it
+* 		takes it past the centre value.
+* \param	b			Boundary coordinate.
+* \param	c			Centre coordinate.
+* \param	t			Small displacement.
+*/
+static double	WlzCMeshAddTolToBndAndClamp(double b, double c, double t)
+{
+  double 	d;
+
+  d = c - b;
+  if(d > DBL_EPSILON)
+  {
+    d = b + t;
+    b = (d > c)? c: d;
+  }
+  else if(d < DBL_EPSILON)
+  {
+    d = b - t;
+    b = (d < c)? c: d;
+  }
+  return(b);
+}
+
 
 /*!
 * \return	Element index or negative value if no enclosing element found.
@@ -6792,8 +6970,8 @@ int		WlzCMeshElmEnclosesPos3D(WlzCMeshElm3D *elm, WlzDVertex3 gPos)
 WlzObject	*WlzCMeshExtract2D(WlzObject *gObj, int applyDsp,
 				   WlzErrorNum *dstErr)
 {
-  int		nNod,
-  		nElm,
+  int		nNod = 0,
+  		nElm = 0,
 		maxNod = 0,
 		maxElm = 0;
   WlzCMeshP	gMeshP;
@@ -7405,7 +7583,7 @@ WlzCMesh2D5	*WlzCMeshFromGM(WlzGMModel *model, WlzErrorNum *dstErr)
   		nNod,
 		maxFce,
 		maxVtx;
-  WlzCMesh2D5	*mesh;
+  WlzCMesh2D5	*mesh = NULL;
   WlzGMResIdxTb	*resIdxTb = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
