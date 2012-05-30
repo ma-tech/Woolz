@@ -509,13 +509,13 @@ WlzDVertex2	WlzCMeshClosePointDom2D5(WlzObject *vObj, WlzObject *mObj,
 {
   int		eIdx = -1;
   double	mDst = DBL_MAX;
-  double	mL[3];
+  double	mL[2];
   WlzDVertex2	mPos2;
   WlzCMesh2D5	*mesh;
   WlzIterateWSpace *itWSp = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  mL[0] = mL[1] = mL[2] = 0.0;
+  mL[0] = mL[1] = 0.0;
   WLZ_VTX_2_SET(mPos2, 0.0, 0.0);
   if((vObj == NULL) || (mObj == NULL))
   {
@@ -574,13 +574,13 @@ WlzDVertex2	WlzCMeshClosePointDom2D5(WlzObject *vObj, WlzObject *mObj,
 
 	    WlzCMeshElmGetNodes2D5(edu1->elm, nodes + 0, nodes + 1, nodes + 2);
 	    d = WlzGeomTriangleVtxDistSq3D(NULL, &zT, NULL,
-	    		       l + 0, l + 1, l + 2, vPos,
+	    		       l + 0, l + 1, vPos,
 			       nodes[0]->pos, nodes[1]->pos, nodes[2]->pos);
 	    if((zT == 0) && (d < mDst))
 	    {
 	      mDst = d;
 	      eIdx = edu1->elm->idx;
-	      mL[0] = l[0]; mL[1] = l[1]; mL[2] = l[2];
+	      mL[0] = l[0]; mL[1] = l[1];
 	    }
 	    edu1 = edu1->nnxt;
 	  } while(edu0 != edu1);
@@ -617,13 +617,13 @@ WlzDVertex2	WlzCMeshClosePointDom2D5(WlzObject *vObj, WlzObject *mObj,
     nP2[2].vtX = nodes[2]->pos.vtX + dsp[0];
     nP2[2].vtY = nodes[2]->pos.vtY + dsp[1];
     /* Compute the planar position of the closest point using the
-     * barycentric coordinates for linear interpolation. */
+     * parametric coordinates for linear interpolation. */
     WLZ_VTX_2_SUB(nP2[1], nP2[1], nP2[0]);
     WLZ_VTX_2_SUB(nP2[2], nP2[2], nP2[0]);
     mPos2.vtX = scale *
-                (nP2[0].vtX + (mL[1] * nP2[1].vtX) + (mL[2] * nP2[2].vtX));
+                (nP2[0].vtX + (mL[0] * nP2[1].vtX) + (mL[1] * nP2[2].vtX));
     mPos2.vtY = scale *
-                (nP2[0].vtY + (mL[1] * nP2[1].vtY) + (mL[2] * nP2[2].vtY));
+                (nP2[0].vtY + (mL[0] * nP2[1].vtY) + (mL[1] * nP2[2].vtY));
   }
   if(dstErr != NULL)
   {
@@ -631,54 +631,6 @@ WlzDVertex2	WlzCMeshClosePointDom2D5(WlzObject *vObj, WlzObject *mObj,
   }
   return(mPos2);
 }
-
-/*!
-* \return	Position of point in mesh with minimum distance.
-* \ingroup	WlzMesh
-* \brief	Computes the position in the 3D conforming mesh which
-* 		has the least distance to the given position.
-* \param	mObj			Object with the 3D mesh.
-* \param	gPos			Given position.
-* \param	dstCEI			Destination pointer for index to
-* 					element that the closest point is
-* 					within, may be NULL.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-WlzDVertex3	WlzCMeshClosestPoint3D(WlzObject *mObj, WlzDVertex3 gPos,
-				       int *dstCEI, WlzErrorNum *dstErr)
-{
-  WlzDVertex3	rPos;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-#ifdef NEW_CODE_HACK
-  /* First just look to see if a mesh element encloses the given point. */
-  cEI = WlzCMeshElmJumpPos3D(mObj->mesh, gPos, NULL, &errNum);
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if(eEI > 0)
-    {
-      rPos = gPos;
-    }
-    else
-    {
-      /* TODO  HACK
-	 Find closest grid cell to point.
-	 While grid cell is empty spiral out.
-	 */
-    }
-  }
-  if((errNum == WLZ_ERR_NONE) && (dstCEI != NULL) && (cE != NULL))
-  {
-    dstCEI = cE->idx;
-  }
-#endif
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(rPos);
-}
-
 
 /*!
 * \return	Signed sort indicator.
