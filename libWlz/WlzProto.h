@@ -1392,11 +1392,6 @@ extern WlzDVertex2		WlzCMeshClosePointDom2D5(
 				  WlzObject *cObj,
 				  double scale,
 				  WlzErrorNum *dstErr);
-extern WlzDVertex3		WlzCMeshClosestPoint3D(
-				  WlzObject *mObj,
-				  WlzDVertex3 gPos,
-				  int *dstCEI,
-				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzCMeshScan.c							*
@@ -2859,6 +2854,19 @@ extern int			WlzGeomRectFromWideLine(
 				  double width,
 				  WlzDVertex2 *v);
 #endif /* !WLZ_EXT_BIND */
+extern WlzDVertex2     		WlzGeomTriangleCen2D(
+				  WlzDVertex2 v0,
+				  WlzDVertex2 v1,
+                                  WlzDVertex2 v2);
+extern WlzDVertex3     		WlzGeomTriangleCen3D(
+				  WlzDVertex3 v0,
+				  WlzDVertex3 v1,
+                                  WlzDVertex3 v2);
+extern WlzDVertex3     		WlzGeomTetrahedronCen3D(
+				  WlzDVertex3 v0,
+				  WlzDVertex3 v1,
+                                  WlzDVertex3 v2,
+				  WlzDVertex3 v3);
 extern int			WlzGeomVxInTriangle2D(
 				  WlzDVertex2 p0,
 				  WlzDVertex2 p1,
@@ -3178,17 +3186,25 @@ extern double			WlzGeomTriangleVtxDistSq3D(
 				  int *dstIT,
 				  double *dstL0,
 				  double *dstL1,
-				  double *dstL2,
 				  WlzDVertex3 vT,
 				  WlzDVertex3 v0,
 				  WlzDVertex3 v1,
 				  WlzDVertex3 v2);
 extern double          		WlzGeomTriangleVtxDistSq2D(
-				  WlzDVertex2 *dstU0,
+				  WlzDVertex2 *dstU,
+				  int *dstEI,
 				  WlzDVertex2 vT,
 				  WlzDVertex2 v0,
 				  WlzDVertex2 v1,
 				  WlzDVertex2 v2);
+extern double			WlzGeomTetrahedronVtxDistSq3D(
+				  WlzDVertex3 *dstU,
+				  int *dstFI,
+				  WlzDVertex3 vT,
+				  WlzDVertex3 v0,
+				  WlzDVertex3 v1,
+				  WlzDVertex3 v2,
+				  WlzDVertex3 v3);
 
 /************************************************************************
 * WlzGreyCrossing.c							*
@@ -4597,6 +4613,26 @@ extern void			WlzCMeshDbgOutVTK2D(FILE *fP,
 				  WlzCMesh2D *mesh);
 extern void			WlzCMeshDbgOutVTK3D(FILE *fP,
 				  WlzCMesh3D *mesh);
+extern int			WlzCMeshElmClosestPosIn(
+				  WlzCMeshP mesh,
+				  WlzVertexP dstPos,
+				  WlzVertex pos,
+				  double dMax);
+extern int			WlzCMeshElmClosestPosIn2D(
+				  WlzCMesh2D *mesh,
+                                  WlzDVertex2 *dstPos,
+				  WlzDVertex2 pos,
+				  double dMax);
+extern int			WlzCMeshElmClosestPosIn2D5(
+				  WlzCMesh2D5 *mesh,
+                                  WlzDVertex3 *dstPos,
+				  WlzDVertex3 pos,
+				  double dMax);
+extern int			WlzCMeshElmClosestPosIn3D(
+				  WlzCMesh3D *mesh,
+                                  WlzDVertex3 *dstPos,
+				  WlzDVertex3 pos,
+				  double dMax);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
