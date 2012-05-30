@@ -1,4 +1,5 @@
 *.o
+*.lo
 Makefile
 Makefile.in
 tags
