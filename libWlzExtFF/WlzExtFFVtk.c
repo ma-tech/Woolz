@@ -308,8 +308,7 @@ static WlzErrorNum WlzEffWriteCtrVtk(FILE *fP, WlzContour *ctr)
 static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
 {
 
-  int		dim,
-  		idI,
+  int		idI,
   		iCnt;
   int		bufI[3];
   AlcVector	*vec;
@@ -332,12 +331,10 @@ static WlzErrorNum WlzEffWriteGMModelVtk(FILE *fP, WlzGMModel *model)
       case WLZ_GMMOD_2I: /* FALLTHROUGH */
       case WLZ_GMMOD_2D: /* FALLTHROUGH */
       case WLZ_GMMOD_2N:
-        dim = 2;
 	break;
       case WLZ_GMMOD_3I: /* FALLTHROUGH */
       case WLZ_GMMOD_3D: /* FALLTHROUGH */
       case WLZ_GMMOD_3N:
-	dim = 3;
         break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;

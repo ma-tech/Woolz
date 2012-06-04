@@ -165,11 +165,9 @@ WlzObject	*WlzCMeshCompSurfMap(WlzObject *inObj,
 {
   int		*nodTb = NULL;
   WlzCMesh2D5	*mesh;
-  WlzValues	val;
   WlzObject	*rtnObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  val.core = NULL;
   if(inObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;

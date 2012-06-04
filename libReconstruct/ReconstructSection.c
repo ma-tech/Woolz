@@ -536,7 +536,7 @@ char		*RecSecToStr(RecSection *sec, unsigned int reqFields,
       filePathLen = strlen(sec->imageFile) + 10;
       filePathLen -= filePathLen % 10;
       (void )sprintf(strBuf + strIdx, ", Imagefile %*s",
-		     filePathLen,
+		     (int )filePathLen,
 		     sec->imageFile);	 	 /* Dynamic string precision */
       strIdx = strlen(strBuf);
     }
@@ -601,9 +601,6 @@ char		*RecSecToStr(RecSection *sec, unsigned int reqFields,
 		     (prim.invert)? 1: 0);
       strIdx = strlen(strBuf);
     }
-    REC_DBG((REC_DBG_SEC|REC_DBG_LVL_2),
-	    ("RecSecListToStrList 01 >%s<\n",
-	     strBuf? strBuf: "(null)"));
     if(strIdx > 0)
     {
       secStr = AlcStrDup(strBuf);

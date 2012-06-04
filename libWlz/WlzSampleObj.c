@@ -531,7 +531,7 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
 	dstInvLeftPos = (srcIWsp.lftpos + samFac.vtX - 1) / samFac.vtX;
 	dstInvRgtPos = srcIWsp.rgtpos / samFac.vtX;
 	srcInvWidth = srcIWsp.rgtpos - srcIWsp.lftpos + 1;
-	dstInvWidth = (srcInvWidth >= (srcIWsp.rgtpos % samFac.vtX)) ?
+	dstInvWidth = (srcInvWidth >= (srcIWsp.rgtpos % samFac.vtX))?
 		      dstInvRgtPos - dstInvLeftPos + 1 : 0;
 	if(dstInvWidth > 0)
 	{

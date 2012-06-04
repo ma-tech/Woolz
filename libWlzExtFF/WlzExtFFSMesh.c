@@ -173,7 +173,7 @@ WlzObject	*WlzEffReadObjSMesh(FILE *fP, WlzErrorNum *dstErr)
   if(errNum == WLZ_ERR_NONE)
   {
     int 	idE,
-    		nFld;
+    		nFld = 4;
     int		idx[3];
     WlzDVertex3	pos[3];
 

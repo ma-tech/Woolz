@@ -297,8 +297,7 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 	        a = p2[2].vtY / p2[2].vtX;
 		for(x2 = 0.0; x2 < p2[2].vtX + eps; x2 += 1.0)
 		{
-	          WlzDVertex2	q2;
-	          WlzDVertex3	q3;
+		  WlzDVertex2	q2;
 
 		  y2 = a * x2;
 		  q2.vtX = x2;
@@ -326,7 +325,6 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 		for(y2 = 0.0; y2 < p2[2].vtY + eps; y2 += 1.0)
 		{
 	          WlzDVertex2	q2;
-	          WlzDVertex3	q3;
 
 		  x2 = a * y2;
 		  q2.vtX = x2;

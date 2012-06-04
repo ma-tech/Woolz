@@ -489,13 +489,11 @@ static WlzObject *WlzCMeshTransformInvert2D(WlzObject *gObj,
       int	idN;
       double	*gDsp,
       		*rDsp;
-      AlcVector	*gVec,
-      		*rVec;
+      AlcVector	*gVec;
       WlzCMeshNod2D *gNod,
       		    *rNod;
 
       gVec = gMesh->res.nod.vec;
-      rVec = rMesh->res.nod.vec;
       for(idN = 0; idN < gMesh->res.nod.maxEnt; ++idN)
       {
         gNod = (WlzCMeshNod2D *)AlcVectorItemGet(gVec, idN);
@@ -651,13 +649,11 @@ static WlzObject *WlzCMeshTransformInvert2D5(WlzObject *gObj,
       int	idN;
       double	*gDsp,
       		*rDsp;
-      AlcVector	*gVec,
-      		*rVec;
+      AlcVector	*gVec;
       WlzCMeshNod2D5 *gNod,
       		    *rNod;
 
       gVec = gMesh->res.nod.vec;
-      rVec = rMesh->res.nod.vec;
       for(idN = 0; idN < gMesh->res.nod.maxEnt; ++idN)
       {
         gNod = (WlzCMeshNod2D5 *)AlcVectorItemGet(gVec, idN);
@@ -815,13 +811,11 @@ static WlzObject *WlzCMeshTransformInvert3D(WlzObject *gObj,
       int	idN;
       double	*gDsp,
       		*rDsp;
-      AlcVector	*gVec,
-      		*rVec;
+      AlcVector	*gVec;
       WlzCMeshNod3D *gNod,
       		    *rNod;
 
       gVec = gMesh->res.nod.vec;
-      rVec = rMesh->res.nod.vec;
       for(idN = 0; idN < gMesh->res.nod.maxEnt; ++idN)
       {
         gNod = (WlzCMeshNod3D *)AlcVectorItemGet(gVec, idN);

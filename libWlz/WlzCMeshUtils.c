@@ -3317,9 +3317,7 @@ WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, int squeeze,
 	  gvnElm = (WlzCMeshElm2D *)AlcVectorItemGet(gvnMesh->res.elm.vec, idE);
 	  if(gvnElm->idx < 0)
 	  {
-	    WlzCMeshElm2D *newElm;
-
-	    newElm = WlzCMeshAllocElm2D(newMesh);
+	    (void )WlzCMeshAllocElm2D(newMesh);
 	    --(newMesh->res.elm.numEnt);
 	  }
 	  else
@@ -3534,9 +3532,7 @@ WlzCMesh2D5	*WlzCMeshCopy2D5(WlzCMesh2D5 *gvnMesh, int squeeze,
 	                                              idE);
 	  if(gvnElm->idx < 0)
 	  {
-	    WlzCMeshElm2D5 *newElm;
-
-	    newElm = WlzCMeshAllocElm2D5(newMesh);
+	    (void )WlzCMeshAllocElm2D5(newMesh);
 	    --(newMesh->res.elm.numEnt);
 	  }
 	  else
@@ -3752,9 +3748,7 @@ WlzCMesh3D	*WlzCMeshCopy3D(WlzCMesh3D *gvnMesh, int squeeze,
 	  gvnElm = (WlzCMeshElm3D *)AlcVectorItemGet(gvnMesh->res.elm.vec, idE);
 	  if(gvnElm->idx < 0)
 	  {
-	    WlzCMeshElm3D *newElm;
-
-	    newElm = WlzCMeshAllocElm3D(newMesh);
+	    (void )WlzCMeshAllocElm3D(newMesh);
 	    --(newMesh->res.elm.numEnt);
 	  }
 	  else

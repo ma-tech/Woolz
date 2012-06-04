@@ -1404,14 +1404,12 @@ static WlzErrorNum WlzRegICPCompTransform(WlzRegICPWSp *wSp,
 				          WlzTransformType trType)
 {
   WlzAffineTransform *newTr = NULL;
-  WlzVertexP	nullP;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 #ifdef WLZ_REGICP_DEBUG
   int		idx;
   FILE		*fP = NULL;
 #endif /* WLZ_REGICP_DEBUG */
 
-  nullP.v = NULL;
 #ifdef WLZ_REGICP_DEBUG
   if(wSp->vType == WLZ_VERTEX_D2)
   {
@@ -1696,7 +1694,6 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 		*prvTr = NULL,
   		*curTr = NULL,
   		*newTr = NULL;
-  WlzVertexP	nullP;
   WlzVertex	dV,
   		sV,
 		sN,
@@ -1717,7 +1714,6 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
   double	vxD[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
  
-  nullP.v = NULL;
   curTr = (initTr == NULL)?
   	  WlzMakeAffineTransform(WLZ_TRANSFORM_2D_AFFINE, &errNum):
 	  WlzAffineTransformCopy(initTr, &errNum);
