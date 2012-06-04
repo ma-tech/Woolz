@@ -352,22 +352,13 @@ static WlzErrorNum WlzGMModelCut3D(WlzGMModel *cut, WlzGMModel *given,
 	/* For each cell that the bonding box intersects. */
         for(idZ = cBox.zMin; idZ <= cBox.zMax; ++idZ)
         {
-          WlzDVertex3 kCellMin,
-                      kCellMax;
-
-          kCellMin.vtZ = kGrid->org.vtZ + kGrid->cellSz * idZ;
-          kCellMax.vtZ = kGrid->org.vtZ + kGrid->cellSz * (idZ + 1);
           for(idY = cBox.yMin; idY <= cBox.yMax; ++idY)
           {
-            kCellMin.vtY = kGrid->org.vtY + kGrid->cellSz * idY;
-            kCellMax.vtY = kGrid->org.vtY + kGrid->cellSz * (idY + 1);
             for(idX = cBox.xMin; idX <= cBox.xMax; ++idX)
             {
 	      WlzDVertex3 kVtx[3];
 	      WlzGMGridWSpCell3D *kCell;
 
-              kCellMin.vtX = kGrid->org.vtX + kGrid->cellSz * idX;
-              kCellMax.vtX = kGrid->org.vtX + kGrid->cellSz * (idX + 1);
               /* Test if the face of the given model intersects the faces
 	       * of the knife grid cells. */
 	      kCell = *(*(*(kGrid->cells + idZ) + idY) + idX);

@@ -502,8 +502,7 @@ AlgMatrix	AlgMatrixReadAscii(AlgMatrixType mType, double tol,
 				   AlgError *dstErr)
 {
   size_t	nC,
-  		nR,
-		nV;
+  		nR;
   AlgMatrix	mat;
   AlcVector	*vec = NULL;
   AlcErrno	alcErr = ALC_ER_NONE;

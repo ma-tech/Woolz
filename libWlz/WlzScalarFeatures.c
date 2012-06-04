@@ -128,7 +128,6 @@ WlzErrorNum	WlzScalarFeatures2D(WlzObject *obj,
   WlzVertexP	vCoords,
   		fCoords;
   AlcKDTTree	*tree = NULL;
-  AlcKDTNode	*node;
   int 		(*sortFn)(void *, int *, int, int);
   double	pos[2];
   AlcErrno	alcErr = ALC_ER_NONE;
@@ -281,7 +280,7 @@ WlzErrorNum	WlzScalarFeatures2D(WlzObject *obj,
 	cIdx = *(vRank + rIdx);
 	pos[0] = (vCoords.i2 + cIdx)->vtX;
 	pos[1] = (vCoords.i2 + cIdx)->vtY;
-	node = AlcKDTGetNN(tree, pos, INT_MAX, &dist, NULL);
+	(void )AlcKDTGetNN(tree, pos, INT_MAX, &dist, NULL);
 	if(dist > minDist)
 	{
 	  *(dRank + fCnt++) = cIdx;

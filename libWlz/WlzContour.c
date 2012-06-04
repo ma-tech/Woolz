@@ -1330,7 +1330,6 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
   		org,
   		posAbs,
 		posRel;
-  WlzDVertex2	nrm;
   WlzIntervalWSpace gXIWSp,
   		gYIWSp;
   WlzGreyWSpace	gXGWSp,
@@ -1600,8 +1599,6 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
 	    if(*(*(grdLBuf + lnIdx[1]) + klIdx[1]))
 	    {
 	      /* Generate and link edge segments. */
-	      nrm.vtX = grdX0;
-	      nrm.vtY = grdY0;
 	      errNum = WlzContourGrdLink2D(ctr, grdLBuf, org, posRel.vtY - 2,
 					   lnIdx, klIdx[0],
 					   nrmFlg, grdXBuf, grdYBuf);

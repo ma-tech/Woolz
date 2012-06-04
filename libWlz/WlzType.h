@@ -3435,7 +3435,7 @@ typedef union _WlzCMeshEdgUP
 */
 typedef struct _WlzCMeshFace
 {
-  struct _WlzCMeshEdgU3D edu[3];      /*!< Directed edges of the face. */
+  struct _WlzCMeshEdgU3D edu[3];        /*!< Directed edges of the face. */
   struct _WlzCMeshFace *opp;            /*!< Opposite face on neighboring
                                              mesh element. */
   struct _WlzCMeshElm3D *elm;           /*!< Parent mesh element. */

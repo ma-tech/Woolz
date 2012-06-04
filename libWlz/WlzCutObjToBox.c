@@ -526,11 +526,9 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 		*dObj = NULL;
   WlzDomain	dom2D,
   		dDom,
-  		sDom,
-		sDom2D;
+  		sDom;
   WlzValues	val2D,
-  		dVal,
-  		sVal2D;
+  		dVal;
   WlzGreyP	dValP,
   		dVal2DP;
   WlzPixelV	dBgPix,
@@ -622,8 +620,6 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      sDom2D.core = NULL;
-	      sVal2D.core = NULL;
 	      dDom.p = WlzMakePlaneDomain(sDom.p->type,
 					  cutBox.zMin, cutBox.zMax,
 					  cutBox.yMin, cutBox.yMax,
