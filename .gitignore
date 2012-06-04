@@ -5,3 +5,9 @@ Makefile.in
 tags
 ctags
 .deps
+aclocal.m4
+config.guess
+config.log
+config.status
+config.sub
+configure
