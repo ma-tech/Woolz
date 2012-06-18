@@ -108,7 +108,7 @@ WlzC2Java.c:
 			$(CPPSOURCES) > WlzC2Java.c
 
 WlzC2Java.class:	WlzC2Java.java
-			javac WlzC2Java.java
+			$(JDK_HOME)/bin/javac WlzC2Java.java
 
 WlzC2Java.java:		WlzC2Java.jj
 
