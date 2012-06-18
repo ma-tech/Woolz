@@ -1924,7 +1924,7 @@ public class WlzC2Java
   public static WlzJParamTypes jFnParam = new WlzJParamTypes();
   // Set the debug level for debug output: 0 = none, 1 = lots, 2 = more
   // HACK public static int debugLevel = 0;
-  public static int debugLevel = 0; // HACK
+  public static int debugLevel = 2; // HACK
 
   /**********************************************************************
   * Purpose:	Looks in the types hash table to see if the given string
