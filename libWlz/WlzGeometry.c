@@ -93,6 +93,12 @@ static int			WlzGeomTriTriPlaneTest(
 				  double *d0d2,
 				  WlzDVertex3 s[],
 				  WlzDVertex3 t[]);
+static int			WlzGeomTriangleTriangleIntersect2DA(
+ 				  WlzDVertex2 s[],
+				  WlzDVertex2 t[]);
+static int			WlzGeomTriangleTriangleIntersect3DA(
+				  WlzDVertex3 s[],
+				  WlzDVertex3 t[]);
 static double			WlzGeomCot2D3(
 				  WlzDVertex2 a,
 				  WlzDVertex2 b,
@@ -4811,7 +4817,7 @@ int		WlzGeomTriangleTriangleIntersect2D(WlzDVertex2 s0,
 * \param	s			Array of 3 vertices in 1st triangle.
 * \param	t			Array of 3 vertices in 2nd triangle.
 */
-int		WlzGeomTriangleTriangleIntersect2DA(WlzDVertex2 s[],
+static int	WlzGeomTriangleTriangleIntersect2DA(WlzDVertex2 s[],
 				WlzDVertex2 t[])
 {
   int		i0,
@@ -4898,7 +4904,7 @@ int		WlzGeomTriangleTriangleIntersect3D(WlzDVertex3 s0,
 * \param	s			Array of vertices in 1st triangle.
 * \param	t			Array of vertices in 2nd triangle.
 */
-int		WlzGeomTriangleTriangleIntersect3DA(WlzDVertex3 s[],
+static int	WlzGeomTriangleTriangleIntersect3DA(WlzDVertex3 s[],
 				WlzDVertex3 t[])
 {
   int		idx,
