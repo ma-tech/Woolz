@@ -42,13 +42,14 @@ AC_GNU_SOURCE
 
 AM_INIT_AUTOMAKE
 
-AC_PROG_CC
-
 AC_CONFIG_SRCDIR([libWlz/Wlz.h])
 
 # Set defaults
 AC_PREFIX_DEFAULT(/opt/MouseAtlas)
 AC_DISABLE_SHARED
+CP="cp"
+RM="rm -f"
+RMRF="rm -rf"
 CDEF_ARCH=""
 USE_CTAGS=1
 USE_ETAGS=0
@@ -62,8 +63,14 @@ TIFF_DIR="no"
 ENABLE_JAVA="no"
 HAVE_JNI="no"
 JDK_DIR="no"
+JAR="no"
+JAVA="no"
+JAVAC="no"
 JAVACC="no"
 ENABLE_TEST="no"
+AC_SUBST(CP)
+AC_SUBST(RM)
+AC_SUBST(RMRF)
 AC_SUBST(ENABLE_EXTFF)
 
 # Check CPU type
@@ -99,6 +106,7 @@ esac
 AC_PROG_CC
 AC_PROG_INSTALL
 AC_PROG_LIBTOOL
+AC_PROG_MKDIR_P
 AC_PROG_RANLIB
 
 # Check for system functions
@@ -317,7 +325,7 @@ then
 fi
 
 AC_CONFIG_FILES([	Makefile \
-		        libAlc/Makefile \
+			libAlc/Makefile \
 			libAlg/Makefile \
 			libWlz/Makefile \
 			binWlz/Makefile \
@@ -405,6 +413,12 @@ then
         JDK_DIR=${JAVA_HOME}
       fi
   fi
+  if test ${JDK_DIR} != "no"
+  then
+    JAR=${JDK_DIR}/bin/jar
+    JAVA=${JDK_DIR}/bin/java
+    JAVAC=${JDK_DIR}/bin/javac
+  fi
   AC_ARG_WITH(javacc, [  --with-javacc=PATH      Full path of the javacc
                           executable, by default the standard paths are
 			  searched.],
@@ -417,7 +431,18 @@ then
       AC_MSG_ERROR([Program javacc required, use --with-javacc=PATH.])
     fi
   fi
-  AC_CONFIG_FILES([     libWlzBnd/Makefile])
+  AC_SUBST(JAVA)
+  AC_SUBST(JAVAC)
+  AC_SUBST(JAVACC)
+  AC_CONFIG_FILES([     libWlzBnd/Makefile \
+                        java/uk/ac/mrc/hgu/Wlz/C2Java/Makefile \
+                        java/uk/ac/mrc/hgu/Wlz/C/Makefile \
+			java/uk/ac/mrc/hgu/Wlz/Java/Makefile ])
+
+  if test x${ENABLE_TEST} = "xyes"
+  then
+    AC_CONFIG_FILES([   java/uk/ac/mrc/hgu/Wlz/Test/Makefile ])
+  fi
 fi
 
 AC_OUTPUT
@@ -436,9 +461,12 @@ Woolz core has been configured on ${host} with
   LIBS needed for configure:       ${LIBS_EXTFF} ${LIBS}
   Woolz external file format code:  ${ENABLE_EXTFF}
   Java Woolz binding:               ${ENABLE_JAVA}
-  Test programs:                    ${ENABLE_TEST}
   JDK directory:                    ${JDK_DIR}
-  JavaCC path:                      ${JAVACC}
+  jar:                              ${JAR}
+  java:                             ${JAVA}
+  javac:                            ${JAVAC}
+  javacc:                           ${JAVACC}
+  Test programs:                    ${ENABLE_TEST}
 
 To build Woolz:                     make
 To install Woolz:                   make install

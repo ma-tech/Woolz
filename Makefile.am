@@ -58,10 +58,9 @@ endif
 if BUILD_JAVA
   SUBDIRS +=	\
   		libWlzBnd \
-		java/uk/ac/mrc/hgu/Wlz \
-		java/uk/ac/mrc/hgu/Wlz/C2Java \
+		java/uk/ac/mrc/hgu/Wlz/C2Java  \
 		java/uk/ac/mrc/hgu/Wlz/C \
-		java/uk/ac/mrc/hgu/Wlz/Test 
+		java/uk/ac/mrc/hgu/Wlz/Java
 endif
 
 doc:
