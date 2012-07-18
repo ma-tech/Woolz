@@ -47,15 +47,19 @@ static char _Alg_h[] = "University of Edinburgh $Id$";
 #endif
 
 #ifdef __cplusplus
+#ifndef WLZ_EXT_BIND
 using namespace std;
+#endif /* WLZ_EXT_BIND */
 #else
 #include <stdlib.h>
 #endif
 
+#ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+#endif /* WLZ_EXT_BIND */
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -64,8 +68,10 @@ extern "C"
 #include <AlgType.h>
 #include <AlgProto.h>
 
+#ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 }
 #endif
+#endif /* WLZ_EXT_BIND */
 
 #endif /* ! ALG_H */

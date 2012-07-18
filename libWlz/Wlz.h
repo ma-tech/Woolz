@@ -42,10 +42,12 @@ static char _Wlz_h[] = "University of Edinburgh $Id$";
 * \ingroup	Wlz
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+#endif /* WLZ_EXT_BIND */
 
 #include <stdio.h>
 #include <math.h>
@@ -60,8 +62,10 @@ extern "C"
 #include <WlzProto.h>
 #include <WlzMacro.h>
 
+#ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 }
 #endif
+#endif /* WLZ_EXT_BIND */
 
 #endif	/* !WLZ_H Don't put anything after this line */

@@ -42,9 +42,11 @@ static char _ReconstructProto_h[] = "University of Edinburgh $Id$";
 * \ingroup	Reconstruct
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif
+#endif /* WLZ_EXT_BIND */
 
 /* From ReconstructAuto.c */
 extern RecError			RecAuto(
@@ -303,8 +305,10 @@ extern void			RecTranFindPeak(
 				  WlzIVertex2 size,
 				  WlzIVertex2 search);
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif
+#endif /* WLZ_EXT_BIND */
 
 #endif /* RECONSTRUCT_PROTO_H */

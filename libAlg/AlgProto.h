@@ -43,9 +43,11 @@ static char _AlgProto_h[] = "University of Edinburgh $Id$";
 * \bug          None known.
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif
+#endif /* WLZ_EXT_BIND */
 
 /* From AlgAutoCorr.c */
 extern AlgError			AlgAutoCorrelate2D(double **data,
@@ -831,8 +833,10 @@ extern AlgError			AlgDbgWrite(
 				  char *,
 				  ...);
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif
+#endif /* WLZ_EXT_BIND */
 
 #endif /* ! ALGPROTO_H */

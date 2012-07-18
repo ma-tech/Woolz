@@ -42,9 +42,11 @@ static char _WlzType_h[] = "University of Edinburgh $Id$";
 * \ingroup	Wlz
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \typedef	WlzUByte
@@ -4952,8 +4954,10 @@ typedef WlzPixelV (*Wlz3DProjectionIntFn)(WlzPixelP, int, int, void *,
 
 
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif	/* !WLZ_TYPE_H Don't put anything after this line */

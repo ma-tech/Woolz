@@ -42,9 +42,11 @@ static char _bibFile_h[] = "University of Edinburgh $Id$";
 * \ingroup	bibfile
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #include <stdio.h>
 #include <Alc.h>
@@ -131,8 +133,10 @@ int				BibFileFieldParseFmt(
 				  ...);
 
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif /* BIBFILE_H */

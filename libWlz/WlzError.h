@@ -41,9 +41,11 @@ static char _WlzError_h[] = "University of Edinburgh $Id$";
 * \ingroup	WlzError
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \enum		_WlzErrorNum
@@ -161,8 +163,10 @@ typedef enum _WlzErrorNum
   WLZ_ERR_COUNT			/*!< Not an error but the number of errors! */
 } WlzErrorNum;
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif	/* !WLZ_ERROR_H Don't put anything after this line */

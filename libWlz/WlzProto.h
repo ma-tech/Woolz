@@ -102,9 +102,11 @@ static char _WlzProto_h[] = "University of Edinburgh $Id$";
 * \ingroup	Wlz
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #ifdef _WIN32
 #define _BORLAND_HACK_FOR_JATLASVIEWER
@@ -2971,9 +2973,6 @@ extern int			WlzGeomTriangleTriangleIntersect2D(
 				  WlzDVertex2 t0,
 				  WlzDVertex2 t1,
 				  WlzDVertex2 t2);
-extern int			WlzGeomTriangleTriangleIntersect2DA(
-				  WlzDVertex2 s[],
-				  WlzDVertex2 t[]);
 extern int			WlzGeomTriangleTriangleIntersect3D(
 				  WlzDVertex3 s0,
 				  WlzDVertex3 s1,
@@ -2981,9 +2980,6 @@ extern int			WlzGeomTriangleTriangleIntersect3D(
 				  WlzDVertex3 t0,
 				  WlzDVertex3 t1,
 				  WlzDVertex3 t2);
-extern int			WlzGeomTriangleTriangleIntersect3DA(
-				  WlzDVertex3 s[],
-				  WlzDVertex3 t[]);
 extern int			WlzGeomPlaneLineIntersect(
 				  double a,
 				  double b,
@@ -6357,8 +6353,10 @@ extern WlzObject		*WlzGreyValueMixing_s(
 
 #endif /* !WLZ_EXT_BIND */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif	/* !WLZ_PROTO_H Don't put anything after this line */

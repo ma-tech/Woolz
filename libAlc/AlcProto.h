@@ -41,9 +41,11 @@ static char _AlcProto_h[] = "University of Edinburgh $Id$";
 *		library.
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * AlcAlloc.c
@@ -685,9 +687,11 @@ extern AlcVector		*AlcVecReadDouble2Asci(
                                   size_t *dstNR,
 				  size_t *dstNC,
 				  AlcErrno *dstErr);
+#ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif /* ALCPROTO_H */
 

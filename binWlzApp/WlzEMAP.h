@@ -42,9 +42,11 @@ static char _WlzEMAP_h[] = "University of Edinburgh $Id$";
 		library.
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #include <sys/types.h>
 
@@ -89,8 +91,10 @@ extern WlzObject *WlzEMAPDomainTransform(char		*srcModel,
 					 WlzObject	*obj,
 					 WlzErrorNum	*dstErr);
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif	/* !WLZ_EMAP_H Don't put anything after this line */
