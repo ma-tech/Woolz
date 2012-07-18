@@ -75,7 +75,7 @@ public class WlzExtFFFacts
 	    fFmt = WlzObject.WlzEffStringExtToFormat(fSuf);
 	    System.err.println("fFmt = " + fFmt);
 	  }
-	  obj0 = WlzObject.WlzEffReadObj(in, fName, fFmt, 0);
+	  obj0 = WlzObject.WlzEffReadObj(in, fName, fFmt, 0, 0, 0);
 	  WlzObject.WlzObjectFacts(obj0, null, facts, manyFacts);
 	  System.out.println(facts[0]);
 	  firstPass = false;
