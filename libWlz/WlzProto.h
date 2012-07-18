@@ -109,7 +109,6 @@ extern "C" {
 #endif /* WLZ_EXT_BIND */
 
 #ifdef _WIN32
-#define _BORLAND_HACK_FOR_JATLASVIEWER
 #define fabsf(x) fabs(x)
 #define _setmode setmode
 #endif

@@ -46,14 +46,6 @@ static char _WlzGeometry_c[] = "University of Edinburgh $Id$";
 #include <Wlz.h>
 
 extern double			cbrt(double c);
-#ifdef _BORLAND_FOR_JATLASVIEWER
-/*!
- *  Dummy function to allow compilation with borland bcc32 under Windows
- */
-double cbrt(double c) {
-   return (0.0);
-}
-#endif
 
 static int			WlzGeomVtxSortRadialFn(
 				  void *p0,
