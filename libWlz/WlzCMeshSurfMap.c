@@ -131,7 +131,7 @@ WlzObject	*WlzCMeshCompSurfMapToCircle(WlzObject *inObj,
     /* For each of the boundary nodes, set it's displacement to be
      * the closest point on the fitted circle. */
     
-    /* TODO HACK TODO */
+    /* TODO */
   }
   /* Compute conformal mapping of the mesh to the circular boundary. */
   if(errNum == WLZ_ERR_NONE)
