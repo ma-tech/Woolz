@@ -1,20 +1,46 @@
-/************************************************************************
-* Project:      Java Woolz
-* Title:        WlzJavaArray1D.c
-* Date:         January 1999
-* Purpose:      Functions for 1D array access between java and native
-*		Woolz code.
-*		Many of these functions 'hardcore' Woolz field names
-*		and types, these will need to be maintained.
-* Copyright:	1997 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Maintenance:	Log changes below, with most recent at top of list.
-* @author       Bill Hill (bill@hgu.mrc.ac.uk)
-* @version 	MRC HGU %I%, %G%
-************************************************************************/
+#if defined(__GNUC__)
+#ident "University of Edinburgh $Id$"
+#else
+static char _HandCodedC/WlzJavaArray1D_c[] = "University of Edinburgh $Id$";
+#endif
+/*!
+* \file         WlzJavaArray1D.c
+* \author       Bill Hill
+* \date         January 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Functions for 1D array access between java and native
+* 		Woolz code. Many of these functions 'hardcode' Woolz
+* 		field names and types, these will need to be maintained.
+* \ingroup 	JWlz
+*/
+
 #include <WlzJava.h>
 
 static jlong	WlzJavaArray1DGetPrim(
@@ -33,38 +59,28 @@ static jlong	WlzJavaArray1DGetNonPrim(
 			        int wArraySz,
 			        jboolean *isCpy);
 
-/************************************************************************
-* Function:	WlzJavaArray1DGet				
-* Returns:	jlong:			The value held in the given 
-*					Java object.		
-* Purpose:	Returns a native 1D array built from the given java 1D
-*		java array.
-* Global refs:	-						
-* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.
-*		char *cObjName:		The Java woolz C object class
-*					string.			
-*		char *jObjName:		The Java woolz Java object
-*					class string.		
-*		char *jniObjName:	The Java woolz JNI object
-*					class string.		
-*		int idrCnt:		Indirection count (ie 1 for *,
-*					2 for **, ...).		
-*		int pKey:		Parameter key.		
-*		jarray jWArray:		The Java Woolz array.	
-*		int wArraySz:		The number of elements in the
-*					Java Woolz array.	
-*		jboolean *isCpy:	Destination pointer for JNI
-*					copy flag.		
-************************************************************************/
-jlong 		WlzJavaArray1DGet(
-				JNIEnv *jEnv,
-				char *cObjName,
-				char *jObjName,
-				char *jniObjName,
-				int idrCnt, int pKey,
-				jarray jWArray,
-				int wArraySz,
-				jboolean *isCpy)
+/*!
+* \return	The value held in the given Java object.
+* \ingroup	JWlz
+* \brief	Returns a native 1D array built from the given java 1D
+* 		java array.
+* \param	jEnv			Given JNI environment pointer.
+* \param	cObjName		The Java woolz C object class string.
+* \param	jObjName		The Java woolz Java object class
+* 					string.
+* \param	jniObjName		The Java woolz JNI object class string.
+* \param	idrCnt			Indirection count (ie 1 for *, 2 for
+* 					**, ...).
+* \param	pKey			Parameter key.
+* \param	jWArray			The Java Woolz array.
+* \param	wArraySz		The number of elements in the Java
+* 					Woolz array.
+* \param	isCpy			Destination pointer for JNI copy flag.
+*/
+jlong 		WlzJavaArray1DGet(JNIEnv *jEnv, char *cObjName,
+				  char *jObjName, char *jniObjName,
+				  int idrCnt, int pKey, jarray jWArray,
+				  int wArraySz, jboolean *isCpy)
 {
   jlong		rtnVal = 0;
 
@@ -90,28 +106,22 @@ jlong 		WlzJavaArray1DGet(
   return(rtnVal);
 }
 
-/************************************************************************
-* Function:	WlzJavaArray1DGetPrim				
-* Returns:	jlong:			The value held in the given 
-*					Java object.		
-* Purpose:	Returns a native 1D array built from the given java 1D
-*		java array of primative types (byte, short, int,
-*		long, float and double).
-* Global refs:	-						
-* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.
-*		int pKey:		Parameter key.		
-*		jarray jWArray:		The Java Woolz array.	
-*		int wArraySz:		The number of elements in the
-*					Java Woolz array.	
-*		jboolean *isCpy:	Destination pointer for JNI
-*					copy flag.		
-************************************************************************/
-static jlong	WlzJavaArray1DGetPrim(
-				JNIEnv *jEnv,
-				int pKey,
-			   	jarray jWArray,
-				int wArraySz,
-			   	jboolean *isCpy)
+/*!
+* \return	The value held in the given Java object.
+* \ingroup	JWlz
+* \brief	Returns a native 1D array built from the given java 1D java
+* 		array of primative types (byte, short, int, long, float and
+* 		double).
+* \param	jEnv			Given JNI environment pointer.
+* \param	pKey			Parameter key.
+* \param	jWArray			The Java Woolz array.
+* \param	wArraySz		The number of elements in the Java
+* 					Woolz array.
+* \param	isCpy			Destination pointer for JNI copy flag.
+*/
+static jlong	WlzJavaArray1DGetPrim(JNIEnv *jEnv, int pKey,
+			   	      jarray jWArray, int wArraySz,
+			   	      jboolean *isCpy)
 {
   int		idN0;
   void		*bufJ = NULL,
@@ -228,39 +238,28 @@ static jlong	WlzJavaArray1DGetPrim(
   return((jlong )bufW);
 }
 
-/************************************************************************
-* Function:	WlzJavaArray1DGetNonPrim				
-* Returns:	jlong:			The value held in the given 
-*					Java object.		
-* Purpose:	Returns a native 1D array built from the given java 1D
-*		java array of non-primative types.
-* Global refs:	-						
-* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.
-*		char *cObjName:		The Java woolz C object class
-*					string.			
-*		char *jObjName:		The Java woolz Java object
-*					class string.		
-*		char *jniObjName:	The Java woolz JNI object
-*					class string.		
-*		int idrCnt:		Indirection count (ie 1 for *,
-*					2 for **, ...).		
-*		int pKey:		Parameter key.		
-*		jarray jWArray:		The Java Woolz array.	
-*		int wArraySz:		The number of elements in the
-*					Java Woolz array.	
-*		jboolean *isCpy:	Destination pointer for JNI
-*					copy flag.		
-************************************************************************/
-static jlong	WlzJavaArray1DGetNonPrim(
-				JNIEnv *jEnv,
-				char *cObjName,
-				char *jObjName,
-				char *jniObjName,
-				int idrCnt,
-				int pKey,
-				jarray jWArray,
-				int wArraySz,
-				jboolean *isCpy)
+/*!
+* \return	The value held in the given Java object.
+* \ingroup	JWlz
+* \brief	Returns a native 1D array built from the given java 1D java
+* 		array of non-primative types.
+* \param	jEnv			Given JNI environment pointer.
+* \param	cObjName		The Java woolz C object class string.
+* \param	jObjName		The Java woolz Java object class
+* 					string.
+* \param	jniObjName		The Java woolz JNI object class string.
+* \param	idrCnt			Indirection count (ie 1 for *, 2 for
+* 					**, ...).
+* \param	pKey			Parameter key.
+* \param	jWArray			The Java Woolz array.
+* \param	wArraySz		The number of elements in the Java
+* 					Woolz array.
+* \param	isCpy			Destination pointer for JNI copy flag.
+*/
+static jlong	WlzJavaArray1DGetNonPrim(JNIEnv *jEnv, char *cObjName,
+				         char *jObjName, char *jniObjName,
+				         int idrCnt, int pKey, jarray jWArray,
+				         int wArraySz, jboolean *isCpy)
 {
   int		tI0,
   		idN0;
@@ -680,25 +679,22 @@ static jlong	WlzJavaArray1DGetNonPrim(
   return(rtnVal);
 }
 
-/************************************************************************
-* Function:	WlzJavaArray1DSet				
-* Returns:	void						
-* Purpose:	Sets the given value in a Java object for return to
-*		the Java side of th JNI.			
-* Global refs:	-						
-* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.
-*		jobjectArray dstJA:	Destination Java array.	
-*		char *cObjName:		The type of the value to set.
-*               char *jObjName:         The Java woolz Java object     
-*                                       class string.                  
-*               char *jniObjName:       The Java woolz JNI object      
-*                                       class string.                  
-*		int idrCnt:		Indirection count (ie 1 for *,
-*					2 for **, ...).		
-*		int pKey:		Parameter key.		
-*		void *aVal:		C array to set value from.
-*		int aSz:		Size of the 1D array.	
-************************************************************************/
+/*!
+* \ingroup	JWlz
+* \brief	Sets the given value in a Java object for return to the Java
+* 		side of the JNI.
+* \param	jEnv			Given JNI environment pointer.
+* \param	dstJObj			Destination Java array.
+* \param	cObjName		The type of the value to set.
+* \param	jObjName		The Java woolz Java object class
+* 					string.
+* \param	jniObjName		The Java woolz JNI object class string.
+* \param	idrCnt			Indirection count (ie 1 for *, 2 for
+* 					**, ...).
+* \param	pKey			Parameter key.
+* \param	aVal			C array to set value from.
+* \param	aSz			Size of the 1D array.
+*/
 void		WlzJavaArray1DSet(JNIEnv *jEnv, jobjectArray dstJObj,
 				char *cObjName,
 				char *jObjName,
@@ -794,24 +790,21 @@ void		WlzJavaArray1DSet(JNIEnv *jEnv, jobjectArray dstJObj,
   }
 }
 
-/************************************************************************
-* Function:     WlzJavaArray1DWrap				
-* Returns:      jobject:                New Java object.               
-* Purpose:      Wraps up the given array as a new Java array.	
-* Global refs:  -                                                      
-* Parameters:   JNIEnv *jEnv:           Given JNI environment ptr.     
-*               char *cObjName:         The Java woolz object class    
-*                                       string.                        
-*               char *jObjName:         The Java woolz Java object     
-*                                       class string.                  
-*               char *jniObjName:       The Java woolz JNI object      
-*                                       class string.                  
-*               int idrCnt:             Indirection count (ie 1 for *, 
-*                                       2 for **, ...).                
-*               int pKey:               Parameter key.                 
-*		void *aVal:		C array to set values from.
-*		int aSz:		Size of the 1D array.	
-************************************************************************/
+/*!
+* \return	New Java object.
+* \ingroup	JWlz
+* \brief	Wraps up the given array as a new Java array.
+* \param	jEnv			Given JNI environment pointer.
+* \param	cObjName		The Java woolz object class string.
+* \param	jObjName		The Java woolz Java object class
+* 					string.
+* \param	jniObjName		The Java woolz JNI object class string.
+* \param	idrCnt			Indirection count (ie 1 for *, 2 for
+* 					**, ...).
+* \param	pKey			Parameter key.
+* \param	aVal			C array to set values from.
+* \param	aSz			Size of the 1D array.
+*/
 jobject		WlzJavaArray1DWrap(JNIEnv *jEnv,
 				   char *cObjName,
 				   char *jObjName,
@@ -833,7 +826,7 @@ jobject		WlzJavaArray1DWrap(JNIEnv *jEnv,
   int hack = 1;
   while(hack)
   {
-    sleep(2);
+    sleep(1);
   }
 #endif /* JWLZ_DEBUG */
   if(aVal && (aSz > 0))
@@ -1038,16 +1031,14 @@ jobject		WlzJavaArray1DWrap(JNIEnv *jEnv,
   return(rtnJObj);
 }
 
-/************************************************************************
-* Function:	WlzJavaArray1DFree				
-* Returns:	void						
-* Purpose:	Free's a temporary native 1D array.			
-* Global refs:	-						
-* Parameters:	void *aDat:		Array data structure.	
-*		int aSz:		Array size.		
-*		int dSKey:		Data structure identification.
-*		jboolean isCpy:		Copy flag for JNI functions.
-************************************************************************/
+/*!
+* \ingroup	JWlz
+* \brief	Free's a temporary native 1D array.
+* \param	aDat			Array data structure.
+* \param	aSz			Array size.
+* \param	dSKey			Data structure identification.
+* \param	isCpy			Copy flag for JNI functions.
+*/
 void		WlzJavaArray1DFree(void *aDat, int aSz,
 			      int dSKey, jboolean isCpy)
 {
