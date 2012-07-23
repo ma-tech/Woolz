@@ -77,6 +77,8 @@ clean:
 			      Binding/WlzObjectC2J.c  \
 			      Binding/WlzObjectC2J.h
 
+distclean:		clobber
+
 clobber:		clean
 			$(RM)  *.java
 
