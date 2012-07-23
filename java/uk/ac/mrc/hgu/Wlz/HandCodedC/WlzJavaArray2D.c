@@ -1,41 +1,62 @@
-/************************************************************************
-* Project:      Java Woolz
-* Title:        WlzJavaArray2D.c
-* Date:         January 1999
-* Purpose:      2D array functions for the C side of Java Woolz.
-* Copyright:	1997 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Maintenance:	Log changes below, with most recent at top of list.
-* @author       Bill Hill (bill@hgu.mrc.ac.uk)
-* @version 	MRC HGU %I%, %G%
-************************************************************************/
+#if defined(__GNUC__)
+#ident "University of Edinburgh $Id$"
+#else
+static char _HandCodedC/WlzJavaArray2D_c[] = "University of Edinburgh $Id$";
+#endif
+/*!
+* \file         WlzJavaArray2D.c
+* \author       Bill Hill
+* \date         January 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	2D array functions for the C side of Java Woolz.
+* \ingroup	JWlz
+*/
 #include <WlzJava.h>
 
-/************************************************************************
-* Function:	WlzJavaArray2DGet					*
-* Returns:	jlong:			The value held in the given 	*
-*					Java object.			*
-* Purpose:	Returns a 2D array built from the given 2D java array.	*
-* Global refs:	-							*
-* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.	*
-*		char *cObjName:		The Java woolz C object class	*
-*					string.				*
-*		char *jObjName:		The Java woolz Java object	*
-*					class string.			*
-*		char *jniObjName:	The Java woolz JNI object	*
-*					class string.			*
-*		int idrCnt:		Indirection count (ie 1 for *,	*
-*					2 for **, ...).			*
-*		int pKey:		Parameter key.			*
-*		jarray jWArray:		The Java Woolz array.		*
-*		WlzIVertex2 wArraySz:	The number of elements in the	*
-*					Java Woolz array.		*
-*		jboolean *isCpy:	Destination pointer for JNI	*
-*					copy flag.			*
-************************************************************************/
+/*!
+* \return	The value held in the given Java object.
+* \ingroup	JWlz
+* \brief	Returns a 2D array built from the given 2D java array.
+* \param	jEnv			Given JNI environment ptr.
+* \param	cObjName		The Java woolz C object class string.	
+* \param	jObjName		The Java woolz Java object class
+* 					string.
+* \param	jniObjName		The Java woolz JNI object class string.
+* \param	idrCnt			Indirection count (ie 1 for *, 2 for
+* 					**, ...).
+* \param	pKey			Parameter key.
+* \param	jWArray			The Java Woolz array.
+* \param	wArraySz		The number of elements in the Java
+* 					Woolz array.
+* \param	isCpy			Destination pointer for JNI copy flag.
+*/
 jlong 		WlzJavaArray2DGet(JNIEnv *jEnv,
 				       char *cObjName,
 				       char *jObjName,
@@ -221,25 +242,22 @@ jlong 		WlzJavaArray2DGet(JNIEnv *jEnv,
   return(rtnVal);
 }
 
-/************************************************************************
-* Function:	WlzJavaArray2DSet					*
-* Returns:	void							*
-* Purpose:	Sets the given value in a Java object for return to	*
-*		the Java side of th JNI.				*
-* Global refs:	-							*
-* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.	*
-*		jobjectArray dstJA:	Destination Java array.		*
-*		char *cObjName:		The type of the value to set.	*
-*               char *jObjName:         The Java woolz Java object      *
-*                                       class string.                   *
-*               char *jniObjName:       The Java woolz JNI object       *
-*                                       class string.                   *
-*		int idrCnt:		Indirection count (ie 1 for *,	*
-*					2 for **, ...).			*
-*		int pKey:		Parameter key.			*
-*		void *aVal:		C array to set value from.	*
-*		WlzIVertex2 aSz:	Size of the 2D array.		*
-************************************************************************/
+/*!
+* \ingroup	JWlz
+* \brief	Sets the given value in a Java object for return to the Java
+* 		side of th JNI.
+* \param	jEnv			Given JNI environment pointer.
+* \param	dstJObj			Destination Java array.
+* \param	cObjName		The type of the value to set.
+* \param	jObjName		The Java woolz Java object class
+* 					string.
+* \param	jniObjName		The Java woolz JNI object class string.
+* \param	idrCnt			Indirection count (ie 1 for *, 2 for
+* 					**, ...).
+* \param	pKey			Parameter key.
+* \param	aVal			C array to set value from.
+* \param	aSz			Size of the 2D array.
+*/
 void		WlzJavaArray2DSet(JNIEnv *jEnv, jobjectArray dstJObj,
 				char *cObjName,
 				char *jObjName,
@@ -290,24 +308,20 @@ void		WlzJavaArray2DSet(JNIEnv *jEnv, jobjectArray dstJObj,
   }
 }
 
-/************************************************************************
-* Function:     WlzJavaArray2DWrap					*
-* Returns:      jobject:                New Java object.                *
-* Purpose:      Wraps up the given array as a new Java array.		*
-* Global refs:  -                                                       *
-* Parameters:   JNIEnv *jEnv:           Given JNI environment ptr.      *
-*               char *cObjName:         The Java woolz object class     *
-*                                       string.                         *
-*               char *jObjName:         The Java woolz Java object      *
-*                                       class string.                   *
-*               char *jniObjName:       The Java woolz JNI object       *
-*                                       class string.                   *
-*               int idrCnt:             Indirection count (ie 1 for *,  *
-*                                       2 for **, ...).                 *
-*               int pKey:               Parameter key.                  *
-*		void *aVal:		C array to set values from.	*
-*		WlzIVertex2 aSz:	Size of the 2D array.		*
-************************************************************************/
+/*!
+* \return	New Java object.
+* \ingroup	JWlz
+* \brief	Wraps up the given array as a new Java array.
+* \param	jEnv			Given JNI environment pointer.
+* \param	cObjName		The Java woolz object class string.
+* \param	jObjName		Java woolz Java object class string.
+* \param	jniObjName		The Java woolz JNI object class string.
+* \param	idrCnt			Indirection count (ie 1 for *, 2 for
+* 					**, ...).
+* \param	pKey			Parameter key.
+* \param	aVal			C array to set values from.
+* \param	aSz			Size of the 2D array.
+*/
 jobject		WlzJavaArray2DWrap(JNIEnv *jEnv,
 				   char *cObjName,
 				   char *jObjName,
@@ -326,7 +340,7 @@ jobject		WlzJavaArray2DWrap(JNIEnv *jEnv,
   int hack = 1;
   while(hack)
   {
-    sleep(2);
+    sleep(1);
   }
 #endif /* JWLZ_DEBUG */
   if(aVal && (aSz.vtX > 0) && (aSz.vtY > 0))
@@ -470,16 +484,14 @@ jobject		WlzJavaArray2DWrap(JNIEnv *jEnv,
   return(rtnJObj);
 }
 
-/************************************************************************
-* Function:	WlzJavaArray2DFree					*
-* Returns:	void							*
-* Purpose:	Free's a temporary 2D array.				*
-* Global refs:	-							*
-* Parameters:	void *aDat:		Array data structure.		*
-*		WlzIVertex2 aSz:	Array size.			*
-*		int dSKey:		Data structure identification.	*
-*		jboolean isCpy:		Copy flag for JNI functions.	*
-************************************************************************/
+/*!
+* \ingroup	JWlz
+* \brief	Free's a temporary 2D array.
+* \param	aDat			Array data structure.
+* \param	aSz			Array size.
+* \param	dSKey			Data structure identification.
+* \param	isCpy			Copy flag for JNI functions.
+*/
 void		WlzJavaArray2DFree(void *aDat, WlzIVertex2 aSz,
 			      int dSKey, jboolean isCpy)
 {

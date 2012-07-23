@@ -1,17 +1,38 @@
-/************************************************************************
-* Project:      Java Woolz
-* Title:        WlzFVertex2.java
-* Date:         January 1999
-* Purpose:      Java object to mirror the Woolz WlzFVertex2 structure.
-* Copyright:	1997 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Maintenance:	Log changes below, with most recent at top of list.
-* @author       Bill Hill (bill@hgu.mrc.ac.uk)
-* @version 	MRC HGU %I%, %G%
-************************************************************************/
+/*!
+* @file         WlzFVertex2.java
+* @author       Bill Hill
+* @date         January 1999
+* @version      $Id$
+* @par
+* Address:
+*               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* @par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* @brief        Java object to mirror the Woolz WlzFVertex2 structure.
+* @ingroup      JWlz
+*/
 package uk.ac.mrc.hgu.Wlz;
 
 import java.lang.*;
@@ -20,57 +41,57 @@ import uk.ac.mrc.hgu.Wlz.*;
 
 public class WlzFVertex2 extends WlzBase implements Cloneable
 {
+  // Version string.
+  public static String ident = "Id$$";
+
   public float	vtX;
   public float	vtY;
 
-  /**********************************************************************
-  * Purpose:    Constructor
-  * @param:     void
-  **********************************************************************/
+  /*!
+  * @brief      Constructor
+  */
   public	WlzFVertex2()
   {
     vtX = 0.0f;
     vtY = 0.0f;
   }
 
-  /**********************************************************************
-  * Purpose:    Constructor
-  * @param:     x		the x coordinate
-  * @param:     y		the y coordinate
-  **********************************************************************/
+  /*!
+  * @brief      Constructor
+  * @param      x		The x coordinate.
+  * @param      y		The y coordinate.
+  */
   public	WlzFVertex2(float x, float y)
   {
     vtX = x;
     vtY = y;
   }
 
-  /**********************************************************************
-  * Purpose:	Constructs a new Java (2D) point which has the same
+  /*!
+  * @brief  	Constructs a new Java (2D) point which has the same
   *		coordinates as this Java Woolz vertex.
-  * @param:	void
-  **********************************************************************/
+  */
   public Point2D toPoint()
   {
     return(new Point2D.Float(vtX, vtY));
   }
 
-  /**********************************************************************
-  * Purpose:    Implements cloning.
-  * @return:    Clone of this object.
-  * @param:     void
-  **********************************************************************/
+  /*!
+  * @return     Clone of this object.
+  * @brief      Implements cloning.
+  */
   public Object clone()
   {
     return(new WlzFVertex2(vtX, vtY));
   }
 
-  /**********************************************************************
-  * Purpose:    Indicates whether some other object is "equal to" this
-  *		Woolz pointer.
+  /*!
   * @return     true if this object is the same as the given object,
   *		otherwise false.
-  * @param:     obj		the given object for comparison.
-  **********************************************************************/
+  * @brief      Indicates whether some other object is "equal to" this
+  *		Woolz pointer.
+  * @param      obj		The given object for comparison.
+  */
   public boolean equals(Object other)
   {
     boolean	isEqual;

@@ -1,29 +1,53 @@
-/************************************************************************
-* Project:      Java Woolz
-* Title:        WlzPointer.java
-* Date:         January 1999
-* Purpose:      Java binding for Woolz native pointers.
-* Copyright:	1997 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Maintenance:	Log changes below, with most recent at top of list.
-* @author       Bill Hill (bill@hgu.mrc.ac.uk)
-* @version 	MRC HGU %I%, %G%
-************************************************************************/
+/*!
+* @file         WlzPointer.java
+* @author       Bill Hill
+* @date         January 1999
+* @version      $Id$
+* @par
+* Address:
+*               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* @par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* @brief        Java binding for Woolz native pointers.
+* @ingroup      JWlz
+*/
 package uk.ac.mrc.hgu.Wlz;
 import uk.ac.mrc.hgu.Wlz.*;
 
 public class WlzPointer extends WlzNative
 {
-  /**********************************************************************
-  * Purpose:    Indicates whether some other object is "equal to" this
-  *		Woolz pointer.
-  * @return     true if this object is the same as the given object,
+  // Version string.
+  public static String ident = "Id$$";
+
+  /*!
+  * @return     True if this object is the same as the given object,
   *		otherwise false.
-  * @param:     obj		the given object for comparison.
-  **********************************************************************/
+  * @brief      Indicates whether some other object is "equal to" this
+  *		Woolz pointer.
+  * @param      obj		the given object for comparison.
+  */
   public boolean equals(Object other)
   {
     boolean	isEqual;
@@ -47,31 +71,27 @@ public class WlzPointer extends WlzNative
     return(isEqual);
   }
 
-  /**********************************************************************
-  * Purpose:    Computes a hashcode for this pointer.
-  * @return     a hash code value for the Woolz pointer.
-  * @param:     void
-  **********************************************************************/
+  /*!
+  * @return     Hash code value for the Woolz pointer.
+  * @brief      Computes a hashcode for this pointer.
+  */
   public int 	hashCode()
   {
     return((int )((value >>> 32) + (value & 0xFFFFFFFF)));
   }
 
-  /**********************************************************************
-  * Purpose:    Tests the pointer to see if it is null.
-  * @return     true if the pointer is null.
-  * @param:     void
-  **********************************************************************/
+  /*!
+  * @return     True if the pointer is null.
+  * @brief      Tests the pointer to see if it is null.
+  */
   public boolean isNull()
   {
     return(value == 0);
   }
 
-  /**********************************************************************
-  * Purpose:    Makes the pointer a null pointer.
-  * @return     void
-  * @param:     void
-  **********************************************************************/
+  /*!
+  * @brief      Makes the pointer a null pointer.
+  */
   public void	clear()
   {
     value = 0;
