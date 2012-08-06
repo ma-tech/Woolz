@@ -437,7 +437,7 @@ WlzErrorNum 	WlzLUTGreyTransformSet(WlzObject *obj,
 		int	*p;
 
 		p = lutVal->val.inp + kl;
-		t = (double )(gou.inv - gol.inv) / (double )nk;
+		t = (double )(gou.inv - gol.inv + 1) / (double )nk;
 		for(i = 0; i < nk; ++i)
 		{
 		  p[i] = gol.inv + (int )((double )(kl + i) * t + eps); 
@@ -492,7 +492,7 @@ WlzErrorNum 	WlzLUTGreyTransformSet(WlzObject *obj,
 
 		p = lutVal->val.inp + kl;;
 		ol = gol.inv + eps;
-		t = (gou.inv - gol.inv) * pow(nl, -p0);
+		t = (gou.inv - gol.inv + 1) * pow(nl, -p0);
 		for(i = 0; i < nk; ++i)
 		{
 		  p[i] = (int )(t * pow((kl + i), p0) + ol);
@@ -556,7 +556,7 @@ WlzErrorNum 	WlzLUTGreyTransformSet(WlzObject *obj,
 		  int	*p;
 
 		  p = lutVal->val.inp + kl;
-		  t0 = (gou.inv - gol.inv) * fu;
+		  t0 = (gou.inv - gol.inv + 1) * fu;
 		  t1 = gol.inv - t0 * fl + eps;
 		  for(i = 0; i < nk; ++i)
 		  {
@@ -642,12 +642,13 @@ WlzObject       *WlzLUTMergeToRGBA(WlzObject *r, WlzObject *g, WlzObject *b,
   unsigned int	*mP;
   int		*cP[4];
   WlzObject	*cObj[4];
-  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   cObj[0] = r;
   cObj[1] = g;
   cObj[2] = b;
   cObj[3] = a;
+  lutDom = NULL;
   /* Check the given LUT objects. */
   for(i = 0; i < 4; ++i)
   {
@@ -684,7 +685,7 @@ WlzObject       *WlzLUTMergeToRGBA(WlzObject *r, WlzObject *g, WlzObject *b,
 	{
 	  lutDom = cObj[i]->domain.lut;
 	}
-	else
+	else if(lutDom)
 	{
 	  if((lutDom->bin1 != cObj[i]->domain.lut->bin1) ||
 	      (lutDom->lastbin != cObj[i]->domain.lut->lastbin))
@@ -722,7 +723,7 @@ WlzObject       *WlzLUTMergeToRGBA(WlzObject *r, WlzObject *g, WlzObject *b,
     {
       for(j = 0; j < 3; ++j)
       {
-	c[i] = (cObj[i])? WLZ_CLAMP(cP[j][i], 0, 255): 0;
+	c[j] = (cObj[j])? WLZ_CLAMP(cP[j][i], 0, 255): 0;
       }
       c[3] = (cObj[3])? WLZ_CLAMP(cP[3][i], 0, 255): 255;
       WLZ_RGBA_RGBA_SET(mP[i], c[0], c[1], c[2], c[3]);
