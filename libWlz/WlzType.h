@@ -1248,6 +1248,26 @@ typedef struct _WlzPixelP
   WlzGreyP	p;			/*!< Pointer to the grey value(s). */
 } WlzPixelP;
 
+/*!
+* \struct	_WlzGreyTransformParam
+* \ingroup	WlzTransform
+* \brief	Grey-level transform parameters.
+*		Typedef: ::WlzGreyTransformParam.
+*/
+typedef struct _WlzGreyTransformParam
+{
+  WlzGreyTransformType type; 		/*!< Grey transform type. */
+  WlzPixelV	il;       		/*!< Input minimum grey value. */
+  WlzPixelV	iu;       		/*!< Input maximum grey value. */
+  WlzPixelV	ol;       		/*!< Output minimum grey value. */
+  WlzPixelV	ou;       		/*!< Output maximum grey value. */
+  double	p0;			/*!< First parameter, used for
+                                             gamma (\f$\gamma\f$) or
+                                             sigmoid (\f$\mu\f$). */
+  double	p1;			/*!< Second parameter, used for
+                                             sigmoid (\f$\sigma\f$). */
+} WlzGreyTransformParam;
+
 /************************************************************************
 * Markers.
 ************************************************************************/
