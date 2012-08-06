@@ -5479,6 +5479,8 @@ extern int 			WlzValueMatchString(
 				  int	targetVal,
 				  const char *testStr,
 				  ...);
+extern char 			*WlzStringWhiteSpSkip(
+				  char *str);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
