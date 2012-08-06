@@ -146,6 +146,7 @@ bin_PROGRAMS		= \
 			  WlzLabel \
 			  WlzLaplacian \
 			  WlzLUTGreyTransformObj \
+			  WlzLUTGreyTransformMerge \
 			  WlzMakeEmpty \
 			  WlzMakeRect \
 			  WlzMarkerLatticeFromDomain \
@@ -604,6 +605,10 @@ WlzLaplacian_LDFLAGS			= $(AM_LFLAGS)
 WlzLUTGreyTransformObj_SOURCES		= WlzLUTGreyTransformObj.c
 WlzLUTGreyTransformObj_LDADD		= $(LDADD)
 WlzLUTGreyTransformObj_LDFLAGS		= $(AM_LFLAGS)
+
+WlzLUTGreyTransformMerge_SOURCES	= WlzLUTGreyTransformMerge.c
+WlzLUTGreyTransformMerge_LDADD		= $(LDADD)
+WlzLUTGreyTransformMerge_LDFLAGS	= $(AM_LFLAGS)
 
 WlzMakeEmpty_SOURCES			= WlzMakeEmpty.c
 WlzMakeEmpty_LDADD			= $(LDADD)
