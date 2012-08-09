@@ -52,6 +52,7 @@ WlzDbgMask	wlzDbgMask = WLZ_DBG_NONE,
 void		*wlzDbgData = NULL,
 		*wlzDbgObjData = NULL;
 
+
 WlzDbgFn	wlzDbgOutFn = WlzDbgWrite;
 WlzDbgObjFn	wlzDbgOutOutFn = WlzDbgObjWrite;
 
@@ -106,3 +107,4 @@ WlzErrorNum	WlzDbgObjWrite(WlzObject *obj, int freeFlg)
   }
   return(errFlag);
 }
+

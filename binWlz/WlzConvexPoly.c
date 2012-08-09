@@ -100,11 +100,13 @@ static void usage(char *proc_str)
 	  "\tCalculate the convex polygon (hull) enclosing a domain.\n"
 	  "\tFor 3D objects the convex polygons are calculated for\n"
 	  "\teach plane and therefore do not necessarily corrspond to\n"
-	  "\tthe 3D convex hull. Options are:\n"
+	  "\tthe 3D convex hull.\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

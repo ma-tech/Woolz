@@ -299,12 +299,15 @@ int             main(int argc, char **argv)
     if(usage)
     {
       (void )fprintf(stderr,
-      "Usage: %s %s",
+      "Usage: %s%s%s %s",
       *argv,
       "        [-h] [-o<out object>]\n"
       "        [-c#,#] [-r#,#] [-w<window function>] [<in object>)]\n"
       "Applies a window function to a Woolz object.\n"
-      "Options are:\n"
+      "Version: ",
+      WlzVersion(),
+      "\n"
+      "Options:\n"
       "  -h         Help, prints this usage information.\n"
       "  -c#,#      Window function center in object's coordinates. First\n"
       "             coordinate is the column, second the line. If neither is\n"

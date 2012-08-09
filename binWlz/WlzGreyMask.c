@@ -103,7 +103,7 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-m#] [-h] [-v] [<input mask> [<input obj>]]\n"
 	  "\tApply the mask to the given object setting all pixels\n"
 	  "\twithin the mask to the mask value. The object must be\n"
@@ -111,12 +111,13 @@ static void usage(char *proc_str)
 	  "\tpolyline or boundary list which will be filled to make\n"
 	  "\t a domain. The mask is always the second object if read\n"
 	  "\tfrom the standard input\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -m#       the mask value - default 0\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

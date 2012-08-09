@@ -351,9 +351,13 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
-    " [-d] [-h] [-o<output file>] [-t <transform>] [<input file>]\n" 
+    " [-d] [-h] [-o<output file>]\n"
+    "                                  [-t <transform>] [<input file>]\n" 
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -d Output the vertices in same format used by WlzAffineTransformLSq\n"
     "       <vtx x> <vtx y> <disp x> <disp y> for 2D\n"

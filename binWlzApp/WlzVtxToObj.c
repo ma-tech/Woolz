@@ -98,15 +98,16 @@ static void usage(
   char	*str)
 {
   fprintf(stderr,
-	  "Usage:\n"
-	  "%s\n"
-	  "\tBuild a Woolz domain object from a vertex reading the\n"
-	  "\tvertex values from standard input\n"
+	  "Usage:\t%s [-d#] [-h] [-v]\n"
+	  "\tBuild a Woolz domain object from a vertex reading the vertex\n"
+	  "\tvalues from standard input\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t-d#     input dimension, can be 2 or 3 (default 2)\n"
 	  "\t-h      help message\n"
-	  "\t-v     verbose operation\n"
-	  "\n",
-	  str);
+	  "\t-v     verbose operation\n",
+	  str,
+	  WlzVersion());
 
   return;
 }

@@ -277,9 +277,13 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
-    " [-h] [-e #] [-o<output file>] <transform 0> <transform 1>\n" 
+    " [-h] [-e #] [-o<output file>]\n"
+    "                              <transform 0> <transform 1>\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
     "  -e  Tolerance value.\n"

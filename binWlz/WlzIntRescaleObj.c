@@ -227,12 +227,14 @@ int             main(int argc, char **argv)
     "Usage: "
     "%s [-s#] [-c] [-e] [-h] [<in object>]\n"
     "Rescales a woolz object using an integer scale factor.\n"
-    "Options are:\n"
+    "Version %s\n"
+    "Options:\n"
     "  -s#   Scale factor (set to %d).\n"
     "  -c    Compress using 1/scale (%sset).\n"
     "  -e    Expand using scale (%sset).\n"
     "  -h    Display this usage information.\n",
     *argv,
+    WlzVersion(),
     scale,
     (expand == 0) ? "" : "not ",
     (expand != 0) ? "" : "not ");

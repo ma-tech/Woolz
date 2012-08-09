@@ -130,7 +130,8 @@ static void usage(char *proc_str)
 	  "Usage:\t%s [-c#] [-h] [<input file>]\n"
 	  "\tDilate a domain woolz object\n"
 	  "\twriting the new object to standard output\n"
-	  "\tOptions are:\n"
+	  "Version %s:\n"
+	  "Options:\n"
 	  "\t  -c#       Dilation connectivity:\n"
 	  "\t            # =  4: 4-connected (2D)\n"
 	  "\t                 8: 8-connected (2D) - default\n"
@@ -138,9 +139,9 @@ static void usage(char *proc_str)
 	  "\t                18: 18-connected (3D)\n"
 	  "\t                26: 26-connected (3D)\n"
 	  "\t  -r#       Structuring element radius (default 1)\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "",
-	  proc_str);
+	  "\t  -h        Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

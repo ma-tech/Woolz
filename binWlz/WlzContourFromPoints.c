@@ -560,13 +560,16 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%s",
+    "Usage: %s%s%s%s",
     *argv,
     "WlzContourFromPoints [-h] [-2] [-3] [-o<out object>]\n"
     "                     [-S<surface points file>]\n"
     "                     [-I<inside points file>] [-O<outside points file>]\n"
     "                     [-a#] [-b#] [-c#] [-d#] [-e#] [-D#] [-M#] [-T#]\n"
     "                     [-X#]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Print this usage message.\n"
     "  -2  Points are 2D and contour is a curve in 2D.\n"

@@ -100,18 +100,19 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-h] [-v] [<source image> [<destination obj>]]\n"
 	  "\tCopy grey values from the source object to the destination\n"
 	  "\tobject within the domain of intersection. The output object\n"
 	  "\thas the domain and grey-values of the destination object \n"
 	  "\totherwise. If both objects are read from stdin then the\n"
 	  "\tfirst object is the destination and the second the source.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

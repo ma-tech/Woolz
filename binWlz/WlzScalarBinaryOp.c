@@ -98,12 +98,13 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-b <op>] [-h] [-v] [<value>] [<input file>]\n"
 	  "\tApply a scalar binary operation to the grey values of\n"
 	  "\tthe given image with respect to the input value. Note\n"
 	  "\tmost options require an input value.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -b <op>  convert to a given channel\n"
 	  "\t           op =  %d - Add\n"   
 	  "\t              =  %d - SUBTRACT\n"
@@ -123,9 +124,9 @@ static void usage(char *proc_str)
 	  "\t              =  %d - MIN\n"
 	  "\t              =  %d - MAGNITUDE\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
+	  "\t  -v        verbose operation\n",
 	  proc_str,
+	  WlzVersion(),
 	  WLZ_BO_ADD,
 	  WLZ_BO_SUBTRACT,
 	  WLZ_BO_MULTIPLY,

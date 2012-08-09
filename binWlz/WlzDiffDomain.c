@@ -94,10 +94,11 @@ static void usage(char *proc_str)
   fprintf(stderr,
 	  "Usage:\t%s [-h] [<input file>]\n"
 	  "\tCalculate the difference of the input woolz objects\n"
-	  "\tOptions are:\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "",
-	  proc_str);
+	  "Version: %s\n"
+	  "Options:\n"
+	  "\t  -h        Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

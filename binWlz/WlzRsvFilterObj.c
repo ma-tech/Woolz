@@ -463,11 +463,14 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-o<output object>] [-a#,#,#,#] [-b#,#] [-c#]\n"
     "        [-P] [-n] [-g] [-d] [-p#] [-r#] [-t#]\n"
     "        [<input object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Prints this usage information\n"
     "  -o  Output object file name.\n"

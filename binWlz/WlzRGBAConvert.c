@@ -108,13 +108,14 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-c] [-C <channel>] [-m] [-s#][-h] [<input file>]\n"
 	  "\tConvert the RGBA woolz object to a compound object\n"
 	  "\tor to a specific channel, including modulus, of the rgb\n"
 	  "\tvalues, writing the new object to standard output.\n"
 	  "\tNote input object MUST have grey-value type RGBA\n."
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -c       convert to compound (default)\n"
 	  "\t  -C #     convert to a given channel\n"
 	  "\t           # = %d: red\n"
@@ -134,6 +135,7 @@ static void usage(char *proc_str)
 	  "\t  -h        Help - prints this usage message\n"
 	  "",
 	  proc_str,
+	  WlzVersion(),
 	  WLZ_RGBA_CHANNEL_RED,
 	  WLZ_RGBA_CHANNEL_GREEN,
 	  WLZ_RGBA_CHANNEL_BLUE,

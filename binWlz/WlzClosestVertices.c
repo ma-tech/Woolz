@@ -408,10 +408,13 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-2] [-3] [-s <transform>] [-t <transform>]\n"
     "        [-u <vertices>] [-o<output file>] [<input file>]\n" 
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
     "  -2  Vertices and object are 2D.\n"

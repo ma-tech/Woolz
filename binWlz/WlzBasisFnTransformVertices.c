@@ -480,13 +480,16 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-o<out object>] [-p<tie points file>]\n"
     "                  [-m<min mesh dist>] [-M<max mesh dist>]\n"
     "                  [-t<basis fn transform>] [-Y<order of polynomial>]\n"
     "                  [-g] [-h] [-q] [-Q] [-s] [-y] [-B] [-D] [-G] [-L]\n"
     "                  [-T] [<in object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -o  Output vertices file name.\n"
     "  -p  Tie point file.\n"
@@ -499,7 +502,7 @@ int             main(int argc, char **argv)
     "  -s  Use thin plate spline basis function (default) if tie points\n"
     "      are given.\n"
     "  -y  Use polynomianl basis function if tie points are given.\n"
-    "  -Y  Polynomial order for oolynomianl basis function (default 3).\n"
+    "  -Y  Polynomial order for polynomianl basis function (default 3).\n"
     "Computes and applies Woolz basis function transforms.\n"
     "Tie points may be read from an ascii file with the format:\n"
     "  <vertex x> <vertex y> <displacement x> <displacement y>\n"

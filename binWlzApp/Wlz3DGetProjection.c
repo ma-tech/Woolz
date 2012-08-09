@@ -141,14 +141,15 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]"
-	  " [-b <parameter bibfile>] [-m <mode>] [-s <scale>]"
-	  " [-o <output file>] [-u<ux,uy,uz>] [-h] [-v]"
-	  " [<3D object input file>]\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]\n"
+	  "\t[-b <parameter bibfile>] [-m <mode>] [-s <scale>]\n"
+	  "\t[-o <output file>] [-u<ux,uy,uz>] [-h] [-v]\n"
+	  "\t[<3D object input file>]\n"
 	  "\tGet an arbitrary sliceprojection from a 3D object\n"
 	  "\twriting the 2D object to standard output\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -a<pitch,yaw[,roll]> viewing angles in degrees. If roll\n"
 	  "\t                       is defined then the mode is \"absolute\"\n"
 	  "\t  -b<bibfile>        bibfile defining the view parameters e.g.\n"
@@ -165,9 +166,9 @@ static void usage(char *proc_str)
 	  "\t  -u<ux,uy,uz>       Up vector for up-is-up mode.\n"
 	  "\t			  Default: (0,0,-1)\n"
 	  "\t  -h                 Help - prints this usage message\n"
-	  "\t  -v                 verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v                 verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

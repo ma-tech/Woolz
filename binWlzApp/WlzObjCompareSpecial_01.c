@@ -82,12 +82,12 @@ static void usage(
   char	*str)
 {
   fprintf(stderr,
-	  "Usage:\n"
-	  "%s\n"
-	  "\tPrint out some stats for two input woolz objects\n"
-	  "\tread in from standard input\n"
-	  "\n",
-	  str);
+	  "Usage:\t%s\n"
+	  "\tPrint out some stats for two input woolz objects read from\n"
+	  "\tthe standard input.\n"
+	  "Version: %s\n",
+	  str,
+	  WlzVersion());
 
   return;
 }

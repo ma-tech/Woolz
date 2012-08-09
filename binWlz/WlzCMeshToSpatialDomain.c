@@ -57,7 +57,6 @@ WlzCMeshToSpatialDomain [-h] [-o<out obj file>] [-s#] [<input mesh file>]
 \par Options
 <table width="500" border="0">
   <tr> 
-  <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
   </tr>
@@ -235,15 +234,18 @@ int		main(int argc, char *argv[])
   (void )WlzFreeObj(outObj);
   if(usage)
   {
-    fprintf(stderr,
-      "Usage: %s [-h] [-o<out obj file>] [-s #] [<input mesh file>]\n"
+    (void )fprintf(stderr,
+      "Usage: %s [-h] [-o<out obj file>] [-s #]\n"
+      "                               [<input mesh file>]\n"
       "Constructs a 2D or 3D spatial domain object without values which\n"
       "covers the given conforming mesh.\n"
+      "Version: %s\n"
       "Options are:\n"
       "  -h  Help, prints this usage message.\n"
       "  -o  Output object.\n"
       "  -s  Additional scale factor from the mesh to the spatial domain\n.",
-      argv[0]);
+      argv[0],
+      WlzVersion());
 
   }
   return(!ok);

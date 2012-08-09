@@ -90,11 +90,14 @@ static void usage(char *proc_str)
 {
   fprintf(stderr,
 	  "Usage:\t%s [-h] [<input file>]\n"
-	  "\tCalculate the area of the input 2D woolz objects\n"
+	  "Version: %s"
+	  "\n\tCalculate the area of the input 2D woolz objects\n"
+	  "\n"
 	  "\tOptions are:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "",
-	  proc_str);
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

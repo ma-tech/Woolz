@@ -236,9 +236,12 @@ int             main(int argc, char *argv[])
   if(usage)
   {
       (void )fprintf(stderr,
-      "Usage: %s %s",
+      "Usage: %s%s%s %s",
       *argv,
       " [-h] -s<threshold> [<input object>]\n"
+      "Version: ",
+      WlzVersion(),
+      "\n"
       "Options:\n"
       "  -s  Threshold shell size (edges in 2D, loops in 3D).\n"
       "  -h  Prints this usage information.\n"

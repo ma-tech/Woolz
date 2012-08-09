@@ -412,11 +412,14 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-v] [-o<out obj>] [-i <init tr>]\n"
     "                      [-n] [-t] [-r] [-R #] [-T #,#] [-V]\n"
     "                      [<in obj 0>] [<in obj 1>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
     "  -v  Verbose output to the standard output. This consists of two\n"

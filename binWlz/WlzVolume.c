@@ -49,7 +49,7 @@ static char _WlzVolume_c[] = "University of Edinburgh $Id$";
 WlzVolume - computes the volume of 3D objects.
 \par Synopsis
 \verbatim
-WlzVolume [-h] [<input file>]
+WlzVolume [-h] [-n] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -101,11 +101,12 @@ static void usage(char *proc_str)
   fprintf(stderr,
 	  "Usage:\t%s [-n] [-h] [<input file>]\n"
 	  "\tCalculate the volume of the input 3D woolz objects\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -n        Numeric output only - number of voxels, zero on error\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "",
-	  proc_str);
+	  "\t  -h        Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

@@ -177,13 +177,15 @@ static void usage(
   char	*str)
 {
   fprintf(stderr,
-	  "Usage:\n"
-	  "%s -d <delta> -t <type> -m <matrix-file> -h -v  <rows> <cols>\n"
+	  "Usage: "
+	  "%s -d <delta> -t <type> -m <matrix-file> -h\n"
+	  "                            -v <rows> <cols>\n"
 	  "\tRead in domains from stdin and calculate the match value\n"
 	  "\tmatrix according to type, writing to stdout. The row domains\n"
 	  "\tare read first followed by the column domains, there must be\n"
 	  "\tsufficient for the match type.\n"
-	  "Arguments:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t-d#        delta value (default 0.01), must be < 1\n"
 	  "\t-m<file>   input the name of a file containing the mixing\n"
 	  "\t           and contrib matrices - csv format\n"
@@ -200,9 +202,9 @@ static void usage(
 	  "\t               domains\n"
 	  "\t             = 8 - Area/volume of intersection.\n"
 	  "\t-h         print this message\n"
-	  "\t-v         verbose operation\n"
-	  "\n",
-	  str);
+	  "\t-v         verbose operation\n",
+	  str,
+	  WlzVersion());
 
   return;
 }

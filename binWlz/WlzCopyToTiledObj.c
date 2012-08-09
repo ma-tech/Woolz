@@ -279,12 +279,15 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%s",
+    "Usage: %s%s%s%s",
     *argv,
     " [-h] [-t <tiled object>] [-x #] [-y #] [-z #]\n"
     "                         [<input objects>]\n"
     "Sets the values in the tiled object using the values in the given\n"
     "input object(s).\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Prints this usage information.\n"
     "  -t  The tiled object.\n"

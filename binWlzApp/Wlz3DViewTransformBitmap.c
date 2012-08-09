@@ -134,16 +134,17 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-a<pitch>,<yaw[>,<roll]>] [-b<bibfile>]"
-	  "[-f<fx>,<fy>,<fz>] [-d<dist>] -o <x_off>,<y_off>"
-	  " [-h] [-m<mode>] -s<width>,<height> <bitmap data file>\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-a<pitch>,<yaw[>,<roll]>] [-b<bibfile>]\n"
+	  "\t[-f<fx>,<fy>,<fz>] [-d<dist>] -o <x_off>,<y_off>\n"
+	  "\t[-h] [-m<mode>] -s<width>,<height> <bitmap data file>\n"
 	  "\tTransform a bitmap on a section view to a 3D object\n"
 	  "\twriting the 3D object to standard output\n"
-	  "\tRequired are:\n"
+	  "Version: %s\n"
+	  "Required are:\n"
 	  "\t  -s<width,height>   size of bitmap image\n"
 	  "\t  -o<x_off,y_off>    x and y offsets of the bitmap image\n"
-	  "\tOptions are:\n"
+	  "Options:\n"
 	  "\t  -a<pitch,yaw[,roll]> viewing angles in degrees - default 0.0\n"
 	  "\t  -b<view-bibfile>   input parameters from the view\n"
 	  "\t                     bibfile - e.g. saved from MAPaint\n"
@@ -152,9 +153,9 @@ static void usage(char *proc_str)
 	  "\t  -m<mode>           viewing mode, one of: up-is-up, statue, absolute\n"
 	  "\t  -u<ux,uy,uz>       up vector - default (0.0, 0.0, 1.0)\n"
 	  "\t  -h                 Help - prints this usage message\n"
-	  "\t  -v                 Verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v                 Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

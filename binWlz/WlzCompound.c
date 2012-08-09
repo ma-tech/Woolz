@@ -110,11 +110,13 @@ static void usage(char *proc_str)
 	  "Usage:\t%s [-h] [-n#]\n"
 	  "\tGenerate a woolz compound object from the given\n"
 	  "\tinput objects. Objects are read from stdin and written\n"
-	  "\tto stdout. Options are:\n"
+	  "\tto stdout.\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -n#       Maximum number of objects -default=1024\n"
-	  "",
-	  proc_str);
+	  "\t  -n#       Maximum number of objects -default=1024\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

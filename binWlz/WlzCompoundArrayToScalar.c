@@ -224,7 +224,9 @@ int		main(int argc, char *argv[])
     fprintf(stderr,
             "Usage: %s [-h] [-o<output object>] [-l] [<in object>]\n"
             "Reduces a compound array to an object with scalar values.\n"
-	    "Options are:\n"
+	    "Version: %s"
+	    "\n"
+	    "Options:\n"
 	    "  -h  Output this usage message.\n"
 	    "  -l  Modulus operator to convert to scalar (default).\n"
 	    "  -o  Output file.\n"
@@ -233,7 +235,9 @@ int		main(int argc, char *argv[])
 	    "Creates a new object which is written to the file out.wlz. The\n"
 	    "output object is a domain object in which the values are the\n"
 	    "modulus of the values in the compound array read from ca.wlz.\n",
-	    argv[0], argv[0]);
+	    argv[0],
+	    WlzVersion(),
+	    argv[0]);
 
   }
   return(!ok);

@@ -634,11 +634,14 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%s",
+    "Usage: %s%s%s%s",
     *argv,
     " [-o<out obj>] [-A<algorithm>]\n"
     "                             [-2] [-3] [-T] [-a] [-r] [-t] [-h]\n"
     "                             [-w<weights>] [<in data>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -2  Compute a 2D transform, requires verticies in 2D format.\n"
     "  -3  Compute a 3D transform, requires verticies in 3D format.\n"

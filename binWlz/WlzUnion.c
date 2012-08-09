@@ -97,14 +97,15 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-h] [<input file>]\n"
 	  "\tCalculate the union of the input woolz objects\n"
-	  "\tOptions are:\n"
+	  "Verson: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -n#       Maximum number of objects -default=100\n"
-	  "",
-	  proc_str);
+	  "\t  -n#       Maximum number of objects -default=100\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

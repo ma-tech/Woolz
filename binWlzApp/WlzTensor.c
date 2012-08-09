@@ -329,19 +329,17 @@ int             main(int argc, char **argv)
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-h] \n"
 	  "\tDetermine tensor object.\n"
-	  "\n"
-	  "\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -s        Source file\n"
           "\t  -b        Bib files\n"
-	  "\t  -t        Output tensor file\n"
-	  "\t                                                      \n"
-					  "",
-	  proc_str);
+	  "\t  -t        Output tensor file\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

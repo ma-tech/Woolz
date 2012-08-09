@@ -118,15 +118,16 @@ static void usage(char *proc_str)
 	  "\twriting the new object to standard output\n"
 	  "\tThe original grey-values are transformed\n"
 	  "\tfrom their original range. The transformation is \n"
-	  "\tnew_grey = u + l - old_grey. where u and l are"
-	  "\tthe upper and lower values of the inversion range."
-	  "\tOptions are:\n"
+	  "\tnew_grey = u + l - old_grey. where u and l are\n"
+	  "\tthe upper and lower values of the inversion range.\n"
+	  "Version: %s"
+	  "Options:\n"
 	  "\t  -l#       low grey value, default min value in source\n"
 	  "\t  -u#       upper grey value, default max value in source\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

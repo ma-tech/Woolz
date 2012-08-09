@@ -320,9 +320,12 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-c] [-d#] [-h] [-s#] [-v] [<mesh object>] [<domain object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -c  Find the closest point on the surface to the domain if there is\n"
     "      no intersection.\n"

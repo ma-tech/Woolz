@@ -100,9 +100,9 @@ WlzErrorNum	WlzEffIcsFileNames(char **fileBody,
 WlzObject	*WlzEffReadObjIcs(const char *gvnFileName, WlzErrorNum *dstErr)
 {
   int		bits,
-		dataCount,
 		datumSize,
   		idx;
+  size_t	dataCount;
   void		***data = NULL;
   FILE		*fP = NULL;
   char		*fileName = NULL,
@@ -412,16 +412,15 @@ WlzObject	*WlzEffReadObjIcs(const char *gvnFileName, WlzErrorNum *dstErr)
      (header.format == WLZEFF_ICS_TKN_INT) &&
      idsFileName && ((fP = fopen(idsFileName, "r")) != NULL))
   {
-      #ifdef _WIN32
-  if (fP != NULL){
-	if(_setmode(_fileno(fP), 0x8000) == -1)
-	{
-		errNum = WLZ_ERR_READ_EOF;
-	}
-  }
-  #endif
-
-  dataCount = size.vtX * size.vtY * size.vtZ;
+#ifdef _WIN32
+    if (fP != NULL){
+	  if(_setmode(_fileno(fP), 0x8000) == -1)
+	  {
+		  errNum = WLZ_ERR_READ_EOF;
+	  }
+    }
+#endif
+    dataCount = (size_t)(size.vtX) * (size_t)(size.vtY) * (size_t )(size.vtZ);
     switch(bits)
     {
       case 8:

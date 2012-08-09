@@ -243,6 +243,8 @@ int		main(int argc, char *argv[])
   {
     (void )fprintf(stderr,
     "Usage: %s [-h] [-o<output file>] [-p #] [-s #,#,#] <input file list>\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -h  Output this usage message.\n"
     "  -o  Output file name, default is the standard output.\n"
     "  -p  Coordinate of the first plane.\n"
@@ -258,7 +260,9 @@ int		main(int argc, char *argv[])
     "%s obj000000.wlz obj000001.wlz empty.wlz obj000003.wlz >out.wlz\n"
     "Constructs a 3D object from the 2D domain objects obj00000X.wlz and\n"
     "the empty object empty.wlz.\n",
-    argv[0], argv[0]);
+    argv[0],
+    WlzVersion(),
+    argv[0]);
   }
   return(!ok);
 }

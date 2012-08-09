@@ -224,6 +224,8 @@ int		main(int argc, char *argv[])
   {
     (void )fprintf(stderr,
     "Usage: %s [-h] [-o<output index object>] [<input compound object>]\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -h  Output this usage message.\n"
     "  -o  Output file name, default is the standard output.\n"
     "Reads a compound array object, which must contain only 2D or 3D\n"
@@ -239,7 +241,8 @@ int		main(int argc, char *argv[])
     "overlap then higher index objects will overwrite lower index objects\n"
     "within their intersection.\n"
     "This binary can be considered the inverse of WlzIndexObjToCompound.\n",
-    argv[0]);
+    argv[0],
+    WlzVersion());
   }
   return(!ok);
 }

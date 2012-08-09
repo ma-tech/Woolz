@@ -487,7 +487,8 @@ int             main(int argc, char *argv[])
     "images are sorted by column origin of the bounding boxes, ie the\n"
     "component numbrs increase from left to right.\n"
     "origins of their bounding boxes increase.\n"
-    "Command line options are:\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -b  Border width for each component image.\n"
     "  -d  Write component images to separate directories using MA Editorial\n"
     "      office conventions.\n"
@@ -497,7 +498,9 @@ int             main(int argc, char *argv[])
     "  -n  Number of component images to extract, value %d.\n"
     "  -s  Histogram smoothing parameter, value %g.\n"
     "  -v  Be verbose, probably only useful for debugging.\n",
-    argv[0], nComp, sigma);
+    argv[0],
+    WlzVersion(),
+    nComp, sigma);
   }
   return(!ok);
 }

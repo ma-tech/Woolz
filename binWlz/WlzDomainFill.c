@@ -100,11 +100,12 @@ static void usage(char *proc_str)
 	  "\taffects 2D and 3D domain objects and will automatically\n"
 	  "\tremove the valuetable if present. The new object is\n"
 	  "\twritten to standard output."
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

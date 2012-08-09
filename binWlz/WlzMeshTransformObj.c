@@ -49,8 +49,8 @@ static char _WlzMeshTransformObj_c[] = "University of Edinburgh $Id$";
 WlzMeshTransformObj - applies a mesh transform to an object.
 \par Synopsis
 \verbatim
-WlzMeshTransformObj -m <mesh transform file> [-o <output file>] [-h] [-v]
-                    <2D object input file>
+WlzMeshTransformObj [-i] [-L] -m <mesh transform file> [-o <output file>]
+                    [-h] [-v] <2D object input file>
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -142,19 +142,21 @@ static void usage(char *proc_str)
 {
   fprintf(stderr,
 	  "Usage:\t%s -m <mesh transform file>"
-	  " [-o <output file>] [-h] [-v]"
-	  " [<2D object input file>]\n"
+	  " [-o <output file>] [-h]\n"
+	  "                            [-v] [<2D object input file>]\n"
 	  "\tApply a mesh transform to given input objects\n"
 	  "\twriting the warped objects to standard output.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -i                 Inverse transform\n"
-	  "\t  -L                 Use linear interpolation instead of nearest-neighbour\n"
+	  "\t  -L                 Use linear interpolation instead of\n"
+	  "\t                     nearest-neighbour\n"
 	  "\t  -m<meshfile>       Mesh transform object\n"
 	  "\t  -o<output file>    Output filename, default to stdout\n"
 	  "\t  -h                 Help - this message\n"
-	  "\t  -v                 verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v                 verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

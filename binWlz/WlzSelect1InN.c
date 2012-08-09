@@ -109,19 +109,20 @@ static WlzObject *WlzSelect1InN(WlzObject *obj,
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-f#] [-l#] [-s#] [-h] [<input file>]\n"
 	  "\tSelect planes 1 in n from a 3D object\n"
 	  "\tresetting voxel size to suit and\n"
 	  "\twriting the new object to standard output\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -f#       first plane (def: 0)\n"
 	  "\t  -l#       last plane (less than first => all, def: -1)\n"
 	  "\t  -n#       step (def: 3)\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

@@ -104,10 +104,14 @@ static void usage(char *proc_str)
   fprintf(stderr,
 	  "Usage:\t%s -m <src> -M <dest> [-h] [-v]"
 	  " <object input file>\n"
-	  "\t  -h                 Help - this message\n"
-	  "\t  -v                 verbose operation\n"
-	  "",
-	  proc_str);
+	  "Version: %s\n"
+	  "Options:\n"
+	  "\t-m\t\tSource model.\n"
+	  "\t-M\t\tDestination model.\n"
+	  "\t-h\t\tHelp - this message\n"
+	  "\t-v\t\tverbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

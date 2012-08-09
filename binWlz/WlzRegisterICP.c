@@ -454,11 +454,14 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-o<out obj>]\n"
     "                      [-E #] [-I] [-M #] [-i <init tr>] [-t] [-r]\n"
     "                      [<in obj 0>] [<in obj 1>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -I  Maximum number of iterations.\n"
     "  -M  Minimum distance weight, range [0.0-1.0]: Useful values are\n"

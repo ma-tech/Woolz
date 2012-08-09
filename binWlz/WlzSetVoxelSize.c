@@ -115,14 +115,15 @@ static void usage(char *proc_str)
 	  "\tThis is required until the 3D objects are converted to\n"
 	  "\tWLZ_TRANS_OBJ type. If a voxel size is not defined then\n"
 	  "\tthe original size is retained\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -x#       x voxel size\n"
 	  "\t  -y#       y voxel size\n"
 	  "\t  -z#       z voxel size\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

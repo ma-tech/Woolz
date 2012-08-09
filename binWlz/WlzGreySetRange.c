@@ -124,7 +124,7 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-d] [-u#] [-l#] [-U#] [-L#] [-h] [-v] [<input file>]\n"
 	  "\tReset the grey-range of a grey-level woolz object\n"
 	  "\twriting the new object to standard output\n"
@@ -135,20 +135,21 @@ static void usage(char *proc_str)
 	  "\t u and l are the old upper and lower values. If u and l\n"
 	  "\t are set it is up to the user to ensure that the actual\n"
 	  "\timage values are within the range [u,l]. Use WlzGreyRange\n"
-	  "\tto check."
-	  "\tOptions are:\n"
+	  "\tto check.\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -d        dither values\n"
-	  "\t  -l#       low grey value in source image, default min value"
-	  "in source\n"
-	  "\t  -L#       low grey value in dest image, default 0"
-	  "\t  -u#       upper grey value in source image, default max value"
-	  "in source\n"
+	  "\t  -l#       low grey value in source image, default min value\n"
+	  "\t            in source\n"
+	  "\t  -L#       low grey value in dest image, default 0\n"
+	  "\t  -u#       upper grey value in source image, default max value\n"
+	  "\t            in source\n"
 	  "\t  -U#       upper grey value in dest image, default 0"
 	  "in source\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

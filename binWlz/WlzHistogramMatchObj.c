@@ -393,11 +393,14 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " -m <histogram object> [-h] [-o<output object>]\n"
     "                              [-D] [-i] [-s#] [-t#] [-d#,#]\n"
     "                              [<input object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -D  Dither pixel values when mapping.\n"
     "  -m  Histogram object to match domain objects values to.\n"

@@ -132,7 +132,8 @@ static void usage(char *proc_str)
 	  "           -s<width>,<height> <input file-list>\n"
 	  "\tRead the file list and convert the woolz domains to\n"
 	  "\tGlaxo-Wellcome XYZ format contour files.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -v        Verbose operation\n"
 	  "\t  -m#       input the min size used to determine which\n"
@@ -140,9 +141,9 @@ static void usage(char *proc_str)
 	  "\t  -o#,#     x and y offsets to correspond to the grey-level\n"
 	  "\t            object so that all coordinates are +ve.\n"
 	  "\t  -s#,#     width and height for the XYZ file\n"
-	  "\t  -p#       required plane number\n"
-	  "",
-	  proc_str);
+	  "\t  -p#       required plane number\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

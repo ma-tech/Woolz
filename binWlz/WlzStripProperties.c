@@ -100,8 +100,11 @@ static void usage(char *proc_str)
 	  "\tfrom a newer version of woolz with old code e.g. if\n"
 	  "\tyou have binaries for a different architecture than\n"
 	  "\tsupplied. Object written to stdout\n"
-	  "",
-	  proc_str);
+	  "Version: %s\n"
+	  "Options:\n"
+	  "  -h\tHelp, prints this usage message.\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

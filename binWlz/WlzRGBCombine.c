@@ -434,6 +434,7 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s [-h] [-i] [-o<out file>] [-n] [-m <match object>]\n"
     "       [<red object 0>] [<green object 1>] [<blue object>]\n"
+    "Version: %s\n"
     "Options:\n"
     "  -h        Help, prints this usage message.\n"
     "  -i        Invert grey values.\n"
@@ -461,7 +462,9 @@ int             main(int argc, char **argv)
     "blue.wlz. The green channel is left empty because null is given\n"
     "on the command line. The read and blue channels have their values\n"
     "matched to the histogram of hist.wlz.\n",
-    argv[0], argv[0]);
+    argv[0],
+    WlzVersion(),
+    argv[0]);
   }
   return(!ok);
 }

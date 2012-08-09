@@ -99,17 +99,19 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-h] [-v] [<input file>]\n"
 	  "\tNormalise the grey-range of a grey-level woolz object\n"
 	  "\twhich is resets the grey range to (0,255) and is a\n"
 	  "\tconvenience routine equivalent to WlzGreySetRange -U255 -L0\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        help - prints this usage message\n"
 	  "\t  -d        dither values\n"
 	  "\t  -v        verbose operation\n"
 	  "",
-	  proc_str);
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

@@ -536,7 +536,7 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-o<output object>] [-2] [-3]\n"
     "        [-R] [-g] [-r] [-t]\n"
@@ -545,6 +545,9 @@ int             main(int argc, char **argv)
     "        [-u #] [-U #] [-v #] [-V #] [-w #] [-W #]\n"
     "        [-s #] [-S #]\n"
     "        [-e #]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
     "  -o  Output affine transform object.\n" 

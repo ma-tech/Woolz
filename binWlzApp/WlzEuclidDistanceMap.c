@@ -104,17 +104,18 @@ static void usage(
   char	*str)
 {
   fprintf(stderr,
-	  "Usage:\n"
+	  "Usage: "
 	  "%s -p x,y,z  -h -v \n"
 	  "\tRead in domain object from stdin and calculate the Euclidean\n"
 	  "\tdistance from the input vertex to each point in the domain,\n"
 	  "\twriting to stdout.\n"
-	  "Arguments:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t-p#,#,#    input vertex, default (0,0,0)\n"
 	  "\t-h         print this message\n"
-	  "\t-v         verbose operation\n"
-	  "\n",
-	  str);
+	  "\t-v         verbose operation\n",
+	  str,
+	  WlzVersion());
 
   return;
 }

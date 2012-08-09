@@ -1246,11 +1246,11 @@ static WlzErrorNum WlzToArrayGrey3D(void ****dstP, WlzObject *srcObj,
 static void	WlzArrayTxRectValues(WlzGreyP dstValP, WlzGreyP srcValP,
 				     double *bufP,
 				     WlzIVertex2 rectSize,
-				     int dstOffset,
-				     int srcOffset,
+				     size_t dstOff,
+				     size_t srcOff,
 				     WlzGreyType dstGreyType,
 				     WlzGreyType srcGreyType,
-				     double valOffset, double valScale,
+				     double valOff, double valScale,
 				     int clampFlag, int txFlag)
 {
   int		lineCount,
@@ -1263,7 +1263,7 @@ static void	WlzArrayTxRectValues(WlzGreyP dstValP, WlzGreyP srcValP,
   while(lineCount-- > 0)
   {
     WlzValueCopyGreyToGrey(bufValP, 0, WLZ_GREY_DOUBLE,
-			   srcValP, srcOffset, srcGreyType,
+			   srcValP, srcOff, srcGreyType,
 			   rectSize.vtX);
     if(txFlag)
     {
@@ -1271,7 +1271,7 @@ static void	WlzArrayTxRectValues(WlzGreyP dstValP, WlzGreyP srcValP,
       rowCount = rectSize.vtX;
       while(rowCount-- > 0)
       {
-	*tDP0 = (*tDP0 * valScale) + valOffset;
+	*tDP0 = (*tDP0 * valScale) + valOff;
 	++tDP0;
       }
     }
@@ -1298,11 +1298,11 @@ static void	WlzArrayTxRectValues(WlzGreyP dstValP, WlzGreyP srcValP,
 	  break;
       }
     }
-    WlzValueCopyGreyToGrey(dstValP, dstOffset, dstGreyType,
+    WlzValueCopyGreyToGrey(dstValP, dstOff, dstGreyType,
 			   bufValP, 0, WLZ_GREY_DOUBLE,
 			   rectSize.vtX);
-    dstOffset += rectSize.vtX;
-    srcOffset += rectSize.vtX;
+    dstOff += (size_t )(rectSize.vtX);
+    srcOff += (size_t )(rectSize.vtX);
   }
 }
 
@@ -2165,12 +2165,12 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 					    int clampFlag, int noCopyFlag,
 					    WlzErrorNum *dstErr)
 {
-  int  		planeCount,
+  int  		planeCnt,
   		planeIdx,
-		planeOffset,
 		planePos,
 		txFlag = 0;
-  size_t	aSz;
+  size_t	aSz,
+  		planeOff;
   int		*tIP0;
   double	*bufP = NULL;
   WlzGreyP	dstValP,
@@ -2238,7 +2238,8 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
     }
     else
     {
-      aSz = arraySize.vtX * arraySize.vtY * arraySize.vtZ;
+      aSz = (size_t )(arraySize.vtX) * (size_t)(arraySize.vtY) *
+            (size_t )(arraySize.vtZ);
       switch(dstGreyType)
       {
 	case WLZ_GREY_INT:
@@ -2315,8 +2316,7 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
   {
     dstValues.vox =  WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
 					 arrayOrigin.vtZ,
-					 (arrayOrigin.vtZ + arraySize.vtZ
-					  - 1),
+					 (arrayOrigin.vtZ + arraySize.vtZ - 1),
 					 dstBkgPix, NULL, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -2328,39 +2328,40 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 						NULL);
     }
     planeIdx = 0;
-    planeCount = arraySize.vtZ;
+    planeCnt = arraySize.vtZ;
     planePos = arrayOrigin.vtZ;
-    planeOffset = 0;
+    planeOff = 0;
     if((txFlag == 0) && (clampFlag == 0))
     {
       if(noCopyFlag == 0)
       {
+	 aSz = (size_t )(arraySize.vtX) * (size_t)(arraySize.vtY) *
+	       (size_t )(arraySize.vtZ);
 	 WlzValueCopyGreyToGrey(dstValP, 0, dstGreyType,
-				srcValP, 0, srcGreyType,
-				arraySize.vtX * arraySize.vtY * arraySize.vtZ);
+				srcValP, 0, srcGreyType, aSz);
       }
     }
-    while((errNum == WLZ_ERR_NONE) && (planeCount-- > 0))
+    while((errNum == WLZ_ERR_NONE) && (planeCnt-- > 0))
     {
       switch(dstGreyType)
       {
 	case WLZ_GREY_INT:
-	  tIP0 = dstValP.inp + planeOffset;
+	  tIP0 = dstValP.inp + planeOff;
 	  break;
 	case WLZ_GREY_SHORT:
-	  tIP0 = (int *)(dstValP.shp + planeOffset);
+	  tIP0 = (int *)(dstValP.shp + planeOff);
 	  break;
 	case WLZ_GREY_UBYTE:
-	  tIP0 = (int *)(dstValP.ubp + planeOffset);
+	  tIP0 = (int *)(dstValP.ubp + planeOff);
 	  break;
 	case WLZ_GREY_FLOAT:
-	  tIP0 = (int *)(dstValP.flp + planeOffset);
+	  tIP0 = (int *)(dstValP.flp + planeOff);
 	  break;
 	case WLZ_GREY_DOUBLE:
-	  tIP0 = (int *)(dstValP.dbp + planeOffset);
+	  tIP0 = (int *)(dstValP.dbp + planeOff);
 	  break;
 	case WLZ_GREY_RGBA:
-	  tIP0 = (int *)(dstValP.rgbp + planeOffset);
+	  tIP0 = (int *)(dstValP.rgbp + planeOff);
 	  break;
         default:
 	  break;
@@ -2392,7 +2393,7 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 	if(txFlag || clampFlag)
 	{
 	  WlzArrayTxRectValues(dstValP, srcValP, bufP, arraySize2D, 
-			       planeOffset, planeOffset,
+			       planeOff, planeOff,
 			       dstGreyType, srcGreyType, valOffset, valScale,
 			       clampFlag, txFlag);
 	}
@@ -2401,7 +2402,7 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 							      &errNum);
 	++planeIdx;
 	++planePos;
-	planeOffset += arraySize.vtX * arraySize.vtY;
+	planeOff += (size_t )(arraySize.vtX) * (size_t )(arraySize.vtY);
       }
     }
   }

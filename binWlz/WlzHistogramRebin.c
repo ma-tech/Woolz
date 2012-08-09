@@ -352,9 +352,12 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-a] [-o<out file>] [-i] [-f] [-n#] [-s#] [-w#] [<in object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -a  Output the histogram as ascii data not a Woolz histogram object.\n"
     "  -o  Output object/data file name.\n"
