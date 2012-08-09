@@ -220,6 +220,8 @@ int		main(int argc, char *argv[])
   {
     (void )fprintf(stderr,
     "Usage: %s [-h] [-o<output index object>] [<input compound object>]\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -h  Output this usage message.\n"
     "  -o  Output file name, default is the standard output.\n"
     "Reads a grey values index object and uses it to create a a new\n"
@@ -231,7 +233,8 @@ int		main(int argc, char *argv[])
     "object's array will have the domain for which all grey values have\n"
     "the value i.  This function can be considered the inverse of\n"
     "This binary can be considered the inverse of WlzIndexObjFromCompound.\n",
-    argv[0]);
+    argv[0],
+    WlzVersion());
   }
   return(!ok);
 }

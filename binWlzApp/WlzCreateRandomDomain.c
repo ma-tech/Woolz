@@ -102,14 +102,16 @@ static void usage(
   char	*str)
 {
   fprintf(stderr,
-	  "Usage:\n"
-	  "%s -n <num domains> -r <radius> -t <type> -h -v  [<model-file>]\n"
-	  "\tRead in model domain from file or stdin and generate a set of random\n"
-	  "\tdomains within the model. <num domains> domains are created\n"
-	  "\taccording to type and written to stdout.If domain sequence is\n"
-	  "\tselected then a series of incrementing domains will be generated,\n"
-	  "\twith each step a random selctio of pixels from the remaining set.\n"
-	  "Arguments:\n"
+	  "Usage: %s -n <num domains> -r <radius> -t <type> -h -v\n"
+	  "                             [<model-file>]\n"
+	  "\tRead in model domain from file or stdin and generate a set of\n"
+	  "\trandom domains within the model. <num domains> domains are\n"
+	  "\tcreated according to type and written to stdout.If domain\n"
+	  "\tsequence is selected then a series of incrementing domains will\n"
+	  "\tbe generated, with each step a random selctio of pixels from\n"
+	  "\tthe remaining set.\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t-m         generate a regular mesh of square domains with size\n"
 	  "\t           defined by the radius and type, enough domains will\n"
 	  "\t           be generated to cover the model.\n"
@@ -120,9 +122,9 @@ static void usage(
 	  "\t             = 1 - circular domain (on a single plane in 3D)\n"
 	  "\t             = 2 - spherical domain\n"
 	  "\t-h         print this message\n"
-	  "\t-v         verbose operation\n"
-	  "\n",
-	  str);
+	  "\t-v         verbose operation\n",
+	  str,
+	  WlzVersion());
 
   return;
 }

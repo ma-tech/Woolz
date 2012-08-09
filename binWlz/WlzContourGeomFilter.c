@@ -396,6 +396,8 @@ int		main(int argc, char *argv[])
     "Usage: %s [-h] [-o<output file>]\n"
     "        [-l#] [-m#] [-n#]\n"
     "        [-p#] [-s#] [-P#] [-S#] [<input file>]\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -h  Output this usage message.\n"
     "  -N  Allow non manifild vertices to be filtered.\n"
     "  -o  Output file name, default is the standard output.\n"
@@ -427,7 +429,8 @@ int		main(int argc, char *argv[])
     "or\n"
     "    Gabriel Taubin. A Signal Processing Approach to Fair Surface\n"
     "    Design. Computer Graphics, 29, 351-358, 1995.\n",
-    argv[0]);
+    argv[0],
+    WlzVersion());
     (void )fprintf(stderr,
 		   "The parameter values are:\n"
 		   "    %s kPB =    %g\n"

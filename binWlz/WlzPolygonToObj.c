@@ -104,7 +104,8 @@ static void usage(char *proc_str)
 	  "Usage:\t%s [-h] [-v] [-t#] [<input file>]\n"
 	  "\tConvert a 2D or 3D polygon woolz object\n"
 	  "\tto the corresponding domain object\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -t#       Polygon fill-mode:\n"
 	  "\t            # = %d: simple fill (default)\n"
 	  "\t                %d: even-odd fill\n"
@@ -112,7 +113,10 @@ static void usage(char *proc_str)
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -v        Verbose operation\n"
 	  "",
-	  proc_str, WLZ_SIMPLE_FILL, WLZ_EVEN_ODD_FILL,
+	  proc_str,
+	  WlzVersion(),
+	  WLZ_SIMPLE_FILL,
+	  WLZ_EVEN_ODD_FILL,
 	  WLZ_VERTEX_FILL);
   return;
 }

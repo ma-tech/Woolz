@@ -110,18 +110,19 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-d <domainfile>] [-n#] [-h] [-v] [<input file>]\n"
 	  "\tCalculate the occupancy given a series of domains.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -d <file> Optional input domain over which occupancy\n"
 	  "\t            will be calculated, default - union of input.\n"
 	  "\t  -m        Calculate a normalised mean (1.e. *255/n).\n"
 	  "\t  -n#       Maximum number of objects -default=100\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

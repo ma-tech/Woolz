@@ -120,14 +120,15 @@ static void usage(char *proc_str)
 	  "\tcorrection using the bright-field and dark-field images\n"
 	  "\tassumes intensity images and calculates a normalised\n"
 	  "\ttransmission coefficient.\n"
-	  "\tOptions are:\n" 
+	  "Version: %s\n"
+	  "Options:\n" 
 	  "\t  -b <file> Bright-field image - REQUIRED\n"
 	  "\t  -d <file> Dark-field image - optional\n"
 	  "\t  -p        Patch image, shade images shifted to correct each patch\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

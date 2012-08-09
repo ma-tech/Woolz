@@ -245,13 +245,15 @@ int             main(int argc, char **argv)
     "Establishes whether the given vertex is inside or outside the domain\n"
     "of the given object's domain. If inside 1 is output otherwise 0, with\n"
     "either of these digits being followed by a new line character\n"
-    "Options are:\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -x#   Column position (set to %g).\n"
     "  -y#   Line positio (set to %g).\n"
     "  -z#   Plane position (set to %g).\n"
     "  -o#   Output file name.\n"
     "  -h    Display this usage information.\n",
     *argv,
+    WlzVersion(),
     pos.vtX, pos.vtY, pos.vtZ);
   }
   return(!ok);

@@ -172,8 +172,11 @@ static void usage(char *proc_str)
 	  "\tEach image is assumed to represent a class \"probability\", scaled\n"
 	  "\tbetween 0 and 255. For each pixel the class with the maximum\n"
 	  "\tprobability value is selected and the colour set appropriately.\n"
-	  "\tOptions are:\n"
-	  "\t  -b r,g,b  Colour for background, i.e. outside of the domain: default (0,0,0)\n"
+	  "\tNote colour values are 0-255\n"
+	  "Version: %s\n"
+	  "Options:\n"
+	  "\t  -b r,g,b  Colour for background, i.e. outside of the domain:\n"
+	  "\t            default (0,0,0)\n"
 	  "\t  -B r,g,b  Colour for zero values  default (0,0,0)\n"
 	  "\t  -d <file> Optional input domain over which class-map\n"
 	  "\t            will be calculated, default - union of input.\n"
@@ -184,10 +187,9 @@ static void usage(char *proc_str)
 	  "\t  -s        Sort on size - smallest first.\n"
 	  "\t  -S        Sort on size - largest first.\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
-	  "\n"
-	  "Note colour values are 0-255\n",
-	  proc_str);
+	  "\t  -v        Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

@@ -330,7 +330,8 @@ int             main(int argc, char **argv)
     "object is written to the output file, but if the flag is not set\n"
     "then the grey value is written out in ascii form with a new line\n"
     "character.\n"
-    "Options are:\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -v#   Grey value to be set (set to %g).\n"
     "  -x#   Column position (set to %g).\n"
     "  -y#   Line position (set to %g).\n"
@@ -338,6 +339,7 @@ int             main(int argc, char **argv)
     "  -o#   Output file name.\n"
     "  -h    Display this usage information.\n",
     *argv,
+    WlzVersion(),
     pix0.v.dbv,
     pos.vtX, pos.vtY, pos.vtZ);
   }

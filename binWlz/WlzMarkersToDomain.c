@@ -286,7 +286,9 @@ int		main(int argc, char *argv[])
   {
     (void )fprintf(stderr,
     "Usage: %s [-h] [-o<output file>] [-2] [-3] [-s #] [-t <type>]\n"
-    "                         [<input file>]\n"
+    "                          [<input file>]\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -h  Output this usage message.\n"
     "  -o  Output file name, default is the standard output.\n"
     "  -2  Vertices and output domain are 2D.\n"
@@ -296,7 +298,8 @@ int		main(int argc, char *argv[])
     "Reads a list of 2D or 3D vertices either from the given file or the\n"
     "standard input (default). These vertices are then used to create\n"
     "either a 2D or 3D domain with a marker at the position of each vertex.\n",
-    argv[0]);
+    argv[0],
+    WlzVersion());
   }
   return(!ok);
 }

@@ -121,12 +121,13 @@ static void usage(char *proc_str)
 	  "\tTranspose planes in the 3D object with respect\n"
 	  "\tto the offset so that p' = offset - p\n"
 	  "\tThis is equivalent to reflection about offset/2\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -o#       offset(default plane1+lastpl)\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

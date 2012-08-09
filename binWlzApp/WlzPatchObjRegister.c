@@ -130,14 +130,15 @@ static int		verboseFlg=0;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-b] [-d] [-h] [-v] [-t#[,#]] [-p] [-g] [-G] [-T#] "
-	  "[<input file>]\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-b] [-d] [-h] [-v] [-t#[,#]] [-p] [-g] [-G] [-T#]\n"
+	  "                            [<input file>]\n"
 	  "\tWoolz in a compound woolz object assumed\n"
 	  "\tto be output of patch images from xmgrab.\n"
 	  "\tRegister the patches and output the single\n"
 	  "\tdomain object.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -b        Ordered breadth-first search, darkest\n"
 	  "\t            images first (default)\n"
 	  "\t  -d        Unordered depth-first search\n"
@@ -152,9 +153,9 @@ static void usage(char *proc_str)
 	  "\t  -T#       Threshold the input images e.g. to remove\n"
 	  "\t            spurious lines around the edge\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

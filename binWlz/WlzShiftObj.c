@@ -286,9 +286,13 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
-    " [-o<output object>] [-h] [-g] [-x#] [-y#] [-z#] [<input object>]\n"
+    " [-o<output object>] [-h] [-g] [-x#] [-y#] [-z#]\n"
+    "                   [<input object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -g  Shift object to the origin\n"
     "  -h  Prints this usage information\n"

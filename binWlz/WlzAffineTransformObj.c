@@ -686,13 +686,17 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%sExample: %s%s",
     *argv,
     " [-o<output object>] [-L] [-M] [-N] [-P] [-R]\n"
     "        [-h] [-i] [-3] [-x#] [-y#] [-z#] [-s#]"
-    "[-t<input transform file>] [-T<output transform file>]"
+    "[-t<input transform file>]\n"
+    "        [-T<output transform file>]"
     " [-a#] [-b#] [-u#] [-v#] [-w#]\n"
     "        [<input object>]\n" 
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -2  2D transform (default).\n"
     "  -3  3D transform instead of 2D.\n"

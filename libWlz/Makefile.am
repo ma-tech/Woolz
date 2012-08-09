@@ -224,6 +224,7 @@ libWlz_la_SOURCES 	= \
 			  WlzValueTableUtils.c \
 			  WlzValueUtils.c \
 			  WlzVerifyObj.c \
+			  WlzVersion.c \
 			  WlzVerticies.c \
 			  WlzVolume.c \
 			  WlzWindow.c \

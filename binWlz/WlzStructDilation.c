@@ -102,14 +102,15 @@ static void usage(char *proc_str)
 	  "\tDilate a domain woolz object(s) using given\n"
 	  "\tstructuring element writing the new object(s)\n"
 	  "\tto standard output\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -s <file> file holding the structuring\n"
 	  "\t            element object. Default is the\n"
 	  "\t            first object read in from the input\n"
 	  "\t            file or standard input.\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "",
-	  proc_str);
+	  "\t  -h        Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

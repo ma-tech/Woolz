@@ -309,7 +309,8 @@ int             main(int argc, char **argv)
     "are separated by a minimum distance and are either maximal or minimal\n"
     "within a region (which approximates to the Vorinoi cell) containing\n"
     "the feature.\n"
-    "Options are:\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -o Output file name, set to %s.\n"
     "  -h Display this usage information.\n"
     "  -H Feature values will be at or above the threshold value, %sset.\n"
@@ -321,6 +322,7 @@ int             main(int argc, char **argv)
     "     to %s.\n"
     "  -f Filter value for feature extraction, set to %g\n",
     *argv,
+    WlzVersion(),
     strcmp(outFileStr, "-")? outFileStr: "<stdout>",
     (thrHL == WLZ_THRESH_HIGH)? "": "not ",
     (thrHL == WLZ_THRESH_LOW)? "": "not ",

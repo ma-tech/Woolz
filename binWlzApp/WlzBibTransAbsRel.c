@@ -262,7 +262,8 @@ int		 main(int argc, char *argv[])
     "Usage: %s [-a] [-h] [-r] [-o outfile] [<infile>]\n"
     "Reads a reconstruction bibfile and writes it to the output file\n"
     "with either absolute or relative transforms.\n"
-    "Options are:\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -a  Output bibfile with absolute transforms (%s).\n"
     "  -h  Help - print this usage information.\n"
     "  -r  Output bibfile with relative transforms (%s).\n"
@@ -270,6 +271,7 @@ int		 main(int argc, char *argv[])
     "By default %s reads from it's standard input and\n"
     "writes to it's standard output.\n",
     *argv,
+    WlzVersion(),
     (absMode != 0)? "set": "not set",
     (absMode == 0)? "set": "not set",
     *argv);

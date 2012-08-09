@@ -61,19 +61,21 @@ extern char     *optarg;
 static void usage(
   char	*str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\n"
 	  "%s -f <function> -h -v <image file> <tiles file>\n"
-	  "\tRead in an image file (woolz image object) and tiles file (woolz compound object)\n"
-	  "\tand apply the selected function to the iage values within each tile. The calculated\n"
-	  "\tvalues are output as an ascii csv string to standard output\n"
-	  "Arguments:\n"
+	  "\tRead in an image file (woolz image object) and tiles file\n"
+	  "\t(woolz compound object) and apply the selected function to\n"
+	  "\tthe image values within each tile. The calculated values are\n"
+	  "\toutput as an ascii csv string to standard output.\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t-f#          parameter to determine tile function default 1\n"
 	  "\t             = 1 - average\n"
 	  "\t-h         print this message\n"
-	  "\t-v         verbose operation\n"
-	  "\n",
-	  str);
+	  "\t-v         verbose operation\n",
+	  str,
+	  WlzVersion());
 
   return;
 }

@@ -128,7 +128,8 @@ static void usage(char *proc_str)
       "Usage:\t%s [-t#] [-v#] [-H] [-L] [-E] [-h] [<input file>]\n"
       "\tThreshold a grey-level woolz object\n"
       "\twriting the new object to standard output\n"
-      "\tOptions are:\n"
+      "Version: %s\n"
+      "Options:\n"
       "\t  -H        Threshold high, keep pixels above threshold value "
       "(default).\n"
       "\t  -L        Threshold low, keep pixels below threshold value.\n"
@@ -141,9 +142,10 @@ static void usage(char *proc_str)
       "\t                %d: double\n"
       "\t            Note -t option must precede -v\n"
       "\t  -v#       threshold value  - integer unless -t used\n"
-      "\t  -h        Help - prints this usage message\n"
-      "",
-      proc_str, WLZ_GREY_INT, WLZ_GREY_SHORT, WLZ_GREY_UBYTE,
+      "\t  -h        Help - prints this usage message\n",
+      proc_str,
+      WlzVersion(),
+      WLZ_GREY_INT, WLZ_GREY_SHORT, WLZ_GREY_UBYTE,
       WLZ_GREY_FLOAT, WLZ_GREY_DOUBLE);
   return;
 }

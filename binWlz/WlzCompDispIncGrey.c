@@ -230,7 +230,8 @@ int		main(int argc, char *argv[])
 	    "result of a spatial transformation of that object then the\n"
 	    "displacements field will capture the transformation.\n"
 	    "The dispplacement values map object 1 to object 2.\n"
-	    "Options are:\n"
+	    "Version: %s\n"
+	    "Options:\n"
 	    "  -h  Output this usage message.\n"
 	    "  -o  Output file.\n"
 	    "Example:\n"
@@ -238,7 +239,9 @@ int		main(int argc, char *argv[])
 	    "Creates a new object which is written to the file out.wlz. The\n"
 	    "output object is a compound array containing the displacements\n"
 	    "from obj.wlz to obj1.wlz.\n",
-	    argv[0], argv[0]);
+	    argv[0],
+	    WlzVersion(),
+	    argv[0]);
 
   }
   return(!ok);

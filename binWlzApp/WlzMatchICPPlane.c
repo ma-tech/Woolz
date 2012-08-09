@@ -1069,15 +1069,18 @@ int             main(int argc, char **argv)
   if(usage)
   {
       (void )fprintf(stderr,
-      "Usage: %s%s",
+      "Usage: %s%s%s%s",
       *argv,
       " [-h] [-d] [-v] [-V]\n"
-      "          [-o<output file base>] [-r <reference file>] [-Y]\n" 
-      "          [-t#] [-x#] [-y#] [-a#] [-s#] [-e]\n"
-      "          [-g#,#] [-k#,#] [-u#,#] [-b #] [-B #]\n"
-      "          [-f] [-i#] [-s#] [-A#] [-S#] [-F#] [-m#] [-n#]\n"
-      "          [-c<contour file base>] [-N] [-L]\n"
-      "          [<section parameters file>]\n"
+      "                        [-o<output file base>] [-r <reference file>]\n"
+      "                        [-Y] [-t#] [-x#] [-y#] [-a#] [-s#] [-e]\n"
+      "                        [-g#,#] [-k#,#] [-u#,#] [-b #] [-B #]\n"
+      "                        [-f] [-i#] [-s#] [-A#] [-S#] [-F#] [-m#] [-n#]\n"
+      "                        [-c<contour file base>] [-N] [-L]\n"
+      "                        [<section parameters file>]\n"
+      "Version: ",
+      WlzVersion(),
+      "\n"
       "Options:\n"
       "  -h  Prints this usage information.\n"
       "  -d  Perform extra tests to aid debuging.\n"

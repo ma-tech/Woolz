@@ -365,7 +365,7 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    	"Usage: %s%s%s%s%s%s\n",
+    	"Usage: %s%s%s%s%s%s%s%s\n",
 	*argv,
 	" [-h] [-o<out object>] [-p<proj>] [-s[<sec>]\n"
 	"        [-n#] [-m<mask1>[,<mask2>,...,<maskn>]]\n"
@@ -375,7 +375,10 @@ int		main(int argc, char *argv[])
 	"The input domain may be projected and transformed in parts to allow\n"
 	"the separation of regions that may otherwise be obscured in a\n"
 	"projected view.\n"
-	"Options are:\n"
+	"Version: ",
+	WlzVersion(),
+	"\n"
+	"Options:\n"
 	"  -h    Help - prints this usage message\n"
 	"  -o    Output file for the projected section view.\n"
 	"  -p    Projection from the 3D space of the input object and mask\n"

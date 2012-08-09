@@ -90,13 +90,14 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-h] [<input file>]\n"
 	  "\tCheck each input object, fix if possible and write to stdout\n"
-	  "\tOptions are:\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "",
-	  proc_str);
+	  "Version: %s\n"
+	  "Options:\n"
+	  "\t  -h        Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

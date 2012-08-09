@@ -253,9 +253,12 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%s%d%s%d%sExample: %s%s",
+    "Usage: %s%s%s%s%d%s%d%sExample: %s%s",
     *argv,
     " [-o<out object>] [-c #] [-s #] [-h] [<in object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -o  Output object file name.\n"
     "  -c  Minimum connectivity (4, 6, 8, 18, 26), default ",

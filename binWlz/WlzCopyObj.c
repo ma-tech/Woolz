@@ -174,7 +174,8 @@ int		main(int argc, char *argv[])
             "Usage: %s [-h] [-o<out file>] [<in file> [... <in file>]]\n"
             "Reads objects and writes them out again which can be useful for\n"
             "moving to a new file format.\n"
-	    "Options are:\n"
+	    "Version: %s\n"
+	    "Options:\n"
 	    "  -h  Help, prints this usage message.\n"
 	    "  -o  Output file.\n"
             "Examples:\n"
@@ -182,7 +183,7 @@ int		main(int argc, char *argv[])
 	    "  %s <old.wlz >new.wlz\n"
             "Both these examples copy the object(s) from the file old.wlz to\n"
 	    "the file out.wlz.\n",
-	    argv[0], argv[0], argv[0]);
+	    argv[0], WlzVersion(), argv[0], argv[0]);
 
   }
   return(!ok);

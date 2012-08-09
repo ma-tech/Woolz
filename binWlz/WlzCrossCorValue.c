@@ -268,9 +268,12 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-n] [-o<out file>] [-u] [<in obj 0>] [<in obj 1>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
     "  -n  Normalise the cross-correlation value by dividing it by the\n"

@@ -417,9 +417,13 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
-    " [-b<file body>] [-e <file extension>] [-h] [-p] [-u] [<in object>]\n"
+    " [-b<file body>] [-e <file extension>] [-h] [-p] [-u]\n"
+    "                  [<in object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -b  Output object file body.\n"
     "  -c  Colour objects exploded into RGBA components only.\n"

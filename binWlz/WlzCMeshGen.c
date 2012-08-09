@@ -365,6 +365,7 @@ int		main(int argc, char *argv[])
 	    "       [-L#] [-a#] [-W#] [-l#] [-u#] [-B] [-C]\n"
 	    "       [-m#] [-M#] [<input object>]\n"
     	    "Computes a conforming mesh that covers the given domain object.\n"
+	    "Version: %s\n"
 	    "Options are:\n"
 	    "  -h  Help, prints this usage message.\n"
 	    "  -o  Output file.\n"
@@ -378,7 +379,8 @@ int		main(int argc, char *argv[])
 	    "  -m  Minimum mesh element size.\n"
 	    "  -L  Number of Laplacian smoothing iterations.\n"
 	    "  -M  Maximum mesh element size.\n",
-	    argv[0]);
+	    argv[0],
+	    WlzVersion());
 
   }
   return(!ok);

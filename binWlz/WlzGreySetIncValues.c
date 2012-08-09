@@ -51,7 +51,7 @@ WlzGreySetIncValues  -  sets incrementing (and hence unique) values in scan
                         order throughout a domain object.
 \par Synopsis
 \verbatim
-WlzGreySetIncValues [-h] [-o<output file>] [<input file>]
+WlzGreySetIncValues [-bh] [-o<output file>] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -223,15 +223,17 @@ int		main(int argc, char *argv[])
   (void )WlzFreeObj(outObj);
   if(usage)
   {
-    fprintf(stderr,
+    (void )fprintf(stderr,
             "Usage: %s [-b] [-h] [-o<output file>] [<input file>]\n"
             "Sets incrementing (and hence unique) values in scan order\n"
 	    "throughout the domain of the input object.\n"
-	    "Options are:\n"
+	    "Version: %s\n"
+	    "Options:\n"
 	    "  -b  Use Hilbert ranking.\n"
 	    "  -h  Output this usage message.\n"
 	    "  -o  Output file.\n",
-	    argv[0]);
+	    argv[0],
+	    WlzVersion());
 
   }
   return(!ok);

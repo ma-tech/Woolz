@@ -224,13 +224,16 @@ int		main(int argc, char *argv[])
   {
     (void )fprintf(stderr,
     "Usage: %s [-h] [-o<output>] [<input>]\n"
+    "Version %s\n"
+    "Options:\n"
     "  -h  Output this usage message.\n"
     "  -o  Output file name, default is the standard output.\n"
     "Reads a conforming mesh object and deletes and unused nodes from it,\n"
     "ie those with no edge uses. By default the input object is read from\n"
     "the standard input and the output object is written to the standard\n"
     "output.\n",
-    argv[0]);
+    argv[0],
+    WlzVersion());
   }
   return(!ok);
 }

@@ -98,15 +98,16 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s  [-R] [-h] [-v] [<input file>]\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -R        Output polyline coordinates relative to\n"
 	  "\t            the image bounding box.\n"
 	  "\t  -h        Help - prints this usage message.\n"
-	  "\t  -v        Verbose operation.\n"
-	  "",
-	  proc_str);
+	  "\t  -v        Verbose operation.\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

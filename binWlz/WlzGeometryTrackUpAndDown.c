@@ -482,9 +482,8 @@ static void usage(char *proc_str)
 	  "\t ABC.bib,  ABC.wlz ,\n"
 	  "\twhere the base part of their name is the same\n"
 	  "\n"
-	  "\tPlease report bugs to RAO.JIANGUO@hgu.mrc.ac.uk\n"
-	  "\t \n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -L        input name of a file which contains the list of \n" 
           "\t                  of the 2D Woolz contour image file names  \n"
@@ -523,9 +522,9 @@ static void usage(char *proc_str)
 	  "\t  -A        input the end   shell number (not index ) for tracking\n"
 	  "\t  -b        input the start section number for tracking\n"
 	  "\t  -B        input the end   section number for tracking\n"
-	  "\t                  \n"
-	        	  "", 
-	  proc_str);
+	  "\t                  \n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

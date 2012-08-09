@@ -98,13 +98,15 @@ static void ShowUsage(char *arg)
 {
   fprintf(stderr,
 	  "Usage: %s [-f s|e|o] [-h] [<input file>]\n"
+	  "Version: %s\n"
 	  "Options:\n"
 	  "  -f Sets the boundary fill method to be one of: simple (s),\n"
 	  "     even/odd (e) or vertex (v) fill, default is even/odd.\n"
 	  "  -h Help - prints this usage message\n"
 	  "Converts a boundary list woolz object to a corresponding domain\n"
 	  "using the given fill method.\n",
-	  arg);
+	  arg,
+	  WlzVersion());
   return;
 }
  

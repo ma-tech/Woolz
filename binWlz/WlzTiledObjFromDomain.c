@@ -379,12 +379,15 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%s",
+    "Usage: %s%s%s%s",
     *argv,
     " [-o<output object>] [-h] [-b #] [-g #] [-s #,#,#]\n"
     "                             [<input object>]\n"
     "Creates an object with a tiled value table from an object with a\n"
     "valid spatial domain.\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -b  Background value. If the grey type is RGBA then the channel\n"
     "      background values should be comma seperated and in the order\n"

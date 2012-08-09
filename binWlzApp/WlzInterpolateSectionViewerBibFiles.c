@@ -413,40 +413,31 @@ int main(int	argc,
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-h] [<input file>]\n"
 	  "\tAutomatically interpolate bib files.\n"
-	  "\n"
 	  "\tThe user needs to prepare some sample bib files by using MAPaint.\n"
 	  "\tAnd the user should also prepare some file name list. Please give\n"
 	  "\tfull directory including the machine name when give your file name.\n"
-	  "\n"
-	  "\tFor example:\n"
+	  "\tExample:\n"
 	  "\t/net/laphroaig/export/data1/rjianguo/newcastle/LizpDir/\n"
 	  "\tsampleBibFilesDir/s11r2s06_template_g.bib\n"
-	  "\n"
 	  "\tALSO, The base part of sample bib file's name should be the same as\n"
 	  "\tthat of 2D Woolz file.\n"
-	  "\t \n"
 	  "\tFor example:\n"
 	  "\t ABC.bib,  ABC.wlz ,\n"
 	  "\twhere the base part of their name is the same\n"
-	  "\n"
-	  "\tPlease report bugs to RAO.JIANGUO@hgu.mrc.ac.uk\n"
-	  "\t \n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
           "\t  -w        input file name for the Woolz Object( OPT model !)\n"
 	  "\t  -d        input the Directory of the output bib files\n"
-	  "\t                                                    \n"
 	  "\t  -L        input name of a file which contains the list\n"
-	  "\t                     of the 2D raw data image file names\n"
-	  "\t                                                        \n"
+	  "\t            of the 2D raw data image file names\n"
 	  "\t  -B        input name of a file which contains the Sample\n"
-	  "\t                     Bib file names \n"
-	  "\t                                                        \n"
-	  "",
-	  proc_str);
+	  "\t            Bib file names \n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

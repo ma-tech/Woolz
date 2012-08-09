@@ -109,12 +109,13 @@ static void usage(char *proc_str)
 	  "\twriting the new object to standard output.\n"
 	  "\tThe background value is converted to the grey type\n"
 	  "\tof the input object\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -b#       required background value, default 0\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

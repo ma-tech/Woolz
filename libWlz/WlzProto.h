@@ -2134,6 +2134,7 @@ extern WlzObject		*WlzDiffDomain(
 				  WlzObject *obj1,
 				  WlzObject *obj2,
 				  WlzErrorNum *dstErr);
+
 /************************************************************************
 * WlzDiffDomain3d.c							*
 ************************************************************************/
@@ -2141,6 +2142,7 @@ extern WlzObject 		*WlzDiffDomain3d(
 				  WlzObject *obj1,
 				  WlzObject *obj2,
 				  WlzErrorNum *dstErr);
+
 /************************************************************************
 * WlzDilation.c								*
 ************************************************************************/
@@ -5729,380 +5731,380 @@ extern void			*WlzIndexedValueExtGet(
 extern void			WlzValueSetInt(
 				  int *vec,
 				  int value,
-				  int count);
+				  size_t count);
 extern void			WlzValueSetShort(
 				  short *vec,
 				  short value,
-				  int count);
+				  size_t count);
 extern void			WlzValueSetUByte(
 				  WlzUByte *vec,
 				  WlzUByte value,
-				  int count);
+				  size_t count);
 extern void			WlzValueSetFloat(
 				  float *vec,
 				  float value,
-				  int count);
+				  size_t count);
 extern void			WlzValueSetDouble(
 				  double *vec,
 				  double value,
-				  int count);
+				  size_t count);
 extern void			WlzValueSetRGBA(
 				  WlzUInt *vec,
 				  WlzUInt value,
-				  int count);
+				  size_t count);
 extern void			WlzValueSetDVertex(
 				  WlzDVertex2 *vec,
 				  WlzDVertex2 value,
-				  int count);
+				  size_t count);
 extern void			WlzValueSetFVertex(
 				  WlzFVertex2 *vec,
 				  WlzFVertex2 value,
-				  int count);
+				  size_t count);
 extern void			WlzValueSetIVertex(
 				  WlzIVertex2 *vec,
 				  WlzIVertex2 value,
-				  int count);
+				  size_t count);
 extern void			WlzValueSetGrey(
 				  WlzGreyP vec,
-				  int vecOff,
+				  size_t vecOff,
 				  WlzGreyV value,
 				  WlzGreyType gType,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampGreyIntoGrey(
 				  WlzGreyP dst,
-				  int dstOff,
+				  size_t dstOff,
 				  WlzGreyType dstType,
 				  WlzGreyP src,
-				  int srcOff,
+				  size_t srcOff,
 				  WlzGreyType srcType,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampIntIntoShort(
 				  short *dst,
 				  int *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampIntIntoUByte(
 				  WlzUByte *dst,
 				  int *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampShortIntoUByte(
 				  WlzUByte *dst,
 				  short *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampFloatIntoInt(
 				  int *dst,
 				  float *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampFloatIntoShort(
 				  short *dst,
 				  float *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampFloatIntoUByte(
 				  WlzUByte *dst,
 				  float *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampDoubleIntoInt(
 				  int *dst,
 				  double *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampDoubleIntoShort(
  				  short *dst,
 				  double *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampDoubleIntoUByte(
 				  WlzUByte *dst,
 				  double *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampDoubleIntoFloat(
 				  float *dst,
 				  double *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampDoubleIntoRGBA(
 				  WlzUInt *dst,
 				  double *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampIntIntoRGBA(
 				  WlzUInt *dst,
 				  int *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampShortIntoRGBA(
 				  WlzUInt *dst,
 				  short *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampFloatIntoRGBA(
 				  WlzUInt *dst,
 				  float *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampDoubleIntoRGBA(
 				  WlzUInt *dst,
 				  double *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampIntToShort(
 				  int *vec,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampIntToUByte(
 				  int *vec,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampShortToUByte(
 				  short *vec,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampDoubleToInt(
 				  double *vec,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampDoubleToShort(
 				  double *vec,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampDoubleToUByte(
 				  double *vec,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampDoubleToRGBA(
 				  double *vec,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampDoubleToFloat(
 				  double *vec,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampFloatToInt(
 				  float *vec,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampFloatToShort(
 				  float *vec,
-				  int count);
+				  size_t count);
 extern void			WlzValueClampFloatToUByte(
 				  float *vec,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyIntToInt(
 				  int *dst,
 				  int *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyIntToShort(
 				  short *dst,
 				  int *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyIntToUByte(
 				  WlzUByte *dst,
 				  int *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyIntToFloat(
 				  float *dst,
 				  int *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyIntToDouble(
 				  double *dst,
 				  int *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyIntToRGBA(
 				  WlzUInt *dst,
 				  int *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyShortToInt(
 				  int *dst,
 				  short *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyShortToShort(
 				  short *dst,
 				  short *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyShortToUByte(
 				  WlzUByte *dst,
 				  short *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyShortToFloat(
 				  float *dst,
 				  short *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyShortToDouble(
 				  double *dst,
 				  short *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyShortToRGBA(
 				  WlzUInt *dst,
 				  short *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyUByteToInt(
 				  int *dst,
 				  WlzUByte *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyUByteToShort(
 				  short *dst,
 				  WlzUByte *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyUByteToUByte(
 				  WlzUByte *dst,
 				  WlzUByte *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyUByteToFloat(
 				  float *dst,
 				  WlzUByte *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyUByteToDouble(
 				  double *dst,
 				  WlzUByte *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyUByteToRGBA(
 				  WlzUInt *dst,
 				  WlzUByte *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyFloatToInt(
 				  int *dst,
 				  float *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyFloatToShort(
 				  short *dst,
 				  float *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyFloatToUByte(
 				  WlzUByte *dst,
 				  float *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyFloatToFloat(
 				  float *dst,
 				  float *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyFloatToDouble(
 				  double *dst,
 				  float *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyFloatToRGBA(
 				  WlzUInt *dst,
 				  float *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyDoubleToInt(
 				  int *dst,
 				  double *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyDoubleToShort(
 				  short *dst,
 				  double *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyDoubleToUByte(
 				  WlzUByte *dst,
 				  double *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyDoubleToFloat(
 				  float *dst,
 				  double *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyDoubleToDouble(
 				  double *dst,
 				  double *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyDoubleToRGBA(
 				  WlzUInt *dst,
 				  double *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyRGBAToInt(
 				  int *dst,
 				  WlzUInt *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyRGBAToShort(
 				  short *dst,
 				  WlzUInt *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyRGBAToUByte(
 				  WlzUByte *dst,
 				  WlzUInt *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyRGBAToFloat(
 				  float *dst,
 				  WlzUInt *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyRGBAToDouble(
 				  double *dst,
 				  WlzUInt *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyRGBAToRGBA(
 				  WlzUInt *dst,
 				  WlzUInt *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyGreyToGrey(
 				  WlzGreyP dst,
-				  int dstOff,
+				  size_t dstOff,
 				  WlzGreyType dstType,
 				  WlzGreyP src,
-				  int srcOff,
+				  size_t srcOff,
 				  WlzGreyType srcType,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyDVertexToDVertex(
 				  WlzDVertex2 *dst,
 				  WlzDVertex2 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyDVertexToFVertex(
 				  WlzFVertex2 *dst,
 				  WlzDVertex2 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyDVertexToIVertex(
 				  WlzIVertex2 *dst,
 				  WlzDVertex2 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyFVertexToDVertex(
 				  WlzDVertex2 *dst,
 				  WlzFVertex2 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyFVertexToFVertex(
 				  WlzFVertex2 *dst,
 				  WlzFVertex2 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyFVertexToIVertex(
 				  WlzIVertex2 *dst,
 				  WlzFVertex2 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyIVertexToDVertex(
 				  WlzDVertex2 *dst,
 				  WlzIVertex2 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyIVertexToFVertex(
 				  WlzFVertex2 *dst,
 				  WlzIVertex2 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyIVertexToIVertex(
 				  WlzIVertex2 *dst,
 				  WlzIVertex2 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyDVertexToDVertex3(
 				  WlzDVertex3 *dst,
 				  WlzDVertex3 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyDVertexToFVertex3(
 				  WlzFVertex3 *dst,
 				  WlzDVertex3 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyDVertexToIVertex3(
 				  WlzIVertex3 *dst,
 				  WlzDVertex3 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyFVertexToDVertex3(
 				  WlzDVertex3 *dst,
 				  WlzFVertex3 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyFVertexToFVertex3(
 				  WlzFVertex3 *dst,
 				  WlzFVertex3 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyFVertexToIVertex3(
 				  WlzIVertex3 *dst,
 				  WlzFVertex3 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyIVertexToDVertex3(
 				  WlzDVertex3 *dst,
 				  WlzIVertex3 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyIVertexToFVertex3(
 				  WlzFVertex3 *dst,
 				  WlzIVertex3 *src,
-				  int count);
+				  size_t count);
 extern void			WlzValueCopyIVertexToIVertex3(
 				  WlzIVertex3 *dst,
 				  WlzIVertex3 *src,
-				  int count);
+				  size_t count);
 extern WlzErrorNum 		WlzValueConvertPixel(
 				  WlzPixelV *dstPix,
 				  WlzPixelV srcPix,
 				  WlzGreyType dstType);
 extern int			WlzValueMedianInt(
 				  int *vec,
-				  int count);
+				  size_t count);
 extern double			WlzValueMedianDouble(
 				  double *vec,
-				  int count);
+				  size_t count);
 extern int			WlzValueDitherI(
 				  int p0,
 				  int p1,
@@ -6126,6 +6128,11 @@ extern WlzErrorNum 		WlzVerifyInterval(
 				  WlzInterval *intv,
 				  int fix);
 #endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzVersion.c 	 							*
+************************************************************************/
+extern const char		*WlzVersion();
 
 /************************************************************************
 * WlzVerticies.c

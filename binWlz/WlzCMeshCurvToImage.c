@@ -247,10 +247,13 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-m] [-N] [-L] [-Q] [-o<output object>] [-s#]\n"
     "      [<input object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Help, prints usage message.\n"
     "  -N  Nearest neighbour interpolation from nearest element node value.\n"

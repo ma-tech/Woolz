@@ -104,12 +104,13 @@ static void usage(char *proc_str)
   fprintf(stderr,
 	  "Usage:\t%s [-h] [-f] [-m] [<input file>]\n"
 	  "\tPrint facts about the input woolz objects\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -f        Few facts (default)\n"
-	  "\t  -m        Many facts - print out more detailed information\n"
-	  "",
-	  proc_str);
+	  "\t  -m        Many facts - print out more detailed information\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

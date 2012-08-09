@@ -172,25 +172,22 @@ int main(int	argc,
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-h] [<input file>]\n"
 	  "\tAutomatically produce a Woolz object from two Woolz objects. \n"
 	  "\tthe output woolz object has the grey values  mixed from the\n"
 	  "\tthe grey value of the two input Woolz objects. \n"
-	  "\n"
-	  "\tPlease report bugs to RAO.JIANGUO@hgu.mrc.ac.uk\n"
-	  "\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "\tOptions:\n"
 	  "\t  -h        Help - prints this usage message\n"
           "\t  -i        input file name for the Woolz Object\n"
-          "\t  -t        input file name for the target Woolz Object\n"
+	  "\t  -t        input file name for the target Woolz Object\n"
           "\t  -o        output file name for the mixed grey value Woolz Object\n"
 	  "\t  -x        input the mixing parameter x\n"
 	  "\t            The grey value will be (1-x) Sobj + x Tobj \n"
-	  "\t            where x is between 0 and 1\n"
-	  "\t                                                      \n"
-					  "",
-	  proc_str);
+	  "\t            where x is between 0 and 1\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -491,13 +491,16 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-dfhiNsu] [-o<out object>]\n"
     "       [-M <mean>] [-S <std dev>]\n"
     "       [-x<x min>,<x max>] [-y<y min>,<y max>] [-z<z min>,<z max>]\n"
     "       [<in object>]\n"
     "Cuts a  Woolz object using specified cut box.\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -d  Double output values.\n"
     "  -f  Float output values.\n"

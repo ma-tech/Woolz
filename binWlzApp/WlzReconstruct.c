@@ -548,16 +548,16 @@ int		 main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage:\n"
-    "  %s [-o <out obj file>] [-T <out obj fmt>] [-b <out bibfile>]\n"
-    "                 [-f] [-g] [-h] [-i] [-l] [-L] [-p]\n"
-    "                 [-s #] [-m #] [-c #,#,#] [-C #,#,#] <in bibfile>\n"
+    "Usage: %s [-o <out obj file>] [-T <out obj fmt>] [-b <out bibfile>]\n"
+    "                      [-f] [-g] [-h] [-i] [-l] [-L] [-p]\n"
+    "                      [-s #] [-m #] [-c #,#,#] [-C #,#,#] <in bibfile>\n"
     "Reads a reconstruction bibfile either from the command line or the\n"
     "standard input and constructs a 3D object. The reconstruction process\n"
     "is controlled by the values in the bibfile, many of which can be\n"
     "overridden on the command line. Unless the force flag is set\n"
     "overwriting files will require a confirmation.\n"
-    "Options are:\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -o  Output object file name.\n"
     "  -T  Output object file format.\n"
     "  -b  Output bibfile, the default is the same file name as the output\n"
@@ -587,7 +587,7 @@ int		 main(int argc, char *argv[])
     "bibfile. a new bibfile will be created for the reconstruction and\n"
     "written to new.bib. Because of the -f flag any existing files may\n"
     "be overwriten without confirmation.\n",
-    argv[0], argv[0], argv[0]);
+    argv[0], WlzVersion(), argv[0], argv[0]);
   }
   exit(!ok);
 }

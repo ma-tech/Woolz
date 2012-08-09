@@ -522,7 +522,8 @@ int             main(int argc, char *argv[])
     "either a  single value or a  narrow range of values.  The component\n"
     "images are each output to a separate file in raster scan order from\n"
     "top left to bottom right (approximately).\n"
-    "Command line options are:\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -h  Help - prints this usage massage.\n"
     "  -v  Be verbose, probably only useful for debugging.\n"
     "  -a  Minimum area for each of the extracted components, value = %d.\n"
@@ -540,7 +541,8 @@ int             main(int argc, char *argv[])
     "Splits the montage file img.jpg which has a pure white gaps,\n"
     "separating it into component images. The component images are\n"
     "written to files img000001.jpg, img000002.jpg, etc..\n",
-    argv[0], minArea, (useAlpha)? "set": "not set", gapStr,
+    argv[0], WlzVersion(),
+    minArea, (useAlpha)? "set": "not set", gapStr,
     tol * 100.0, bWidth, argv[0]);
   }
   AlcFree(gapStr);

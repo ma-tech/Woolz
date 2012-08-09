@@ -385,6 +385,8 @@ int		main(int argc, char *argv[])
     (void )fprintf(stderr,
     "Usage: %s [-h] [-f] [-o<output file>] [-p #] [-s #,#,#]\n"
     "                           [-G] [-S] [<file>|<input file list>]\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -h  Output this usage message.\n"
     "  -f  Input file is a list of image files.\n"
     "  -o  Output file name, default is the standard output.\n"
@@ -411,7 +413,9 @@ int		main(int argc, char *argv[])
     "%s img00.bmp img01.bmp NULL img03.bmp img04.bmp >out.wlz\n"
     "Constructs a 3D woolz object from the 2D BMP image files\n"
     "img0X.bmp, with an empty 3rd section.\n",
-    argv[0], argv[0]);
+    argv[0],
+    WlzVersion(),
+    argv[0]);
   }
   return(!ok);
 }

@@ -121,7 +121,8 @@ static void usage(char *proc_str)
 	  "Usage:\t%s [-w#[#]] [-x#] [-y#] [-h] [<input file>]\n"
 	  "\tApply a Gaussian filter to a grey-level woolz object\n"
 	  "\twriting the new object to standard output\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -w#[,#]   x_width[y_width] gaussian widths defined as\n"
 	  "\t            full width half maximum in pixels\n"
 	  "\t            default value 3.0, if y_width omitted\n"
@@ -129,7 +130,8 @@ static void usage(char *proc_str)
 	  "\t  -x#       x derivative - possible values 0,1,2, default - 0\n"
 	  "\t  -y#       y derivative - possible values 0,1,2, default - 0\n"
 	  "\t  -h        Help - prints this usage message\n",
-	  proc_str);
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

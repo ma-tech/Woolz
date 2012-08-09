@@ -310,19 +310,18 @@ int             main(int argc, char **argv)
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-h] \n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-h] [-s<source file>] [-b<bib file>]\n"
+	  "                        [-d<output file>] \n"
 	  "\tDetermine displacement object.\n"
-	  "\n"
-	  "\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -s        Source file\n"
           "\t  -b        Bib files\n"
-	  "\t  -d        Output displacement file\n"
-	  "\t                                                      \n"
-					  "",
-	  proc_str);
+	  "\t  -d        Output displacement file\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

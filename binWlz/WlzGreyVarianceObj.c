@@ -232,14 +232,16 @@ int		main(int argc, char *argv[])
     	    "Variance filters the grey values of a Woolz domain object.\n"
             "This computes the variance at each pixel within and object by\n"
 	    "considering the values in a small kernel surrounding the pixel.\n"
-	    "Options are:\n"
+	    "Version: %s\n"
+	    "Options:\n"
 	    "  -h  Output this usage message.\n"
 	    "  -o  Output file.\n"
 	    "  -k  Size of filter kernel size, must be 3, 5 or 7.\n"
 	    "      Default 3 for 3x3 region.\n"
 	    "  -s  Variance scale factor which is applied to the computed\n"
 	    "      variance before converting it to an integral value.\n",
-	    argv[0]);
+	    argv[0],
+	    WlzVersion());
 
   }
   return(!ok);

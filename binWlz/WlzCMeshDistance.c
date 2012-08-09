@@ -491,7 +491,9 @@ int		main(int argc, char *argv[])
 	    "Constructs a 2D or 3D domain object the values of which are\n"
 	    "the minimum distance from the given seeds points in the given\n"
 	    "conforming mesh. The domain of the output object covers the\n"
-	    "input mesh. Options are:\n"
+	    "input mesh.\n"
+	    "Version: %s\n"
+	    "Options:\n"
 	    "  -h  Help, prints this usage message.\n"
             "  -i  Output and image (ie a 2 or 3D domain object) with\n"
 	    "      interpolated distance values rather than a mesh with\n"
@@ -500,7 +502,8 @@ int		main(int argc, char *argv[])
 	    "  -b  Set seed points around the boundary of the mesh.\n"
 	    "  -s  Single seed position.\n"
 	    "  -r  Reference object with seed points around it's boundary.\n",
-	    argv[0]);
+	    argv[0],
+	    WlzVersion());
 
   }
   return(!ok);

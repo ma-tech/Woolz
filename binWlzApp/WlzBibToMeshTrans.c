@@ -111,7 +111,7 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s -b <parameter bibfile>"
 	  " [-o <output file>] [-h] [-v]"
 	  " <2D object input file>\n"
@@ -119,15 +119,16 @@ static void usage(char *proc_str)
 	  "\twriting the mesh transform object to standard output.\n"
 	  "\tA 2D image is required to define the mesh extent, read\n"
 	  "\tfrom standard input by default\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -b<bibfile>        bibfile defining the warp parameters e.g.\n"
 	  "\t                     from MAPaint\n"
 	  "\t  -f<2D image file>  2D Woolz image used to define the mesh\n"
 	  "\t  -o<output file>    Output filename, default to stdout\n"
 	  "\t  -h                 Help - this message\n"
-	  "\t  -v                 verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v                 verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

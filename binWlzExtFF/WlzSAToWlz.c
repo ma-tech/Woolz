@@ -99,11 +99,12 @@ void usage(char *proc_str)
   fprintf(stderr,
 	  "Usage:\t%s -h -v [<input file>]\n"
 	  "\tRead the Smart Atlas XML file and convert to woolz\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

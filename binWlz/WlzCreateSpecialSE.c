@@ -149,7 +149,8 @@ static void usage(char *proc_str)
 	  "Usage:\t%s [-o#] [-r#] [-s#] [-t#] [-x#] [-y#] [-z#] [-h] \n"
 	  "\tCreate a \"special\" structuring element object\n"
 	  "\tand write the new object to standard output\n"
-	  "\tOptions are:\n"
+	  "Version %s\n"
+	  "Options:\n"
 	  "\t  -o#       Structuring element object type\n"
 	  "\t            # =  0: 2D\n"
 	  "\t            # =  1: 3D\n"
@@ -179,9 +180,9 @@ static void usage(char *proc_str)
 	  "\t            # = 22: sphere object\n"
 	  "\t            # = 23: standard structuring element - uses\n"
 	  "\t                    distance type (sub-type), radius and otype\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "",
-	  proc_str);
+	  "\t  -h        Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

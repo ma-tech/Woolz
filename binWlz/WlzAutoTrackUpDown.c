@@ -46,7 +46,6 @@ static char _WlzAutoTrackUpDown_c[] = "University of Edinburgh $Id$";
 #include <stdlib.h>
 #include <math.h>
 #include <float.h>
-#include <Alg.h>
 #include <Wlz.h>
 
 typedef struct {
@@ -558,6 +557,7 @@ static void usage(char *proc_str)
 	  "\tthe given domain using the poor-mans snake as in paint.\n"
 	  "\tNote it is assumed that the input objects are 3D and have\n"
 	  "\tappropriately matching planes etc.\n"
+	  "Version: %s\n"
 	  "\tOptions are:\n"
 	  "\t  -r#       range - seach distance along perps. (def 5)\n"
 	  "\t  -s#       spacing - spacing between perps. (def 5)\n"
@@ -570,7 +570,8 @@ static void usage(char *proc_str)
 	  "\t  -h        help - prints this usage message\n"
 	  "\t  -v        verbose operation\n"
 	  "",
-	  proc_str);
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

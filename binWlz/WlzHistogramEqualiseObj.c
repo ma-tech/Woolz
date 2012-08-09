@@ -251,9 +251,13 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
-    " [-h] [-D] [-s#] [-o<output object>] [<input object>]\n"
+    " [-h] [-D] [-s#] [-o<output object>]\n"
+    "                               [<input object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -D  Dither pixel values when mapping.\n"
     "  -s  Input object histogram smoothing.\n"

@@ -100,11 +100,12 @@ static void usage(char *proc_str)
 	  "\tUsing this function can significantly reduce the size of\n"
 	  "\tan object and reduce execution time when only the domain\n"
 	  "\tis required.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

@@ -47,6 +47,8 @@ extern "C" {
 #endif /* __cplusplus */
 #endif /* WLZ_EXT_BIND */
 
+#define WLZ_VERSION	PACKAGE_VERSION
+
 /************************************************************************
 * Simple macros not always available elsewhere.				*
 ************************************************************************/

@@ -479,7 +479,7 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-2] [-a<pitch,yaw,roll>] [-f <fx,fy,fz>]\n"
     "                 [-d <dist> [-b <view bib file>]\n"
@@ -487,6 +487,9 @@ int             main(int argc, char **argv)
     "                 [-g <ox,oy,oz>] [-h] [-o<output>]\n"
     "                 [-r <ref object>]\n"
     "                 [-s <cmd str>] [<cmd str file>>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -2  Ignore the view struct and keep as a 2D object.\n"
     "  -a  Viewing angles: pitch (phi), yaw (theta) and roll (zeta),\n"

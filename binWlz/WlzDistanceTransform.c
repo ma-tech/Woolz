@@ -345,7 +345,8 @@ int		main(int argc, char *argv[])
     "Computes a distance transform object which has the domain of the\n"
     "foreground object and values which are the distance from the reference\n"
     "object.\n"
-    "Options are:\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -b  Use the boundary of the reference object.\n"
     "  -d  Distance function:\n"
     "              0: Euclidean (2D and 3D, unimplemented)\n"
@@ -363,7 +364,8 @@ int		main(int argc, char *argv[])
     "      cost of increased time. Default value - 10.0.\n"
     "  -o  Output object file.\n"
     "  -h  Help - prints this usage message\n",
-    argv[0]);
+    argv[0],
+    WlzVersion());
   }
   return(!ok);
 }

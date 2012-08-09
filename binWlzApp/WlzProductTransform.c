@@ -174,7 +174,7 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-A] [-R] [-1] [-2] [-3]\n"
 	  "\t[-ffilename1] [-Ffilename2] [-3]\n"
 	  "\t[-i] [-I] [-x#] [-y#] [-z#] [-s#] [-a#] [-b#]\n"
@@ -187,7 +187,8 @@ static void usage(char *proc_str)
 	  "\ton the command line then stdin is ignored.\n"
 	  "\tThe transform entered as arguments assume degree angles\n"
 	  "\tand will be applied after transform 1 or 2.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h                Help - prints this usage message\n"
 	  "\t  -v                verbose operation\n"
 	  "\t  -A                calculate absolute transform(default)\n"
@@ -205,9 +206,9 @@ static void usage(char *proc_str)
 	  "\t  -w                3D shear angle.\n"
 	  "\t  -x                Column (x) translation.\n"
 	  "\t  -y                Row (y) translation.\n"
-	  "\t  -z                Plane (z) translation.\n"
-	  "",
-	  proc_str);
+	  "\t  -z                Plane (z) translation.\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

@@ -196,7 +196,7 @@ static void usage(
   char	*str)
 {
   fprintf(stderr,
-	  "Usage:\n"
+	  "Usage: "
 	  "%s -a<mesh_area> -c<conn> -H -m -h -v < infile > outfile\n"
 	  "\tSegment an object and select parts according to area, either\n"
 	  "\tkeeping all parts <= a given area or > the area. The operation\n"
@@ -204,7 +204,8 @@ static void usage(
 	  "\tthe domain complement in which case the size filter is applied\n"
 	  "\tto the holes. If the input object is 3D then the filter is\n"
 	  "\tapplied plane-by-plane.\n"
-	  "Arguments:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\tmesh_area: domains <= area selected, default 5\n"
 	  "\tconn:      connectivity for segmentation = 4 or 8, - default 4\n"
 	  "\t-H:        select from the domain complement within\n"
@@ -226,9 +227,8 @@ static void usage(
 	  "\tSelect all background objects, defined by segmentation with\n"
 	  "\tconnectivity 4 and area <= 10 pixels (i.e. collect holes\n"
 	  "\twith area <= 10):\n"
-	  "\t\t%s -a10 -c4 -H -m < in.wlz > out.wlz\n\n"
-	  "\n",
-	  str, str, str, str);
+	  "\t\t%s -a10 -c4 -H -m < in.wlz > out.wlz\n\n",
+	  str, WlzVersion(), str, str, str);
 
   return;
 }

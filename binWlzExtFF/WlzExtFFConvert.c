@@ -503,16 +503,19 @@ int             main(int argc, char **argv)
       fmtStr = WlzEffFormatTable(2, 50, 10, NULL);
       (void )fprintf(
 	stderr,
-	"Usage: %s%s%s%s%s%s%s%s%s\n",
+	"Usage: %s%s%s%s%s%s%s%s%s%s%s\n",
 	*argv,
 	" [-h] [-s] [-b<background>]\n"
-	"        [-d<min-dimension>] [-D<max-dimension>]\n"
-	"        [-f<input format>] [-F<output format>]\n"
-	"        [-x<x size>] [-y<y size>] [-z<z size>]\n"
-	"        [-o<output file>] [<input file>)]\n"
+	"                       [-d<min-dimension>] [-D<max-dimension>]\n"
+	"                       [-f<input format>] [-F<output format>]\n"
+	"                       [-x<x size>] [-y<y size>] [-z<z size>]\n"
+	"                       [-o<output file>] [<input file>)]\n"
 	"Converts objects between one file format and another, neither of\n"
 	"which need be the Woolz data file format.\n"
-	"Options are:\n"
+	"Version: ",
+	WlzVersion(),
+	"\n"
+	"Options:\n"
 	"  -h    Help, prints this usage information.\n"
 	"  -s    Split labeled volumes into domains.This will also split\n"
 	"        a tiled or pyramidal tiff into resolution slices and tiles.\n"

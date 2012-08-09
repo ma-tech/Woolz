@@ -109,18 +109,19 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-c#,#,#] [-g#] [-h] [-v]\n"
 	  "\t  [<input mask> [<input obj>]]\n"
 	  "\tSet the grey values of the object to the input value.\n"
 	  "\tA valuetable will be attached if required.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -c#,#,#   the new colour value r,g,b - default 0,0,0\n"
 	  "\t  -g#       the new grey value - default 0\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

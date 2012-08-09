@@ -99,12 +99,13 @@ static void usage(char *proc_str)
   fprintf(stderr,
 	  "Usage:\t%s [-s#] [-h] [-v] [<input mask> [<input obj>]]\n"
 	  "\tAdd gaussian noise to the grey value of an object.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -s#       standard deviation of the noise - default 5\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

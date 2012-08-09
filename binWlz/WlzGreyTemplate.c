@@ -115,12 +115,13 @@ static void usage(char *proc_str)
 	  "\t a domain. The template is always the second object if read\n"
 	  "\tfrom the standard input. Pixels outside the domain of the\n"
 	  "\tobject are set to the template value.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -t#       the template value - default 0\n"
 	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

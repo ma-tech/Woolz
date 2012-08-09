@@ -174,9 +174,11 @@ int             main(int argc, char **argv)
     "reading the entire object and writes the corresponding object type\n"
     "string to the standard output.\n"
     "By default the input file is the standard input.\n"
-    "Options are:\n"
+    "Version %s\n"
+    "Options:\n"
     "  -h    Display this usage information.\n",
-    *argv);
+    *argv,
+    WlzVersion());
   }
   return(!ok);
 }

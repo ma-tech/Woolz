@@ -252,11 +252,14 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%s",
+    "Usage: %s%s%s%s",
     *argv,
     " [-o<out object>] [-h>]\n"
     "                  [-e] [-m] [-l]\n"
     "                  [<in object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -e  Exponential function (g_out = exp(g_in)).\n"
     "  -m  Mudulus function (g_out = |g_in|).\n"

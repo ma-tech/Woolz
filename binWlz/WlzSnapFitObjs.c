@@ -362,10 +362,13 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-A] [-i <transform>] [-d #] [-t #] [-s #]\n"
     "        [-o<output file>] <target> <source>\n" 
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
     "  -A  Correspondences output in absolute format.\n"
@@ -383,7 +386,8 @@ int             main(int argc, char **argv)
     "  <tx> <ty>[ <tz> ]<sx> <sy>[ <sz>],\n"
     "where sx, sy, sz, tx, ty and tz are the source and target coordinates.\n",
     *argv,
-    " -3 -d 10 -i tr.wlz -o out.num -t 20 -s 20 trg.wlz src.wlz\n"
+    " -3 -d 10 -i tr.wlz -o out.num -t 20 -s 20 \\\n"
+    "                        trg.wlz src.wlz\n"
     "Reads an initial source affine transform from tr.wlz and computes\n"
     "a set of corresponding closest points such that the minimum distance\n"
     "between and target and source pair is less than 10, no target points\n"
