@@ -876,14 +876,8 @@ static WlzErrorNum WlzImageArithmetic2D(WlzObject *obj0, WlzObject *obj1,
       errNum = WlzSetBackground(obj2, bgd[2]);
     }
   }
-  if(buf[0].inp)
-  {
-    AlcFree(buf[0].inp);
-  }
-  if(buf[1].inp)
-  {
-    AlcFree(buf[1].inp);
-  }
+  AlcFree(buf[0].inp);
+  AlcFree(buf[1].inp);
   (void )WlzFreeObj(obj[0]);
   (void )WlzFreeObj(obj[1]);
   return(errNum);
@@ -1046,15 +1040,20 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    errNum = WlzImageArithmetic2D(obj2D[0], obj2D[1], obj2D[2],
-					  op, overwrite);
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    if((bgdFlag == 0) && (obj2D[2]->type == WLZ_2D_DOMAINOBJ))
+	    if((obj2D[2] != NULL) &&
+	       (obj2D[2]->type == WLZ_2D_DOMAINOBJ) &&
+	       (obj2D[2]->domain.core != NULL))
 	    {
-      	      bgd[2] = WlzGetBackground(obj0, &errNum);
-	      bgdFlag = 1;
+	      errNum = WlzImageArithmetic2D(obj2D[0], obj2D[1], obj2D[2],
+					    op, overwrite);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		if((bgdFlag == 0) && (obj2D[2]->type == WLZ_2D_DOMAINOBJ))
+		{
+		  bgd[2] = WlzGetBackground(obj0, &errNum);
+		  bgdFlag = 1;
+		}
+	      }
 	    }
 	  }
 	  if(errNum == WLZ_ERR_NONE)
