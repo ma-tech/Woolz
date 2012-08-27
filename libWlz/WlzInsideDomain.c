@@ -175,7 +175,8 @@ int		WlzInsideDomain(WlzObject *obj,
 	}
 	else
 	{
-	  inside = WlzInsideDomain2D(obj->domain.i, (int )line,  (int )kol,
+	  inside = WlzInsideDomain2D(obj->domain.i,
+	                             WLZ_NINT(line),  WLZ_NINT(kol),
 	  			     &errNum);
 	}
 	break;
@@ -191,8 +192,8 @@ int		WlzInsideDomain(WlzObject *obj,
 	else
 	{
 	  inside = WlzInsideDomain3D(obj->domain.p,
-	                             (int )plane, (int )line,  (int )kol,
-	  			     &errNum);
+	                             WLZ_NINT(plane), WLZ_NINT(line),
+				     WLZ_NINT(kol), &errNum);
 	}
 	break;
       case WLZ_TRANS_OBJ:
