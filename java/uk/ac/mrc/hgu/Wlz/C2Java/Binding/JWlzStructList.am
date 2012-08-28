@@ -19,6 +19,7 @@ JWlzStructList		= \
 			WlzGreyV.java \
 			WlzPixelV.java \
 			WlzPixelP.java \
+			WlzGreyTransformParam.java \
 			WlzGMElemP.java \
 			WlzGMCore.java \
 			WlzGMVertexG2I.java \
