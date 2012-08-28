@@ -54,6 +54,15 @@ principle could also be applied). It is especially efficient for
 morphological and set operations because of the way it's 2 and 3D
 domain objects are encoded using intervals.
 
+All pixel or voxel based image processing systems which allow
+image query via floating point coordinates need to define what a pixel
+is by the relationship between the integer pixel/voxel coordinates and
+the floating point query coordinates. In Woolz a pixel or voxel is
+defined to be an image sample centred at the integer coordinate.
+Following from this definition the C macro WLZ_NINT(), which returns
+the nearest integer to the given float, should be used in queries of
+pixel/voxel values when using floating point coordinates.
+
 Since it's adoption by the Mouse Atlas Project there have been many
 significant developments in Woolz, which have primarily been focused on
 3D reconstruction, transforms, registration and warping.
@@ -123,7 +132,7 @@ In these cases running
   autoreconf -i --force
 may fix the problems.
 
-The build script simply runs
+The build script build.sh simply runs
   autoreconf
 followed by
   ./configure

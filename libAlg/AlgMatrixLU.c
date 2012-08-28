@@ -63,15 +63,16 @@ static char _AlgMatrixLU_c[] = "University of Edinburgh $Id$";
 */
 AlgError	AlgMatrixLUSolveRaw3(double **aM, double *bV, int bSz)
 {
+  int		k;
   int		wSpace[3];
   AlgError	errCode = ALG_ERR_NONE;
-  int		colIndex;
 
   if((errCode = AlgMatrixLUDecompRaw(aM, 3, wSpace, NULL)) == ALG_ERR_NONE)
   {
     /* Having found the LU decomposition, now perform back substitution */
-    for(colIndex=0; colIndex < bSz; colIndex++){
-      (void )AlgMatrixLUBackSubRaw(aM, 3, wSpace, bV +  colIndex*3);
+    for(k = 0; k < bSz; ++k)
+    {
+      (void )AlgMatrixLUBackSubRaw(aM, 3, wSpace, bV +  (k * 3));
     }
   }
   return(errCode);
@@ -92,15 +93,16 @@ AlgError	AlgMatrixLUSolveRaw3(double **aM, double *bV, int bSz)
 */
 AlgError	AlgMatrixLUSolveRaw4(double **aM, double *bV, int bSz)
 {
+  int		k;
   int		wSpace[4];
   AlgError	errCode = ALG_ERR_NONE;
-  int		colIndex;
 
   if((errCode = AlgMatrixLUDecompRaw(aM, 4, wSpace, NULL)) == ALG_ERR_NONE)
   {
     /* Having found the LU decomposition, now perform back substitution */
-    for(colIndex=0; colIndex < bSz; colIndex++){
-      (void )AlgMatrixLUBackSubRaw(aM, 4, wSpace, bV +  colIndex*4);
+    for(k = 0; k < bSz; ++k)
+    {
+      (void )AlgMatrixLUBackSubRaw(aM, 4, wSpace, bV +  (k * 4));
     }
   }
   return(errCode);
