@@ -65,13 +65,14 @@ AlgError	AlgMatrixLUSolveRaw3(double **aM, double *bV, int bSz)
 {
   int		wSpace[3];
   AlgError	errCode = ALG_ERR_NONE;
+  int		colIndex;
 
   if((errCode = AlgMatrixLUDecompRaw(aM, 3, wSpace, NULL)) == ALG_ERR_NONE)
   {
     /* Having found the LU decomposition, now perform back substitution */
-    (void )AlgMatrixLUBackSubRaw(aM, 3, wSpace, bV +  0);
-    (void )AlgMatrixLUBackSubRaw(aM, 3, wSpace, bV +  3);
-    (void )AlgMatrixLUBackSubRaw(aM, 3, wSpace, bV +  6);
+    for(colIndex=0; colIndex < bSz; colIndex++){
+      (void )AlgMatrixLUBackSubRaw(aM, 3, wSpace, bV +  colIndex*3);
+    }
   }
   return(errCode);
 }
@@ -93,14 +94,14 @@ AlgError	AlgMatrixLUSolveRaw4(double **aM, double *bV, int bSz)
 {
   int		wSpace[4];
   AlgError	errCode = ALG_ERR_NONE;
+  int		colIndex;
 
   if((errCode = AlgMatrixLUDecompRaw(aM, 4, wSpace, NULL)) == ALG_ERR_NONE)
   {
     /* Having found the LU decomposition, now perform back substitution */
-    (void )AlgMatrixLUBackSubRaw(aM, 4, wSpace, bV +  0);
-    (void )AlgMatrixLUBackSubRaw(aM, 4, wSpace, bV +  4);
-    (void )AlgMatrixLUBackSubRaw(aM, 4, wSpace, bV +  8);
-    (void )AlgMatrixLUBackSubRaw(aM, 4, wSpace, bV + 12);
+    for(colIndex=0; colIndex < bSz; colIndex++){
+      (void )AlgMatrixLUBackSubRaw(aM, 4, wSpace, bV +  colIndex*4);
+    }
   }
   return(errCode);
 }
