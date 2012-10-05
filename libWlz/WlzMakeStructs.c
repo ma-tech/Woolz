@@ -790,13 +790,14 @@ WlzObject 	*WlzMakeMarkers(WlzVertexType vType,
                                 WlzErrorNum *dstErr)
 {
   int           idx,
-                dim;
+                dim = 0;
   WlzObjectType oType;
   WlzObject     *mObj = NULL;
   WlzObject     *tObj[4];
   WlzIVertex3   off;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
+  off.vtX = off.vtY = off.vtZ = 0;
   tObj[0] = tObj[1] = tObj[2] = tObj[3] = NULL;
   if((nVtx <= 0) || (mSz <= 0))
   {
@@ -1101,8 +1102,8 @@ WlzMakePolygonDomain(WlzObjectType	type,
 	       int 		copy,
 	       WlzErrorNum		*dstErr)
 {
-  WlzPolygonDomain	*p=NULL;
-  int 			vertexsize;
+  WlzPolygonDomain	*p = NULL;
+  int 			vertexsize = 0;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check type and set vertex size */
@@ -1146,7 +1147,7 @@ WlzMakePolygonDomain(WlzObjectType	type,
       else {
 	p->vtx = (WlzIVertex2 *) (p + 1);
 	if( vertices ){
-	  memcpy((void *) p->vtx, (void *) vertices, n*vertexsize);
+	  (void )memcpy((void * )p->vtx, (void * )vertices, n * vertexsize);
 	}
       }
     }
@@ -1347,15 +1348,15 @@ WlzObject	*WlzMakeCuboid(int plane1, int lastpl,
 {
   int		pPos;
   size_t	arSz,
-  		arElmSz;
+  		arElmSz = 0;
   void		*arDat = NULL;
   WlzDomain	dom,
   		dom2D;
-  WlzDomain	*dom2DP;
+  WlzDomain	*dom2DP = NULL;
   WlzObjectType	tbType;
   WlzValues	val,
   		val2D;
-  WlzValues	*val2DP;
+  WlzValues	*val2DP = NULL;
   WlzObject	*obj = NULL;
   AlcErrno	alcErr = ALC_ER_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1789,11 +1790,12 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
   WlzDomain		idom;
   WlzIntervalWSpace	iwsp;
   WlzGreyP		g;
-  int 			k1, table_size, bgd_val;
+  int 			k1 = 0, table_size, bgd_val;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check the object */
   v.v = NULL;
+  g.v = NULL;
   if( obj == NULL || obj->domain.core == NULL ){
     errNum = WLZ_ERR_OBJECT_NULL;
   }
