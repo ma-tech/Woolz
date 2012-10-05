@@ -125,8 +125,8 @@ extern char     *optarg;
 
 int             main(int argc, char **argv)
 {
-  int		idx,
-		option,
+  int		option,
+		idx = 0,
 		invFlg = 0,
 		nrmFlg = 0,
 		ok = 1,
