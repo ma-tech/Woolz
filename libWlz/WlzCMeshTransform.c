@@ -420,10 +420,10 @@ static WlzObject *WlzCMeshTransformInvert2D(WlzObject *gObj,
 {
   int		*nTbl = NULL;
   WlzObject	*rObj = NULL;
-  WlzIndexedValues *gIxv,
-  		*rIxv;
-  WlzCMesh2D	*gMesh,
-  		*rMesh;
+  WlzIndexedValues *gIxv = NULL,
+  		*rIxv = NULL;
+  WlzCMesh2D	*gMesh = NULL,
+  		*rMesh = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   if((gMesh = gObj->domain.cm2)->type != WLZ_CMESH_2D)
@@ -580,10 +580,10 @@ static WlzObject *WlzCMeshTransformInvert2D5(WlzObject *gObj,
 {
   int		*nTbl = NULL;
   WlzObject	*rObj = NULL;
-  WlzIndexedValues *gIxv,
-  		*rIxv;
-  WlzCMesh2D5	*gMesh,
-  		*rMesh;
+  WlzIndexedValues *gIxv = NULL,
+  		*rIxv = NULL;
+  WlzCMesh2D5	*gMesh = NULL,
+  		*rMesh = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   if((gMesh = gObj->domain.cm2d5)->type != WLZ_CMESH_2D5)
@@ -742,10 +742,10 @@ static WlzObject *WlzCMeshTransformInvert3D(WlzObject *gObj,
 {
   int		*nTbl = NULL;
   WlzObject	*rObj = NULL;
-  WlzIndexedValues *gIxv,
-  		*rIxv;
-  WlzCMesh3D	*gMesh,
-  		*rMesh;
+  WlzIndexedValues *gIxv = NULL,
+  		*rIxv = NULL;
+  WlzCMesh3D	*gMesh = NULL,
+  		*rMesh = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   if((gMesh = gObj->domain.cm3)->type != WLZ_CMESH_3D)
@@ -1597,17 +1597,17 @@ WlzObject	*WlzCMeshToDomObjValues(WlzObject *dObj, WlzObject *mObj,
 static WlzObject *WlzCMeshToDomObj2D(WlzObject *mObj, int trans,
 				     WlzErrorNum *dstErr)
 {
-  int           idI,
-                line,
-                itvLnCnt,
-                itvLnWidth,
-                itvLnByteWidth;
+  int           idI = 0,
+                line = 0,
+                itvLnCnt = 0,
+                itvLnWidth = 0,
+                itvLnByteWidth = 0;
   WlzIBox2      iBox;
   WlzDBox2      dBox;
   WlzCMesh2D	*mesh;
   WlzCMeshScanWSp2D *mSWSp = NULL;
-  WlzCMeshScanItv2D *curItv,
-  		*prvItv;
+  WlzCMeshScanItv2D *curItv = NULL,
+  		*prvItv = NULL;
   WlzUByte	*lnMsk = NULL;
   WlzObject     *dObj = NULL;
   WlzDomain     dom;
@@ -1617,6 +1617,7 @@ static WlzObject *WlzCMeshToDomObj2D(WlzObject *mObj, int trans,
 
   dom.core = NULL;
   val.core = NULL;
+  iBox.xMin = iBox.yMin = iBox.xMax = iBox.yMax = 0;
   if(mObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -2608,10 +2609,10 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
   		idX,
 		iLft,
 		iRgt,
-		bufWidth,
-		itvWidth,
 		mItvIdx0,
-		mItvIdx1;
+		mItvIdx1,
+		bufWidth = 0,
+		itvWidth = 0;
   double	tD0 ,
   		tD1,
 		tD2,
@@ -2624,12 +2625,12 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
   int		*olpCnt = NULL;
   WlzGreyP	dGP,
   		olpBuf;
-  WlzGreyType	gType;
+  WlzGreyType	gType = WLZ_GREY_ERROR;
   WlzPixelV	bgdV;
   WlzDVertex2	sPosD;
-  WlzCMeshScanItv2D *mItv0,
-  		*mItv1,
-		*mItv2;
+  WlzCMeshScanItv2D *mItv0 = NULL,
+  		*mItv1 = NULL,
+		*mItv2 = NULL;
   WlzCMeshScanWSp2D *mSWSp = NULL;
   WlzCMeshScanElm2D *sElm;
   WlzGreyValueWSpace *gVWSp = NULL;
@@ -3355,6 +3356,7 @@ static WlzCMeshScanWSp3D *WlzCMeshScanWSpInit3D(WlzObject *mObj, int trans,
   WlzCMeshScanElm3D *dElm;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  dBox.xMin = dBox.yMin = dBox.zMin = dBox.xMax = dBox.yMax = dBox.zMax = 0.0;
   /* Check that the mesh transform object is appropriate to that it doesn't
    * need testing later. */
   if(mObj == NULL)
@@ -5362,8 +5364,8 @@ static WlzObject *WlzCMeshScanObjPDomain3D(WlzObject *srcObj,
 		sPos;
   WlzDVertex3	tV;
   WlzDynItvPool	itvPool;
-  WlzCMeshScanItv3D *curItv,
-  		*prvItv;
+  WlzCMeshScanItv3D *curItv = NULL,
+  		*prvItv = NULL;
   WlzObjectType	dstObjType;
   WlzCMeshScanElm3D *sE;
   WlzUByte	*lnMsk = NULL;
