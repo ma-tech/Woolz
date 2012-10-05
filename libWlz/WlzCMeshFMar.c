@@ -218,11 +218,10 @@ WlzObject	*WlzCMeshDistance2D(WlzObject *objG,
   WlzObject	*objM = NULL,
 		*objR = NULL;
   WlzCMesh2D 	*mesh;
-  WlzValues	valD,
-  		valI;
+  WlzValues	valI;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  valD.core = valI.core = NULL;
+  valI.core = NULL;
   if(objG == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -344,11 +343,10 @@ WlzObject	*WlzCMeshDistance3D(WlzObject *objG,
   WlzObject	*objM = NULL,
 		*objR = NULL;
   WlzCMesh3D  	*mesh;
-  WlzValues	valD,
-  		valI;
+  WlzValues	valI;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  valD.core = valI.core = NULL;
+  valI.core = NULL;
   if(objG == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -1015,6 +1013,7 @@ static int	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
       }
     }
   }
+  len[1] = 0.0; 			  /* Just to silence dumb compiller. */
   dist[0] = distances[nod0->idx];
   dist[1] = distances[nod1->idx];
   if(dist[1] < dist[0])
@@ -1874,6 +1873,7 @@ static WlzErrorNum WlzCMeshFMarAddSeed2D(AlcHeap  *sElmQ,
   }
   /* Pop element that has the min(maximum node distance) from the edge
    * queue. */
+#ifndef WLZ_CMESHFM_NOLINEOFSIGHT
   while((errNum == WLZ_ERR_NONE) &&
         ((sElmQEnt = (WlzCMeshFMarQEnt *)AlcHeapTop(sElmQ)) != NULL))
   {
@@ -1972,6 +1972,7 @@ static WlzErrorNum WlzCMeshFMarAddSeed2D(AlcHeap  *sElmQ,
     }
   }
   return(errNum);
+#endif /* !WLZ_CMESHFM_NOLINEOFSIGHT */
 }
 
 /*!
