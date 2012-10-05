@@ -70,7 +70,7 @@ static void usage(char *proc_str)
 {
   (void )fprintf(stderr,
 	  "Usage:\t%s [-1] [-2] [-ffilename1] [-Ffilename2] [-h]\n"
-	  "                           [-v] [<bibfile1>] [<bibfile2>]\n"
+	  "                           [<bibfile1>] [<bibfile2>]\n"
 	  "\tReset the transforms in bibfile2 so that the planes that\n"
 	  "\tmatch plane in bibfile1 - the fixed planes - are put back\n"
 	  "\tto the fixed positions defined by bibfile1. Planes\n"
@@ -84,8 +84,7 @@ static void usage(char *proc_str)
 	  "Options:\n"
 	  "\t  -1                transform 1 is absolute (def: relative)\n"
 	  "\t  -2                transform 2 is absolute (def: relative)\n"
-	  "\t  -h                Help - prints this usage message\n"
-	  "\t  -v                verbose operation\n",
+	  "\t  -h                Help - prints this usage message\n",
 	  proc_str,
 	  WlzVersion());
   return;
@@ -232,9 +231,8 @@ int main(int	argc,
 	 char	**argv)
 {
   FILE		*inFile1=NULL, *inFile2=NULL;
-  char 		optList[] = "f:F:hV";
+  char 		optList[] = "f:F:h";
   int		option;
-  int		verboseFlg=0;
   RecSectionList	recSecList1, recSecList2;
   RecSectionList	*secList1=&recSecList1, *secList2=&recSecList2;
   HGUDlpListItem	*listItem1, *listItem2;
@@ -285,10 +283,6 @@ int main(int	argc,
 	usage(argv[0]);
 	return 1;
       }
-      break;
-
-    case 'V':
-      verboseFlg = 1;
       break;
 
     case 'h':

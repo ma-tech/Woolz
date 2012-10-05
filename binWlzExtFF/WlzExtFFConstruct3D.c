@@ -156,12 +156,11 @@ static WlzErrorNum 		WlzEFFConAddImg(
 
 int		main(int argc, char *argv[])
 {
-  int		idx,
+  int		option,
   		ok = 1,
-  		option,
+  		idx = 0,
   		usage = 0,
 		fileList = 0,
-		endOfFileList,
 		gTrans = 0,
 		nObj,
 		nObjMax,
@@ -280,7 +279,6 @@ int		main(int argc, char *argv[])
       {
         idx = 0;
 	nObj = 0;
-	endOfFileList = 0;
 	while((errNum == WLZ_ERR_NONE) &&
 	      (fgets(fStrBuf, WLZEFFCON_BUF_LEN, fP) != NULL))
 	{

@@ -112,7 +112,7 @@ int main(int	argc,
 {
   char 		optList[] = "hv";
   int		option;
-  int		verboseFlg=0;
+  /* int		verboseFlg=0; */
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   char		*tiffFile=NULL;
   WlzObject	*inObj, *outObj, *obj, **objVec;
@@ -125,7 +125,7 @@ int main(int	argc,
     switch( option ){
 
     case 'v':
-      verboseFlg = 1;
+      /* verboseFlg = 1; */
       break;
 
     case 'h':
