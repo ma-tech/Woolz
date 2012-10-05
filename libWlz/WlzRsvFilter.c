@@ -1158,6 +1158,8 @@ static WlzObject *WlzRsvFilterObj2DY(WlzObject *srcObj, WlzRsvFilter *ftr,
   if(errNum == WLZ_ERR_NONE)
   {
     idD = 0;
+    bufLnIdx = 0;
+    dstLnIdx = 0;
     itvBufWidth = (bufSz.vtX + 7) / 8;
     while((errNum == WLZ_ERR_NONE) && (idD < 2))
     {
@@ -1387,8 +1389,8 @@ static WlzObject *WlzRsvFilterObj3DZ(WlzObject *srcObj, WlzRsvFilter *ftr,
   WlzObjectType	dstValTbType2D;
   WlzGreyType	tmpGType,
 		bufType,
-  		srcGType,
-  		dstGType;
+  		srcGType = WLZ_GREY_ERROR,
+  		dstGType = WLZ_GREY_ERROR;
   WlzGreyP	dstBufGP,
   		srcBufGP,
   		wrkBufGP;
@@ -1412,6 +1414,7 @@ static WlzObject *WlzRsvFilterObj3DZ(WlzObject *srcObj, WlzRsvFilter *ftr,
   		dstGWSp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  dstVal.core = NULL;
   /* Gather information about the source object. */
   if((srcDom = srcObj->domain).core->type != WLZ_PLANEDOMAIN_DOMAIN)
   {

@@ -59,7 +59,7 @@ WlzObject	*WlzEffReadObjIPL(FILE *fP, WlzErrorNum *dstErr)
 {
   int		idxZ, i,
   		planeSz, pixelSz;
-  void 		***data;
+  void 		***data = NULL;
   unsigned char	***ubData = NULL;
   short		***shData = NULL;
   int		***inData = NULL;

@@ -396,7 +396,7 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
   {
     WlzProperty	p;
     char 	*s = NULL;
-    WlzPropertyList *pLst;
+    WlzPropertyList *pLst = NULL;
 
     p.core = NULL;
     nim->descrip[79] = '\0';

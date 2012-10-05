@@ -111,7 +111,7 @@ WlzErrorNum	WlzSnapFit(WlzObject *tObj, WlzObject *sObj,
   int		idM,
   		idN,
   		idT,
-		idS;
+		idS = 0;
   double	tD0;
   WlzVertexP	tVP0,
   		tVtxP,
@@ -119,11 +119,11 @@ WlzErrorNum	WlzSnapFit(WlzObject *tObj, WlzObject *sObj,
   int		*idxBuf = NULL;
   double	*dist = NULL;
   AlcKDTTree	*tree = NULL;
-  AlcKDTNode	*node;
+  AlcKDTNode	*node = NULL;
   int		nVtx[2],			/* Number of extracted
   						 * vertices with target 0 and
 						 * source 1. */
-		nCor[3],			/* Number of correspondences
+		nCor[4],			/* Number of correspondences
 						 * with: Target 0, closest
 						 * source 1 and minimum
 						 * distance closest source
@@ -146,8 +146,10 @@ WlzErrorNum	WlzSnapFit(WlzObject *tObj, WlzObject *sObj,
   AlcErrno	alcErr = ALC_ER_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  idx[0] = idx[1] = idx[2] = NULL;
+  tVtxP.v = sVtxP.v = NULL;
   vtxP[0].v = vtxP[1].v = NULL;
+  idx[0] = idx[1] = idx[2] = NULL;
+  nCor[0] = nCor[1] = nCor[2] = nCor[3] = 0;
   if((tObj == NULL) || (sObj == NULL))
   {
     errNum = WLZ_ERR_OBJECT_NULL;

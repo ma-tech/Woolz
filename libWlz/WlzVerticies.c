@@ -298,10 +298,8 @@ WlzErrorNum	WlzVerticesFromObjBnd3I(WlzObject *obj,
   WlzIVertex3	*vtx = NULL;
   WlzObject	*tObj = NULL,
   		*bObj = NULL;
-  WlzValues	dumVal;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  dumVal.core = NULL;
   if(obj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;

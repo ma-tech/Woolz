@@ -99,9 +99,9 @@ WlzErrorNum	WlzEffIcsFileNames(char **fileBody,
 */
 WlzObject	*WlzEffReadObjIcs(const char *gvnFileName, WlzErrorNum *dstErr)
 {
-  int		bits,
-		datumSize,
-  		idx;
+  int		idx,
+  		bits = 0,
+		datumSize = 0;
   size_t	dataCount;
   void		***data = NULL;
   FILE		*fP = NULL;
