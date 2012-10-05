@@ -77,8 +77,7 @@ extern char     *optarg;
 
 int		main(int argc, char *argv[])
 {
-  int		pLen,
-  		option,
+  int		option,
 		debug = 0,
   		ok = 1,
 		random = 0,
@@ -100,6 +99,7 @@ int		main(int argc, char *argv[])
   AlcLRUCache	*cache = NULL;
   WlzTstObjCacheEntry *objTbl = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const char	*errMsgStr;
   static char   optList[] = "dhmn:r:s:";
 
   opterr = 0;
@@ -185,50 +185,52 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    pLen = strlen(path);
-    if((dir = opendir(path)) == NULL)
+    if(strlen(path) > 0)
     {
-      ok = 0;
-      (void )fprintf(stderr,
-                     "%s: Failed to open directory %s.\n",
-                     *argv, path);
-    }
-    else
-    {
-      objCnt = 0;
-      while(ok && ((dP = readdir(dir)) != NULL))
-      {
-	int	len;
-
-        if(((len = strlen(dP->d_name)) > 4) &&
-	   (strcmp(dP->d_name + len - 4, ".wlz") == 0))
-	{
-	  if((objTbl[objCnt].file = AlcStrCat3(path, "/",
-	                                       dP->d_name)) == NULL)
-	  {
-	    ok = 0;
-	    (void )fprintf(stderr,
-	                   "%s: Failed to allocate file path string.\n",
-			   *argv);
-	  }
-	  else
-	  {
-	    if((stat(objTbl[objCnt].file, &stbuf) == 0) &&
-	       ((stbuf.st_mode & S_IFREG) != 0))
-	    {
-	      objTbl[objCnt].size = stbuf.st_size;
-	      ++objCnt;
-	    }
-	  }
-	}
-      }
-      (void )closedir(dir);
-      if(objCnt < 1)
+      if((dir = opendir(path)) == NULL)
       {
 	ok = 0;
 	(void )fprintf(stderr,
-		       "%s: Directory %s contains no readable Woolz files.\n",
+		       "%s: Failed to open directory %s.\n",
 		       *argv, path);
+      }
+      else
+      {
+	objCnt = 0;
+	while(ok && ((dP = readdir(dir)) != NULL))
+	{
+	  int	len;
+
+	  if(((len = strlen(dP->d_name)) > 4) &&
+	     (strcmp(dP->d_name + len - 4, ".wlz") == 0))
+	  {
+	    if((objTbl[objCnt].file = AlcStrCat3(path, "/",
+						 dP->d_name)) == NULL)
+	    {
+	      ok = 0;
+	      (void )fprintf(stderr,
+			     "%s: Failed to allocate file path string.\n",
+			     *argv);
+	    }
+	    else
+	    {
+	      if((stat(objTbl[objCnt].file, &stbuf) == 0) &&
+		 ((stbuf.st_mode & S_IFREG) != 0))
+	      {
+		objTbl[objCnt].size = stbuf.st_size;
+		++objCnt;
+	      }
+	    }
+	  }
+	}
+	(void )closedir(dir);
+	if(objCnt < 1)
+	{
+	  ok = 0;
+	  (void )fprintf(stderr,
+			 "%s: Directory %s contains no readable Woolz files.\n",
+			 *argv, path);
+	}
       }
     }
   }
@@ -270,6 +272,10 @@ int		main(int argc, char *argv[])
 
 	k = (random)? rand() % objCnt: j; 
 	errNum = WlzTstObjCacheAdd(cache, objTbl + k, &hit, &colSz);
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  break;
+	}
 	if(hit)
 	{
 	  ++nHit;
@@ -299,6 +305,13 @@ int		main(int argc, char *argv[])
 	  AlcLRUCacheFacts(cache, stderr);
 	}
       }
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+      (void )printf("%s: Error - %s.\n",
+		    *argv,
+                    errMsgStr);
     }
     (void )printf("%s:\n"
                   "  calls = %u, hits = %u\n"
