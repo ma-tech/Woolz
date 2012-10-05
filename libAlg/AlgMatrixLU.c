@@ -484,8 +484,8 @@ AlgError	AlgMatrixLUDecompRaw(double **aM, int aSz,
   int		idx0,
   		idx1,
 		idx2,
-		iMax,
-		even;
+		even,
+		iMax = 0;
   double	tD0,
   		aaMax,
   		sum,
