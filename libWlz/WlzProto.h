@@ -3072,6 +3072,7 @@ extern WlzDVertex2		WlzGeomObjLineSegIntersect2D(
 				  WlzDVertex2 p1,
 				  double tol,
 				  int inside,
+				  int method,
 				  int *dstStat);
 extern WlzDVertex3		WlzGeomObjLineSegIntersect3D(
 				  WlzObject *obj,
@@ -3079,6 +3080,7 @@ extern WlzDVertex3		WlzGeomObjLineSegIntersect3D(
 				  WlzDVertex3 p1,
 				  double tol,
 				  int inside,
+				  int method,
 				  int *dstStat);
 extern double                   WlzGeomPolar2D(
                                   WlzDVertex2 org,
@@ -4459,10 +4461,12 @@ extern WlzErrorNum		WlzCMeshDelNod2D5(
 extern WlzErrorNum		WlzCMeshBoundConform2D(
 				  WlzCMesh2D *mesh,
 				  WlzObject *obj,
+				  int method,
 				  double tol);
 extern WlzErrorNum		WlzCMeshBoundConform3D(
 				  WlzCMesh3D *mesh,
 				  WlzObject *obj,
+				  int method,
 				  double tol);
 extern double			WlzCMeshElmMinEdgLnSq2D(
 				  WlzCMeshElm2D *elm);
@@ -5461,6 +5465,12 @@ extern const char		*WlzStringFromMarkerType(
 extern WlzMarkerType		WlzStringToMarkerType(
 				  const char *mStr,
 				  WlzErrorNum *dstErr);
+extern const char      		*WlzStringFromThreeDViewMode(
+				  WlzThreeDViewMode vMode,
+                                  WlzErrorNum *dstErr);
+extern WlzThreeDViewMode 	WlzStringToThreeDViewMode(
+				  const char *vStr,
+                                  WlzErrorNum *dstErr);
 extern const char 		*WlzStringFromErrorNum(
 				  WlzErrorNum gvnErr,
 			          const char **dstMsgStr);
