@@ -1205,6 +1205,8 @@ typedef union _WlzGreyP
   float   	*flp;
   double  	*dbp;
   WlzUInt 	*rgbp;
+  char		**bytes;
+  unsigned char **ubytes;
 } WlzGreyP;
 
 /*!
@@ -1215,6 +1217,7 @@ typedef union _WlzGreyP
 */
 typedef union _WlzGreyV
 {
+  void		*v;		        /*!< Can save a cast when assigning. */
   WlzLong 	lnv;
   int 		inv;
   short 	shv;
@@ -1222,6 +1225,8 @@ typedef union _WlzGreyV
   float 	flv;
   double 	dbv;
   WlzUInt 	rgbv;
+  char		bytes[8];
+  unsigned char	ubytes[8];
 } WlzGreyV;
 
 /*!
@@ -3275,16 +3280,14 @@ typedef enum _WlzCMeshElmFlags
   WLZ_CMESH_ELM_FLAG_BOUNDARY	= (1),	/*!< Element intersects the boundary
   					     of the domain to which it
 					     should conform. */
-  WLZ_CMESH_ELM_FLAG_OUTSIDE 	= (2),	/*!< Element is outside the domain to
+  WLZ_CMESH_ELM_FLAG_OUTSIDE 	= (1<<1), /*!< Element is outside the domain to
   					     which the mesh should
 					     conform. */
-  WLZ_CMESH_ELM_FLAG_KNOWN	= (4),	/*!< A property of the element is
+  WLZ_CMESH_ELM_FLAG_KNOWN	= (1<<2), /*!< A property of the element is
   					     known. */
-#ifndef WLZ_EXT_BIND
-  WLZ_CMESH_ELM_FLAG_ALL	= (0xffffffff) /*!< All possible flags. */
-#else
-  WLZ_CMESH_ELM_FLAG_ALL	= (-1)  /*!< All possible flags. */
-#endif
+  WLZ_CMESH_ELM_FLAG_ALL	= (65535) /*!< All possible flags, 0xffff
+                                               decimal representation required
+					       for JavaWoolz. */
 } WlzCMeshElmFlags;
 
 /*!
@@ -3307,11 +3310,12 @@ typedef enum _WlzCMeshNodFlags
   						and is being processed. */
   WLZ_CMESH_NOD_FLAG_KNOWN	= (1<<4),  /*!< Property associated with
                                                 node is known. */
-#ifndef WLZ_EXT_BIND
-  WLZ_CMESH_NOD_FLAG_ALL	= (0xffffffff) /*!< All possible flags. */
-#else
-  WLZ_CMESH_NOD_FLAG_ALL	= (-1)  /*!< All possible flags. */
-#endif
+  WLZ_CMESH_NOD_FLAG_OUTSIDE 	= (1<<5),  /*!< Node is outside the domain to
+  					        which the mesh should
+						conform. */
+  WLZ_CMESH_NOD_FLAG_ALL	= (65535) /*!< All possible flags, 0xffff
+  					       decimal representation required
+					       for JavaWoolz. */
 } WlzCMeshNodFlags;
 
 /*!
