@@ -1274,6 +1274,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 		  *(dGP.dbp)++ = tD0;
 		  break;
 		case WLZ_GREY_RGBA:
+		  tU0 = 0U;
 		  tD4 = (WLZ_RGBA_RED_GET((gVWSp->gVal[0]).rgbv) *
 		         tD2 * tD3) +
 			 (WLZ_RGBA_RED_GET((gVWSp->gVal[1]).rgbv) *
@@ -1754,9 +1755,9 @@ static WlzMeshTransform *WlzMeshFromObjBlock(WlzObject *srcObj,
 {
   int		tI0;
   unsigned int	lIdx,
-  		nLines,
-		maxNodes,
-		maxElems;
+  		nLines = 0,
+		maxNodes = 0,
+		maxElems = 0;
   WlzInterval	*itv0,
   		*lnItvs = NULL;
   WlzObject	*tObj0,
@@ -1767,6 +1768,7 @@ static WlzMeshTransform *WlzMeshFromObjBlock(WlzObject *srcObj,
   WlzIVertex2	org;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  org.vtX = org.vtY = 0;
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
