@@ -405,7 +405,7 @@ WlzObject *WlzDomainFillHoles(
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   WlzValues	values;
   WlzDomain	domain;
-  WlzObject	*obj1, *backObj, *holeObj, **objs;
+  WlzObject	*obj1 = NULL, *backObj = NULL, *holeObj = NULL, **objs = NULL;
   int		i, numObjs;
 
   /* check parameters */
