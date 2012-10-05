@@ -298,11 +298,11 @@ int main(int	argc,
   char		*modelName=NULL;
   char		*version=NULL;
   char		*fileName=NULL;
-  time_t	creationTime;
+  time_t	creationTime = 0;
   int		cTimeFlg=0;
   char		*creationAuthor=NULL;
   char		*creationMachineName=NULL;
-  time_t	modificationTime;
+  time_t	modificationTime = 0;
   int		mTimeFlg=0;
   char		*modificationAuthor=NULL;
   char		*comment=NULL;
@@ -313,6 +313,7 @@ int main(int	argc,
     
   /* read the argument list and check for an input file */
   opterr = 0;
+  property.core = NULL;
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
 

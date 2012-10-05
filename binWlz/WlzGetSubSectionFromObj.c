@@ -86,7 +86,7 @@ int		main(int argc, char *argv[])
   ok = 1;
   opterr = 0;
   errMsg = "";
-  inFileStr = inRefFileStr = fileStrDef;
+  inFileStr = inRefFileStr = outFileStr = fileStrDef;
   if((view = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) == NULL)
   {
     ok = 0;

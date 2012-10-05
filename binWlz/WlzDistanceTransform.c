@@ -129,8 +129,7 @@ int		main(int argc, char *argv[])
   		con,
   		option,
 		usage = 0;
-  char		*inFileStr,
-  		*forFileStr,
+  char		*forFileStr,
   		*refFileStr,
 		*outFileStr;
   double	dParam = 10.0;
@@ -149,7 +148,7 @@ int		main(int argc, char *argv[])
 
   /* Parse the argument list and check for input files. */
   opterr = 0;
-  inFileStr = (char *)fileStrDef;
+  refFileStr = (char *)fileStrDef;
   forFileStr = (char *)fileStrDef;
   outFileStr = (char *)fileStrDef;
   dFn = defDFn;
