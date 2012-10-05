@@ -82,8 +82,8 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 					WlzErrorNum *dstErr)
 {
   int		idN;
-  WlzCMesh2D5	*mesh;
-  WlzIndexedValues *ixv;
+  WlzCMesh2D5	*mesh = NULL;
+  WlzIndexedValues *ixv = NULL;
   WlzObject	*fObj = NULL,
   		*rObj = NULL;
   WlzObject	*tObj[5];	         	       /* Temporary objects. */
@@ -297,11 +297,7 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 	        a = p2[2].vtY / p2[2].vtX;
 		for(x2 = 0.0; x2 < p2[2].vtX + eps; x2 += 1.0)
 		{
-		  WlzDVertex2	q2;
-
 		  y2 = a * x2;
-		  q2.vtX = x2;
-		  q2.vtY = y2;
 		  b = x2 / p2[2].vtX;
 		  q3.vtX = p3[0].vtX + b * (p3[2].vtX - p3[0].vtX);
 		  q3.vtY = p3[0].vtY + b * (p3[2].vtY - p3[0].vtY);
@@ -324,11 +320,7 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 	        a = p2[2].vtX / p2[2].vtY;
 		for(y2 = 0.0; y2 < p2[2].vtY + eps; y2 += 1.0)
 		{
-	          WlzDVertex2	q2;
-
 		  x2 = a * y2;
-		  q2.vtX = x2;
-		  q2.vtY = y2;
 		  b = y2 / p2[2].vtY;
 		  q3.vtX = p3[0].vtX + b * (p3[2].vtX - p3[0].vtX);
 		  q3.vtY = p3[0].vtY + b * (p3[2].vtY - p3[0].vtY);
@@ -509,7 +501,7 @@ WlzDVertex2	WlzCMeshClosePointDom2D5(WlzObject *vObj, WlzObject *mObj,
   double	mDst = DBL_MAX;
   double	mL[2];
   WlzDVertex2	mPos2;
-  WlzCMesh2D5	*mesh;
+  WlzCMesh2D5	*mesh = NULL;
   WlzIterateWSpace *itWSp = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
