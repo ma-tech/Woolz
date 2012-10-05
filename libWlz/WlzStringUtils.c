@@ -39,6 +39,7 @@ static char _WlzStringUtils_c[] = "University of Edinburgh $Id$";
 * \ingroup	WlzStrings
 */
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
