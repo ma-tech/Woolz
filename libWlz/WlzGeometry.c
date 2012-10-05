@@ -2928,52 +2928,99 @@ int             WlzGeomTetraAffineSolve(double *tr,
 *					should be inside or on the
 *					boundary, if zero it will be
 *					outside or on the boundary.
+* \param	method			Method for finding intersection:
+* 					0 - bisection, 1 - increment.
+* 					If increment is used each point
+* 				        along the line segment will be
+* 				        tested until termination, this may
+* 				        be very slow if tol is small, with
+* 				        possibly 1/tol incremental steps.
 * \param        dstStat                 Destination pointer for status,
 *                                       may be NULL.
 */
 WlzDVertex2	WlzGeomObjLineSegIntersect2D(WlzObject *obj,
 					WlzDVertex2 p0, WlzDVertex2 p1,
-					double tol, int inside, int *dstStat)
+					double tol, int inside, int method,
+					int *dstStat)
 {
-  int           s0,
-                s1,
+  int           s1,
+                s0,
                 s2,
                 stat;
-  double        dErr;
+  double        dErr,
+  		tolSq;
   WlzDVertex2   p2;
 
-  tol *= tol;
+  tol = fabs(tol);
+  tolSq = tol * tol;
   s0 = WlzInsideDomain(obj, 0.0, p0.vtY, p0.vtX, NULL);
   s1 = WlzInsideDomain(obj, 0.0, p1.vtY, p1.vtX, NULL);
   if(s0 != s1)
   {
     stat = 0;
-    if(s0 != 0)
+    if(s1 != 0)
     {
-      /* Ensure that p0 is outside the domain. */
-      p2 = p0; p0 = p1; p1 = p2;
-      s2 = s0; s0 = s1; s1 = s2;
+      /* Ensure that p1 is outside the domain. */
+      p2 = p1; p1 = p0; p0 = p2;
+      s2 = s1; s1 = s0; s0 = s2;
     }
-    do
+    switch(method)
     {
-      /* Find midpoint of p0 and p1. */
-      p2.vtX = 0.5 * (p0.vtX + p1.vtX);
-      p2.vtY = 0.5 * (p0.vtY + p1.vtY);
-      /* Check if the midpoint is within the object and update end points. */
-      s2 = WlzInsideDomain(obj, 0.0, p2.vtY, p2.vtX, NULL);
-      if(s2 != 0)
-      {
-        p1 = p2;
-      }
-      else
-      {
-        p0 = p2;
-      }
-      /* Check distance error. */
-      WLZ_VTX_2_SUB(p2, p0, p1);
-      dErr = WLZ_VTX_2_SQRLEN(p2);
+      case 0: /* Bisection. */
+	do
+	{
+	  /* Find midpoint of p1 and p0. */
+	  p2.vtX = 0.5 * (p1.vtX + p0.vtX);
+	  p2.vtY = 0.5 * (p1.vtY + p0.vtY);
+	  /* Check if the midpoint is within the object and update end
+	   * points. */
+	  s2 = WlzInsideDomain(obj, 0.0, p2.vtY, p2.vtX, NULL);
+	  if(s2 != 0)
+	  {
+	    p0 = p2;
+	  }
+	  else
+	  {
+	    p1 = p2;
+	  }
+	  /* Check distance error. */
+	  WLZ_VTX_2_SUB(p2, p1, p0);
+	  dErr = WLZ_VTX_2_SQRLEN(p2);
+	}
+	while(dErr > tolSq);
+	break;
+      case 1: /* Increment. */ /* FALLTHROUGH */
+      default:
+	if(tolSq > DBL_EPSILON)
+	{
+	  double      l;
+	  WlzDVertex2 inc;
+
+	  p2 = p1;
+	  dErr = 0;
+	  WLZ_VTX_2_SUB(p1, p2, p0);
+	  l = WLZ_VTX_2_LENGTH(p1);
+	  l = tol / l; /* fabs(l) must be >= 1 since s0 != s1 above. */
+	  WLZ_VTX_2_SCALE(inc, p1, l);
+	  p1 = p0;
+	  do
+	  {
+	    WlzDVertex2 d;
+
+	    p0 = p1;
+	    WLZ_VTX_2_ADD(p1, p0, inc);
+	    s1 = WlzInsideDomain(obj, 0.0, p1.vtY, p1.vtX, NULL);
+	    if(s1 != 0)
+	    {
+	      WLZ_VTX_2_SUB(d, p2, p1);
+	      d.vtX = copysign(d.vtX, inc.vtX);
+	      d.vtY = copysign(d.vtY, inc.vtY);
+	      dErr = ALG_MAX(d.vtX, d.vtY);
+	    }
+	  } while((s1 != 0) && (dErr > tol));
+	}
+	break;
     }
-    while(dErr > tol);
   }
   else if(s0 != 0)
   {
@@ -2983,7 +3030,7 @@ WlzDVertex2	WlzGeomObjLineSegIntersect2D(WlzObject *obj,
   {
     stat = 2;
   }
-  p2 = (inside)? p1: p0;
+  p2 = (inside)? p0: p1;
   if(dstStat)
   {
     *dstStat = stat;
@@ -3020,53 +3067,101 @@ WlzDVertex2	WlzGeomObjLineSegIntersect2D(WlzObject *obj,
 *					should be inside or on the
 *					boundary, if zero it will be
 *					outside or on the boundary.
+* \param	method			Method for finding intersection:
+* 					0 - bisection, 1 - increment.
+* 					If increment is used each point
+* 				        along the line segment will be
+* 				        tested until termination, this may
+* 				        be very slow if tol is small, with
+* 				        possibly 1/tol incremental steps.
 * \param        dstStat                 Destination pointer for status,
 *                                       may be NULL.
 */
 WlzDVertex3	WlzGeomObjLineSegIntersect3D(WlzObject *obj,
 					WlzDVertex3 p0, WlzDVertex3 p1,
-					double tol, int inside, int *dstStat)
+					double tol, int inside, int method,
+					int *dstStat)
 {
   int           s0,
                 s1,
                 s2,
                 stat;
-  double        dErr;
+  double        dErr,
+  		tolSq;
   WlzDVertex3   p2;
 
-  tol *= tol;
+  tol = fabs(tol);
+  tolSq = tol * tol;
   s0 = WlzInsideDomain(obj, p0.vtZ, p0.vtY, p0.vtX, NULL);
   s1 = WlzInsideDomain(obj, p1.vtZ, p1.vtY, p1.vtX, NULL);
   if(s0 != s1)
   {
     stat = 0;
-    if(s0 != 0)
+    if(s1 != 0)
     {
-      /* Ensure that p0 is outside the domain. */
-      p2 = p0; p0 = p1; p1 = p2;
-      s2 = s0; s0 = s1; s1 = s2;
+      /* Ensure that p1 is outside the domain. */
+      p2 = p1; p1 = p0; p0 = p2;
+      s2 = s1; s1 = s0; s0 = s2;
     }
-    do
+    switch(method)
     {
-      /* Find midpoint of p0 and p1. */
-      p2.vtX = 0.5 * (p0.vtX + p1.vtX);
-      p2.vtY = 0.5 * (p0.vtY + p1.vtY);
-      p2.vtZ = 0.5 * (p0.vtZ + p1.vtZ);
-      /* Check if the midpoint is within the object and update end points. */
-      s2 = WlzInsideDomain(obj, p2.vtZ, p2.vtY, p2.vtX, NULL);
-      if(s2 != 0)
-      {
-        p1 = p2;
-      }
-      else
-      {
-        p0 = p2;
-      }
-      /* Check distance error. */
-      WLZ_VTX_3_SUB(p2, p0, p1);
-      dErr = WLZ_VTX_3_SQRLEN(p2);
+      case 0: /* Bisection. */
+	do
+	{
+	  /* Find midpoint of p1 and p0. */
+	  p2.vtX = 0.5 * (p1.vtX + p0.vtX);
+	  p2.vtY = 0.5 * (p1.vtY + p0.vtY);
+	  p2.vtZ = 0.5 * (p1.vtZ + p0.vtZ);
+	  /* Check if the midpoint is within the object and update end
+	   * points. */
+	  s2 = WlzInsideDomain(obj, p2.vtZ, p2.vtY, p2.vtX, NULL);
+	  if(s2 != 0)
+	  {
+	    p0 = p2;
+	  }
+	  else
+	  {
+	    p1 = p2;
+	  }
+	  /* Check distance error. */
+	  WLZ_VTX_3_SUB(p2, p1, p0);
+	  dErr = WLZ_VTX_3_SQRLEN(p2);
+	}
+	while(dErr > tolSq);
+	break;
+      case 1: /* FALLTHROUGH */
+      default:
+	if(tolSq > DBL_EPSILON)
+	{
+	  double      l;
+	  WlzDVertex3 inc;
+
+	  p2 = p1;
+	  dErr = 0;
+	  WLZ_VTX_3_SUB(p1, p2, p0);
+	  l = WLZ_VTX_3_LENGTH(p1);
+	  l = tol / l; /* fabs(l) must be >= 1 since s0 != s1 above. */
+	  WLZ_VTX_3_SCALE(inc, p1, l);
+	  p1 = p0;
+	  do
+	  {
+	    WlzDVertex3 d;
+
+	    p0 = p1;
+	    WLZ_VTX_3_ADD(p1, p0, inc);
+	    s1 = WlzInsideDomain(obj, p1.vtZ, p1.vtY, p1.vtX, NULL);
+	    if(s1 != 0)
+	    {
+	      WLZ_VTX_3_SUB(d, p2, p1);
+	      d.vtX = copysign(d.vtX, inc.vtX);
+	      d.vtY = copysign(d.vtY, inc.vtY);
+	      d.vtZ = copysign(d.vtZ, inc.vtZ);
+	      dErr = ALG_MAX3(d.vtX, d.vtY, d.vtZ);
+	    }
+	  } while((s1 != 0) && (dErr > tol));
+	}
+	break;
     }
-    while(dErr > tol);
   }
   else if(s0 != 0)
   {
@@ -3076,7 +3171,7 @@ WlzDVertex3	WlzGeomObjLineSegIntersect3D(WlzObject *obj,
   {
     stat = 2;
   }
-  p2 = (inside)? p1: p0;
+  p2 = (inside)? p0: p1;
   if(dstStat)
   {
     *dstStat = stat;
