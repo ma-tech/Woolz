@@ -75,7 +75,7 @@ int             main(int argc, char **argv)
 		flgInv = 0,
 		flgLin = 0,
 		flgMsh = 0;
-  unsigned int  *v,
+  unsigned int  *v = NULL,
   		*h = NULL,
   		*p = NULL;
   const int	bufMax = 4096;

@@ -69,7 +69,7 @@ int             main(int argc, char *argv[])
                 verbose = 0;
   long		seed = 0;
   double	zFrac = 0.2;
-  const char	*opStr;
+  const char	*opStr = NULL;
   AlgTstMatOp	op = ALG_TST_MAT_OP_ADD;
   AlgMatrixType aType = ALG_MATRIX_RECT;
   AlgMatrix	a[3];
