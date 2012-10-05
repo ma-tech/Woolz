@@ -212,7 +212,7 @@ WlzObject	*WlzDrawDomainObj(WlzDVertex2 org, WlzThreeDViewStruct *view,
 				  WlzErrorNum *dstErr)
 {
   double	version = 0.0;
-  WlzDrawDomCmd	cmd;
+  WlzDrawDomCmd	cmd = WLZ_DRAWDOM_CMD_ERROR;
   WlzDrawDomWSp	wSp;
   WlzObject	*obj0 = NULL,
 		*obj1 = NULL,

@@ -1096,6 +1096,8 @@ WlzErrorNum WlzScalarBinaryOp(
     int			i, ival;
     double		dval;
 
+    o1PP.p.v = o3PP.p.v = NULL;
+    o1PP.type = o3PP.type = WLZ_GREY_ERROR;
     /* initialise the workspaces */
     if( (errNum = WlzInitGreyScan(o1,&iwsp1,&gwsp1)) ){
       return errNum;

@@ -138,7 +138,7 @@ WlzErrorNum 	WlzGeoModelGridWSpSet3D(WlzGMGridWSp3D *grid,
                                         WlzGMElemType elemType)
 {
   WlzDBox3	mBox;
-  WlzGMResource	*res;
+  WlzGMResource	*res = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(grid == NULL)

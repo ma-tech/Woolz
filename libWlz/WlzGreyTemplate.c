@@ -231,7 +231,7 @@ static WlzObject *WlzGreyTemplate3d(
   WlzErrorNum	*dstErr)
 {
   WlzObject	*rtnObj=NULL;
-  WlzObject	*tmpObj, *obj1, *obj2;
+  WlzObject	*tmpObj = NULL, *obj1 = NULL, *obj2 = NULL;
   WlzDomain	domain, *domains;
   WlzValues	values, *valuess;
   WlzPlaneDomain	*pdom;

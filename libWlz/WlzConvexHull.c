@@ -105,13 +105,13 @@ WlzObject *WlzObjToConvexPolygon(
   WlzObject	*obj,
   WlzErrorNum	*dstErr)
 {
-  WlzObject 		*cvh=NULL;
+  WlzObject 		*cvh = NULL;
   WlzDomain		domain;
   WlzValues		values;
-  WlzIVertex2 		*wtx, *w1tx, *w2tx;
+  WlzIVertex2 		*wtx = NULL, *w1tx = NULL, *w2tx = NULL;
   WlzIntervalWSpace 	iwsp;
   int 			nhalfway;
-  WlzErrorNum		errNum=WLZ_ERR_NONE;
+  WlzErrorNum		errNum = WLZ_ERR_NONE;
 
   /* check object */
   if( obj ){

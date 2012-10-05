@@ -717,8 +717,8 @@ WlzErrorNum	WlzCopyObjectGreyValues(WlzObject *dObj, WlzObject *sObj)
 */
 static WlzErrorNum WlzCopyObjectGreyValues2D(WlzObject *dObj, WlzObject *sObj)
 {
-  WlzObjectType dGTType,
-  		sGTType;
+  WlzObjectType dGTType = WLZ_NULL,
+  		sGTType = WLZ_NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   dGTType = WlzGreyTableTypeToTableType(dObj->values.core->type, &errNum);
@@ -969,10 +969,8 @@ static WlzErrorNum WlzCopyObjectGreyValuesScan3D(WlzObject *dObj,
   		 *sVVal;
   WlzPlaneDomain *dPDom,
   		 *sPDom;
-  WlzValues	nullVal;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  nullVal.core = NULL;
   dPDom = dObj->domain.p;
   sPDom = sObj->domain.p;
   dVVal = dObj->values.vox;

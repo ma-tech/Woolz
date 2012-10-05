@@ -217,8 +217,8 @@ BibFileField	*BibFileFieldMakeVa(char *name, char *value, ...)
   va_list	ap;
   int		ok = 0;
   BibFileField	*fieldTop = NULL,
-		*field1,
-		*field2;
+		*field1 = NULL,
+		*field2 = NULL;
 
   va_start(ap, value);
   if((fieldTop = BibFileFieldMake(name, value, NULL)) != NULL)

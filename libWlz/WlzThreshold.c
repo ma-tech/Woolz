@@ -396,15 +396,15 @@ WlzObject *WlzThreshold(WlzObject	*obj,
 			WlzThresholdType highlow,
 			WlzErrorNum	*dstErr)
 {
-  WlzObject		*nobj=NULL;
-  WlzIntervalDomain	*idom;
+  WlzObject		*nobj = NULL;
+  WlzIntervalDomain	*idom = NULL;
   WlzGreyP		g;
   int			colno, nints;
   int			over;
   int			nl1,nll,nk1,nkl;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
-  WlzInterval		*itvl, *jtvl;
+  WlzInterval		*itvl = NULL, *jtvl = NULL;
   int			thresh_i;
   float			thresh_f;
   double		thresh_d;

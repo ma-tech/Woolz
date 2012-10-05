@@ -87,7 +87,7 @@ WlzObject *WlzErosion(
   WlzInterval 		*jp, *jwp;
   WlzInterval 		*buff = NULL,
   			*tmp = NULL;
-  int			i, j;
+  int			i = 0, j;
   int			maxItvLn;
   int 			inttot, *nitv;
   int 			line1, lastln, line;

@@ -124,7 +124,7 @@ WlzObject	*WlzSeqPar(WlzObject *srcObj,
 		needed,
 		idx,
 		itop,
-		minLine;
+		minLine = 0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   int 		*lineBufSpace = NULL, 	/* lineBufSpace is the current line
   					   buffer */

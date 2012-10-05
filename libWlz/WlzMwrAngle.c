@@ -129,7 +129,7 @@ static double gap (WlzChord *ch, WlzPolygonDomain *pdom)
 {
   WlzIVertex2 *vtx;
   int i;
-  double c, minc, maxc, acon, bcon;
+  double c, acon, bcon, minc = 0.0, maxc = 0.0;
   vtx = pdom->vtx;
   acon = ch->acon;
   bcon = ch->bcon;

@@ -56,10 +56,10 @@ WlzObject *WlzRGBAScalarBinaryOp(
   WlzBinaryOperatorType op,
   WlzErrorNum		*dstErr)
 {
-  WlzObject	*rtnObj;
-  WlzCompoundArray	*cmpnd0;
   int		i;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzObject	*rtnObj = NULL;
+  WlzCompoundArray	*cmpnd0 = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* check objects */
   if( (o1 == NULL) ){
@@ -92,5 +92,5 @@ WlzObject *WlzRGBAScalarBinaryOp(
   if( dstErr ){
     *dstErr = errNum;
   }
-  return rtnObj;
+  return(rtnObj);
 }

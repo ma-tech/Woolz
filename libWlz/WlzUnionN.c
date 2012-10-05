@@ -76,20 +76,20 @@ WlzObject *WlzUnionN(
   WlzDomain		domain;
   WlzValues		values;
   WlzIntervalDomain	*idom;
-  WlzInterval		*itvl, *jtvl;
+  WlzInterval		*itvl = NULL, *jtvl = NULL;
   WlzIntervalWSpace	*iwsp;
-  WlzIntervalWSpace	*biwsp, *tiwsp, niwsp;
+  WlzIntervalWSpace	*biwsp = NULL, *tiwsp, niwsp;
   WlzGreyWSpace		*gwsp, ngwsp;
   WlzObjectType		type;
   int 			i, j, k, l;
-  int			inttot, numactive, change, lwas, nints, noverlap;
+  int			inttot, numactive, change, lwas = 0, nints, noverlap;
   WlzPixelV		backg;
   int			line1, lastln;
   int			kol1,lastkl;
   WlzGreyV		gv;
   WlzGreyP		greyptr;
-  int			**locbuff;
-  int			*locbuffs;
+  int			**locbuff = NULL;
+  int			*locbuffs = NULL;
   int			span;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 

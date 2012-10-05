@@ -76,6 +76,7 @@ WlzErrorNum 	WlzDistMetricGM(WlzGMModel *model0, WlzGMModel *model1,
   WlzVertexType vType[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  vP[0].v = vP[1].v = NULL;
   if((model0 == NULL) || (model1 == NULL))
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
@@ -152,6 +153,7 @@ WlzErrorNum 	WlzDistMetricDirGM(WlzGMModel *model0, WlzGMModel *model1,
   WlzVertexType vType[2];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  vP[0].v = vP[1].v = NULL;
   if((model0 == NULL) || (model1 == NULL))
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
