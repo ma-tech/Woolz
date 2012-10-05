@@ -67,7 +67,7 @@ int WlzPolyCrossings(
   WlzErrorNum		*dstErr)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  int		i, crossings;
+  int		i, crossings = 0;
   WlzIVertex2	*vtxs;
   WlzFVertex2	*vtxsF;
   WlzDVertex2	*vtxsD;
@@ -77,7 +77,6 @@ int WlzPolyCrossings(
   switch( pgdm->type ){
   case WLZ_POLYGON_INT:
     vtxs = pgdm->vtx;
-    crossings = 0;
     for(i=0; i < pgdm->nvertices - 1; i++){
       if(((vtxs[i].vtY > vtx.vtY) && (vtxs[i+1].vtY <= vtx.vtY)) ||
 	 ((vtxs[i+1].vtY > vtx.vtY) && (vtxs[i].vtY <= vtx.vtY))){
@@ -92,7 +91,6 @@ int WlzPolyCrossings(
 
   case WLZ_POLYGON_FLOAT:
     vtxsF = (WlzFVertex2 *) pgdm->vtx;
-    crossings = 0;
     for(i=0; i < pgdm->nvertices - 1; i++){
       if(((vtxsF[i].vtY > vtx.vtY) && (vtxsF[i+1].vtY <= vtx.vtY)) ||
 	 ((vtxsF[i+1].vtY > vtx.vtY) && (vtxsF[i].vtY <= vtx.vtY))){
@@ -107,7 +105,6 @@ int WlzPolyCrossings(
 
   case WLZ_POLYGON_DOUBLE:
     vtxsD = (WlzDVertex2 *) pgdm->vtx;
-    crossings = 0;
     for(i=0; i < pgdm->nvertices - 1; i++){
       if(((vtxsD[i].vtY > vtx.vtY) && (vtxsD[i+1].vtY <= vtx.vtY)) ||
 	 ((vtxsD[i+1].vtY > vtx.vtY) && (vtxsD[i].vtY <= vtx.vtY))){
@@ -127,7 +124,7 @@ int WlzPolyCrossings(
   if( dstErr ){
     *dstErr = errNum;
   }
-  return crossings;
+  return(crossings);
 }
 
 /* function:     WlzPolyCrossingsD    */
@@ -151,7 +148,7 @@ int WlzPolyCrossingsD(
   WlzErrorNum		*dstErr)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  int		i, crossings;
+  int		i, crossings = 0;
   WlzIVertex2	*vtxs;
   WlzFVertex2	*vtxsF;
   WlzDVertex2	*vtxsD;
@@ -161,7 +158,6 @@ int WlzPolyCrossingsD(
   switch( pgdm->type ){
   case WLZ_POLYGON_INT:
     vtxs = pgdm->vtx;
-    crossings = 0;
     for(i=0; i < pgdm->nvertices - 1; i++){
       if(((vtxs[i].vtY > vtx.vtY) && (vtxs[i+1].vtY <= vtx.vtY)) ||
 	 ((vtxs[i+1].vtY > vtx.vtY) && (vtxs[i].vtY <= vtx.vtY))){
@@ -176,7 +172,6 @@ int WlzPolyCrossingsD(
 
   case WLZ_POLYGON_FLOAT:
     vtxsF = (WlzFVertex2 *) pgdm->vtx;
-    crossings = 0;
     for(i=0; i < pgdm->nvertices - 1; i++){
       if(((vtxsF[i].vtY > vtx.vtY) && (vtxsF[i+1].vtY <= vtx.vtY)) ||
 	 ((vtxsF[i+1].vtY > vtx.vtY) && (vtxsF[i].vtY <= vtx.vtY))){
@@ -191,7 +186,6 @@ int WlzPolyCrossingsD(
 
   case WLZ_POLYGON_DOUBLE:
     vtxsD = (WlzDVertex2 *) pgdm->vtx;
-    crossings = 0;
     for(i=0; i < pgdm->nvertices - 1; i++){
       if(((vtxsD[i].vtY > vtx.vtY) && (vtxsD[i+1].vtY <= vtx.vtY)) ||
 	 ((vtxsD[i+1].vtY > vtx.vtY) && (vtxsD[i].vtY <= vtx.vtY))){
@@ -211,7 +205,7 @@ int WlzPolyCrossingsD(
   if( dstErr ){
     *dstErr = errNum;
   }
-  return crossings;
+  return(crossings);
 }
 
 /* function:     WlzInsidePolyEO    */
@@ -446,18 +440,21 @@ WlzObject *WlzPolyToObj(
   WlzErrorNum		*dstErr)
 {
   /* local variables */
-  WlzObject		*new_poly, *obj1, *obj2, *obj3, *obj=NULL;
-  WlzObject		**objs=NULL;
+  WlzObject		*new_poly = NULL,
+                        *obj1 = NULL, *obj2 = NULL, *obj3 = NULL, *obj = NULL;
+  WlzObject		**objs = NULL;
   WlzDomain		domain;
   WlzValues		values;
-  WlzIVertex2		*vtxs;
-  WlzInterval		*intptr;
-  int			i, j, n, width, height, ignlns;
-  int			l1, ll, k1, lk, nints;
-  int			num_vtxs, nv;
-  int			wrap;
+  WlzIVertex2		*vtxs = NULL;
+  WlzInterval		*intptr = NULL;
+  int			i, j, n, ignlns, width = 0, height = 0;
+  int			l1 = 0, ll = 0, k1 = 0, lk = 0, nints;
+  int			num_vtxs = 0, nv;
+  int			wrap = 0;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
+  domain.core = NULL;
+  values.core = NULL;
   /* input parameter checks */
   if( pgdm == NULL ){
     errNum = WLZ_ERR_DOMAIN_NULL;
@@ -702,13 +699,13 @@ WlzObject *WlzPolyTo8Polygon(
   WlzErrorNum		*dstErr)
 {
   /* local variables */
-  WlzObject		*obj=NULL;
+  WlzObject		*obj = NULL;
   WlzDomain		domain;
   WlzValues		values;
   WlzPolygonDomain	*npgdm;
-  WlzIVertex2		*vtxs, *nvtxs;
-  void			*freeptr=NULL;
-  int			i, j, n, length, k;
+  WlzIVertex2		*vtxs = NULL, *nvtxs = NULL;
+  void			*freeptr = NULL;
+  int			i, j, n, length, k = 0;
   int			x, y, x0, y0, lx, ly;
   float			del;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
@@ -864,7 +861,7 @@ WlzObject       *WlzBoundTo8Bound(WlzObject *gvnObj, WlzErrorNum *dstErr)
 {
   WlzDomain     newDom;
   WlzValues     dumVal;
-  WlzBoundList  *gvnBnd;
+  WlzBoundList  *gvnBnd = NULL;
   WlzObject     *newObj = NULL,
                 *tmpObj = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;

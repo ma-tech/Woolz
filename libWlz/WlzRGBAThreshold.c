@@ -285,16 +285,17 @@ int WlzVectorThreshCb(
   }
 
   /* calculate threshold rule */
+  d = 0.0;
   switch( vts->type ){
   case WLZ_RGBA_THRESH_SPHERE:
-    for(i=0, d=0.0; i < 3; i++){
+    for(i=0; i < 3; i++){
       d1 = vect[i] - vts->origin[i];
       d += d1 * d1;
     }
     break;
 
   case WLZ_RGBA_THRESH_SLICE:
-    for(i=0, d=0.0; i < 3; i++){
+    for(i=0; i < 3; i++){
       d += (vect[i] - vts->origin[i]) * vts->direction[i];
     }
     break;

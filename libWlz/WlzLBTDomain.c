@@ -624,7 +624,7 @@ WlzIntervalDomain *WlzIDomainFromPItv2D(int line1, int lastln,
 					WlzErrorNum *dstErr)
 {
   int		idI,
-  		nItv;
+  		nItv = 0;
   WlzPartialItv2D *pItv0,
   		*pItv1;
   WlzIntervalLine *itvLn;

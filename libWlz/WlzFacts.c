@@ -1788,7 +1788,7 @@ static WlzErrorNum WlzObjFactsGMModel(WlzObjFactsData *fData,
 				      WlzGMModel *model)
 {
   int		idS,
-  		dim;
+  		dim = 0;
   WlzGMShell	*s;
   const char	*tStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;

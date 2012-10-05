@@ -157,14 +157,14 @@ WlzErrorNum	WlzRankFilter(WlzObject *gObj, int fSz, double rank)
 static WlzErrorNum WlzRankFilterDomObj2D(WlzObject *gObj, int fSz,
 				         double rank)
 {
-  int		bufLn,
-		bufLft,
+  int		bufLft,
 		bufRgt,
 		inLn,
-		outLn,
 		fSz2,
 		itvWidth,
-		iBufWidth; 	      /* No of bytes in interval buffer line */
+		iBufWidth, 	      /* No of bytes in interval buffer line */
+		bufLn = 0,
+		outLn = 0;
   void		*rBuf = NULL;
   void		**vBuf = NULL;
   WlzUByte	**iBuf = NULL;
@@ -543,9 +543,9 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
   int		idK,
 		idX,
 		idY,
+		fSz2,
 		sameRCnt,
-		rCnt,
-		fSz2;
+		rCnt = 0;
   WlzGreyV	gV0,
   		gV1;
   WlzGreyP	gP0,
@@ -555,6 +555,7 @@ static void	WlzRankFilterValLn(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 		bufPos1,
   		objPos;
 
+  gP0.v = gP1.v = NULL;
   gDom = gObj->domain;
   fSz2 = bufSz.vtY / 2;
   bufPos1.vtY = line - gDom.i->line1 - fSz2 + bufSz.vtY;
@@ -801,6 +802,7 @@ static void	WlzRankFilterValPl(WlzObject *gObj, WlzGreyValueWSpace *gVWSp,
 		bufPos1,
   		objPos;
 
+  gP0.v = NULL;
   gDom = gObj->domain;
   fSz2 = bufSz.vtZ / 2;
   bufPos1.vtZ = plane - gDom.p->plane1 - fSz2 + bufSz.vtZ;

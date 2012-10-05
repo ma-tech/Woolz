@@ -130,7 +130,7 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
   WlzValues	*planeValues;
   WlzObjectType	gTabType0,
 	        gTabType1 = WLZ_DUMMY_ENTRY;
-  WlzGreyType	gType0,
+  WlzGreyType	gType0 = WLZ_GREY_ERROR,
 		gType1 = WLZ_GREY_ERROR;
   WlzPixelV	bkdPix;
   WlzAffineTransform *trans0,
@@ -138,6 +138,8 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
   WlzGreyValueWSpace *gVWSp = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  bkdPix.v.ubv = 0;
+  bkdPix.type = WLZ_GREY_INT;
   WLZ_DBG((WLZ_DBG_LVL_1),
   	   ("WlzGreyValueMakeWSp FE %p %p\n",
 	    obj, dstErrNum));
@@ -1420,11 +1422,11 @@ static void	WlzGreyValueGet3DCon(WlzGreyValueWSpace *gVWSp,
   int		tI0,
   		planeOff,
 		planeRel,
-		savePlane;
+		savePlane = 0;
   WlzDomain	*domP;
   WlzValues	*valP;
-  WlzObjectType	saveGTabType2D;
-  WlzIntervalDomain *saveIDom2D;
+  WlzObjectType	saveGTabType2D = WLZ_NULL;
+  WlzIntervalDomain *saveIDom2D = NULL;
   WlzValues	saveValues2D;
   int		planeSet[2];
   WlzGreyP	saveGPtr[4];
@@ -1543,7 +1545,7 @@ static void	WlzGreyValueGet3DConTiled(WlzGreyValueWSpace *gVWSp,
 	  int	ln;
 
 	  ln = line + idL;
-	  if((ln >= iDom->line1) && (ln <= iDom->line1))
+	  if((ln >= iDom->line1) && (ln <= iDom->lastln))
 	  {
 	    if((kol + 1 >= iDom->kol1) &&
 	       (kol <= iDom->lastkl))
@@ -1587,7 +1589,7 @@ static void	WlzGreyValueGet3DConTiled(WlzGreyValueWSpace *gVWSp,
     }
   }
   /* Now set grey values and pointers knowing which are within the domain. */
-  if(gVWSp->bkdFlag == 0xff)
+  if(valMsk == 0)
   {
     WlzGreyValueSetBkdPN(gVWSp->gVal, gVWSp->gPtr,
                          gVWSp->gType, gVWSp->gBkd, 8);
@@ -1615,14 +1617,14 @@ static void	WlzGreyValueGet3DConTiled(WlzGreyValueWSpace *gVWSp,
 	tOff.vtY = (tOff.vtZ + (rPos.vtY % tVal->tileWidth)) * tVal->tileWidth;
 	for(idK = 0; idK < 2; ++idK)
 	{
-	  if((valMsk & (1 < idV)) == 0)
+	  if((valMsk & (1 << idV)) == 0)
 	  {
 	    WlzGreyValueSetBkdPN(gVWSp->gVal + idV, gVWSp->gPtr + idV,
 	                         gVWSp->gType, gVWSp->gBkd, 1);
 	  }
 	  else
 	  {
-            rPos.vtX = line - tVal->kol1 + idK;
+            rPos.vtX = kol - tVal->kol1 + idK;
 	    tIdx.vtX = tIdx.vtY + (rPos.vtX / tVal->tileWidth);
             tOff.vtX = tOff.vtY + (rPos.vtX % tVal->tileWidth);
             offset = *(tVal->indices + tIdx.vtX) * tVal->tileSz + tOff.vtX;

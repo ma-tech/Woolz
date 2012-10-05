@@ -805,7 +805,7 @@ WlzObject *WlzIndexToRGBA(
   WlzObjectType		newvtbltype;
   WlzPixelV		bg;
   WlzValues		values;
-  int 			k, greyVal, redVal, greenVal, blueVal;
+  int 			k, redVal, greenVal, blueVal, greyVal = 0;
   unsigned int		rgbaVal;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 

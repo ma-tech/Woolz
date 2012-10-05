@@ -860,7 +860,6 @@ WlzErrorNum WlzFreeProperty(WlzProperty prop)
   return errNum;
 }
 
-
 /*!
 * \return       Woolz error code.
 * \ingroup      WlzProperty
@@ -883,34 +882,28 @@ WlzErrorNum 	WlzFreePropertyList(WlzPropertyList *pList)
   return(errNum);
 }
 
-
-/* function:     WlzFreePropertyListEntry    */
 /*!
 * \ingroup      WlzProperty
 * \brief        Free a property list entry. This is a procedure that
 *		can be passed e.g. to AlcDLPListEntryAppend to enable
 *		automatic freeing of properties held on a property list.
 * \param    	prop			Property to be freed.
-* \par      Source:
-*                WlzMakeProperties.c
 */
-void WlzFreePropertyListEntry(void *prop)
+void 		WlzFreePropertyListEntry(void *prop)
 {
-  WlzCoreProperty *core = (WlzCoreProperty *) prop;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
-  AlcErrno	alcErrNum=ALC_ER_NONE;
+  WlzCoreProperty *core = (WlzCoreProperty *)prop;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* check the object pointer and linkcount */
-  if (prop == NULL){
-    return;
-  }
-
-  if( WlzUnlink(&(core->linkcount), &errNum) ){
-    if( core->freeptr != NULL ){
-      alcErrNum = AlcFreeStackFree(core->freeptr);
+  if(prop)
+  {
+    if(WlzUnlink(&(core->linkcount), &errNum))
+    {
+      if(core->freeptr != NULL)
+      {
+	(void )AlcFreeStackFree(core->freeptr);
+      }
+      AlcFree((void *)prop);
     }
-    AlcFree((void *)prop);
   }
-
-  return;
 }

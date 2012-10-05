@@ -611,8 +611,8 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
   WlzHistogramDomain *histDom,
   		*histDom2D;
   WlzObject	*histObj = NULL,
-  		*histObj2D,
-		*srcObj2D;
+  		*histObj2D = NULL,
+		*srcObj2D = NULL;
   WlzDomain	dummyDom;
   WlzValues	dummyValues;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -2038,11 +2038,11 @@ WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
 				     double *dstLL)
 {
   int		idx,
-  		binCnt,
   		pkCnt,
-		fitNI;
+		fitNI,
+		binCnt = 0;
   double	fitLL,
-		fitObs,
+		fitObs = 0.0,
 		pkHgt,
 		pkHWHM,
   		sumAlpha;
@@ -2052,8 +2052,8 @@ WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
 		*pkMu = NULL,
 		*pkSigma = NULL;
   WlzObject	*smHistObj = NULL;
-  WlzHistogramDomain *histDom,
-  		*smHistDom;
+  WlzHistogramDomain *histDom = NULL,
+  		*smHistDom = NULL;
   AlgError 	algErr = ALG_ERR_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -2621,7 +2621,7 @@ WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
   int		tI0,
   		planeIdx,
   		planeCount,
-		matchFlag;
+		matchFlag = 0;
   double 	dist;
   WlzGreyType	greyType;
   WlzObject	*targetHistCum = NULL,

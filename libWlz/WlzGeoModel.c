@@ -870,12 +870,12 @@ WlzGMModel	*WlzGMModelNewFromS(WlzGMShell *gS, WlzErrorNum *dstErr)
 */
 WlzGMModel 	*WlzGMModelCopy(WlzGMModel *gM, WlzErrorNum *dstErr)
 {
-  int		dim,
-  		gIdx,
+  int		gIdx,
   		nIdx,
 		tIdx,
   		nBkSz,
-		nHTSz;
+		nHTSz,
+		dim = 0;
   WlzGMElemP	gElmP,
   		nElmP;
   WlzGMResIdxTb *resIdxTb = NULL;
@@ -2372,7 +2372,7 @@ WlzGMResource	*WlzGMModelGetRes(WlzGMModel *model, WlzGMElemType elemType,
 */
 WlzGMElemType 	WlzGMModelGetSGeomType(WlzGMModel *model)
 {
-  WlzGMElemType	sGType;
+  WlzGMElemType	sGType = WLZ_GMELM_NONE;
 
   switch(model->type)
   {
@@ -2406,7 +2406,7 @@ WlzGMElemType 	WlzGMModelGetSGeomType(WlzGMModel *model)
 */
 WlzGMElemType 	WlzGMModelGetVGeomType(WlzGMModel *model)
 {
-  WlzGMElemType	vGType;
+  WlzGMElemType	vGType = WLZ_GMELM_NONE;
 
   switch(model->type)
   {
@@ -5016,10 +5016,10 @@ static double	WlzGMVertexShellDist2CommonLT(WlzGMVertexT *gVT0,
   WlzDVertex2	posN[2],
   		posP[2],
 		diff;
-  WlzGMEdgeT	*eTN,
-  		*eTP;
-  WlzGMVertexT	*vTN,
-  		*vTP;
+  WlzGMEdgeT	*eTN = NULL,
+  		*eTP = NULL;
+  WlzGMVertexT	*vTN = NULL,
+  		*vTP = NULL;
 
   if(gVT0->diskT->vertex != gVT1->diskT->vertex)
   {
@@ -5384,7 +5384,7 @@ WlzGMEdge	**WlzGMModelFindNMEdges(WlzGMModel *model, int *dstNMCnt,
 				        WlzErrorNum *dstErr)
 {
   int		tEI,
-  		nmEI;
+  		nmEI = 0;
   int		*nmEIP;
   WlzGMEdge	*tE;
   WlzGMEdge	**nmE = NULL;

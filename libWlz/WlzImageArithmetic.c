@@ -977,7 +977,6 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
     if(obj[2]->type != WLZ_EMPTY_OBJ)
     {
       pIdx[2] = 0;
-      vIdx[2] = 0;
       tI0 = obj[2]->domain.p->plane1;
       for(oIdx = 0; (oIdx < 2) && (errNum == WLZ_ERR_NONE); ++oIdx)
       {
@@ -1007,26 +1006,26 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
 	  switch(overwrite)
 	  {
 	    case 0: 					/* No values shared. */
-	      (void )WlzFreeValues(*(vVal[2]->values + vIdx[2]));
-	      *(vVal[2]->values + vIdx[2]) = nullValues;
+	      (void )WlzFreeValues(*(vVal[2]->values + pIdx[2]));
+	      *(vVal[2]->values + pIdx[2]) = nullValues;
 	      tObj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
 	      			 *(pDom[2]->domains + pIdx[2]),
 				 nullValues, NULL, NULL, &errNum);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-	        *(vVal[2]->values + vIdx[2]) = WlzAssignValues(tObj->values,
+	        *(vVal[2]->values + pIdx[2]) = WlzAssignValues(tObj->values,
 							       NULL);
 	      }
 	      WlzFreeObj(tObj);
 	      break;
 	    case 1: 				 /* Values shared with obj0. */
-	      (void )WlzFreeValues(*(vVal[2]->values + vIdx[2]));
-	      *(vVal[2]->values + vIdx[2]) = WlzAssignValues(
+	      (void )WlzFreeValues(*(vVal[2]->values + pIdx[2]));
+	      *(vVal[2]->values + pIdx[2]) = WlzAssignValues(
 	        *(vVal[0]->values + vIdx[0]), NULL);
 	      break;
 	    case 2: 				 /* Values shared with obj1. */
-	      (void )WlzFreeValues(*(vVal[2]->values + vIdx[2]));
-	      *(vVal[2]->values + vIdx[2]) = WlzAssignValues(
+	      (void )WlzFreeValues(*(vVal[2]->values + pIdx[2]));
+	      *(vVal[2]->values + pIdx[2]) = WlzAssignValues(
 	        *(vVal[1]->values + vIdx[1]), NULL);
 	      break;
 	  }

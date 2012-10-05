@@ -478,8 +478,8 @@ WlzErrorNum	WlzMeshPolyDomAdd(WlzMeshTransform *mesh, WlzObject *obj,
   int		vxCnt0,
 		vxCnt2,
 		vxId0,
-		dVxCnt,
-		sVxCnt;
+		dVxCnt = 0,
+		sVxCnt = 0;
   double	tD0,
 		tD1,
 		tD2,
@@ -1191,8 +1191,8 @@ WlzErrorNum	WlzMeshElemSplit(WlzMeshTransform *mesh, int sElmId)
   double	sElmArea,
 		sElmArea0,
 		sElmArea1;
-  WlzMeshElem	*sElm;
-  WlzMeshNode	*nodes;
+  WlzMeshElem	*sElm = NULL;
+  WlzMeshNode	*nodes = NULL;
   WlzDVertex2	nVx,
 		sVx0,
 		sVx1,
@@ -2361,18 +2361,18 @@ static WlzErrorNum WlzMeshElemReplaceNWithN(WlzMeshTransform *mesh,
 		rId,
 		wId,
 		zId,
-		zNId,
 		fndFlg,
 		wElmCnt,
 		mElmCnt,
 		mNodCnt,
-		newNodId;
-  WlzMeshElem	*nElm,
-		*rElm,
-		*wElm,
-		*zElm,
-		*zNElm;
-  WlzMeshNode	*nNod;
+		newNodId,
+		zNId = 0;
+  WlzMeshElem	*nElm = NULL,
+		*rElm = NULL,
+		*wElm = NULL,
+		*zElm = NULL,
+		*zNElm = NULL;
+  WlzMeshNode	*nNod = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const unsigned int nbrFlgTbl[3] = {WLZ_MESH_ELEM_FLAGS_NBR_0,
 				     WLZ_MESH_ELEM_FLAGS_NBR_1,

@@ -65,8 +65,8 @@ WlzObject *WlzConvertPix(
   WlzGreyType	newpixtype,
   WlzErrorNum	*dstErr)
 {
-  WlzGreyType		oldpixtype;
   WlzGreyP		go, gn;
+  WlzGreyType		oldpixtype = WLZ_GREY_ERROR;
   WlzIntervalWSpace	oldiwsp, newiwsp;
   WlzGreyWSpace		oldgwsp, newgwsp;
   WlzObjectType		newvtbltype;

@@ -76,8 +76,6 @@ WlzObject *WlzGreyTransfer(
   WlzObject	*rtnObj=NULL;
   WlzObject	*obj1, *obj2;
   WlzValues	values;
-  WlzPixelV	bckgrnd;
-  WlzGreyType	gtype=WLZ_GREY_UBYTE;
   WlzIntervalWSpace	iwsp1, iwsp2;
   WlzGreyWSpace		gwsp1, gwsp2;
   int			size;
@@ -93,8 +91,6 @@ WlzObject *WlzGreyTransfer(
       if( obj->values.core == NULL ){
 	errNum = WLZ_ERR_VALUES_NULL;
       }
-      bckgrnd = WlzGetBackground(obj, &errNum);
-      gtype = WlzGreyTableTypeToGreyType(obj->values.core->type, NULL);
       rtnObj = WlzCopyObject(obj, &errNum);
       break;
 
@@ -110,8 +106,6 @@ WlzObject *WlzGreyTransfer(
       break;
 
     case WLZ_EMPTY_OBJ:
-      bckgrnd.type = WLZ_GREY_UBYTE;
-      bckgrnd.v.ubv = 0;
       return WlzMakeEmpty(dstErr);
 
     default:
