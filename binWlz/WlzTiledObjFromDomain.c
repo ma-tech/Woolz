@@ -152,7 +152,7 @@ int		main(int argc, char *argv[])
 	{
 
 	  case WLZ_GREY_LONG:
-	    if(sscanf(optarg, "%ld", &(bgdV.v.lnv)) != 1)
+	    if(sscanf(optarg, "%lld", &(bgdV.v.lnv)) != 1)
 	    {
 	      usage = 1;
 	    }
