@@ -622,8 +622,8 @@ WlzErrorNum	WlzEffWriteObjNodeEle(const char *gvnFileName, WlzObject *obj)
 		dim = 0,
   		nElm = 0,
 		nNod = 0,
-		maxElm,
-		maxNod;
+		maxElm = 0,
+		maxNod = 0;
   char		*fileName = NULL,
   		*nodeFileName = NULL,
 		*eleFileName = NULL;
@@ -636,6 +636,7 @@ WlzErrorNum	WlzEffWriteObjNodeEle(const char *gvnFileName, WlzObject *obj)
   WlzCMeshNod3D	*nod3[4];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  mesh.v = NULL;
   if(obj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -676,8 +677,11 @@ WlzErrorNum	WlzEffWriteObjNodeEle(const char *gvnFileName, WlzObject *obj)
     switch(obj->type)
     {
       case WLZ_CMESH_2D:
-	mesh.m2 = obj->domain.cm2;
-	if(mesh.m2->type == WLZ_CMESH_2D)
+	if((mesh.m2 = obj->domain.cm2) == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else if(mesh.m2->type == WLZ_CMESH_2D)
 	{
 	  dim = 2;
 	  nNod = mesh.m2->res.nod.numEnt;
@@ -691,8 +695,11 @@ WlzErrorNum	WlzEffWriteObjNodeEle(const char *gvnFileName, WlzObject *obj)
 	}
         break;
       case WLZ_CMESH_3D:
-	mesh.m3 = obj->domain.cm3;
-	if(mesh.m3->type == WLZ_CMESH_3D)
+	if((mesh.m3 = obj->domain.cm3) == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else if(mesh.m3->type == WLZ_CMESH_3D)
 	{
 	  dim = 3;
 	  nNod = mesh.m3->res.nod.numEnt;
