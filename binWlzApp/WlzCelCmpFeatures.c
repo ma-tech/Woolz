@@ -293,7 +293,6 @@ int		main(int argc, char *argv[])
 		*tObj1 = NULL;
   WlzCompoundArray *celCAObj = NULL,
   		*cmpCAObj = NULL;
-  WlzPixelV	celC;
   char		*iFileStr,
   		*iFilePath = NULL,
 		*iFileBody = NULL,
@@ -324,7 +323,7 @@ int		main(int argc, char *argv[])
   		tExtra = 0.00;
   const	WlzEffFormat defFileFmt = WLZEFF_FORMAT_WLZ;
 
-  WLZ_RGBA_RGBA_SET(celC.v.rgbv, 0, 0, 255, 255);
+  featSz.vtX = featSz.vtY = 0;
   /* Parse the argument list and check for input files. */
   opterr = 0;
   iFileStr = fileDef;
@@ -1635,7 +1634,7 @@ static WlzObject *WlzCelCmpColorise(WlzObject *gObj,
 				  WlzErrorNum *dstErr)
 {
   int		idN;
-  WlzObjectType	gTType;
+  WlzObjectType	gTType = WLZ_NULL;
   WlzObject	*cObj = NULL,
   		*tObj0 = NULL,
 		*tObj1 = NULL;

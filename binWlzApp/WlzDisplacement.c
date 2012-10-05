@@ -78,9 +78,9 @@ int             main(int argc, char **argv)
                 relFlag,
                 meshMinDist,
                 meshMaxDist;
-  char 		*srcFileStr,
+  char 		*srcFileStr = NULL,
 		*bibFileStr = NULL,
-                *outFileStr,
+                *outFileStr = NULL,
                 *bibErrMsg;
   const char    *errMsg;
   FILE		*inFile = NULL,
@@ -101,7 +101,7 @@ int             main(int argc, char **argv)
   WlzMeshGenMethod genMethod;
   WlzErrorNum	errNum = WLZ_ERR_NONE; 
   BibFileRecord	       *bibfileRecord;
-  BibFileError         bibFileErr;
+  BibFileError         bibFileErr = BIBFILE_ER_NONE;
   
   /* read the argument list and check for an input file */
 
