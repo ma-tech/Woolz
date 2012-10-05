@@ -124,8 +124,8 @@ system (see http://en.wikipedia.org/wiki/GNU_build_system).
 
 In most cases the simple script build.sh should be sufficient to build Woolz.
 This script simply runs autoreconf followed by ./configure with various
-options. It's probably best to copy build.sh to mybuild.sh and then
-set the required options for the build you want.
+options. It's probably best to copy build.sh to mybuild.sh and then set the
+required options for the build you want.
 
 Sometimes the configuration will fail with messages relating to libtool.
 In these cases running
@@ -136,7 +136,13 @@ The build script build.sh simply runs
   autoreconf
 followed by
   ./configure
-Various common configurations are included in the build script.
+
+If building JavaWoolz then the build requires all libraries (including
+external file format libraries such as Jpeg, NIfTI and Tiff) to be built
+with relocatable code (use -fPIC with gcc). Sometimes the JavaWoolz
+build fails because of something to do with the Java classpath. You
+can often work around this by running make within the JavaWoolz C2Java
+directory and then rerunning make from the top level directory again.
 
 A prefix can be given in the configure stage to define where the programs,
 libraries are will be installed, conventionally this is /opt/MouseAtlas.
@@ -179,7 +185,6 @@ The program WlzExtFFConvert can be used to convert between supported
 file formats. The library functions WlzEffReadObj() and WlzEffWriteObj()
 (in libWlzExtFF) can also be used to read and write non-Woolz format
 files.
-
 
 6) How can I write my own Woolz code?
 -------------------------------------
