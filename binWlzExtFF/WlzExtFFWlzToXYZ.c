@@ -303,7 +303,7 @@ int main(int	argc,
 {
   char 		optList[] = "hvm:p:o:s:";
   int		option;
-  int		verboseFlg=0;
+  /* int	verboseFlg=0; */
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   HGUDlpList	*dmnList;
   DomainItem	*dmnItem;
@@ -317,7 +317,7 @@ int main(int	argc,
   int		plane=0, xOff=0, yOff=0, pOff;
   int		width=0, height=0;
   int		colorFlg = 0;
-  int		minL, maxL, minK, maxK;
+  int		minL = 0, maxL = 0, minK = 0, maxK = 0;
   WlzIVertex2	vtxs[5];
   int		index, i;
   int		minSize=4;
@@ -360,7 +360,7 @@ int main(int	argc,
       break;
 
     case 'v':
-      verboseFlg = 1;
+      /* verboseFlg = 1; */
       break;
 
     case 'h':
