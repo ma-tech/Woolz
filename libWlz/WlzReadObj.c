@@ -207,6 +207,61 @@ static WlzErrorNum 		WlzReadBox3D(
 				  int nB);
 #endif /* WLZ_UNUSED_FUNCTIONS */
 
+/* These macros convert sequences of bytes from the Woolz file format order
+ * to the appropriate order for the architecture's endianness. */
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
+#define WLZ_SWAP_IN_WORD(T,S) \
+		(T).ubytes[0] = (S).ubytes[3]; \
+		(T).ubytes[1] = (S).ubytes[2]; \
+		(T).ubytes[2] = (S).ubytes[1]; \
+		(T).ubytes[3] = (S).ubytes[0];
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+#define WLZ_SWAP_IN_WORD(T,S) \
+		(T).inv = (S).inv;
+#endif /* __x86 || __alpha */
+
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
+#define WLZ_SWAP_IN_SHORT(T,S) \
+		(T).ubytes[0] = (S).ubytes[1]; \
+		(T).ubytes[1] = (S).ubytes[0];
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+#define WLZ_SWAP_IN_SHORT(T,S) \
+		(T).shv = (S).shv;
+#endif /* __x86 || __alpha */
+
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
+#define WLZ_SWAP_IN_FLOAT(T,S) \
+		(T).bytes[0] = (char )((S).bytes[1] - 1); \
+		(T).bytes[1] = (S).bytes[0]; \
+		(T).bytes[2] = (S).bytes[3]; \
+		(T).bytes[3] = (S).bytes[2];
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+#define WLZ_SWAP_IN_FLOAT(T,S) \
+	       (T).bytes[3] = (char )((S).bytes[1] - 1); \
+	       (T).bytes[2] = (S).bytes[0]; \
+	       (T).bytes[1] = (S).bytes[3]; \
+	       (T).bytes[0] = (S).bytes[2];
+#endif /* __x86 || __alpha */
+
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
+#define WLZ_SWAP_IN_DOUBLE(T,S) \
+		(T).ubytes[0] = (S).ubytes[7]; \
+		(T).ubytes[1] = (S).ubytes[6]; \
+		(T).ubytes[2] = (S).ubytes[5]; \
+		(T).ubytes[3] = (S).ubytes[4]; \
+		(T).ubytes[4] = (S).ubytes[3]; \
+		(T).ubytes[5] = (S).ubytes[2]; \
+		(T).ubytes[6] = (S).ubytes[1]; \
+		(T).ubytes[7] = (S).ubytes[0];
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+#define WLZ_SWAP_IN_DOUBLE(T,S) \
+		(T).dbv = (S).dbv;
+#endif /* __x86 || __alpha */
+
 /*!
 * \return	The word value.
 * \ingroup	WlzIO
@@ -217,22 +272,12 @@ static WlzErrorNum 		WlzReadBox3D(
 
 static int 	getword(FILE *fp)
 {
-  char cin[4], cout[4];
- fread(cin,sizeof(char),4,fp);
+  WlzGreyV	in,
+  		out;
 
-#if defined (__sparc) || defined (__mips) || defined (__ppc)
-  cout[0] = cin[3];
-  cout[1] = cin[2];
-  cout[2] = cin[1];
-  cout[3] = cin[0];
-#endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
-  cout[0] = cin[0];
-  cout[1] = cin[1];
-  cout[2] = cin[2];
-  cout[3] = cin[3];
-#endif /* __x86 || __alpha */
-  return(*((int *) &cout[0]));
+  (void )fread(in.ubytes, sizeof(char), 4, fp);
+  WLZ_SWAP_IN_WORD(out, in);
+  return(out.inv);
 }
 
 /*!
@@ -244,18 +289,12 @@ static int 	getword(FILE *fp)
 */
 static int 	getshort(FILE *fp)
 {
-  unsigned char cin[2], cout[2];
-  fread(cin,sizeof(char),2,fp);
+  WlzGreyV	in,
+  		out;
 
-#if defined (__sparc) || defined (__mips) || defined (__ppc)
-  cout[0] = cin[1];
-  cout[1] = cin[0];
-#endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
-  cout[0] = cin[0];
-  cout[1] = cin[1];
-#endif /* __x86 || __alpha */
-  return((int) *((short *) &cout[0]));
+  (void )fread(in.ubytes, sizeof(char), 2, fp);
+  WLZ_SWAP_IN_SHORT(out, in);
+  return(out.shv);
 }
 
 /*!
@@ -267,32 +306,13 @@ static int 	getshort(FILE *fp)
 */
 static float 	getfloat(FILE *fp)
 {
-  char cin[4], cout[4];
+  WlzGreyV	in,
+  		out;
 
-fread(cin,sizeof(char),4,fp);
-
-#if defined (__sparc) || defined (__mips) || defined (__ppc)
-  cout[0] = (char )(cin[1] - 1);
-  cout[1] = cin[0];
-  cout[2] = cin[3];
-  cout[3] = cin[2];
-#endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
-  cout[3] = (char )(cin[1] - 1);
-  cout[2] = cin[0];
-  cout[1] = cin[3];
-  cout[0] = cin[2];
-#endif /* __x86 || __alpha */
-  return(*((float *) &cout[0]));
+  (void )fread(in.bytes, sizeof(char), 4, fp);
+  WLZ_SWAP_IN_FLOAT(out, in);
+  return(out.flv);
 }
-
-/*
-*   Function   : getdouble						*
-*   Synopsis   : get the next double from the input stream		*
-*   Returns    : double:	value of next double on the input stream*
-*   Parameters : FILE *fp:	input stream				*
-*   Global refs: -                                                      *
-*/
 
 /*!
 * \return	The  doublevalue.
@@ -303,30 +323,12 @@ fread(cin,sizeof(char),4,fp);
 */
 static double 	getdouble(FILE *fp)
 {
-  char cin[8], cout[8];
-  fread(cin,sizeof(char),8,fp);
-
-#if defined (__sparc) || defined (__mips) || defined (__ppc)
-  cout[0] = cin[7];
-  cout[1] = cin[6];
-  cout[2] = cin[5];
-  cout[3] = cin[4];
-  cout[4] = cin[3];
-  cout[5] = cin[2];
-  cout[6] = cin[1];
-  cout[7] = cin[0];
-#endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
-  cout[7] = cin[7];
-  cout[6] = cin[6];
-  cout[5] = cin[5];
-  cout[4] = cin[4];
-  cout[3] = cin[3];
-  cout[2] = cin[2];
-  cout[1] = cin[1];
-  cout[0] = cin[0];
-#endif /* __x86 || __alpha */
-  return(*((double *) &cout[0]));
+  WlzGreyV	in,
+  		out;
+  
+  (void )fread(in.ubytes, sizeof(char), 8, fp);
+  WLZ_SWAP_IN_DOUBLE(out, in);
+  return(out.dbv);
 }
 
 /*!
@@ -341,7 +343,7 @@ static double 	getdouble(FILE *fp)
 */
 WlzObjectType	WlzReadObjType(FILE *fP, WlzErrorNum *dstErr)
 {
-  WlzObjectType	type;
+  WlzObjectType	type = WLZ_NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(fP == NULL )
@@ -614,15 +616,27 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 */
 static WlzErrorNum WlzReadInt(FILE *fP, int *iP, int nI)
 {
+  size_t	n;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
-  while((errNum == WLZ_ERR_NONE) && (nI-- > 0))
-  {
-    *iP++ = getword(fP);
-  }
-  if(feof(fP))
+  n = 4 * nI;
+  if(fread(iP, sizeof(char), n, fP) < n)
   {
     errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else
+  {
+    int		i;
+
+    for(i = 0; i < nI; ++i)
+    {
+      WlzGreyV	in,
+		out;
+
+      in.inv = iP[i];
+      WLZ_SWAP_IN_WORD(out, in);
+      iP[i] = out.inv;
+    }
   }
   return(errNum);
 }
@@ -1118,9 +1132,9 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
 					  WlzErrorNum *dstErr)
 {
   WlzObjectType		type;
-  WlzDomain		domain, *domains;
+  WlzDomain		domain, *domains = NULL;
   WlzPlaneDomain	*planedm=NULL;
-  int			i, nplanes;
+  int			i, nplanes = 0;
   int			p1, pl, l1, ll, k1, kl;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
@@ -1281,7 +1295,7 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
   WlzIntervalWSpace 	iwsp;
   WlzValues		values;
   WlzGreyType		packing;
-  int 			kstart, l1, ll, k1;
+  int 			l1, ll, k1, kstart = 0;
   int 			i;
   WlzPixelV 		backgrnd;
   WlzGreyP		v, g;
@@ -4126,10 +4140,11 @@ static WlzCMesh3D *WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
 {
   int		idE,
   		idN,
-		flags,
 		nElm,
-		nNod;
+		nNod,
+		flags;
   WlzDVertex3	pos;
+  unsigned int	*flgBuf = NULL;
   WlzDVertex3	*posBuf = NULL;
   WlzCMeshElm3D	*elm;
   WlzCMesh3D	*mesh = NULL;
@@ -4162,7 +4177,8 @@ static WlzCMesh3D *WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if(((posBuf = AlcMalloc(sizeof(WlzDVertex3) * nNod)) == NULL) ||
+    if(((flgBuf = AlcMalloc(sizeof(unsigned int) * nNod)) == NULL) ||
+       ((posBuf = AlcMalloc(sizeof(WlzDVertex3) * nNod)) == NULL) ||
        (AlcVectorExtendAndGet(mesh->res.nod.vec, nNod) == NULL) ||
        (AlcVectorExtendAndGet(mesh->res.elm.vec, nElm) == NULL))
     {
@@ -4190,6 +4206,7 @@ static WlzCMesh3D *WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
         errNum = WLZ_ERR_READ_INCOMPLETE;
 	break;
       }
+      flgBuf[idN] = flags;
       posBuf[idN] = pos;
       if(idN == 0)
       {
@@ -4241,10 +4258,11 @@ static WlzCMesh3D *WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
       if(errNum == WLZ_ERR_NONE)
       {
 	nod[0]->pos = pos;
-	nod[0]->flags = flags;
+	nod[0]->flags = flgBuf[idN];
       }
     }
   }
+  AlcFree(flgBuf);
   AlcFree(posBuf);
   /* Read elements and create them within the mesh using the already
    * created nodes. */
@@ -4253,15 +4271,7 @@ static WlzCMesh3D *WlzReadCMesh3D(FILE *fp, WlzErrorNum *dstErr)
     for(idE = 0; idE < nElm; ++idE)
     {
       flags = getword(fp);
-      idx[0] = getword(fp);
-      idx[1] = getword(fp);
-      idx[2] = getword(fp);
-      idx[3] = getword(fp);
-      if(feof(fp) != 0)
-      {
-        errNum = WLZ_ERR_READ_INCOMPLETE;
-	break;
-      }
+      errNum = WlzReadInt(fp, idx, 4);
       if(errNum == WLZ_ERR_NONE)
       {
 #ifdef WLZ_DEBUG_READOBJ
@@ -4644,7 +4654,7 @@ static WlzThreeDViewStruct *WlzRead3DViewStruct(FILE *fP, WlzErrorNum *dstErr)
   {
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
-  else if(type == (WlzTransformType )WLZ_NULL)
+  else if(type == WLZ_NULL)
   {
     errNum = WLZ_ERR_EOO;
   }
