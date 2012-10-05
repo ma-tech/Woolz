@@ -62,8 +62,7 @@ extern int	optind,
 
 int		main(int argc, char *argv[])
 {
-  int		dim = 0,
-  		balance = 0,
+  int		balance = 0,
   		option,
   		ok = 1,
 		maxNodSz = INT_MAX,
@@ -85,8 +84,9 @@ int		main(int argc, char *argv[])
   		outFileStrDef[] = "-",
   		inFileStrDef[] = "-";
 
-  lDom.core = NULL;
   opterr = 0;
+  lDom.core = NULL;
+  outDom.core = NULL;
   nullVal.core = NULL;
   outFileStr = outFileStrDef;
   inFileStr = inFileStrDef;
@@ -170,10 +170,8 @@ int		main(int argc, char *argv[])
       switch(inObj->type)
       {
         case WLZ_2D_DOMAINOBJ:
-	  dim = 2;
 	  break;
         case WLZ_3D_DOMAINOBJ:
-	  dim =3;
 	  break;
 	default:
 	  errNum = WLZ_ERR_OBJECT_TYPE;
