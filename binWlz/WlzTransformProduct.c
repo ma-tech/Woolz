@@ -174,8 +174,10 @@ int             main(int argc, char **argv)
       {
 	if((obj->type != WLZ_AFFINE_TRANS) ||
 	   (obj->domain.core == NULL) ||
-	   ((obj->domain.core->type != WLZ_TRANSFORM_2D_AFFINE) &&
-	    (obj->domain.core->type != WLZ_TRANSFORM_3D_AFFINE)))
+	   ((obj->domain.core->type != (WlzObjectType )
+	                               WLZ_TRANSFORM_2D_AFFINE) &&
+	    (obj->domain.core->type != (WlzObjectType )
+	                               WLZ_TRANSFORM_3D_AFFINE)))
 	{
 	  ok = 0;
 	  (void )fprintf(stderr,
