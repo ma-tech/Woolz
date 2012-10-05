@@ -92,7 +92,8 @@ WlzObject *WlzEffReadObjJpeg(
   struct 	my_error_mgr jerr;
   JSAMPARRAY 	buffer;		/* Output row buffer */
   int 		row_stride;	/* physical row width in output buffer */
-  int		width, height, depth;
+  int		width, height;
+  /* int		depth; */
   int		wlzDepth;
   WlzGreyType	newpixtype;
   WlzPixelV	bckgrnd;
@@ -163,7 +164,7 @@ WlzObject *WlzEffReadObjJpeg(
       else {
 	wlzDepth = sizeof(char);
 	newpixtype = WLZ_GREY_UBYTE;
-	depth = cinfo.num_components * 8;
+	/* depth = cinfo.num_components * 8; */
 	bckgrnd.v.ubv = 0;
       }
 #endif /* BITS_IN_SAMPLE == 8 */
@@ -174,7 +175,7 @@ WlzObject *WlzEffReadObjJpeg(
       else {
 	wlzDepth = sizeof(short);
 	newpixtype = WLZ_GREY_SHORT;
-	depth = cinfo.num_components * 12;
+	/* depth = cinfo.num_components * 12; */
 	bckgrnd.v.shv = 0;
       }
 #endif /* BITS_IN_SAMPLE == 12 */
@@ -193,7 +194,7 @@ WlzObject *WlzEffReadObjJpeg(
       else {
 	wlzDepth = sizeof(int);
 	newpixtype = WLZ_GREY_RGBA;
-	depth = cinfo.num_components * 8;
+	/* depth = cinfo.num_components * 8; */
 	bckgrnd.v.inv = 0;
       }
 #endif /* BITS_IN_SAMPLE == 8 */
@@ -304,7 +305,7 @@ WlzErrorNum WlzEffWriteObjJpeg(
   WlzErrorNum			errNum=WLZ_ERR_NONE;
   struct jpeg_compress_struct cinfo;
   struct my_error_mgr		jerr;
-  JSAMPARRAY 	buffer;		/* Output row buffer */
+  JSAMPARRAY 	buffer = NULL;	/* Output row buffer */
   int		quality = 100;	/* Output quality. */
   int 		row_stride;	/* physical row width in input buffer */
   int		width, height;
@@ -312,7 +313,7 @@ WlzErrorNum WlzEffWriteObjJpeg(
   WlzGreyWSpace		gwsp;
   int		i, j;
   WlzObject	*rectObj=NULL;
-  WlzGreyType 	gType;
+  WlzGreyType 	gType = WLZ_GREY_ERROR;
 
   /* check input */
   if( fP == NULL ){
@@ -420,7 +421,8 @@ WlzErrorNum WlzEffWriteObjJpeg(
 
       /* JSAMPLEs per row in output buffer */
       row_stride = cinfo.image_width * cinfo.input_components;
-      /* Make a one-row-high sample array that will go away when done with image */
+      /* Make a one-row-high sample array that will go away when done with
+       * image */
       buffer = (*cinfo.mem->alloc_sarray)
 	((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
 

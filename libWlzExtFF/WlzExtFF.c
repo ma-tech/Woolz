@@ -772,5 +772,9 @@ char		*WlzEffFormatTable(unsigned indWth,
     *s0 = '\0';
   }
   AlcFree(idxTbl);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
   return(fmtTbl);
 }
