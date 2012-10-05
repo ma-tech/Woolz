@@ -64,7 +64,7 @@ WlzErrorNum WlzBoundaryToPolyObjArray(
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   WlzDomain	domain;
   WlzValues	values;
-  WlzObject	*obj, **objs;
+  WlzObject	*obj = NULL, **objs = NULL;
   WlzPolygonDomain	**polyArray;
   int 		i, numPolys;
 

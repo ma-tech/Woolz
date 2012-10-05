@@ -114,7 +114,7 @@ char *nextStartTag(
   char 	*tag=NULL;
   char 	buf[256];
   char	c;
-  int	i;
+  int	i = 0;
 
   while( (c = fgetc(inFile)) != EOF ){
     if( c == '<' ){
@@ -318,7 +318,7 @@ int		main(int argc, char *argv[])
   FILE		*inFile, *outFile;
   char 		optList[] = "hv";
   int		option;
-  int		verboseFlg=0;
+  /* int	verboseFlg=0; */
   WlzObject	*obj;
   WlzDomain	domain;
   WlzValues	values;
@@ -336,7 +336,7 @@ int		main(int argc, char *argv[])
     switch( option ){
 
     case 'v':
-      verboseFlg = 1;
+      /* verboseFlg = 1; */
       break;
 
     case 'h':

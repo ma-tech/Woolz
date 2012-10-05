@@ -180,10 +180,10 @@ static WlzCompoundArray *WlzCompDispIncGrey3D(WlzObject *obj0, WlzObject *obj1,
   		idN,
   		idO,
 		idP,
-  		nAry,
-		iWidth;
-  int		*ary,
-		*valF;
+  		nAry = 0,
+		iWidth = 0;
+  int		*ary = NULL,
+		*valF = NULL;
   int		*val[4];
   WlzObject	*objs[3],
   		*objs2D[4];
@@ -338,7 +338,7 @@ static int	*WlzCompDispMakeValAry3D(WlzObject *obj, int *dstNAry,
   int		idO,
   		idP,
 		nAry;
-  int		*ary,
+  int		*ary = NULL,
   		*array = NULL;
   WlzObject	*obj2D;
   WlzPlaneDomain *pDom;

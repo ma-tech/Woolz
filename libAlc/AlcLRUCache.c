@@ -491,7 +491,7 @@ void	AlcLRUCacheFacts(AlcLRUCache *cache, FILE *fP)
   (void )fprintf(fP, "hashTbl\n");
   for(idx = 0; idx < cache->hashTblSz; ++idx)
   {
-    (void )fprintf(fP, "  % 8u\n", idx);
+    (void )fprintf(fP, "  %8u\n", idx);
     item = cache->hashTbl[idx];
     while(item)
     {

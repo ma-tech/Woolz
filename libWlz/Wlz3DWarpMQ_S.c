@@ -5366,7 +5366,6 @@ WlzObject      *WlzMeshTransformObj_3D( WlzObject            *srcObj,
   WlzDomain	  dstDom;
   WlzPlaneDomain *dstPDom   = NULL;
   WlzValues	  dstValues;
-  WlzValues	  srcValues;
   WlzObject	 *dstObj = NULL;
   WlzErrorNum	  errNum = WLZ_ERR_NONE;
   WlzIBox3        bBox;
@@ -5391,7 +5390,6 @@ WlzObject      *WlzMeshTransformObj_3D( WlzObject            *srcObj,
 
   
   dstDom.core      = NULL;
-  srcValues.core   = NULL;
   dummyDom.core    = NULL;
   dummyValues.core = NULL;
   dstValues.core   = NULL;
