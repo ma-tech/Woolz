@@ -51,17 +51,13 @@ WlzGreyTransfer - copies grey values from a source object to a destination
 object within the intersection of the object's domains.
 \par Synopsis
 \verbatim
-WlzGreyTransfer [-h] [-v] [<source image> [<destination obj>]]
+WlzGreyTransfer [-h] [<source image> [<destination obj>]]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
 </table>
 \par Description
@@ -109,8 +105,7 @@ static void usage(char *proc_str)
 	  "\tfirst object is the destination and the second the source.\n"
 	  "Version: %s\n"
 	  "Options:\n"
-	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n",
+	  "\t  -h        help - prints this usage message\n",
 	  proc_str,
 	  WlzVersion());
   return;
@@ -122,9 +117,8 @@ int main(int	argc,
 
   WlzObject	*obj, *tmpl, *newobj;
   FILE		*inFile;
-  char 		optList[] = "hv";
+  char 		optList[] = "h";
   int		option;
-  int		verboseFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
     
@@ -133,16 +127,10 @@ int main(int	argc,
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
-
-    case 'v':
-      verboseFlg = 1;
-      break;
-
     case 'h':
     default:
       usage(argv[0]);
       return 1;
-
     }
   }
 

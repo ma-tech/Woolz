@@ -148,7 +148,7 @@ int             main(int argc, char **argv)
 		widthFlag = 0,
 		ok = 1,
 		usage = 0;
-  WlzObjectType	binType;
+  WlzObjectType	binType = WLZ_HISTOGRAMDOMAIN_INT;
   double	binOrigin = 0.0,
   		binWidth = 0.0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
