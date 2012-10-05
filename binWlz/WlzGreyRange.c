@@ -51,17 +51,13 @@ static char _WlzGreyRange_c[] = "MRC HGU $Id$";
 WlzGreyRange  -  outputs the grey-range of a grey-level object.
 \par Synopsis
 \verbatim
-WlzGreyRange [-h] [-v] [<input file>]
+WlzGreyRange [-h] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
 </table>
 \par Description
@@ -99,8 +95,7 @@ static void usage(char *proc_str)
 	  "\tPrint grey-range of a grey-level woolz object\n"
 	  "Version: %s\n"
 	  "Options:\n"
-	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n",
+	  "\t  -h        help - prints this usage message\n",
 	  proc_str,
 	  WlzVersion());
   return;
@@ -115,7 +110,6 @@ int main(int	argc,
   FILE		*inFile;
   char 		optList[] = "hv";
   int		option;
-  int		verboseFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   int		objCount=0;
     
@@ -124,16 +118,10 @@ int main(int	argc,
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
-
-    case 'v':
-      verboseFlg = 1;
-      break;
-
     case 'h':
     default:
       usage(argv[0]);
       return 1;
-
     }
   }
 
