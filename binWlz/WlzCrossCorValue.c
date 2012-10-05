@@ -116,8 +116,6 @@ int             main(int argc, char **argv)
   		unionFlg = 0;
   double 	cCor = 0.0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzDomain	outDom;
-  WlzValues	nullVal;
   WlzObject	*inObj[2];
   FILE		*fP = NULL;
   char 		*outFileStr;
@@ -128,8 +126,6 @@ int             main(int argc, char **argv)
   		inObjFileStrDef[] = "-";
 
   opterr = 0;
-  outDom.core = NULL;
-  nullVal.core = NULL;
   inObj[0] = NULL;
   inObj[1] = NULL;
   outFileStr = outFileStrDef;

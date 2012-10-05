@@ -132,8 +132,7 @@ int		main(int argc, char *argv[])
   		usage = 0;
   size_t	vtxSize = sizeof(WlzDVertex2);
   WlzObjectType	outObjType;
-  WlzVertexType vtxType,
-  		bndVtxType;
+  WlzVertexType bndVtxType;
   WlzVertex	seed;
   WlzVertexP	bndSeeds,
 		seeds;
@@ -271,7 +270,6 @@ int		main(int argc, char *argv[])
     switch(mshObj->type)
     {
       case WLZ_CMESH_2D:
-	vtxType = WLZ_VERTEX_D2;
 	vtxSize = sizeof(WlzDVertex2);
         if((refObj != NULL) && (refObj->type != WLZ_2D_DOMAINOBJ))
 	{
@@ -279,7 +277,6 @@ int		main(int argc, char *argv[])
 	}
 	break;
       case WLZ_CMESH_3D:
-	vtxType = WLZ_VERTEX_D3;
 	vtxSize = sizeof(WlzDVertex3);
         if((refObj != NULL) && (refObj->type != WLZ_3D_DOMAINOBJ))
 	{
