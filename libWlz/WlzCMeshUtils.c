@@ -1890,7 +1890,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
   		idN;
   WlzCMeshEdgU2D *edu0,
   		*edu1;
-  WlzCMeshElm2D	*elm;
+  WlzCMeshElm2D	*elm = NULL;
   WlzCMeshNod2D	*nod;
   WlzCMeshCell2D *cell;
   WlzIVertex2	idx;
@@ -2161,7 +2161,7 @@ WlzErrorNum 	WlzCMeshVerify3D(WlzCMesh3D *mesh, WlzCMeshElm3D **dstElm,
   WlzCMeshEdgU3D *edu,
   		*edu0,
 		*edu1;
-  WlzCMeshElm3D	*elm;
+  WlzCMeshElm3D	*elm = NULL;
   WlzCMeshFace	*fce;
   WlzErrorNum	errNum0,
   		errNum1 = WLZ_ERR_NONE;
@@ -3244,38 +3244,49 @@ WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, int squeeze,
 	  gvnElm = (WlzCMeshElm2D *)AlcVectorItemGet(gvnMesh->res.elm.vec, idE);
 	  if(gvnElm->idx >= 0)
 	  {
-	    WlzCMeshNod2D *gvnNodes[3],
-			  *newNodes[3];
+	    double sA2 = 0.0;
 
-	    /* Copy Nodes. */
-	    gvnNodes[0] = WLZ_CMESH_ELM2D_GET_NODE_0(gvnElm);
-	    gvnNodes[1] = WLZ_CMESH_ELM2D_GET_NODE_1(gvnElm);
-	    gvnNodes[2] = WLZ_CMESH_ELM2D_GET_NODE_2(gvnElm);
-	    for(idN = 0; idN < 3; ++idN)
+	    if(squeeze)
 	    {
-	      if(WlzCMeshLocateNod2D(newMesh, gvnNodes[idN]->pos,
-				     newNodes + idN) == 0)
-	      {
-		newNodes[idN] = WlzCMeshNewNod2D(newMesh, gvnNodes[idN]->pos,
-						 NULL);
-		/* Copy node associated data. */
-		if(prvDat != NULL)
-		{
-	          void *ascP;
+	      sA2 = WlzCMeshElmSnArea22D(gvnElm);
+	    }
+	    if((squeeze == 0) ||
+	       (fabs(sA2) > WLZ_MESH_TOLERANCE_SQ)) /* Squeeze out zero area
+	                                               elements. */
+	    {
+	      WlzCMeshNod2D *gvnNodes[3],
+			    *newNodes[3];
 
-		  ascP = AlcVectorItemGet(prvDat, newNodes[idN]->idx);
-		  memcpy(ascP, AlcVectorItemGet(gvnDat, gvnNodes[idN]->idx),
-			 datSz);
+	      /* Copy Nodes. */
+	      gvnNodes[0] = WLZ_CMESH_ELM2D_GET_NODE_0(gvnElm);
+	      gvnNodes[1] = WLZ_CMESH_ELM2D_GET_NODE_1(gvnElm);
+	      gvnNodes[2] = WLZ_CMESH_ELM2D_GET_NODE_2(gvnElm);
+	      for(idN = 0; idN < 3; ++idN)
+	      {
+		if(WlzCMeshLocateNod2D(newMesh, gvnNodes[idN]->pos,
+				       newNodes + idN) == 0)
+		{
+		  newNodes[idN] = WlzCMeshNewNod2D(newMesh, gvnNodes[idN]->pos,
+						   NULL);
+		  /* Copy node associated data. */
+		  if(prvDat != NULL)
+		  {
+		    void *ascP;
+
+		    ascP = AlcVectorItemGet(prvDat, newNodes[idN]->idx);
+		    memcpy(ascP, AlcVectorItemGet(gvnDat, gvnNodes[idN]->idx),
+			   datSz);
+		  }
 		}
 	      }
-	    }
-	    /* Copy element. */
-	    (void )WlzCMeshNewElm2D(newMesh,
-				    newNodes[0], newNodes[1], newNodes[2],
-				    0, &errNum);
-	    if(errNum != WLZ_ERR_NONE)
-	    {
-	      break;
+	      /* Copy element. */
+	      (void )WlzCMeshNewElm2D(newMesh,
+				      newNodes[0], newNodes[1], newNodes[2],
+				      1, &errNum);
+	      if(errNum != WLZ_ERR_NONE)
+	      {
+		break;
+	      }
 	    }
 	  }
 	}
@@ -4090,23 +4101,22 @@ void	 	WlzCMeshGetCellStats2D(WlzCMesh2D *mesh,
 				       int *dstMaxElmPerCell,
 				       double *dstMeanElmPerCell)
 {
-  int		cntNPC,
-  		nNPC,
-  		minNPC,
-  		maxNPC,
-		sumNPC,
-     		cntEPC,
-		nEPC,
-  		minEPC,
-  		maxEPC,
-		sumEPC;
+  int		cntNPC = 0,
+  		nNPC = 0,
+  		minNPC = 0,
+  		maxNPC = 0,
+		sumNPC = 0,
+     		cntEPC = 0,
+		nEPC = 0,
+  		minEPC = 0,
+  		maxEPC = 0,
+		sumEPC = 0;
   WlzIVertex2	idx,
 		nCells;
   WlzCMeshNod2D	*nod;
   WlzCMeshCellElm2D *cElm;
   WlzCMeshCell2D *cell;
 
-  cntNPC = cntEPC = 0;
   nCells = mesh->cGrid.nCells;
   for(idx.vtY = 0; idx.vtY < nCells.vtY; ++idx.vtY)
   {
@@ -4229,23 +4239,22 @@ void	 	WlzCMeshGetCellStats3D(WlzCMesh3D *mesh,
 				       int *dstMaxElmPerCell,
 				       double *dstMeanElmPerCell)
 {
-  int		cntNPC,
-  		nNPC,
-  		minNPC,
-  		maxNPC,
-		sumNPC,
-     		cntEPC,
-		nEPC,
-  		minEPC,
-  		maxEPC,
-		sumEPC;
+  int		cntNPC = 0,
+  		nNPC = 0,
+  		minNPC = 0,
+  		maxNPC = 0,
+		sumNPC = 0,
+     		cntEPC = 0,
+		nEPC = 0,
+  		minEPC = 0,
+  		maxEPC = 0,
+		sumEPC = 0;
   WlzIVertex3	idx,
 		nCells;
   WlzCMeshNod3D	*nod;
   WlzCMeshCellElm3D *cElm;
   WlzCMeshCell3D *cell;
 
-  cntNPC = cntEPC = 0;
   nCells = mesh->cGrid.nCells;
   for(idx.vtZ = 0; idx.vtZ < nCells.vtZ; ++idx.vtZ)
   {
