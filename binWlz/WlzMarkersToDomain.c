@@ -325,7 +325,7 @@ static WlzVertexP 	WlzMTDReadVtxArray(FILE *fP, int dim, int *dstNVtx,
   char		lnBuf[WLZ_CFP_READLN_LEN];
   WlzVertex	datV;
   WlzVertexP	datVP;
-  WlzVertexType vType;
+  WlzVertexType vType = WLZ_VERTEX_I2;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   datVP.v = NULL;
