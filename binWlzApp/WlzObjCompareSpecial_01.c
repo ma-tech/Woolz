@@ -303,7 +303,6 @@ int main(
   char  **argv)
 {
   WlzObject     	*obj1, *obj2;
-  int			verboseFlg=0;
   char			*nameStr;
   double		xsize=1.0, ysize=1.0, zsize=1.0;
   int			i, j;
@@ -327,10 +326,6 @@ int main(
     case 'h':
       usage(nameStr);
       return 0;
-
-    case 'v':
-      verboseFlg = 1;
-      break;
 
     default:
       usage(nameStr);
