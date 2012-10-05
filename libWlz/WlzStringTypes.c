@@ -1431,6 +1431,79 @@ WlzValueAttach WlzStringToValuesAttachType(const char *aStr,
 /*!
 * \return	Pointer to read only string or NULL on error.
 * \ingroup      WlzStrings
+* \brief	Finds a string for the given 3D view mode.
+* \param	vMode			Given 3D view mode.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+const char	*WlzStringFromThreeDViewMode(WlzThreeDViewMode vMode,
+				             WlzErrorNum *dstErr)
+{
+  const char	*vStr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(vMode)
+  {
+    case WLZ_STATUE_MODE:
+      vStr = "WLZ_STATUE_MODE";
+      break;
+    case WLZ_UP_IS_UP_MODE:
+      vStr = "WLZ_UP_IS_UP_MODE";
+      break;
+    case WLZ_FIXED_LINE_MODE:
+      vStr = "WLZ_FIXED_LINE_MODE";
+      break;
+    case WLZ_ZERO_ZETA_MODE:
+      vStr = "WLZ_ZERO_ZETA_MODE";
+      break;
+    case WLZ_ZETA_MODE:
+      vStr = "WLZ_ZETA_MODE";
+      break;
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vStr);
+}
+
+/*!
+* \return       Marker type.
+* \brief        Gets a 3D view mode from a string.
+* \param        vStr               	Given 3D view mode string.
+* \param        dstErr                  Destination error pointer, may be NULL.
+*/
+WlzThreeDViewMode WlzStringToThreeDViewMode(const char *vStr,
+				            WlzErrorNum *dstErr)
+{
+  int           tI0;
+  WlzThreeDViewMode vMode = WLZ_STATUE_MODE;
+  WlzErrorNum   errNum = WLZ_ERR_PARAM_TYPE;
+
+  if(WlzStringMatchValue(&tI0, vStr,
+			 "WLZ_STATUE_MODE", WLZ_STATUE_MODE,
+			 "WLZ_UP_IS_UP_MODE", WLZ_UP_IS_UP_MODE,
+			 "WLZ_FIXED_LINE_MODE", WLZ_FIXED_LINE_MODE,
+			 "WLZ_ZERO_ZETA_MODE", WLZ_ZERO_ZETA_MODE,
+			 "WLZ_ZETA_MODE", WLZ_ZETA_MODE,
+                         NULL))
+  {
+    vMode = tI0;
+    errNum = WLZ_ERR_NONE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vMode);
+}
+
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
 * \brief	Finds a string for the given values attachment type.
 * \param	iType			Given values attachment type.
 * \param	dstErr			Destination error pointer, may
@@ -1530,7 +1603,7 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
     msgStr = "Object data";
     break;
   case WLZ_ERR_DOMAIN_NULL :
-    errStr = "WLZ_ERR_DOMAIN_NULL ";
+    errStr = "WLZ_ERR_DOMAIN_NULL";
     msgStr = "NULL domain";
     break;
   case WLZ_ERR_DOMAIN_TYPE:
