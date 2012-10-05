@@ -189,6 +189,61 @@ static WlzErrorNum 		WlzWriteBox3D(
 				  int nB);
 #endif /* WLZ_UNUSED_FUNCTIONS */
 
+/* These macros convert sequences of bytes from the architecture's endianness
+ * to the Woolz file format order. */
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
+#define WLZ_SWAP_OUT_WORD(T,S) \
+		(T).ubytes[0] = (S).ubytes[3]; \
+		(T).ubytes[1] = (S).ubytes[2]; \
+		(T).ubytes[2] = (S).ubytes[1]; \
+		(T).ubytes[3] = (S).ubytes[0];
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+#define WLZ_SWAP_OUT_WORD(T,S) \
+		(T).inv = (S).inv;
+#endif /* __x86 || __alpha */
+
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
+#define WLZ_SWAP_OUT_SHORT(T,S) \
+		(T).ubytes[0] = (S).ubytes[1]; \
+		(T).ubytes[1] = (S).ubytes[0];
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+#define WLZ_SWAP_OUT_SHORT(T,S) \
+		(T).shv = (S).shv;
+#endif /* __x86 || __alpha */
+
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
+#define WLZ_SWAP_OUT_FLOAT(T,S) \
+		(T).ubytes[0] = (S).ubytes[1]; \
+		(T).ubytes[1] = (S).ubytes[0] + 1; \
+		(T).ubytes[2] = (S).ubytes[3]; \
+		(T).ubytes[3] = (S).ubytes[2];
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+#define WLZ_SWAP_OUT_FLOAT(T,S) \
+		(T).ubytes[3] = (S).ubytes[1]; \
+		(T).ubytes[2] = (S).ubytes[0]; \
+		(T).ubytes[1] = (S).ubytes[3] + 1; \
+		(T).ubytes[0] = (S).ubytes[2];
+#endif /* __x86 || __alpha */
+
+#if defined (__sparc) || defined (__mips) || defined (__ppc)
+#define WLZ_SWAP_OUT_DOUBLE(T,S) \
+		(T).ubytes[0] = (S).ubytes[7]; \
+		(T).ubytes[1] = (S).ubytes[6]; \
+		(T).ubytes[2] = (S).ubytes[5]; \
+		(T).ubytes[3] = (S).ubytes[4]; \
+		(T).ubytes[4] = (S).ubytes[3]; \
+		(T).ubytes[5] = (S).ubytes[2]; \
+		(T).ubytes[6] = (S).ubytes[1]; \
+		(T).ubytes[7] = (S).ubytes[0];
+#endif /* __sparc || __mips */
+#if defined (__x86) || defined (__alpha)
+#define WLZ_SWAP_OUT_DOUBLE(T,S) \
+                (T).dbv = (S).dbv;
+#endif /* __x86 || __alpha */
+
 /*!
 * \return	Number of bytes written.
 * \ingroup 	WlzIO
@@ -198,22 +253,12 @@ static WlzErrorNum 		WlzWriteBox3D(
 */
 static int putword(int i, FILE *fP)
 {
-  unsigned char *cin, cout[4];
+  WlzGreyV	in,
+  		out;
 
-  cin = (unsigned char *) &i;
-#if defined (__sparc) || defined (__mips) || defined (__ppc)
-  cout[0] = *(cin+3);
-  cout[1] = *(cin+2);
-  cout[2] = *(cin+1);
-  cout[3] = *(cin+0);
-#endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
-  cout[0] = *(cin+0);
-  cout[1] = *(cin+1);
-  cout[2] = *(cin+2);
-  cout[3] = *(cin+3);
-#endif /* __x86 || __alpha */
-  return( (int) fwrite(&cout[0], sizeof(char), 4, fP) );
+  in.inv = i;
+  WLZ_SWAP_OUT_WORD(out, in);
+  return((int )fwrite(out.ubytes, sizeof(char), 4, fP));
 }
 
 /*!
@@ -225,18 +270,12 @@ static int putword(int i, FILE *fP)
 */
 static int putshort(short i, FILE *fP)
 {
-  unsigned char *cin, cout[2];
+  WlzGreyV	in,
+  		out;
 
-  cin = (unsigned char *) &i;
-#if defined (__sparc) || defined (__mips) || defined (__ppc)
-  cout[0] = *(cin+1);
-  cout[1] = *(cin+0);
-#endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
-  cout[0] = *(cin+0);
-  cout[1] = *(cin+1);
-#endif /* __x86 || __alpha */
-  return( (int) fwrite(&cout[0], sizeof(char), 2, fP) );
+  in.shv = i;
+  WLZ_SWAP_OUT_SHORT(out, in);
+  return((int )fwrite(out.ubytes, sizeof(char), 2, fP));
 }
 
 /*!
@@ -248,23 +287,12 @@ static int putshort(short i, FILE *fP)
 */
 static int putfloat(float f, FILE *fP)
 {
-  float ff = f;
-  unsigned char *cin, cout[4];
+  WlzGreyV	in,
+  		out;
 
-  cin = (unsigned char *) &ff;
-#if defined (__sparc) || defined (__mips) || defined (__ppc)
-  cout[0] = *(cin + 1);
-  cout[1] = (unsigned char )(*cin + 1);
-  cout[2] = *(cin + 3);
-  cout[3] = *(cin + 2);
-#endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
-  cout[3] = *(cin+1);
-  cout[2] = *(cin+0);
-  cout[1] = (unsigned char )(*(cin + 3) + 1);
-  cout[0] = *(cin+2);
-#endif /* __x86 || __alpha */
-  return( (int )fwrite(&cout[0], sizeof(char), 4, fP) );
+  in.flv = f;
+  WLZ_SWAP_OUT_FLOAT(out, in);
+  return((int )fwrite(out.ubytes, sizeof(char), 4, fP));
 }
 
 /*!
@@ -276,31 +304,12 @@ static int putfloat(float f, FILE *fP)
 */
 static int putdouble(double d, FILE *fP)
 {
-  double dd = d;
-  unsigned char *cin, cout[8];
+  WlzGreyV	in,
+  		out;
 
-  cin = (unsigned char *) &dd;
-#if defined (__sparc) || defined (__mips) || defined (__ppc)
-  cout[0] = *(cin+7);
-  cout[1] = *(cin+6);
-  cout[2] = *(cin+5);
-  cout[3] = *(cin+4);
-  cout[4] = *(cin+3);
-  cout[5] = *(cin+2);
-  cout[6] = *(cin+1);
-  cout[7] = *cin;
-#endif /* __sparc || __mips */
-#if defined (__x86) || defined (__alpha)
-  cout[7] = *(cin+7);
-  cout[6] = *(cin+6);
-  cout[5] = *(cin+5);
-  cout[4] = *(cin+4);
-  cout[3] = *(cin+3);
-  cout[2] = *(cin+2);
-  cout[1] = *(cin+1);
-  cout[0] = *cin;
-#endif /* __x86 || __alpha */
-  return( (int) fwrite(&cout[0], sizeof(char), 8, fP) );
+  in.dbv = d;
+  WLZ_SWAP_OUT_DOUBLE(out, in);
+  return((int )fwrite(out.ubytes, sizeof(char), 8, fP));
 }
 
 /*!
