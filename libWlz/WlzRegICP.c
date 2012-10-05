@@ -743,8 +743,8 @@ WlzAffineTransform	*WlzRegICPVertices(WlzVertexP tVx, WlzVertexP tNr,
 					    double minDistWgt,
 					    WlzErrorNum *dstErr)
 {
-  int		conv,
-		maxCnt;
+  int		conv = 0,
+		maxCnt = 0;
   WlzAffineTransform *regTr = NULL;
   WlzRegICPWSp	wSp;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -1319,9 +1319,9 @@ static double	WlzRegICPWeight(WlzRegICPWSp *wSp, double minVxWgt)
 		w1,
 		w2,
   		wVx,
-		wNr,
 		minDist,
 		maxDist,
+		wNr = 0.0,
 		meanSumWgt = 0.0;
   WlzVertex	sV,
   		tV;
@@ -1706,11 +1706,11 @@ static WlzAffineTransform *WlzRegICPTreeAndVerticesSimple(AlcKDTTree *tree,
 		wgt2,
 		wMaxDist,
 		wMinDist,
-		prvMetric,
-		curMetric,
 		dist,
   		wNr,
-		wVx;
+		wVx,
+		prvMetric = 0.0,
+		curMetric = 0.0;
   double	vxD[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
  

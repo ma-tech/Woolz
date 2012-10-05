@@ -63,9 +63,9 @@ WlzObject	*WlzPointsToDomObj(WlzPoints *pnt, double scale,
 {
   int		idP;
   WlzObjectType	dType;
-  WlzObject	*tObj0,
-		*tObj1,
-		*tObj2,
+  WlzObject	*tObj0 = NULL,
+		*tObj1 = NULL,
+		*tObj2 = NULL,
 		*dObj = NULL;
   WlzVertex	pos;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
