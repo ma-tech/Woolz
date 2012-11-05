@@ -1473,12 +1473,14 @@ extern WlzObject		*WlzCMeshDistance2D(
 				  WlzObjectType rObjType,
 				  int sizeArraySeeds,
 				  WlzDVertex2 *arraySeeds,
+                                  WlzInterpolationType itp,
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzCMeshDistance3D(
 				  WlzObject *mObj,
 				  WlzObjectType rObjType,
 				  int sizeArraySeeds,
 				  WlzDVertex3 *arraySeeds,
+                                  WlzInterpolationType itp,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -1573,6 +1575,12 @@ extern WlzDBox3			WlzCMeshTransformGetBBox3D(
 * WlzCMeshUtils.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
+extern double			WlzCMeshElmMaxSqEdgLen2D(
+				  WlzCMeshElm2D *elm);
+extern double			WlzCMeshElmMaxSqEdgLen2D5(
+				  WlzCMeshElm2D5 *elm);
+extern double			WlzCMeshElmMaxSqEdgLen3D(
+				  WlzCMeshElm3D *elm);
 extern void                     WlzCMeshUpdateMaxSqEdgLen2D(
                                   WlzCMesh2D *mesh);
 extern void                     WlzCMeshUpdateMaxSqEdgLen2D5(
@@ -1728,8 +1736,18 @@ extern int			*WlzCMeshMakeElmIdxTbl2D5(
 extern int			*WlzCMeshMakeElmIdxTbl3D(
 				  WlzCMesh3D *mesh,
 				  int *dstNElm);
+extern int			WlzCMeshElmRingNodIndices2D(
+				  WlzCMeshElm2D *elm,
+				  int *maxIdxBuf,
+				  int **idxBuf,
+				  WlzErrorNum *dstErr);
 extern int			WlzCMeshNodRingElmIndices2D5(
 				  WlzCMeshNod2D5 *nod, 
+				  int *maxIdxBuf,
+				  int **idxBuf, 
+				  WlzErrorNum *dstErr);
+extern int			WlzCMeshNodRingNodIndices2D(
+				  WlzCMeshNod2D *nod, 
 				  int *maxIdxBuf,
 				  int **idxBuf, 
 				  WlzErrorNum *dstErr);
@@ -3204,6 +3222,11 @@ extern double			WlzGeomTetrahedronVtxDistSq3D(
 				  WlzDVertex3 v1,
 				  WlzDVertex3 v2,
 				  WlzDVertex3 v3);
+extern WlzErrorNum		WlzGeomPolyTriangulate2D(
+				  int sizeArrayPVtx,
+				  WlzDVertex2 *arrayPVtx,
+				  int *dstSizeArrayTri,
+				  int **dstArrayTri);
 
 /************************************************************************
 * WlzGreyCrossing.c							*
@@ -3652,6 +3675,53 @@ extern WlzIterateWSpace		*WlzIterateInit(
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzIterate(
 				  WlzIterateWSpace *itWSp);
+
+/************************************************************************
+* WlzKrig.c								*
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern void			WlzKrigSetModelFn(
+				  WlzKrigModelFn *fn,
+				  WlzKrigModelFnType type,
+				  double c0,
+				  double c1,
+				  double a);
+extern double          		WlzKrigModelFnNugget(
+				  WlzKrigModelFn *f,
+				  double h);
+extern double          		WlzKrigModelFnLinear(
+				  WlzKrigModelFn *f,
+				  double h);
+extern double          		WlzKrigModelFnSpherical(
+				  WlzKrigModelFn *f,
+				  double h);
+extern double          		WlzKrigModelFnExponential(
+				  WlzKrigModelFn *f,
+				  double h);
+extern double          		WlzKrigModelFnGaussian(
+				  WlzKrigModelFn *f,
+				  double h);
+extern double          		WlzKrigModelFnQuadratic(
+				  WlzKrigModelFn *f,
+				  double h);
+extern WlzErrorNum     		WlzKrigOSetModelSV2D(
+				  AlgMatrix modelSV,
+				  WlzKrigModelFn *modelFn,
+				  int n,
+				  WlzDVertex2 *nbr,
+				  int *wSp);
+extern WlzErrorNum     		WlzKrigOSetPosSV2D(
+				  double *posSV,
+				  WlzKrigModelFn *modelFn,
+				  int n,
+				  WlzDVertex2 *nbr,
+				  WlzDVertex2 pos);
+extern WlzErrorNum     		WlzKrigOWeightsSolve(
+				  AlgMatrix modelSV,
+				  double *posSV,
+				  int *wSp,
+				  double eps);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzLBTDomain.c							*
@@ -4211,6 +4281,9 @@ extern double          		WlzMatchICPWeightMatches(
 * WlzMeshGen.c								*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
+extern WlzErrorNum		WlzCMeshElmFuse2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshElm2D *gElm);
 extern WlzObject		*WlzCMeshComputeNormalsIxv2D5(
 				  WlzObject *gObj,
 				  int nrmFlg,
@@ -6107,6 +6180,13 @@ extern void			WlzValueCopyIVertexToIVertex3(
 				  WlzIVertex3 *dst,
 				  WlzIVertex3 *src,
 				  size_t count);
+extern void			WlzIndexedValueBufWeight(
+				  WlzGreyP gP,
+				  int gO,
+				  WlzIndexedValues *ixv,
+				  double *wgt,
+				  int nIdx,
+				  int *idx);
 extern WlzErrorNum 		WlzValueConvertPixel(
 				  WlzPixelV *dstPix,
 				  WlzPixelV srcPix,
