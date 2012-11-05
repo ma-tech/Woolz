@@ -70,6 +70,93 @@ static WlzDVertex3 		WlzCMeshFilterLPLDelta3D(
 				  int doBnd);
 
 /*!
+* \return	Maximum square edge length for the element.
+* \ingroup      WlzMesh
+* \brief        Computes the mesh maximum edge length of the given element.
+* \param        elm			The given element.
+*/
+double		WlzCMeshElmMaxSqEdgLen2D(WlzCMeshElm2D *elm)
+{
+  double	dSq0,
+  		dSq1;                    
+
+  dSq0 = WlzGeomDistSq2D(elm->edu[0].nod->pos, elm->edu[1].nod->pos);
+  dSq1 = WlzGeomDistSq2D(elm->edu[1].nod->pos, elm->edu[2].nod->pos);
+  if(dSq1 > dSq0)
+  {
+    dSq0 = dSq1;
+  }
+  dSq1 = WlzGeomDistSq2D(elm->edu[2].nod->pos, elm->edu[0].nod->pos);
+  if(dSq1 > dSq0)
+  {
+    dSq0 = dSq1;
+  }
+  return(dSq0);
+}
+
+/*!
+* \return	Maximum square edge length for the element.
+* \ingroup      WlzMesh
+* \brief        Computes the mesh maximum edge length of the given element.
+* \param        elm			The given element.
+*/
+double		WlzCMeshElmMaxSqEdgLen2D5(WlzCMeshElm2D5 *elm)
+{
+  double	dSq0,
+  		dSq1;                    
+
+  dSq0 = WlzGeomDistSq3D(elm->edu[0].nod->pos, elm->edu[1].nod->pos);
+  dSq1 = WlzGeomDistSq3D(elm->edu[1].nod->pos, elm->edu[2].nod->pos);
+  if(dSq1 > dSq0)
+  {
+    dSq0 = dSq1;
+  }
+  dSq1 = WlzGeomDistSq3D(elm->edu[2].nod->pos, elm->edu[0].nod->pos);
+  if(dSq1 > dSq0)
+  {
+    dSq0 = dSq1;
+  }
+  return(dSq0);
+}
+
+/*!
+* \return	Maximum square edge length for the element.
+* \ingroup      WlzMesh
+* \brief        Computes the mesh maximum edge length of the given element.
+* \param        elm			The given element.
+*/
+double		WlzCMeshElmMaxSqEdgLen3D(WlzCMeshElm3D *elm)
+{
+  int		idN;
+  double	dSq0,
+  		dSq1;                    
+  WlzCMeshNod3D	*nodes[4];
+
+  dSq0 = 0.0;
+  nodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+  nodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+  nodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+  nodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
+  for(idN = 0; idN < 3; ++idN)
+  {
+    dSq1 = WlzGeomDistSq3D(nodes[idN]->pos, nodes[(idN + 1) % 3]->pos);
+    if(dSq1 > dSq0)
+    {
+      dSq0 = dSq1;
+    }
+  }
+  for(idN = 1; idN < 3; ++idN)
+  {
+    dSq0 = WlzGeomDistSq3D(nodes[3]->pos, nodes[idN]->pos);
+    if(dSq1 > dSq0)
+    {
+      dSq0 = dSq1;
+    }
+  }
+  return(dSq0);
+}
+
+/*!
 * \ingroup      WlzMesh
 * \brief        Computes the mesh maximum edge length which is used to
 *               terminate vertex location. This should not be allowed
@@ -4703,7 +4790,96 @@ int		WlzCMeshSetElmIdxTbl3D(WlzCMesh3D *mesh, int *idxTb)
 * 					of indices possible in the current
 * 					buffer. This must be valid and may
 * 					be modified on return.
-* \param	*idxBuf			Pointer to the current node index
+* \param	idxBuf			Pointer to the current node index
+* 					buffer. This must either be valid
+* 					or a pointer to a NULL array. The
+* 					array pointer may be modified on
+* 					return.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int		WlzCMeshNodRingNodIndices2D(WlzCMeshNod2D *nod,
+					     int *maxIdxBuf,
+					     int **idxBuf,
+				             WlzErrorNum *dstErr)
+{
+  int		nN;
+  WlzCMeshEdgU2D *edu0,
+  		*edu1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Count the number of edge uses directed away from this node plus one. */
+  nN = 1;
+  edu1 = edu0 = nod->edu;
+  do
+  {
+    if((edu1->opp == NULL) || (edu1->opp == edu1))
+    {
+      nN += 2;
+    }
+    else
+    {
+      nN += 1;
+    }
+    edu1 = edu1->nnxt;
+  } while((edu1 != NULL) && (edu1 != edu0));
+  /* Re-allocate the index buffer if required. */
+  if((*idxBuf == NULL) || (*maxIdxBuf < nN))
+  {
+    *maxIdxBuf = 2 * nN;
+    if((*idxBuf = (int *)
+                  AlcRealloc(*idxBuf, sizeof(int) * *maxIdxBuf)) == NULL)
+    {
+      nN = 0;
+      *maxIdxBuf = 0;
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Fill the buffer with the indices of the nodes on the opposite ends
+   * of all edge uses directed away from the node. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int idN;
+
+    idN = 1;
+    edu1 = edu0;
+    (*idxBuf)[0] = nod->idx;
+    do
+    {
+      if((edu1->opp == NULL) || (edu1->opp == edu1))
+      {
+        (*idxBuf)[idN++] = edu1->next->nod->idx;
+      }
+      (*idxBuf)[idN++] = edu1->next->next->nod->idx;
+      edu1 = edu1->nnxt;
+    } while((edu1 != NULL) && (edu1 != edu0));
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    nN = 0;
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(nN);
+}
+
+/*!
+* \return	Number of nodes in the ring plus one for the given node or
+* 		zero on error.
+* \ingroup	WlzMesh
+* \brief	Gathers the indices of the nodes that form a ring or
+* 		partial rings around the given node. Where members of the
+*		ring are the immediate neighbours of the given node. The
+*		given node's index will always be the first in the
+*		buffer but the remainder of the node indices may be
+*		unsorted.
+* \param	nod			Given node which must be valid.
+* \param	maxIdxBuf		Pointer to the current maximum number
+* 					of indices possible in the current
+* 					buffer. This must be valid and may
+* 					be modified on return.
+* \param	idxBuf			Pointer to the current node index
 * 					buffer. This must either be valid
 * 					or a pointer to a NULL array. The
 * 					array pointer may be modified on
@@ -4789,7 +4965,7 @@ int		WlzCMeshNodRingNodIndices2D5(WlzCMeshNod2D5 *nod,
 * 					of indices possible in the current
 * 					buffer. This must be valid and may
 * 					be modified on return.
-* \param	*idxBuf			Pointer to the current node index
+* \param	idxBuf			Pointer to the current node index
 * 					buffer. This must either be valid
 * 					or a pointer to a NULL array. The
 * 					array pointer may be modified on
@@ -4850,4 +5026,119 @@ int		WlzCMeshNodRingElmIndices2D5(WlzCMeshNod2D5 *nod,
     *dstErr = errNum;
   }
   return(nE);
+}
+
+/*!
+* \return	Number of nodes in the ring or zero on error.
+* \ingroup	WlzMesh
+* \brief	Gathers the indices of the nodes that form a ring or
+* 		partial rings around the given element. Where members
+* 		of the ring are the nodes of the element followed by
+* 		the immediate edge neighbours of these nodes. The
+*		node indices may be unsorted (apart from the element
+*		nodes being first and in edge use order) but they will
+*		not have duplicates.
+* \param	elm			Given element which must be valid.
+* \param	maxIdxBuf		Pointer to the current maximum number
+* 					of indices possible in the current
+* 					buffer. This must be valid and may
+* 					be modified on return.
+* \param	idxBuf			Pointer to the current node index
+* 					buffer. This must either be valid
+* 					or a pointer to a NULL array. The
+* 					array pointer may be modified on
+* 					return.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int		WlzCMeshElmRingNodIndices2D(WlzCMeshElm2D *elm, int *maxIdxBuf,
+					    int **idxBuf, WlzErrorNum *dstErr)
+{
+  int		idE,
+  		idN,
+  		nN;
+  WlzCMeshEdgU2D *edu0,
+  		*edu1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Count the number of edge uses directed away from this node, there
+   * will be one per element. */
+  nN = 3;
+  for(idE = 0; idE < 3; ++idE)
+  {
+    edu1 = edu0 = elm->edu[idE].nod->edu;
+    do
+    {
+      ++nN;
+      edu1 = edu1->nnxt;
+    } while((edu1 != NULL) && (edu1 != edu0));
+  }
+  /* Re-allocate the index buffer if required. */
+  if((*idxBuf == NULL) || (*maxIdxBuf < nN))
+  {
+    *maxIdxBuf = 2 * nN;
+    if((*idxBuf = (int *)
+                  AlcRealloc(*idxBuf, sizeof(int) * *maxIdxBuf)) == NULL)
+    {
+      nN = 0;
+      *maxIdxBuf = 0;
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Fill the buffer with the indices of the elements that use the node. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		*buf;
+
+    buf = *idxBuf;
+    for(idE = 0; idE < 3; ++idE)
+    {
+      buf[idE] = elm->edu[idE].nod->idx;
+    }
+    nN = 3;
+    for(idE = 0; idE < 3; ++idE)
+    {
+      edu1 = edu0 = elm->edu[idE].nod->edu;
+      do
+      {
+        int	nIdx;
+
+	nIdx = edu1->next->nod->idx;
+	for(idN = 0; idN < nN; ++idN)
+	{
+	  if(nIdx == buf[idN])
+	  {
+	    nIdx = -1;
+	    break;
+	  }
+	}
+	if(nIdx >= 0)
+	{
+	  buf[nN++] = nIdx;
+	}
+	nIdx = edu1->next->next->nod->idx;
+	for(idN = 0; idN < nN; ++idN)
+	{
+	  if(nIdx == buf[idN])
+	  {
+	    nIdx = -1;
+	    break;
+	  }
+	}
+	if(nIdx >= 0)
+	{
+	  buf[nN++] = nIdx;
+	}
+        edu1 = edu1->nnxt;
+      } while((edu1 != NULL) && (edu1 != edu0));
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    nN = 0;
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(nN);
 }
