@@ -129,6 +129,13 @@ static WlzErrorNum 		WlzCMeshAddElmToGrid2D5(
 static WlzErrorNum 		WlzCMeshAddElmToGrid3D(
 				  WlzCMesh3D *mesh,
 				  WlzCMeshElm3D *elm);
+static WlzErrorNum 		WlzCMeshElmFuse2D2(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshElm2D *gElm,
+				  int edgMsk);
+static WlzErrorNum 		WlzCMeshElmFuse2D3(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshElm2D *gElm);
 static int			WlzCMeshCompLBTNodPos2D(
 				  WlzDVertex2 *nPos,
 				  WlzLBTDomain2D *lDom,
@@ -2356,22 +2363,31 @@ WlzErrorNum  	WlzCMeshSetElm3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm,
 * \return	Opposite face or NULL.
 * \ingroup	WlzMesh
 * \brief	Finds the face opposite to the given face within the mesh.
-* 		This function is only needed when building a mesh.
+* 		This function is only needed when building a mesh. To speed
+* 		up checking for the opposite face, the sum of the face node
+* 		indices is used to quickly reject most possible faces.
 * \param	gFce			Given face.
 */
 static WlzCMeshFace *WlzCMeshFindOppFce(WlzCMeshFace *gFce)
 {
   int		idM,
   		idN,
+		gIdxSum,
+		tIdxSum,
 		cnt = 0;
   WlzCMeshNod3D	*tmp;
   WlzCMeshEdgU3D *fEdg,
   		*tEdg;
   WlzCMeshFace	*tFce,
   		*oFce = NULL;
-  WlzCMeshNod3D *tNod[3];
+  WlzCMeshNod3D *gNod[3],
+  		*tNod[3];
 
-  tEdg = fEdg = gFce->edu[0].nod->edu;
+  gNod[0] = gFce->edu[0].nod;
+  gNod[1] = gFce->edu[1].nod;
+  gNod[2] = gFce->edu[2].nod;
+  tEdg = fEdg = gNod[0]->edu;
+  gIdxSum = gNod[0]->idx + gNod[1]->idx + gNod[2]->idx;
   do
   {
     cnt = 0;
@@ -2381,25 +2397,32 @@ static WlzCMeshFace *WlzCMeshFindOppFce(WlzCMeshFace *gFce)
       tNod[0] = tFce->edu[0].nod;
       tNod[1] = tFce->edu[1].nod;
       tNod[2] = tFce->edu[2].nod;
-      for(idN = 0; idN < 3; ++idN)
+      tIdxSum = tNod[0]->idx + tNod[1]->idx + tNod[2]->idx;
+      if(tIdxSum == gIdxSum)
       {
-	for(idM = idN; idM < 3; ++idM)
+	/* Sum of node indices around face is the same, yet it's not the
+	 * same face. It's probably the opposite face, but may not be so
+	 * check for nodes being the same. */
+	for(idN = 0; idN < 3; ++idN)
 	{
-	  if(tNod[idM] == gFce->edu[idN].nod)
+	  for(idM = idN; idM < 3; ++idM)
 	  {
-	    if(idN < 2)
+	    if(tNod[idM] == gNod[idN])
 	    {
-	      tmp = tNod[idN];
-	      tNod[idN] = tNod[idM];
-	      tNod[idM] = tmp;
+	      if(idN < 2)
+	      {
+		tmp = tNod[idN];
+		tNod[idN] = tNod[idM];
+		tNod[idM] = tmp;
+	      }
+	      ++cnt;
+	      break;
 	    }
-	    ++cnt;
+	  }
+	  if(cnt != (idN + 1))
+	  {
 	    break;
 	  }
-	}
-	if(cnt != (idN + 1))
-	{
-	  break;
 	}
       }
     }
@@ -3302,8 +3325,7 @@ WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
       }
     }
   }
-  /* Pass 2: Delete all elements flaged as outside or with very small/
-   * negative area. */
+  /* Pass 2: Delete all elements flaged as outside. */
   for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
   {
     elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
@@ -3313,7 +3335,16 @@ WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
       {
         (void )WlzCMeshDelElm2D(mesh, elm);
       }
-      else if((elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) != 0)
+    }
+  }
+  /* Pass 3: Delete all very small elements. */
+  for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+  {
+    elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+    if(elm->idx >= 0)
+    {
+
+      if((elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) != 0)
       {
         double sA2;
 
@@ -3322,9 +3353,9 @@ WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
 	nodes[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
 	sA2 = WlzGeomTriangleSnArea2(nodes[0]->pos, nodes[1]->pos,
 	                             nodes[2]->pos);
-        if(sA2 < WLZ_MESH_TOLERANCE_SQ)
+        if(sA2 < 1.0)
 	{
-          (void )WlzCMeshDelElm2D(mesh, elm);
+	  errNum = WlzCMeshElmFuse2D(mesh, elm);
 	}
       }
     }
@@ -9177,294 +9208,270 @@ void		WlzCMeshDbgOutVTK(FILE *fP, WlzCMeshP mesh)
   }
 }
 
-#ifdef WLZ_CMESH_DEBUG_MAIN
-
-
-extern char 	*optarg;
-extern int 	optind,
-		opterr,
-		optopt;
-
-int		main(int argc, char *argv[])
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Fuses the given element in the mesh.
+* \param	mesh			The mesh.
+* \param	gElm			Element to be removed by fusion.
+*/
+WlzErrorNum	WlzCMeshElmFuse2D(WlzCMesh2D *mesh, WlzCMeshElm2D *gElm)
 {
-  int		idE,
-  		nElm = 0,
-  		ok = 1,
-  		option,
-  		usage = 0,
-		features = 0,
-		laplacianItr = 0,
-		lowPassItr = 0,
-		smoothBnd = 0,
-		verify = 0;
-  double	laplacianAlpha = 0.1,
-		lowPassLambda = 0.33,
-		lowPassMu = -0.34,
-  		minElmSz = 25.0,
-  		maxElmSz = 100.0;
-  int		*idx = NULL;
-  double	*vol = NULL,
-  		*minLen = NULL,
-		*maxLen = NULL;
-  FILE		*fP = NULL;
-  char		*inObjFileStr,
-  		*outFileStr;
-  const char	*errMsgStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzObject	*obj = NULL;
-  WlzCMeshP 	mesh;
-  static char   optList[] = "a:BFhl:L:m:M:o:u:VW:";
-  const char    inObjFileStrDef[] = "-",
-  	        outFileStrDef[] = "-";
 
-  mesh.v = NULL;
-  opterr = 0;
-  inObjFileStr = (char *)inObjFileStrDef;
-  outFileStr = (char *)outFileStrDef;
-  while((usage == 0) && ((option = getopt(argc, argv, optList)) != EOF))
+  if(mesh == NULL)
   {
-    switch(option)
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_2D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if(gElm == NULL)
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(gElm->idx < 0)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    int		idN,
+    		cnt = 0,
+  		msk = 0;
+
+    for(idN = 0; idN < 3; ++idN)
     {
-      case 'a':
-	if(sscanf(optarg, "%lg", &laplacianAlpha) != 1)
-	{
-	  usage = 1;
-	}
-        break;
-      case 'B':
-        smoothBnd = 1;
+      int	t;
+      WlzCMeshEdgU2D *e;
+
+      e = &(gElm->edu[0]);
+      t = (e->opp != NULL) && (e->opp != e);
+      cnt += t;
+      msk |= t << idN;
+    }
+    switch(cnt)
+    {
+      case 2:
+        errNum = WlzCMeshElmFuse2D2(mesh, gElm, msk);
 	break;
-      case 'F':
-        features = 1;
+      case 3:
+        errNum = WlzCMeshElmFuse2D3(mesh, gElm);
 	break;
-      case 'l':
-	if(sscanf(optarg, "%lg", &lowPassLambda) != 1)
-	{
-	  usage = 1;
-	}
-        break;
-      case 'L':
-	if(sscanf(optarg, "%d", &laplacianItr) != 1)
-	{
-	  usage = 1;
-	}
-        break;
-      case 'm':
-        if(sscanf(optarg, "%lg", &minElmSz) != 1)
-	{
-	  usage = 1;
-	}
-	break;
-      case 'M':
-        if(sscanf(optarg, "%lg", &maxElmSz) != 1)
-	{
-	  usage = 1;
-	}
-        break;
-      case 'o':
-        outFileStr = optarg;
-	break;
-      case 'u':
-	if(sscanf(optarg, "%lg", &lowPassMu) != 1)
-	{
-	  usage = 1;
-	}
-        break;
-      case 'W':
-	if(sscanf(optarg, "%d", &lowPassItr) != 1)
-	{
-	  usage = 1;
-	}
-        break;
-      case 'V':
-        verify = 1;
-	break;
-      case 'h':
       default:
-	usage = 1;
-	break;
+        break;
     }
   }
-  ok = usage == 0;
-  if(ok)
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Fuses the given element in the mesh where the element has
+* 		two edge neighbours.
+* \param	mesh			The mesh.
+* \param	gElm			Element to be removed by fusion.
+* \param	edgMsk			Element edge mask.
+*/
+static WlzErrorNum WlzCMeshElmFuse2D2(WlzCMesh2D *mesh, WlzCMeshElm2D *gElm,
+				      int edgMsk)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  
+  /* This is unimplemented and simply returns no error. */
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Fuses the given element in the mesh where the element has all
+* 		three edge neighbours. It probably works for only 2 edge
+* 		neighbours too, but is not optimal.
+* \param	mesh			The mesh.
+* \param	gElm			Element to be removed by fusion.
+*/
+static WlzErrorNum WlzCMeshElmFuse2D3(WlzCMesh2D *mesh, WlzCMeshElm2D *gElm)
+{
+  int		idL,
+  		idM,
+  		idN,
+  		maxNEdu,
+		nEdu = 0,
+		nDElm = 0,
+		nBEdu = 0,
+		nBNod = 0,
+		nTElm = 0;
+  WlzCMeshEdgU2D *edu[4];
+  WlzCMeshEdgU2D **bEdu = NULL; /* Array of boundary edge uses (inside the
+  				 * elements to be deleted. */
+  WlzDVertex2	*bPos = NULL;  /* Array of boundary node position pairs. */
+  WlzCMeshNod2D	**bNod = NULL;  /* Array for boundary nodes. */
+  WlzCMeshElm2D **dElm = NULL; /* Array of elements within the boundary to
+  				* be deleted and replaced. */
+  int		*tElmIdx = NULL; /* Indices of the boundary polygon positions
+  				  * that retriangulate the polygon. */
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Collect edge neighbor elements.
+   * Compute upper limit for the number of nodes and elements that surround
+   * the nodes of the given element's nodes. Then allocate a neighbouring
+   * edge use array. */
+  for(idN = 0; idN < 3; ++idN)
   {
-    if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
-       (outFileStr == NULL) || (*outFileStr == '\0'))
+    edu[0] = edu[1] = gElm->edu[idN].nod->edu;
+    do
     {
-      ok = 0;
-      usage = 1;
-    }
-    if(ok && (optind < argc))
+      ++nEdu;
+      edu[1] = edu[1]->nnxt;
+    } while(edu[0] != edu[1]);
+  }
+  maxNEdu = 3 * nEdu;
+  if(((dElm = (WlzCMeshElm2D **)
+              AlcCalloc(maxNEdu, sizeof(WlzCMeshElm2D *))) == NULL) ||
+     ((bEdu = (WlzCMeshEdgU2D **)
+              AlcCalloc(maxNEdu, sizeof(WlzCMeshEdgU2D *))) == NULL) ||
+     ((bPos = (WlzDVertex2 *)
+              AlcCalloc(maxNEdu, sizeof(WlzDVertex2))) == NULL) ||
+     ((bNod = (WlzCMeshNod2D **)
+     	      AlcCalloc(maxNEdu, sizeof(WlzCMeshNod2D *))) == NULL))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+   /* Collect all edge uses of all elements that use a node of the
+    * given element and build the deletion element array. */
+    idL = 0;
+    for(idN = 0; idN < 3; ++idN)
     {
-      if((optind + 1) != argc)
+      edu[0] = gElm->edu[idN].nod->edu;
+      edu[1] = edu[0];
+      do
       {
-        usage = 1;
-        ok = 0;
-      }
-      else
+	int	add = 1;
+
+	for(idM = 0; idM < nDElm; ++idM)
+	{
+	  if(edu[1]->elm == dElm[idM])
+	  {
+	    add = 0;
+	    break;
+	  }
+	}
+	if(add)
+	{
+	  bEdu[idL++] = edu[1];
+	  bEdu[idL++] = edu[1]->next;
+	  bEdu[idL++] = edu[1]->next->next;
+	  dElm[nDElm++] = edu[1]->elm;
+	}
+	edu[1] = edu[1]->nnxt;
+      } while(edu[0] != edu[1]);
+    }
+    /* Remove all edge uses from the boundary edge array which
+     * have an opposite edge use and that opposite edge use is used
+     * by an element in the deletion array. */
+    idL = 0;
+    for(idN = 0; idN < maxNEdu; ++idN)
+    {
+      edu[0] = bEdu[idN];
+      if(edu[0])
       {
-        inObjFileStr = *(argv + optind);
+        int	keep = 1;
+
+	edu[1] = edu[0]->opp;
+	if((edu[1] == NULL) || (edu[1] == edu[0]))
+	{
+	  keep = 1;
+	}
+	else
+	{
+	  for(idM = 0; idM < nDElm; ++idM)
+	  {
+	    if(edu[1]->elm == dElm[idM])
+	    {
+	      keep = 0;
+	      break;
+	    }
+	  }
+	}
+	if(keep)
+	{
+	  bEdu[idL++] = edu[0];
+	}
+      }
+    }
+    nBEdu = idL;
+    /* Sort the edge uses to form a loop of node positions. */
+    bPos[0] = bEdu[0]->nod->pos;
+    for(idM = 0; idM < (nBEdu - 1); ++idM)
+    {
+      WlzCMeshNod2D *nNod;
+
+      nNod = bEdu[idM]->next->nod;
+      for(idN = idM + 1; idN < nBEdu; ++idN)
+      {
+        if(bEdu[idN]->nod == nNod)
+	{
+	  edu[0] = bEdu[idM + 1];
+	  bEdu[idM + 1] = bEdu[idN];
+	  bEdu[idN] = edu[0];
+	  bPos[nBNod++] = nNod->pos;
+	  break;
+	}
       }
     }
   }
-  if(ok)
+  /* Delete the elements connected to the nodes of the given element. */
+  for(idN = 0; (errNum == WLZ_ERR_NONE) && (idN < nDElm); ++idN)
   {
-    if((inObjFileStr == NULL) ||
-       (*inObjFileStr == '\0') ||
-       ((fP = (strcmp(inObjFileStr, "-")?
-              fopen(inObjFileStr, "r"): stdin)) == NULL) ||
-       ((obj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
-       (errNum != WLZ_ERR_NONE))
+    errNum = WlzCMeshDelElm2D(mesh, dElm[idN]);
+  }
+  /* Triangulate the empty polygon. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzGeomPolyTriangulate2D(nBNod, bPos, &nTElm, &tElmIdx);
+  }
+  /* For each of the boundary node positions make sure that a node
+   * exists and gather the nodes. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    for(idN = 0; idN < nBNod; ++idN)
     {
-      ok = 0;
-      (void )fprintf(stderr,
-                     "%s: failed to read object from file %s\n",
-                     *argv, inObjFileStr);
-    }
-    if(fP && strcmp(inObjFileStr, "-"))
-    {
-      (void )fclose(fP); fP = NULL;
+      if((bNod[idN] = WlzCMeshMatchNod2D(mesh, bPos[idN])) == NULL)
+      {
+        bNod[idN] = WlzCMeshNewNod2D(mesh, bPos[idN], &errNum);
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  break;
+	}
+      }
     }
   }
-  if(ok)
+  /* Create the new mesh elements filling the boundary polygon. */
+  if(errNum == WLZ_ERR_NONE)
   {
-    (void )WlzAssignObject(obj, NULL);
-    mesh = WlzCMeshFromObj(obj, minElmSz, maxElmSz, NULL, &errNum);
-    if(errNum != WLZ_ERR_NONE)
+    for(idN = 0; idN < nTElm; ++idN)
     {
-      ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-      (void )fprintf(stderr,
-      		     "%s Failed to create conforming mesh, %s.\n",
-      		     argv[0],
-		     errMsgStr);
-    }
-  }
-  if(ok)
-  {
-    WlzCMeshSetBoundNodFlags(mesh);
-    if(verify)
-    {
-      errNum = WlzCMeshVerify(mesh, NULL, 1, stderr);
+      int	*idx;
+
+      idx = tElmIdx + (idN * 3);
+      (void )WlzCMeshNewElm2D(mesh,
+                              bNod[idx[0]], bNod[idx[1]], bNod[idx[2]],
+			      1, &errNum);
       if(errNum != WLZ_ERR_NONE)
       {
-	ok = 0;
-	(void )WlzStringFromErrorNum(errNum, &errMsgStr);
-	(void )fprintf(stderr,
-		       "%s Failed to verify mesh, %s.\n",
-		       argv[0],
-		       errMsgStr);
+	break;
       }
     }
   }
-  if(ok && (laplacianItr > 0))
-  {
-    errNum = WlzCMeshLaplacianSmooth(mesh, laplacianItr, laplacianAlpha,
-    				     smoothBnd, 1);
-    if((errNum == WLZ_ERR_NONE) && verify)
-    {
-      errNum = WlzCMeshVerify(mesh, NULL, 1, stderr);
-    }
-    if(errNum != WLZ_ERR_NONE)
-    {
-      ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-      (void )fprintf(stderr,
-                     "%s Failed to Laplacian smooth mesh, %s.\n",
-		     argv[0],
-		     errMsgStr);
-    }
-  }
-  if(ok && (lowPassItr > 0))
-  {
-    errNum = WlzCMeshLPFilterLM(mesh, lowPassLambda, lowPassMu,
-    				lowPassItr, smoothBnd, 1);
-    if((errNum == WLZ_ERR_NONE) && verify)
-    {
-      errNum = WlzCMeshVerify(mesh, NULL, 1, stderr);
-    }
-    if(errNum != WLZ_ERR_NONE)
-    {
-      ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-      (void )fprintf(stderr,
-                     "%s Failed to low pass filter mesh, %s.\n",
-		     argv[0],
-		     errMsgStr);
-    }
-  }
-  if(ok)
-  {
-    if((fP = (strcmp(outFileStr, "-")?
-	     fopen(outFileStr, "w"): stdout)) == NULL)
-    {
-      ok = 0;
-      (void )fprintf(stderr,
-		     "%s: Failed to open output file %s.\n",
-		     argv[0], outFileStr);
-    }
-  }
-  if(ok && features)
-  {
-    errNum = WlzCMeshCmpElmFeat(mesh, &nElm, &idx, &vol, &minLen, &maxLen);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      for(idE = 0; idE < nElm; ++idE)
-      {
-        (void )printf("%d %lg %lg %lg\n",
-	              *(idx + idE), *(vol + idE),
-	              *(minLen + idE), *(maxLen + idE));
-      }
-    }
-    else
-    {
-      ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-      (void )fprintf(stderr,
-                     "%s Failed to compute mesh features, %s.\n",
-		     argv[0],
-		     errMsgStr);
-    }
-    AlcFree(idx);
-    AlcFree(vol);
-    AlcFree(minLen);
-    AlcFree(maxLen);
-  }
-  if(ok)
-  {
-    WlzCMeshDbgOutVTK(fP, mesh);
-  }
-  if(fP && strcmp(outFileStr, "-"))
-  {
-    (void )fclose(fP); fP = NULL;
-  }
-  (void )WlzFreeObj(obj);
-  if(usage)
-  {
-    fprintf(stderr,
-            "Usage: %s [-h] [-o<output file>]\n"
-	    "       [-L#] [-a#] [-W#] [-l#] [-u#] [-B]\n"
-	    "       [-m#] [-M#] [-F] [-V] [<input object>]\n"
-    	    "Computes a conforming mesh for the given input object.\n"
-	    "Options are:\n"
-	    "  -h  Help, prints this usage message.\n"
-	    "  -o  Output file.\n"
-	    "  -L  Number of Laplacian smoothing iterations.\n"
-	    "  -a  Laplacian alpha parameter.\n"
-	    "  -W  Number of low pass filter smoothing iterations.\n"
-	    "  -l  Low pass filter lambda value.\n"
-	    "  -u  Low pass filter mu value.\n"
-	    "  -B  Smooth boundary (requires a smoothing method to be\n"
-	    "      selected).\n"
-	    "  -m  Minimum mesh element size.\n"
-	    "  -M  Maximum mesh element size.\n"
-	    "  -F  Prints features of the mesh elements to the standard\n"
-	    "      output.\n"
-	    "  -V  Verify mesh. This may take a long time and may give\n"
-	    "      segmentation faults for buggy meshes.\n",
-	    argv[0]);
-
-  }
-  return(!ok);
+  AlcFree(bEdu);
+  AlcFree(bPos);
+  AlcFree(bNod);
+  AlcFree(dElm);
+  AlcFree(tElmIdx);
+  return(errNum);
 }
-#endif /* WLZ_CMESH_DEBUG_MAIN */
