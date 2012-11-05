@@ -45,6 +45,20 @@ static char _WlzGeometry_c[] = "University of Edinburgh $Id$";
 #include <limits.h>
 #include <Wlz.h>
 
+/*!
+* \struct	_WlzGeomPolyListItem2D
+* \ingroup	WlzGeometry
+* \brief	Item for polygon vertex list.
+* 		See WlzGeomPolyTriangulate2D().
+*/
+typedef struct _WlzGeomPolyListItem2D
+{
+  int		v;	/*!< Index of the vertex in the given polygon. */
+  int		cvx;	/*!< Non zero if polygon is convex at vertex. */
+  struct _WlzGeomPolyListItem2D	*prev;	/*!< Previous vertex. */
+  struct _WlzGeomPolyListItem2D	*next;	/*!< Next vertex. */
+} WlzGeomPolyListItem2D;
+
 extern double			cbrt(double c);
 
 static int			WlzGeomVtxSortRadialFn(
@@ -91,10 +105,18 @@ static int			WlzGeomTriangleTriangleIntersect2DA(
 static int			WlzGeomTriangleTriangleIntersect3DA(
 				  WlzDVertex3 s[],
 				  WlzDVertex3 t[]);
+static int			WlzGeomPolyListIsEar2D(
+				  int n,
+				  WlzDVertex2 *v,
+				  WlzGeomPolyListItem2D *p,
+				  WlzErrorNum *dstErr);
 static double			WlzGeomCot2D3(
 				  WlzDVertex2 a,
 				  WlzDVertex2 b,
 				  WlzDVertex2 c);
+static void 			WlzGeomPolyTriSetCvx(
+				  WlzDVertex2 *v,
+				  WlzGeomPolyListItem2D *p);
 
 /*!
 * \return	Position of the centroid of the given triangle.
@@ -1372,7 +1394,7 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
    * onto vectors perpendicular to the faces of the AABB. */
   if((tst == 0) || (tst == 1))
   {
-    /* Compute the AABB of the tetrahedron. */
+    /* Compute the AABB of the tetrahedron and check for intersection. */
     WlzDVertex3	bT[2];
 
     bT[0] = bT[1] = t[0];
@@ -1386,29 +1408,46 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
       {
 	bT[1].vtX = t[idx].vtX;
       }
-      if(t[idx].vtY < bT[0].vtY)
-      {
-	bT[0].vtY = t[idx].vtY;
-      }
-      else if(t[idx].vtY > bT[1].vtY)
-      {
-	bT[1].vtY = t[idx].vtY;
-      }
-      if(t[idx].vtZ < bT[0].vtZ)
-      {
-	bT[0].vtZ = t[idx].vtZ;
-      }
-      else if(t[idx].vtZ > bT[1].vtZ)
-      {
-	bT[1].vtZ = t[idx].vtZ;
-      }
     }
-    /* Compare AABB of triangle with given AABB. */
-    if((-b.vtX - bT[1].vtX > tol) || (bT[0].vtX - b.vtX > tol) ||
-       (-b.vtY - bT[1].vtY > tol) || (bT[0].vtY - b.vtY > tol) ||
-       (-b.vtZ - bT[1].vtZ > tol) || (bT[0].vtZ - b.vtZ > tol))
+    if((-b.vtX - bT[1].vtX > tol) || (bT[0].vtX - b.vtX > tol))
     {
-      isn = 0;        /* No intersection of the AABB with AABB(tetrahedron). */
+     isn = 0;
+    }
+    else
+    {
+      for(idx = 1; idx <= 3; ++idx)
+      {
+	if(t[idx].vtY < bT[0].vtY)
+	{
+	  bT[0].vtY = t[idx].vtY;
+	}
+	else if(t[idx].vtY > bT[1].vtY)
+	{
+	  bT[1].vtY = t[idx].vtY;
+	}
+      }
+      if((-b.vtY - bT[1].vtY > tol) || (bT[0].vtY - b.vtY > tol))
+      {
+	isn = 0;
+      }
+      else
+      {
+	for(idx = 1; idx <= 3; ++idx)
+	{
+	  if(t[idx].vtZ < bT[0].vtZ)
+	  {
+	    bT[0].vtZ = t[idx].vtZ;
+	  }
+	  else if(t[idx].vtZ > bT[1].vtZ)
+	  {
+	    bT[1].vtZ = t[idx].vtZ;
+	  }
+	}
+	if((-b.vtZ - bT[1].vtZ > tol) || (bT[0].vtZ - b.vtZ > tol))
+	{
+	  isn = 0;
+	}
+      }
     }
   }
   /* Check for intersection using projections of the AABB onto vectors
@@ -6262,4 +6301,225 @@ double 		WlzGeomTetrahedronVtxDistSq3D(WlzDVertex3 *dstU, int *dstFI,
     *dstFI = fIdx;
   }
   return(dSq);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzGeometry
+* \brief	Given a sorted list or polygon vertex positions. The polygon
+* 		is triangulated by ear clipping and the resulting triangulation
+* 		is returned.
+*
+* 		The algorithm is based on the paper:
+* 		Kong, X., H. Everett, and G.T. Toussaint. 
+* 		The Graham scan triangulates simple polygons. 
+* 		Pattern Recognition Letters. November 1990, 713-716.
+*
+* 		In this algorithm the input is a simple polygon stored
+* 		as a doubly linked circular list. With next(Pi) and
+* 		prev(Pi) the successor and predecessor of Pi respectively.
+* 		The algorithm produces a set D of diagonals comprising a
+* 		triangulation of P. R is a set containing all the concave
+* 		vertices of P.
+* \verbatim
+  1.  pi = p2;
+  2.  while (pi==Po) do
+  3.  if(IsAnEar(P,R, prev(pi)) and P is not a triangle // prev(Pi) is an ear
+  4.  D = D U (prev (prev (Pi)), Pi) // Store a diagonal
+  5.  P = P - prev(Pi) // Cut the ear
+  6.  if Pi in R and Pi is a convex vertex // Pi has become convex
+  7.  R = R - Pi
+  8.  if prev(Pi) in R and prev(Pi) is a convex vertex // prev(Pi) now convex
+  9.  R = R - prev(pi)
+  10. if (prev(Pi)=P0) // next(P0) was cut
+  11. Pi = next(Pi) // Advance the scan
+  12. else pi = next(pi) // prev(pi) not an ear or P is triangle. Advance scan.
+  13. end while
+  \endverbatim
+*
+* \param	nPVtx			Number of polygon vertices.
+* \param	pVtx			The polygon vertices.
+* \param	dstNTri			Destination pointer for the number of
+* 					triangles.
+* \param 	dstTri			Indices (triples) of the vertices
+* 					for each triangle. This should be
+* 					freed using AlcFree().
+*/
+WlzErrorNum	WlzGeomPolyTriangulate2D(int nPVtx, WlzDVertex2 *pVtx,
+				         int *dstNTri, int **dstTri)
+{
+  int		nTri = 0;
+  int		*tri = NULL;
+  WlzGeomPolyListItem2D *polyList = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((pVtx == NULL) || (dstNTri == NULL) || (dstTri == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(nPVtx < 3)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    /* Create a linked list for the polygon vertices and a return
+     * array for the triangles. */
+    if(((polyList = (WlzGeomPolyListItem2D *)
+                AlcMalloc(nPVtx *  sizeof(WlzGeomPolyListItem2D))) == NULL) ||
+       ((tri = (int *)AlcMalloc(3 * (nPVtx - 2) * sizeof(int))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nTri = nPVtx - 2;
+    if(nPVtx == 3)
+    {
+      /* Trivial case of polygon is a triangle. */
+      tri[0] = 0;
+      tri[1] = 1;
+      tri[2] = 2;
+    }
+    else
+    {
+      int	idV,
+      		idT,
+		repMax;
+      WlzGeomPolyListItem2D *p;
+
+      idT = 0;
+      /* Set up the linked list of polygon vertices. */
+      for(idV = 0; idV < nPVtx; ++idV)
+      {
+	p = &(polyList[idV]);
+        p->v = idV;
+	p->prev = &(polyList[(idV + nPVtx - 1) % nPVtx]);
+	p->next = &(polyList[(idV + 1) % nPVtx]);
+      }
+      /* Set convexity. */
+      for(idV = 0; idV < nPVtx; ++idV)
+      {
+	p = &(polyList[idV]);
+	WlzGeomPolyTriSetCvx(pVtx, p);
+      }
+      /* Pull of ears until there are none left. */
+      repMax = nPVtx * 2;
+      p = polyList;
+      do
+      {
+	if(p == p->next->next->next)
+	{
+	  int	*t;
+
+	  t = &(tri[idT++ * 3]);
+	  t[0] = p->v;
+	  t[1] = p->next->v;
+	  t[2] = p->next->next->v;
+	}
+	else if(WlzGeomPolyListIsEar2D(nPVtx, pVtx, p, &errNum))
+	{
+	  int	*t;
+
+	  /* Add the ear triangle. */
+	  t = &(tri[idT++ * 3]);
+	  t[0] = p->prev->v;
+	  t[1] = p->v;
+	  t[2] = p->next->v;
+	  /* Cut off the ear. */
+	  p->prev->next = p->next;
+	  p->next->prev = p->prev;
+	  /* Update convexity of previous and next vertices. */
+          WlzGeomPolyTriSetCvx(pVtx, p->prev);
+          WlzGeomPolyTriSetCvx(pVtx, p->next);
+	  /* advance to the next vertex. */
+	}
+	p = p->next;
+      } while((errNum == WLZ_ERR_NONE) && (idT < nTri) && (repMax-- > 0));
+      if(repMax <= 0)
+      {
+        errNum = WLZ_ERR_DOMAIN_DATA;
+      }
+    }
+  }
+  AlcFree(polyList);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    AlcFree(tri);
+    tri = NULL;
+    nTri = 0;
+  }
+  if(dstTri)
+  {
+    *dstTri = tri;
+  }
+  if(dstNTri)
+  {
+    *dstNTri = nTri;
+  }
+  return(errNum);
+}
+
+
+/*!
+* \return	Status of vertex Pi in polygon P, true if Pi is an ear in
+* 		polygon P and false otherwise.
+* \ingroup	WlzGeometry
+* \brief	Determines whether the vertex of the given polygon is an ear.
+*		See WlzGeomPolyTriangulate2D().
+* \param	n		Number of vertices in the polygon.
+* \param	v		Polygon vertex coordinates.
+* \param	p		Polygon list item for vertex.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static int	WlzGeomPolyListIsEar2D(int n, WlzDVertex2 *v,
+				       WlzGeomPolyListItem2D *p,
+				       WlzErrorNum *dstErr)
+{
+  int		ear = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(p->cvx)
+  {
+    WlzDVertex2	v0,
+    		v1,
+		v2;
+    WlzGeomPolyListItem2D *p0,
+    		*p1;
+    
+    ear = 1;
+    p0 = p->prev;
+    p1 = p->next;
+    v0 = v[p0->v];
+    v1 = v[p->v];
+    v2 = v[p1->v];
+    while((ear == 1) && ((p1 = p1->next) != p0) && (n-- >= 0))
+    {
+      ear = (WlzGeomVxInTriangle2D(v0, v1, v2, v[p1->v]) < 0);
+    }
+  }
+  if(n < 0)
+  {
+    ear = 0;
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ear);
+}
+
+/*!
+* \ingroup	WlzGeometry
+* \brief	sets the convexity flag for the vertex in it's polygon
+* 		list item.
+*		See WlzGeomPolyTriangulate2D().
+* \param	v		Polygon vertex coordinates.
+* \param	p		Polygon list item for vertex.
+*/
+static void 	WlzGeomPolyTriSetCvx(WlzDVertex2 *v, WlzGeomPolyListItem2D *p)
+{
+  p->cvx = (WlzGeomTriangleSnArea2(v[p->prev->v], v[p->v], v[p->next->v]) > 0);
 }
