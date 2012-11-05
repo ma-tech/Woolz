@@ -108,7 +108,7 @@ static void usage(char *proc_str)
 	  "Options:\n"
 	  "\t  -h        help - prints this usage message\n"
 	  "\t  -d        dither values\n"
-	  "\t  -u        convert to unsigne byte values\n"
+	  "\t  -u        convert to unsigned byte values\n"
 	  "",
 	  proc_str,
 	  WlzVersion());
