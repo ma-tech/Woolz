@@ -2860,3 +2860,111 @@ int             WlzValueDitherI(int p0, int p1, int p2)
   v = p1 + WLZ_NINT(d);
   return(v);
 }
+
+/*!
+* \ingroup	WlzValueUtils
+* \brief	Given an indexed values, weights and an array of indices 
+* 		into the indexed values; weights and sums the indexed values
+* 		setting the grey value to the sum of the weighted values.
+* 		The type of the grey pointer must be the same as the type
+* 		of the indexed values.
+* \param	gP			Grey pointer.
+* \param	gO			Grey pointer offset.
+* \param	ixv			Indexed values.
+* \param	wgt			Weights.
+* \param	nIdx			Number of indices into the indexed
+* 					values and the number of weights.
+* \param	idx			Indices into the indexed values.
+*/
+void 		WlzIndexedValueBufWeight(WlzGreyP gP, int gO,
+				         WlzIndexedValues *ixv, double *wgt,
+					 int nIdx, int *idx)
+{
+  int		i;
+
+  switch(ixv->vType)
+  {
+    case WLZ_GREY_UBYTE:
+      {
+	int	x = 0;
+
+	for(i = 0; i < nIdx; ++i)
+	{
+	  x += wgt[i] * *(WlzUByte *)WlzIndexedValueGet(ixv, idx[i]);
+	}
+	*(gP.ubp + gO) = WLZ_CLAMP(x, 0, UCHAR_MAX);
+      }
+      break;
+    case WLZ_GREY_SHORT:
+      {
+	int	x = 0;
+
+	for(i = 0; i < nIdx; ++i)
+	{
+	  x += wgt[i] * *(short *)WlzIndexedValueGet(ixv, idx[i]);
+	}
+	*(gP.shp + gO) = WLZ_CLAMP(x, SHRT_MIN, SHRT_MAX);
+      }
+      break;
+    case WLZ_GREY_INT:
+      {
+	int	x = 0;
+
+	for(i = 0; i < nIdx; ++i)
+	{
+	  x += wgt[i] * *(int *)WlzIndexedValueGet(ixv, idx[i]);
+	}
+	*(gP.inp + gO) = x;
+      }
+      break;
+    case WLZ_GREY_FLOAT:
+      {
+	float	x = 0.0;
+
+	for(i = 0; i < nIdx; ++i)
+	{
+	  x += wgt[i] * *(float *)WlzIndexedValueGet(ixv, idx[i]);
+	}
+	*(gP.flp + gO) = x;
+      }
+      break;
+    case WLZ_GREY_DOUBLE:
+      {
+	double	x = 0.0;
+
+	for(i = 0; i < nIdx; ++i)
+	{
+	  x += wgt[i] * *(double *)WlzIndexedValueGet(ixv, idx[i]);
+	}
+	*(gP.dbp + gO) = x;
+      }
+      break;
+    case WLZ_GREY_RGBA:
+      {
+	WlzUInt x;
+	int	r = 0,
+		g = 0,
+		b = 0,
+		a = 0;
+
+	for(i = 0; i < nIdx; ++i)
+	{
+	  int	w;
+
+	  w = wgt[i];
+	  x = *(WlzUInt *)WlzIndexedValueGet(ixv, idx[i]);
+	  r += w * WLZ_RGBA_RED_GET(x);
+	  g += w * WLZ_RGBA_GREEN_GET(x);
+	  b += w * WLZ_RGBA_BLUE_GET(x);
+	  a += w * WLZ_RGBA_ALPHA_GET(x);
+	}
+	WLZ_CLAMP(r, 0, UCHAR_MAX);
+	WLZ_CLAMP(g, 0, UCHAR_MAX);
+	WLZ_CLAMP(b, 0, UCHAR_MAX);
+	WLZ_CLAMP(a, 0, UCHAR_MAX);
+	WLZ_RGBA_RGBA_SET(x, r, g, b, a);
+	*(gP.rgbp + gO) = x;
+      }
+      break;
+  }
+}
