@@ -2883,7 +2883,7 @@ static WlzErrorNum WlzMeshEarListRealloc(WlzMeshEarList *earList,
 		\f]
 *		Where the given (CCW order) nodes are (x0,y0), (x1,y1)
 *		and (x2,y2). The node to be deleted is (xp, yp). In practice
-*		this function first checks that the nodesare not co-linear,
+*		this function first checks that the nodes are not co-linear,
 *		then that the nodes are CCW and if all ok so far then computes
 *		the power.
 * \param	mesh			Given mesh transform.
