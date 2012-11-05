@@ -714,7 +714,9 @@ typedef enum _WlzInterpolationType
   WLZ_INTERPOLATION_CLASSIFY_1,		/*!< Classification by probability. */
   WLZ_INTERPOLATION_CALLBACK,		/*!< Callback function computes
 					     each interpolated value. */
-  WLZ_INTERPOLATION_ORDER_2		/*!< Second order interpolation. */
+  WLZ_INTERPOLATION_ORDER_2,		/*!< Second order interpolation. */
+  WLZ_INTERPOLATION_BARYCENTRIC,	/*!< Barycentric mesh interpolation. */
+  WLZ_INTERPOLATION_KRIG 	        /*!< Kriging mesh interpolation. */
 } WlzInterpolationType;
 
 /*!
@@ -4975,7 +4977,48 @@ typedef struct _WlzThreeDViewStruct
 typedef WlzPixelV (*Wlz3DProjectionIntFn)(WlzPixelP, int, int, void *,
 					  WlzErrorNum *);
 #endif
+/*!
+* \enum         _WlzKrigModelFnType
+* \ingroup      WlzType
+* \brief        Enumerated values for kriging variogram model functions. See
+* 		the functions for details.
+*/
+typedef enum _WlzKrigModelFnType
+{
+  WLZ_KRIG_MODELFN_INVALID      = 0,    /*!< Invalid function, may be used
+                                             to indicate an error. */
+  WLZ_KRIG_MODELFN_NUGGET,		/*!< Nugget model function, see
+  					     WlzKrigModelFnNugget(). */
+  WLZ_KRIG_MODELFN_LINEAR,		/*!< Linear model function, see
+  					     WlzKrigModelFnNugget(). */
+  WLZ_KRIG_MODELFN_SPHERICAL,           /*!< Spherical model function, see
+                                             WlzKrigModelFnSpherical(). */
+  WLZ_KRIG_MODELFN_EXPONENTIAL,         /*!< Exponential model function, see
+                                             WlzKrigModelFnExponential(). */
+  WLZ_KRIG_MODELFN_GAUSSIAN,            /*!< Gaussian model function, see
+                                             WlzKrigModelFnGaussian(). */
+  WLZ_KRIG_MODELFN_QUADRATIC            /*!< Quadratic model function, see
+                                             WlzKrigModelFnQuadratic(). */
+} WlzKrigModelFnType;
 
+/*!
+* \struct       _WlzKrigModelFn
+* \ingroup      WlzType
+* \brief        Parameters and function pointer for a kriging model function.
+*/
+typedef struct _WlzKrigModelFn
+{
+  WlzKrigModelFnType    type;           /*!< Kriging model function type. */
+  double                c0;             /*!< Nugget (offset) parameter. */
+  double                c1;             /*!< Sill (slope) parameter. */
+  double                a;              /*!< Range parameter. */
+#ifdef WLZ_EXT_BIND
+  void                  *fn;
+#else
+  double                (*fn)(struct _WlzKrigModelFn *, double h);
+#endif
+                                        /*!< Function pointer. */
+} WlzKrigModelFn;
 
 
 #ifndef WLZ_EXT_BIND
