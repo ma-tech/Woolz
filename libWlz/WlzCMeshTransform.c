@@ -42,6 +42,7 @@ static char _WlzCMeshTransform_c[] = "University of Edinburgh $Id$";
 
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 #include <float.h>
 #include <Wlz.h>
 
@@ -188,6 +189,13 @@ static void			WlzCMeshScanClearOlpBuf(
 				  int clrWidth);
 static void			WlzCMeshSqzRedundantItv3D(
 				  WlzCMeshScanWSp3D *mSWSp);
+static WlzErrorNum 		WlzCMeshInterpolate2DKrig(
+				  WlzGreyP dst,
+				  int ln,
+				  int kolL,
+				  int kolR,
+				  WlzCMesh2D *mesh,
+				  WlzIndexedValues *ixv);
 static void	 		WlzCMeshInterpolate2DLinear(
 				  WlzGreyP dst,
 				  int ln,
@@ -1878,10 +1886,16 @@ static WlzObject *WlzCMeshToDomObjValues2D(WlzObject *dObj, WlzObject *mObj,
     {
       switch(itp)
       {
-	case WLZ_INTERPOLATION_LINEAR:
+	case WLZ_INTERPOLATION_LINEAR: /* FALLTHROUGH */
+	case WLZ_INTERPOLATION_BARYCENTRIC:
 	  WlzCMeshInterpolate2DLinear(gWsp.u_grintptr, 
 				      iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
 				      mesh, ixv);
+	  break;
+	case WLZ_INTERPOLATION_KRIG:
+	  errNum = WlzCMeshInterpolate2DKrig(gWsp.u_grintptr, 
+	  			    iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
+				    mesh, ixv);
 	  break;
         default:
 	  errNum = WLZ_ERR_PARAM_TYPE;
@@ -2047,6 +2061,185 @@ static WlzObject *WlzCMeshToDomObjValues3D(WlzObject *dObj, WlzObject *mObj,
 
 /*!
 * \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Interpolates values along the pixels of a single interval
+* 		from the given mesh and it's indexed values. Uses kriging
+* 		for interpolation within each mesh element.
+* 		The mesh must have a valid maxSqEdgLen before calling
+* 		this function.
+* \param	dst				The interval values.
+* \param	ln				Line coordinate of the
+* 						interval.
+* \param	kolL				leftmost column coordinate of
+* 						the interval.
+* \param	kolR				Rightmost column coordinate of
+* 						the interval.
+* \param	mesh				The mesh.
+* \param	ixv				The indexed values.
+*/
+static WlzErrorNum WlzCMeshInterpolate2DKrig(WlzGreyP dst,
+                                          int ln, int kolL, int kolR,
+					  WlzCMesh2D *mesh,
+					  WlzIndexedValues *ixv)
+{
+  int		kl,
+		idI,
+  		idE0,
+		idE1,
+		idN0,
+		idN1,
+		nNbr0,
+		nNbr1,
+		nbrChange = 0,
+		maxNbrIdxBuf = 0;
+  double	dRange;
+  int		*wSp = NULL,
+  		*nbrIdxBuf = NULL;
+  double	*posSV = NULL;
+  AlgMatrix	modelSV;
+  WlzDVertex2	pos;
+  WlzDVertex2	*nbrPosBuf = NULL;
+  WlzKrigModelFn modelFn;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  static int	HACK0 = 0,
+  		HACK1 = 0,
+		HACK2 = 0,
+		HACK3 = 0;
+
+  idE0 = -1;
+  idN0 = -1;
+  nNbr0 = 0;
+  modelSV.core = NULL;
+  dRange = sqrt(mesh->maxSqEdgLen);
+  pos.vtY = ln;
+  for(idI = 0, kl = kolL; kl <= kolR; ++idI, ++kl)
+  {
+    pos.vtX = kl;
+    /* Find element enclosing the voxel or if that doesn't exist the
+     * nearest node to the voxel. Then find the fing of nodes that
+     * include and surround either this element or node. */
+    idE1 = WlzCMeshElmEnclosingPos2D(mesh, idE0, pos.vtX, pos.vtY, 0, &idN1);
+    if(idE1 >= 0)
+    {
+      if(idE1 != idE0)
+      {
+	WlzCMeshElm2D	*elm;
+
+	elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE1);
+	nNbr1 = WlzCMeshElmRingNodIndices2D(elm, &maxNbrIdxBuf, &nbrIdxBuf,
+					    &errNum);
+	nbrChange = 1;
+        idE0 = idE1;
+	idN0 = -1;
+      }
+    }
+    else if(idN1 >= 0)
+    {
+      if(idN1 != idN0)
+      {
+        WlzCMeshNod2D	*nod;
+
+	nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN1);
+	nNbr1 = WlzCMeshNodRingNodIndices2D(nod, &maxNbrIdxBuf, &nbrIdxBuf,
+					    &errNum);
+	nbrChange = 1;
+        idN0 = idN1;
+	idE0 = -1;
+      }
+    }
+    /* The neighbouring node ring has changed so the position buffers and 
+     * it's semi-variogram need updating. */
+    if(nNbr1 > 0)
+    {
+      if(nbrChange)
+      {
+	int	n;
+
+	n = nNbr1 + 1;
+	/* Check for an increased number of neighbours and reallocate
+	 * the buffers if needed. */
+	if(nNbr1 > nNbr0)
+	{
+	  maxNbrIdxBuf = nNbr1;
+	  if(((nbrPosBuf = (WlzDVertex2 *)
+			   AlcRealloc(nbrPosBuf,
+				      n * sizeof(WlzDVertex2))) == NULL) ||
+	     ((posSV = (double *)
+		       AlcRealloc(posSV, n * sizeof(double))) == NULL) ||
+	     ((wSp = (int *)
+		     AlcRealloc(wSp, n * sizeof(int))) == NULL))
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	}
+	if((errNum == WLZ_ERR_NONE) && (nNbr1 != nNbr0))
+	{
+	  if(nNbr1 > nNbr0)
+	  {
+	    AlgMatrixFree(modelSV);
+	    modelSV = AlgMatrixNew(ALG_MATRIX_RECT, n, n, 0, 0.0, NULL);
+	    if(modelSV.core == NULL)
+	    {
+	      errNum = WLZ_ERR_MEM_ALLOC;
+	    }
+	  }
+	  else
+	  {
+	    modelSV.rect->nR = n;
+	    modelSV.rect->nC = n;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  int	i;
+
+	  for(i = 0; i < nNbr1; ++i)
+	  {
+	    WlzCMeshNod2D *nod;
+	    nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec,
+	                                            nbrIdxBuf[i]);
+	    nbrPosBuf[i] = nod->pos;
+	  }
+	  WlzKrigSetModelFn(&modelFn, WLZ_KRIG_MODELFN_LINEAR,
+	  		    0.0, 0.1, 2.0 * dRange);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzKrigOSetModelSV2D(modelSV, &modelFn, nNbr1, nbrPosBuf,
+	  				wSp);
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzKrigOSetPosSV2D(posSV, &modelFn, nNbr1, nbrPosBuf, pos);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	WlzKrigOWeightsSolve(modelSV, posSV, wSp, WLZ_MESH_TOLERANCE);
+	/* posSV now contains the weights. */
+	WlzIndexedValueBufWeight(dst, idI, ixv, posSV, nNbr1, nbrIdxBuf);
+      }
+      nNbr0 = nNbr1;
+      ++HACK0;
+      HACK1 = nNbr0;
+      if(HACK2 < nNbr0){HACK2 = nNbr0;}
+      if(HACK3 > nNbr0){HACK3 = nNbr0;}
+      fprintf(stderr, "HACK %d %d %d %d\n", HACK0, HACK1, HACK2, HACK3);
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      break;
+    }
+  }
+  AlgMatrixFree(modelSV);
+  AlcFree(posSV);
+  AlcFree(wSp);
+  AlcFree(nbrIdxBuf);
+  AlcFree(nbrPosBuf);
+  return(errNum);
+}
+
+/*!
 * \ingroup	WlzMesh
 * \brief	Interpolates values along the pixels of a single interval
 * 		from the given mesh and it's indexed values. Uses linear
