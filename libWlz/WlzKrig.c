@@ -447,3 +447,74 @@ WlzErrorNum	WlzKrigOWeightsSolve(AlgMatrix modelSV, double *posSV,
   }
   return(errNum);
 }
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValuesUtils
+* \brief	A convinience function for allocating and reallocating
+* 		the buffers needed for 2D kriging. All given pointers
+* 		must be valid and on the first call all pointer values
+* 		(eg *dstNbrPosBuf) must be NULL.
+* \param	dstNbrPosBuf		Destination pointer for the
+* 				        neighbourhood position buffer.
+* \param	dstPosSV		Destination pointer for the
+* 				        position vector.
+* \param	dstWSp			Destination pointer for kriging
+* 					matrix workspace.
+* \param	dstModelSV		Destination pointer for kriging
+* 					model matrix.
+* \param	dstMaxNbrIdxBuf		Destination pointer for the
+* 					maximum number of neighbours the
+* 					buffers have been reallocated
+* 					for.
+* \param	nNbrC			Current number of neighbours.
+* \param	nNbrL			Last number of neighbours.
+*/
+WlzErrorNum	WlzKrigReallocBuffers2D(WlzDVertex2 **dstNbrPosBuf,
+                                        double **dstPosSV, int **dstWSp,
+					AlgMatrix *dstModelSV,
+					int *dstMaxKrigBuf,
+					int nNbrC, int nNbrL)
+{
+  int		nC1,
+		maxC1,
+  		maxKrigBuf = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(nNbrC > *dstMaxKrigBuf)
+  {
+    maxKrigBuf = nNbrC * 2;
+    maxC1 = maxKrigBuf + 1;
+    if(((*dstNbrPosBuf = (WlzDVertex2 *)
+			 AlcRealloc(*dstNbrPosBuf,
+				    maxC1 * sizeof(WlzDVertex2))) == NULL) ||
+	((*dstPosSV = (double *)
+		      AlcRealloc(*dstPosSV,
+		                 maxC1 * sizeof(double))) == NULL) ||
+	((*dstWSp = (int *)
+		    AlcRealloc(*dstWSp, maxC1 * sizeof(int))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && (nNbrC != nNbrL))
+  {
+    if(maxKrigBuf > 0)
+    {
+      AlgMatrixFree(*dstModelSV);
+      *dstModelSV = AlgMatrixNew(ALG_MATRIX_RECT, maxC1, maxC1, 0, 0.0, NULL);
+      if((*dstModelSV).core == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    nC1 = nNbrC + 1;
+    (*dstModelSV).rect->nR = nC1;
+    (*dstModelSV).rect->nC = nC1;
+  }
+  if((errNum == WLZ_ERR_NONE) && (maxKrigBuf > 0))
+  {
+    *dstMaxKrigBuf = maxKrigBuf;
+  }
+  return(errNum);
+}
