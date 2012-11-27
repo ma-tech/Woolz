@@ -2958,13 +2958,87 @@ void 		WlzIndexedValueBufWeight(WlzGreyP gP, int gO,
 	  b += w * WLZ_RGBA_BLUE_GET(x);
 	  a += w * WLZ_RGBA_ALPHA_GET(x);
 	}
-	WLZ_CLAMP(r, 0, UCHAR_MAX);
-	WLZ_CLAMP(g, 0, UCHAR_MAX);
-	WLZ_CLAMP(b, 0, UCHAR_MAX);
-	WLZ_CLAMP(a, 0, UCHAR_MAX);
+	r = WLZ_CLAMP(r, 0, UCHAR_MAX);
+	g = WLZ_CLAMP(g, 0, UCHAR_MAX);
+	b = WLZ_CLAMP(b, 0, UCHAR_MAX);
+	a = WLZ_CLAMP(a, 0, UCHAR_MAX);
 	WLZ_RGBA_RGBA_SET(x, r, g, b, a);
 	*(gP.rgbp + gO) = x;
       }
       break;
+    default:
+      break;
   }
+}
+
+/*!
+* \return	Size of data at each location of the indxed values.
+* \ingroup	WlzValueUtils
+* \brief	Computes the size of the data at each location of the indxed
+* 		values.
+* \param	ixv			Given indexed values structure.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+size_t		WlzIndexedValueSize(WlzIndexedValues *ixv, WlzErrorNum *dstErr)
+{
+  size_t	vSz = 0,
+  		nDat = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(ixv == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(ixv->type != WLZ_INDEXED_VALUES)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else if(ixv->rank < 0)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if(ixv->rank == 0)
+  {
+    nDat = 1;
+  }
+  else
+  {
+    if(ixv->dim[0] < 1)
+    {
+      errNum = WLZ_ERR_VALUES_DATA;
+    }
+    else
+    {
+      int	idx;
+
+      nDat = ixv->dim[0];
+      for(idx = 1; idx < ixv->rank; ++idx)
+      {
+        if(ixv->dim[idx] < 1)
+	{
+	  errNum = WLZ_ERR_VALUES_DATA;
+	  break;
+	}
+	nDat *= ixv->dim[idx];
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    size_t	gSz = 0;
+
+    if((ixv->vType == WLZ_GREY_BIT) || ((gSz = WlzGreySize(ixv->vType)) == 0))
+    {
+      errNum = WLZ_ERR_GREY_TYPE;
+    }
+    else
+    {
+      vSz = gSz * nDat;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vSz);
 }
