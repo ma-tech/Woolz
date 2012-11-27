@@ -70,6 +70,7 @@ bin_PROGRAMS		=  \
 			  WlzDisplacementToVtk \
 			  WlzDomainMatch \
 			  WlzDomainMatchMatrix \
+			  WlzDomainOccupancy \
 			  WlzDomainToTiles \
 			  WlzDrawDomainObj \
 			  WlzEMAPDomainTransform \
@@ -149,6 +150,10 @@ WlzDisplacementToVtk_LDFLAGS	= $(AM_LFLAGS)
 WlzDomainMatch_SOURCES		= WlzDomainMatch.c
 WlzDomainMatch_LDADD		= $(LDADD)
 WlzDomainMatch_LDFLAGS		= $(AM_LFLAGS)
+
+WlzDomainOccupancy_SOURCES	= WlzDomainOccupancy.c
+WlzDomainOccupancy_LDADD	= $(LDADD)
+WlzDomainOccupancy_LDFLAGS	= $(AM_LFLAGS)
 
 WlzDomainMatchMatrix_SOURCES	= WlzDomainMatchMatrix.c
 WlzDomainMatchMatrix_LDADD	= $(LDADD)
