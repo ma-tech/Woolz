@@ -128,6 +128,53 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
 	  outObj = WlzMakeMain(inObj->type, dom, val, pLst, NULL, &errNum);
 	}
 	break;
+      case WLZ_CMESH_2D:
+	if(inObj->values.core != NULL)
+	{
+	  if(inObj->values.core->type != WLZ_INDEXED_VALUES)
+	  {
+	    errNum = WLZ_ERR_VALUES_TYPE;
+	  }
+	  else
+	  {
+	    WlzIndexedValues *ixv;
+
+	    ixv = inObj->values.x;
+	    val.x = WlzMakeIndexedValues(inObj, ixv->rank, ixv->dim,
+	                                 ixv->vType, ixv->attach, &errNum);
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  size_t datSz;
+	  AlcVector *newVec = NULL;
+
+	  datSz = WlzIndexedValueSize(val.x, NULL);
+	  dom.cm2 =  WlzCMeshCopy2D(inObj->domain.cm2, 1,
+				datSz,
+				(val.core)? &newVec: NULL,
+				(val.core)? (inObj->values.x->values): NULL,
+				&errNum);
+	  if(newVec)
+	  {
+	    (void )AlcVectorFree(val.x->values);
+	    val.x->values = newVec;
+	  }
+	}
+	if((errNum == WLZ_ERR_NONE) && inObj->plist)
+	{
+	  pLst = WlzCopyPropertyList(inObj->plist, &errNum);
+        }
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  outObj = WlzMakeMain(inObj->type, dom, val, pLst, NULL, &errNum);
+	}
+	break;
+      case WLZ_CMESH_3D:
+        /* HACK TODO */
+      case WLZ_CMESH_2D5:
+        /* HACK TODO */
+	break;
       case WLZ_EMPTY_OBJ:
         outObj = WlzMakeEmpty(&errNum);
 	break;
