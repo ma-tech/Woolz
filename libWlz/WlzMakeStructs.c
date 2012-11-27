@@ -210,6 +210,79 @@ WlzMakePlaneDomain(WlzObjectType type,
 }
 
 /*!
+* \return	New object or NULL on error.
+* \ingroup	WlzAllocation
+* \brief	Creaes a new object with the domain of the given object
+*		and a new values.
+*
+*		This function conveniently wraps up WlzNewValueTb(),
+*		WlzNewValuesVox(), WlzMakeMain() and WlzGreySetValue().
+* \param	sObj			Given object.
+* \param	tType			Grey table type.
+* \param	bgdV			Background value.
+* \param	setFG			Set forground value if non zero.
+* \param	fgdV			Foreground value to be set.
+* \param	dstErr			Destinaition error pointer, may be NULL.
+*/
+WlzObject	*WlzNewObjectValues(WlzObject *sObj, WlzObjectType tType,
+				    WlzPixelV bgdV, int setFG, WlzPixelV fgdV,
+				    WlzErrorNum *dstErr)
+{
+  WlzValues 	val;
+  WlzPixelV 	gV;
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(sObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(sObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(sObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
+      case WLZ_3D_DOMAINOBJ:
+	if(sObj->type == WLZ_2D_DOMAINOBJ)
+	{
+	  val.v = WlzNewValueTb(sObj, tType, bgdV, &errNum);
+	}
+	else
+	{
+	  val.vox = WlzNewValuesVox(sObj, tType, bgdV, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  rObj = WlzMakeMain(sObj->type, sObj->domain, val, NULL, NULL,
+			     &errNum);
+	}
+	if((errNum == WLZ_ERR_NONE) && setFG)
+	{
+	  errNum = WlzGreySetValue(rObj, fgdV);
+	}
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  (void )WlzFreeObj(rObj);
+	  rObj = NULL;
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
 * \return	New voxel value table.
 * \ingroup      WlzAllocation
 * \brief	From the domain of the given source object a new voxel
@@ -651,8 +724,7 @@ WlzMakeRectValueTb(WlzObjectType	type,
 
   /* allocate space */
   if( errNum == WLZ_ERR_NONE ){
-    if( (vtb = (WlzRectValues *) AlcMalloc(sizeof(WlzRectValues)))
-       == NULL ){
+    if( (vtb = (WlzRectValues *) AlcMalloc(sizeof(WlzRectValues))) == NULL ){
       errNum = WLZ_ERR_MEM_ALLOC;
     }
     else {
@@ -1196,8 +1268,7 @@ WlzMakeBoundList(WlzObjectType		type,
 
   /* allocate space */
   if( errNum == WLZ_ERR_NONE ){
-    if( (blist = ( WlzBoundList *) AlcMalloc(sizeof( WlzBoundList)))
-       == NULL ){
+    if( (blist = ( WlzBoundList *) AlcMalloc(sizeof( WlzBoundList))) == NULL ){
     errNum = WLZ_ERR_MEM_ALLOC;
     }
     else {
