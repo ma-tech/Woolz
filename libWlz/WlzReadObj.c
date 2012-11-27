@@ -445,8 +445,8 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 	break;
 
       case WLZ_TRANS_OBJ:
-	if((domain.t = WlzReadAffineTransform( fp, &errNum)) != NULL){
-	  if((values.obj = WlzReadObj( fp, &errNum)) != NULL){
+	if((domain.t = WlzReadAffineTransform(fp, &errNum)) != NULL){
+	  if((values.obj = WlzReadObj(fp, &errNum)) != NULL){
 	    if((obj = WlzMakeMain(WLZ_TRANS_OBJ, domain, values,
 				  NULL, NULL, &errNum)) != NULL){
 	      obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
@@ -4447,6 +4447,7 @@ static WlzErrorNum WlzReadIndexedvValues(FILE *fP, WlzObject *obj)
       }
     }
   }
+  AlcFree(dim);
   if(errNum == WLZ_ERR_NONE)
   {
     obj->values = WlzAssignValues(values, NULL);
