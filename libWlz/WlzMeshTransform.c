@@ -630,7 +630,7 @@ WlzMeshTransform *WlzMeshTransformFromCPts(WlzObject *obj,
     /* Apply the affine transform to the mesh transform. */
     if(errNum == WLZ_ERR_NONE)
     {
-      errNum = WlzMeshAffineProduct(mTr, aTr);
+      errNum = WlzMeshAffineProduct(mTr, aTr, 0);
     }
   }
   AlcFree(dPtsT);
@@ -654,15 +654,32 @@ WlzMeshTransform *WlzMeshTransformFromCPts(WlzObject *obj,
 * \brief	Computes the product of the given affine and mesh transforms
 *		in place, ie the mesh transform has it's displacements
 * 		overwritten.
+*
+* 		Given a mesh transform \f$\mathbf{M}\f$ and an affine
+* 		transform \f$\mathbf{A}\f$. The product \f$\mathbf{P}\f$
+* 		can be evaluated as:
+* 		\f[
+		\begin{array}
+ 		\mathbf{P} = \mathbf{A}\mathbf{M}, && o = 0 \\
+ 		\mathbf{P} = \mathbf{M}\mathbf{A}, && o = 1
+		\end{array}
+		\f]
+*		where \f$o\f$ is the order parameter and
+*		\f[
+		\mathbf{T_0}\mathbf{T_1}\mathbf{x} =
+		\mathbf{T_0}(\mathbf{T_1}\mathbf{x})
+		\f]
+* 		The product with \f$o = 1\f$ applies the mesh displacement
+* 		at location \f$\mathbf{x}\f$ and not at
+* 		\f$\mathbf{A}(\mathbf{x})\f$ as might be expected.
 * \param	mTr		Given mesh transform.
 * \param	aTr		Given affine transform.
+* \param	order		Order of evaluation.
 */
 WlzErrorNum WlzMeshAffineProduct(WlzMeshTransform *mTr,
-				 WlzAffineTransform *aTr)
+				 WlzAffineTransform *aTr,
+				 int order)
 {
-  int           count;
-  WlzDVertex2   tDV0;
-  WlzMeshNode	*node;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   if((mTr == NULL) || (aTr == NULL))
@@ -676,14 +693,35 @@ WlzErrorNum WlzMeshAffineProduct(WlzMeshTransform *mTr,
   /* Loop through nodes, resetting the displacement. */
   if(errNum == WLZ_ERR_NONE)
   {
-    node = mTr->nodes;
-    count = mTr->nNodes;
-    while(count-- > 0)
+    int         idN;
+    WlzMeshNode	*node;
+
+    if(order == 0) /* P = A M */
     {
-      WLZ_VTX_2_ADD(tDV0, node->position, node->displacement);
-      tDV0 = WlzAffineTransformVertexD2(aTr, tDV0, &errNum);
-      WLZ_VTX_2_SUB(node->displacement, tDV0, node->position);
-      ++node;
+      for(idN = 0; idN < mTr->nNodes; ++idN)
+      {
+	WlzDVertex2   tDV0;
+        WlzMeshNode   *node;
+
+	node = &(mTr->nodes[idN]);
+	WLZ_VTX_2_ADD(tDV0, node->position, node->displacement);
+	tDV0 = WlzAffineTransformVertexD2(aTr, tDV0, &errNum);
+	WLZ_VTX_2_SUB(node->displacement, tDV0, node->position);
+      }
+    }
+    else /* P = M A */
+    {
+      for(idN = 0; idN < mTr->nNodes; ++idN)
+      {
+	WlzDVertex2   tDV0,
+		      tDV1;
+        WlzMeshNode   *node;
+
+	node = &(mTr->nodes[idN]);
+	tDV0 = WlzAffineTransformVertexD2(aTr, node->position, &errNum);
+	WLZ_VTX_2_ADD(tDV1, tDV0, node->displacement);
+	WLZ_VTX_2_SUB(node->displacement, tDV1, node->position);
+      }
     }
   }
   return(errNum);
