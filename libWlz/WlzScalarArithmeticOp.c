@@ -5,7 +5,7 @@ static char _WlzScalarArithmeticOp_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzScalarArithmeticOp.c
-* \author       Richard Baldock
+* \author       Richard Baldock, Bill Hill
 * \date         March 1999
 * \version      $Id$
 * \par
@@ -62,17 +62,236 @@ static WlzErrorNum 		WlzScalarMulAddSet2D(
 				  WlzObject *iObj,
 				  double m,
 				  double a);
+static WlzErrorNum 		WlzGreyIncValuesInDomain2D(
+				  WlzObject *gObj,
+				  WlzObject *dObj);
+static WlzErrorNum 		WlzGreyIncValuesInDomain3D(
+				  WlzObject *gObj,
+				  WlzObject *dObj);
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArithmetic
+* \brief	Increments all valus of the firstobjct which are within
+* 		the domain of the second object. The domain of the first
+* 		object must cover that of the second.
+* \param	gObj		First object.
+* \param	dObj		Second object.
+*/
+WlzErrorNum	WlzGreyIncValuesInDomain(WlzObject *gObj, WlzObject *dObj)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((gObj == NULL) || (dObj == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((gObj->domain.core == NULL) || (dObj->domain.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(gObj->type != dObj->type)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(gObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    switch(gObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+	errNum = WlzGreyIncValuesInDomain2D(gObj, dObj);
+        break;
+      case WLZ_3D_DOMAINOBJ:
+	errNum = WlzGreyIncValuesInDomain3D(gObj, dObj);
+        break;
+      default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+        break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArithmetic
+* \brief	Increments all valus of the firstobjct which are within
+* 		the domain of the second object. The domain of the first
+* 		object must cover that of the second.
+*		Because this is a static object it is assumed that the
+*		two 3D objects are known to be valid.
+* \param	gObj		First object.
+* \param	dObj		Second object.
+*/
+static WlzErrorNum WlzGreyIncValuesInDomain3D(WlzObject *gObj, WlzObject *dObj)
+{
+  WlzPlaneDomain *gPD,
+  		 *dPD;
+  WlzVoxelValues *gVV;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  gPD = gObj->domain.p;
+  gVV = gObj->values.vox;
+  dPD = dObj->domain.p;
+  if((dPD->plane1 < gPD->plane1) || (dPD->lastpl > gPD->lastpl))
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else
+  {
+    int		p,
+		p0,
+		p1;
+
+    p0 = ALG_MAX(dPD->plane1, gPD->plane1);
+    p1 = ALG_MIN(dPD->lastpl, gPD->lastpl);
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(p = p0; p <= p1; ++p)
+    {
+      if(errNum == WLZ_ERR_NONE)
+      {
+	WlzDomain   *doms;
+	WlzValues    *vals;
+	WlzErrorNum  errNum2D = WLZ_ERR_NONE;
+
+	doms = dPD->domains + p - dPD->plane1;
+	vals = gVV->values + p - gPD->plane1;;
+	if(((*doms).core != NULL) && ((*vals).core != NULL))
+	{
+	  WlzObject    *obj2D = NULL;
+
+	  if((obj2D = WlzAssignObject(
+		      WlzMakeMain(WLZ_2D_DOMAINOBJ, *doms, *vals, NULL, NULL,
+		                  &errNum2D), NULL)) != NULL)
+	  {
+	    errNum2D = WlzGreyIncValues2D(obj2D);
+	    (void )WlzFreeObj(obj2D);
+	  }
+	}
+#ifdef _OPENMP
+#pragma omp critical
+	{
+#endif
+	  if((errNum == WLZ_ERR_NONE) && (errNum2D != WLZ_ERR_NONE))
+	  {
+	    errNum = errNum2D;
+	  }
+#ifdef _OPENMP
+	}
+#endif
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArithmetic
+* \brief	Increments all valus of the firstobjct which are within
+* 		the domain of the second object. The domain of the first
+* 		object must cover that of the second.
+*		Because this is a static object it is assumed that the
+*		two 2D objects are known to be valid.
+* \param	gObj		First object.
+* \param	dObj		Second object.
+*/
+static WlzErrorNum WlzGreyIncValuesInDomain2D(WlzObject *gObj, WlzObject *dObj)
+{
+  WlzObject	*tObj;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  tObj = WlzAssignObject(
+         WlzMakeMain(WLZ_2D_DOMAINOBJ, dObj->domain, gObj->values, NULL, NULL,
+	             &errNum), NULL);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzGreyIncValues2D(tObj);
+    (void )WlzFreeObj(tObj);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArithmetic
+* \brief	Increments all values within the given object.
+* \param	obj		Given object.
+*/
+WlzErrorNum 	WlzGreyIncValues2D(WlzObject *obj)
+{
+  WlzGreyWSpace gWSp;
+  WlzIntervalWSpace iWSp;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  errNum = WlzInitGreyScan(obj, &iWSp, &gWSp);
+  while((errNum == WLZ_ERR_NONE) &&
+        ((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE))
+  {
+    int	     i,
+    	     len;
+    WlzGreyP gP;
+    
+    gP = gWSp.u_grintptr;
+    len = iWSp.rgtpos - iWSp.lftpos + 1;
+    switch(gWSp.pixeltype)
+    {
+      case WLZ_GREY_INT:
+        for(i = 0; i < len; ++i)
+	{
+	  *(gP.inp)++ += 1;
+	}
+	break;
+      case WLZ_GREY_SHORT:
+        for(i = 0; i < len; ++i)
+	{
+	  *(gP.shp)++ += 1;
+	}
+	break;
+      case WLZ_GREY_UBYTE:
+        for(i = 0; i < len; ++i)
+	{
+	  *(gP.ubp)++ += 1;
+	}
+	break;
+      case WLZ_GREY_FLOAT:
+        for(i = 0; i < len; ++i)
+	{
+	  *(gP.flp)++ += 1.0f;
+	}
+	break;
+      case WLZ_GREY_DOUBLE:
+        for(i = 0; i < len; ++i)
+	{
+	  *(gP.dbp)++ += 1.0;
+	}
+	break;
+      default:
+        break;
+    }
+  }
+  if(errNum == WLZ_ERR_EOO)
+  {
+    errNum = WLZ_ERR_NONE;
+  }
+  return(errNum);
+}
 
 /*! 
+* \return       Object with transformed grey-values.
 * \ingroup      WlzArithmetic
 * \brief        Apply a binary operation (add subtract etc) to
- each pixel value in the given object. The operand value is in
- <tt>pval</tt>.
-*
-* \return       Object with transformed grey-values.
+*               each pixel value in the given object. The operand value
+*               is in <tt>pval</tt>.
 * \param    o1	Input object
 * \param    pval	Pixel value for binary operation.
-* \param    op	Opertor
+* \param    op		Opertor
 * \param    dstErr	Error return.
 * \par      Source:
 *                WlzScalarArithmeticOp.c
@@ -412,8 +631,8 @@ WlzObject	*WlzScalarMulAdd(WlzObject *iObj, WlzPixelV m, WlzPixelV a,
       case WLZ_3D_DOMAINOBJ:
         rObj = WlzScalarMulAdd3D(iObj, m, a, rGType, &errNum);
 	break;
-      /* TODO */
       default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
         break;
     }
   }
