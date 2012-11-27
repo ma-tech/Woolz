@@ -171,6 +171,7 @@ libWlz_la_SOURCES 	= \
 			  WlzMwrAngle.c \
 			  WlzNMSuppress.c \
 			  WlzObjToBoundary.c \
+			  WlzOccupancy.c \
 			  WlzPoints.c \
 			  WlzPolarSample.c \
 			  WlzPolyDecimate.c \
