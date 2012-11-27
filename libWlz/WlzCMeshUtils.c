@@ -2877,33 +2877,18 @@ void		WlzCMeshElmGetNodes3D(WlzCMeshElm3D *elm,
 */
 WlzDBox2	WlzCMeshElmBBox2D(WlzCMeshElm2D *elm)
 {
-  int		idx;
-  WlzCMeshNod2D	*nod;
+  WlzDVertex2	p0,
+  		p1,
+		p2;
   WlzDBox2	bBox;
 
-  nod = elm->edu[0].nod;
-  bBox.xMin = bBox.xMax = nod->pos.vtX;
-  bBox.yMin = bBox.yMax = nod->pos.vtY;
-  for(idx = 1; idx <= 2; ++idx)
-  {
-    nod = elm->edu[idx].nod;
-    if(nod->pos.vtX < bBox.xMin)
-    {
-      bBox.xMin = nod->pos.vtX;
-    }
-    else if(nod->pos.vtX > bBox.xMax)
-    {
-      bBox.xMax = nod->pos.vtX;
-    }
-    if(nod->pos.vtY < bBox.yMin)
-    {
-      bBox.yMin = nod->pos.vtY;
-    }
-    else if(nod->pos.vtY > bBox.yMax)
-    {
-      bBox.yMax = nod->pos.vtY;
-    }
-  }
+  p0 = elm->edu[0].nod->pos;
+  p1 = elm->edu[1].nod->pos;
+  p2 = elm->edu[2].nod->pos;
+  bBox.xMin = ALG_MIN3(p0.vtX, p1.vtX, p2.vtX);
+  bBox.yMin = ALG_MIN3(p0.vtY, p1.vtY, p2.vtY);
+  bBox.xMax = ALG_MAX3(p0.vtX, p1.vtX, p2.vtX);
+  bBox.yMax = ALG_MAX3(p0.vtY, p1.vtY, p2.vtY);
   return(bBox);
 }
 
