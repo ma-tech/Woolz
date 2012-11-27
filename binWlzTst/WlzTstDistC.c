@@ -399,13 +399,13 @@ int		main(int argc, char *argv[])
       {
 	o = WlzAssignObject(
 	    WlzCMeshDistance2D(oC[WLZTST_DIST_MESH], WLZ_CMESH_2D, 1, &seed2,
-	                       &errNum), NULL);
+	                       WLZ_INTERPOLATION_BARYCENTRIC, &errNum), NULL);
       }
       else /* dim == 3 */
       {
 	o = WlzAssignObject(
 	    WlzCMeshDistance3D(oC[WLZTST_DIST_MESH], WLZ_CMESH_3D, 1, &seed,
-			       &errNum), NULL);
+			       WLZ_INTERPOLATION_BARYCENTRIC, &errNum), NULL);
       }
       if(errNum != WLZ_ERR_NONE)
       {
