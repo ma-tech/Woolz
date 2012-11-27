@@ -1230,88 +1230,75 @@ int		WlzGeomTriangleAABBIntersect2D(WlzDVertex2 t0,
     /* Compute the AABB of the triangle. */
     WlzDVertex2	bT[2];
 
-    bT[0] = bT[1] = t[0];
-    for(idx = 1; idx <= 2; ++idx)
-    {
-      if(t[idx].vtX < bT[0].vtX)
-      {
-	bT[0].vtX = t[idx].vtX;
-      }
-      else if(t[idx].vtX > bT[1].vtX)
-      {
-	bT[1].vtX = t[idx].vtX;
-      }
-      if(t[idx].vtY < bT[0].vtY)
-      {
-	bT[0].vtY = t[idx].vtY;
-      }
-      else if(t[idx].vtY > bT[1].vtY)
-      {
-	bT[1].vtY = t[idx].vtY;
-      }
-    }
+    bT[0].vtX = ALG_MIN3(t[0].vtX, t[1].vtX, t[2].vtX);
+    bT[1].vtX = ALG_MAX3(t[0].vtX, t[1].vtX, t[2].vtX);
     /* Compare AABB of triangle with given AABB. If is an intersection
      * when using tolerance then there may be an intersection. Set
      * intersection (will keep looking below). */
-    if((-b.vtX - bT[1].vtX > tol) || (bT[0].vtX - b.vtX > tol) ||
-       (-b.vtY - bT[1].vtY > tol) || (bT[0].vtY - b.vtY > tol))
+    if((-b.vtX - bT[1].vtX > tol) || (bT[0].vtX - b.vtX > tol))
     {
       isn = 0;
     }
-  }
-  if((tst == 0) || (tst == 2))
-  {
-    if(isn != 0)
+    else
     {
-      WlzDVertex2	e,
-		  f;
-      double	p[2],
-		  q[3];
-
-      for(idx = 0; idx < 3; ++idx)
+      bT[0].vtY = ALG_MIN3(t[0].vtY, t[1].vtY, t[2].vtY);
+      bT[1].vtY = ALG_MAX3(t[0].vtY, t[1].vtY, t[2].vtY);
+      if((-b.vtY - bT[1].vtY > tol) || (bT[0].vtY - b.vtY > tol))
       {
-	/* Compute an edge vector for the triangle. */
-	WLZ_VTX_2_SUB(e, t[(idx + 1) % 3], t[idx]);
-	/* Project two vertices onto perpendicular to first edge. */
-	p[0] = t[idx].vtX * e.vtY - t[idx].vtY * e.vtX;
-	p[1] = t[(idx + 2) % 3].vtX * e.vtY - t[(idx + 2) % 3].vtY * e.vtX;
-	if(p[0] > p[1])
-	{
-	  q[2] = p[0]; p[0] = p[1]; p[1] = q[2];
-	}
-	/* Project AABB vertices onto perpendicular and find limits. */
-	f.vtX = b.vtX * e.vtY;
-	f.vtY = b.vtY * e.vtX;
-	q[0] = -f.vtX + f.vtY;
-	q[1] =  f.vtX + f.vtY;
-	if(q[1] < q[0])
-	{
-	  q[2] = q[0]; q[0] = q[1]; q[1] = q[2];
-	}
-	q[2] =  f.vtX - f.vtY;
-	if(q[2] < q[0])
-	{
-	  q[0] = q[2];
-	}
-	else if(q[2] > q[1])
-	{
-	  q[1] = q[2];
-	}
-	q[2] = -f.vtX - f.vtY;
-	if(q[2] < q[0])
-	{
-	  q[0] = q[2];
-	}
-	else if(q[2] > q[1])
-	{
-	  q[1] = q[2];
-	}
-	/* Look for intersection of projections. */
-	if((p[0] - q[1] > -tol) || (q[0] + p[1] > -tol))
-	{
-	  isn = 0;
-	  break;
-	}
+	isn = 0;
+      }
+    }
+  }
+  if((isn != 0) && ((tst == 0) || (tst == 2)))
+  {
+    WlzDVertex2	e,
+		f;
+    double	p[2],
+		q[3];
+
+    for(idx = 0; idx < 3; ++idx)
+    {
+      /* Compute an edge vector for the triangle. */
+      WLZ_VTX_2_SUB(e, t[(idx + 1) % 3], t[idx]);
+      /* Project two vertices onto perpendicular to first edge. */
+      p[0] = t[idx].vtX * e.vtY - t[idx].vtY * e.vtX;
+      p[1] = t[(idx + 2) % 3].vtX * e.vtY - t[(idx + 2) % 3].vtY * e.vtX;
+      if(p[0] > p[1])
+      {
+	q[2] = p[0]; p[0] = p[1]; p[1] = q[2];
+      }
+      /* Project AABB vertices onto perpendicular and find limits. */
+      f.vtX = b.vtX * e.vtY;
+      f.vtY = b.vtY * e.vtX;
+      q[0] = -f.vtX + f.vtY;
+      q[1] =  f.vtX + f.vtY;
+      if(q[1] < q[0])
+      {
+	q[2] = q[0]; q[0] = q[1]; q[1] = q[2];
+      }
+      q[2] =  f.vtX - f.vtY;
+      if(q[2] < q[0])
+      {
+	q[0] = q[2];
+      }
+      else if(q[2] > q[1])
+      {
+	q[1] = q[2];
+      }
+      q[2] = -f.vtX - f.vtY;
+      if(q[2] < q[0])
+      {
+	q[0] = q[2];
+      }
+      else if(q[2] > q[1])
+      {
+	q[1] = q[2];
+      }
+      /* Look for intersection of projections. */
+      if((p[0] - q[1] > -tol) || (q[0] + p[1] > -tol))
+      {
+	isn = 0;
+	break;
       }
     }
   }
