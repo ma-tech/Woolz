@@ -492,10 +492,12 @@ typedef enum _WlzTransformType
   WLZ_TRANSFORM_2D5_MESH,     		/*!< 2.5D (plane wise) triangular
   					     mesh transform. */
   WLZ_TRANSFORM_3D_MESH,		/*!< 3D tetrahedral mesh transform. */
-  WLZ_TRANSFORM_2D_CMESH,		/*!< 2D conforming triangular mesh
-  				             transform */
-  WLZ_TRANSFORM_3D_CMESH		/*!< 3D conforming tetrahedral mesh
-  					     transform */
+  WLZ_TRANSFORM_2D_CMESH = WLZ_CMESH_2D, /*!< 2D conforming triangular mesh
+  				              transform. */
+  WLZ_TRANSFORM_2D5_CMESH = WLZ_CMESH_2D5, /*!< 3D conforming triangular mesh
+  				                transform. */
+  WLZ_TRANSFORM_3D_CMESH = WLZ_CMESH_3D	/*!< 3D conforming tetrahedral mesh
+  					     transform. */
 } WlzTransformType;
 
 /*!
@@ -4150,10 +4152,13 @@ typedef int (*WlzThreshCbFn)(WlzObject *, void *, WlzThreshCbStr *);
 typedef union _WlzTransform
 {
   struct _WlzCoreTransform *core;	/*!< Core transform. */
+  struct _WlzEmptyTransform *empty;	/*!< Empty (zero) transform. */
   struct _WlzAffineTransform *affine;	/*!< Affine transforms, 2D or 3D. */
   struct _WlzBasisFnTransform *basis;	/*!< Any basis function transform. */
   struct _WlzMeshTransform *mesh;	/*!< Any convex mesh transform. */
-  struct _WlzObject *obj;               /*!< Some transforms are objects						     with a domain and values. */
+  struct _WlzObject *obj;               /*!< Some transforms are objects
+  					     with a domain and values (eg
+					     conforming mesh transforms). */
 } WlzTransform;
 
 /*!
@@ -4168,6 +4173,21 @@ typedef struct _WlzCoreTransform
   int           linkcount;      	/*!< From WlzCoreDomain. */
   void 		*freeptr;		/*!< From WlzCoreDomain. */
 } WlzCoreTransform;
+
+/*!
+* \struct	_WlzEmptyTransform
+* \ingroup	WlzTransform
+* \brief	An empty transform, with members common to all transforms.
+* 		An empty transform is a compact represetation of a zero
+* 		transform avoiding the use of NULL which implies an error.
+*		Typedef: ::WlzCoreTransform.
+*/
+typedef struct _WlzEmptyTransform
+{
+  WlzTransformType type;       		/*!< From WlzCoreDomain. */
+  int           linkcount;      	/*!< From WlzCoreDomain. */
+  void 		*freeptr;		/*!< From WlzCoreDomain. */
+} WlzEmptyTransform;
 
 /*!
 * \struct	_WlzAffineTransform
@@ -4322,7 +4342,7 @@ typedef struct _WlzMeshElem3D
 /*!
 * \struct	_WlzMeshTransform
 * \ingroup	WlzTransform
-* \brief	A mesh transform.
+* \brief	A mesh convex transform.
 *		Typedef: ::WlzMeshElem.
 */
 typedef struct _WlzMeshTransform
@@ -4340,10 +4360,6 @@ typedef struct _WlzMeshTransform
 } WlzMeshTransform;
 
 
-/* 
-   nickb 27.02.03
-   to prevent parse errors in WlzC2Java.c
-*/
 #ifndef WLZ_EXT_BIND
 /*!
 * \struct	_WlzMeshTransform3D
