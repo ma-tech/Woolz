@@ -3346,14 +3346,14 @@ WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
 
       if((elm->flags & WLZ_CMESH_ELM_FLAG_BOUNDARY) != 0)
       {
-        double sA2;
+	double sA2;
 
 	nodes[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
 	nodes[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
 	nodes[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
 	sA2 = WlzGeomTriangleSnArea2(nodes[0]->pos, nodes[1]->pos,
-	                             nodes[2]->pos);
-        if(sA2 < 1.0)
+				     nodes[2]->pos);
+	if(sA2 < 1.0)
 	{
 	  errNum = WlzCMeshElmFuse2D(mesh, elm);
 	}
@@ -5008,7 +5008,8 @@ int		WlzCMeshElmClosestPosIn(WlzCMeshP mesh,
 * \param        mesh			The mesh.
 * \param        dstPos			Destination pointer for found
 * 					position within element. Not set if
-* 					element returned is invalid.
+* 					element returned is invalid. May be
+* 					NULL.
 * \param        pos			Given vertex position.
 * \param	dMax			Maximum distance for found position
 * 					from given position.
@@ -5839,8 +5840,6 @@ int		WlzCMeshClosestNod2D(WlzCMesh2D *mesh, WlzDVertex2 pos)
   WlzCMeshNod2D	*nod;
   WlzCMeshCell2D *cell;
 
-  /* TODO adapt as WlzCMeshClosestNod2D5() to allow for search from position
-   * outside of the cell grid. */
   if(mesh->res.nod.numEnt > 0)
   {
     idx1.vtX = idx1.vtY = 0;
@@ -5878,7 +5877,7 @@ int		WlzCMeshClosestNod2D(WlzCMesh2D *mesh, WlzDVertex2 pos)
       ring = WlzGeomItrSpiralRing(spiralCnt);
       /* Stop spiraling out when the ring after the first in which a node
        * was found has been searched. */
-    } while(ring - firstRing < 2);
+    } while((firstRing < 0) || ((ring - firstRing) < 2));
   }
   return(closeNod);
 }
@@ -6115,8 +6114,6 @@ int		WlzCMeshClosestNod3D(WlzCMesh3D *mesh, WlzDVertex3 pos)
   WlzCMeshNod3D	*nod;
   WlzCMeshCell3D *cell;
 
-  /* TODO adapt as WlzCMeshClosestNod2D5() to allow for search from position
-   * outside of the cell grid. */
   if(mesh->res.nod.numEnt > 0)
   {
     idx1.vtX = idx1.vtY = idx1.vtZ = 0;
@@ -6157,7 +6154,7 @@ int		WlzCMeshClosestNod3D(WlzCMesh3D *mesh, WlzDVertex3 pos)
       ring = WlzGeomItrSpiralRing(spiralCnt);
       /* Stop spiraling out when the ring after the first in which a node
        * was found has been searched. */
-    } while(ring - firstRing < 2);
+    } while((firstRing < 0) || (ring - firstRing < 2));
   }
   return(closeNod);
 }
