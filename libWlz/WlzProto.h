@@ -918,7 +918,10 @@ extern WlzValues 		WlzAssignValues(
 				  WlzErrorNum *dstErr);
 extern WlzProperty		WlzAssignProperty(
 				  WlzProperty property,
-				  WlzErrorNum *dstErr );
+				  WlzErrorNum *dstErr);
+extern WlzTransform		WlzAssignTransform(
+				  WlzTransform t,
+				  WlzErrorNum *dstErr);
 extern WlzPropertyList          *WlzAssignPropertyList(
                                   WlzPropertyList *plist,
                                   WlzErrorNum *dstErr);
@@ -1382,6 +1385,20 @@ extern WlzObject		*WlzCMeshComputeCurvaturesFromNodNorm(
 /************************************************************************
 * WlzCMeshIntersect.c							*
 ************************************************************************/
+extern WlzObject		*WlzCMeshIntersect(
+				  WlzObject *obj0,
+				  WlzObject *obj1,
+				  int dsp0,
+				  int **dstNodTab,
+				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
+extern WlzCMesh2D		*WlzCMeshIntersect2Mesh2D(
+				  WlzMeshTransform *tr0,
+				  WlzMeshTransform *tr1,
+				  int dsp0,
+				  int **dstNodTab,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 extern WlzObject		*WlzCMeshIntersectDom2D5(
 				  WlzObject *sObj,
 				  WlzObject *cObj,
@@ -1570,6 +1587,23 @@ extern WlzDBox3			WlzCMeshTransformGetBBox3D(
 				  int trans,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
+extern	WlzErrorNum		WlzCMeshAffineProduct(
+				  WlzObject *trC,
+				  WlzAffineTransform *trA,
+                                  int order);
+extern WlzObject       		*WlzCMeshMeshMeshProduct(
+				  WlzMeshTransform *tr0,
+                                  WlzMeshTransform *tr1,
+				  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzCMeshMeshProduct(
+				  WlzObject *tr0,
+                                  WlzMeshTransform *tr1,
+				  int order,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzCMeshProduct(
+				  WlzObject *tr0,
+				  WlzObject *tr1,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzCMeshUtils.c							*
@@ -3721,6 +3755,14 @@ extern WlzErrorNum     		WlzKrigOWeightsSolve(
 				  double *posSV,
 				  int *wSp,
 				  double eps);
+extern WlzErrorNum		WlzKrigReallocBuffers2D(
+				  WlzDVertex2 **dstNbrPosBuf,
+				  double **dstPosSV,
+				  int **dstWSp,
+				  AlgMatrix *dstModelSV,
+				  int *dstMaxNbrIdxBuf,
+				  int nNbrC,
+				  int nNbrL);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -4147,6 +4189,13 @@ extern WlzVoxelValues		*WlzMakeVoxelValueTb(
 				  int pl,
 				  WlzPixelV bckgrnd,
 				  WlzObject *original,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzNewObjectValues(
+				  WlzObject *sObj,
+				  WlzObjectType tType,
+				  WlzPixelV bgdV,
+				  int setFG,
+				  WlzPixelV fgdV,
 				  WlzErrorNum *dstErr);
 extern WlzVoxelValues		*WlzNewValuesVox(
 				  WlzObject *sObj,
@@ -4756,7 +4805,8 @@ extern WlzMeshTransform 	*WlzMeshTransformFromCPts(
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzMeshAffineProduct(
 				  WlzMeshTransform *mTr,
-				  WlzAffineTransform *aTr);
+				  WlzAffineTransform *aTr,
+				  int order);
 extern WlzDVertex2 		WlzMeshTransformVtx(
 				  WlzDVertex2 vtx,
 				  WlzMeshTransform *mesh,
@@ -4791,8 +4841,15 @@ extern int			WlzMeshElemFindVx(
 				  WlzMeshTransform *mesh,
 				  WlzDVertex2 gVx,
 				  int startElm,
+				  int *lastElm,
 				  int *existsFlg,
 				  WlzErrorNum *dstErr);
+extern int             		WlzMeshClosestNod2D(
+				  WlzMeshTransform *mesh,
+				  WlzDVertex2 pos);
+extern double          		WlzMeshMaxEdgeLenSq(
+				  WlzMeshTransform *mesh,
+                                  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzMeshDomainAdd(
 				  WlzMeshTransform *mesh,
 				  WlzObject *obj,
@@ -4836,7 +4893,6 @@ extern WlzErrorNum		WlzMeshGetNodesAndEdges(
 				  WlzDVertex2 **dstArrayDsp,
 				  int *dstSizeArrayEdg,
 				  int **dstArrayEdg);
-
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -4856,6 +4912,21 @@ extern WlzObject		*WlzNMSuppress(
 extern WlzObject 		*WlzObjToBoundary(
 				  WlzObject *obj,
 				  int wrap,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzOccupancy.c
+************************************************************************/
+extern	WlzErrorNum		Wlz3DSectionOcc(
+				  WlzObject *obj,
+				  WlzThreeDViewStruct *vs,
+				  double sep,
+				  double *dstFirst,
+				  double *dstLast,
+				  int *dstArraySizeOcc,
+				  int **dstArrayOcc);
+extern WlzObject		*WlzDomainOccupancy(
+				  WlzObject *gObj,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -5197,6 +5268,11 @@ extern WlzErrorNum     		WlzSampleValuesAndCoords(
 /************************************************************************
 * WlzScalarArithmeticOp.c
 ************************************************************************/
+extern WlzErrorNum     		WlzGreyIncValues2D(
+				  WlzObject *obj);
+extern WlzErrorNum		WlzGreyIncValuesInDomain(
+				  WlzObject *gObj,
+				  WlzObject *dObj);
 extern WlzObject		*WlzScalarAdd(
 				  WlzObject *o1,
 				  WlzPixelV pval,
@@ -5751,8 +5827,16 @@ extern WlzObject		*WlzMakeTiledValuesFromObj(
 * WlzTransform.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
+extern WlzEmptyTransform	*WlzMakeEmptyTransform(
+				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzFreeTransform(
 				  WlzTransform tr);
+extern WlzErrorNum		WlzFreeEmptyTransform(
+				  WlzEmptyTransform *tr);
+extern WlzTransform		WlzTransformProduct(
+				  WlzTransform tr0,
+				  WlzTransform tr1,
+				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -6201,6 +6285,9 @@ extern int			WlzValueDitherI(
 				  int p0,
 				  int p1,
 				  int p2);
+extern size_t			WlzIndexedValueSize(
+				  WlzIndexedValues *ixv,
+				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
