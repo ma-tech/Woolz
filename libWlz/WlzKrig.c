@@ -339,6 +339,70 @@ WlzErrorNum	WlzKrigOSetModelSV2D(AlgMatrix modelSV,
 * \return	Woolz error code. If all input parameters are valid then
 * 		this will return WLZ_ERR_NONE.
 * \ingroup	WlzValuesUtils
+* \brief	Computes the ordinary kriging model semi-variogram from the
+* 		given neighbourhood vertices.
+* \param	modelSV			Valid \f$(n + 1)\times(n + 1)\f$
+* 					matrix for the model semi-variogram.
+* 					This must be a square matrix.
+* \param	modelFn			The model value function.
+* \param	n			Number of neighbourhood vertices.
+* \param	nbr			The neighbourhood vertex positions.
+* \param	wSp			Workspace with room for n values
+* 					(used by AlgMatrixLUDecomp()).
+*/
+WlzErrorNum	WlzKrigOSetModelSV3D(AlgMatrix modelSV,
+				     WlzKrigModelFn *modelFn,
+				     int n, WlzDVertex3 *nbr,
+				     int *wSp)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((modelSV.core == NULL) || (nbr == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(modelSV.core->type != ALG_MATRIX_RECT)
+  {
+    errNum = WLZ_ERR_PARAM_TYPE;
+  }
+  else if((modelSV.core->nR != modelSV.core->nC) ||
+          (modelSV.core->nR != n + 1))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    int		i,
+    		j;
+    double	**a;
+
+    /* Set values in matrix. */
+    a = modelSV.rect->array;
+    for(j = 0; j < n; ++j)
+    {
+      for(i = 0; i < j; ++i)
+      {
+	double d;
+	WlzDVertex3 s;
+        
+	WLZ_VTX_3_SUB(s, nbr[j], nbr[i]);
+	d = WLZ_VTX_3_LENGTH(s);
+        a[j][i] = a[i][j] = modelFn->fn(modelFn, d);;
+      }
+      a[j][j] = 0.0;
+      a[n][j] = a[j][n] = 1.0;
+    }
+    a[n][n] = 0.0;
+    /* Perform LU decomposition. */
+    errNum = WlzErrorFromAlg(AlgMatrixLUDecompRaw(a, n + 1, wSp, NULL));
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code. If all input parameters are valid then
+* 		this will return WLZ_ERR_NONE.
+* \ingroup	WlzValuesUtils
 * \brief	Computes the ordinary kriging position semi-variogram from
 * 		the given neighbourhood vertices and the given position
 * 		vertex.
@@ -373,6 +437,51 @@ WlzErrorNum	WlzKrigOSetPosSV2D(double *posSV, WlzKrigModelFn *modelFn,
 
       WLZ_VTX_2_SUB(s, pos, nbr[j]);
       d = WLZ_VTX_2_LENGTH(s);
+      posSV[j] = modelFn->fn(modelFn, d);;
+    }
+    posSV[n] = 1.0;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code. If all input parameters are valid then
+* 		this will return WLZ_ERR_NONE.
+* \ingroup	WlzValuesUtils
+* \brief	Computes the ordinary kriging position semi-variogram from
+* 		the given neighbourhood vertices and the given position
+* 		vertex.
+* \param	posSV			Valid \f$(n + 1)\f$ column vector
+* 					for the position semi-variogram.
+* \param	modelFn			The model value function.
+* \param	n			Number of neighbourhood vertices.
+* \param	nbr			The neighbourhood vertex positions.
+* \param	pos			The given position.
+*/
+WlzErrorNum	WlzKrigOSetPosSV3D(double *posSV, WlzKrigModelFn *modelFn,
+				   int n, WlzDVertex3 *nbr, WlzDVertex3 pos)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((posSV == NULL) || (nbr == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(n < 1)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    int		j;
+
+    for(j = 0; j < n; ++j)
+    {
+      double d;
+      WlzDVertex3 s;
+
+      WLZ_VTX_3_SUB(s, pos, nbr[j]);
+      d = WLZ_VTX_3_LENGTH(s);
       posSV[j] = modelFn->fn(modelFn, d);;
     }
     posSV[n] = 1.0;
@@ -488,6 +597,77 @@ WlzErrorNum	WlzKrigReallocBuffers2D(WlzDVertex2 **dstNbrPosBuf,
     if(((*dstNbrPosBuf = (WlzDVertex2 *)
 			 AlcRealloc(*dstNbrPosBuf,
 				    maxC1 * sizeof(WlzDVertex2))) == NULL) ||
+	((*dstPosSV = (double *)
+		      AlcRealloc(*dstPosSV,
+		                 maxC1 * sizeof(double))) == NULL) ||
+	((*dstWSp = (int *)
+		    AlcRealloc(*dstWSp, maxC1 * sizeof(int))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && (nNbrC != nNbrL))
+  {
+    if(maxKrigBuf > 0)
+    {
+      AlgMatrixFree(*dstModelSV);
+      *dstModelSV = AlgMatrixNew(ALG_MATRIX_RECT, maxC1, maxC1, 0, 0.0, NULL);
+      if((*dstModelSV).core == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    nC1 = nNbrC + 1;
+    (*dstModelSV).rect->nR = nC1;
+    (*dstModelSV).rect->nC = nC1;
+  }
+  if((errNum == WLZ_ERR_NONE) && (maxKrigBuf > 0))
+  {
+    *dstMaxKrigBuf = maxKrigBuf;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValuesUtils
+* \brief	A convinience function for allocating and reallocating
+* 		the buffers needed for 3D kriging. All given pointers
+* 		must be valid and on the first call all pointer values
+* 		(eg *dstNbrPosBuf) must be NULL.
+* \param	dstNbrPosBuf		Destination pointer for the
+* 				        neighbourhood position buffer.
+* \param	dstPosSV		Destination pointer for the
+* 				        position vector.
+* \param	dstWSp			Destination pointer for kriging
+* 					matrix workspace.
+* \param	dstModelSV		Destination pointer for kriging
+* 					model matrix.
+* \param	dstMaxNbrIdxBuf		Destination pointer for the
+* 					maximum number of neighbours the
+* 					buffers have been reallocated
+* 					for.
+* \param	nNbrC			Current number of neighbours.
+* \param	nNbrL			Last number of neighbours.
+*/
+WlzErrorNum	WlzKrigReallocBuffers3D(WlzDVertex3 **dstNbrPosBuf,
+                                        double **dstPosSV, int **dstWSp,
+					AlgMatrix *dstModelSV,
+					int *dstMaxKrigBuf,
+					int nNbrC, int nNbrL)
+{
+  int		nC1,
+		maxC1,
+  		maxKrigBuf = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(nNbrC > *dstMaxKrigBuf)
+  {
+    maxKrigBuf = nNbrC * 2;
+    maxC1 = maxKrigBuf + 1;
+    if(((*dstNbrPosBuf = (WlzDVertex3 *)
+			 AlcRealloc(*dstNbrPosBuf,
+				    maxC1 * sizeof(WlzDVertex3))) == NULL) ||
 	((*dstPosSV = (double *)
 		      AlcRealloc(*dstPosSV,
 		                 maxC1 * sizeof(double))) == NULL) ||
