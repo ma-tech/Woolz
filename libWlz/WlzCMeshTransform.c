@@ -238,6 +238,10 @@ static WlzObject 		*WlzCMeshProduct2D(
 				  WlzObject *tr0,
 				  WlzObject *tr1,
 				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzCMeshProduct3D(
+				  WlzObject *tr0,
+				  WlzObject *tr1,
+				  WlzErrorNum *dstErr);
 static WlzErrorNum 		WlzCMeshTransformValues2D(
 				  WlzObject *dstObj,
 				  WlzObject *srcObj,
@@ -7431,19 +7435,86 @@ static WlzErrorNum WlzCMeshAffineProduct2D5(WlzObject *trM,
 					   WlzAffineTransform *trA, int order)
 {
   WlzIndexedValues *ixv;
+  WlzCMesh2D5	*mesh = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   ixv = trM->values.x;
   if((ixv->attach != WLZ_VALUE_ATTACH_NOD) ||
      (ixv->rank != 1) ||
-     (ixv->dim[0] < 2) ||
+     (ixv->dim[0] < 3) ||
      (ixv->vType != WLZ_GREY_DOUBLE))
   {
     errNum = WLZ_ERR_VALUES_DATA;
   }
   else
   {
-    errNum = WLZ_ERR_UNIMPLEMENTED; /* HACK TODO */
+    int		maxNod;
+    AlcVector	*nVec;
+
+    mesh = trM->domain.cm2d5;
+    nVec = mesh->res.nod.vec;
+    maxNod = mesh->res.nod.maxEnt;
+    if(order == 0) /* P(x) = A(M(x))*/
+    {
+      int         idN;
+
+      for(idN = 0; idN < maxNod; ++idN)
+      {
+	WlzCMeshNod2D5 *nod;
+
+	nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(nVec, idN);
+	if(nod->idx >= 0)
+	{
+	  double      *dsp;
+	  WlzDVertex3 dPos;
+
+	  dsp = (double *)WlzIndexedValueGet(ixv, idN);
+	  dPos.vtX = nod->pos.vtX + dsp[0];
+	  dPos.vtY = nod->pos.vtY + dsp[1];
+	  dPos.vtZ = nod->pos.vtZ + dsp[2];
+	  dPos = WlzAffineTransformVertexD3(trA, dPos, &errNum);
+	  dsp[0] = dPos.vtX - nod->pos.vtX;
+	  dsp[1] = dPos.vtY - nod->pos.vtY;
+	  dsp[2] = dPos.vtZ - nod->pos.vtZ;
+	}
+      }
+    }
+    else /* P(x) = M(A(x)) */
+    {
+      WlzAffineTransform *trI;
+
+      trI = WlzAffineTransformInverse(trA, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	int         idN;
+
+	for(idN = 0; idN < maxNod; ++idN)
+	{
+	  WlzCMeshNod2D5 *nod;
+
+	  nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(nVec, idN);
+	  if(nod->idx >= 0)
+	  {
+	    double	*dsp;
+	    WlzDVertex3	iPos;
+
+	    iPos = WlzAffineTransformVertexD3(trI, nod->pos, NULL);
+	    dsp = (double *)WlzIndexedValueGet(ixv, idN);
+	    dsp[0] += nod->pos.vtX - iPos.vtX;
+	    dsp[1] += nod->pos.vtY - iPos.vtY;
+	    dsp[2] += nod->pos.vtZ - iPos.vtZ;
+	    nod->pos = iPos;
+	  }
+	}
+      }
+      (void )WlzFreeAffineTransform(trI);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	WlzCMeshUpdateBBox2D5(mesh);
+	WlzCMeshUpdateMaxSqEdgLen2D5(mesh);
+	errNum = WlzCMeshReassignGridCells2D5(mesh, 0);
+      }
+    }
   }
   return(errNum);
 }
@@ -7461,6 +7532,7 @@ static WlzErrorNum WlzCMeshAffineProduct3D(WlzObject *trM,
 					   WlzAffineTransform *trA, int order)
 {
   WlzIndexedValues *ixv;
+  WlzCMesh3D	*mesh = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   ixv = trM->values.x;
@@ -7473,7 +7545,73 @@ static WlzErrorNum WlzCMeshAffineProduct3D(WlzObject *trM,
   }
   else
   {
-    errNum = WLZ_ERR_UNIMPLEMENTED; /* HACK TODO */
+    int		maxNod;
+    AlcVector	*nVec;
+
+    mesh = trM->domain.cm3;
+    nVec = mesh->res.nod.vec;
+    maxNod = mesh->res.nod.maxEnt;
+    if(order == 0) /* P(x) = A(M(x))*/
+    {
+      int         idN;
+
+      for(idN = 0; idN < maxNod; ++idN)
+      {
+	WlzCMeshNod3D *nod;
+
+	nod = (WlzCMeshNod3D *)AlcVectorItemGet(nVec, idN);
+	if(nod->idx >= 0)
+	{
+	  double      *dsp;
+	  WlzDVertex3 dPos;
+
+	  dsp = (double *)WlzIndexedValueGet(ixv, idN);
+	  dPos.vtX = nod->pos.vtX + dsp[0];
+	  dPos.vtY = nod->pos.vtY + dsp[1];
+	  dPos.vtZ = nod->pos.vtZ + dsp[2];
+	  dPos = WlzAffineTransformVertexD3(trA, dPos, &errNum);
+	  dsp[0] = dPos.vtX - nod->pos.vtX;
+	  dsp[1] = dPos.vtY - nod->pos.vtY;
+	  dsp[2] = dPos.vtZ - nod->pos.vtZ;
+	}
+      }
+    }
+    else /* P(x) = M(A(x)) */
+    {
+      WlzAffineTransform *trI;
+
+      trI = WlzAffineTransformInverse(trA, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	int         idN;
+
+	for(idN = 0; idN < maxNod; ++idN)
+	{
+	  WlzCMeshNod3D *nod;
+
+	  nod = (WlzCMeshNod3D *)AlcVectorItemGet(nVec, idN);
+	  if(nod->idx >= 0)
+	  {
+	    double	*dsp;
+	    WlzDVertex3	iPos;
+
+	    iPos = WlzAffineTransformVertexD3(trI, nod->pos, NULL);
+	    dsp = (double *)WlzIndexedValueGet(ixv, idN);
+	    dsp[0] += nod->pos.vtX - iPos.vtX;
+	    dsp[1] += nod->pos.vtY - iPos.vtY;
+	    dsp[2] += nod->pos.vtZ - iPos.vtZ;
+	    nod->pos = iPos;
+	  }
+	}
+      }
+      (void )WlzFreeAffineTransform(trI);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	WlzCMeshUpdateBBox3D(mesh);
+	WlzCMeshUpdateMaxSqEdgLen3D(mesh);
+	errNum = WlzCMeshReassignGridCells3D(mesh, 0);
+      }
+    }
   }
   return(errNum);
 }
@@ -7769,13 +7907,36 @@ WlzObject	*WlzCMeshMeshMeshProduct(WlzMeshTransform *tr0,
   return(trR);
 }
 
+/*!
+* \return	New Woolz object containing the conforming mesh transform
+* 		product or NULL on error.
+* \ingroup	WlzTransform
+* \brief	Computes the product of the two given (convex) mesh
+* 		transforms. This is computed within intersection of
+* 		the two mesh transforms resulting in a conforming
+* 		mesh transform.
+* 		\f[
+ 		\mathbf{T_R}(\mathbf{x}) =
+		   \mathbf{T_1}(\mathbf{T_0}(\mathbf{x}))
+ 		\f]
+* 		Where possible the node positions of the second mesh
+* 		\f$\mathbf{T_1}\f$ are preserved in the output mesh
+* 		\f$\mathbf{T_R}\f$.
+* 		The displacements in the output transform are given by
+* 		\f[
+		\mathbf{d_R}(\mathbf{x}) = \mathbf{d_0}(\mathbf{x}) +
+		  \mathbf{d_1}(\mathbf{d_0}(\mathbf{x})) - \mathbf{x}
+  		\f]
+* \param	tr0			First (convex) mesh transform.
+* \param	tr1			Second (convex) mesh transform.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
 WlzObject	*WlzCMeshMeshProduct(WlzObject *tr0, WlzMeshTransform *tr1,
 				     int order, WlzErrorNum *dstErr)
 {
   WlzObject	*trR = NULL;
   WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
 
-  /* HACK TODO */
   if(dstErr)
   {
     *dstErr = errNum;
@@ -7851,13 +8012,15 @@ WlzObject	*WlzCMeshProduct(WlzObject *tr0, WlzObject *tr1,
           trR = WlzCMeshProduct2D(tr0, tr1, &errNum);
 	}
 	break;
-      case WLZ_CMESH_2D5:
-        /* HACK TODO */
-	errNum = WLZ_ERR_UNIMPLEMENTED;
-        break;
       case WLZ_CMESH_3D:
-        /* HACK TODO */
-	errNum = WLZ_ERR_UNIMPLEMENTED;
+	if(tr0->domain.cm2->type != WLZ_CMESH_3D)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+	else
+	{
+          trR = WlzCMeshProduct3D(tr0, tr1, &errNum);
+	}
         break;
       default: 
         errNum = WLZ_ERR_OBJECT_TYPE;
@@ -7937,7 +8100,7 @@ static WlzObject *WlzCMeshProduct2D(WlzObject *tr0, WlzObject *tr1,
   }
   else
   {
-    /* Create a new conforming mesh with nodes and elements of corresponding
+    /* Create a new conforming mesh with nodes and elements corresponding
      * to those of tr0 and where the displaced nodes of tr0 fall within
      * elements of tr1. */
     trR = WlzCMeshIntersect(tr0, tr1, 1, &nodTab, &errNum);
@@ -7996,6 +8159,7 @@ static WlzObject *WlzCMeshProduct2D(WlzObject *tr0, WlzObject *tr1,
 	  dsp0[0] = (double *)WlzIndexedValueGet(ixv1, nod0[0]->idx);
 	  dsp0[1] = (double *)WlzIndexedValueGet(ixv1, nod0[1]->idx);
 	  dsp0[2] = (double *)WlzIndexedValueGet(ixv1, nod0[2]->idx);
+/* HACK TODO OPTIMISE HERE */
 	  v1.vtX = WlzGeomInterpolateTri2D(nod0[0]->pos,
 					   nod0[1]->pos,
 					   nod0[2]->pos,
@@ -8078,6 +8242,238 @@ static WlzObject *WlzCMeshProduct2D(WlzObject *tr0, WlzObject *tr1,
 	dspR = (double *)WlzIndexedValueGet(ixvR, nodR->idx);
 	dspR[0] = v1.vtX;
 	dspR[1] = v1.vtY;
+      }
+    }
+  }
+  AlcFree(wSp);
+  AlcFree(posSV);
+  AlcFree(nodTab);
+  AlcFree(nbrIdxBuf);
+  AlcFree(nbrPosBuf);
+  AlgMatrixFree(modelSV);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(trR);
+}
+
+/*!
+* \return	New Woolz object containing the conforming mesh transform
+* 		product or NULL on error.
+* \ingroup	WlzTransform
+* \brief	Computes the product of the two given (conforming) mesh
+* 		transforms. See WlzCMeshProduct().
+* \param	tr0			First (conforming) mesh transform.
+* \param	tr1			Second (conforming) mesh transform.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject *WlzCMeshProduct3D(WlzObject *tr0, WlzObject *tr1,
+				    WlzErrorNum *dstErr)
+{
+  int		nNbr0 = 0,
+  		nNbr1 = 0,
+		maxKrigBuf = 0,
+		maxNbrIdxBuf = 0;
+  double	dRange;
+  WlzObject	*trR = NULL;
+  WlzCMesh3D	*mesh0 = NULL,
+  		*mesh1 = NULL,
+		*meshR = NULL;
+  WlzIndexedValues *ixv0 = NULL,
+  		   *ixv1 = NULL,
+		   *ixvR = NULL;
+  int		*wSp = NULL,
+  		*nodTab = NULL,
+  		*nbrIdxBuf = NULL;
+  double	*posSV = NULL;
+  WlzKrigModelFn modelFn;
+  AlgMatrix	modelSV;
+  WlzDVertex3	*nbrPosBuf = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  modelSV.core = NULL;
+  if(((mesh0 = tr0->domain.cm3) == NULL) ||
+     ((mesh1 = tr1->domain.cm3) == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(((ixv0 = tr0->values.x) == NULL) ||
+          ((ixv1 = tr1->values.x) == NULL))
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if((mesh0->type != WLZ_CMESH_3D) || ( mesh0->type != mesh1->type))
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((ixv0->type != WLZ_INDEXED_VALUES) || ( ixv0->type != ixv1->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else if((ixv0->rank != 1) ||
+          (ixv1->rank != 1) ||
+          (ixv0->dim[0] < 3) ||
+	  (ixv1->dim[0] < 3) ||
+          (ixv0->vType != WLZ_GREY_DOUBLE) ||
+	  (ixv1->vType != WLZ_GREY_DOUBLE) ||
+	  (ixv0->attach != WLZ_VALUE_ATTACH_NOD) ||
+	  (ixv1->attach != WLZ_VALUE_ATTACH_NOD))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else
+  {
+    /* Create a new conforming mesh with nodes and elements corresponding
+     * to those of tr0 and where the displaced nodes of tr0 fall within
+     * elements of tr1. */
+    trR = WlzCMeshIntersect(tr0, tr1, 1, &nodTab, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		dim = 3;
+
+    meshR = trR->domain.cm3;
+    ixvR = WlzMakeIndexedValues(trR, 1, &dim, WLZ_GREY_DOUBLE,
+                                WLZ_VALUE_ATTACH_NOD, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idN;
+    WlzValues	val;
+
+    val.x = ixvR;
+    dRange = sqrt(mesh1->maxSqEdgLen);
+    trR->values = WlzAssignValues(val, &errNum);
+    /* Set displacements for the new constrained mesh transform. */
+    for(idN = 0; idN < mesh0->res.nod.maxEnt; ++idN)
+    {
+      int	nIdx;
+      WlzCMeshNod3D *nod1,
+      		    *nodR;
+      double	*dsp1;
+      WlzDVertex3 v0,
+      		  v1;
+
+      if((nIdx = nodTab[idN]) >= 0)
+      {
+	int	idE0;
+        double  *dspR;
+
+	nod1 = (WlzCMeshNod3D *)AlcVectorItemGet(mesh0->res.nod.vec, idN);
+        nodR = (WlzCMeshNod3D *)AlcVectorItemGet(meshR->res.nod.vec, nIdx);
+	dsp1 = (double *)WlzIndexedValueGet(ixv0, idN);
+	v0.vtX = nod1->pos.vtX + dsp1[0];
+	v0.vtY = nod1->pos.vtY + dsp1[1];
+	v0.vtZ = nod1->pos.vtZ + dsp1[2];
+	/* Find element in tr1 which encloses a vertex at the position of
+	 * the new node. */
+        idE0 = WlzCMeshElmEnclosingPos3D(mesh1, -1, v0.vtX, v0.vtY, v0.vtZ,
+					 0, NULL);
+	if(idE0 >= 0)
+	{
+	  double	*dsp0[4];
+	  WlzCMeshNod3D *nod0[4];
+	  WlzCMeshElm3D *elm0;
+
+	  /* Interpolate displacement at the new node position using
+	   * barycentric interpolation. */
+	  elm0 = (WlzCMeshElm3D *)AlcVectorItemGet(mesh1->res.elm.vec, idE0);
+	  nod0[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm0);
+	  nod0[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm0);
+	  nod0[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm0);
+	  nod0[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm0);
+	  dsp0[0] = (double *)WlzIndexedValueGet(ixv1, nod0[0]->idx);
+	  dsp0[1] = (double *)WlzIndexedValueGet(ixv1, nod0[1]->idx);
+	  dsp0[2] = (double *)WlzIndexedValueGet(ixv1, nod0[2]->idx);
+	  dsp0[3] = (double *)WlzIndexedValueGet(ixv1, nod0[3]->idx);
+/* HACK TODO OPTIMISE HERE */
+	  v1.vtX = WlzGeomInterpolateTet3D(nod0[0]->pos, nod0[1]->pos,
+					   nod0[2]->pos, nod0[3]->pos,
+					   dsp0[0][0], dsp0[1][0],
+					   dsp0[2][0], dsp0[3][0],
+					   v0);
+	  v1.vtY = WlzGeomInterpolateTet3D(nod0[0]->pos, nod0[1]->pos,
+					   nod0[2]->pos, nod0[3]->pos,
+					   dsp0[0][1], dsp0[1][1],
+					   dsp0[2][1], dsp0[3][1],
+					   v0);
+	  v1.vtZ = WlzGeomInterpolateTet3D(nod0[0]->pos, nod0[1]->pos,
+					   nod0[2]->pos, nod0[3]->pos,
+					   dsp0[0][2], dsp0[1][2],
+					   dsp0[2][2], dsp0[3][2],
+					   v0);
+	}
+	else /* idE0 <0, the vertex is not in the mesh. Find the closest
+	      * node to the vertex in the mesh and then use kriging. */
+	{
+	  int		idN0;
+          WlzCMeshNod3D	*nod0,
+	  		*nodN;
+
+	  idN0 = WlzCMeshClosestNod3D(mesh1, v0);
+          nod0 = (WlzCMeshNod3D *)AlcVectorItemGet(mesh1->res.nod.vec, idN0);
+	  nNbr1 = WlzCMeshNodRingNodIndices3D(nod0, &maxNbrIdxBuf,
+	  			              &nbrIdxBuf, &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    /* Reallocate buffers if required. */
+	    errNum = WlzKrigReallocBuffers3D(&nbrPosBuf, &posSV, &wSp,
+					     &modelSV, &maxKrigBuf,
+					     nNbr1, nNbr0);
+	    nNbr0 = nNbr1;
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    int	i;
+
+	    for(i = 0; i < nNbr1; ++i)
+	    {
+	      WlzCMeshNod3D *nod;
+	      nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh1->res.nod.vec,
+						      nbrIdxBuf[i]);
+	      nbrPosBuf[i] = nod->pos;
+	    }
+	    WlzKrigSetModelFn(&modelFn, WLZ_KRIG_MODELFN_LINEAR,
+			      0.0, 0.1, 2.0 * dRange);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzKrigOSetModelSV3D(modelSV, &modelFn, nNbr1, nbrPosBuf,
+					  wSp);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzKrigOSetPosSV3D(posSV, &modelFn, nNbr1, nbrPosBuf, v0);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    int	i;
+
+	    v1.vtX = 0.0;
+	    v1.vtY = 0.0;
+	    v1.vtZ = 0.0;
+	    WlzKrigOWeightsSolve(modelSV, posSV, wSp, WLZ_MESH_TOLERANCE);
+	    /* posSV now contains the weights. */
+	    for(i = 0; i < nNbr1; ++i) 
+	    {
+	      double *dsp0;
+
+	      nodN = (WlzCMeshNod3D *)AlcVectorItemGet(mesh1->res.nod.vec,
+	                                               nbrIdxBuf[i]);
+	      dsp0 = (double *)WlzIndexedValueGet(ixv1, nodN->idx);
+	      v1.vtX += posSV[i] * dsp0[0];
+	      v1.vtY += posSV[i] * dsp0[1];
+	      v1.vtZ += posSV[i] * dsp0[2];
+	    }
+	  }
+	}
+	WLZ_VTX_3_ADD(v1, v1, v0);
+	WLZ_VTX_3_SUB(v1, v1, nodR->pos);
+	dspR = (double *)WlzIndexedValueGet(ixvR, nodR->idx);
+	dspR[0] = v1.vtX;
+	dspR[1] = v1.vtY;
+	dspR[2] = v1.vtZ;
       }
     }
   }
