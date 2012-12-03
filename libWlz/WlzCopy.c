@@ -128,7 +128,9 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
 	  outObj = WlzMakeMain(inObj->type, dom, val, pLst, NULL, &errNum);
 	}
 	break;
-      case WLZ_CMESH_2D:
+      case WLZ_CMESH_2D:	/* FALLTHROUGH */
+      case WLZ_CMESH_2D5:	/* FALLTHROUGH */
+      case WLZ_CMESH_3D:
 	if(inObj->values.core != NULL)
 	{
 	  if(inObj->values.core->type != WLZ_INDEXED_VALUES)
@@ -147,14 +149,18 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  size_t datSz;
+	  WlzCMeshP meshP;
 	  AlcVector *newVec = NULL;
 
 	  datSz = WlzIndexedValueSize(val.x, NULL);
-	  dom.cm2 =  WlzCMeshCopy2D(inObj->domain.cm2, 1,
-				datSz,
+	  /* Although the 2D conforming mesh union member is used all that
+	   * really matters is that the pointer is passed. */
+	  meshP.m2 = inObj->domain.cm2;
+	  meshP =  WlzCMeshCopy(meshP, 1, datSz,
 				(val.core)? &newVec: NULL,
 				(val.core)? (inObj->values.x->values): NULL,
 				&errNum);
+	  dom.cm2 = meshP.m2;
 	  if(newVec)
 	  {
 	    (void )AlcVectorFree(val.x->values);
@@ -169,11 +175,6 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
 	{
 	  outObj = WlzMakeMain(inObj->type, dom, val, pLst, NULL, &errNum);
 	}
-	break;
-      case WLZ_CMESH_3D:
-        /* HACK TODO */
-      case WLZ_CMESH_2D5:
-        /* HACK TODO */
 	break;
       case WLZ_EMPTY_OBJ:
         outObj = WlzMakeEmpty(&errNum);
