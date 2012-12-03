@@ -2791,6 +2791,23 @@ double          WlzCMeshElmSnArea22D(WlzCMeshElm2D *elm)
 }
 
 /*!
+* \return       Twice the square of the area of the 2D5 mesh element.
+* \ingroup      WlzMesh
+* \brief        Computes twice the square of te area of the 2D5 mesh
+* 		element.
+* \param        elm                     Given mesh element.
+*/
+double          WlzCMeshElmSqArea22D5(WlzCMeshElm2D5 *elm)
+{
+  double        area;
+
+  area = WlzGeomTriangleArea2Sq3(elm->edu[0].nod->pos,
+                                 elm->edu[1].nod->pos,
+                                 elm->edu[2].nod->pos);
+  return(area);
+}
+
+/*!
 * \return       Siz times the signed volume of the 3D mesh element.
 * \ingroup      WlzMesh
 * \brief        Computes six times the signed volume of the 3D mesh
@@ -3318,12 +3335,8 @@ WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, int squeeze,
 	  {
 	    double sA2 = 0.0;
 
-	    if(squeeze)
-	    {
-	      sA2 = WlzCMeshElmSnArea22D(gvnElm);
-	    }
-	    if((squeeze == 0) ||
-	       (fabs(sA2) > WLZ_MESH_TOLERANCE_SQ)) /* Squeeze out zero area
+	    sA2 = WlzCMeshElmSnArea22D(gvnElm);
+	    if(fabs(sA2) > WLZ_MESH_TOLERANCE_SQ)   /* Squeeze out zero area
 	                                               elements. */
 	    {
 	      WlzCMeshNod2D *gvnNodes[3],
@@ -3419,7 +3432,7 @@ WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, int squeeze,
 	                  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
 	    (void )WlzCMeshNewElm2D(newMesh,
 	                            newNodes[0], newNodes[1], newNodes[2],
-				    0, &errNum);
+				    1, &errNum);
 	    if(errNum != WLZ_ERR_NONE)
 	    {
 	      break;
@@ -3541,38 +3554,44 @@ WlzCMesh2D5	*WlzCMeshCopy2D5(WlzCMesh2D5 *gvnMesh, int squeeze,
 	  					      idE);
 	  if(gvnElm->idx >= 0)
 	  {
-	    WlzCMeshNod2D5 *gvnNodes[3],
-			   *newNodes[3];
+	    double sQA2 = 0.0;
 
-	    /* Copy Nodes. */
-	    gvnNodes[0] = WLZ_CMESH_ELM2D5_GET_NODE_0(gvnElm);
-	    gvnNodes[1] = WLZ_CMESH_ELM2D5_GET_NODE_1(gvnElm);
-	    gvnNodes[2] = WLZ_CMESH_ELM2D5_GET_NODE_2(gvnElm);
-	    for(idN = 0; idN < 3; ++idN)
+	    sQA2 = WlzCMeshElmSqArea22D5(gvnElm);
+	    if(fabs(sQA2) > WLZ_MESH_TOLERANCE_SQ)
 	    {
-	      if(WlzCMeshLocateNod2D5(newMesh, gvnNodes[idN]->pos,
-				      newNodes + idN) == 0)
-	      {
-		newNodes[idN] = WlzCMeshNewNod2D5(newMesh, gvnNodes[idN]->pos,
-						  NULL);
-		/* Copy node associated data. */
-		if(prvDat != NULL)
-		{
-	          void *ascP;
+	      WlzCMeshNod2D5 *gvnNodes[3],
+			     *newNodes[3];
 
-		  ascP = AlcVectorItemGet(prvDat, newNodes[idN]->idx);
-		  memcpy(ascP, AlcVectorItemGet(gvnDat, gvnNodes[idN]->idx),
-			 datSz);
+	      /* Copy Nodes. */
+	      gvnNodes[0] = WLZ_CMESH_ELM2D5_GET_NODE_0(gvnElm);
+	      gvnNodes[1] = WLZ_CMESH_ELM2D5_GET_NODE_1(gvnElm);
+	      gvnNodes[2] = WLZ_CMESH_ELM2D5_GET_NODE_2(gvnElm);
+	      for(idN = 0; idN < 3; ++idN)
+	      {
+		if(WlzCMeshLocateNod2D5(newMesh, gvnNodes[idN]->pos,
+					newNodes + idN) == 0)
+		{
+		  newNodes[idN] = WlzCMeshNewNod2D5(newMesh,
+		  				    gvnNodes[idN]->pos, NULL);
+		  /* Copy node associated data. */
+		  if(prvDat != NULL)
+		  {
+		    void *ascP;
+
+		    ascP = AlcVectorItemGet(prvDat, newNodes[idN]->idx);
+		    memcpy(ascP, AlcVectorItemGet(gvnDat, gvnNodes[idN]->idx),
+			   datSz);
+		  }
 		}
 	      }
-	    }
-	    /* Copy element. */
-	    (void )WlzCMeshNewElm2D5(newMesh,
-				     newNodes[0], newNodes[1], newNodes[2],
-				     0, &errNum);
-	    if(errNum != WLZ_ERR_NONE)
-	    {
-	      break;
+	      /* Copy element. */
+	      (void )WlzCMeshNewElm2D5(newMesh,
+				       newNodes[0], newNodes[1], newNodes[2],
+				       1, &errNum);
+	      if(errNum != WLZ_ERR_NONE)
+	      {
+		break;
+	      }
 	    }
 	  }
 	}
@@ -3634,7 +3653,7 @@ WlzCMesh2D5	*WlzCMeshCopy2D5(WlzCMesh2D5 *gvnMesh, int squeeze,
 	                  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
 	    (void )WlzCMeshNewElm2D5(newMesh,
 	                            newNodes[0], newNodes[1], newNodes[2],
-				    0, &errNum);
+				    1, &errNum);
 	    if(errNum != WLZ_ERR_NONE)
 	    {
 	      break;
@@ -3755,41 +3774,48 @@ WlzCMesh3D	*WlzCMeshCopy3D(WlzCMesh3D *gvnMesh, int squeeze,
 	  gvnElm = (WlzCMeshElm3D *)AlcVectorItemGet(gvnMesh->res.elm.vec, idE);
 	  if(gvnElm->idx >= 0)
 	  {
-	    WlzCMeshNod3D *gvnNodes[4],
-			  *newNodes[4];
+	    double sV6 = 0.0;
 
-	    /* Copy Nodes. */
-	    gvnNodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(gvnElm);
-	    gvnNodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(gvnElm);
-	    gvnNodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(gvnElm);
-	    gvnNodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(gvnElm);
-	    for(idN = 0; idN < 4; ++idN)
+            sV6 = WlzCMeshElmSnVolume63D(gvnElm);
+	    if(fabs(sV6) > WLZ_MESH_TOLERANCE_SQ)
 	    {
-              WlzIVertex3 dumGrdPos;
-              WlzCMeshNod3D *dumNod;
+	      WlzCMeshNod3D *gvnNodes[4],
+			    *newNodes[4];
 
-	      if(WlzCMeshLocateNod3D(newMesh, gvnNodes[idN]->pos,
-				     &dumGrdPos, &dumNod, newNodes + idN) == 0)
+	      /* Copy Nodes. */
+	      gvnNodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(gvnElm);
+	      gvnNodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(gvnElm);
+	      gvnNodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(gvnElm);
+	      gvnNodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(gvnElm);
+	      for(idN = 0; idN < 4; ++idN)
 	      {
-		newNodes[idN] = WlzCMeshNewNod3D(newMesh, gvnNodes[idN]->pos,
-						 NULL);
-		/* Copy node associated data. */
-		if(prvDat != NULL)
-		{
-	          void *ascP;
+		WlzIVertex3 dumGrdPos;
+		WlzCMeshNod3D *dumNod;
 
-		  ascP = AlcVectorItemGet(prvDat, newNodes[idN]->idx);
-		  memcpy(ascP, AlcVectorItemGet(gvnDat, gvnNodes[idN]->idx),
-			 datSz);
+		if(WlzCMeshLocateNod3D(newMesh, gvnNodes[idN]->pos,
+				       &dumGrdPos, &dumNod,
+				       newNodes + idN) == 0)
+		{
+		  newNodes[idN] = WlzCMeshNewNod3D(newMesh, gvnNodes[idN]->pos,
+						   NULL);
+		  /* Copy node associated data. */
+		  if(prvDat != NULL)
+		  {
+		    void *ascP;
+
+		    ascP = AlcVectorItemGet(prvDat, newNodes[idN]->idx);
+		    memcpy(ascP, AlcVectorItemGet(gvnDat, gvnNodes[idN]->idx),
+			   datSz);
+		  }
 		}
 	      }
-	    }
-	    /* Copy element. */
-	    (void )WlzCMeshNewElm3D(newMesh, newNodes[0], newNodes[1],
-	    			    newNodes[2], newNodes[3], 0, &errNum);
-	    if(errNum != WLZ_ERR_NONE)
-	    {
-	      break;
+	      /* Copy element. */
+	      (void )WlzCMeshNewElm3D(newMesh, newNodes[0], newNodes[1],
+				      newNodes[2], newNodes[3], 1, &errNum);
+	      if(errNum != WLZ_ERR_NONE)
+	      {
+		break;
+	      }
 	    }
 	  }
 	}
@@ -3852,7 +3878,7 @@ WlzCMesh3D	*WlzCMeshCopy3D(WlzCMesh3D *gvnMesh, int squeeze,
 	    newNodes[3] = (WlzCMeshNod3D *)
 	                  AlcVectorItemGet(gvnMesh->res.nod.vec, gvnNod->idx);
 	    (void )WlzCMeshNewElm3D(newMesh, newNodes[0], newNodes[1],
-	    			    newNodes[2], newNodes[3], 0, &errNum);
+	    			    newNodes[2], newNodes[3], 1, &errNum);
 	    if(errNum != WLZ_ERR_NONE)
 	    {
 	      break;
@@ -4926,6 +4952,99 @@ int		WlzCMeshNodRingNodIndices2D5(WlzCMeshNod2D5 *nod,
       (*idxBuf)[idN++] = edu1->next->next->nod->idx;
       edu1 = edu1->nnxt;
     } while((edu1 != NULL) && (edu1 != edu0));
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    nN = 0;
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(nN);
+}
+
+/*!
+* \return	Number of nodes in the ring plus one for the given node or
+* 		zero on error.
+* \ingroup	WlzMesh
+* \brief	Gathers the indices of the nodes that form a ring or
+* 		partial rings around the given node. Where members of the
+*		ring are the immediate neighbours of the given node. The
+*		given node's index will always be the first in the
+*		buffer but the remainder of the node indices may be
+*		unsorted.
+* \param	nod			Given node which must be valid.
+* \param	maxIdxBuf		Pointer to the current maximum number
+* 					of indices possible in the current
+* 					buffer. This must be valid and may
+* 					be modified on return.
+* \param	idxBuf			Pointer to the current node index
+* 					buffer. This must either be valid
+* 					or a pointer to a NULL array. The
+* 					array pointer may be modified on
+* 					return.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int		WlzCMeshNodRingNodIndices3D(WlzCMeshNod3D *nod,
+					     int *maxIdxBuf,
+					     int **idxBuf,
+				             WlzErrorNum *dstErr)
+{
+  int		nN;
+  WlzCMeshEdgU3D *edu0,
+  		*edu1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Count the number of edge uses directed away from this node plus one. */
+  nN = 1;
+  edu1 = edu0 = nod->edu;
+  do
+  {
+    ++nN;
+    edu1 = edu1->nnxt;
+  } while((edu1 != NULL) && (edu1 != edu0));
+  /* Re-allocate the index buffer if required. */
+  if((*idxBuf == NULL) || (*maxIdxBuf < nN))
+  {
+    *maxIdxBuf = 2 * nN;
+    if((*idxBuf = (int *)
+                  AlcRealloc(*idxBuf, sizeof(int) * *maxIdxBuf)) == NULL)
+    {
+      nN = 0;
+      *maxIdxBuf = 0;
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Fill the buffer with the indices of the nodes on the opposite ends
+   * of all edge uses directed away from the node. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int idN0;
+
+    idN0 = 1;
+    edu1 = edu0;
+    (*idxBuf)[0] = nod->idx;
+    do
+    {
+      int idN1,
+      	  idN2;
+
+      idN1 = edu1->next->next->nod->idx;
+      for(idN2 = 0; idN2 < idN0; ++idN2)
+      {
+        if(idN1 == (*idxBuf)[idN2])
+	{
+	  break;
+	}
+      }
+      if(idN0 == idN2)
+      {
+        (*idxBuf)[idN0++] = idN1;
+      }
+      edu1 = edu1->nnxt;
+    } while((edu1 != NULL) && (edu1 != edu0));
+    nN = idN0;
   }
   if(errNum != WLZ_ERR_NONE)
   {
