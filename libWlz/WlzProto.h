@@ -1790,8 +1790,15 @@ extern int			WlzCMeshNodRingNodIndices2D5(
 				  int *maxIdxBuf,
 				  int **idxBuf, 
 				  WlzErrorNum *dstErr);
+extern int			WlzCMeshNodRingNodIndices3D(
+				  WlzCMeshNod3D *nod, 
+				  int *maxIdxBuf,
+				  int **idxBuf, 
+				  WlzErrorNum *dstErr);
 extern double                   WlzCMeshElmSnArea22D(
                                   WlzCMeshElm2D *elm);
+extern double			WlzCMeshElmSqArea22D5(
+				  WlzCMeshElm2D5 *elm);
 extern double                   WlzCMeshElmSnVolume63D(
                                   WlzCMeshElm3D *elm);
 extern WlzDBox2			WlzCMeshElmBBox2D(
@@ -3744,12 +3751,24 @@ extern WlzErrorNum     		WlzKrigOSetModelSV2D(
 				  int n,
 				  WlzDVertex2 *nbr,
 				  int *wSp);
+extern WlzErrorNum     		WlzKrigOSetModelSV3D(
+				  AlgMatrix modelSV,
+				  WlzKrigModelFn *modelFn,
+				  int n,
+				  WlzDVertex3 *nbr,
+				  int *wSp);
 extern WlzErrorNum     		WlzKrigOSetPosSV2D(
 				  double *posSV,
 				  WlzKrigModelFn *modelFn,
 				  int n,
 				  WlzDVertex2 *nbr,
 				  WlzDVertex2 pos);
+extern WlzErrorNum     		WlzKrigOSetPosSV3D(
+				  double *posSV,
+				  WlzKrigModelFn *modelFn,
+				  int n,
+				  WlzDVertex3 *nbr,
+				  WlzDVertex3 pos);
 extern WlzErrorNum     		WlzKrigOWeightsSolve(
 				  AlgMatrix modelSV,
 				  double *posSV,
@@ -3757,6 +3776,14 @@ extern WlzErrorNum     		WlzKrigOWeightsSolve(
 				  double eps);
 extern WlzErrorNum		WlzKrigReallocBuffers2D(
 				  WlzDVertex2 **dstNbrPosBuf,
+				  double **dstPosSV,
+				  int **dstWSp,
+				  AlgMatrix *dstModelSV,
+				  int *dstMaxNbrIdxBuf,
+				  int nNbrC,
+				  int nNbrL);
+extern WlzErrorNum		WlzKrigReallocBuffers3D(
+				  WlzDVertex3 **dstNbrPosBuf,
 				  double **dstPosSV,
 				  int **dstWSp,
 				  AlgMatrix *dstModelSV,
