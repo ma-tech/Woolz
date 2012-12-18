@@ -152,60 +152,78 @@ extern AlgError			AlgDbgWrite(
 extern void     		AlgFourHart1D(
 				  double *data,
 				  int num, 
-				  int step,
-				  int cThr);
+				  int step);
 extern void			AlgFour1D(
 				  double *real,
 				  double *imag,
 				  int num,
-				  int step,
-				  int cThr);
+				  int step);
 extern void			AlgFourInv1D(
 				  double *real,
 				  double *imag,
 				  int num,
-				  int step,
-				  int cThr);
+				  int step);
 extern void			AlgFourReal1D(
 				  double *real,
 				  int num,
-				  int step,
-				  int cThr);
+				  int step);
 extern void			AlgFourRealInv1D(
 				  double *real,
 				  int num,
-				  int step,
-				  int cThr);
-extern void			AlgFour2D(
+				  int step);
+extern AlgError			AlgFourHart2D(
+				  double **data,
+				  int useBuf,
+				  int numX,
+				  int numY);
+extern AlgError			AlgFour2D(
 				  double **real,
 				  double **imag,
-				  double *reBuf,
-				  double *imBuf,
+				  int useBuf,
 				  int numX,
-				  int numY,
-				  int cThr);
-extern void			AlgFourInv2D(
+				  int numY);
+extern AlgError			AlgFourInv2D(
 				  double **real,
 				  double **imag,
-				  double *reBuf,
-				  double *imBuf,
+				  int useBuf,
 				  int numX,
-				  int numY,
-				 int cThr);
-extern void			AlgFourReal2D(
+				  int numY);
+extern AlgError			AlgFourReal2D(
 				  double **real,
-				  double *reBuf,
-				  double *imBuf,
+				  int useBuf,
 				  int numX,
-				  int numY,
-				  int cThr);
-extern void			AlgFourRealInv2D(
+				  int numY);
+extern AlgError			AlgFourRealInv2D(
 				  double **real,
-				  double *reBuf,
-				  double *imBuf,
+				  int useBuf,
+				  int numX,
+				  int numY);
+extern AlgError			AlgFour3D(
+				  double ***real,
+				  double ***imag,
+				  int useBuf,
 				  int numX,
 				  int numY,
-				  int cThr);
+				  int numZ);
+extern AlgError			AlgFourInv3D(
+				  double ***real,
+				  double ***imag,
+				  int useBuf,
+				  int numX,
+				  int numY,
+				  int numZ);
+extern AlgError        		AlgFourReal3D(
+				  double ***real,
+				  int useBuf,
+				  int numX,
+				  int numY,
+				  int numZ);
+extern AlgError        		AlgFourRealInv3D(
+				  double ***real,
+				  int useBuf,
+				  int numX,
+				  int numY,
+				  int numZ);
 
 /* From AlgGamma.c */
 extern double			AlgGammaLog(

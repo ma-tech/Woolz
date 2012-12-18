@@ -1385,13 +1385,13 @@ extern WlzObject		*WlzCMeshComputeCurvaturesFromNodNorm(
 /************************************************************************
 * WlzCMeshIntersect.c							*
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern WlzObject		*WlzCMeshIntersect(
 				  WlzObject *obj0,
 				  WlzObject *obj1,
 				  int dsp0,
 				  int **dstNodTab,
 				  WlzErrorNum *dstErr);
-#ifndef WLZ_EXT_BIND
 extern WlzCMesh2D		*WlzCMeshIntersect2Mesh2D(
 				  WlzMeshTransform *tr0,
 				  WlzMeshTransform *tr1,
@@ -2418,6 +2418,14 @@ extern WlzErrorNum 		WlzFreeIndexedValues(
 #endif /* !WLZ_EXT_BIND */
 
 /************************************************************************
+* WlzFourier.c
+************************************************************************/
+extern WlzObject       		*WlzFourierTransformObj(
+				  WlzObject *iObj,
+				  int fwd,
+                                  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzDrawDomain.c
 ************************************************************************/
 extern WlzObject		*WlzDrawDomainObj(
@@ -3263,11 +3271,13 @@ extern double			WlzGeomTetrahedronVtxDistSq3D(
 				  WlzDVertex3 v1,
 				  WlzDVertex3 v2,
 				  WlzDVertex3 v3);
+#ifndef WLZ_EXT_BIND
 extern WlzErrorNum		WlzGeomPolyTriangulate2D(
 				  int sizeArrayPVtx,
 				  WlzDVertex2 *arrayPVtx,
 				  int *dstSizeArrayTri,
 				  int **dstArrayTri);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzGreyCrossing.c							*
@@ -4944,6 +4954,7 @@ extern WlzObject 		*WlzObjToBoundary(
 /************************************************************************
 * WlzOccupancy.c
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern	WlzErrorNum		Wlz3DSectionOcc(
 				  WlzObject *obj,
 				  WlzThreeDViewStruct *vs,
@@ -4952,6 +4963,7 @@ extern	WlzErrorNum		Wlz3DSectionOcc(
 				  double *dstLast,
 				  int *dstArraySizeOcc,
 				  int **dstArrayOcc);
+#endif /* WLZ_EXT_BIND */
 extern WlzObject		*WlzDomainOccupancy(
 				  WlzObject *gObj,
 				  WlzErrorNum *dstErr);
