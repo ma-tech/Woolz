@@ -884,7 +884,9 @@ static WlzErrorNum WlzCopyObjectGreyValuesAny3D(WlzObject *dObj,
       WlzErrorNum errNum2D = WLZ_ERR_NONE;
 
       if(((dDom2D = dPDom->domains + idP - dPDom->plane1) != NULL) &&
-	 ((sDom2D = sPDom->domains + idP - sPDom->plane1) != NULL))
+	 ((sDom2D = sPDom->domains + idP - sPDom->plane1) != NULL) &&
+	 ((*dDom2D).core != NULL) &&
+	 ((*sDom2D).core != NULL))
       {
 	WlzObject *dObj2D = NULL,
 		  *sObj2D = NULL;
