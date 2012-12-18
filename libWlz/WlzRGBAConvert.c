@@ -764,17 +764,106 @@ WlzObject *WlzRGBAToModulus(
   return rtnObj;
 }
 
-static WlzObject *WlzRGBAToModulus3D(
-  WlzObject	*obj,
-  WlzErrorNum	*dstErr)
+static WlzObject *WlzRGBAToModulus3D(WlzObject *obj, WlzErrorNum *dstErr)
 {
-  WlzObject	*rtnObj=NULL;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  int           pln;
+  WlzPlaneDomain *gDom,
+  		 *rDom = NULL;
+  WlzVoxelValues *gVal,
+                 *rVal = NULL;
+  WlzObject	*rObj=NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  if( dstErr ){
+  gDom = obj->domain.p;
+  gVal = obj->values.vox;
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rDom = WlzMakePlaneDomain(gDom->type,
+			      gDom->plane1, gDom->lastpl,
+			      gDom->line1, gDom->lastln,
+			      gDom->kol1, gDom->lastkl,
+			      &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rVal = WlzMakeVoxelValueTb(gVal->type, gVal->plane1, gVal->lastpl,
+    			       gVal->bckgrnd, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzDomain dom;
+    WlzValues val;
+
+    dom.p = rDom;
+    val.vox = rVal;
+    rObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, dom, val, NULL, obj, &errNum);
+  }
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for(pln = gDom->plane1; pln <= gDom->lastpl; ++pln)
+  {
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzDomain *gDom2,
+      		*rDom2;
+      WlzValues *gVal2,
+                *rVal2;
+      WlzErrorNum errNum2 = WLZ_ERR_NONE;
+
+      if(((gDom2 = gDom->domains + pln - gDom->plane1) != NULL) &&
+	 ((*gDom2).core != NULL) &&
+         ((rDom2 = rDom->domains + pln - rDom->plane1) != NULL) &&
+         ((gVal2 = gVal->values  + pln - gDom->plane1) != NULL) &&
+         ((rVal2 = rVal->values  + pln - rDom->plane1) != NULL))
+      {
+        WlzObject *gObj2 = NULL,
+                  *rObj2 = NULL;
+
+        if((gObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *gDom2, *gVal2, NULL, NULL,
+                                &errNum2)) != NULL)
+        {
+          rObj2 = WlzRGBAToModulus(gObj2, &errNum2);
+	  if(errNum2 == WLZ_ERR_NONE)
+	  {
+	    *rDom2 = WlzAssignDomain(rObj2->domain, NULL);
+	    *rVal2 = WlzAssignValues(rObj2->values, NULL);
+	  }
+        }
+        (void )WlzFreeObj(gObj2);
+        (void )WlzFreeObj(rObj2);
+      }
+#ifdef _OPENMP
+#pragma omp critical
+      {
+#endif
+        if(errNum2 != WLZ_ERR_NONE)
+        {
+          errNum = errNum2;
+        }
+#ifdef _OPENMP
+      }
+#endif
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(rObj)
+    {
+      WlzFreeObj(rObj);
+      rObj = NULL;
+    }
+    else
+    {
+      (void )WlzFreePlaneDomain(rDom);
+      (void )WlzFreeVoxelValueTb(rVal);
+    }
+  }
+  if(dstErr)
+  {
     *dstErr = errNum;
   }
-  return rtnObj;
+  return(rObj);
 }
 
 
