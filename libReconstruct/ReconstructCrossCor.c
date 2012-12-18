@@ -43,34 +43,11 @@ static char _ReconstructCrossCor_c[] = "University of Edinburgh $Id$";
 #include <unistd.h>
 #include <string.h>
 #include <float.h>
-#ifdef REC_THREADS_USED
-#include <pthread.h>
-#endif /* REC_THREADS_USED */
 
-#ifdef REC_THREADS_USED
-typedef struct    		   /* Used for args by RecCCorThrObjToFour() */
-{
-  RecError	errFlag;
-  double	**data;
-  double	*reBuf;
-  double	*imBuf;
-  double	*sSq;
-  WlzObject	*obj;
-  WlzIVertex2	org;
-  WlzIVertex2	size;
-  RecPPControl	*ppCtrl;
-  int		cThr;
-} RecCCorArgs1;
-#endif /* REC_THREADS_USED */
 
-static RecError	RecCCorObjToFour(double **data, double *reBuf, double *imBuf,
-				 double *sSq, WlzObject *obj,
+static RecError	RecCCorObjToFour(double **data, double *sSq, WlzObject *obj,
 				 WlzIVertex2 org, WlzIVertex2 size,
-				 RecPPControl *ppCtrl, int cThr);
-
-#ifdef REC_THREADS_USED
-static void	*RecCCorThrObjToFour(RecCCorArgs1 *args);
-#endif /* REC_THREADS_USED */
+				 RecPPControl *ppCtrl);
 
 /*!
 * \return	Error code.
@@ -120,15 +97,6 @@ RecError	RecCrossCorrelate(double **data0, double **data1,
 		tD4;
   double	*tDP1,
 		*tDP2;
-  double	*reBuf = NULL,
-		*imBuf = NULL;
-#ifdef REC_THREADS_USED
-  int		cThr = -1;
-  pthread_t	thrId;
-  RecCCorArgs1	thrArgs;
-#else /* ! REC_THREADS_USED */
-  static int	cThr = 1;
-#endif /* REC_THREADS_USED */
 
   REC_DBG((REC_DBG_CROSS|REC_DBG_LVL_FN|REC_DBG_LVL_1),
           ("RecCrossCorrelate FE 0x%lx 0x%lx 0x%lx 0x%lx %d 0x%lx 0x%lx"
@@ -137,24 +105,6 @@ RecError	RecCrossCorrelate(double **data0, double **data1,
 	   (unsigned long )sSq0, (unsigned long )sSq1, ccFlags,
 	   (unsigned long )obj0, (unsigned long )obj1,
 	   org.vtX, org.vtY, size.vtX, size.vtY));
-#ifdef REC_THREADS_USED
-  if(cThr <= 0)  /* Find number of CPUs and set number of concurrent threads */
-  {
-    cThr = sysconf(_SC_NPROCESSORS_ONLN);
-    if(cThr > 1)
-    {
-      ++cThr;
-    }
-    if(cThr >= REC_THREADS_MAX)
-    {
-      cThr = REC_THREADS_MAX;
-    }
-    if(thr_getconcurrency() < cThr)
-    {
-      (void )thr_setconcurrency(cThr);
-    }
-  }
-#endif /* REC_THREADS_USED */
   if((data0 == NULL) || (data1 == NULL) || (obj0 == NULL) || (obj1 == NULL))
   {
      errFlag = REC_ERR_FUNC;
@@ -171,83 +121,14 @@ RecError	RecCrossCorrelate(double **data0, double **data1,
       errFlag = REC_ERR_FUNC;
     }
   }
-  if(errFlag == REC_ERR_NONE) /* Allocate column buffers, allow for threads! */
-  {
-    if(cThr > 1)
-    {
-      idX = 2;
-    }
-    else
-      idX = 1;
-    if(((reBuf = (double *)AlcMalloc(size.vtY * idX *
-    				     sizeof(double))) == NULL) ||
-       ((imBuf = (double *)AlcMalloc(size.vtY * idX *
-       				     sizeof(double))) == NULL))
-    {
-      errFlag = REC_ERR_MALLOC;
-    }
-  }
-#ifdef REC_THREADS_USED
-  if(errFlag == REC_ERR_NONE)
-  {
-    if((cThr > 1) && (((ccFlags & REC_CCFLAG_DATA0VALID) == 0) ||
-    		      ((ccFlags & REC_CCFLAG_DATA1VALID) == 0)))
-    {
-      --cThr;
-      thrArgs.errFlag = REC_ERR_NONE;
-      thrArgs.data = data0;
-      thrArgs.reBuf = reBuf;
-      thrArgs.imBuf = imBuf;
-      thrArgs.sSq = sSq0;
-      thrArgs.obj = obj0;
-      thrArgs.org = org;
-      thrArgs.size = size;
-      thrArgs.ppCtrl = ppCtrl;
-      thrArgs.cThr = cThr;
-      (void )pthread_create(&thrId, NULL,
-      			    (void *(*)(void *))RecCCorThrObjToFour,
-      			    (void *)&thrArgs);
-      errFlag = RecCCorObjToFour(data1, reBuf + size.vtY, imBuf + size.vtY,
-				 sSq1, obj1, org, size,
-				 ppCtrl, cThr);
-      
-      (void )pthread_join(thrId,  NULL, NULL);
-      ++cThr;
-      if(errFlag == REC_ERR_NONE)
-      {
-	errFlag = thrArgs.errFlag;
-      }
-    }
-    else
-    {
-      if((errFlag == REC_ERR_NONE) && ((ccFlags & REC_CCFLAG_DATA0VALID) == 0))
-      {
-	errFlag = RecCCorObjToFour(data0, reBuf, imBuf,
-				   sSq0, obj0, org, size,
-				   ppCtrl, cThr);
-      }
-      if((errFlag == REC_ERR_NONE) && ((ccFlags & REC_CCFLAG_DATA1VALID) == 0))
-      {
-	errFlag = RecCCorObjToFour(data1, reBuf, imBuf,
-				   sSq1, obj1, org, size,
-				   ppCtrl, cThr);
-      }
-    }
-  }
-#else /* ! REC_THREADS_USED */
   if((errFlag == REC_ERR_NONE) && ((ccFlags & REC_CCFLAG_DATA0VALID) == 0))
   {
-    errFlag = RecCCorObjToFour(data0, reBuf, imBuf,
-    			       sSq0, obj0, org, size,
-			       ppCtrl, cThr);
+    errFlag = RecCCorObjToFour(data0, sSq0, obj0, org, size, ppCtrl);
   }
   if((errFlag == REC_ERR_NONE) && ((ccFlags & REC_CCFLAG_DATA1VALID) == 0))
   {
-    errFlag = RecCCorObjToFour(data1, reBuf, imBuf,
-    			       sSq1, obj1, org, size,
-			       ppCtrl, cThr);
+    errFlag = RecCCorObjToFour(data1, sSq1, obj1, org, size, ppCtrl);
   }
-#endif /* REC_THREADS_USED */
   if(errFlag == REC_ERR_NONE)
   {
     tC2I.vtX = size.vtX / 2;
@@ -286,20 +167,12 @@ RecError	RecCrossCorrelate(double **data0, double **data1,
     **(data0 + tC2I.vtY) *= **(data1 + tC2I.vtY);
     *(*data0 + tC2I.vtX) *= *(*data1 + tC2I.vtX);
     *(*(data0 + tC2I.vtY) + tC2I.vtX) *= *(*(data1 + tC2I.vtY) + tC2I.vtX);
-    AlgFourRealInv2D(data0, reBuf, imBuf, size.vtX, size.vtY, cThr);
+    AlgFourRealInv2D(data0, 1, size.vtX, size.vtY);
     REC_DBGW((REC_DBG_CROSS|REC_DBG_LVL_1),
 	     WlzFromArray2D((void **)data0, size, org,
 	     		    WLZ_GREY_UBYTE, WLZ_GREY_DOUBLE,
 			    0.0, 255.0 / (1.0 + sqrt(*sSq0 * *sSq1)),
 			    0, 0, NULL), 1);
-  }
-  if(reBuf)
-  {
-    AlcFree(reBuf);
-  }
-  if(imBuf)
-  {
-    AlcFree(imBuf);
   }
   REC_DBG((REC_DBG_CROSS|REC_DBG_LVL_FN|REC_DBG_LVL_1),
 	  ("RecCrossCorrelate FX %d\n",
@@ -313,9 +186,6 @@ RecError	RecCrossCorrelate(double **data0, double **data1,
 * \brief	Preprocesses the given object and calculates it's (real)
 *		Fourier transform.
 * \param	data			Given object data and returned FFT.
-* \param	reBuf			Buffer for real data row or column.
-* \param	imBuf			Buffer for imaginary data row or
-*					column.
 * \param	sSq			Destination for sum of squares of the
 *					object after any preprocessing.
 * \param	obj			Given object.
@@ -323,23 +193,18 @@ RecError	RecCrossCorrelate(double **data0, double **data1,
 * 					object.
 * \param	size			The size of data.
 * \param	ppCtrl			Preprocessing control data structure.
-* \param	cThr			Concurrent threads available.
 */
-static RecError	RecCCorObjToFour(double **data, double *reBuf, double *imBuf,
+static RecError	RecCCorObjToFour(double **data,
 				 double *sSq, WlzObject *obj,
 				 WlzIVertex2 org, WlzIVertex2 size,
-				 RecPPControl *ppCtrl, int cThr)
+				 RecPPControl *ppCtrl)
 {
   RecError      errFlag = REC_ERR_NONE;
   WlzObject	*ppObj = NULL;
 
   REC_DBG((REC_DBG_CROSS|REC_DBG_PPROC | REC_DBG_LVL_2),
-	  ("RecCCorObjToFour FE 0x%lx 0x%lx 0x%lx 0x%lx 0x%lx "
-	   "{%d, %d} {%d, %d} 0x%lx %d\n",
-	   (unsigned long )data, (unsigned long )reBuf, (unsigned long )imBuf,
-	   (unsigned long )sSq, (unsigned long )obj,
-	   org.vtX, org.vtY, size.vtX, size.vtY,
-	   (unsigned long )ppCtrl, cThr));
+	  ("RecCCorObjToFour FE %p %p %p {%d, %d} {%d, %d} %p\n",
+	   data, sSq, obj, org.vtX, org.vtY, size.vtX, size.vtY, ppCtrl));
   (void )memset(*data, 0, size.vtX * size.vtY * sizeof(double));
   ppObj = RecPreProcObj(obj, ppCtrl, &errFlag); /* Assigned by RecPreProcObj */
   REC_DBG((REC_DBG_CROSS|REC_DBG_PPROC | REC_DBG_LVL_2),
@@ -375,7 +240,7 @@ static RecError	RecCCorObjToFour(double **data, double *reBuf, double *imBuf,
 	     WlzFromArray2D((void **)data, size, org,
 	     		    WLZ_GREY_UBYTE, WLZ_GREY_DOUBLE,
 			    0.0, 1.0, 0, 0, NULL), 1);
-    AlgFourReal2D(data, reBuf, imBuf, size.vtX, size.vtY, cThr);
+    AlgFourReal2D(data, 1, size.vtX, size.vtY);
     REC_DBGW((REC_DBG_CROSS|REC_DBG_LVL_3),
 	     WlzFromArray2D((void **)data, size, org,
 	     		    WLZ_GREY_UBYTE, WLZ_GREY_DOUBLE,
@@ -390,22 +255,6 @@ static RecError	RecCCorObjToFour(double **data, double *reBuf, double *imBuf,
 	   errFlag));
   return(errFlag);
 }
-
-#ifdef REC_THREADS_USED
-/*!
-* \ingroup	Reconstruct
-* \brief	Simple wrapper for RecCCorObjToFour(), used for thread
-* 		creation.
-* \param	args			Parameter list.
-*/
-static void     *RecCCorThrObjToFour(RecCCorArgs1 *args)
-{
-  args->errFlag = RecCCorObjToFour(args->data, args->reBuf, args->imBuf,
-  				   args->sSq, args->obj, args->org, args->size,
-				   args->ppCtrl, args->cThr);
-  return(NULL);
-}
-#endif /* REC_THREADS_USED */
 
 /*!
 * \return	Error code.
