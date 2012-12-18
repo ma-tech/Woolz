@@ -109,6 +109,7 @@ libWlz_la_SOURCES 	= \
 			  WlzFacts.c \
 			  WlzFillBlankPlanes.c \
 			  WlzFilterNObjValues.c \
+			  WlzFourier.c \
 			  WlzFreeSpace.c \
 			  WlzGauss.c \
 			  WlzGaussNoise.c \
