@@ -510,7 +510,6 @@ WlzErrorNum	WlzKrigOWeightsSolve(AlgMatrix modelSV, double *posSV,
 				     int *wSp, double eps)
 {
   int		n;
-  AlgMatrix	mat;
 
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
