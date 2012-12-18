@@ -130,6 +130,7 @@ JWlzStructList		= \
 			WlzThreshCbStr.java \
 			WlzTransform.java \
 			WlzCoreTransform.java \
+			WlzEmptyTransform.java \
 			WlzAffineTransform.java \
 			WlzAffineTransformPrim.java \
 			WlzBasisFnTransform.java \
@@ -156,4 +157,5 @@ JWlzStructList		= \
 			WlzFMatchPoint.java \
 			WlzFMatchObj.java \
 			Wlz3DWarpTrans.java \
-			WlzThreeDViewStruct.java
+			WlzThreeDViewStruct.java \
+			WlzKrigModelFn.java

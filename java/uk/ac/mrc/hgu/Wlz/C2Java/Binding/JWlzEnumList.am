@@ -46,5 +46,6 @@ JWlzEnumList		= \
 			WlzElementType.java \
 			WlzMatchType.java \
 			Wlz3DViewStructInitMask.java \
+			WlzKrigModelFnType.java \
 			WlzErrorNum.java \
 			WlzEffFormat.java
