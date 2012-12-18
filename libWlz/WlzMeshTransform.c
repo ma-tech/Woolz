@@ -694,7 +694,6 @@ WlzErrorNum WlzMeshAffineProduct(WlzMeshTransform *mTr,
   if(errNum == WLZ_ERR_NONE)
   {
     int         idN;
-    WlzMeshNode	*node;
 
     if(order == 0) /* P = A M */
     {

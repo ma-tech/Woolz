@@ -229,7 +229,6 @@ WlzObject	*WlzNewObjectValues(WlzObject *sObj, WlzObjectType tType,
 				    WlzErrorNum *dstErr)
 {
   WlzValues 	val;
-  WlzPixelV 	gV;
   WlzObject	*rObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
