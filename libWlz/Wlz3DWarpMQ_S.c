@@ -2111,7 +2111,7 @@ static int	WlzMeshScanTriElm(WlzMeshScanWSp2D5 *mSnWSp,
   WlzMeshNode2D5 *nod;
   WlzMeshElem    *elm;
   WlzDVertex2	  dVx0;
-  WlzDVertex3 	  dVx1;
+  /* WlzDVertex3  dVx1; unused */
   WlzMeshScanItv *itv;
 
   elm = mSnWSp->mesh->elements + eIdx;
@@ -2122,7 +2122,7 @@ static int	WlzMeshScanTriElm(WlzMeshScanWSp2D5 *mSnWSp,
     ndIdx1 = elm->nodes[ndIdx0];
     nod = mSnWSp->mesh->nodes + ndIdx1;
     dVx0 = nod->position;
-    dVx1 = nod->displacement;
+    /* dVx1 = nod->displacement; */
     tD0 = dVx0.vtX; 
     tD1 = dVx0.vtY; 
     dNd[ndIdx0].vtX = WLZ_NINT(tD0);
@@ -2379,9 +2379,8 @@ void  static GetTheSourceSurfaceOfTheCutPlanePoints(int nIntersect,
   /* allocate memory for Affine transformation */
   if( (AlcDouble2Malloc(&Affine3D4pointsTrFun, 3, 4) !=  ALC_ER_NONE)  )
   {
-      errNum = WLZ_ERR_MEM_ALLOC;
-      printf("Failed to allocate memory for intersectionTable!");
-      exit(1);
+      /* This error should be handled. */
+      /* errNum = WLZ_ERR_MEM_ALLOC; unused */
   }
 
   
@@ -3093,7 +3092,8 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 				 WlzMeshScanWSp2D5 *mSnWSp 
 					    )
 {
-  int		mItvIdx, i, j, k, k0, k1, k2, ip;
+  /* int	mItvIdx; unused */
+  int		i, j, k, k0, k1, k2, ip;
   int           i_lineCom, i_columnP, debugNum, i_prevC;
   int           ix,iy,iz;
   
@@ -3106,7 +3106,7 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 		
  
   double        xs, ys, zs;
-  WlzIVertex2	dPosI;
+  /* WlzIVertex2	dPosI; unused */
   		
   
   WlzGreyP	dGP;
@@ -3192,7 +3192,7 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 
   if(errNum == WLZ_ERR_NONE)
   {
-    mItvIdx = 0;
+    /* mItvIdx = 0; unused */
     /* get 2D5 mesh */
     /* the following two functions can be used but it seems there are
        some differents and the first is better. The later one seems
@@ -3268,8 +3268,8 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
               mItv      =  mSnWSp->itvs;
 	      /* Initialize  */
               WlzNextGreyInterval(&iWSp);
-	      dPosI.vtX = iWSp.lftpos;
- 	      dPosI.vtY = iWSp.linpos;
+	      /* dPosI.vtX = iWSp.lftpos; */
+ 	      /* dPosI.vtY = iWSp.linpos; */
 	      dGP       = gWSp.u_grintptr;
 	      i_lineCom = iWSp.linpos;
 	      i_columnP = iWSp.lftpos;
@@ -3294,8 +3294,8 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 	         while( (errNum == WLZ_ERR_NONE) && (i_lineCom < mItv->line) )
 		 {
                    WlzNextGreyInterval(&iWSp);
-		   dPosI.vtX = iWSp.lftpos;
-		   dPosI.vtY = iWSp.linpos;
+		   /* dPosI.vtX = iWSp.lftpos; */
+		   /* dPosI.vtY = iWSp.linpos; */
 		   dGP       = gWSp.u_grintptr;
 		   i_lineCom++;
 		   i_columnP = iWSp.lftpos;
@@ -3353,6 +3353,9 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 		             break;
 	                   }
 	                 break;
+		       default:
+		         errNum = WLZ_ERR_INTERPOLATION_TYPE;
+			 break;
                        }
 		     }
 		   }
@@ -3511,6 +3514,9 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 		             break;
 	                  }
 	                break;
+		      default:
+		        /* errNum = WLZ_ERR_INTERPOLATION_TYPE; unused */
+			break;
                     }
  	        }
 		/* ------check whether there is a gap here and filled it with back ground vlaues------- */
@@ -3568,6 +3574,9 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
 			     
 	                   }
 	                 break;
+		       default:
+		         /* errNum = WLZ_ERR_INTERPOLATION_TYPE; unused */
+			 break;
                        }
 		    }
 		}
@@ -4221,6 +4230,10 @@ void WlzGet2D5Transform( const WlzMeshTransform3D   *wmt3D,
     linkList       = NULL;
     intersectIndex = NULL;
   */
+  if(dsterrNum)
+  {
+    *dsterrNum = errNum;
+  }
 }
 
 /*!
