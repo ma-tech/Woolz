@@ -107,6 +107,7 @@ bin_PROGRAMS		= \
 			  WlzFacts \
 			  WlzFile \
 			  WlzFilterNObjsValues \
+			  WlzFourierTransform \
 			  WlzGauss \
 			  WlzGaussNoise \
 			  WlzGeometryTrackUpAndDown \
@@ -449,6 +450,10 @@ WlzFile_LDFLAGS				= $(AM_LFLAGS)
 WlzFilterNObjsValues_SOURCES		= WlzFilterNObjsValues.c
 WlzFilterNObjsValues_LDADD		= $(LDADD)
 WlzFilterNObjsValues_LDFLAGS		= $(AM_LFLAGS)
+
+WlzFourierTransform_SOURCES		= WlzFourierTransform.c
+WlzFourierTransform_LDADD		= $(LDADD)
+WlzFourierTransform_LDFLAGS		= $(AM_LFLAGS)
 
 WlzGauss_SOURCES			= WlzGauss.c
 WlzGauss_LDADD				= $(LDADD)
