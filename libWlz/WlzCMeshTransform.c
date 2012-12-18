@@ -8159,7 +8159,6 @@ static WlzObject *WlzCMeshProduct2D(WlzObject *tr0, WlzObject *tr1,
 	  dsp0[0] = (double *)WlzIndexedValueGet(ixv1, nod0[0]->idx);
 	  dsp0[1] = (double *)WlzIndexedValueGet(ixv1, nod0[1]->idx);
 	  dsp0[2] = (double *)WlzIndexedValueGet(ixv1, nod0[2]->idx);
-/* HACK TODO OPTIMISE HERE */
 	  v1.vtX = WlzGeomInterpolateTri2D(nod0[0]->pos,
 					   nod0[1]->pos,
 					   nod0[2]->pos,
@@ -8387,7 +8386,6 @@ static WlzObject *WlzCMeshProduct3D(WlzObject *tr0, WlzObject *tr1,
 	  dsp0[1] = (double *)WlzIndexedValueGet(ixv1, nod0[1]->idx);
 	  dsp0[2] = (double *)WlzIndexedValueGet(ixv1, nod0[2]->idx);
 	  dsp0[3] = (double *)WlzIndexedValueGet(ixv1, nod0[3]->idx);
-/* HACK TODO OPTIMISE HERE */
 	  v1.vtX = WlzGeomInterpolateTet3D(nod0[0]->pos, nod0[1]->pos,
 					   nod0[2]->pos, nod0[3]->pos,
 					   dsp0[0][0], dsp0[1][0],
