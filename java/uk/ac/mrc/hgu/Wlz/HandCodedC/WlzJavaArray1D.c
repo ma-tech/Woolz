@@ -261,16 +261,13 @@ static jlong	WlzJavaArray1DGetNonPrim(JNIEnv *jEnv, char *cObjName,
 				         int idrCnt, int pKey, jarray jWArray,
 				         int wArraySz, jboolean *isCpy)
 {
-  int		tI0,
-  		idN0;
-  jint		arSz;
+  int		idN0;
   jlong		rtnVal = 0;
   jfieldID	fldID[8];
   jvalue	fldVal[2];
   jclass	jWCls;
   jobject	jWObj;
-  void		*bufJ = NULL,
-  		*bufW = NULL;
+  void		*bufW = NULL;
 
   switch(pKey)
   {
