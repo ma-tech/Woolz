@@ -41,13 +41,15 @@ static char _WlzMeshGen_c[] = "University of Edinburgh $Id$";
 *
 * \ingroup	WlzMesh
 */
-
 #include <stdio.h>
 #include <float.h>
 #include <math.h>
 #include <string.h>
 #include <Wlz.h>
 
+#ifndef WLZ_FAST_CODE
+#define WLZ_FAST_CODE
+#endif
 
 /*!
 * \enum		_WlzCMeshConformAction
@@ -5050,45 +5052,54 @@ int		WlzCMeshElmClosestPosIn2D(WlzCMesh2D *mesh,
     do /* For each grid cell. */
     {
       d = minDstSq;
-      WLZ_VTX_2_ADD(idx, idx0, idx1);
-      if((idx.vtX >= 0) &&
-	 (idx.vtY >= 0) &&
-	 (idx.vtX < mesh->cGrid.nCells.vtX) &&
-	 (idx.vtY < mesh->cGrid.nCells.vtY)) /* If grid cell in grid bbox. */
+      idx.vtX = idx0.vtX + idx1.vtX;
+#ifdef WLZ_FAST_CODE
+      if((unsigned int )(idx.vtX) <= (unsigned int )(mesh->cGrid.nCells.vtX))
+#else
+      if((idx.vtX >= 0) && (idx.vtX < mesh->cGrid.nCells.vtX))
+#endif
       {
-	/* For each element that intersects this cell, find the minimum
-	 * distance from the vertex to this element and so search for
-	 * the element with the minimum distance from the vertex. */
-	cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
-	cElm = cell->cElm;
-	while(cElm && (minDstSq > WLZ_MESH_TOLERANCE_SQ))
+        idx.vtY = idx0.vtY + idx1.vtY;
+#ifdef WLZ_FAST_CODE
+        if((unsigned int )(idx.vtY) <= (unsigned int )(mesh->cGrid.nCells.vtY))
+#else
+        if((idx.vtY >= 0) && (idx.vtY < mesh->cGrid.nCells.vtY))
+#endif
 	{
-	  WlzDVertex2	inPos;
-          WlzCMeshElm2D *elm;
-
-	  if((elm = cElm->elm) != NULL)
+	  /* For each element that intersects this cell, find the minimum
+	   * distance from the vertex to this element and so search for
+	   * the element with the minimum distance from the vertex. */
+	  cell = *(mesh->cGrid.cells + idx.vtY) + idx.vtX;
+	  cElm = cell->cElm;
+	  while(cElm && (minDstSq > WLZ_MESH_TOLERANCE_SQ))
 	  {
-	    WlzCMeshNod2D *nod[3];
+	    WlzDVertex2	inPos;
+	    WlzCMeshElm2D *elm;
 
-	    if((minElm == NULL) && (maxRing > ring + 1))
+	    if((elm = cElm->elm) != NULL)
 	    {
-	      maxRing = ring + 1;
+	      WlzCMeshNod2D *nod[3];
+
+	      if((minElm == NULL) && (maxRing > ring + 1))
+	      {
+		maxRing = ring + 1;
+	      }
+	      /* Square of distance but -ve if inside triangle, 0 if on it
+	       * and +ve outside of the triangle. */
+	      nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+	      nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+	      nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
+	      d = WlzGeomTriangleVtxDistSq2D(&inPos, NULL, pos, nod[0]->pos,
+					     nod[1]->pos, nod[2]->pos);
+	      if(d < minDstSq)
+	      {
+		minDstSq = d;
+		minElm = cElm->elm;
+		minInPos = inPos;
+	      }
 	    }
-	    /* Square of distance but -ve if inside triangle, 0 if on it
-	     * and +ve outside of the triangle. */
-	    nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
-	    nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
-	    nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
-	    d = WlzGeomTriangleVtxDistSq2D(&inPos, NULL, pos, nod[0]->pos,
-	                                   nod[1]->pos, nod[2]->pos);
-	    if(d < minDstSq)
-	    {
-	      minDstSq = d;
-	      minElm = cElm->elm;
-	      minInPos = inPos;
-	    }
+	    cElm = cElm->next;
 	  }
-	  cElm = cElm->next;
 	}
       }
       /* Spiral out from the initial grid cell. */
@@ -5197,50 +5208,66 @@ int		WlzCMeshElmClosestPosIn3D(WlzCMesh3D *mesh,
     do /* For each grid cell. */
     {
       d = minDstSq;
-      WLZ_VTX_3_ADD(idx, idx0, idx1);
-      if((idx.vtX >= 0) &&
-	 (idx.vtY >= 0) &&
-	 (idx.vtZ >= 0) &&
-	 (idx.vtX < mesh->cGrid.nCells.vtX) &&
-	 (idx.vtY < mesh->cGrid.nCells.vtY) &&
-	 (idx.vtZ < mesh->cGrid.nCells.vtZ)) /* If grid cell in grid bbox. */
+      idx.vtX = idx0.vtX + idx1.vtX;
+#ifdef WLZ_FAST_CODE
+      if((unsigned int )(idx.vtX) <= (unsigned int )(mesh->cGrid.nCells.vtX))
+#else
+      if((idx.vtX >= 0) && (idx.vtX < mesh->cGrid.nCells.vtX))
+#endif
       {
-	/* For each element that intersects this cell, find the minimum
-	 * distance from the vertex to this element and so search for
-	 * the element with the minimum distance from the vertex. */
-	cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
-	cElm = cell->cElm;
-	while(cElm && (minDstSq > WLZ_MESH_TOLERANCE_SQ))
+	idx.vtY = idx0.vtY + idx1.vtY;
+#ifdef WLZ_FAST_CODE
+	if((unsigned int )(idx.vtY) <= (unsigned int )(mesh->cGrid.nCells.vtY))
+#else
+        if((idx.vtY >= 0) && (idx.vtY < mesh->cGrid.nCells.vtY))
+#endif
 	{
-	  WlzDVertex3	inPos;
-          WlzCMeshElm3D *elm;
-
-	  if((elm = cElm->elm) != NULL)
+          idx.vtZ = idx0.vtZ + idx1.vtZ;
+#ifdef WLZ_FAST_CODE
+	  if((unsigned int )(idx.vtZ) <=
+	     (unsigned int )(mesh->cGrid.nCells.vtZ))
+#else
+          if((idx.vtZ >= 0) && (idx.vtZ < mesh->cGrid.nCells.vtZ))
+#endif
 	  {
-	    WlzCMeshNod3D *nod[4];
+	    /* For each element that intersects this cell, find the minimum
+	     * distance from the vertex to this element and so search for
+	     * the element with the minimum distance from the vertex. */
+	    cell = *(*(mesh->cGrid.cells + idx.vtZ) + idx.vtY) + idx.vtX;
+	    cElm = cell->cElm;
+	    while(cElm && (minDstSq > WLZ_MESH_TOLERANCE_SQ))
+	    {
+	      WlzDVertex3	inPos;
+	      WlzCMeshElm3D *elm;
 
-	    if((minElm == NULL) && (maxRing > ring + 1))
-	    {
-	      maxRing = ring + 1;
-	    }
-	    /* Square of distance but -ve if inside tetrahedron, 0 if on it
-	     * and +ve outside of the tetrahedron. */
-	    nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
-	    nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
-	    nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
-	    nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
-	    d = WlzGeomTetrahedronVtxDistSq3D(&inPos, NULL, pos, nod[0]->pos,
-	                                      nod[1]->pos, nod[2]->pos,
-	                                      nod[3]->pos);
-	    if(d < minDstSq)
-	    {
-	      minDstSq = d;
-	      minElm = cElm->elm;
-	      minInPos = inPos;
+	      if((elm = cElm->elm) != NULL)
+	      {
+		WlzCMeshNod3D *nod[4];
+
+		if((minElm == NULL) && (maxRing > ring + 1))
+		{
+		  maxRing = ring + 1;
+		}
+		/* Square of distance but -ve if inside tetrahedron, 0 if on it
+		 * and +ve outside of the tetrahedron. */
+		nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+		nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+		nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+		nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
+		d = WlzGeomTetrahedronVtxDistSq3D(&inPos, NULL, pos,
+						  nod[0]->pos, nod[1]->pos,
+						  nod[2]->pos, nod[3]->pos);
+		if(d < minDstSq)
+		{
+		  minDstSq = d;
+		  minElm = cElm->elm;
+		  minInPos = inPos;
+		}
+	      }
+	      cElm = cElm->next;
 	    }
 	  }
-	  cElm = cElm->next;
-	}
+        }
       }
       /* Spiral out from the initial grid cell. */
       spiralCnt = WlzGeomItrSpiral3I(spiralCnt,
