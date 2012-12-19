@@ -248,7 +248,8 @@ AC_ARG_ENABLE(optimise,
 	  CFLAGS="${CFLAGS} -O2 -fomit-frame-pointer"
 	  ;;
 	x86_64|amd64)
-          CFLAGS="${CFLAGS} -O2"
+          #CFLAGS="${CFLAGS} -O2"
+          CFLAGS="${CFLAGS} -O3"
 	  ;;
         *)
           CFLAGS="${CFLAGS} -O2"
