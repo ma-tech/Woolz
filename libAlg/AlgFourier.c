@@ -688,25 +688,26 @@ AlgError 	AlgFourHart2D(double **data, int useBuf, int numX, int numY)
   {
     int		idX,
 		idY,
-		idU,
-		idV,
 		halfX,
      		halfY;
 
     halfX = numX/2;
     halfY = numY/2;
-    idU = numX - 1;
 #ifdef _OPENMP
-#pragma omp parallel for private(idX,idY,idU,idV)
+#pragma omp parallel for private(idX,idY)
 #endif
     for(idX = 1; idX < halfX; ++idX)
     {
-      idV = numY - 1;
+      int 	idU;
+
+      idU = numX - idX;
       for(idY = 1; idY < halfY; ++idY)
       {
+	int	idV;
 	double	t[4];
 	double	*p[4];
 
+	idV = numY - idY;
 	p[0] = data[idY] + idX;
 	p[1] = data[idY] + idU;
 	p[2] = data[idV] + idX;
@@ -719,9 +720,7 @@ AlgError 	AlgFourHart2D(double **data, int useBuf, int numX, int numY)
 	*p[1] = ( t[0] + t[1] - t[2] + t[3]) * 0.5;
 	*p[2] = ( t[0] - t[1] + t[2] + t[3]) * 0.5;
 	*p[3] = (-t[0] + t[1] + t[2] + t[3]) * 0.5;
-	--idV;
       }
-      --idU;
     }
 #ifdef _OPENMP
 #pragma omp parallel for private(idY)
@@ -749,7 +748,7 @@ AlgError 	AlgFourHart2D(double **data, int useBuf, int numX, int numY)
       }
       else
       {
-	AlgFourHart1D(data[0] + idY, numY, numX);
+	AlgFourHart1D(data[0] + idX, numY, numX);
       }
     }
   }
