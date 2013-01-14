@@ -527,6 +527,7 @@ static WlzCompoundArray *WlzFourierTransformObjCpx3D(WlzCompoundArray *iObj,
 
     iSz.vtX = bBox[0].xMax - bBox[0].xMin + 1;
     iSz.vtY = bBox[0].yMax - bBox[0].yMin + 1;
+    iSz.vtZ = bBox[0].zMax - bBox[0].zMin + 1;
     (void )AlgBitNextPowerOfTwo(&t0, iSz.vtX);
     oSz.vtX = t0;
     (void )AlgBitNextPowerOfTwo(&t0, iSz.vtY);
