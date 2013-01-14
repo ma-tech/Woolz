@@ -523,7 +523,7 @@ static WlzVertexP WlzVerticesFromPoly2(WlzPolygonDomain *poly,
 					WlzErrorNum *dstErr)
 {
   int		cnt;
-  WlzVertexType	type;
+  WlzVertexType	type = WLZ_VERTEX_I2;
   WlzVertexP	vData;
   WlzDVertex2	*vNorm = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -603,7 +603,7 @@ static WlzVertexP WlzVerticesFromBound(WlzBoundList *bound,
 {
   int		off,
   		cnt;
-  WlzVertexType	type;
+  WlzVertexType	type = WLZ_VERTEX_I2;
   WlzVertexP    vData;
   WlzDVertex2	*vNorm = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;

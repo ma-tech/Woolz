@@ -71,7 +71,8 @@ int main(int	argc,
 
   double        xmidle         = 0;
   
-  char                *inFileStr, *outFileStr, *targetfileStr;
+  char                *inFileStr = NULL, *outFileStr = NULL,
+  		      *targetfileStr = NULL;
   WlzErrorNum	       errNum = WLZ_ERR_NONE;
   WlzObject           *wObjS          = NULL; /* source Woolz object */
   WlzObject           *wObjT          = NULL; /* target Woolz object */

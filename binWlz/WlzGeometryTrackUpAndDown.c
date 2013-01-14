@@ -229,8 +229,9 @@ int main(int	argc,
   double        minDis = 10.;
   /* char       *outFileStr; unused */
   unsigned char        **TwoDImageFilesNameList;
-  char         *ContourFilesNameList;
-  char         *surfacePointFileName, *surfaceInPointFileName, *surfaceOutPointFileName;
+  char         *ContourFilesNameList = NULL;
+  char         *surfacePointFileName = NULL, *surfaceInPointFileName = NULL,
+               *surfaceOutPointFileName = NULL;
   /* WlzDVertex3          *SurfacePatchPoints; unused */
   WlzErrorNum	       errNum = WLZ_ERR_NONE;
   AlcErrno             alcErr = ALC_ER_NONE;

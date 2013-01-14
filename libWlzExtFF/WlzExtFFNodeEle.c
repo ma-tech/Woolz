@@ -149,7 +149,7 @@ WlzObject	*WlzEffReadObjNodeEle(const char *gvnFileName,
   WlzValues	val;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   char		cBuf[256];
-  WlzCMeshNod2D	*nBuf2[3];
+  WlzCMeshNod2D	*nBuf2[4];
   WlzCMeshNod3D	*nBuf3[4];
 
   vBuf.v = NULL;

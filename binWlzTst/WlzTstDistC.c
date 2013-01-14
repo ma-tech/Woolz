@@ -674,6 +674,7 @@ int		main(int argc, char *argv[])
 	    double d0;
 	    double d[WLZTST_DIST_CNT];
 
+	    WlzValueSetDouble(d, 0.0, WLZTST_DIST_CNT);
 	    d0 = rec->dist[WLZTST_DIST_TRUE];
 	    if((d0 * d0) > eps)
 	    {

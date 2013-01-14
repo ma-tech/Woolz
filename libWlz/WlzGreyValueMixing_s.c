@@ -82,9 +82,9 @@ WlzObject	*WlzGreyValueMixing_s(  WlzObject       *sObj,
     WlzIBox3        bBox;
     WlzObject      *tempObj;
     int             ix, iy, iz, xi, yi, zi;
-    int             intensityS, intensityT, intensityW;
+    int             intensityS = 0, intensityT = 0, intensityW;
     int             mElem, nElem, lElem;
-    int          dmin, dmin0;
+    int          dmin = 0, dmin0 = 0;
     WlzGreyValueWSpace *gVWSpS = NULL, *gVWSpT = NULL, *gVWSpW = NULL;
     WlzErrorNum  errNum = WLZ_ERR_NONE;
 

@@ -2038,8 +2038,8 @@ WlzErrorNum     WlzHistogramFitPeaks(WlzObject *histObj, int numDbn,
 				     double *dstLL)
 {
   int		idx,
-  		pkCnt,
 		fitNI,
+  		pkCnt = 0,
 		binCnt = 0;
   double	fitLL,
 		fitObs = 0.0,

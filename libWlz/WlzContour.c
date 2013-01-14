@@ -3998,6 +3998,8 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr,
   double	gF[2],
   		lIP[4];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  gF[0] = gF[1] = 0.0;
   /* Compute gradient vector at centre of cube as a unit vector and it's
    * modulus. */
   aCC.vtX = bufPos.vtX + 1;

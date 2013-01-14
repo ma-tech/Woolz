@@ -8131,6 +8131,7 @@ static WlzObject *WlzCMeshProduct2D(WlzObject *tr0, WlzObject *tr1,
       WlzDVertex2 v0,
       		  v1;
 
+      WLZ_VTX_2_ZERO(v1);
       if((nIdx = nodTab[idN]) >= 0)
       {
 	int	idE0;
@@ -8354,6 +8355,7 @@ static WlzObject *WlzCMeshProduct3D(WlzObject *tr0, WlzObject *tr1,
       WlzDVertex3 v0,
       		  v1;
 
+      WLZ_VTX_3_ZERO(v1);
       if((nIdx = nodTab[idN]) >= 0)
       {
 	int	idE0;

@@ -6275,9 +6275,9 @@ void		WlzGMShellJoinAndUnlink(WlzGMShell *eShell, WlzGMShell *dShell)
 WlzGMResIdxTb	*WlzGMModelResIdx(WlzGMModel *model, unsigned int eMsk,
 				  WlzErrorNum *dstErr)
 {
-  int		dim,
-  		iCnt,
-		vCnt;
+  int		iCnt,
+		vCnt,
+		dim = 0;
   unsigned int 	eMskTst;
   int		*iLut;
   AlcVector	*vec;
@@ -7638,8 +7638,8 @@ static WlzErrorNum WlzGMModelJoin2V0E0S3D(WlzGMModel *model,
   int		idx,
   		nIdx,
 		pIdx;
-  double	eVol,
-  		dVol;
+  double	eVol = 0.0,
+  		dVol = 0.0;
   WlzGMShell	*eShell,
   		*dShell,
 		*tShell;
@@ -7822,7 +7822,7 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model,
   int		idx,
   		nIdx,
 		pIdx;
-  double	eVol;
+  double	eVol = 0.0;
   double	dVol[2];
   WlzGMShell	*eShell,
   		*tShell;
@@ -7840,7 +7840,10 @@ static WlzErrorNum WlzGMModelJoin3V0E3S3D(WlzGMModel *model,
   WlzDVertex3	pos[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  eV[0] = gEV[0]; eV[1] = gEV[1]; eV[2] = gEV[2];
+  eV[0] = gEV[0];
+  eV[1] = gEV[1];
+  eV[2] = gEV[2];
+  dVol[0] = dVol[1] = 0.0;
   if(model &&
      ((nF = WlzGMModelNewF(model, &errNum)) != NULL) &&
      ((nLT[0] = WlzGMModelNewLT(model, &errNum)) != NULL) &&

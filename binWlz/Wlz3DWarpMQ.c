@@ -227,8 +227,9 @@ int main(int	argc,
                 numOfElemAlonY = 6,
                 numOfElemAlonZ = 6;
   double        zConst = 0.0;
-  char                *inFileStr, *outFileStr, *TiePointsFileStr;
-  char                *outFileMeshTrWlzStr, *inFileMeshTrWlzStr;
+  char                *inFileStr = NULL, *outFileStr = NULL,
+  		      *TiePointsFileStr = NULL, *outFileMeshTrWlzStr = NULL,
+		      *inFileMeshTrWlzStr = NULL;
   WlzErrorNum	       errNum = WLZ_ERR_NONE;
   WlzMeshTransform3D  *wmt3D = NULL;
   WlzBasisFnTransform *basisTr       = NULL;   /* the transformation functions  */
