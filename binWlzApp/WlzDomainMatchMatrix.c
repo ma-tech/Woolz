@@ -146,7 +146,7 @@ A_{contrib} & = & \sum_{Pixels} \left \{ \begin{array}{c@{\quad \mbox{if} \quad}
 1 & C_{ll'} \ne 0,\\
 0 & C_{ll'} = 0,
 \end{array}\right.
-\f}
+\f
 In these formulae the \f$S()\f$ is the size of the domain - volume or area depending on the nature of the image. \f$l, l'\f$ are the pixel values of the two input category images.
 
 \par Examples

@@ -403,7 +403,8 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
   				WlzRGBAColorSpace cSpc, WlzErrorNum *dstErr)
 {
   int		i,
-  		j;
+  		j,
+		numObjs = 3;
   WlzObject	*rtnObj=NULL;
   WlzPixelV	bckgrnd;
   WlzObject	*objs[4];
@@ -413,11 +414,15 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
 
   /* Make a copy of the object pointers because WlzUnionN() modifies the
    * array if it contains empty objects. */
+  if(cObj->n >= 4)
+  {
+    numObjs = 4;
+  }
   for(i = 0; i < 3; ++i)
   {
     objs[i] = cObj->o[i];
   }
-  rtnObj = WlzUnionN(3, objs, 0, &errNum);
+  rtnObj = WlzUnionN(numObjs, objs, 0, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     /* Add an RGBA valuetable, extract background for each channel */
@@ -481,7 +486,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
 
       for(j = iwsp.lftpos; j <= iwsp.rgtpos; j++)
       {
-	for(i = 0; i < 3; i++)
+	for(i = 0; i < numObjs; i++)
 	{
 	  if(gValWSpc[i] == NULL)
 	  {
@@ -505,7 +510,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
     {
       errNum = WLZ_ERR_NONE;
     }
-    for(i=0; i < 3; i++)
+    for(i=0; i < numObjs; i++)
     {
       WlzGreyValueFreeWSp(gValWSpc[i]);
     }

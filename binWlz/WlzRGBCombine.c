@@ -51,11 +51,15 @@ static char _WlzRGBCombine_c[] = "University of Edinburgh $Id$";
 WlzRGBCombine - Combines domain objects to make a single RGBA domain object.
 \par Synopsis
 \verbatim
-WlzRGBCombine [-h] [-i] [-o<out file>] [-n] [-m <match object>]
-              [<red object 0>] [<green object 1>] [<blue object>]
+WlzRGBCombine [-a] [-h] [-i] [-o<out file>] [-n] [-m <match object>]
+              [<red object>] [<green object>] [<blue object>] [<alpha object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
+  <tr> 
+    <td><b>-a</b></td>
+    <td>Include an alpha channel object.</td>
+  </tr>
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
@@ -81,9 +85,9 @@ WlzRGBCombine [-h] [-i] [-o<out file>] [-n] [-m <match object>]
 </table>
 \par Description
 Combines the input domain objects with values to form an RGBA object
-in which the red, green and blue components are the input objects.
-Histogram matching and grey value normalisation may be used to allow
-better visual comparison between the components.
+in which the red, green, blue and alpha (optional) components are the input
+objects. Histogram matching and grey value normalisation may be used to
+allow better visual comparison between the components.
 By default the input grey values are clamped to the range 0 - 255,
 but they will be normalised to this range if the normalise flag is set.
 The optional object for histogram matching may either be a domain object
@@ -127,6 +131,7 @@ int             main(int argc, char **argv)
 {
   int		option,
 		idx = 0,
+		idxMax = 3,
 		invFlg = 0,
 		nrmFlg = 0,
 		ok = 1,
@@ -143,9 +148,9 @@ int             main(int argc, char **argv)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   char 		*histObjFileStr = NULL,
   		*outObjFileStr = NULL;
-  char  	*inObjFileStr[3];
+  char  	*inObjFileStr[4];
   const char	*errMsg;
-  static char	optList[] = "hinsm:o:",
+  static char	optList[] = "ahinsm:o:",
 		outObjFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -158,10 +163,14 @@ int             main(int argc, char **argv)
   inObjFileStr[0] = inObjFileStrDef;
   inObjFileStr[1] = inObjFileStrDef;
   inObjFileStr[2] = inObjFileStrDef;
+  inObjFileStr[3] = inObjFileStrDef;
   while(ok && ((option = getopt(argc, argv, optList)) != -1))
   {
     switch(option)
     {
+    case 'a':
+      idxMax = 4;
+      break;
     case 'i':
       invFlg = 1;
       break;
@@ -191,7 +200,7 @@ int             main(int argc, char **argv)
   if(ok && (optind < argc))
   {
     idx = 0;
-    while((idx < 3) && (optind < argc))
+    while((idx < idxMax) && (optind < argc))
     {
       inObjFileStr[idx] = argv[optind];
       ++optind;
@@ -216,7 +225,7 @@ int             main(int argc, char **argv)
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
 		     "%s: Failed to read histogram object from file %s (%s)\n",
-		     argv[0], inObjFileStr[idx], errMsg);
+		     argv[0], histObjFileStr, errMsg);
     }
     if(fP && strcmp(histObjFileStr, "-"))
     {
@@ -257,7 +266,7 @@ int             main(int argc, char **argv)
   if(ok)
   {
     idx = 0;
-    while((errNum == WLZ_ERR_NONE) && (idx < 3))
+    while((errNum == WLZ_ERR_NONE) && (idx < idxMax))
     {
       if(strcmp(inObjFileStr[idx], "null") != 0)
       {
@@ -432,10 +441,11 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-h] [-i] [-o<out file>] [-n] [-m <match object>]\n"
-    "       [<red object 0>] [<green object 1>] [<blue object>]\n"
+    "Usage: %s [-a] [-h] [-i] [-o<out file>] [-n] [-m <match object>]\n"
+    "       [<red object>] [<green object>] [<blue object>] [<alpha object>]\n"
     "Version: %s\n"
     "Options:\n"
+    "  -a        Include alpha object.\n"
     "  -h        Help, prints this usage message.\n"
     "  -i        Invert grey values.\n"
     "  -o        Output file name.\n"
@@ -445,13 +455,13 @@ int             main(int argc, char **argv)
     "  -m        Match the histograms of the input objects to that of the\n"
     "            given object.\n"
     "Combines the input domain objects with values to form an RGBA object\n"
-    "in which the red, green and blue components are the input objects. \n"
-    "Histogram matching and grey value normalisation may be used to allow\n"
-    "better visual comparison between the components.  By default the input\n"
-    "grey values are clamped to the range 0 - 255, but they will be\n"
-    "normalised to this range if the normalise flag is set. The optional\n"
-    "object for histogram matching may either be a domain object with\n"
-    "values or a histogram.\n"
+    "in which the red, green, blue and optional alpha components are the\n"
+    "input objects. Histogram matching and grey value normalisation may be\n"
+    "used to allow better visual comparison between the components.\n"
+    "By default the input grey values are clamped to the range 0 - 255,\n"
+    "but they will be normalised to this range if the normalise flag is set.\n"
+    "The optional object for histogram matching may either be a domain\n"
+    "object with values or a histogram.\n"
     "By default the objects are read from the standard input (in the\n"
     "order given) and written to the standard output. Null objects may\n"
     "be specified using the word null inplace of a object filename.\n"
