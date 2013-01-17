@@ -20,11 +20,11 @@ export MA=/opt/MouseAtlas
 
 # The default build; optimised, using openmp and external file formats.
 # This requires jpeg, nifti and tiff libraries.
-./configure --prefix=$MA --enable-optimise --enable-openmp --enable-extff --with-nifti=$MA --with-jpeg=$MA --with-tiff=$MA --enable-test
+#./configure --prefix=$MA --enable-optimise --enable-openmp --enable-extff --with-nifti=$MA --with-jpeg=$MA --with-tiff=$MA --enable-test
 
 # Build optimised, using openmp, external file formats and the Java binding.
 # This requires javacc; the jpeg, nifti and tiff libraries.
-#./configure --prefix=$MA --enable-optimise --enable-openmp --enable-extff --with-jpeg=$MA --with-tiff=$MA --with-nifti=$MA --enable-java --enable-shared --disable-static --with-jdk=/opt/java --with-javacc=/opt/JavaCC/bin/javacc
+./configure --prefix=$MA --enable-optimise --enable-openmp --enable-extff --with-jpeg=$MA --with-tiff=$MA --with-nifti=$MA --enable-shared --enable-java --with-jdk=/opt/java --with-javacc=/opt/JavaCC/bin/javacc
 
 # Build the core Woolz code unoptimised with debug support.
 # This requires only standard system libraries.
@@ -45,5 +45,5 @@ export MA=/opt/MouseAtlas
 # Build the Woolz code unoptimised with debug support, external file formats,
 # the Java binding and tests.
 # This requires javacc; the jpeg, nifti and tiff libraries.
-#./configure --prefix=$MA --enable-debug --enable-extff --enable-test --with-nifti=$MA --enable-java --enable-shared --disable-static --with-jdk=/opt/java --with-javacc=/opt/JavaCC/bin/javacc
+#./configure --prefix=$MA --enable-debug --enable-extff --enable-test --with-nifti=$MA --enable-shared --enable-java --with-jdk=/opt/java --with-javacc=/opt/JavaCC/bin/javacc
 
