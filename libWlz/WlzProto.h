@@ -3684,7 +3684,9 @@ extern int			WlzIDomMaxItvLn(
 extern int 			WlzIntervalCount(
 				  WlzIntervalDomain *idom,
 			    	  WlzErrorNum *dstErr);
-
+extern size_t			WlzIntervalCountObj(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
 /************************************************************************
 * WlzIntervalDomScan.c							*
 ************************************************************************/
