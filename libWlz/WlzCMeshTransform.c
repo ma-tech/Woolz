@@ -7233,9 +7233,9 @@ WlzObject 	*WlzCopyScaleCMeshValue(double scale, WlzObject *obj,
 * 		affine transform \f$\mathbf{A}\f$. The product
 * 		\f$\mathbf{P}\f$ can be evaluated as:
 *               \f[
-                \begin{array}
-                \mathbf{P} = \mathbf{A}\mathbf{M}, && o = 0 \\
-                \mathbf{P} = \mathbf{M}\mathbf{A}, && o = 1
+                \begin{array}{ll}
+                \mathbf{P} = \mathbf{A}\mathbf{M}, & o = 0 \\
+                \mathbf{P} = \mathbf{M}\mathbf{A}, & o = 1
                 \end{array}
                 \f]
 *               where \f$o\f$ is the order parameter and

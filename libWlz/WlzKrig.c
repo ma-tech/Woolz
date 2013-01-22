@@ -135,7 +135,7 @@ void		WlzKrigSetModelFn(WlzKrigModelFn *fn,
 * \brief	A nugget kriging variance model.
 * 		\[
 		\left{
-		\begin{array}
+		\begin{array}{ll}
 		h = 0 & \gamma(h) = 0 \\
 		h > 0 & \gamma(h) = c_0
 		\end{array}
@@ -158,7 +158,7 @@ double		WlzKrigModelFnNugget(WlzKrigModelFn *f, double h)
 * \brief	A linear kriging variance model.
 * 		\[
 		\left{
-		\begin{array}
+		\begin{array}{ll}
 		h < a    & \gamma(h) = c_0 + \frac{(c_1 - c_0)}{a} h
 		h \geq a & \gamma(h) = c_1
 		\end{array}
@@ -181,7 +181,7 @@ double		WlzKrigModelFnLinear(WlzKrigModelFn *f, double h)
 * \brief	A spherical kriging variance model.
 * 		\[
 		\left{
-		\begin{array}
+		\begin{array}{ll}
 		0 < h \leq a & \gamma(h) = c_0 + c_1 \frac{1}{2}
 		                           (\frac{3h}{a} - \frac{h^3}{a^3}) \\
 		h > a        & \gamma(h) = c_0 + c_1
