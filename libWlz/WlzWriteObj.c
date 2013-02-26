@@ -113,7 +113,23 @@ static WlzErrorNum 		WlzWriteGMModel(
 static WlzErrorNum		WlzWriteInt(
 				  FILE *fP,
 				  int *iP,
-				  int nI);
+				  size_t nI);
+static WlzErrorNum		WlzWriteShort(
+				  FILE *fP,
+				  short *iP,
+				  size_t nI);
+static WlzErrorNum		WlzWriteUByte(
+				  FILE *fP,
+				  WlzUByte *iP,
+				  size_t nI);
+static WlzErrorNum		WlzWriteFloat(
+				  FILE *fP,
+				  float *iP,
+				  size_t nI);
+static WlzErrorNum		WlzWriteDouble(
+				  FILE *fP,
+				  double *iP,
+				  size_t nI);
 static WlzErrorNum 		WlzWriteVertex2I(
 				  FILE *fP,
 				  WlzIVertex2 *vP,
@@ -169,6 +185,12 @@ static WlzErrorNum 		WlzWriteLUTValues(
 static WlzErrorNum 		WlzWrite3DViewStruct(
 				  FILE *fp,
 				  WlzThreeDViewStruct *vs);
+static WlzErrorNum	 	WlzWritePoints(
+				  FILE *fP,
+				  WlzPoints *pts);
+static WlzErrorNum      	WlzWritePointValues(
+				  FILE *fP,
+				  WlzObject *obj);
 
 #ifdef WLZ_UNUSED_FUNCTIONS
 static WlzErrorNum 		WlzWriteBox2I(
@@ -477,6 +499,14 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
 	  errNum = WlzWritePropertyList(fP, obj->plist);
 	}
 	break;
+      case WLZ_POINTS:
+	if(((errNum = WlzWritePoints(fP,
+	                             obj->domain.pts)) == WLZ_ERR_NONE) &&
+           ((errNum = WlzWritePointValues(fP, obj)) == WLZ_ERR_NONE))
+	{
+	  errNum = WlzWritePropertyList(fP, obj->plist);
+	}
+        break;
       /* Orphans and not yet implemented object types for I/O */
       case WLZ_CONVOLVE_INT:    /* FALLTHROUGH */
       case WLZ_CONVOLVE_FLOAT:  /* FALLTHROUGH */
@@ -500,13 +530,109 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
 * \param	iP			Ptr to native ints.
 * \param	nI			Number of ints.
 */
-static WlzErrorNum WlzWriteInt(FILE *fP, int *iP, int nI)
+static WlzErrorNum WlzWriteInt(FILE *fP, int *iP, size_t nI)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
   while((errNum == WLZ_ERR_NONE) && (nI-- > 0))
   {
     if(!putword(*iP, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++iP;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Write's the given native short values to the given file
+*               as a 2 byte short integer.
+* \param	fP			Given file.
+* \param	iP			Ptr to native shorts.
+* \param	nI			Number of shorts.
+*/
+static WlzErrorNum WlzWriteShort(FILE *fP, short *iP, size_t nI)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nI-- > 0))
+  {
+    if(!putshort(*iP, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++iP;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Write's the given native unsigned byte values to the given file
+*               as a single unsigned byte.
+* \param	fP			Given file.
+* \param	iP			Ptr to native unsigned bytes.
+* \param	nI			Number of bytes.
+*/
+static WlzErrorNum WlzWriteUByte(FILE *fP, WlzUByte *iP, size_t nI)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nI-- > 0))
+  {
+    if(!putc((unsigned int )*iP, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++iP;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Write's the given native float values to the given file
+*               as a 4 floats.
+* \param	fP			Given file.
+* \param	iP			Ptr to native floats.
+* \param	nI			Number of floats.
+*/
+static WlzErrorNum WlzWriteFloat(FILE *fP, float *iP, size_t nI)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nI-- > 0))
+  {
+    if(!putfloat(*iP, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    ++iP;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Write's the given native double values to the given file
+*               as a 8 byte doubles.
+* \param	fP			Given file.
+* \param	iP			Ptr to native doubles.
+* \param	nI			Number of doubles.
+*/
+static WlzErrorNum WlzWriteDouble(FILE *fP, double *iP, size_t nI)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) && (nI-- > 0))
+  {
+    if(!putdouble(*iP, fP))
     {
       errNum = WLZ_ERR_WRITE_INCOMPLETE;
     }
@@ -3568,6 +3694,157 @@ static WlzErrorNum WlzWrite3DViewStruct(FILE *fP, WlzThreeDViewStruct *vs)
     if(errNum == WLZ_ERR_NONE)
     {
       errNum = WlzWriteVertex3D(fP, &(vs->up), 1);
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzIO
+* \brief	Writes a points domain to the given open file.
+* \param	fP			Given file.
+* \param	pts			Given points domain.
+*/
+static WlzErrorNum	WlzWritePoints(FILE *fP, WlzPoints *pts)
+{
+  const WlzUByte version = 1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(pts == NULL)
+  {
+    if(putc(0, fP) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_EOF;
+    }
+  }
+  else
+  {
+    if((putc(pts->type, fP) == EOF) ||
+       (putc(version, fP) == EOF) ||
+       (putword(pts->nPoints, fP) == 0))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+    else
+    {
+      switch(pts->type)
+      {
+        case WLZ_POINTS_2I:
+          errNum = WlzWriteVertex2I(fP, pts->points.i2, pts->nPoints);
+	  break;
+	case WLZ_POINTS_2D:
+          errNum = WlzWriteVertex2D(fP, pts->points.d2, pts->nPoints);
+	  break;
+	case WLZ_POINTS_3I:
+          errNum = WlzWriteVertex3I(fP, pts->points.i3, pts->nPoints);
+	  break;
+	case WLZ_POINTS_3D:
+          errNum = WlzWriteVertex3D(fP, pts->points.d3, pts->nPoints);
+	  break;
+        default:
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	  break;
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes point values to the given file.
+* \param	fP			Given file.
+* \param	obj			Points object.
+*/
+static WlzErrorNum      WlzWritePointValues(FILE *fP, WlzObject *obj)
+{
+  size_t	vCount = 1;
+  const WlzUByte version = 1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(obj->values.core == NULL)
+  {
+    if(putc(0,fP) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_EOF;
+    }
+  }
+  else
+  {
+    WlzPoints *pDom;
+    WlzPointValues *pVal;
+
+    pDom = obj->domain.pts;
+    pVal = obj->values.pts;
+    if(pVal->type != WLZ_POINT_VALUES)
+    {
+      errNum = WLZ_ERR_VALUES_TYPE;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(putc((unsigned int )(pVal->type), fP) == 0)
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int	idx;
+
+      (void )putc(version, fP);
+      (void )putword(pVal->rank, fP);
+      for(idx = 0; idx < pVal->rank; ++idx)
+      {
+	vCount *= pVal->dim[idx];
+	(void )putword(pVal->dim[idx], fP);
+      }
+      (void )putc((unsigned int )(pVal->vType), fP);
+      (void )putword(pDom->nPoints, fP);
+      if(feof(fP))
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzGreyP gP;
+
+      vCount *= pDom->nPoints;
+      gP = pVal->values;
+      switch(pVal->vType)
+      {
+	case WLZ_GREY_INT:
+	  errNum = WlzWriteInt(fP, gP.inp, vCount);
+	  break;
+	case WLZ_GREY_SHORT:
+	  errNum = WlzWriteShort(fP, gP.shp, vCount);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  errNum = WlzWriteUByte(fP, gP.ubp, vCount);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  errNum = WlzWriteFloat(fP, gP.flp, vCount);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  errNum = WlzWriteDouble(fP, gP.dbp, vCount);
+	  break;
+	case WLZ_GREY_RGBA:
+	  errNum = WlzWriteInt(fP, (WlzUInt *)(gP.rgbp), vCount);
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
+      }
     }
   }
   return(errNum);
