@@ -91,6 +91,7 @@ typedef enum _WlzEffFormat
   WLZEFF_FORMAT_SMESH,          /*!< GRUMMP surface mesh format. */
   WLZEFF_FORMAT_EMT,            /*!< Netgen neutral mesh format. */
   WLZEFF_FORMAT_STL,            /*!< Stereolithography file format. */
+  WLZEFF_FORMAT_PVL,            /*!< Drishti PVL dot NC format. */
   WLZEFF_FORMAT_COUNT 		/*!< Keep last: Number of formats (including
   				     WLZEFF_FORMAT_NONE). */
 } WlzEffFormat;
