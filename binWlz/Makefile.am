@@ -72,6 +72,7 @@ bin_PROGRAMS		= \
 			  WlzCMeshIntersectDom \
 			  WlzCMeshSurfaceMap \
 			  WlzCMeshToContour \
+			  WlzCMeshTrStrainTensor \
 			  WlzCMeshCurvToImage \
 			  WlzCMeshToSpatialDomain \
 			  WlzCMeshTransformVtx \
@@ -298,6 +299,10 @@ WlzCMeshFromContour_LDFLAGS		= $(AM_LFLAGS)
 WlzCMeshGen_SOURCES			= WlzCMeshGen.c
 WlzCMeshGen_LDADD			= $(LDADD)
 WlzCMeshGen_LDFLAGS			= $(AM_LFLAGS)
+
+WlzCMeshTrStrainTensor_SOURCES		= WlzCMeshTrStrainTensor.c
+WlzCMeshTrStrainTensor_LDADD		= $(LDADD)
+WlzCMeshTrStrainTensor_LDFLAGS		= $(AM_LFLAGS)
 
 WlzCMeshToContour_SOURCES		= WlzCMeshToContour.c
 WlzCMeshToContour_LDADD			= $(LDADD)
