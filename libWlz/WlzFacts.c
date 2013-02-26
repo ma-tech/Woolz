@@ -158,6 +158,12 @@ static WlzErrorNum 		WlzObjFactsLUTDomain(
 static WlzErrorNum 		WlzObjFactsLUTValues(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj);
+static WlzErrorNum 		WlzObjFactsPointsDomain(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj);
+static WlzErrorNum 		WlzObjFactsPointsValues(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj);
 
 /*!
 * \return	Woolz error code.
@@ -461,6 +467,17 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    errNum = WlzObjFactsLUTValues(fData, obj);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
+	  break;
+	case WLZ_POINTS:
+	  errNum = WlzObjFactsPointsDomain(fData, obj);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPointsValues(fData, obj);
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
@@ -2348,11 +2365,11 @@ static WlzErrorNum WlzObjFactsIndexedValues(WlzObjFactsData *fData,
     if(errNum == WLZ_ERR_NONE)
     {
       ixv = val.x;
-      errNum = WlzObjFactsAppend(fData, "Rank: %d.\n", ixv->rank);
+      errNum = WlzObjFactsAppend(fData, "rank: %d.\n", ixv->rank);
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      (void )WlzObjFactsAppend(fData, "Dim:");
+      (void )WlzObjFactsAppend(fData, "dim:");
       if(ixv->rank < 0)
       {
         errNum = WLZ_ERR_VALUES_DATA;
@@ -2755,6 +2772,341 @@ static WlzErrorNum WlzObjFactsLUTValues(WlzObjFactsData *fData,
 	    break;
 	}
       }
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a points domain.
+* \param	fData			Facts data structure.
+* \param	obj			Object with a points domain.
+*/
+static WlzErrorNum WlzObjFactsPointsDomain(WlzObjFactsData *fData,
+				           WlzObject *obj)
+{
+  const char	*tStr;
+  WlzPoints	*pts;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromObjDomainType(obj, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Domain NULL.\n");
+      errNum = WLZ_ERR_NONE;
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Domain type invalid.\n");
+    }
+  }
+  else
+  {
+    pts = obj->domain.pts;
+    errNum = WlzObjFactsAppend(fData, "Domain type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n", pts->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "nPoints: %d.\n", pts->nPoints);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "maxPoints: %d.\n", pts->maxPoints);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "points: %p.\n", pts->points.v);
+    }
+    if(fData->verbose)
+    {
+      int	i;
+
+      ++(fData->indent);
+      switch(pts->type)
+      {
+        case WLZ_POINTS_2I:
+	  {
+	    WlzIVertex2 *p;
+
+	    p = pts->points.i2;
+	    for(i = 0; (errNum == WLZ_ERR_NONE) && (i < pts->nPoints); ++i)
+	    {
+	      errNum = WlzObjFactsAppend(fData, " %d %d\n", p->vtX, p->vtY);
+	      ++p;
+	    }
+	  }
+	  break;
+        case WLZ_POINTS_2D:
+	  {
+	    WlzDVertex2 *p;
+
+	    p = pts->points.d2;
+	    for(i = 0; (errNum == WLZ_ERR_NONE) && (i < pts->nPoints); ++i)
+	    {
+	      errNum = WlzObjFactsAppend(fData, " %g %g\n", p->vtX, p->vtY);
+	      ++p;
+	    }
+	  }
+	  break;
+        case WLZ_POINTS_3I:
+	  {
+	    WlzIVertex3 *p;
+
+	    p = pts->points.i3;
+	    for(i = 0; (errNum == WLZ_ERR_NONE) && (i < pts->nPoints); ++i)
+	    {
+	      errNum = WlzObjFactsAppend(fData, " %d %d %d\n",
+	                                 p->vtX, p->vtY, p->vtZ);
+	      ++p;
+	    }
+	  }
+	  break;
+        case WLZ_POINTS_3D:
+	  {
+	    WlzDVertex3 *p;
+
+	    p = pts->points.d3;
+	    for(i = 0; (errNum == WLZ_ERR_NONE) && (i < pts->nPoints); ++i)
+	    {
+	      errNum = WlzObjFactsAppend(fData, " %g %g %g\n",
+	                                 p->vtX, p->vtY, p->vtZ);
+	      ++p;
+	    }
+	  }
+	  break;
+	default:
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	  break;
+
+      }
+      --(fData->indent);
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a points values data
+* 		structure.
+* \param	fData			Facts data structure.
+* \param	obj			Object with a points values data
+* 					structure.
+*/
+static WlzErrorNum WlzObjFactsPointsValues(WlzObjFactsData *fData,
+				           WlzObject *obj)
+{
+  int		idx,
+  		saveIndent;
+  const char	*tStr;
+  WlzPointValues *pts;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromObjValuesType(obj, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_VALUES_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Values NULL.\n");
+      errNum = WLZ_ERR_NONE;
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Values type invalid.\n");
+    }
+  }
+  else
+  {
+    pts = obj->values.pts;
+    errNum = WlzObjFactsAppend(fData, "Values type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n",
+      				 pts->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(pts->type != WLZ_POINT_VALUES)
+      {
+        errNum = WLZ_ERR_VALUES_TYPE;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "rank: %d.\n", pts->rank);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzObjFactsAppend(fData, "dim:");
+      if(pts->rank < 0)
+      {
+        errNum = WLZ_ERR_VALUES_DATA;
+      }
+      else if(pts->rank == 0)
+      {
+        errNum = WlzObjFactsAppend(fData, " NULL\n");
+      }
+      else
+      {
+	saveIndent = fData->indent;
+	fData->indent = 0;
+	for(idx = 0; idx < pts->rank; ++idx)
+	{
+	  WlzObjFactsAppend(fData, " %d", pts->dim[idx]);
+	}
+        errNum = WlzObjFactsAppend(fData, "\n");
+	fData->indent = saveIndent;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      tStr = WlzStringFromGreyType(pts->vType, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "vType: %s.\n", tStr);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "maxPoints: %d.\n", pts->maxPoints);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "values: %p\n", pts->values.v);
+    }
+    if((errNum == WLZ_ERR_NONE) && (fData->verbose != 0))
+    {
+      int	vCnt = 1;
+
+      if(pts->rank > 0)
+      {
+	for(idx = 0; idx < pts->rank; ++idx)
+	{
+	  vCnt *= pts->dim[idx];
+	}
+      }
+      ++(fData->indent);
+      switch(pts->vType)
+      {
+        case WLZ_GREY_LONG:
+	  for(idx = 0; idx < pts->maxPoints; ++idx)
+	  {
+	    int	idv;
+	    long *tv;
+
+	    tv = (long *)WlzPointValueGet(pts, idx);
+	    for(idv = 0; idv < vCnt; ++idv)
+	    {
+	      (void )WlzObjFactsAppend(fData, "%ld\n", tv[idv]);
+	    }
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
+	  break;
+	case WLZ_GREY_INT:
+	  for(idx = 0; idx < pts->maxPoints; ++idx)
+	  {
+	    int	idv;
+	    int	*tv;
+
+	    tv = (int *)WlzPointValueGet(pts, idx);
+	    for(idv = 0; idv < vCnt; ++idv)
+	    {
+	      (void )WlzObjFactsAppend(fData, "%d\n", tv[idv]);
+	    }
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
+	  break;
+        case WLZ_GREY_SHORT:
+	  for(idx = 0; idx < pts->maxPoints; ++idx)
+	  {
+	    int	idv;
+	    short	*tv;
+
+	    tv = (short *)WlzPointValueGet(pts, idx);
+	    for(idv = 0; idv < vCnt; ++idv)
+	    {
+	      (void )WlzObjFactsAppend(fData, "%d\n", tv[idv]);
+	    }
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
+	  break;
+        case WLZ_GREY_UBYTE:
+	  for(idx = 0; idx < pts->maxPoints; ++idx)
+	  {
+	    int	idv;
+	    WlzUByte *tv;
+
+	    tv = (WlzUByte *)WlzPointValueGet(pts, idx);
+	    for(idv = 0; idv < vCnt; ++idv)
+	    {
+	      (void )WlzObjFactsAppend(fData, "%d\n", tv[idv]);
+	    }
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
+	  break;
+        case WLZ_GREY_FLOAT:
+	  for(idx = 0; idx < pts->maxPoints; ++idx)
+	  {
+	    int	idv;
+	    float *tv;
+
+	    tv = (float *)WlzPointValueGet(pts, idx);
+	    for(idv = 0; idv < vCnt; ++idv)
+	    {
+	      (void )WlzObjFactsAppend(fData, "%g\n", tv[idv]);
+	    }
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
+	  break;
+        case WLZ_GREY_DOUBLE:
+	  for(idx = 0; idx < pts->maxPoints; ++idx)
+	  {
+	    int	idv;
+	    double *tv;
+
+	    tv = (double *)WlzPointValueGet(pts, idx);
+	    for(idv = 0; idv < vCnt; ++idv)
+	    {
+	      (void )WlzObjFactsAppend(fData, "%g\n", tv[idv]);
+	    }
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
+      }
+      --(fData->indent);
     }
   }
   --(fData->indent);
