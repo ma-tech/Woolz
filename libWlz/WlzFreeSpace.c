@@ -242,6 +242,25 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
       }
       break;
 
+    case WLZ_POINTS:
+      WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
+      	      ("WlzFreeObj %p WLZ_POINTS %p\n",
+	       obj, obj->domain.pts));
+      errNum = WlzFreeDomain(obj->domain);
+      if((errNum == WLZ_ERR_NONE) && (obj->values.core != NULL))
+      {
+        errNum = WlzFreePointValues(obj->values.pts);
+      }
+      if((errNum == WLZ_ERR_NONE) && (obj->plist != NULL))
+      {
+        errNum = WlzFreePropertyList(obj->plist);
+      }
+      if((errNum == WLZ_ERR_NONE) && (obj->assoc != NULL))
+      {
+	errNum = WlzFreeObj(obj->assoc);
+      }
+      break;
+
     case WLZ_HISTOGRAM:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
       	      ("WlzFreeObj %p WLZ_CONV_HULL %p\n",
@@ -760,11 +779,11 @@ WlzErrorNum	WlzFreeIndexedValues(WlzIndexedValues *ixv)
 
   if(ixv == NULL)
   {
-    errNum = WLZ_ERR_DOMAIN_NULL;
+    errNum = WLZ_ERR_VALUES_NULL;
   }
   else if(ixv->type != WLZ_INDEXED_VALUES)
   {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   else
   {
@@ -774,6 +793,36 @@ WlzErrorNum	WlzFreeIndexedValues(WlzIndexedValues *ixv)
       AlcFree(ixv->dim);
     }
     AlcFree(ixv);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Frees a points valuetable.
+* \param	pv			Given  points valuetable.
+*/
+WlzErrorNum	WlzFreePointValues(WlzPointValues *pv)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(pv == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(pv->type != WLZ_POINT_VALUES)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else
+  {
+    (void )AlcFree(pv->values.v);
+    if(pv->rank > 0)
+    {
+      AlcFree(pv->dim);
+    }
+    AlcFree(pv);
   }
   return(errNum);
 }
