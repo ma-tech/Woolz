@@ -177,6 +177,9 @@ const char	*WlzStringFromObjTypeValue(WlzObjectType objType,
     case WLZ_3D_VIEW_STRUCT:
       oTypeStr = "WLZ_3D_VIEW_STRUCT";
       break;
+    case WLZ_POINTS:
+      oTypeStr = "WLZ_POINTS";
+      break;
     default:
       errNum = WLZ_ERR_OBJECT_TYPE;
       break;
@@ -233,6 +236,7 @@ WlzObjectType	WlzStringToObjType(const char *oTypeStr,
 		"WLZ_CMESH_TRANS", WLZ_CMESH_TRANS,
 		"WLZ_LUT", WLZ_LUT,
 		"WLZ_3D_VIEW_STRUCT", WLZ_3D_VIEW_STRUCT,
+		"WLZ_POINTS", WLZ_POINTS,
 		NULL))
   {
     oType = (WlzObjectType )tI0;
@@ -412,6 +416,18 @@ const char	*WlzStringFromObjDomainType(WlzObject *obj,
       case WLZ_3D_VIEW_STRUCT:
 	oDomTypeStr = "WLZ_3D_VIEW_STRUCT";
 	break;
+      case WLZ_POINTS_2I:
+        oDomTypeStr = "WLZ_POINTS_2I";
+	break;
+      case WLZ_POINTS_2D:
+        oDomTypeStr = "WLZ_POINTS_2D";
+	break;
+      case WLZ_POINTS_3I:
+        oDomTypeStr = "WLZ_POINTS_3I";
+	break;
+      case WLZ_POINTS_3D:
+        oDomTypeStr = "WLZ_POINTS_3D";
+	break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
         break;
@@ -464,6 +480,10 @@ WlzObjectType	WlzStringToObjDomainType(const char *oDomTypeStr,
 		"WLZ_RECTANGLE_DOMAIN_INT", WLZ_RECTANGLE_DOMAIN_INT,
 		"WLZ_RECTANGLE_DOMAIN_FLOAT", WLZ_RECTANGLE_DOMAIN_FLOAT,
 		"WLZ_LUT", WLZ_LUT,
+		"WLZ_POINTS_2I", WLZ_POINTS_2I,
+		"WLZ_POINTS_2D", WLZ_POINTS_2D,
+		"WLZ_POINTS_3I", WLZ_POINTS_3I,
+		"WLZ_POINTS_3D", WLZ_POINTS_3D,
 		NULL))
   {
     oDomType = (WlzObjectType )tI0;
@@ -501,6 +521,9 @@ const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
   {
     switch(obj->values.core->type)
     {
+      case WLZ_POINT_VALUES:
+        oValTypeStr = "WLZ_POINT_VALUES";
+	break;
       case WLZ_LUT:
         oValTypeStr = "WLZ_LUT";
 	break;
@@ -590,6 +613,7 @@ WlzObjectType	WlzStringToObjValuesType(const char *oValTypeStr,
 		"WLZ_GREY_TAB_INTL", WLZ_GREY_TAB_INTL,
 		"WLZ_VOXELVALUETABLE_GREY", WLZ_VOXELVALUETABLE_GREY,
 		"WLZ_LUT", WLZ_LUT,
+		"WLZ_POINT_VALUES", WLZ_POINT_VALUES,
 		NULL))
   {
     oValType = (WlzObjectType )tI0;

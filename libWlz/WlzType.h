@@ -213,6 +213,7 @@ typedef enum _WlzObjectType
   WLZ_GREY_TAB_RECT		= 1,	/*!< Base rectangular grey value
   					     table. */
   WLZ_GREY_TAB_INTL		= 2,	/*!< Base interval grey value table. */
+  WLZ_POINT_VALUES              = 3,    /*!< Values defined at points. */
   WLZ_INDEXED_VALUES		= 4,	/*!< Indexed value table. */
   WLZ_FEAT_TAB_RAGR		= 5,	/*!< Base ragged rectangle feature
   					     table. */
@@ -361,12 +362,12 @@ typedef enum _WlzObjectType
   /**********************************************************************
   * Points domain types.
   **********************************************************************/
-  WLZ_POINTS_2I			= 1,	/*!< Integer 2D points domain. */
-  WLZ_POINTS_2D			= 2,	/*!< Integer 2D points domain. */
-  WLZ_POINTS_3I	                = 3,    /*!< Double precision floating point
-					     2D points domain. */
-  WLZ_POINTS_3D	                = 4,    /*!< Double precision floating point
-					     3D points domain. */
+  WLZ_POINTS_2I			= 21,	/*!< Integer 2D points domain. */
+  WLZ_POINTS_2D			= 22,	/*!< Integer 2D points domain. */
+  WLZ_POINTS_3I	                = 23,    /*!< Double precision floating point
+					      2D points domain. */
+  WLZ_POINTS_3D	                = 24,    /*!< Double precision floating point
+					      3D points domain. */
   /**********************************************************************
   * WLZ_DUMMY_ENTRY is not an object type.			
   * Keep it the last enumerator!				
@@ -2226,6 +2227,7 @@ typedef union _WlzValues
   struct _WlzIndexedValues  *x;
   struct _WlzTiledValues    *t;
   struct _WlzLUTValues      *lut;
+  struct _WlzPointValues    *pts;
 } WlzValues;
 
 /*!
@@ -2938,6 +2940,41 @@ typedef struct _WlzLUTValues
   int		maxVal;			/*!< Number of values allocated. */
   WlzGreyP	val;			/*!< LUT values. */
 } WlzLUTValues;
+
+/*!
+* \struct	_WlzPointValues
+* \ingroup	WlzType
+* \brief	Point values - values with arbitrary rank and dimension
+* 		defined at points.
+* 		Typedef: ::WlzPointValues
+*/
+typedef struct _WlzPointValues
+{
+  WlzObjectType	type;			/*!< WLZ_POINT_VALUES. */
+  int		linkcount;		/*!< From WlzCoreValues. */
+  void		*freeptr;		/*!< From WlzCoreValues. */
+  int           rank;                   /*!< The rank of the individual values.
+                                             Here the rank for a scalar is 0,
+                                             for a 1D array it is 1 and for
+                                             and for individual values that
+                                             are nD arrays the rank is n. */
+  int           *dim;                   /*!< The dimensions of individual
+                                             indexed values. The dimensions
+                                             are a 1D array with the number
+                                             of entries equal to the rank.
+					     A dimension array is only
+					     allocated if the rank > 0,
+					     for rank == 0 dim is NULL. */
+  int		pSz;			/*!< Size of each point this is
+                                             the product of the dimensions
+					     times the value type size and
+					     is frequently used for accessing
+					     the values. */
+  WlzGreyType   vType;                  /*!< The type of the data in the
+                                             individual values. */
+  size_t	maxPoints;		/*!< Number of points allocated. */
+  WlzGreyP      values;                 /*!< The indexed values. */
+} WlzPointValues;
 
 /************************************************************************
 * Point domains.						
