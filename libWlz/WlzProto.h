@@ -2415,6 +2415,8 @@ extern WlzErrorNum		WlzFreeContour(
 				  WlzContour *ctr);
 extern WlzErrorNum 		WlzFreeIndexedValues(
 				  WlzIndexedValues *ixv);
+extern WlzErrorNum		WlzFreePointValues(
+				  WlzPointValues *pv);
 #endif /* !WLZ_EXT_BIND */
 
 /************************************************************************
@@ -3684,9 +3686,16 @@ extern int			WlzIDomMaxItvLn(
 extern int 			WlzIntervalCount(
 				  WlzIntervalDomain *idom,
 			    	  WlzErrorNum *dstErr);
+#ifdef WLZ_EXT_BIND
+extern int   			WlzIntervalCountObj(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+#else /* WLZ_EXT_BIND */
 extern size_t			WlzIntervalCountObj(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+
 /************************************************************************
 * WlzIntervalDomScan.c							*
 ************************************************************************/
@@ -4160,6 +4169,18 @@ extern WlzPoints		*WlzMakePoints(
 				  int nVtx,
 				  WlzVertexP vtxP,
 				  int maxVtx,
+				  WlzErrorNum *dstErr);
+extern WlzPointValues		*WlzNewPointValues(
+				  WlzObject *obj,
+				  int rank,
+				  int *dim,
+				  WlzGreyType vType,
+				  WlzErrorNum *dstErr);
+extern WlzPointValues		*WlzMakePointValues(
+				  size_t nP,
+				  int rank,
+				  int *dim,
+				  WlzGreyType vType,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 extern WlzPolygonDomain		*WlzMakePolygonDomain(
@@ -4978,6 +4999,9 @@ extern WlzObject		*WlzPointsToDomObj(
     				  WlzPoints *pnt,
 				  double scale,
 				  WlzErrorNum *dstErr);
+extern void			*WlzPointValueGet(
+				  WlzPointValues *pts,
+				  int idx);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -5834,6 +5858,30 @@ extern WlzObject		*WlzCbThreshold(
 				  void *clientData,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzTensor.c								*
+************************************************************************/
+extern WlzObject       		*WlzCMeshDGTensor(
+				  WlzObject *cObj,
+				  int invert,
+				  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzCMeshDGTensorAtPts(
+				  WlzObject *cObj,
+				  int invert,
+				  WlzDVertex3 sd,
+				  int dither,
+				  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzCMeshStrainTensor(
+				  WlzObject *cObj,
+				  int invert,
+				  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzCMeshStrainTensorAtPts(
+				  WlzObject *cObj,
+				  int invert,
+				  WlzDVertex3 sd,
+				  int dither,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzThreshold.c							*
