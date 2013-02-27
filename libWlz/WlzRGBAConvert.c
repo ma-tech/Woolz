@@ -586,8 +586,6 @@ static WlzObject *WlzCompoundToRGBA3D(WlzCompoundArray *cObj,
 	idC = 0;
 	while((errNum2 == WLZ_ERR_NONE) && (idC < cObj->n))
 	{
-	  int		idP2,
-	  		nPl2;
 	  WlzDomain	dom2;
 	  WlzValues	val2;
 
@@ -596,11 +594,12 @@ static WlzObject *WlzCompoundToRGBA3D(WlzCompoundArray *cObj,
 	  if((cObj->o[idC] != NULL) &&
 	     (cObj->o[idC]->type == WLZ_3D_DOMAINOBJ))
 	  {
-	    idP2 = bBox.zMin + idP - cObj->o[idC]->domain.p->plane1;
-	    nPl2 = cObj->o[idC]->domain.p->lastpl - 
-	           cObj->o[idC]->domain.p->plane1 + 1;
-	    if((idP2 >= 0) && (idP2 <= nPl2))
+	    if((bBox.zMin + idP >= cObj->o[idC]->domain.p->plane1) &&
+	       (bBox.zMin + idP <= cObj->o[idC]->domain.p->lastpl))
 	    {
+	      int	idP2;
+
+	      idP2 = bBox.zMin + idP - cObj->o[idC]->domain.p->plane1;
 	      dom2 = *(cObj->o[idC]->domain.p->domains + idP2);
 	      val2 = *(cObj->o[idC]->values.vox->values + idP2);
 	    }
