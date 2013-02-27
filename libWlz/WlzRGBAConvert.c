@@ -418,7 +418,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
   {
     numObjs = 4;
   }
-  for(i = 0; i < 3; ++i)
+  for(i = 0; i < numObjs; ++i)
   {
     objs[i] = cObj->o[i];
   }
@@ -427,7 +427,8 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
   {
     /* Add an RGBA valuetable, extract background for each channel */
     vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_RGBA, &errNum);
-    for(i=0; (errNum == WLZ_ERR_NONE) && (i < 3); i++)
+    b[0] = b[1] = b[2] = b[3] = 255;
+    for(i=0; (errNum == WLZ_ERR_NONE) && (i < numObjs); i++)
     {
       bckgrnd = WlzGetBackground(cObj->o[i], &errNum);
       if(errNum == WLZ_ERR_NONE)
@@ -442,7 +443,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
     WlzValues	values;
 
     bckgrnd.type = WLZ_GREY_RGBA;
-    WLZ_RGBA_RGBA_SET(bckgrnd.v.rgbv, b[0], b[1], b[2], 255);
+    WLZ_RGBA_RGBA_SET(bckgrnd.v.rgbv, b[0], b[1], b[2], b[3]);
     values.v = WlzNewValueTb(rtnObj, vType, bckgrnd, &errNum);
     if(values.v != NULL)
     {
@@ -464,7 +465,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
 
     /* do it dumb fashion for now, rgb only */
     gValWSpc[0] = gValWSpc[1] = gValWSpc[2] = gValWSpc[3] = NULL;
-    for(i=0; i < 3; i++)
+    for(i=0; i < numObjs; i++)
     {
       if((cObj->o[i] != NULL) && (cObj->o[i]->type != WLZ_EMPTY_OBJ))
       {
