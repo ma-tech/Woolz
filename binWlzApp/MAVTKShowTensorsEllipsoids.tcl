@@ -33,6 +33,9 @@
 # Boston, MA  02110-1301, USA.
 # \ingroup      BinWlzApp
 # \brief        Display tensor ellipsiods using VTK.
+# 		Ellipsoid axes are the eigenvectors of the tensor and
+# 		axis dimensions the eigen values. Colous are derived
+# 		from the largest eigenvalue.
 ##
 
 package require vtk
@@ -40,7 +43,7 @@ package require vtkinteraction
 
 source /opt/vis/share/VTK/colors.tcl
 
-set inFileName "out.vtk"
+set inFileName [lindex $argv 0]
 
 vtkPolyDataReader reader
   reader SetFileName $inFileName
@@ -63,17 +66,10 @@ vtkTubeFilter tubeAxes
 vtkTensorGlyph ellipsoids
   ellipsoids SetInput [reader GetOutput]
   ellipsoids SetSource [sphere GetOutput]
-#  ellipsoids SetSource [tubeAxes GetOutput]
-  ellipsoids SetScaleFactor 0.2
-#  ellipsoids ClampScalingOn
-#  ellipsoids ColorGlyphsOff
-#  ellipsoids ColorGlyphsOn
-#  ellipsoids ExtractEigenvaluesOn
-#  ellipsoids SetColorModeToEigenvalues
-#  ellipsoids ThreeGlyphsOff
-   ellipsoids SetColorModeToEigenvalues
-#   ellipsoids ThreeGlyphsOn
-   ellipsoids SetMaxScaleFactor 8.0
+  ellipsoids SetScaleFactor 0.20
+  ellipsoids SetColorModeToEigenvalues
+  ellipsoids SetMaxScaleFactor 5.0
+  ellipsoids SetClampScaling 1
 
 vtkPolyDataNormals ellipNormals
   ellipNormals SetInput [ellipsoids GetOutput]
