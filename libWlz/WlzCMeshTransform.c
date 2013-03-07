@@ -330,6 +330,12 @@ static WlzObject 		*WlzCMeshToDomObjValues3D(
 				  WlzObject *mObj,
                                   WlzInterpolationType itp,
 				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzCMeshExpansion2D(
+				  WlzObject *tObj,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzCMeshExpansion3D(
+				  WlzObject *tObj,
+				  WlzErrorNum *dstErr);
 static WlzPolygonDomain 	*WlzCMeshTransformPoly(
 				  WlzPolygonDomain *srcPoly,
 				  WlzObject *mObj,
@@ -8488,4 +8494,310 @@ static WlzObject *WlzCMeshProduct3D(WlzObject *tr0, WlzObject *tr1,
     *dstErr = errNum;
   }
   return(trR);
+}
+
+/*!
+* \return	Woolz object with the given conforming mesh and scalar
+* 		expansion factor values attached the the mesh elements,
+* 		or NULL on error.
+* \ingroup	WlzTransform
+* \brief	Compute the scalar expansion factors for the mesh elements
+* 		of the given conforming mesh transform. The expansion
+* 		factors are attached to the elements of the returned
+* 		conforming mesh object.
+* 		The expansion factor is defined to be the square root (for
+* 		2D) or cube root (for 3D) of the ration of the the displaced
+* 		element area (for 2D) or volume (for 3D) (\f$a_d\f$) to the
+* 		undisplaced element area or volume (\f$\_0\f$):
+		\f[
+		e = \left{
+		    \begin{array}{ll}
+		    e = \sqrt{\frac{a_d}{a_0}}, & 2D \\
+		    e = \sqrt[3]{\frac{a_d}{a_0}} & 3D
+		    \end{array}
+		    \right.
+ 		\f]
+* \param	tObj			Given conforming mesh transform.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzCMeshExpansion(WlzObject *tObj, WlzErrorNum *dstErr)
+{
+  WlzObject	*eObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(tObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    switch(tObj->type)
+    {
+      case WLZ_CMESH_2D:
+	eObj = WlzCMeshExpansion2D(tObj, &errNum);
+	break;
+      case WLZ_CMESH_3D:
+	eObj = WlzCMeshExpansion3D(tObj, &errNum);
+        break;
+      default: 
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(eObj);
+}
+
+/*!
+* \return	Woolz object with the given conforming mesh and scalar
+* 		expansion factor values attached the the mesh elements,
+* 		or NULL on error.
+* \ingroup	WlzTransform
+* \brief	Compute the scalar expansion factors for the mesh elements
+* 		of the given 2D conforming mesh transform. The expansion
+* 		factors are attached to the elements of the returned
+* 		conforming mesh object.
+* 		The expansion factor is defined to be the square root of
+* 		ratio of the the displaced element area (\f$a_d\f$) to the
+* 		undisplaced element area (\f$\_0\f$):
+* 		\f$ e = \sqrt{\frac{a_d}{a_0}}\f$.
+* \param	tObj			Given conforming mesh transform.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject *WlzCMeshExpansion2D(WlzObject *tObj, WlzErrorNum *dstErr)
+{
+  WlzObject	*eObj = NULL;
+  WlzCMesh2D	*mesh;
+  WlzIndexedValues *ixvT,
+  		   *ixvE = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((mesh = tObj->domain.cm2) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_2D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((ixvT = tObj->values.x) == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(ixvT->type != WLZ_INDEXED_VALUES)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else if((ixvT->rank != 1) ||
+          (ixvT->dim[0] < 2) ||
+          (ixvT->vType != WLZ_GREY_DOUBLE) ||
+	  (ixvT->attach != WLZ_VALUE_ATTACH_NOD))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else
+  {
+    ixvE = WlzMakeIndexedValues(tObj, 0, NULL, WLZ_GREY_DOUBLE,
+                                WLZ_VALUE_ATTACH_ELM, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzDomain	dom;
+      WlzValues val;
+
+      dom.cm2 = mesh;
+      val.x = ixvE;
+      eObj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      (void )WlzFreeIndexedValues(ixvE);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE;
+
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      double	*fac;
+      WlzCMeshElm2D *elm;
+
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	double	a0,
+		a1;
+	WlzCMeshNod2D *nod[3];
+
+	nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+	nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+	nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
+        a0 = fabs(
+	     WlzGeomTriangleSnArea2(nod[0]->pos, nod[1]->pos, nod[2]->pos));
+	if(a0 > WLZ_MESH_TOLERANCE_SQ)
+	{
+	  int	idN;
+	  WlzDVertex2 dVx[3];
+
+	  for(idN = 0; idN < 3; ++idN)
+	  {
+	    double	*dsp;
+
+	    dsp = (double *)WlzIndexedValueGet(ixvT, nod[idN]->idx);
+	    dVx[idN] = nod[idN]->pos;
+	    dVx[idN].vtX += dsp[0];
+	    dVx[idN].vtY += dsp[1];
+	  }
+	  a1 = fabs(
+	       WlzGeomTriangleSnArea2(dVx[0], dVx[1], dVx[2]));
+	  a0 = a1 / a0;
+        }
+	else
+	{
+	  a0 = DBL_MAX;
+	}
+	fac = (double *)WlzIndexedValueGet(ixvE, elm->idx);
+	*fac = sqrt(a0);
+      }
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeObj(eObj);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(eObj);
+}
+
+/*!
+* \return	Woolz object with the given conforming mesh and scalar
+* 		expansion factor values attached the the mesh elements,
+* 		or NULL on error.
+* \ingroup	WlzTransform
+* \brief	Compute the scalar expansion factors for the mesh elements
+* 		of the given 3D conforming mesh transform. The expansion
+* 		factors are attached to the elements of the returned
+* 		conforming mesh object.
+* 		The expansion factor is defined to be the cube root of
+* 		ratio of the the displaced element area (\f$a_d\f$) to the
+* 		undisplaced element area (\f$\_0\f$):
+* 		\f$ e = \sqrt[3]{\frac{a_d}{a_0}}\f$.
+* \param	tObj			Given conforming mesh transform.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject *WlzCMeshExpansion3D(WlzObject *tObj, WlzErrorNum *dstErr)
+{
+  WlzObject	*eObj = NULL;
+  WlzCMesh3D	*mesh;
+  WlzIndexedValues *ixvT,
+  		   *ixvE = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((mesh = tObj->domain.cm3) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(mesh->type != WLZ_CMESH_3D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((ixvT = tObj->values.x) == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(ixvT->type != WLZ_INDEXED_VALUES)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else if((ixvT->rank != 1) ||
+          (ixvT->dim[0] < 3) ||
+          (ixvT->vType != WLZ_GREY_DOUBLE) ||
+	  (ixvT->attach != WLZ_VALUE_ATTACH_NOD))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else
+  {
+    ixvE = WlzMakeIndexedValues(tObj, 0, NULL, WLZ_GREY_DOUBLE,
+                                WLZ_VALUE_ATTACH_ELM, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzDomain	dom;
+      WlzValues val;
+
+      dom.cm3 = mesh;
+      val.x = ixvE;
+      eObj = WlzMakeMain(WLZ_CMESH_3D, dom, val, NULL, NULL, &errNum);
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      (void )WlzFreeIndexedValues(ixvE);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE;
+
+    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+    {
+      double	*fac;
+      WlzCMeshElm3D *elm;
+
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	double	a0,
+		a1;
+	WlzCMeshNod3D *nod[4];
+
+	nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+	nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+	nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+	nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
+        a0 = fabs(
+	     WlzGeomTetraSnVolume6(nod[0]->pos, nod[1]->pos, nod[2]->pos,
+	                           nod[3]->pos));
+	if(a0 > WLZ_MESH_TOLERANCE_SQ)
+	{
+	  int	idN;
+	  WlzDVertex3 dVx[4];
+
+	  for(idN = 0; idN < 4; ++idN)
+	  {
+	    double	*dsp;
+
+	    dsp = (double *)WlzIndexedValueGet(ixvT, nod[idN]->idx);
+	    dVx[idN] = nod[idN]->pos;
+	    dVx[idN].vtX += dsp[0];
+	    dVx[idN].vtY += dsp[1];
+	    dVx[idN].vtZ += dsp[2];
+	  }
+	  a1 = fabs(
+	       WlzGeomTetraSnVolume6(dVx[0], dVx[1], dVx[2], dVx[3]));
+	  a0 = a1 / a0;
+        }
+	else
+	{
+	  a0 = DBL_MAX;
+	}
+	fac = (double *)WlzIndexedValueGet(ixvE, elm->idx);
+	*fac = cbrt(a0);
+      }
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeObj(eObj);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(eObj);
 }

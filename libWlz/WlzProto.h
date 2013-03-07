@@ -1604,6 +1604,9 @@ extern WlzObject		*WlzCMeshProduct(
 				  WlzObject *tr0,
 				  WlzObject *tr1,
 				  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzCMeshExpansion(
+				  WlzObject *cObj,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzCMeshUtils.c							*
@@ -1908,6 +1911,13 @@ extern WlzErrorNum		WlzCMeshFixNegativeElms2D(
 				  WlzCMesh2D *mesh);
 extern WlzErrorNum		WlzCMeshFixNegativeElms3D(
 				  WlzCMesh3D *mesh);
+extern WlzErrorNum		WlzCMeshValuesNormalise(
+				  WlzObject *cObj,
+				  int mapZero,
+                                  double vZero,
+				  double vMin,
+				  double vMax,
+				  double oFrac);
 extern WlzCMeshP		WlzCMeshCopy(
 				  WlzCMeshP mesh,
 				  int squuze,
