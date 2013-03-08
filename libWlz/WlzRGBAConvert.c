@@ -491,7 +491,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
 	{
 	  if(gValWSpc[i] == NULL)
 	  {
-	    pix.v.ubv = (i < 2)? 0: 255;
+	    pix.v.ubv = (i < 3)? 0: 255;
 	  }
 	  else
 	  {
