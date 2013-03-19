@@ -119,7 +119,7 @@ static void usage(
 	  "\tadjacency profile with repect to the test domain and output as a \n"
 	  "\tmatrix of values. The first row is the adjacency distances used to\n"
 	  "\tcalculate each column.\n"
-	  "Version: %s\n"
+	  "Woolz Version: %s\n"
 	  "Arguments:\n"
 	  "\t-a#,#,#    min and max values of the adjacency distance and step (default -10,100,1)\n"
 	  "\t-f<file>   input the name of a file containing the target domain set.\n"
@@ -184,10 +184,9 @@ int main(
   WlzObjectType	objType;
   int		dim=0;
   WlzObject	**structElements;
-  int		numElements;
   int		i, j, radius;
   int		rMin=-10, rMax=100, rStep=1;
-  int		adjVal, *rVals, **adjVals;
+  int		adjVal;
 
   /* read the argument list and check for an input file */
   infile  = stdin;
@@ -281,7 +280,7 @@ int main(
   domains = NULL;
   numDomains = 0;
   while( (obj = WlzReadObj(infileDomains, &errNum)) ){
-    if( (obj->type != objType) || (obj->type != WLZ_EMPTY_OBJ) ){
+    if( (obj->type != objType) && (obj->type != WLZ_EMPTY_OBJ) ){
       fprintf(stderr, "%s: found domain of invalid type\n", argv[0]);
       errNum = WlzFreeObj(obj);
       continue;
@@ -301,10 +300,10 @@ int main(
   /* the first row is the set of radii for which the intersection volume is calculated */
   /* output radii and calculate structuring element */
   structElements = (WlzObject **) malloc(sizeof(WlzObject *) * ((rMax - rMin)/rStep + 2));
-  for( radius=rMin, i=0; radius < rMax; radius += rStep, i++){
+  for( radius=rMin, i=0; radius <= rMax; radius += rStep, i++){
 
     /* output the radius */
-    if( (radius + rStep) >= rMax ){
+    if( (radius + rStep) > rMax ){
       fprintf(outfile, "%d\n", radius);
     } else {
       fprintf(outfile, "%d, ", radius);
@@ -317,7 +316,7 @@ int main(
 	obj = WlzMakeCircleObject((double) -radius, 0, 0, &errNum);
 	break;
       case 3:
-	obj = WlzMakeSphereObject((double) -radius, 0, 0, 0, &errNum);
+	obj = WlzMakeSphereObject(WLZ_3D_DOMAINOBJ, (double) -radius, 0, 0, 0, &errNum);
 	break;
       }
       structElements[i] = WlzAssignObject(obj, &errNum);
@@ -328,7 +327,7 @@ int main(
 	obj = WlzMakeCircleObject((double) radius, 0, 0, &errNum);
 	break;
       case 3:
-	obj = WlzMakeSphereObject((double) radius, 0, 0, 0, &errNum);
+	obj = WlzMakeSphereObject(WLZ_3D_DOMAINOBJ, (double) radius, 0, 0, 0, &errNum);
 	break;
       }
       structElements[i] = WlzAssignObject(obj, &errNum);
@@ -339,34 +338,36 @@ int main(
   }
 
   /* now erode/dilate as required and calculate intersection volume */
-  for( radius=rMin, i=0; radius < rMax; radius += rStep, i++){
+  for( radius=rMin, i=0; radius <= rMax; radius += rStep, i++){
     for( j=0; j < numDomains; j++){
-
       adjVal = 0;
       if( radius < 0 ){
-	if( obj = WlzStructErosion( domains[j], structElements[i], &errNum) ){
-	  if( obj1 = WlzIntersect2(testDomain, domains[j], &errNum) ){
+	if( (obj = WlzStructErosion( domains[j], structElements[i], &errNum)) ){
+	  if( (obj1 = WlzIntersect2(testDomain, obj, &errNum)) ){
 	    adjVal = WlzSize(obj1, &errNum);
-	    WlzFreeObj(obj1, &errNum);
+	    errNum = WlzFreeObj(obj1);
 	  }
-	  WlzFreeObj(obj, &errNum);
+	  errNum = WlzFreeObj(obj);
 	}
       } else if( radius > 0 ){
-	if( obj = WlzStructDilation( domains[j], structElements[i], &errNum) ){
-	  if( obj1 = WlzIntersect2(testDomain, domains[j], &errNum) ){
+	if( (obj = WlzStructDilation( domains[j], structElements[i], &errNum)) ){
+	  if( (obj1 = WlzIntersect2(testDomain, obj, &errNum)) ){
 	    adjVal = WlzSize(obj1, &errNum);
-	    WlzFreeObj(obj1, &errNum);
+	    errNum = WlzFreeObj(obj1);
 	  }
-	  WlzFreeObj(obj, &errNum);
+	  errNum = WlzFreeObj(obj);
 	}
       } else {
-	if( obj1 = WlzIntersect(testDomian, domians[j], &errNum) ){
+	if( (obj1 = WlzIntersect2(testDomain, domains[j], &errNum)) ){
 	  adjVal = WlzSize(obj1, &errNum);
-	  WlzFreeObj(obj1, &errNum);
+	  errNum = WlzFreeObj(obj1);
 	}
       }
+      if( verboseFlg ){
+	fprintf(stderr, "%s: radius=%d, domainIndx=%s, adjVal=%d\n", argv[0], radius, j, adjVal);
+      }
 
-      if ( (radius + rStep) >= rMax ){
+      if ( (radius + rStep) > rMax ){
 	fprintf(outfile, "%d\n", adjVal);
       } else {
 	fprintf(outfile, "%d, ", adjVal);
@@ -374,7 +375,7 @@ int main(
     }
 
     if( verboseFlg ){
-      fprintf(stderr, "\n%s: completed row %d\n", argv[0], i+1);
+      fprintf(stderr, "%s: completed row %d\n\n", argv[0], i+1);
     }
   }
 
