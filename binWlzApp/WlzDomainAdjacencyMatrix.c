@@ -32,7 +32,7 @@ static char _WlzDomainAdjacencyMatrix_c[] = "University of Edinburgh $Id$";
 * details.
 *
 * You should have received a copy of the GNU General Public
-* License along with this program; if not, write to the Free
+ * License along with this program; if not, write to the Free
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
 * \ingroup      BinWlzApp
@@ -119,13 +119,14 @@ static void usage(
 	  "\tadjacency profile with repect to the test domain and output as a \n"
 	  "\tmatrix of values. The first row is the adjacency distances used to\n"
 	  "\tcalculate each column.\n"
+	  "Version: %s\n"
 	  "Arguments:\n"
 	  "\t-a#,#,#    min and max values of the adjacency distance and step (default -10,100,1)\n"
 	  "\t-f<file>   input the name of a file containing the target domain set.\n"
 	  "\t-h         print this message\n"
 	  "\t-v         verbose operation\n"
 	  "\n",
-	  str);
+	  str, WlzVersion());
 
   return;
 }
@@ -172,26 +173,26 @@ int main(
   int   argc,
   char  **argv)
 {
-  FILE		*inFileDomains, *infile, *outFile;
+  FILE		*infileDomains, *infile, *outfile;
   char 		optList[] = "a:f:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		verboseFlg=0;
   WlzObject	**domains;
   int		numDomains;
-  WlzObject	*obj, *obj1, *testDomian;
+  WlzObject	*obj, *obj1, *testDomain;
   WlzObjectType	objType;
   int		dim=0;
   WlzObject	**structElements;
   int		numElements;
-  int		i, j, k, l;
+  int		i, j, radius;
   int		rMin=-10, rMax=100, rStep=1;
   int		adjVal, *rVals, **adjVals;
 
   /* read the argument list and check for an input file */
   infile  = stdin;
-  inFileDomains = stdin;
-  outFile = stdout;
+  infileDomains = stdin;
+  outfile = stdout;
   opterr = 0;
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
@@ -217,7 +218,7 @@ int main(
       break;
 
     case 'f':
-      if((inFileDomains = fopen(optarg, "r")) == NULL){
+      if((infileDomains = fopen(optarg, "r")) == NULL){
 	fprintf(stderr, "%s: can't open domains file %s\n", argv[0], optarg);
 	usage(argv[0]);
 	return 1;
@@ -238,7 +239,7 @@ int main(
 
   /* Check for test domain file */
   if( (argc - optind) > 0 ){
-    if((inFile = fopen(*(argv + optind), "r")) == NULL){
+    if((infile = fopen(*(argv + optind), "r")) == NULL){
       fprintf(stderr, "%s: can't open domains file %s\n", argv[0], *(argv+optind));
       usage(argv[0]);
       return 1;
@@ -251,8 +252,8 @@ int main(
     fprintf(stderr, "adjacency range: %d to %d step %d\n", rMin, rMax, rStep);
   }
 
-  /* get test object from inFile */
-  if( (testDomain = WlzReadObj(inFile, &errNum)) == NULL ){
+  /* get test object from infile */
+  if( (testDomain = WlzReadObj(infile, &errNum)) == NULL ){
     fprintf(stderr, "%s: can't read test domain object.\n", argv[0]);
     usage(argv[0]);
     return 1;
@@ -279,7 +280,7 @@ int main(
   /* read the domain set - must all have same type as test domain or empty */
   domains = NULL;
   numDomains = 0;
-  while( obj = WlzReadObj(inFileDomains, %errNum) ){
+  while( (obj = WlzReadObj(infileDomains, &errNum)) ){
     if( (obj->type != objType) || (obj->type != WLZ_EMPTY_OBJ) ){
       fprintf(stderr, "%s: found domain of invalid type\n", argv[0]);
       errNum = WlzFreeObj(obj);
@@ -299,38 +300,38 @@ int main(
   /* each row is the profile of the test domain against one from the list */
   /* the first row is the set of radii for which the intersection volume is calculated */
   /* output radii and calculate structuring element */
-  structElements = (WlzObject **) alloc(sizeof(WlzObject *) * ((rMax - rMin)/rStep + 2));
+  structElements = (WlzObject **) malloc(sizeof(WlzObject *) * ((rMax - rMin)/rStep + 2));
   for( radius=rMin, i=0; radius < rMax; radius += rStep, i++){
 
     /* output the radius */
     if( (radius + rStep) >= rMax ){
       fprintf(outfile, "%d\n", radius);
     } else {
-      fprintf(outFile, "%d, ", radius);
+      fprintf(outfile, "%d, ", radius);
     }
 
     /* create the structuring element for the erosion/dilation */
     if( radius < 0 ){
       switch( dim ){
       case 2:
-	obj = WlzMakeCircleObject((double) -radius, 0, 0, &errNum)
+	obj = WlzMakeCircleObject((double) -radius, 0, 0, &errNum);
 	break;
       case 3:
-	obj = WlzMakeSphereObject((double) -radius, 0, 0, 0, &errNum)
+	obj = WlzMakeSphereObject((double) -radius, 0, 0, 0, &errNum);
 	break;
       }
-      structElements[i] = WlzAssignObject(obj, &errNum)
+      structElements[i] = WlzAssignObject(obj, &errNum);
     }
     else if (radius > 0 ){
       switch( dim ){
       case 2:
-	obj = WlzMakeCircleObject((double) radius, 0, 0, &errNum)
+	obj = WlzMakeCircleObject((double) radius, 0, 0, &errNum);
 	break;
       case 3:
-	obj = WlzMakeSphereObject((double) radius, 0, 0, 0, &errNum)
+	obj = WlzMakeSphereObject((double) radius, 0, 0, 0, &errNum);
 	break;
       }
-      structElements[i] = WlzAssignObject(obj, &errNum)
+      structElements[i] = WlzAssignObject(obj, &errNum);
     }
     else {
       structElements[i] = NULL;
@@ -368,7 +369,7 @@ int main(
       if ( (radius + rStep) >= rMax ){
 	fprintf(outfile, "%d\n", adjVal);
       } else {
-	fprintf(outFile, "%d, ", adjVal);
+	fprintf(outfile, "%d, ", adjVal);
       }
     }
 
