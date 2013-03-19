@@ -511,7 +511,7 @@ AlgError	AlgMatrixLUDecompRaw(double **aM, int aSz,
     }
     else
     {
-      wSpace = vSpace4;
+      wSpace = wSpace4;
     }
     if(errCode == ALG_ERR_NONE)
     {
@@ -617,7 +617,7 @@ AlgError	AlgMatrixLUDecompRaw(double **aM, int aSz,
         *evenOdd = (even)? 1.0: -1.0;
       }
     }
-    if(wSpace && (vSpace != wSpace4))
+    if(wSpace && (wSpace != wSpace4))
     {
       AlcFree(wSpace);
     }
