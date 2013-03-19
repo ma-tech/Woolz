@@ -493,6 +493,7 @@ AlgError	AlgMatrixLUDecompRaw(double **aM, int aSz,
   double	*tDP0,
 		*tDP1,
   		*wSpace = NULL;
+  double	wSpace4[4];
   AlgError	errCode = ALG_ERR_NONE;
 
   if((aM == NULL) || (*aM == NULL) || (aSz <= 0) || (iV == NULL))
@@ -501,11 +502,18 @@ AlgError	AlgMatrixLUDecompRaw(double **aM, int aSz,
   }
   else
   {
-    if((wSpace = (double *)AlcMalloc(sizeof(double) * aSz)) == NULL)
+    if(aSz > 4)
     {
-      errCode = ALG_ERR_MALLOC;
+      if((wSpace = (double *)AlcMalloc(sizeof(double) * aSz)) == NULL)
+      {
+	errCode = ALG_ERR_MALLOC;
+      }
     }
     else
+    {
+      wSpace = vSpace4;
+    }
+    if(errCode == ALG_ERR_NONE)
     {
       even = 1;
       /* Calculate implicit scaling */
@@ -609,7 +617,7 @@ AlgError	AlgMatrixLUDecompRaw(double **aM, int aSz,
         *evenOdd = (even)? 1.0: -1.0;
       }
     }
-    if(wSpace)
+    if(wSpace && (vSpace != wSpace4))
     {
       AlcFree(wSpace);
     }
