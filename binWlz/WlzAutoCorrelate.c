@@ -210,10 +210,12 @@ int		main(int argc, char *argv[])
     fprintf(stderr,
             "Usage: %s [-h] [-o<output file>] [<input object>]\n"
             "Computes the autocorrelation of the given object.\n"
+	    "Version: %s\n"
 	    "Options are:\n"
 	    "  -h  Output this usage message.\n"
 	    "  -o  Output file.\n",
-	    argv[0]);
+	    argv[0],
+	    WlzVersion());
 
   }
   return(!ok);

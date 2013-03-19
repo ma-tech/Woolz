@@ -59,15 +59,16 @@ static WlzErrorNum WlzDisplacementsToVtk(FILE *, WlzObject *, WlzObject *);
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-h] [-c] [<compound array file>] [-v] [<vtk file>]\n"
 	  "\tConverts Compound Array object to VTK format\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -c        Compound Array file\n"
-	  "\t  -v        VTK file\n"
-	  "",
-	  proc_str);
+	  "\t  -v        VTK file\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

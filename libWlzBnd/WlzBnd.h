@@ -42,10 +42,12 @@ static char _WlzBnd_h[] = "University of Edinburgh $Id$";
 * \ingroup	LibWlzBnd
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+#endif /* WLZ_EXT_BIND */
 
 #include <stdio.h>
 #include <math.h>
@@ -58,9 +60,11 @@ extern "C"
 #include <WlzBndType.h>
 #include <WlzBndProto.h>
 
+#ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 }
 #endif
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \defgroup    LibWlzBnd	LibWlzBnd

@@ -231,10 +231,12 @@ int		main(int argc, char *argv[])
             "Usage: %s [-h] [-o<output object>] [<input object>]\n"
             "Constructs a conforming mesh that is equivalent to the given\n"
 	    "contour.\n"
-	    "Options are:\n"
+	    "Version: %s\n"
+	    "Options:\n"
 	    "  -h  Help, prints this usage message.\n"
 	    "  -o  Output file.\n",
-	    argv[0]);
+	    argv[0],
+	    WlzVersion());
 
   }
   return(!ok);

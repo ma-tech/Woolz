@@ -57,14 +57,10 @@ int		main(int argc, char *argv[])
   		dim = 2,
 		step,
   		ok = 1,
-  		usage = 0,
-		verbose = 0;
+  		usage = 0;
   WlzIVertex3	v3;
-  WlzIVertex2	v2;
   static char   optList[] = "23hn:";
 
-  v2.vtX = 0;
-  v2.vtY = 0;
   v3.vtX = 0;
   v3.vtY = 0;
   v3.vtZ = 0;
@@ -84,9 +80,6 @@ int		main(int argc, char *argv[])
 	  usage = 1;
 	}
         break;
-      case 'v':
-        verbose = 1;
-	break;
       case 'h': /* FALLTHROUGH */
       default:
         usage = 1;
@@ -129,12 +122,11 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-2|3] [-n <number of steps>] [-v]\n"
+    "Usage: %s [-2|3] [-n <number of steps>]\n"
     "Options are:\n"
     " -2  2D.\n"
     " -3  3D.\n"
     " -n  Number of spiral steps.\n"
-    " -v  Verbose output.\n"
     "Draws a sprial in VTK polydata format, with the output going to the\n"
     "standard output.\n",
     argv[0]);

@@ -120,10 +120,10 @@ static WlzErrorNum WlzNMSuppress2DBufI(WlzIntervalDomain *dstIDom,
   		g0,
   		g1,
 		gM,
-		gMLft,
-		gMRgt,
 		gY,
-		gX;
+		gX,
+		gMLft = 0,
+		gMRgt = 0;
   WlzUByte	dCode;
   int		*grdMBufPrv,
   		*grdMBufCur,
@@ -289,10 +289,10 @@ static WlzErrorNum WlzNMSuppress2DBufD(WlzIntervalDomain *dstIDom,
   double	g0,
   		g1,
 		gM,
-		gMLft,
-		gMRgt,
 		gY,
-		gX;
+		gX,
+		gMLft = 0.0,
+		gMRgt = 0.0;
   double	*grdMBufPrv,
   		*grdMBufCur,
 		*grdMBufNxt;
@@ -435,7 +435,7 @@ static WlzObject *WlzNMSuppress2D(WlzObject *grdM,
   int		idN,
 		inLen,
 		outLen,
-  		inLnIdx;
+  		inLnIdx = 0;
   WlzGreyType	gType,
   		bufType;
   WlzIVertex2	bufSz,
@@ -465,6 +465,7 @@ static WlzObject *WlzNMSuppress2D(WlzObject *grdM,
   void		**grdMBuf = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  tmpVal.core = NULL;
   pool.itvBlock = NULL;
   dstDom.core = NULL;
   if((grdM->type != WLZ_2D_DOMAINOBJ) ||

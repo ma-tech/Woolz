@@ -632,7 +632,7 @@ static WlzErrorNum WlzFilterValuesMeanFn(WlzGreyType gType,
 static void	*WlzFilterNObjMakeVBuf(WlzGreyType gType, int nVal)
 {
   size_t	sz = 0;
-  void		*gP;
+  void		*gP = NULL;
 
   switch(gType)
   {

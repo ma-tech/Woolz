@@ -149,7 +149,7 @@ int             main(int argc, char **argv)
   		sigma,
 		alpha,
 		binCnt,
-		sumArea,
+		sumArea = 0.0,
   		pkSigma = 1.0,
   		pkThresh = 1.0,
 		fitTol = 0.1;
@@ -451,9 +451,13 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
-    " [-h] [-y] [-o<out file>] [-s#] [-t#] [-l#] [<in object>]\n"
+    " [-h] [-y] [-o<out file>] [-s#] [-t#] [-l#]\n"
+    "                            [<in object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -l  Log-liklihood fitting tolerance.\n"
     "  -n  Number of Gaussian distributions.\n"

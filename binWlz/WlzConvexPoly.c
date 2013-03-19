@@ -49,17 +49,13 @@ static char _WlzConvexPoly_c[] = "University of Edinburgh $Id$";
 WlzConvexPoly - computes the convex polygon (hull) enclosing a domain.
 \par Synopsis
 \verbatim
-WlzConvexPoly [-h] [-v] [<input file>]
+WlzConvexPoly [-h] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
 </table>
 \par Description
@@ -100,11 +96,12 @@ static void usage(char *proc_str)
 	  "\tCalculate the convex polygon (hull) enclosing a domain.\n"
 	  "\tFor 3D objects the convex polygons are calculated for\n"
 	  "\teach plane and therefore do not necessarily corrspond to\n"
-	  "\tthe 3D convex hull. Options are:\n"
-	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\tthe 3D convex hull.\n"
+	  "Version: %s\n"
+	  "Options:\n"
+	  "\t  -h        help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  
@@ -114,9 +111,8 @@ int main(int	argc,
 
   WlzObject	*obj, *newobj;
   FILE		*inFile;
-  char 		optList[] = "hv";
+  char 		optList[] = "h";
   int		option;
-  int		verboseFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
     
@@ -125,11 +121,6 @@ int main(int	argc,
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
-
-    case 'v':
-      verboseFlg = 1;
-      break;
-
     case 'h':
     default:
       usage(argv[0]);

@@ -1,37 +1,59 @@
-/************************************************************************
-* Project:      Java Woolz
-* Title:        WlzJavaValue.c
-* Date:         August 1999
-* Purpose:      Value handling functions for the C side of Java Woolz.
-* Copyright:	1997 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Maintenance:	Log changes below, with most recent at top of list.
-* @author       Bill Hill (bill@hgu.mrc.ac.uk)
-* @version 	MRC HGU %I%, %G%
-************************************************************************/
+#if defined(__GNUC__)
+#ident "University of Edinburgh $Id$"
+#else
+static char _WlzJavaValue_c[] = "University of Edinburgh $Id$";
+#endif
+/*!
+* \file         WlzJavaValue.c
+* \author       Bill Hill
+* \date         August 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Value handling functions for the C side of Java Woolz.
+* \ingroup	JWlz
+*/
 #include <WlzJava.h>
 
-/************************************************************************
-* Function:	WlzJavaValueGet						*
-* Returns:	jlong:			The value held in the given 	*
-*					Java object.			*
-* Purpose:	Returns the value held by the given Woolz Java object.	*
-* Global refs:	-							*
-* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.	*
-*		char *cObjName:		The Java woolz C object class	*
-*					string.				*
-*		char *jObjName:		The Java woolz Java object	*
-*					class string.			*
-*		char *jniObjName:	The Java woolz JNI object	*
-*					class string.			*
-*		int idrCnt:		Indirection count (ie 1 for *,	*
-*					2 for **, ...).			*
-*		int pKey:		Parameter key.			*
-*		jobject jWObj:		The Java Woolz object.		*
-************************************************************************/
+/*!
+* \return	The value held in the given Java object.	
+* \ingroup	JWlz
+* \brief	Returns the value held by the given Woolz Java object.
+* \param	jEnv			Given JNI environment pointer.
+* \param	cObjName		The Java woolz C object class string.
+* \param	jObjName		The Java woolz Java object class
+* 					string.
+* \param	jniObjName		The Java woolz JNI object class string.
+* \param	idrCnt			Indirection count (ie 1 for *, 2 for
+* 					**, ...).
+* \param	pKey			Parameter key.
+* \param	jWObj			The Java Woolz object.
+*/
 jlong 		WlzJavaValueGet(JNIEnv *jEnv,
 				char *cObjName,
 				char *jObjName,
@@ -290,25 +312,22 @@ jlong 		WlzJavaValueGet(JNIEnv *jEnv,
   return(rtnVal);
 }
 
-/************************************************************************
-* Function:	WlzJavaValueWrap					*
-* Returns:	jobject:		New Java object.		*
-* Purpose:	Wraps up the given value to create a new Java Woolz	*
-*		object of the required class.				*
-* Global refs:	-							*
-* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.	*
-*		char *cObjName:		The Java woolz object class	*
-*					string.				*
-*               char *jObjName:         The Java woolz Java object      *
-*                                       class string.                   *
-*               char *jniObjName:       The Java woolz JNI object       *
-*                                       class string.                   *
-*		int idrCnt:		Indirection count (ie 1 for *,	*
-*					2 for **, ...).			*
-*		int pKey:		Parameter key.			*
-*		long val:		Woolz value to be wrapped up	*
-*					into a Java object.		*
-************************************************************************/
+/*!
+* \return	New Java object.	
+* \ingroup	JWlz
+* \brief	Wraps up the given value to create a new Java Woolz object of
+* 		the required class.
+* \param	jEnv			Given JNI environment pointer.
+* \param	cObjName		The Java woolz object class string.
+* \param	jObjName		The Java woolz Java object class
+* 					string.
+* \param	jniObjName		The Java woolz JNI object class string.
+* \param	idrCnt			Indirection count (ie 1 for *, 2 for
+* 					**, ...).
+* \param	pKey			Parameter key.
+* \param	val			Woolz value to be wrapped up into a
+* 					Java object.
+*/
 jobject 	WlzJavaValueWrap(JNIEnv *jEnv,
 				 char *cObjName,
 				 char *jObjName,
@@ -502,24 +521,21 @@ jobject 	WlzJavaValueWrap(JNIEnv *jEnv,
   return(rtnJObj);
 }
 
-/************************************************************************
-* Function:	WlzJavaValueSet						*
-* Returns:	void							*
-* Purpose:	Sets the given value in a Java object for return to	*
-*		the Java side of th JNI.				*
-* Global refs:	-							*
-* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.	*
-*		jobjectArray dstJA:	Destination Java array.		*
-*		char *cObjName:		The type of the value to set.	*
-*               char *jObjName:         The Java woolz Java object      *
-*                                       class string.                   *
-*               char *jniObjName:       The Java woolz JNI object       *
-*                                       class string.                   *
-*		int idrCnt:		Indirection count (ie 1 for *,	*
-*					2 for **, ...).			*
-*		int pKey:		Parameter key.			*
-*		long val:		Value to be set.		*
-************************************************************************/
+/*!
+* \ingroup	JWlz
+* \brief	Sets the given value in a Java object for return to the Java
+* 		side of th JNI.
+* \param	jEnv			Given JNI environment pointer.
+* \param	dstJObj			Destination Java array.
+* \param	cObjName		The type of the value to set.
+* \param	jObjName		The Java woolz Java object class
+* 					string.
+* \param	jniObjName		The Java woolz JNI object class string.
+* \param	idrCnt			Indirection count (ie 1 for *,  for
+* 					**, ...).
+* \param	pKey			Parameter key.
+* \param	val			Value to be set.
+*/
 void		WlzJavaValueSet(JNIEnv *jEnv, jobjectArray dstJObj,
 				char *cObjName,
 				char *jObjName,
@@ -679,15 +695,13 @@ void		WlzJavaValueSet(JNIEnv *jEnv, jobjectArray dstJObj,
   }
 }
 
-/************************************************************************
-* Function:	WlzJavaValueFree					*
-* Returns:	void							*
-* Purpose:	Free's a temporary data structure.			*
-* Global refs:	-							*
-* Parameters:	void *dSP:		Data structure pointer.		*
-*		int dSKey:		Data structure identification.	*
-*		jboolean isCopy:	Coppy flag for JNI functions.	*
-************************************************************************/
+/*!
+* \ingroup	JWlz
+* \brief	Free's a temporary data structure.
+* \param	dSP			Data structure pointer.
+* \param	dSKey			Data structure identification.
+* \param	isCopy			Coppy flag for JNI functions.
+*/
 void		WlzJavaValueFree(void *dSP, int dSKey, jboolean isCopy)
 {
   if(isCopy && dSP)

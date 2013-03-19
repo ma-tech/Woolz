@@ -109,7 +109,8 @@ static void usage(char *proc_str)
 	  "Usage:\t%s [-t#] [-h] [<input file>]\n"
 	  "\tConvert the pixel type of a grey-level woolz object\n"
 	  "\twriting the new object to standard output\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -t#       Output pixel type:\n"
 	  "\t            # = %d: integer\n"
 	  "\t                %d: short\n"
@@ -119,7 +120,9 @@ static void usage(char *proc_str)
 	  "\t                %d: rgba\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "",
-	  proc_str, WLZ_GREY_INT, WLZ_GREY_SHORT, WLZ_GREY_UBYTE,
+	  proc_str,
+	  WlzVersion(),
+	  WLZ_GREY_INT, WLZ_GREY_SHORT, WLZ_GREY_UBYTE,
 	  WLZ_GREY_FLOAT, WLZ_GREY_DOUBLE, WLZ_GREY_RGBA);
   return;
 }

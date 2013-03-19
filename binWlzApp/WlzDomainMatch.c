@@ -173,11 +173,12 @@ static void usage(
   char	*str)
 {
   fprintf(stderr,
-	  "Usage:\n"
+	  "Usage: "
 	  "%s -d <delta> -t <type> -m <matrix-file> -h -v \n"
 	  "\tRead in domains from stdin and calculate the match value\n"
 	  "\taccording to type, writing to stdout.\n"
-	  "Arguments:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t-d#        delta value (default 0.01), must be < 1\n"
 	  "\t-m<file>   input the name of a file containing the mixing\n"
 	  "\t           and contrib matrices - csv format\n"
@@ -190,9 +191,9 @@ static void usage(
 	  "\t               the ratio of type 4 matchs to each domain. For this\n"
 	  "\t               option a 3rd object is required in the input stream.\n"
 	  "\t-h         print this message\n"
-	  "\t-v         verbose operation\n"
-	  "\n",
-	  str);
+	  "\t-v         verbose operation\n",
+	  str,
+	  WlzVersion());
 
   return;
 }
@@ -244,7 +245,7 @@ double WlzMixtureValue(
   double	**contrib,
   WlzErrorNum	*dstErr)
 {
-  double	val, con;
+  double	val = 0.0, con = 0.0;
   WlzObject	*tmpObj, *tmpObj1, *tmpObj2;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;

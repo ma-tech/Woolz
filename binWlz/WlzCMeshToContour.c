@@ -209,9 +209,12 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-d #] [-o<output object>] [<input object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Help, prints usage message.\n"
     "  -d  Apply given scale factor to mesh displacements if they exist.\n"

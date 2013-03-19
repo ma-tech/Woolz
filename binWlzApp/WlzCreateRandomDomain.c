@@ -67,10 +67,6 @@ WlzCreateRandomDomain
     <td><b>-h</b></td>
     <td>Help - print help message</td>
   </tr>
-  <tr>
-    <td><b>-v</b></td>
-    <td>Verbose operation</td>
-  </tr>
 </table>
 
 \par Description
@@ -102,14 +98,16 @@ static void usage(
   char	*str)
 {
   fprintf(stderr,
-	  "Usage:\n"
-	  "%s -n <num domains> -r <radius> -t <type> -h -v  [<model-file>]\n"
-	  "\tRead in model domain from file or stdin and generate a set of random\n"
-	  "\tdomains within the model. <num domains> domains are created\n"
-	  "\taccording to type and written to stdout.If domain sequence is\n"
-	  "\tselected then a series of incrementing domains will be generated,\n"
-	  "\twith each step a random selctio of pixels from the remaining set.\n"
-	  "Arguments:\n"
+	  "Usage: %s -n <num domains> -r <radius> -t <type> -h\n"
+	  "                             [<model-file>]\n"
+	  "\tRead in model domain from file or stdin and generate a set of\n"
+	  "\trandom domains within the model. <num domains> domains are\n"
+	  "\tcreated according to type and written to stdout.If domain\n"
+	  "\tsequence is selected then a series of incrementing domains will\n"
+	  "\tbe generated, with each step a random selctio of pixels from\n"
+	  "\tthe remaining set.\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t-m         generate a regular mesh of square domains with size\n"
 	  "\t           defined by the radius and type, enough domains will\n"
 	  "\t           be generated to cover the model.\n"
@@ -119,10 +117,9 @@ static void usage(
 	  "\t-t#        type of random domain default 1\n"
 	  "\t             = 1 - circular domain (on a single plane in 3D)\n"
 	  "\t             = 2 - spherical domain\n"
-	  "\t-h         print this message\n"
-	  "\t-v         verbose operation\n"
-	  "\n",
-	  str);
+	  "\t-h         print this message\n",
+	  str,
+	  WlzVersion());
 
   return;
 }
@@ -171,12 +168,11 @@ int main(
   char  **argv)
 {
   FILE		*inFile;
-  char 		optList[] = "mn:r:st:hv";
+  char 		optList[] = "mn:r:st:h";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		meshFlg=0;
   int		seqFlg=0;
-  int		verboseFlg=0;
   int		type=1;
   int		numDomains=100, domainCount;
   double	radius=5.0;
@@ -221,10 +217,6 @@ int main(
 
     case 't':
       type = atoi(optarg);
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':
@@ -429,7 +421,7 @@ int main(
     while( domainCount < numDomains ){
       long	xRan, yRan, zRan;
       double	xp, yp, zp;
-      int		x, y, z;
+      int		x = 0, y = 0, z = 0;
       xRan = random();
       yRan = random();
       zRan = random();

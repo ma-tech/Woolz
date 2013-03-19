@@ -207,6 +207,10 @@ int		main(int argc, char *argv[])
   {
       (void )fprintf(stderr,
       "Usage: %s [-h] [-o<output transform>] [<input transform>]\n"
+      "Version: %s\n"
+      "Options:\n"
+      "  -h  Help, prints usage message.\n"
+      "  -o  Output transform.\n"
       "Reads a constrained mesh transform object, inverts it and then\n"
       "writes out the inverted transform.\n"
       "Unless given input and output files are read from the standard input\n"
@@ -215,7 +219,9 @@ int		main(int argc, char *argv[])
       "  %s -o out.wlz in.wlz\n"
       "Reads a constrained mesh transform read from in.wlz and writes the\n"
       "inverted transform to out.wlz\n",
-      argv[0],argv[0]);
+      argv[0],
+      WlzVersion(),
+      argv[0]);
   }
   return(!ok);
 }

@@ -49,7 +49,7 @@ static char _WlzTransposePlanes_c[] = "University of Edinburgh $Id$";
 WlzTransposePlanes - Transposes the planes of 3D Woolz objects.
 \par Synopsis
 \verbatim
-WlzTransposePlanes [-o<offset>] [-h] [-v] [<input object file>]
+WlzTransposePlanes [-o<offset>] [-h] [<input object file>]
 
 \endverbatim
 \par Options
@@ -61,10 +61,6 @@ WlzTransposePlanes [-o<offset>] [-h] [-v] [<input object file>]
   <tr>
     <td><b>-h</b></td>
     <td>Help - print help message</td>
-  </tr>
-  <tr>
-    <td><b>-v</b></td>
-    <td>Verbose operation</td>
   </tr>
 </table>
 By  default  the  input  object is read from the standard input and the
@@ -117,16 +113,16 @@ static WlzObject *WlzTransposePlanes(WlzObject	*obj,
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-o#] [-h] [-v] [<input file>]\n"
+	  "Usage:\t%s [-o#] [-h] [<input file>]\n"
 	  "\tTranspose planes in the 3D object with respect\n"
 	  "\tto the offset so that p' = offset - p\n"
 	  "\tThis is equivalent to reflection about offset/2\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -o#       offset(default plane1+lastpl)\n"
-	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -h        help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  
@@ -138,10 +134,9 @@ int main(int	argc,
   FILE		*inFile;
   int		option;
   char 		optList[] = "ho:v";
-  int		offset;
-  int		offsetFlg;
+  int		offset = 0;
+  int		offsetFlg = 0;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  int		verboseFlg=0;
     
   /* set the defaults */
   offsetFlg = 0;
@@ -154,10 +149,6 @@ int main(int	argc,
     case 'o':
       offset = atoi(optarg);
       offsetFlg = 1;
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

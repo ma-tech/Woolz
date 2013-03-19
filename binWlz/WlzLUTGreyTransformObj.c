@@ -622,12 +622,15 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-o<output object>] [-h]\n"
     "         [-d] [-i] [-A] [-N] [-T] [-f E|G|I|L|S] [-g i|r] [-G i|s|u|r]\n"
     "         [-l#] [-u#] [-L#] [-U#] [-p#] [-q#] [-t <input LUT>]\n"
     "         [<input object>]\n" 
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
     "  -d  Dither grey values.\n"

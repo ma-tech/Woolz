@@ -688,10 +688,13 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-c#] [-g#] [-G#] [-h] [-m#] [-n#] [-N#]\n"
     "       [-o<output object>] [-r#]] [-x#] [<input object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -c  Connectivity: 4, 6, 8, 18 or 26 connected (default 8 for 2D\n"
     "      domains and 26 for 3D domains).\n"

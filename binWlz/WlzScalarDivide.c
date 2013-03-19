@@ -50,7 +50,7 @@ static char _WlzScalarDivide_c[] = "University of Edinburgh $Id$";
 WlzScalarDivide - Divide the pixel values of a grey-level object.
 \par Synopsis
 \verbatim
-WlzScalarDivide -v#] [-h] [<input file>]
+WlzScalarDivide [-v#] [-h] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -99,11 +99,12 @@ static void usage(char *proc_str)
 	  "Usage:\t%s [-v#] [-h] [<input file>]\n"
 	  "\tDivide the pixel values of a grey-level woolz object\n"
 	  "\tby a scalar value\n"
-	  "\tOptions are:\n"
+          "Version: %s\n"
+	  "Options:\n"
 	  "\t  -v#       divisor value (0 is an error), default 1.0:\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "",
-	  proc_str);
+	  "\t  -h        Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

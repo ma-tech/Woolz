@@ -402,6 +402,8 @@ int		main(int argc, char *argv[])
     "Usage: %s [-h] [-o<output file>] [-f <ref object>]\n"
     "                          [-m] [-r #] [-i] [-u]\n"
     "                          [<input objects>]\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -h  Output this usage message.\n"
     "  -o  Output file name, default is the standard output.\n"
     "  -f  Reference object.\n"
@@ -438,7 +440,9 @@ int		main(int argc, char *argv[])
     "to create a new objectct, the domain of which is the intersection of\n"
     "the domains of the input objects and the values of which values are \n"
     "the median of the input object values.\n",
-    argv[0], argv[0]);
+    argv[0],
+    WlzVersion(),
+    argv[0]);
   }
   return(!ok);
 }

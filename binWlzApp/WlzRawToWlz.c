@@ -130,9 +130,9 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-b] [-d#] [-l] [-o#,#,#] "
-	  "[-h] [-v] <width> <height> [planes] <type> [<raw-data file>]\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-b] [-d#] [-l] [-o#,#,#] [-h] [-v]\n"
+	  "\t\t<width> <height> [planes] <type> [<raw-data file>]\n"
 	  "\tConvert the given raw data to a woolz image.\n"
 	  "\tInput can be from standard input, the width,\n"
 	  "\theight and type are mandatory parameters.\n"
@@ -149,16 +149,17 @@ static void usage(char *proc_str)
 	  "\tThe output type will be a suittable woolz grey-type\n"
 	  "\tselected to hold the data if possible - unsigned int\n"
 	  "\tmay result in loss of data\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -b                little-endian byte ordering (default big-endian)\n"
 	  "\t  -d<dimensions>    image dimensions (2 or 3)(default 2)\n"
 	  "\t                    If d=3 then planes must be specified\n"
 	  "\t  -l                little-endian byte ordering\n"
 	  "\t  -oxoff,yoff,zoff  x, y, z offsets (default 0,0,0)\n"
 	  "\t  -h                Help - prints this usage message\n"
-	  "\t  -v                verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v                verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -183,7 +184,7 @@ int main(int	argc,
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		byteOrderFlg=1;
   WlzGreyType	newpixtype;
-  int		verboseFlg=0;
+  /* int	verboseFlg=0; */
   int		width, height, type, depth, wlzDepth;
   InputDataU	data;
   void		***data3D;
@@ -239,7 +240,7 @@ int main(int	argc,
       break;
 
     case 'v':
-      verboseFlg = 1;
+      /* verboseFlg = 1; */
       break;
 
     case 'h':

@@ -61,13 +61,13 @@ WlzObject *WlzUnion3d(int	n,
 		      WlzErrorNum *dstErr)
 {
   /* local variables */
-  WlzObject 		**objlist, *newobj;
-  WlzPlaneDomain 	*pdom, *newpdom;
-  WlzVoxelValues 	*voxtab, *newvoxtab;
-  WlzDomain 		*domains, domain;
-  WlzValues	 	*values, vals;
+  WlzObject 		**objlist = NULL, *newobj = NULL;
+  WlzPlaneDomain 	*pdom = NULL, *newpdom = NULL;
+  WlzVoxelValues 	*voxtab = NULL, *newvoxtab = NULL;
+  WlzDomain 		*domains = NULL, domain;
+  WlzValues	 	*values = NULL, vals;
   int 			i, p, np, min_plane, max_plane;
-  WlzErrorNum		errNum=WLZ_ERR_NONE;
+  WlzErrorNum		errNum = WLZ_ERR_NONE;
 
     /* all objects have been checked by WlzUnionN therefore do not need
        checking here. This routine should not be used except through

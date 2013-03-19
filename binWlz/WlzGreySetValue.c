@@ -49,7 +49,7 @@ static char _WlzGreySetValue_c[] = "University of Edinburgh $Id$";
 WlzGreySetValue - sets the grey values of the object to a specified value.
 \par Synopsis
 \verbatim
-WlzGreySetValue [-c #,#,#] [-g#] [-h] [-v] [<input mask> [<input obj>]]
+WlzGreySetValue [-c #,#,#] [-g#] [-h] [<input mask> [<input obj>]]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -64,10 +64,6 @@ WlzGreySetValue [-c #,#,#] [-g#] [-h] [-v] [<input mask> [<input obj>]]
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
 </table>
 \par Description
@@ -109,18 +105,18 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-c#,#,#] [-g#] [-h] [-v]\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-c#,#,#] [-g#] [-h]\n"
 	  "\t  [<input mask> [<input obj>]]\n"
 	  "\tSet the grey values of the object to the input value.\n"
 	  "\tA valuetable will be attached if required.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -c#,#,#   the new colour value r,g,b - default 0,0,0\n"
 	  "\t  -g#       the new grey value - default 0\n"
-	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -h        help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  
@@ -132,14 +128,14 @@ int main(int	argc,
   WlzDomain	*domains;
   WlzValues	values, *valuess;
   FILE		*inFile;
-  char 		optList[] = "c:g:hv";
+  char 		optList[] = "c:g:h";
   int		igv,
 		pCnt,
   		option;
   WlzPixelV	greyVal;
   WlzPixelV	bckgrnd;
   WlzObjectType	type;
-  int		verboseFlg=0, p, colFlg=0;
+  int		p, colFlg=0;
   int		red=0, green=0, blue=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
@@ -170,10 +166,6 @@ int main(int	argc,
 	return 1;
       }
       colFlg = 0;
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

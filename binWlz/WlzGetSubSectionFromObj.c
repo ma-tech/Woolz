@@ -86,7 +86,7 @@ int		main(int argc, char *argv[])
   ok = 1;
   opterr = 0;
   errMsg = "";
-  inFileStr = inRefFileStr = fileStrDef;
+  inFileStr = inRefFileStr = outFileStr = fileStrDef;
   if((view = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) == NULL)
   {
     ok = 0;
@@ -253,14 +253,17 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-a<pitch,yaw,roll>] [-f <fx,fy,fz>]\n"
     "                [-d <dist>] [-h] [-m <mode>] [-u<ux,uy,uz>]\n"
     "                [-o<out obj>] [-r<ref obj>] <in obj>\n"
     "Creates a new 2D object which is a section cut from the input object\n"
     "within the domain of the reference object.\n"
-    "Options are:\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
+    "Options:\n"
     "  -a  Viewing angles: pitch (phi), yaw (theta) and roll (beta),\n"
     "      default 0.0,0.0,0.0 (all angles in degrees).\n"
     "  -f  Fixed point position, default 0.0,0.0,0.0.\n"

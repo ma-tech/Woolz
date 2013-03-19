@@ -218,7 +218,6 @@ int             main(int argc, char **argv)
 		ok = 1,
 		usage = 0;
   WlzDVertex2	org;
-  WlzDVertex3	upVector;
   WlzThreeDViewStruct *view = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*dwnObj = NULL,
@@ -237,7 +236,6 @@ int             main(int argc, char **argv)
   opterr = 0;
   errMsg = errMsg0 = "";
   org.vtX = org.vtY = 0.0;
-  upVector.vtX = 0.0; upVector.vtY = 0.0; upVector.vtZ = 1.0;
   inFileStr = inFileStrDef;
   outFileStr = outFileStrDef;
   if((view = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) == NULL)
@@ -479,7 +477,7 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-2] [-a<pitch,yaw,roll>] [-f <fx,fy,fz>]\n"
     "                 [-d <dist> [-b <view bib file>]\n"
@@ -487,6 +485,9 @@ int             main(int argc, char **argv)
     "                 [-g <ox,oy,oz>] [-h] [-o<output>]\n"
     "                 [-r <ref object>]\n"
     "                 [-s <cmd str>] [<cmd str file>>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -2  Ignore the view struct and keep as a 2D object.\n"
     "  -a  Viewing angles: pitch (phi), yaw (theta) and roll (zeta),\n"

@@ -43,9 +43,11 @@ static char _WlzBndProto_h[] = "University of Edinburgh $Id$";
 */
 
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * Wlz2DContains.c
@@ -148,4 +150,11 @@ extern const char 		*WlzGetPropName(
 				  WlzObject *obj);
 extern int 			WlzDestroyObj(
 				  WlzObject *obj);
+
+#ifndef WLZ_EXT_BIND
+#ifdef  __cplusplus
+}
+#endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
+
 #endif	/* !WLZBND_PROTO_H Don't put anything after this line */

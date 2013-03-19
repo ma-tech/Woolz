@@ -3306,7 +3306,7 @@ static void GetTrackedSamplePointsFromOneLoopOfGM( WlzGMModel  *gM2,
         AlcKDTNode         *node;
 	AlcErrno            errNo = ALC_ER_NONE;
         int                 LoopIndex[NumberToTrack];
-        int                 ShellIndex[NumberToTrack];
+        /* int              ShellIndex[NumberToTrack]; unused */
         int                 indexStr[NumberToTrack];
 
         int                *GroupNum, *FixNumForEachGroup=0;
@@ -3361,7 +3361,7 @@ static void GetTrackedSamplePointsFromOneLoopOfGM( WlzGMModel  *gM2,
 	  if(errNum == WLZ_ERR_NONE)
 	  {
             LoopIndex[i]  = nLoop;
-	    ShellIndex[i] = nShell;
+	    /* ShellIndex[i] = nShell; unused */
 	  }
 
 	}
@@ -5040,24 +5040,25 @@ static void RecalInOutPBy3DNorm(
 				 WlzDVertex3   *OutPoints,     
 				 int           *nOfVOutTheS )
 {
-   int i, k;
+   int i;
    int nn,mm,ll;
-   int l, delta, halfDelta, count, num, lastline, lines1, lines2, nW, nt;
+   /* int l, k, num, delta, halfDelta, lastline; unused */
+   int count, lines1, lines2, nW, nt;
    int jumpLines, mid, last;
    WlzDVertex3 p[4], p1[3], p2[3], normal, inOrOut[3][2], InStand[100];
    WlzDVertex3 tpv1[NumberToTrack*numOf2DWlzFiles], tpv2[numOf2DWlzFiles], tpv3[numOf2DWlzFiles];
    
    double volume;
-        num       =  3;
-	delta     =  NumberToTrack/num;
+        /* num       =  3; unused */
+	/* delta     =  NumberToTrack/num; unused */
 	mid       =  NumberToTrack/2;
 	last      =  NumberToTrack - 1;
-	halfDelta =  delta/2;
-	k         =  NumberToTrack/num;
-	l         =  NumberToTrack - delta - 1;
+	/* halfDelta =  delta/2; unused */
+	/* k         =  NumberToTrack/num; unused */
+	/* l         =  NumberToTrack - delta - 1; unused */
 	count     =  0;
 	jumpLines =  3; /* numOf2DWlzFiles/4; */
-        lastline  =  numOf2DWlzFiles - jumpLines - 1;
+        /* lastline  =  numOf2DWlzFiles - jumpLines - 1; unused */
 	lines1    =  (numOf2DWlzFiles-1)/2;
 
         /*  reorganize it: */
@@ -5715,7 +5716,8 @@ static void	outputSurfaceByPatch(int j_shell,
      double **u=NULL,  **v=NULL,   *w1=NULL,   chisq, **fittedx=NULL, **fittedy=NULL;
      double **uA;
      double **orderedSurfaceX=NULL, **orderedSurfaceY=NULL, *inx=NULL;
-     double  *Esx, *Esy=NULL,  *Efx, *Efy;
+     double  *Esy=NULL;
+     /* double  *Esx, *Efx, *Efy; unused */
      double   x0, x1, y0, y1;
 
      char    fullnameS[90];
@@ -5794,10 +5796,10 @@ static void	outputSurfaceByPatch(int j_shell,
 
              /* allocate memory for edge (Ex,Ey) */
 
-             Efx    = vector(1, nOfFiles); /*  used to stored sampled points */
-             Efy    = vector(1, nOfFiles);
+             /* Efx = vector(1, nOfFiles); unused to stored sampled points */
+             /* Efy = vector(1, nOfFiles); unused */
 
-             Esx    = vector(1, nOfFiles); /*  used to stored sampled points */
+             /* Esx   = vector(1, nOfFiles); unused to stored sampled points */
              Esy    = vector(1, nOfFiles);
 	     inx    = vector(1, nOfFiles);
 

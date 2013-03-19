@@ -454,9 +454,9 @@ int		main(int argc, char *argv[])
   {
       fprintf(stderr,
             "Usage: %s [-h] [-t<input transfrom>] [-i] [-N] \n"
-            "  [-x<interpolation value> [-o<output woolz file>]] | \n"
-            "  [-s<number of interpolations> [-b <output body>] \n"
-            "    [-e <output extension>]] ] [<input object>]\n"
+            "        [-x<interpolation value> [-o<output woolz file>]] | \n"
+            "        [-s<number of interpolations> [-b <output body>] \n"
+            "        [-e <output extension>]] ] [<input object>]\n"
             "Reads a constrained mesh transform object, applies it\n"
             "to objects generating output transformed objects.\n"
             "Partly transformed object can be generated if interpolation\n"
@@ -465,6 +465,7 @@ int		main(int argc, char *argv[])
 	    "of transformation is computed if the number of interpolations\n"
 	    "is given. For this, the output base filename and its extension\n"
 	    "are must be supplied.\n"
+	    "Version: %s\n"
             "Options are:\n"
             "  -h  Help, prints this usage message.\n"
             "  -t  Transform object.\n"
@@ -486,7 +487,10 @@ int		main(int argc, char *argv[])
             "Applies the transform read from transform.wlz to\n"
             "the in.wlz and generates out_000000.wlz ... out_000005.wlz\n"
             "with interpolation values 0, 0.2, ... 1.0\n.",
-            argv[0], argv[0],argv[0]);
+            argv[0],
+	    WlzVersion(),
+	    argv[0],
+	    argv[0]);
   }
   return(!ok);
 }

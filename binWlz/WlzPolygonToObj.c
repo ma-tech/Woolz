@@ -49,17 +49,13 @@ static char _WlzPolygonToObj_c[] = "University of Edinburgh $Id$";
 WlzPolygonToObj  -  converts a polygon object to a domain object.
 \par Synopsis
 \verbatim
-WlzPolygonToObj  [-h] [-v] [-t#] [<input file>]
+WlzPolygonToObj  [-h] [-t#] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
   <tr> 
     <td><b>-t</b></td>
@@ -101,18 +97,20 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-h] [-v] [-t#] [<input file>]\n"
+	  "Usage:\t%s [-h] [-t#] [<input file>]\n"
 	  "\tConvert a 2D or 3D polygon woolz object\n"
 	  "\tto the corresponding domain object\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -t#       Polygon fill-mode:\n"
 	  "\t            # = %d: simple fill (default)\n"
 	  "\t                %d: even-odd fill\n"
 	  "\t                %d: vertex-fill\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
-	  "",
-	  proc_str, WLZ_SIMPLE_FILL, WLZ_EVEN_ODD_FILL,
+	  "\t  -h        Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion(),
+	  WLZ_SIMPLE_FILL,
+	  WLZ_EVEN_ODD_FILL,
 	  WLZ_VERTEX_FILL);
   return;
 }
@@ -123,9 +121,8 @@ int main(int	argc,
 
   WlzObject	*obj, *nobj;
   FILE		*inFile;
-  char 		optList[] = "f:hv";
+  char 		optList[] = "f:h";
   int		option;
-  int		verboseFlg=0;
   WlzPolyFillMode	fillMode=WLZ_SIMPLE_FILL;
     
   /* read the argument list and check for an input file */
@@ -146,10 +143,6 @@ int main(int	argc,
         usage(argv[0]);
         return 1;
       }
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

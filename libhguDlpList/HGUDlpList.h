@@ -42,9 +42,11 @@ static char _HGUDlpList_h[] = "University of Edinburgh $Id$";
 * \ingroup	hguDlpList
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \enum		_HGUDlpListDirection
@@ -182,8 +184,10 @@ extern HGUDlpListItem		*HGUDlpListNth(
 				  int num);
 #endif /* HGUDLPLIST_C */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif /* HGUDLPLIST_H */

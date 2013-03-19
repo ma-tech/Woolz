@@ -108,7 +108,7 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
 {
   int 		idP,
 		lastP,
-		dim,
+		dim = 0,
   		notDone = 1;
   double	scale;
   WlzObject	*tmpObj,
@@ -125,7 +125,7 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
   		bgdV;
   WlzValues 	*difVals;
   WlzAffineTransform *tr = NULL;
-  WlzConnectType con;
+  WlzConnectType con = WLZ_0_CONNECTED;
   WlzObjectType dstGType;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzValues 	difVal,

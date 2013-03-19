@@ -83,7 +83,7 @@ WlzCelCmpFeatures [-b] [-c<col 0>[,<col 1>[,col 2]]] [-C] [-d<debug mask>]
 	See WlzRGBChannelRatio(1).</td>
   </tr>
   <tr> 
-    td><b>-C</b></td>
+    <td><b>-C</b></td>
     <td>Invert cell image values.</td>
   </tr>
   <tr> 
@@ -108,7 +108,7 @@ WlzCelCmpFeatures [-b] [-c<col 0>[,<col 1>[,col 2]]] [-C] [-d<debug mask>]
         by a single letter as for the cells segmentation.
   </tr>
   <tr> 
-    td><b>-L</b></td>
+    <td><b>-L</b></td>
     <td>Invert clump image values.</td>
   </tr>
   <tr> 
@@ -293,8 +293,6 @@ int		main(int argc, char *argv[])
 		*tObj1 = NULL;
   WlzCompoundArray *celCAObj = NULL,
   		*cmpCAObj = NULL;
-  WlzPixelV	cmpC,
-  		celC;
   char		*iFileStr,
   		*iFilePath = NULL,
 		*iFileBody = NULL,
@@ -325,9 +323,7 @@ int		main(int argc, char *argv[])
   		tExtra = 0.00;
   const	WlzEffFormat defFileFmt = WLZEFF_FORMAT_WLZ;
 
-  cmpC.type = celC.type = WLZ_GREY_RGBA;
-  WLZ_RGBA_RGBA_SET(cmpC.v.rgbv, 255, 0, 0, 255);
-  WLZ_RGBA_RGBA_SET(celC.v.rgbv, 0, 0, 255, 255);
+  featSz.vtX = featSz.vtY = 0;
   /* Parse the argument list and check for input files. */
   opterr = 0;
   iFileStr = fileDef;
@@ -472,7 +468,7 @@ int		main(int argc, char *argv[])
       (void )fprintf(stderr, "%s DBG Reading input object from file %s\n",
                      argv[0], buffer);
     }
-    if((iObj = WlzAssignObject(WlzEffReadObj(NULL, buffer, iFileFmt, 0,
+    if((iObj = WlzAssignObject(WlzEffReadObj(NULL, buffer, iFileFmt, 0, 0, 0,
                                               &errNum), NULL)) == NULL)
     {
       ok = 0;
@@ -765,7 +761,74 @@ int		main(int argc, char *argv[])
   (void )AlcDouble2Free(feat);
   if(usage)
   {
-    (void )fprintf(stderr, "%s help TODO\n", argv[0]);
+    (void )fprintf(stderr, "Usage: %s%s%s%s%s%s",
+      argv[0],
+      " [-b] [-c<col 0>[,<col 1>[,col 2]]] [-C] [-h]\n"
+      "                         [-d<debug mask>] [-f<input image format>]\n"
+      "                         [-l<col 0>[,<col 1>[,<col 2>]]] [-L] [-n#]\n"
+      "                         [-o<out file>] [-s<seg file base>]\n"
+      "                         [-S<seg file format>] [-v] [<input image>]\n"
+      "Version: ",
+      WlzVersion(),
+      "\n"
+      "Options:\n"
+      "  -b  Treats the segmented cells and clumps as binary objects,\n"
+      "      ignoring their image values.\n"
+      "  -c  Colour space for segmenting the cells. The colour is specified\n"
+      "      by a single letter which is one of - *r*ed, *g*reen,\n"
+      "      *b*lue, *y*ellow, *m*agenta, *c*yan, *h*ue, *s*aturation,\n"
+      "      *v*alue or gr*e*y.\n"
+      "      All processing is done on single (grey) valued images. Two\n"
+      "      methods may be used to get the grey valued image from the\n"
+      "      input image: If one colour is specified then that colour\n"
+      "      space is used to construct a grey valued image, if a colour\n"
+      "      pair is given then the ratio of the first to second is used,\n"
+      "      alternatively if a colour triple is given the first two are\n"
+      "      used for the ratio and the third as a multiplier.\n"
+      "      See WlzRGBChannelRatio(1).\n"
+      "  -C  Invert cell image values.\n"
+      "  -d  Probably only useful for debugging, this is a bit mask which\n"
+      "      controls the debug output. Mask bit 1 set for text output and\n"
+      "      mask bit 2 set for object output. The default is no debug\n"
+      "      output.\n"
+      "  -f  Input image format.\n"
+      "  -h  Help - prints this usage message.\n"
+      "  -l  Colour space for segmenting the clumps. The colour is specified\n"
+      "      by a single letter as for the cells segmentation.\n"
+      "  -L  Invert clump image values.\n"
+      "  -n  Number of angular increments to use (default 360).\n"
+      "  -o  Output file for the feature values.\n"
+      "  -s  The segmentation output image base is used to provide a\n"
+      "      colorised image showing the segmentation for each segmented\n"
+      "      clump. Unless a file base is given no segmentation images are\n"
+      "      output.\n"
+      "  -S  Output colorised image format.\n"
+      "  -v  Verbose output.\n"
+      "Extracts domains for clumps and cells within clumps, both from within\n"
+      "the given image. The cells and clumps are used to compute numerical\n"
+      "features which are output to the given file. Colorised images showing\n"
+      "the segmentation may also be output if required.\n"
+      "The features computed are:\n"
+      "  The ratio of cell / clump areas.\n"
+      "  The ratio of clump minimum to maximum diameter.\n"
+      "  The centrality of the cells with respect to the clump, with the\n"
+      "  centrality c given by\n"
+      "    c = \\frac{\\sum_{i,j}{m_{i,j}(R_i - r_{i,j})}}\n"
+      "        {\\sum_{i,j}{m_{i,j}R}}\n"
+      "The image formats recognised are: jpg, tif and wlz.\n"
+      "By default the image is read from the standard input and the features\n"
+      "are output to the stanard output.\n"
+      "Example:\n"
+      "  ",
+      argv[0],
+      "  -b -c b,r -l r,g -s image-seg-.jpg -v image.jpg\n"
+      "Reads an image from the file image.jpg.\n"
+      "Segments clumps using the ratio of red to green and cells using the\n"
+      "ratio of blue to red.\n"
+      "For each clump an colorised image showing the segmentation is output\n"
+      "to files image-seg-000000.jpg, image-seg-000001.jpg, ....\n"
+      "The numerical features are preceded by column labels and output to\n"
+      "the standard output.\n");
   }
   return(!ok);
 }
@@ -1071,7 +1134,7 @@ static int	WlzCelCmpParseFilename(char **dstFPath, char **dstFBody,
 * 		the input onbject using colour channels, thresholding
 * 		and morphological operators.
 * \param	iObj			Input object.
-* \param	numC			Numerator (or only) clour channel.
+* \param	numC			Numerator (or only) colour channel.
 * \param	denC			Denominator colour channel (not
 * 					used if cRatio == 0).
 * \param	cCnt			Number of  colour channels that are
@@ -1571,7 +1634,7 @@ static WlzObject *WlzCelCmpColorise(WlzObject *gObj,
 				  WlzErrorNum *dstErr)
 {
   int		idN;
-  WlzObjectType	gTType;
+  WlzObjectType	gTType = WLZ_NULL;
   WlzObject	*cObj = NULL,
   		*tObj0 = NULL,
 		*tObj1 = NULL;

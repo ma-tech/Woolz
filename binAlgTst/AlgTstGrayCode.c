@@ -66,9 +66,7 @@ int             main(int argc, char **argv)
 		usage = 0,
 		flgInv = 0,
   		flgLL = 0;
-  AlgTstValue   p,
-  		m,
-		v;
+  AlgTstValue   v;
   const char	*optList = "hiln:";
 
   n = 16;
@@ -111,8 +109,6 @@ int             main(int argc, char **argv)
   }
   else
   {
-    m.l = (1 << (n + 1)) - 1;
-    p.l = ~(m.l);
     while(ok && (fscanf(stdin, "%Lu", &(v.l)) == 1))
     {
       if(flgInv)

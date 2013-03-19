@@ -575,12 +575,12 @@ static double	WlzCompThreshSmoothSplit(WlzObject *gObj,
 				  double smMin, double smMax,
 				  WlzErrorNum *dstErr)
 {
-  int		idx,
-		idM,
+  int		idM,
 		idT,
+		idX = 0,
   		nTroughs = 0;
   double 	sm,
-  		thr;
+  		thr = 0.0;
   int		*troughs = NULL;
   WlzGreyP	bins;
   WlzObject	*sObj;
@@ -592,20 +592,20 @@ static double	WlzCompThreshSmoothSplit(WlzObject *gObj,
   switch(gObj->domain.hist->type)
   {
     case WLZ_HISTOGRAMDOMAIN_INT:
-      for(idx = 1; idx < gObj->domain.hist->nBins; ++idx)
+      for(idX = 1; idX < gObj->domain.hist->nBins; ++idX)
       {
-	if(*(bins.inp + idx) > *(bins.inp + idM))
+	if(*(bins.inp + idX) > *(bins.inp + idM))
 	{
-	  idM = idx;
+	  idM = idX;
 	}
       }
       break;
     case WLZ_HISTOGRAMDOMAIN_FLOAT:
-      for(idx = 1; idx < gObj->domain.hist->nBins; ++idx)
+      for(idX = 1; idX < gObj->domain.hist->nBins; ++idX)
       {
-	if(*(bins.dbp + idx) > *(bins.dbp + idM))
+	if(*(bins.dbp + idX) > *(bins.dbp + idM))
 	{
-	  idM = idx;
+	  idM = idX;
 	}
       }
       break;
@@ -631,7 +631,7 @@ static double	WlzCompThreshSmoothSplit(WlzObject *gObj,
   {
     /* Select bin which has lowest ocupancy provided it is in a bin
      * before the histogram maximum. */
-    idx = troughs[0];
+    idX = troughs[0];
     for(idT = 1; idT < nTroughs; ++idT)
     {
       if((troughs[idT] > 0) && (troughs[idT] < idM))
@@ -639,15 +639,15 @@ static double	WlzCompThreshSmoothSplit(WlzObject *gObj,
 	switch(gObj->domain.hist->type)
 	{
 	  case WLZ_HISTOGRAMDOMAIN_INT:
-	    if(*(bins.inp + troughs[idT]) < *(bins.inp + idx))
+	    if(*(bins.inp + troughs[idT]) < *(bins.inp + idX))
 	    {
-	      idx = troughs[idT];
+	      idX = troughs[idT];
 	    }
 	    break;
 	  case WLZ_HISTOGRAMDOMAIN_FLOAT:
-	    if(*(bins.dbp + troughs[idT]) < *(bins.dbp + idx))
+	    if(*(bins.dbp + troughs[idT]) < *(bins.dbp + idX))
 	    {
-	      idx = troughs[idT];
+	      idX = troughs[idT];
 	    }
 	    break;
 	  default:
@@ -657,7 +657,7 @@ static double	WlzCompThreshSmoothSplit(WlzObject *gObj,
     }
   }
 #ifdef WLZ_DEBUG_COMPTHRESH
-  (void )fprintf(stderr, "WlzCompThreshSmoothSplit idx = %d\n", idx);
+  (void )fprintf(stderr, "WlzCompThreshSmoothSplit idX = %d\n", idX);
 #endif
   (void )AlcFree(troughs);
   /* Itterate through smoothing values finding minimum closest to previous. */
@@ -675,18 +675,18 @@ static double	WlzCompThreshSmoothSplit(WlzObject *gObj,
       /* Find closest histogram minimum to previous. */
       if(errNum == WLZ_ERR_NONE)
       {
-	idx = WlzCompThreshClosestMin(sObj->domain.hist, idx);
+	idX = WlzCompThreshClosestMin(sObj->domain.hist, idX);
 	sm = sm / 2.0;
       }
       (void )WlzFreeObj(sObj);
 #ifdef WLZ_DEBUG_COMPTHRESH
-  (void )fprintf(stderr, "WlzCompThreshSmoothSplit idx = %d\n", idx);
+  (void )fprintf(stderr, "WlzCompThreshSmoothSplit idX = %d\n", idX);
 #endif
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    thr = gObj->domain.hist->origin + (idx * gObj->domain.hist->binSize);
+    thr = gObj->domain.hist->origin + (idX * gObj->domain.hist->binSize);
   }
   if(dstErr)
   {
@@ -971,8 +971,8 @@ static double	WlzCompThreshLSqFit(WlzGreyP vec, int idx0, int idx1,
   double	tD1,
 		tD2,
   		tD3,
-		lsqA,
-  		lsqB,
+		lsqA = 0.0,
+  		lsqB = 0.0,
 		sXY = 0.0,
   		sY = 0.0;
   int		*tIP0;

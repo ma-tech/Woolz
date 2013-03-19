@@ -69,10 +69,6 @@ WlzDomainToTiles
     <td><b>-h</b></td>
     <td>Help - print help message</td>
   </tr>
-  <tr>
-    <td><b>-v</b></td>
-    <td>Verbose operation</td>
-  </tr>
 </table>
 
 \par Description
@@ -103,8 +99,9 @@ static void usage(
   char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\n"
-	  "%s [-o <file>] [-p #] [-t #,#,#] [-T] [-h] [-v]  [<input file>]\n"
+	  "Usage: "
+	  "%s [-o <file>] [-p #] [-t #,#,#] [-T] [-h]\n"
+	  "                        [<input file>]\n"
 	  "\tRead in a woolz 2D domain object and generate a set of tile\n"
 	  "\timages. These will be a set of equal sized 2D or 3D tiles which\n"
 	  "\tcover the input domain. If the input object has values then these\n"
@@ -114,15 +111,15 @@ static void usage(
 	  "\torigin is set to (0,0) and tiles generated row-wise from top to\n"
 	  "\tbottom. The output is a compound object with the object order\n"
 	  "\tin tile sequence order.\n"
-	  "Arguments:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t-o <file>         write object to given file, default stdout\n"
 	  "\t-p percent     only generate tiles if intersect size is >= percent \n"
 	  "\t               of the maximum tile size.\n"
 	  "\t-t xsize,ysize,zsize    tile size, default 256x256 (2D), 16x16x16 (3D)\n"
-	  "\t-h                print this message\n"
-	  "\t-v                verbose operation\n"
-	  "\n",
-	  proc_str);
+	  "\t-h                print this message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -131,13 +128,12 @@ int main(
   char  **argv)
 {
   FILE		*inFile, *outFile;
-  char 		optList[] = "o:p:t:Thv";
+  char 		optList[] = "o:p:t:Th";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   const char	*errMsg;
-  int		verboseFlg;
   WlzObject	*inObj, *tileObj, *obj1, *obj2, *obj3;
-  WlzCompoundArray	*cObj;
+  WlzCompoundArray	*cObj = NULL;
   int		tileWidth, tileHeight, tileDepth, width, height, depth;
   int		i, tileIndx, row, col, plane, numTiles;
   int		tileDefaultFlg;
@@ -152,7 +148,6 @@ int main(
   /* set defaults */
   outFile = stdout;
   tileDefaultFlg = 1;
-  verboseFlg = 0;
   tiffFlg = 0;
   tileWidth = tileHeight = tileDepth = 0;
   percent = 0;
@@ -197,10 +192,6 @@ int main(
 
     case 'T':
       tiffFlg = 1;
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

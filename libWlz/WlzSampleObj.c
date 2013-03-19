@@ -249,7 +249,7 @@ static WlzObject *WlzSampleObj2D(WlzObject *srcObj, WlzIVertex2 samFac,
 				 WlzErrorNum *dstErr)
 {
   int		kernelSum,
-  		integralGrey;
+  		integralGrey = 0;
   WlzGreyType	greyType;
   WlzObject	*dstObj = NULL;
   int		**kernelI;
@@ -308,6 +308,7 @@ static WlzObject *WlzSampleObj2D(WlzObject *srcObj, WlzIVertex2 samFac,
 	      }
 	      else
 	      {
+		kernelSum = 0;
 		if(((samFn ==  WLZ_SAMPLEFN_GAUSS) &&
 		    WlzSampleObjGaussKernelI(kernelI, kernelSz, 
 		    			     &kernelSum, samFac)) ||
@@ -520,8 +521,8 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
   }
   if((errNum == WLZ_ERR_NONE) && dstDom.core)
   {
-    totItvCount = itvCount = 0;
     dstItv1 = dstItv0;
+    dstLinePos = totItvCount = itvCount = 0;
     errNum = WlzInitRasterScan(srcObj, &srcIWsp, WLZ_RASTERDIR_ILIC);
     while((errNum == WLZ_ERR_NONE) &&
           ((errNum = WlzNextInterval(&srcIWsp)) == WLZ_ERR_NONE))
@@ -531,7 +532,7 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
 	dstInvLeftPos = (srcIWsp.lftpos + samFac.vtX - 1) / samFac.vtX;
 	dstInvRgtPos = srcIWsp.rgtpos / samFac.vtX;
 	srcInvWidth = srcIWsp.rgtpos - srcIWsp.lftpos + 1;
-	dstInvWidth = (srcInvWidth >= (srcIWsp.rgtpos % samFac.vtX)) ?
+	dstInvWidth = (srcInvWidth >= (srcIWsp.rgtpos % samFac.vtX))?
 		      dstInvRgtPos - dstInvLeftPos + 1 : 0;
 	if(dstInvWidth > 0)
 	{
@@ -759,8 +760,7 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
 		dstLinePos,
 		dstInvLeftPos,
 		dstInvRgtPos,
-		dstInvWidth,
-		srcInvWidth;
+		dstInvWidth;
   WlzGreyType	greyType;
   WlzObject	*dstObj = NULL;
   WlzIBox2	srcBox,
@@ -845,8 +845,8 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
   }
   if((errNum == WLZ_ERR_NONE) && dstValues.core && dstDom.core)
   {
-    totItvCount = itvCount = 0;
     dstItv1 = dstItv0;
+    dstLinePos = totItvCount = itvCount = 0;
     errNum = WlzInitGreyScan(srcObj, &srcIWsp, &srcGWsp);
     while((errNum == WLZ_ERR_NONE) &&
           ((errNum = WlzNextGreyInterval(&srcIWsp)) == WLZ_ERR_NONE))
@@ -855,7 +855,6 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
       {
 	dstInvLeftPos = srcIWsp.lftpos / samFac.vtX;
 	dstInvRgtPos = srcIWsp.rgtpos / samFac.vtX;
-	srcInvWidth = srcIWsp.rgtpos - srcIWsp.lftpos + 1;
 	dstInvWidth = (srcIWsp.rgtpos / samFac.vtX) -
 	              (srcIWsp.lftpos / samFac.vtX) + 1;
 	if(dstInvWidth > 0)
@@ -1008,14 +1007,14 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 		itvCount,
 		delItvCount,
 		totItvCount,
-  		maxItvCount,
   		srcWidth,
 		dstWidth,
 		dstOffset,
 		dstInvLeftPos,
 		dstInvRgtPos,
 		dstInvWidth,
-		backgroundVal;
+  		maxItvCount = 0,
+		backgroundVal = 0;
   WlzGreyType	greyType;
   int		**bufData = NULL;
   int		*tIP0,
@@ -1041,6 +1040,7 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
   AlcErrno	alcErr = ALC_ER_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  tGP0.v = NULL;
   dstDom.core = NULL;
   dstValues.core = NULL;
   srcDom = srcObj->domain;
@@ -1142,9 +1142,10 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
   if((errNum == WLZ_ERR_NONE) && dstValues.core && dstDom.core &&
      bufData && bufMarks)
   {
-    totItvCount = itvCount = 0;
+    bufIwspFlag = 0;
     dstItv0 = dstItvBase;
     dstItv1 = dstItvBase;
+    totItvCount = itvCount = 0;
     bufBase = WLZ_ABS(srcDom.i->line1) + kernelSz.vtY;  /* Make sure not -ve */
     if(((errNum = WlzInitGreyScan(srcObj, &srcIWsp,
     				  &srcGWsp)) == WLZ_ERR_NONE) &&
@@ -1380,7 +1381,7 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 		dstInvWidth;
   WlzGreyType 	greyType;
   double	tD0,
-		backgroundVal;
+		backgroundVal = 0.0;
   double	**bufData = NULL;
   double	*tDP0,
   		*tDP1;
@@ -1406,6 +1407,7 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   AlcErrno	alcErr = ALC_ER_NONE;
 
+  tGP0.v = NULL;
   dstDom.core = NULL;
   dstValues.core = NULL;
   srcDom = srcObj->domain;
@@ -1507,10 +1509,11 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
   if((errNum == WLZ_ERR_NONE) && dstValues.core && dstDom.core &&
      bufData && bufMarks)
   {
-    totItvCount = itvCount = 0;
+    bufIwspFlag = 0;
     dstItv0 = dstItvBase;
     dstItv1 = dstItvBase;
-    bufBase = WLZ_ABS(srcDom.i->line1) + kernelSz.vtY;  /* Make sure never -ve */
+    totItvCount = itvCount = 0;
+    bufBase = WLZ_ABS(srcDom.i->line1) + kernelSz.vtY; /* Make sure never -ve */
     if(((errNum = WlzInitGreyScan(srcObj, &srcIWsp,
     				  &srcGWsp)) == WLZ_ERR_NONE) &&
        ((errNum = WlzInitGreyScan(srcObj, &bufIWsp,
@@ -1714,18 +1717,18 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 		idY,
 		bufBase,
 		bufIwspFlag,
-		bufMedianSz,
 		itvCount,
 		delItvCount,
 		totItvCount,
-  		maxItvCount,
   		srcWidth,
 		dstWidth,
 		dstOffset,
 		dstInvLeftPos,
 		dstInvRgtPos,
 		dstInvWidth,
-		backgroundVal;
+  		maxItvCount = 0,
+		bufMedianSz = 0,
+		backgroundVal = 0;
   WlzGreyType	greyType;
   int		**bufData = NULL;
   int		*tIP0,
@@ -1752,10 +1755,10 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   AlcErrno	alcErr = ALC_ER_NONE;
 
+  tGP0.v = NULL;
   dstDom.core = NULL;
   dstValues.core = NULL;
   srcDom = srcObj->domain;
-
   dstBox.xMin = (srcDom.i->kol1 + (kernelSz.vtX / 2) + samFac.vtX - 1) / 
 		samFac.vtX;
   dstBox.yMin = (srcDom.i->line1 + (kernelSz.vtY / 2) + samFac.vtY - 1) /
@@ -1863,9 +1866,10 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
   if((errNum == WLZ_ERR_NONE) && dstValues.core && dstDom.core &&
      bufData && bufMarks)
   {
-    totItvCount = itvCount = 0;
+    bufIwspFlag = 0;
     dstItv0 = dstItvBase;
     dstItv1 = dstItvBase;
+    totItvCount = itvCount = 0;
     bufBase = WLZ_ABS(srcDom.i->line1) + kernelSz.vtY;  /* Make sure not -ve */
     if(((errNum = WlzInitGreyScan(srcObj, &srcIWsp,
     				  &srcGWsp)) == WLZ_ERR_NONE) &&
@@ -1976,6 +1980,7 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 	  }
 	  for(tI0 = 0; tI0 < dstInvWidth; ++tI0)
 	  {
+	    tI1 = 0;
 	    tI2 = 0;
 	    switch(samFn)
 	    {
@@ -2155,20 +2160,20 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 		idX,
 		idY,
 		bufBase,
-		bufIwspFlag,
-		bufMedianSz,
 		itvCount,
 		delItvCount,
 		totItvCount,
-  		maxItvCount,
   		srcWidth,
 		dstWidth,
 		dstOffset,
 		dstInvLeftPos,
 		dstInvRgtPos,
-		dstInvWidth;
+		dstInvWidth,
+		bufMedianSz = 0,
+  		maxItvCount = 0,
+		bufIwspFlag = 0;
   double	tD0,
-		backgroundVal;
+		backgroundVal = 0.0;
   WlzGreyType	greyType;
   double	**bufData = NULL;
   double	*tDP0,
@@ -2196,6 +2201,7 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   AlcErrno	alcErr = ALC_ER_NONE;
 
+  tGP0.v = NULL;
   dstDom.core = NULL;
   dstValues.core = NULL;
   srcDom = srcObj->domain;
@@ -2411,6 +2417,7 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 	  for(tI0 = 0; tI0 < dstInvWidth; ++tI0)
 	  {
 	    tI2 = 0;
+	    tD0 = FLT_MAX;
 	    switch(samFn)
 	    {
 	      case WLZ_SAMPLEFN_MIN:

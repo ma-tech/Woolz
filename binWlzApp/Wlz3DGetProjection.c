@@ -50,7 +50,7 @@ static char _Wlz3DGetProjection_c[] = "University of Edinburgh $Id$";
 Wlz3DGetProjection - projects a Woolz object using a view transform.
 \par Synopsis
 \verbatim
-Wlz3DGetProjection [-h] [-v]
+Wlz3DGetProjection [-h]
                    [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]
 		   [-b <parameter bibfile>] [-m <mode>] [-s <scale>]
 		   [-o <output file>] [-u<ux,uy,uz>] [<3D object input file>]
@@ -60,10 +60,6 @@ Wlz3DGetProjection [-h] [-v]
   <tr> 
     <td><b>-h</b></td>
     <td>Prints usage information.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
   <tr> 
     <td><b>-a</b></td>
@@ -141,14 +137,15 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]"
-	  " [-b <parameter bibfile>] [-m <mode>] [-s <scale>]"
-	  " [-o <output file>] [-u<ux,uy,uz>] [-h] [-v]"
-	  " [<3D object input file>]\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]\n"
+	  "\t[-b <parameter bibfile>] [-m <mode>] [-s <scale>]\n"
+	  "\t[-o <output file>] [-u<ux,uy,uz>] [-h]\n"
+	  "\t[<3D object input file>]\n"
 	  "\tGet an arbitrary sliceprojection from a 3D object\n"
 	  "\twriting the 2D object to standard output\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -a<pitch,yaw[,roll]> viewing angles in degrees. If roll\n"
 	  "\t                       is defined then the mode is \"absolute\"\n"
 	  "\t  -b<bibfile>        bibfile defining the view parameters e.g.\n"
@@ -164,10 +161,9 @@ static void usage(char *proc_str)
 	  "\t  -s<scale>          Scale factor, default - 1.0\n"
 	  "\t  -u<ux,uy,uz>       Up vector for up-is-up mode.\n"
 	  "\t			  Default: (0,0,-1)\n"
-	  "\t  -h                 Help - prints this usage message\n"
-	  "\t  -v                 verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -h                 Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  
@@ -178,7 +174,7 @@ int main(int	argc,
   WlzObject	*obj, *nobj;
   FILE		*inFP, *outFP, *bibFP;
   char		*outFile, *bibFile;
-  char 		optList[] = "a:b:d:f:m:o:s:u:hv";
+  char 		optList[] = "a:b:d:f:m:o:s:u:h";
   int		option;
   int		iVal;
   double	dist=0.0, pitch=0.0, yaw=0.0, roll=0.0;
@@ -190,7 +186,6 @@ int main(int	argc,
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   BibFileRecord	*bibfileRecord;
   BibFileError	bibFileErr;
-  int		verboseFlg=0;
   char		*errMsg;
     
   /* additional defaults */
@@ -280,10 +275,6 @@ int main(int	argc,
     default:
       usage(argv[0]);
       return 0;
-
-    case 'v':
-      verboseFlg = 1;
-      break;
 
     }
   }

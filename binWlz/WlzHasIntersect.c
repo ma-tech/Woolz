@@ -49,17 +49,13 @@ static char _WlzHasIntersect_c[] = "University of Edinburgh $Id$";
 WlzHasIntersect - tests for the intersection of a pair of objects.
 \par Synopsis
 \verbatim
-WlzHasIntersect [-n] [-h] [-v] [<input file>]
+WlzHasIntersect [-n] [-h] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
   <tr> 
     <td><b>-n</b></td>
@@ -98,15 +94,15 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-n] [-h] [-v] [<input file>]\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-n] [-h] [<input file>]\n"
 	  "\tTest if the input objects have a non-zero intersection\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -n        numerical output: 0 - no intersect, 1 - intersect\n"
-	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -h        help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  
@@ -116,9 +112,8 @@ int main(int	argc,
 
   WlzObject	*obj1, *obj2;
   FILE		*inFile;
-  char 		optList[] = "hnv";
+  char 		optList[] = "hn";
   int		option;
-  int		verboseFlg=0;
   int		numOutputFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
     
@@ -130,10 +125,6 @@ int main(int	argc,
 
     case 'n':
       numOutputFlg = 1;
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

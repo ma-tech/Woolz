@@ -123,13 +123,13 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-h] [-v] [-A] [-R] [-a] [-t] [-T] [-f<filename>]\n"
-	  "                          [input bibfile]\n"
-	  "\tFinds the transform for the given filename\n"
-	  "\twithin the bib-file and output an argument\n"
-	  "\tstring for WlzAffineTransformObj\n"
-	  "\tOptions are:\n"
+	  "                            [input bibfile]\n"
+	  "\tFinds the transform for the given filename within the bib-file\n"
+	  "\tand output an argument string for WlzAffineTransformObj\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h                Help - prints this usage message\n"
 	  "\t  -v                verbose operation\n"
 	  "\t  -A                calculate absolute transform\n"
@@ -138,9 +138,9 @@ static void usage(char *proc_str)
 	  "\t                    WlzAffineTransformObj (default)\n"
 	  "\t  -t                output a woolz affine transform object\n"
 	  "\t  -T                output text\n"
-	  "\t  -f<filename>      filename to be found\n"
-	  "",
-	  proc_str);
+	  "\t  -f<filename>      filename to be found\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  
@@ -277,7 +277,14 @@ int main(int	argc,
 	 (void *) &scaleY, "%*lg %lg %*lg", "Scale",
 	 (void *) &scaleZ, "%*lg %*lg %lg", "Scale",
 	 NULL);
-
+      if(numParsedFields < 1) {
+	(void )fprintf(stderr,
+		       "%s: can't read scale from bibfile: %s\n",
+		       argv[0], optarg);
+	usage(argv[0]);
+	return 1;
+      }
+	
       /* make the transform for this record */
       reconTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
 						 0.0, 0.0, 0.0, scaleX,

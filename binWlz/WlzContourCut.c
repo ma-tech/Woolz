@@ -277,11 +277,13 @@ int		main(int argc, char *argv[])
     "of all simplices of the model that do not intersect simplices of the\n"
     "knife. This may be used to cut into a contour removing sections from\n"
     "it.\n"
-    "Options are:\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -k  The knife contour object.\n"
     "  -o  Output object file.\n"
     "  -h  Help - prints this usage message\n",
-    argv[0]);
+    argv[0],
+    WlzVersion());
   }
   return(!ok);
 }

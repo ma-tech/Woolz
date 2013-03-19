@@ -234,17 +234,19 @@ int		main(int argc, char *argv[])
   (void )WlzFreeObj(obj);
   if(usage)
   {
-    fprintf(stderr,
+    (void )fprintf(stderr,
             "Usage: %s [-h] [-o<output file>] [-r#] [-s#] [<input file>]\n"
     	    "Rank filters the grey values of a Woolz domain object.\n"
-	    "Options are:\n"
+	    "Version %s\n"
+	    "Options:\n"
 	    "  -h  Output this usage message.\n"
 	    "  -o  Output file.\n"
 	    "  -r  Required rank. Range [0.0-1.0] with 0.0 minimum, 0.5\n"
 	    "      median and 1.0 maximum value. Default 0.5.\n"
 	    "  -s  Size of filter region, must be greater than zero.\n"
 	    "      Default 3 for 3x3 region.\n",
-	    argv[0]);
+	    argv[0],
+	    WlzVersion());
 
   }
   return(!ok);

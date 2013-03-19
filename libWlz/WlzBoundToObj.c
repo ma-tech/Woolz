@@ -180,7 +180,7 @@ WlzObject *WlzBoundToObj(
   WlzPolyFillMode	fillMode,
   WlzErrorNum		*dstNum)
 {
-  WlzObject *obj, *selfobj, *nextobj, *downobj;
+  WlzObject *obj, *selfobj = NULL, *nextobj, *downobj;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* check input */
@@ -243,5 +243,5 @@ WlzObject *WlzBoundToObj(
   if( dstNum ){
     *dstNum = errNum;
   }
-  return selfobj;
+  return(selfobj);
 }

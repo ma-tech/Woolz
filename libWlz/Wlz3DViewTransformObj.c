@@ -99,8 +99,8 @@ WlzObject *Wlz3DViewTransformObj(
   WlzObject		*dstObj=NULL;
   int			area;
   int			i, k, p, xp, yp, line;
-  int			plane1, lastpl, line1, lastln, kol1, lastkl;
-  WlzIVertex3		*vertices;
+  int			plane1 = 0, lastpl = 0, line1, lastln, kol1, lastkl;
+  WlzIVertex3		*vertices = NULL;
   int			numVtxs, vtxIdx;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
@@ -110,6 +110,8 @@ WlzObject *Wlz3DViewTransformObj(
   WlzInterval		*itvl;
 
 
+  domain.core = NULL;
+  tmpDomain.core = NULL;
   /* check the object */
   if( srcObj == NULL ){
     errNum = WLZ_ERR_OBJECT_NULL;

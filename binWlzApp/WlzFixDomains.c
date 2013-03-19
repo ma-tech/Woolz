@@ -405,7 +405,7 @@ WlzObject *WlzDomainFillHoles(
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   WlzValues	values;
   WlzDomain	domain;
-  WlzObject	*obj1, *backObj, *holeObj, **objs;
+  WlzObject	*obj1 = NULL, *backObj = NULL, *holeObj = NULL, **objs = NULL;
   int		i, numObjs;
 
   /* check parameters */
@@ -512,7 +512,7 @@ static void usage(
   char	*str)
 {
   fprintf(stderr,
-	  "Usage:\n"
+	  "Usage: "
 	  "%s -f -p -s# -h -v file1.wlz file2.wlz .... fileN.wlz\n"
 	  "\tRead in all the domains and correct flying pixels\n"
 	  "\tand small holes by reassigning to the closest neighbour\n"
@@ -522,14 +522,15 @@ static void usage(
 	  "\tdomain is output to a file with extension _new, additions\n"
 	  "\tand deletions are output to files with extensions _adds\n"
 	  "\tan _dels respectively\n"
-	  "Arguments:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t-f         fill holes\n"
 	  "\t-p         prune & reassign flying pixels\n"
 	  "\ts#:        size parameter to determine selection, default 2\n"
 	  "\t-h         print this message\n"
-	  "\t-v         verbose operation\n"
-	  "\n",
-	  str);
+	  "\t-v         verbose operation\n",
+	  str,
+	  WlzVersion());
 
   return;
 }

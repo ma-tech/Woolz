@@ -818,33 +818,28 @@ int main(int	argc,
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-h] [<input file>]\n"
 	  "\tGet the affine transformation to transform the warped or.\n"
 	  "\nGutted sections through OPT may be  by differnt angles into\n"
 	  "\nThe position we think are right.\n"
-	  "\n"
 	  "\tThe user needs to prepare the bib file file names list which assotiate .\n"
 	  "\twith the cuting OPT. and the file name of warped section or the sections\n"
 	  "\tcut through OPT. Please give\n"
 	  "\tfull directory including the machine name when give your file name.\n"
-	  "\n"
 	  "\tFor example:\n"
 	  "\t/net/laphroaig/export/data1/rjianguo/newcastle/LizpDir/\n"
 	  "\tBibFilesDir/s11r2s06_template_g.bib\n"
 	  "\n"
 	  "\tALSO, The base part of sample bib file's name should be the same as\n"
 	  "\tthat of 2D Woolz file.\n"
-	  "\t \n"
 	  "\tFor example:\n"
 	  "\t ABC.bib,  ABC.wlz ,\n"
 	  "\twhere the base part of their name is the same\n"
 	  "\tThe output will be the set of files Affine transformed which will be\n"
-	  "\tas  ABC_Affine.wlz"
-	  "\n"
-	  "\tPlease report bugs to RAO.JIANGUO@hgu.mrc.ac.uk\n"
-	  "\t \n"
-	  "\tOptions are:\n"
+	  "\tas  ABC_Affine.wlz\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
           "\t  -w        input file name for the Woolz Object( OPT model !)\n"
 	  "\t  -d        input the Directory of the output affineTransformed files\n"
@@ -861,11 +856,9 @@ static void usage(char *proc_str)
 	  "\t  -t        input the tx,ty,tz      no space please!\n"
 	  "\t  -S        input the Sx,Sy,Sz      no space please!\n"
 	  "\t  -F        input the Fx,Fy,Fz      no space please!\n"
-	  "\t  -T        input the Tx,Ty,Tz      no space please!\n"
-	  "\t                                                    \n"
-	  "\t                                                    \n"
-	  "",
-	  proc_str);
+	  "\t  -T        input the Tx,Ty,Tz      no space please!\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

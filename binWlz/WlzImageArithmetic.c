@@ -469,8 +469,10 @@ int             main(int argc, char **argv)
 
     fprintf(stderr,
 	    "Usage: %s"
-	    " [-O#] [-o<out file>] [-a] [-b <op>] [-d] [-g] [-i] [-l] [-m] [-s] [-h] "
-	    "[<in object 0>] [<in object 1>]\n"
+	    " [-O#] [-o<out file>] [-a] [-b <op>] [-d] [-g]\n"
+	    "                          [-i] [-l] [-m] [-s] [-h]\n"
+	    "                          [<in object 0>] [<in object 1>]\n"
+	    "Version: %s\n"
 	    "Options:\n"
 	    "  -O        Overwrite option (only useful for debugging)\n"
 	    "  -o        Output file name.\n"
@@ -509,6 +511,7 @@ int             main(int argc, char **argv)
 	    "unless the filenames are given.\n"
 	    "Example:\n%s%s%s",
 	    *argv,
+	    WlzVersion(),
 	    WLZ_BO_ADD,
 	    WLZ_BO_SUBTRACT,
 	    WLZ_BO_MULTIPLY,

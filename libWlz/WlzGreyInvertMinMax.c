@@ -80,9 +80,9 @@ WlzErrorNum WlzGreyInvertMinMax(
   WlzGreyP		g;
   WlzIntervalWSpace 	iwsp;
   WlzGreyWSpace 	gwsp;
-  int			irange;
-  double		drange;
-  WlzUInt		redrange, greenrange, bluerange;
+  int			irange = 0;
+  double		drange = 0.0;
+  WlzUInt		redrange = 0, greenrange = 0, bluerange = 0;
   int			i;
  
   /* check for NULL object */

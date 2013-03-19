@@ -132,7 +132,8 @@ static void usage(char *proc_str)
 	  "           -s<width>,<height> <input file-list>\n"
 	  "\tRead the file list and convert the woolz domains to\n"
 	  "\tGlaxo-Wellcome XYZ format contour files.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -v        Verbose operation\n"
 	  "\t  -m#       input the min size used to determine which\n"
@@ -140,9 +141,9 @@ static void usage(char *proc_str)
 	  "\t  -o#,#     x and y offsets to correspond to the grey-level\n"
 	  "\t            object so that all coordinates are +ve.\n"
 	  "\t  -s#,#     width and height for the XYZ file\n"
-	  "\t  -p#       required plane number\n"
-	  "",
-	  proc_str);
+	  "\t  -p#       required plane number\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -302,7 +303,7 @@ int main(int	argc,
 {
   char 		optList[] = "hvm:p:o:s:";
   int		option;
-  int		verboseFlg=0;
+  /* int	verboseFlg=0; */
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   HGUDlpList	*dmnList;
   DomainItem	*dmnItem;
@@ -316,7 +317,7 @@ int main(int	argc,
   int		plane=0, xOff=0, yOff=0, pOff;
   int		width=0, height=0;
   int		colorFlg = 0;
-  int		minL, maxL, minK, maxK;
+  int		minL = 0, maxL = 0, minK = 0, maxK = 0;
   WlzIVertex2	vtxs[5];
   int		index, i;
   int		minSize=4;
@@ -359,7 +360,7 @@ int main(int	argc,
       break;
 
     case 'v':
-      verboseFlg = 1;
+      /* verboseFlg = 1; */
       break;
 
     case 'h':

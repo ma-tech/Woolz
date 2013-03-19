@@ -129,13 +129,14 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-t<pitch,yaw[,roll]>] [-b<bibfile>]"
-	  "[-f<fx,fy,fz>] [-d<dist>]"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-t<pitch,yaw[,roll]>] [-b<bibfile>]\n"
+	  "\t[-f<fx,fy,fz>] [-d<dist>]"
 	  " [-h] [-m<mode>] [<2D object input file>]\n"
 	  "\tTransform an section view to a 3D object\n"
 	  "\twriting the 3D object to standard output\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -a<pitch,yaw[,roll]> viewing angles in degrees - default 0.0\n"
 	  "\t  -b<view-bibfile>   input parameters from the view\n"
 	  "\t                     bibfile - e.g. saved from MAPaint\n"
@@ -144,9 +145,9 @@ static void usage(char *proc_str)
 	  "\t  -m<mode>           viewing mode, one of: up-is-up, statue, absolute\n"
 	  "\t  -u<ux,uy,uz>       up vector - default (0.0, 0.0, 1.0)\n"
 	  "\t  -h                 Help - prints this usage message\n"
-	  "\t  -v                 Verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v                 Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  
@@ -218,6 +219,13 @@ int main(int	argc,
 	   (void *) &(upVectorVtx.vtZ), "%*lg ,%*lg ,%lg", "UpVector",
 	   (void *) &(viewModeStr[0]), "%s", "ViewMode",
 	   NULL);
+	if(numParsedFields < 1) {
+	  (void )fprintf(stderr,
+	                 "%s: can't read section transform from bibfile: %s\n",
+	                 argv[0], optarg);
+	  usage(argv[0]);
+	  return 1;
+	}
 	/* doesn't read the view mode correctly - ask Bill */
 	bibfileField = bibfileRecord->field;
 	while( bibfileField ){
@@ -330,6 +338,28 @@ int main(int	argc,
       usage(argv[0]);
       return 1;
     }
+  }
+
+  if(verboseFlg) {
+    (void )fprintf(stderr,
+		   "%s: Section parameters are\n"
+		   "  fixed = %lg,%lg,%lg\n"
+		   "  theta = %lg\n"
+		   "  phi = %lg\n"
+		   "  zeta = %lg\n"
+		   "  dist = %lg\n"
+		   "  scale = %lg\n"
+		   "  viewMode = %s\n"
+		   "  up = %lg,%lg,%lg\n",
+		   argv[0],
+		   fixed.vtX, fixed.vtY, fixed.vtZ,
+		   theta,
+		   phi,
+		   zeta,
+		   dist,
+		   scale,
+		   WlzStringFromThreeDViewMode(viewMode, NULL),
+		   upVectorVtx.vtX, upVectorVtx.vtY, upVectorVtx.vtZ);
   }
 
   /* read objects and section if possible */

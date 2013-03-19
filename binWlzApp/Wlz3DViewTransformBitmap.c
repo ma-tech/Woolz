@@ -134,16 +134,17 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-a<pitch>,<yaw[>,<roll]>] [-b<bibfile>]"
-	  "[-f<fx>,<fy>,<fz>] [-d<dist>] -o <x_off>,<y_off>"
-	  " [-h] [-m<mode>] -s<width>,<height> <bitmap data file>\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-a<pitch>,<yaw[>,<roll]>] [-b<bibfile>]\n"
+	  "\t[-f<fx>,<fy>,<fz>] [-d<dist>] -o <x_off>,<y_off>\n"
+	  "\t[-h] [-m<mode>] -s<width>,<height> <bitmap data file>\n"
 	  "\tTransform a bitmap on a section view to a 3D object\n"
 	  "\twriting the 3D object to standard output\n"
-	  "\tRequired are:\n"
+	  "Version: %s\n"
+	  "Required are:\n"
 	  "\t  -s<width,height>   size of bitmap image\n"
 	  "\t  -o<x_off,y_off>    x and y offsets of the bitmap image\n"
-	  "\tOptions are:\n"
+	  "Options:\n"
 	  "\t  -a<pitch,yaw[,roll]> viewing angles in degrees - default 0.0\n"
 	  "\t  -b<view-bibfile>   input parameters from the view\n"
 	  "\t                     bibfile - e.g. saved from MAPaint\n"
@@ -152,9 +153,9 @@ static void usage(char *proc_str)
 	  "\t  -m<mode>           viewing mode, one of: up-is-up, statue, absolute\n"
 	  "\t  -u<ux,uy,uz>       up vector - default (0.0, 0.0, 1.0)\n"
 	  "\t  -h                 Help - prints this usage message\n"
-	  "\t  -v                 Verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v                 Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  
@@ -207,7 +208,8 @@ int main(int	argc,
 	}
 	(void) fclose(inFile);
 	if( bibFileErr != BIBFILE_ER_NONE ){
-	  fprintf(stderr, "%s: can't read bibfile: %s\n", argv[0], optarg);
+	  (void )fprintf(stderr,
+	                 "%s: can't read bibfile: %s\n", argv[0], optarg);
 	  usage(argv[0]);
 	  return 1;
 	}
@@ -228,6 +230,13 @@ int main(int	argc,
 	   (void *) &(upVectorVtx.vtZ), "%*lg ,%*lg ,%lg", "UpVector",
 	   (void *) &(viewModeStr[0]), "%s", "ViewMode",
 	   NULL);
+	if(numParsedFields < 1) {
+	  (void )fprintf(stderr,
+	                 "%s: can't read section transform from bibfile: %s\n",
+	                 argv[0], optarg);
+	  usage(argv[0]);
+	  return 1;
+	}
 	/* doesn't read the view mode correctly - ask Bill */
 	bibfileField = bibfileRecord->field;
 	while( bibfileField ){
@@ -256,7 +265,8 @@ int main(int	argc,
 
       }
       else {
-	fprintf(stderr, "%s: can't open bibfile: %s\n", argv[0], optarg);
+	(void )fprintf(stderr,
+	               "%s: can't open bibfile: %s\n", argv[0], optarg);
 	usage(argv[0]);
 	return 1;
       }
@@ -288,7 +298,7 @@ int main(int	argc,
 	viewMode = WLZ_ZETA_MODE;
       }
       else {
-	fprintf(stderr, "%s: invalid view mode: %s\n", argv[0], optarg);
+	(void )fprintf(stderr, "%s: invalid view mode: %s\n", argv[0], optarg);
 	usage(argv[0]);
 	return 1;
       }
@@ -332,7 +342,8 @@ int main(int	argc,
 
   /* check size and offset have been set */
   if( offsetFlg || sizeFlg ){
-    fprintf(stderr, "%s: bitmap size and offset must be set\n", argv[0]);
+    (void )fprintf(stderr,
+                   "%s: bitmap size and offset must be set\n", argv[0]);
     usage(argv[0]);
     return 1;
   }
@@ -340,25 +351,52 @@ int main(int	argc,
   /* get the bitmap data */
   if( optind < argc ){
     if( (inFile = fopen(*(argv+optind), "r")) == NULL ){
-      fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
+      (void )fprintf(stderr,
+                     "%s: can't open file %s\n", argv[0], *(argv+optind));
       usage(argv[0]);
       return 1;
     }
     numBytes = (int) (((double) width*height)/8.0 + 1.0);
     if((bitData = AlcMalloc(sizeof(char) * (numBytes + 1) )) != NULL){
       if( fread(bitData, sizeof(char), numBytes, inFile) < numBytes ){
-	fprintf(stderr, "%s: not enough data\n", argv[0]);
+	(void )fprintf(stderr,
+	               "%s: not enough data\n", argv[0]);
       }
     }
     else {
-      fprintf(stderr, "%s: can't alloc memory for bit data\n", argv[0]);
+      (void )fprintf(stderr,
+                     "%s: can't alloc memory for bit data\n", argv[0]);
       return 1;
     }
   }
   else {
-    fprintf(stderr, "%s: please supply a bitmap file\n", argv[0]);
+    (void )fprintf(stderr, "%s: please supply a bitmap file\n", argv[0]);
     usage(argv[0]);
     return 1;
+  }
+
+  if(verboseFlg) {
+    (void )fprintf(stderr,
+		   "%s: Bitmap and section parameters are\n"
+                   "  width = %d\n"
+		   "  height = %d\n"
+		   "  xOffset = %d\n"
+		   "  yOffset = %d\n"
+		   "  fixed = %lg,%lg,%lg\n"
+		   "  theta = %lg\n"
+		   "  phi = %lg\n"
+		   "  dist = %lg\n"
+		   "  viewMode = %s\n",
+		   argv[0],
+		   width,
+		   height,
+		   xOffset,
+		   yOffset,
+		   fixed.vtX, fixed.vtY, fixed.vtZ,
+		   theta,
+		   phi,
+		   dist,
+		   WlzStringFromThreeDViewMode(viewMode, NULL));
   }
 
   /* read bitmap data and section if possible */
@@ -370,9 +408,6 @@ int main(int	argc,
     WlzWriteObj(stdout, obj);
     WlzFreeObj(obj);
   }
-  else {
-  }
-
   return WLZ_ERR_NONE;
 }
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

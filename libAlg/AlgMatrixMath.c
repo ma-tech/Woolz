@@ -642,7 +642,6 @@ void            AlgMatrixCopy(AlgMatrix aM, AlgMatrix bM)
 {
   size_t	nR,
   		nC;
-  AlgError	errNum = ALG_ERR_NONE;
 
   nR = bM.core->nR;
   nC = bM.core->nC;
@@ -675,7 +674,7 @@ void            AlgMatrixCopy(AlgMatrix aM, AlgMatrix bM)
       }
       break;
     case ALG_MATRIX_LLR:
-      errNum = AlgMatrixLLRCopyInPlace(aM.llr, bM.llr);
+      (void )AlgMatrixLLRCopyInPlace(aM.llr, bM.llr);
       break;
     default:
       break;
@@ -1169,12 +1168,10 @@ void 		AlgMatrixVectorMulAdd(double *aV, AlgMatrix bM,
     case ALG_MATRIX_SYM:
       {
 	size_t id0,
-		nC,
 		nR;
         double	**bA;
 
 	nR = bM.sym->nR;
-	nC = bM.sym->nC;
 	bA = bM.sym->array;
 #ifdef _OPENMP
         #pragma omp parallel for default(shared) private(id0)

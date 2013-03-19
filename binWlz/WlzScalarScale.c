@@ -251,11 +251,15 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%s",
+    "Usage: %s%s%s%s",
     *argv,
-    " [-a#] [-g#] [-h] [-o<output object>] [-m #] [<input object>]\n"
+    " [-a#] [-g#] [-h] [-o<output object>] [-m #]\n"
+    "                      [<input object>]\n"
     "Scales the grey values of an object using a linear scaling with\n"
     "v_out = m v_{in} + a.\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -a  Value for addition.\n"
     "  -g  Grey type specified using one of the characters:\n"

@@ -112,7 +112,7 @@ WlzErrorNum 	WlzEffWriteObjBmp2D(const char *fNameStr, WlzObject *obj,
   int		tI0,
 		idN,
 		rleSz;
-  unsigned char *rleData;
+  unsigned char *rleData = NULL;
   FILE		*fP = NULL;
   WlzObject	*cutObj = NULL;
   WlzIBox2	cutBox;
@@ -271,10 +271,7 @@ WlzErrorNum 	WlzEffWriteObjBmp2D(const char *fNameStr, WlzObject *obj,
       errNum = WLZ_ERR_WRITE_INCOMPLETE;
     }
   }
-  if(rleData)
-  {
-    AlcFree(rleData);
-  }
+  AlcFree(rleData);
   if(fP)
   {
     fclose(fP);

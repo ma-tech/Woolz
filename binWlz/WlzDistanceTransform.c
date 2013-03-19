@@ -129,8 +129,7 @@ int		main(int argc, char *argv[])
   		con,
   		option,
 		usage = 0;
-  char		*inFileStr,
-  		*forFileStr,
+  char		*forFileStr,
   		*refFileStr,
 		*outFileStr;
   double	dParam = 10.0;
@@ -149,7 +148,7 @@ int		main(int argc, char *argv[])
 
   /* Parse the argument list and check for input files. */
   opterr = 0;
-  inFileStr = (char *)fileStrDef;
+  refFileStr = (char *)fileStrDef;
   forFileStr = (char *)fileStrDef;
   outFileStr = (char *)fileStrDef;
   dFn = defDFn;
@@ -345,7 +344,8 @@ int		main(int argc, char *argv[])
     "Computes a distance transform object which has the domain of the\n"
     "foreground object and values which are the distance from the reference\n"
     "object.\n"
-    "Options are:\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -b  Use the boundary of the reference object.\n"
     "  -d  Distance function:\n"
     "              0: Euclidean (2D and 3D, unimplemented)\n"
@@ -363,7 +363,8 @@ int		main(int argc, char *argv[])
     "      cost of increased time. Default value - 10.0.\n"
     "  -o  Output object file.\n"
     "  -h  Help - prints this usage message\n",
-    argv[0]);
+    argv[0],
+    WlzVersion());
   }
   return(!ok);
 }

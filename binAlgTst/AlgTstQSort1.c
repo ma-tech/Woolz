@@ -114,7 +114,7 @@ int             main(int argc, char *argv[])
       }
     }
     (void )printf("\n");
-    AlgQSort(ary, nElm, elmSz, (void *)reverse, AlgQSortTestSortFn);
+    AlgQSort(ary, nElm, elmSz, (reverse)? &reverse: NULL, AlgQSortTestSortFn);
     if(verbose)
     {
       for(idN = 0; idN < nElm; ++idN)

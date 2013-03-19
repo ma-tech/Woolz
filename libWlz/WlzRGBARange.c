@@ -57,7 +57,7 @@ WlzErrorNum WlzRGBAModulusRange(
   double	*max)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  double	val, lmin, lmax;
+  double	val, lmin = 0.0, lmax = 0.0;
   int		i, nplanes, initFlg;
   WlzGreyP		g;
   WlzIntervalWSpace	iwsp;

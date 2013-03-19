@@ -78,9 +78,9 @@ WlzErrorNum WlzGreySetRange(
   WlzPixelV	Max,
   int		dither)
 {
-  double		gMin,
-  			gMax,
-			sigma,
+  double		gMin = 0.0,
+  			gMax = 0.0,
+			sigma = 0.0,
   			factor,
 			val;
   WlzIntervalWSpace	iwsp;

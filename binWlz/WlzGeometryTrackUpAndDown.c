@@ -227,11 +227,12 @@ int main(int	argc,
   int           iloop=1, test=0;
   double        DisForInOut = 15, DisForInOutGuid = 15;
   double        minDis = 10.;
-  char         *outFileStr;
+  /* char       *outFileStr; unused */
   unsigned char        **TwoDImageFilesNameList;
-  char         *ContourFilesNameList;
-  char         *surfacePointFileName, *surfaceInPointFileName, *surfaceOutPointFileName;
-  WlzDVertex3          *SurfacePatchPoints;
+  char         *ContourFilesNameList = NULL;
+  char         *surfacePointFileName = NULL, *surfaceInPointFileName = NULL,
+               *surfaceOutPointFileName = NULL;
+  /* WlzDVertex3          *SurfacePatchPoints; unused */
   WlzErrorNum	       errNum = WLZ_ERR_NONE;
   AlcErrno             alcErr = ALC_ER_NONE;
 
@@ -326,7 +327,7 @@ int main(int	argc,
 	     }
 	     break;
        case 'o':
-	     outFileStr = optarg;
+	     /* outFileStr = optarg; unused */
 	     break;
        case 's':
 	     surfacePointFileName = optarg;
@@ -433,7 +434,8 @@ int main(int	argc,
     /*---------- extract contour and track down or up  to get the surface patch ----------- */
     if( (!test)  && ( errNum == WLZ_ERR_NONE ) )
     {
-      SurfacePatchPoints = WlzGeometryTrackUpAndDown_s(      
+      /* SurfacePatchPoints = unused */
+      (void )WlzGeometryTrackUpAndDown_s(      
 							numP_in_Z,
                                                         startTrackingFile,
 							numOfTrackUpOrDown,
@@ -482,9 +484,8 @@ static void usage(char *proc_str)
 	  "\t ABC.bib,  ABC.wlz ,\n"
 	  "\twhere the base part of their name is the same\n"
 	  "\n"
-	  "\tPlease report bugs to RAO.JIANGUO@hgu.mrc.ac.uk\n"
-	  "\t \n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -L        input name of a file which contains the list of \n" 
           "\t                  of the 2D Woolz contour image file names  \n"
@@ -523,9 +524,9 @@ static void usage(char *proc_str)
 	  "\t  -A        input the end   shell number (not index ) for tracking\n"
 	  "\t  -b        input the start section number for tracking\n"
 	  "\t  -B        input the end   section number for tracking\n"
-	  "\t                  \n"
-	        	  "", 
-	  proc_str);
+	  "\t                  \n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

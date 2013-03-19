@@ -480,11 +480,14 @@ int             main(int argc, char *argv[])
   if(usage)
   {
       (void )fprintf(stderr,
-      "Usage: %s%s",
+      "Usage: %s%s%s%s",
       *argv,
       " [-b#] [-d#] [-D#] [-E#] [-o#] [-t#] [-g#] [-i#] [-s#]\n"
       "          [-A#] [-S#] [-F#] [-I#] [-N]\n"
       "          [-h] [<input object 0>] [<input object 1>]\n"
+      "Version: ",
+      WlzVersion(),
+      "\n"
       "Options:\n"
       "  -b  Shell breaking control value.\n"
       "  -d  Debug output file.\n"

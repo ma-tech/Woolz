@@ -360,7 +360,7 @@ int             main(int argc, char **argv)
       fStr = inObjFileStr;
     }
     errNum = WLZ_ERR_READ_EOF;
-    if((inObj = WlzAssignObject(WlzEffReadObj(fP, fStr, inFmt, 0,
+    if((inObj = WlzAssignObject(WlzEffReadObj(fP, fStr, inFmt, 0, 0, 0,
                                               &errNum), NULL)) == NULL)
     {
       ok = 0;
@@ -488,11 +488,14 @@ int             main(int argc, char **argv)
     fmtStr = WlzEffFormatTable(2, 50, 10, NULL);
 
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s%s%s",
+    "Usage: %s%s%s%sExample: %s%s%s%s%s",
     *argv,
     " [-h] [-o<output object>] [-b] [-g] [-i] [-l]\n"
-    "        [-L] [-N] [-U] [-p#] [-s#] [-n#] [-v#] [-w#]\n"
-    "        [<input object>]\n"
+    "                          [-L] [-N] [-U] [-p#] [-s#] [-n#] [-v#] [-w#]\n"
+    "                          [<input object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Prints this usage information.\n"
     "  -o  Output VTK polydata file name.\n"

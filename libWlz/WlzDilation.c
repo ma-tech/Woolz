@@ -704,8 +704,8 @@ static WlzObject *WlzDilation4(
   int		maxItvLn;
   int		kol1, lastkl, line1, lastln;
   int		line, width, inttot, nitv;
-  WlzIntervalDomain 	*idmn;
-  WlzIntervalLine 	*itvl;
+  WlzIntervalDomain 	*idmn = NULL;
+  WlzIntervalLine 	*itvl = NULL;
   WlzInterval 		*buff = NULL;
   int 			length;
 

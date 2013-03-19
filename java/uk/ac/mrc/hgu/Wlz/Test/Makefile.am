@@ -1,23 +1,41 @@
-#########################################################################
-# Project:      Woolz
-# Title:        Makefile
-# Date:         August 1999
-# Author:       Bill Hill
-# Copyright:	1999 Medical Research Council, UK.
-#		All rights reserved.
-# Address:	MRC Human Genetics Unit,
-#		Western General Hospital,
-#		Edinburgh, EH4 2XU, UK.
-# Purpose:      Makefile for Java/Woolz binding tests and demos.
-# $Revision$
-# $Id$
-# Maintenance:	Log changes below, with most recent at top of list.
-#########################################################################
+##
+# \file         Makefile.am
+# \author       Bill Hill
+# \date         July 2012
+# \version      $Id$
+# \par
+# Address:
+#               MRC Human Genetics Unit,
+#               MRC Institute of Genetics and Molecular Medicine,
+#               University of Edinburgh,
+#               Western General Hospital,
+#               Edinburgh, EH4 2XU, UK.
+# \par
+# Copyright (C), [2012],
+# The University Court of the University of Edinburgh,
+# Old College, Edinburgh, UK.
+# 
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be
+# useful but WITHOUT ANY WARRANTY; without even the implied
+# warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+# PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public
+# License along with this program; if not, write to the Free
+# Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA  02110-1301, USA.
+# \brief        Process this file with automake to produce Makefile.in
+##
 
-# Include the configuration makefile (modify as required).
-include			../../../../../../../../Makefile.conf
 
-JAVASOURCES		= \
+if BUILD_JAVA
+JAVASRCS		= \
 			  WlzAffineTransformLSq.java \
 			  WlzArrayStats.java \
 			  WlzArrayViewer.java \
@@ -36,26 +54,26 @@ JAVASOURCES		= \
 			  WlzViewer.java
 
 CLASSPATH		= .:../../../../../..
-ifeq ($(UNIXTYPE), CYGWIN)
-CLASSPATH		= ".;../../../../../.."
-endif
 
 JAVAFLAGS		= -classpath $(CLASSPATH)
-JAVACFLAGS		= -classpath $(CLASSPATH)
 
-CLASSES			= $(JAVASOURCES:%.java=%.class)
+JAVACLS			= $(JAVASRCS:.java=.class)
 
-all:			classes
+%.class:		%.java
+			$(JAVAC) $(JAVAFLAGS) $<
+
+all:			$(JAVACLS)
 
 clean:
 			$(RM) *.class
 
-classes:		$(CLASSES)
-
-demo:			$(CLASSES)
-			@echo "Simple demos of a java-woolz object thats"
-			@echo "in development. Look at the corresponding"
-			@echo "java source file to see the code!"
+demo:			$(JAVACLS)
+			@echo "Simple demos of using Woolz from Java."
+			@echo "Look at the corresponding Java source file to"
+			@echo "see the code!"
+			@echo
+			@echo "All tests will require the JWlz dynamic libary"
+			@echo "to be in the library search path."
 			@echo
 			@echo "WlzBoundingBox simply prints the bounding box"
 			@echo "of the given woolz object:"
@@ -103,3 +121,4 @@ demo:			$(CLASSES)
 			@echo "shows grey value (the window needs to be"
 			@echo "resized):"
 			$(JAVA) $(JAVAFLAGS) WlzViewer t0.wlz
+endif

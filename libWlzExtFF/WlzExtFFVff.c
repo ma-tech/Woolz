@@ -64,8 +64,8 @@ static int			WlzEffHeadRecParseVff(
 WlzObject	*WlzEffReadObjVff(FILE *fP, WlzErrorNum *dstErr)
 {
   WlzErrorNum	errNum = WLZ_ERR_READ_INCOMPLETE;
-  int		datumSize,
-  		dataCount,
+  int		datumSize = 0,
+  		dataCount = 0,
   		recC;
   WlzEffVffHeader header;
   WlzIVertex3	origin,

@@ -242,7 +242,10 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-h] [-o<output>] [-s #] [-t <type>] [-z #] [<input>]\n"
+    "Usage: %s [-h] [-o<output>] [-s #] [-t <type>] [-z #]\n"
+    "                                  [<input>]\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -h  Output this usage message.\n"
     "  -o  Output file name, default is the standard output.\n"
     "  -s  Marker separation.\n"
@@ -251,7 +254,8 @@ int		main(int argc, char *argv[])
     "Reads either a 2D or 3D spatial domain object from a given file or\n"
     "the standard input (default). A new domainis then constructed which\n"
     "covers the given domain with a lattice of markers.\n",
-    argv[0]);
+    argv[0],
+    WlzVersion());
   }
   return(!ok);
 }

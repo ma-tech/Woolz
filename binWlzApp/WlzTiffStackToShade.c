@@ -92,17 +92,18 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s <input file>\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-h] [-v] <input file>\n"
 	  "\tConvert a TIFF stack to a shade image\n"
 	  "\tby finding the maximal pixel values in each\n"
 	  "\tchannel. The TIFF is read from the given file,\n"
 	  "\toutput to stdout.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -111,7 +112,7 @@ int main(int	argc,
 {
   char 		optList[] = "hv";
   int		option;
-  int		verboseFlg=0;
+  /* int		verboseFlg=0; */
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   char		*tiffFile=NULL;
   WlzObject	*inObj, *outObj, *obj, **objVec;
@@ -124,7 +125,7 @@ int main(int	argc,
     switch( option ){
 
     case 'v':
-      verboseFlg = 1;
+      /* verboseFlg = 1; */
       break;
 
     case 'h':
@@ -143,7 +144,8 @@ int main(int	argc,
   }
 
   /* read the TIFF file */
-  if( (inObj = WlzAssignObject(WlzEffReadObj(NULL, tiffFile, WLZEFF_FORMAT_TIFF, 0,
+  if( (inObj = WlzAssignObject(WlzEffReadObj(NULL, tiffFile,
+  			                     WLZEFF_FORMAT_TIFF, 0, 0, 0,
 					     &errNum), NULL)) == NULL ){
     usage(argv[0]);
     return errNum;

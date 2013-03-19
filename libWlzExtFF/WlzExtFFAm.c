@@ -396,6 +396,7 @@ static WlzErrorNum	WlzEffAmWrite3DDomObj(FILE *fP, WlzObject *obj)
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    dataSz = 0;
     dataCnt = sz.vtX * sz.vtY * sz.vtZ;
     switch(gType)
     {
@@ -1814,8 +1815,8 @@ static WlzCompoundArray *WlzEffAmSplitLabelObj(WlzObject *gObj,
   WlzPixelV	thrV;
   WlzObject	*tObj0 = NULL,
   		*tObj1 = NULL,
-		*tObj2,
-		*tObj3;
+		*tObj2 = NULL,
+		*tObj3 = NULL;
   WlzEffAmMaterial *mat;
   WlzPropertyList *pList = NULL;
   WlzCompoundArray *aObj = NULL;

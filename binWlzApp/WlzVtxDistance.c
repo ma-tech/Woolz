@@ -98,14 +98,15 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s x1,y1,z1 x2,y2,z2\n"
-	  "\tCalculate the distance between the two vertices\n"
-	  "\twriting the distance to standard output\n"
-	  "\tOptions are:\n"
-	  "\t  -h                 Help - prints this usage message\n"
-	  "",
-	  proc_str);
+	  "\tCalculate the distance between the two vertices writing the\n"
+	  "\tdistance to standard output\n"
+	  "Version: %s\n"
+	  "Options:\n"
+	  "\t  -h                 Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

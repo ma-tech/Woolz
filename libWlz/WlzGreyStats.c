@@ -117,13 +117,13 @@ static int	WlzGreyStats2D(WlzObject *srcObj,
   WlzGreyP	gPix;
   int		count,
   		area = 0;
-  double	gVal,
-  		min,
-		max,
+  double	gVal = 0.0,
+  		min = 0.0,
+		max = 0.0,
 		sum = 0.0,
 		sumSq = 0.0;
   WlzUInt	rgbVal;
-  WlzGreyType	gType;
+  WlzGreyType	gType = WLZ_GREY_ERROR;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
     
   if((errNum = WlzInitGreyScan(srcObj, &iWSp, &gWSp)) == WLZ_ERR_NONE)
@@ -295,7 +295,7 @@ int		WlzGreyStats(WlzObject *srcObj,
 	       (dom[pIdx].core != NULL) &&
 	       (val[pIdx].core != NULL))
 	    {
-	      int	area2D;
+	      int	area2D = 0;
 	      double	min2D,
 			max2D,
 			sum2D,

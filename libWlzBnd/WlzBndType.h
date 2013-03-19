@@ -42,13 +42,17 @@ static char _WlzBndType_h[] = "University of Edinburgh $Id$";
 * \ingroup	LibWlzBnd
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif	/* !WLZBND_TYPE_H Don't put anything after this line */

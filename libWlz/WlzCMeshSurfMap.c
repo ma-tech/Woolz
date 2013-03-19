@@ -131,7 +131,7 @@ WlzObject	*WlzCMeshCompSurfMapToCircle(WlzObject *inObj,
     /* For each of the boundary nodes, set it's displacement to be
      * the closest point on the fitted circle. */
     
-    /* TODO HACK TODO */
+    /* TODO */
   }
   /* Compute conformal mapping of the mesh to the circular boundary. */
   if(errNum == WLZ_ERR_NONE)
@@ -165,11 +165,9 @@ WlzObject	*WlzCMeshCompSurfMap(WlzObject *inObj,
 {
   int		*nodTb = NULL;
   WlzCMesh2D5	*mesh;
-  WlzValues	val;
   WlzObject	*rtnObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  val.core = NULL;
   if(inObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -650,7 +648,7 @@ WlzGMModel	*WlzCMeshToGMModel(WlzObject *mObj, double disp,
 */
 WlzObject	*WlzCMeshFlatten2D5(WlzObject *gObj, WlzErrorNum *dstErr)
 {
-  WlzCMesh2D5	*gMesh;
+  WlzCMesh2D5	*gMesh = NULL;
   WlzCMesh2D	*rMesh = NULL;
   WlzObject	*rObj = NULL;
   WlzIndexedValues *gIxv;
@@ -815,7 +813,7 @@ static WlzGMModel *WlzCMeshToGMModel2D(WlzObject *mObj, double disp,
 		nNod = 0;
   WlzCMesh2D	*mesh;
   WlzGMModel	*model = NULL;
-  WlzIndexedValues *ixv;
+  WlzIndexedValues *ixv = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	minBkSz = 1024,
   		minHTSz = 1024;

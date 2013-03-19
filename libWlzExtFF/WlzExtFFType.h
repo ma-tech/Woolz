@@ -42,9 +42,11 @@ static char _WlzExtFFType_h[] = "University of Edinburgh $Id$";
 * \ingroup	WlzExtFF
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 /*
 * Can be used to initialise any WlzExtFF enumaerated type to an invalid
@@ -852,8 +854,10 @@ typedef struct _WlzEffAnlDsr
 
 #endif /* WLZ_EXT_BIND */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif /* ! WLZ_EXTFFTYPE_H */

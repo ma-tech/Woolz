@@ -99,11 +99,12 @@ void usage(char *proc_str)
   fprintf(stderr,
 	  "Usage:\t%s -h -v [<input file>]\n"
 	  "\tRead the Smart Atlas XML file and convert to woolz\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -113,7 +114,7 @@ char *nextStartTag(
   char 	*tag=NULL;
   char 	buf[256];
   char	c;
-  int	i;
+  int	i = 0;
 
   while( (c = fgetc(inFile)) != EOF ){
     if( c == '<' ){
@@ -317,7 +318,7 @@ int		main(int argc, char *argv[])
   FILE		*inFile, *outFile;
   char 		optList[] = "hv";
   int		option;
-  int		verboseFlg=0;
+  /* int	verboseFlg=0; */
   WlzObject	*obj;
   WlzDomain	domain;
   WlzValues	values;
@@ -335,7 +336,7 @@ int		main(int argc, char *argv[])
     switch( option ){
 
     case 'v':
-      verboseFlg = 1;
+      /* verboseFlg = 1; */
       break;
 
     case 'h':

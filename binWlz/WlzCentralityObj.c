@@ -273,9 +273,11 @@ int		main(int argc, char *argv[])
   {
     (void )fprintf(stderr,
     "Usage: %s [-b] [-h] [-n#] [-o <output file>] [-R]\n"
-    "Usage:                  [<feat obj>] [<ref obj>]\n"
+    "                        [<feat obj>] [<ref obj>]\n"
+    "Version: %s\n"
     "Computes the centrality of the feature object's domain with respect to\n"
     "the reference object's domain.\n"
+    "\n"
     "Options are:\n"
     "  -b  Treat the feature object as a binary object with constant values.\n"
     "  -h  Help - prints this usage message\n"
@@ -285,7 +287,8 @@ int		main(int argc, char *argv[])
     "By default the feature and reference objects are read from the standard\n"
     "input. This may be made explicit if only one of these is given by using\n"
     "- to specify the standard input.\n",
-    argv[0]);
+    argv[0],
+    WlzVersion());
   }
   return(!ok);
 }

@@ -72,7 +72,8 @@ WlzObject *WlzGetProjectionFromObject(
   WlzThreeDViewStruct	*viewStr1=NULL;
   WlzDomain		domain;
   WlzValues		values;
-  WlzGreyType		srcGType, dstGType;
+  WlzGreyType		srcGType = WLZ_GREY_UBYTE,
+  			dstGType = WLZ_GREY_UBYTE;
   WlzPixelV		pixval;
   WlzPixelP		pixptr;
   WlzIntervalWSpace	iwsp;
@@ -84,7 +85,7 @@ WlzObject *WlzGetProjectionFromObject(
   double		*s_to_y=NULL;
   double		*s_to_z=NULL;
   int			k, xp, yp, s, sp;
-  int			length, size, occupiedFlg;
+  int			length = 0, size = 0, occupiedFlg;
   WlzErrorNum 	errNum=WLZ_ERR_NONE;
 
   /* check inputs */

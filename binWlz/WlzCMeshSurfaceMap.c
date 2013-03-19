@@ -336,10 +336,13 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
-    " [-2] [-h] [-i#] [-n #] [-o<output object>] [-p<points file>]\n"
-    "                          [-r#] [<input object>]\n"
+    " [-2] [-h] [-i#] [-n #] [-o<output object>]\n"
+    "                          [-p<points file>] [-r#] [<input object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -2  Output a 2D mesh rather than a 3D mesh with displacements.\n"
     "  -h  Help, prints usage message.\n"

@@ -56,7 +56,7 @@ WlzObject *WlzCbThreshold(
   WlzErrorNum	*dstErr)
 {
   WlzObject		*nobj=NULL;
-  WlzIntervalDomain	*idom;
+  WlzIntervalDomain	*idom = NULL;
   WlzGreyP		g;
   WlzThreshCbStr	callData;
   int			colno, nints;
@@ -64,7 +64,7 @@ WlzObject *WlzCbThreshold(
   int			nl1,nll,nk1,nkl;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
-  WlzInterval		*itvl, *jtvl;
+  WlzInterval		*itvl = NULL, *jtvl = NULL;
   WlzDomain		domain;
   WlzValues		values;
   WlzErrorNum		errNum=WLZ_ERR_NONE;

@@ -70,7 +70,7 @@ WlzObject *WlzTransposeObj(
   WlzObject	*obj,
   WlzErrorNum	*dstErr)
 {
-  WlzObject		*bobj, *nobj=NULL;
+  WlzObject		*bobj = NULL, *nobj = NULL;
   WlzGreyValueWSpace	*gVWSp = NULL;
   WlzDomain		domain;
   WlzValues		nvalues,
@@ -78,8 +78,10 @@ WlzObject *WlzTransposeObj(
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
   int			i;
-  WlzErrorNum		errNum=WLZ_ERR_NONE;
+  WlzErrorNum		errNum = WLZ_ERR_NONE;
 
+  domain.core = NULL;
+  values.core = NULL;
   /* check object */
   if( obj == NULL ){
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -414,7 +416,7 @@ static WlzObject *WlzTransposeRectObj(
   WlzObject	*nobj=NULL;
   WlzDomain	domain;
   WlzValues	values;
-  int 		i, width, height, size;
+  int 		i, width, height, size = 0;
   WlzGreyP 	newvals;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
@@ -434,7 +436,7 @@ static WlzObject *WlzTransposeRectObj(
     if( obj->values.core ){
       WlzIntervalWSpace	iwsp;
       WlzGreyWSpace	gwsp;
-      WlzObjectType	newtype;
+      WlzObjectType	newtype = WLZ_NULL;
 
       width = obj->domain.i->lastln - obj->domain.i->line1 + 1;
       height = obj->domain.i->lastkl - obj->domain.i->kol1 + 1;
@@ -497,7 +499,7 @@ static WlzObject *WlzTransposeRectObj(
 					   obj->domain.i->kol1,
 					   obj->domain.i->lastkl,
 					   obj->domain.i->line1,
-					   width/size,
+					   width / size,
 					   WlzGetBackground(obj, NULL),
 					   newvals.inp,
 					   &errNum)) == NULL ){
@@ -524,13 +526,15 @@ static WlzObject *WlzTranspose3DObj(
   WlzObject *obj,
   WlzErrorNum *dstErr)
 {
-  WlzObject	*rtnObj;
-  WlzObject	*obj1, *obj2;
+  WlzObject	*rtnObj = NULL;
+  WlzObject	*obj1 = NULL, *obj2 = NULL;
   WlzDomain	domain;
   WlzValues	values;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   int		p, indx;
 
+  domain.core = NULL;
+  values.core = NULL;
   /* only check for the plane domain - other chacks are done */
   if( obj->domain.core == NULL ){
     errNum = WLZ_ERR_DOMAIN_NULL;

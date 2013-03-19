@@ -57,7 +57,7 @@ static char _WlzValueUtils_c[] = "University of Edinburgh $Id$";
 * \param	count			Number of vector elements to be set.
 */
 void		WlzValueSetInt(int *vec, int value,
-			       int count)
+			       size_t count)
 {
   if(value)
   {
@@ -83,7 +83,7 @@ void		WlzValueSetInt(int *vec, int value,
 * \param	count			Number of vector elements to be set.
 */
 void		WlzValueSetShort(short *vec, short value,
-				 int count)
+				 size_t count)
 {
   if(value)
   {
@@ -109,7 +109,7 @@ void		WlzValueSetShort(short *vec, short value,
 * \param	count			Number of vector elements to be set.
 */
 void		WlzValueSetUByte(WlzUByte *vec, WlzUByte value,
-				 int count)
+				 size_t count)
 {
   (void )memset(vec, value, count);
 }
@@ -125,7 +125,7 @@ void		WlzValueSetUByte(WlzUByte *vec, WlzUByte value,
 * \param	count			Number of vector elements to be set.
 */
 void		WlzValueSetFloat(float *vec, float value,
-				 int count)
+				 size_t count)
 {
   while(count-- > 0)
   {
@@ -144,7 +144,7 @@ void		WlzValueSetFloat(float *vec, float value,
 * \param	count			Number of vector elements to be set.
 */
 void		WlzValueSetDouble(double *vec, double value,
-				  int count)
+				  size_t count)
 {
   while(count-- > 0)
   {
@@ -163,7 +163,7 @@ void		WlzValueSetDouble(double *vec, double value,
 * \param	count			Number of vector elements to be set.
 */
 void		WlzValueSetRGBA(WlzUInt *vec, WlzUInt value,
-			       int count)
+			       size_t count)
 {
   if(value)
   {
@@ -189,7 +189,7 @@ void		WlzValueSetRGBA(WlzUInt *vec, WlzUInt value,
 * \param	count			Number of vector elements to be set.
 */
 void		WlzValueSetDVertex(WlzDVertex2 *vec, WlzDVertex2 value,
-				   int count)
+				   size_t count)
 {
   while(count-- > 0)
   {
@@ -208,7 +208,7 @@ void		WlzValueSetDVertex(WlzDVertex2 *vec, WlzDVertex2 value,
 * \param	count			Number of vector elements to be set.
 */
 void		WlzValueSetFVertex(WlzFVertex2 *vec, WlzFVertex2 value,
-				   int count)
+				   size_t count)
 {
   while(count-- > 0)
   {
@@ -227,7 +227,7 @@ void		WlzValueSetFVertex(WlzFVertex2 *vec, WlzFVertex2 value,
 * \param	count			Number of vector elements to be set.
 */
 void		WlzValueSetIVertex(WlzIVertex2 *vec, WlzIVertex2 value,
-				   int count)
+				   size_t count)
 {
   if(value.vtX || value.vtY)
   {
@@ -256,8 +256,8 @@ void		WlzValueSetIVertex(WlzIVertex2 *vec, WlzIVertex2 value,
 * \param	count			Number of vector elements to
 *					be set.
 */
-void		WlzValueSetGrey(WlzGreyP vec, int vecOff, WlzGreyV value,
-				WlzGreyType gType, int count)
+void		WlzValueSetGrey(WlzGreyP vec, size_t vecOff, WlzGreyV value,
+				WlzGreyType gType, size_t count)
 {
   switch(gType)
   {
@@ -292,7 +292,7 @@ void		WlzValueSetGrey(WlzGreyP vec, int vecOff, WlzGreyV value,
 *					clamped.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampIntToShort(int *vec, int count)
+void		 WlzValueClampIntToShort(int *vec, size_t count)
 {
   while(count-- > 0)
   {
@@ -316,7 +316,7 @@ void		 WlzValueClampIntToShort(int *vec, int count)
 *					clamped.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampIntToUByte(int *vec, int count)
+void		 WlzValueClampIntToUByte(int *vec, size_t count)
 {
   while(count-- > 0)
   {
@@ -340,7 +340,7 @@ void		 WlzValueClampIntToUByte(int *vec, int count)
 *					clamped.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampShortToUByte(short *vec, int count)
+void		 WlzValueClampShortToUByte(short *vec, size_t count)
 {
   while(count-- > 0)
   {
@@ -364,7 +364,7 @@ void		 WlzValueClampShortToUByte(short *vec, int count)
 *					clamped.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampDoubleToInt(double *vec, int count)
+void		 WlzValueClampDoubleToInt(double *vec, size_t count)
 {
   while(count-- > 0)
   {
@@ -388,7 +388,7 @@ void		 WlzValueClampDoubleToInt(double *vec, int count)
 *					clamped.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampDoubleToShort(double *vec, int count)
+void		 WlzValueClampDoubleToShort(double *vec, size_t count)
 {
   while(count-- > 0)
   {
@@ -412,7 +412,7 @@ void		 WlzValueClampDoubleToShort(double *vec, int count)
 *					clamped.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampDoubleToUByte(double *vec, int count)
+void		 WlzValueClampDoubleToUByte(double *vec, size_t count)
 {
   while(count-- > 0)
   {
@@ -436,7 +436,7 @@ void		 WlzValueClampDoubleToUByte(double *vec, int count)
 *					clamped.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampDoubleToRGBA(double *vec, int count)
+void		 WlzValueClampDoubleToRGBA(double *vec, size_t count)
 {
   while(count-- > 0)
   {
@@ -460,7 +460,7 @@ void		 WlzValueClampDoubleToRGBA(double *vec, int count)
 *					clamped.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampDoubleToFloat(double *vec, int count)
+void		 WlzValueClampDoubleToFloat(double *vec, size_t count)
 {
   while(count-- > 0)
   {
@@ -484,7 +484,7 @@ void		 WlzValueClampDoubleToFloat(double *vec, int count)
 *					clamped.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampFloatToInt(float *vec, int count)
+void		 WlzValueClampFloatToInt(float *vec, size_t count)
 {
   while(count-- > 0)
   {
@@ -508,7 +508,7 @@ void		 WlzValueClampFloatToInt(float *vec, int count)
 *					clamped.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampFloatToShort(float *vec, int count)
+void		 WlzValueClampFloatToShort(float *vec, size_t count)
 {
   while(count-- > 0)
   {
@@ -532,7 +532,7 @@ void		 WlzValueClampFloatToShort(float *vec, int count)
 *					clamped.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampFloatToUByte(float *vec, int count)
+void		 WlzValueClampFloatToUByte(float *vec, size_t count)
 {
   while(count-- > 0)
   {
@@ -557,7 +557,7 @@ void		 WlzValueClampFloatToUByte(float *vec, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampIntIntoShort(short *dst, int *src, int count)
+void		 WlzValueClampIntIntoShort(short *dst, int *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -587,7 +587,8 @@ void		 WlzValueClampIntIntoShort(short *dst, int *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements.
 */
-void		 WlzValueClampIntIntoUByte(WlzUByte *dst, int *src, int count)
+void		 WlzValueClampIntIntoUByte(WlzUByte *dst, int *src,
+					   size_t count)
 {
   while(count-- > 0)
   {
@@ -618,7 +619,7 @@ void		 WlzValueClampIntIntoUByte(WlzUByte *dst, int *src, int count)
 * \param	count			Number of vector elements.
 */
 void		 WlzValueClampShortIntoUByte(WlzUByte *dst, short *src,
-					     int count)
+					     size_t count)
 {
   while(count-- > 0)
   {
@@ -648,7 +649,7 @@ void		 WlzValueClampShortIntoUByte(WlzUByte *dst, short *src,
 * \param	src			Source vector.
 * \param	count			Number of vector elements.
 */
-void		WlzValueClampFloatIntoInt(int *dst, float *src, int count)
+void		WlzValueClampFloatIntoInt(int *dst, float *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -678,7 +679,8 @@ void		WlzValueClampFloatIntoInt(int *dst, float *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements.
 */
-void		WlzValueClampFloatIntoShort(short *dst, float *src, int count)
+void		WlzValueClampFloatIntoShort(short *dst, float *src,
+					    size_t count)
 {
   while(count-- > 0)
   {
@@ -709,7 +711,7 @@ void		WlzValueClampFloatIntoShort(short *dst, float *src, int count)
 * \param	count			Number of vector elements.
 */
 void		WlzValueClampFloatIntoUByte(WlzUByte *dst, float *src,
-					    int count)
+					    size_t count)
 {
   while(count-- > 0)
   {
@@ -739,7 +741,7 @@ void		WlzValueClampFloatIntoUByte(WlzUByte *dst, float *src,
 * \param	src			Source vector.
 * \param	count			Number of vector elements.
 */
-void		WlzValueClampDoubleIntoInt(int *dst, double *src, int count)
+void		WlzValueClampDoubleIntoInt(int *dst, double *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -769,7 +771,8 @@ void		WlzValueClampDoubleIntoInt(int *dst, double *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements.
 */
-void		WlzValueClampDoubleIntoShort(short *dst, double *src, int count)
+void		WlzValueClampDoubleIntoShort(short *dst, double *src,
+					     size_t count)
 {
   while(count-- > 0)
   {
@@ -800,7 +803,7 @@ void		WlzValueClampDoubleIntoShort(short *dst, double *src, int count)
 * \param	count			Number of vector elements.
 */
 void		WlzValueClampDoubleIntoUByte(WlzUByte *dst, double *src,
-					     int count)
+					     size_t count)
 {
   while(count-- > 0)
   {
@@ -830,7 +833,8 @@ void		WlzValueClampDoubleIntoUByte(WlzUByte *dst, double *src,
 * \param	src			Source vector.
 * \param	count			Number of vector elements.
 */
-void		WlzValueClampDoubleIntoFloat(float *dst, double *src, int count)
+void		WlzValueClampDoubleIntoFloat(float *dst, double *src,
+					     size_t count)
 {
   while(count-- > 0)
   {
@@ -860,7 +864,7 @@ void		WlzValueClampDoubleIntoFloat(float *dst, double *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements.
 */
-void		WlzValueClampIntIntoRGBA(WlzUInt *dst, int *src, int count)
+void		WlzValueClampIntIntoRGBA(WlzUInt *dst, int *src, size_t count)
 {
   WlzUInt val;
   while(count-- > 0)
@@ -892,7 +896,8 @@ void		WlzValueClampIntIntoRGBA(WlzUInt *dst, int *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements.
 */
-void		WlzValueClampShortIntoRGBA(WlzUInt *dst, short *src, int count)
+void		WlzValueClampShortIntoRGBA(WlzUInt *dst, short *src,
+					   size_t count)
 {
   WlzUInt val;
   while(count-- > 0)
@@ -924,7 +929,8 @@ void		WlzValueClampShortIntoRGBA(WlzUInt *dst, short *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements.
 */
-void		WlzValueClampFloatIntoRGBA(WlzUInt *dst, float *src, int count)
+void		WlzValueClampFloatIntoRGBA(WlzUInt *dst, float *src,
+					   size_t count)
 {
   WlzUInt val;
   while(count-- > 0)
@@ -957,7 +963,7 @@ void		WlzValueClampFloatIntoRGBA(WlzUInt *dst, float *src, int count)
 * \param	count			Number of vector elements.
 */
 void		WlzValueClampDoubleIntoRGBA(WlzUInt *dst, double *src,
-					    int count)
+					    size_t count)
 {
   WlzUInt val;
   while(count-- > 0)
@@ -995,11 +1001,11 @@ void		WlzValueClampDoubleIntoRGBA(WlzUInt *dst, double *src,
 * \param	count			Number of vector elements to be
 *					clamped and copied.
 */
-void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
+void		WlzValueClampGreyIntoGrey(WlzGreyP dst, size_t dstOff,
 					  WlzGreyType dstType,
-					  WlzGreyP src, int srcOff,
+					  WlzGreyP src, size_t srcOff,
 					  WlzGreyType srcType,
-					  int count)
+					  size_t count)
 {
   switch(dstType)
   {
@@ -1202,7 +1208,7 @@ void		WlzValueClampGreyIntoGrey(WlzGreyP dst, int dstOff,
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyIntToInt(int *dst, int *src, int count)
+void		WlzValueCopyIntToInt(int *dst, int *src, size_t count)
 {
   (void )memcpy(dst, src, count * sizeof(int));
 }
@@ -1215,7 +1221,7 @@ void		WlzValueCopyIntToInt(int *dst, int *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyIntToShort(short *dst, int *src, int count)
+void		WlzValueCopyIntToShort(short *dst, int *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1231,7 +1237,7 @@ void		WlzValueCopyIntToShort(short *dst, int *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyIntToUByte(WlzUByte *dst, int *src, int count)
+void		WlzValueCopyIntToUByte(WlzUByte *dst, int *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1247,7 +1253,7 @@ void		WlzValueCopyIntToUByte(WlzUByte *dst, int *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyIntToFloat(float *dst, int *src, int count)
+void		WlzValueCopyIntToFloat(float *dst, int *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1263,7 +1269,7 @@ void		WlzValueCopyIntToFloat(float *dst, int *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyIntToDouble(double *dst, int *src, int count)
+void		WlzValueCopyIntToDouble(double *dst, int *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1279,7 +1285,7 @@ void		WlzValueCopyIntToDouble(double *dst, int *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyIntToRGBA(WlzUInt *dst, int *src, int count)
+void		WlzValueCopyIntToRGBA(WlzUInt *dst, int *src, size_t count)
 {
   WlzValueClampIntIntoRGBA(dst, src, count);
 }
@@ -1292,7 +1298,7 @@ void		WlzValueCopyIntToRGBA(WlzUInt *dst, int *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyShortToInt(int *dst, short *src, int count)
+void		WlzValueCopyShortToInt(int *dst, short *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1308,7 +1314,7 @@ void		WlzValueCopyShortToInt(int *dst, short *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyShortToShort(short *dst, short *src, int count)
+void		WlzValueCopyShortToShort(short *dst, short *src, size_t count)
 {
   (void )memcpy(dst, src, count * sizeof(short));
 }
@@ -1321,7 +1327,8 @@ void		WlzValueCopyShortToShort(short *dst, short *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyShortToUByte(WlzUByte *dst, short *src, int count)
+void		WlzValueCopyShortToUByte(WlzUByte *dst, short *src,
+				         size_t count)
 {
   while(count-- > 0)
   {
@@ -1337,7 +1344,7 @@ void		WlzValueCopyShortToUByte(WlzUByte *dst, short *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyShortToFloat(float *dst, short *src, int count)
+void		WlzValueCopyShortToFloat(float *dst, short *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1354,7 +1361,7 @@ void		WlzValueCopyShortToFloat(float *dst, short *src, int count)
 * \param	count			Number of vector elements to copy.
 */
 void		WlzValueCopyShortToDouble(double *dst, short *src,
-					        int count)
+					        size_t count)
 {
   while(count-- > 0)
   {
@@ -1370,7 +1377,7 @@ void		WlzValueCopyShortToDouble(double *dst, short *src,
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyUByteToInt(int *dst, WlzUByte *src, int count)
+void		WlzValueCopyUByteToInt(int *dst, WlzUByte *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1386,7 +1393,7 @@ void		WlzValueCopyUByteToInt(int *dst, WlzUByte *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyShortToRGBA(WlzUInt *dst, short *src, int count)
+void		WlzValueCopyShortToRGBA(WlzUInt *dst, short *src, size_t count)
 {
   WlzValueClampShortIntoRGBA(dst, src, count);
 }
@@ -1399,7 +1406,8 @@ void		WlzValueCopyShortToRGBA(WlzUInt *dst, short *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyUByteToShort(short *dst, WlzUByte *src, int count)
+void		WlzValueCopyUByteToShort(short *dst, WlzUByte *src,
+					 size_t count)
 {
   while(count-- > 0)
   {
@@ -1416,7 +1424,7 @@ void		WlzValueCopyUByteToShort(short *dst, WlzUByte *src, int count)
 * \param	count			Number of vector elements to copy.
 */
 void		WlzValueCopyUByteToUByte(WlzUByte *dst, WlzUByte *src,
-					 int count)
+					 size_t count)
 {
   (void )memcpy(dst, src, count * sizeof(WlzUByte));
 }
@@ -1429,7 +1437,8 @@ void		WlzValueCopyUByteToUByte(WlzUByte *dst, WlzUByte *src,
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyUByteToFloat(float *dst, WlzUByte *src, int count)
+void		WlzValueCopyUByteToFloat(float *dst, WlzUByte *src,
+					 size_t count)
 {
   while(count-- > 0)
   {
@@ -1446,7 +1455,7 @@ void		WlzValueCopyUByteToFloat(float *dst, WlzUByte *src, int count)
 * \param	count			Number of vector elements to copy.
 */
 void		WlzValueCopyUByteToDouble(double *dst, WlzUByte *src,
-					  int count)
+					  size_t count)
 {
   while(count-- > 0)
   {
@@ -1462,7 +1471,8 @@ void		WlzValueCopyUByteToDouble(double *dst, WlzUByte *src,
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyUByteToRGBA(WlzUInt *dst, WlzUByte *src, int count)
+void		WlzValueCopyUByteToRGBA(WlzUInt *dst, WlzUByte *src,
+				        size_t count)
 {
   while(count-- > 0)
   {
@@ -1480,7 +1490,7 @@ void		WlzValueCopyUByteToRGBA(WlzUInt *dst, WlzUByte *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyFloatToInt(int *dst, float *src, int count)
+void		WlzValueCopyFloatToInt(int *dst, float *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1497,7 +1507,7 @@ void		WlzValueCopyFloatToInt(int *dst, float *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyFloatToShort(short *dst, float *src, int count)
+void		WlzValueCopyFloatToShort(short *dst, float *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1514,7 +1524,8 @@ void		WlzValueCopyFloatToShort(short *dst, float *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyFloatToUByte(WlzUByte *dst, float *src, int count)
+void		WlzValueCopyFloatToUByte(WlzUByte *dst, float *src,
+				         size_t count)
 {
   while(count-- > 0)
   {
@@ -1531,7 +1542,7 @@ void		WlzValueCopyFloatToUByte(WlzUByte *dst, float *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyFloatToFloat(float *dst, float *src, int count)
+void		WlzValueCopyFloatToFloat(float *dst, float *src, size_t count)
 {
   (void )memcpy(dst, src, count * sizeof(float));
 }
@@ -1544,7 +1555,8 @@ void		WlzValueCopyFloatToFloat(float *dst, float *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyFloatToDouble(double *dst, float *src, int count)
+void		WlzValueCopyFloatToDouble(double *dst, float *src,
+				          size_t count)
 {
   while(count-- > 0)
   {
@@ -1560,7 +1572,7 @@ void		WlzValueCopyFloatToDouble(double *dst, float *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyFloatToRGBA(WlzUInt *dst, float *src, int count)
+void		WlzValueCopyFloatToRGBA(WlzUInt *dst, float *src, size_t count)
 {
   WlzValueClampFloatIntoRGBA(dst, src, count);
 }
@@ -1573,7 +1585,7 @@ void		WlzValueCopyFloatToRGBA(WlzUInt *dst, float *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyDoubleToInt(int *dst, double *src, int count)
+void		WlzValueCopyDoubleToInt(int *dst, double *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1590,7 +1602,7 @@ void		WlzValueCopyDoubleToInt(int *dst, double *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyDoubleToShort(short *dst, double *src, int count)
+void		WlzValueCopyDoubleToShort(short *dst, double *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1608,7 +1620,7 @@ void		WlzValueCopyDoubleToShort(short *dst, double *src, int count)
 * \param	count			Number of vector elements to copy.
 */
 void		WlzValueCopyDoubleToUByte(WlzUByte *dst, double *src,
-					  int count)
+					  size_t count)
 {
   while(count-- > 0)
   {
@@ -1625,7 +1637,8 @@ void		WlzValueCopyDoubleToUByte(WlzUByte *dst, double *src,
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyDoubleToFloat(float *dst, double *src, int count)
+void		WlzValueCopyDoubleToFloat(float *dst, double *src,
+					  size_t count)
 {
   while(count-- > 0)
   {
@@ -1641,7 +1654,8 @@ void		WlzValueCopyDoubleToFloat(float *dst, double *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyDoubleToDouble(double *dst, double *src, int count)
+void		WlzValueCopyDoubleToDouble(double *dst, double *src,
+					   size_t count)
 {
   (void )memcpy(dst, src, count * sizeof(double));
 }
@@ -1654,7 +1668,8 @@ void		WlzValueCopyDoubleToDouble(double *dst, double *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyDoubleToRGBA(WlzUInt *dst, double *src, int count)
+void		WlzValueCopyDoubleToRGBA(WlzUInt *dst, double *src,
+					 size_t count)
 {
   WlzValueClampDoubleIntoRGBA(dst, src, count);
 }
@@ -1667,7 +1682,7 @@ void		WlzValueCopyDoubleToRGBA(WlzUInt *dst, double *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyRGBAToInt(int *dst, WlzUInt *src, int count)
+void		WlzValueCopyRGBAToInt(int *dst, WlzUInt *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1684,7 +1699,7 @@ void		WlzValueCopyRGBAToInt(int *dst, WlzUInt *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyRGBAToShort(short *dst, WlzUInt *src, int count)
+void		WlzValueCopyRGBAToShort(short *dst, WlzUInt *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1702,7 +1717,7 @@ void		WlzValueCopyRGBAToShort(short *dst, WlzUInt *src, int count)
 * \param	count			Number of vector elements to copy.
 */
 void		WlzValueCopyRGBAToUByte(WlzUByte *dst, WlzUInt *src,
-				        int count)
+				        size_t count)
 {
   int	ival;
 
@@ -1722,7 +1737,7 @@ void		WlzValueCopyRGBAToUByte(WlzUByte *dst, WlzUInt *src,
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyRGBAToFloat(float *dst, WlzUInt *src, int count)
+void		WlzValueCopyRGBAToFloat(float *dst, WlzUInt *src, size_t count)
 {
   while(count-- > 0)
   {
@@ -1739,7 +1754,8 @@ void		WlzValueCopyRGBAToFloat(float *dst, WlzUInt *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyRGBAToDouble(double *dst, WlzUInt *src, int count)
+void		WlzValueCopyRGBAToDouble(double *dst, WlzUInt *src,
+					 size_t count)
 {
   while(count-- > 0)
   {
@@ -1756,7 +1772,8 @@ void		WlzValueCopyRGBAToDouble(double *dst, WlzUInt *src, int count)
 * \param	src			Source vector.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyRGBAToRGBA(WlzUInt *dst, WlzUInt *src, int count)
+void		WlzValueCopyRGBAToRGBA(WlzUInt *dst, WlzUInt *src,
+				       size_t count)
 {
   while(count-- > 0)
   {
@@ -1778,11 +1795,11 @@ void		WlzValueCopyRGBAToRGBA(WlzUInt *dst, WlzUInt *src, int count)
 * \param	srcType			Source type, eg WLZ_GREY_SHORT.
 * \param	count			Number of vector elements to copy.
 */
-void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
+void		WlzValueCopyGreyToGrey(WlzGreyP dst, size_t dstOff,
 				       WlzGreyType dstType,
-				       WlzGreyP src, int srcOff,
+				       WlzGreyP src, size_t srcOff,
 				       WlzGreyType srcType,
-				       int count)
+				       size_t count)
 {
   switch(dstType)
   {
@@ -1987,7 +2004,7 @@ void		WlzValueCopyGreyToGrey(WlzGreyP dst, int dstOff,
 */
 void		WlzValueCopyDVertexToDVertex(WlzDVertex2 *dst,
 					     WlzDVertex2 *src,
-					     int count)
+					     size_t count)
 {
   (void )memcpy(dst, src, count * sizeof(WlzDVertex2));
 }
@@ -2003,7 +2020,7 @@ void		WlzValueCopyDVertexToDVertex(WlzDVertex2 *dst,
 */
 void		WlzValueCopyDVertexToFVertex(WlzFVertex2 *dst,
 					     WlzDVertex2 *src,
-					     int count)
+					     size_t count)
 {
   while(count-- > 0)
   {
@@ -2025,7 +2042,7 @@ void		WlzValueCopyDVertexToFVertex(WlzFVertex2 *dst,
 */
 void		WlzValueCopyDVertexToIVertex(WlzIVertex2 *dst,
 					     WlzDVertex2 *src,
-					     int count)
+					     size_t count)
 {
   while(count-- > 0)
   {
@@ -2047,7 +2064,7 @@ void		WlzValueCopyDVertexToIVertex(WlzIVertex2 *dst,
 */
 void		WlzValueCopyFVertexToDVertex(WlzDVertex2 *dst,
 					     WlzFVertex2 *src,
-					     int count)
+					     size_t count)
 {
   while(count-- > 0)
   {
@@ -2069,7 +2086,7 @@ void		WlzValueCopyFVertexToDVertex(WlzDVertex2 *dst,
 */
 void		WlzValueCopyFVertexToFVertex(WlzFVertex2 *dst,
 					     WlzFVertex2 *src,
-					     int count)
+					     size_t count)
 {
   (void )memcpy(dst, src, count * sizeof(WlzFVertex2));
 }
@@ -2085,7 +2102,7 @@ void		WlzValueCopyFVertexToFVertex(WlzFVertex2 *dst,
 */
 void		WlzValueCopyFVertexToIVertex(WlzIVertex2 *dst,
 					     WlzFVertex2 *src,
-					     int count)
+					     size_t count)
 {
   while(count-- > 0)
   {
@@ -2107,7 +2124,7 @@ void		WlzValueCopyFVertexToIVertex(WlzIVertex2 *dst,
 */
 void		WlzValueCopyIVertexToDVertex(WlzDVertex2 *dst,
 					     WlzIVertex2 *src,
-					     int count)
+					     size_t count)
 {
   while(count-- > 0)
   {
@@ -2129,7 +2146,7 @@ void		WlzValueCopyIVertexToDVertex(WlzDVertex2 *dst,
 */
 void		WlzValueCopyIVertexToFVertex(WlzFVertex2 *dst,
 					     WlzIVertex2 *src,
-					     int count)
+					     size_t count)
 {
   while(count-- > 0)
   {
@@ -2151,7 +2168,7 @@ void		WlzValueCopyIVertexToFVertex(WlzFVertex2 *dst,
 */
 void		WlzValueCopyIVertexToIVertex(WlzIVertex2 *dst,
 					     WlzIVertex2 *src,
-					     int count)
+					     size_t count)
 {
   (void )memcpy(dst, src, count * sizeof(WlzIVertex2));
 }
@@ -2167,7 +2184,7 @@ void		WlzValueCopyIVertexToIVertex(WlzIVertex2 *dst,
 */
 void		WlzValueCopyDVertexToDVertex3(WlzDVertex3 *dst,
 					      WlzDVertex3 *src,
-					      int count)
+					      size_t count)
 {
   (void )memcpy(dst, src, count * sizeof(WlzDVertex3));
 }
@@ -2183,7 +2200,7 @@ void		WlzValueCopyDVertexToDVertex3(WlzDVertex3 *dst,
 */
 void		WlzValueCopyDVertexToFVertex3(WlzFVertex3 *dst,
 					      WlzDVertex3 *src,
-					      int count)
+					      size_t count)
 {
   while(count-- > 0)
   {
@@ -2206,7 +2223,7 @@ void		WlzValueCopyDVertexToFVertex3(WlzFVertex3 *dst,
 */
 void		WlzValueCopyDVertexToIVertex3(WlzIVertex3 *dst,
 					      WlzDVertex3 *src,
-					      int count)
+					      size_t count)
 {
   while(count-- > 0)
   {
@@ -2229,7 +2246,7 @@ void		WlzValueCopyDVertexToIVertex3(WlzIVertex3 *dst,
 */
 void		WlzValueCopyFVertexToDVertex3(WlzDVertex3 *dst,
 					      WlzFVertex3 *src,
-					      int count)
+					      size_t count)
 {
   while(count-- > 0)
   {
@@ -2252,7 +2269,7 @@ void		WlzValueCopyFVertexToDVertex3(WlzDVertex3 *dst,
 */
 void		WlzValueCopyFVertexToFVertex3(WlzFVertex3 *dst,
 					      WlzFVertex3 *src,
-					      int count)
+					      size_t count)
 {
   (void )memcpy(dst, src, count * sizeof(WlzFVertex3));
 }
@@ -2268,7 +2285,7 @@ void		WlzValueCopyFVertexToFVertex3(WlzFVertex3 *dst,
 */
 void		WlzValueCopyFVertexToIVertex3(WlzIVertex3 *dst,
 					      WlzFVertex3 *src,
-					      int count)
+					      size_t count)
 {
   while(count-- > 0)
   {
@@ -2291,7 +2308,7 @@ void		WlzValueCopyFVertexToIVertex3(WlzIVertex3 *dst,
 */
 void		WlzValueCopyIVertexToDVertex3(WlzDVertex3 *dst,
 					      WlzIVertex3 *src,
-					      int count)
+					      size_t count)
 {
   while(count-- > 0)
   {
@@ -2314,7 +2331,7 @@ void		WlzValueCopyIVertexToDVertex3(WlzDVertex3 *dst,
 */
 void		WlzValueCopyIVertexToFVertex3(WlzFVertex3 *dst,
 					      WlzIVertex3 *src,
-					      int count)
+					      size_t count)
 {
   while(count-- > 0)
   {
@@ -2337,7 +2354,7 @@ void		WlzValueCopyIVertexToFVertex3(WlzFVertex3 *dst,
 */
 void		WlzValueCopyIVertexToIVertex3(WlzIVertex3 *dst,
 					      WlzIVertex3 *src,
-					      int count)
+					      size_t count)
 {
   (void )memcpy(dst, src, count * sizeof(WlzIVertex3));
 }
@@ -2626,19 +2643,19 @@ WlzErrorNum	WlzValueConvertPixel(WlzPixelV *dstPix,
 * \param	values			Vector of int values.
 * \param	nVal			Number of values in vector.
 */
-int		WlzValueMedianInt(int *values, int nVal)
+int		WlzValueMedianInt(int *values, size_t nVal)
 {
   int		tmpV,
-  		idP,
-		idV,
-  		nPar,
 		medVal;
+  size_t	idP,
+  		idV,
+  		nPar;
   int		*minP,
   		*maxP,
 		*valP0,
 		*valP1;
 
-  if(nVal <= 0)
+  if(nVal < 1)
   {
     medVal = 0;
   }
@@ -2748,9 +2765,9 @@ int		WlzValueMedianInt(int *values, int nVal)
 * \param	values			Vector of double values.
 * \param	nVal			Number of values in vector.
 */
-double		WlzValueMedianDouble(double *values, int nVal)
+double		WlzValueMedianDouble(double *values, size_t nVal)
 {
-  int		idP,
+  size_t	idP,
 		idV,
   		nPar;
   double	tmpV,
@@ -2760,7 +2777,7 @@ double		WlzValueMedianDouble(double *values, int nVal)
 		*valP0,
 		*valP1;
 
-  if(nVal <= 0)
+  if(nVal < 1)
   {
     medVal = 0.0;
   }
@@ -2842,4 +2859,186 @@ int             WlzValueDitherI(int p0, int p1, int p2)
   d = ((AlgRandUniform() * (double )(p2 - p0)) - (double )(p1 - p0)) * 0.5;
   v = p1 + WLZ_NINT(d);
   return(v);
+}
+
+/*!
+* \ingroup	WlzValueUtils
+* \brief	Given an indexed values, weights and an array of indices 
+* 		into the indexed values; weights and sums the indexed values
+* 		setting the grey value to the sum of the weighted values.
+* 		The type of the grey pointer must be the same as the type
+* 		of the indexed values.
+* \param	gP			Grey pointer.
+* \param	gO			Grey pointer offset.
+* \param	ixv			Indexed values.
+* \param	wgt			Weights.
+* \param	nIdx			Number of indices into the indexed
+* 					values and the number of weights.
+* \param	idx			Indices into the indexed values.
+*/
+void 		WlzIndexedValueBufWeight(WlzGreyP gP, int gO,
+				         WlzIndexedValues *ixv, double *wgt,
+					 int nIdx, int *idx)
+{
+  int		i;
+
+  switch(ixv->vType)
+  {
+    case WLZ_GREY_UBYTE:
+      {
+	int	x = 0;
+
+	for(i = 0; i < nIdx; ++i)
+	{
+	  x += wgt[i] * *(WlzUByte *)WlzIndexedValueGet(ixv, idx[i]);
+	}
+	*(gP.ubp + gO) = WLZ_CLAMP(x, 0, UCHAR_MAX);
+      }
+      break;
+    case WLZ_GREY_SHORT:
+      {
+	int	x = 0;
+
+	for(i = 0; i < nIdx; ++i)
+	{
+	  x += wgt[i] * *(short *)WlzIndexedValueGet(ixv, idx[i]);
+	}
+	*(gP.shp + gO) = WLZ_CLAMP(x, SHRT_MIN, SHRT_MAX);
+      }
+      break;
+    case WLZ_GREY_INT:
+      {
+	int	x = 0;
+
+	for(i = 0; i < nIdx; ++i)
+	{
+	  x += wgt[i] * *(int *)WlzIndexedValueGet(ixv, idx[i]);
+	}
+	*(gP.inp + gO) = x;
+      }
+      break;
+    case WLZ_GREY_FLOAT:
+      {
+	float	x = 0.0;
+
+	for(i = 0; i < nIdx; ++i)
+	{
+	  x += wgt[i] * *(float *)WlzIndexedValueGet(ixv, idx[i]);
+	}
+	*(gP.flp + gO) = x;
+      }
+      break;
+    case WLZ_GREY_DOUBLE:
+      {
+	double	x = 0.0;
+
+	for(i = 0; i < nIdx; ++i)
+	{
+	  x += wgt[i] * *(double *)WlzIndexedValueGet(ixv, idx[i]);
+	}
+	*(gP.dbp + gO) = x;
+      }
+      break;
+    case WLZ_GREY_RGBA:
+      {
+	WlzUInt x;
+	int	r = 0,
+		g = 0,
+		b = 0,
+		a = 0;
+
+	for(i = 0; i < nIdx; ++i)
+	{
+	  int	w;
+
+	  w = wgt[i];
+	  x = *(WlzUInt *)WlzIndexedValueGet(ixv, idx[i]);
+	  r += w * WLZ_RGBA_RED_GET(x);
+	  g += w * WLZ_RGBA_GREEN_GET(x);
+	  b += w * WLZ_RGBA_BLUE_GET(x);
+	  a += w * WLZ_RGBA_ALPHA_GET(x);
+	}
+	r = WLZ_CLAMP(r, 0, UCHAR_MAX);
+	g = WLZ_CLAMP(g, 0, UCHAR_MAX);
+	b = WLZ_CLAMP(b, 0, UCHAR_MAX);
+	a = WLZ_CLAMP(a, 0, UCHAR_MAX);
+	WLZ_RGBA_RGBA_SET(x, r, g, b, a);
+	*(gP.rgbp + gO) = x;
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+/*!
+* \return	Size of data at each location of the indxed values.
+* \ingroup	WlzValueUtils
+* \brief	Computes the size of the data at each location of the indxed
+* 		values.
+* \param	ixv			Given indexed values structure.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+size_t		WlzIndexedValueSize(WlzIndexedValues *ixv, WlzErrorNum *dstErr)
+{
+  size_t	vSz = 0,
+  		nDat = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(ixv == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(ixv->type != WLZ_INDEXED_VALUES)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else if(ixv->rank < 0)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if(ixv->rank == 0)
+  {
+    nDat = 1;
+  }
+  else
+  {
+    if(ixv->dim[0] < 1)
+    {
+      errNum = WLZ_ERR_VALUES_DATA;
+    }
+    else
+    {
+      int	idx;
+
+      nDat = ixv->dim[0];
+      for(idx = 1; idx < ixv->rank; ++idx)
+      {
+        if(ixv->dim[idx] < 1)
+	{
+	  errNum = WLZ_ERR_VALUES_DATA;
+	  break;
+	}
+	nDat *= ixv->dim[idx];
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    size_t	gSz = 0;
+
+    if((ixv->vType == WLZ_GREY_BIT) || ((gSz = WlzGreySize(ixv->vType)) == 0))
+    {
+      errNum = WLZ_ERR_GREY_TYPE;
+    }
+    else
+    {
+      vSz = gSz * nDat;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vSz);
 }

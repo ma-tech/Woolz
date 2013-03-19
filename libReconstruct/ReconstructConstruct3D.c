@@ -106,7 +106,7 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
 		lastPl;
   double	plane1D,
   		lastPlD,
-		gaussHWidth;
+		gaussHWidth = 1.0;
   WlzObject	*tObj0 = NULL,
   		*tObj1 = NULL,
 		*obj3D = NULL,
@@ -124,9 +124,9 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
   WlzIVertex3	samFacI3;
   WlzIBox2      srcClip2I,
   		dstClip2I;
-  WlzIBox3	dstClip3I,
+  WlzIBox3	/* dstClip3I, */
   		dstRegI3;
-  WlzSampleFn	samFn;
+  WlzSampleFn	samFn = WLZ_SAMPLEFN_NONE;
   WlzPixelV	bgdPix;
   RecError	errFlag = REC_ERR_NONE;
   WlzErrorNum	wlzErr = WLZ_ERR_NONE;
@@ -146,6 +146,8 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
 	   (unsigned long )eMsg));
   dstDom.core = NULL;
   dstVal.core = NULL;
+  dstRegI3.xMin = dstRegI3.yMin = dstRegI3.zMin = 0;
+  dstRegI3.xMax = dstRegI3.yMax = dstRegI3.zMax = 0;
   if((dstObj == NULL) ||			   /* Check given parameters */
      (secList == NULL) ||
      (HGUDlpListCount(secList) <= 0) ||
@@ -184,6 +186,7 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
       srcClip2I.yMin = WLZ_NINT(srcReg->yMin);
       srcClip2I.yMax = WLZ_NINT(srcReg->yMax);
     }
+    /*
     if(dstReg)
     {
       dstClip3I.xMin = dstClip2I.xMin = WLZ_NINT(dstReg->xMin);
@@ -193,6 +196,7 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
       dstClip3I.zMin =  WLZ_NINT(dstReg->zMin);
       dstClip3I.zMax =  WLZ_NINT(dstReg->zMax);
     }
+    */
     if(confLimit < 0.0)
     {
       confLimit = 0.0;

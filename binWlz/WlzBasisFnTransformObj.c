@@ -874,7 +874,7 @@ int             main(int argc, char **argv)
   if(usage != 0)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-o<out object>] [-p<tie points file>]\n"
     "                  [-m<min mesh dist>] [-M<max mesh dist>]\n"
@@ -883,6 +883,9 @@ int             main(int argc, char **argv)
     "                  [-d] [-g] [-h] [-q] [-s] [-t] [-y]\n"
     "                  [-B] [-C] [-G] [-L] [-N] [-T]\n"
     "                  [<in object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -b  Basis function transform object.\n"
     "  -B  Block mesh generation method (default).\n"
@@ -966,8 +969,8 @@ static WlzErrorNum WlzBFTOGetVertices2D(int *dstNVx,
   int		vxCount = 0,
   		vxLimit = 0;
   char 		*rec;
-  WlzDVertex2	*vx0,
-  		*vx1,
+  WlzDVertex2	*vx0 = NULL,
+  		*vx1 = NULL,
 		*vxA0 = NULL,
 		*vxA1 = NULL;
   const char    *errMsg;
@@ -1077,8 +1080,8 @@ static WlzErrorNum WlzBFTOGetVertices3D(int *dstNVx,
   int		vxCount = 0,
   		vxLimit = 0;
   char 		*rec;
-  WlzDVertex3	*vx0,
-  		*vx1,
+  WlzDVertex3	*vx0 = NULL,
+  		*vx1 = NULL,
 		*vxA0 = NULL,
 		*vxA1 = NULL;
   const char    *errMsg;

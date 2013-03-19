@@ -109,6 +109,7 @@ libWlz_la_SOURCES 	= \
 			  WlzFacts.c \
 			  WlzFillBlankPlanes.c \
 			  WlzFilterNObjValues.c \
+			  WlzFourier.c \
 			  WlzFreeSpace.c \
 			  WlzGauss.c \
 			  WlzGaussNoise.c \
@@ -152,6 +153,7 @@ libWlz_la_SOURCES 	= \
 			  WlzIntervalDomScan.c \
 			  WlzIntRescaleObj.c \
 			  WlzIterate.c \
+			  WlzKrig.c \
 			  WlzLabel3d.c \
 			  WlzLabel.c \
 			  WlzLaplacian.c \
@@ -170,6 +172,7 @@ libWlz_la_SOURCES 	= \
 			  WlzMwrAngle.c \
 			  WlzNMSuppress.c \
 			  WlzObjToBoundary.c \
+			  WlzOccupancy.c \
 			  WlzPoints.c \
 			  WlzPolarSample.c \
 			  WlzPolyDecimate.c \
@@ -224,6 +227,7 @@ libWlz_la_SOURCES 	= \
 			  WlzValueTableUtils.c \
 			  WlzValueUtils.c \
 			  WlzVerifyObj.c \
+			  WlzVersion.c \
 			  WlzVerticies.c \
 			  WlzVolume.c \
 			  WlzWindow.c \

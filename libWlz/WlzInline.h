@@ -41,13 +41,17 @@ static char _WlzInline_h[] = "University of Edinburgh $Id$";
 * \ingroup	Wlz
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif
+#endif /* WLZ_EXT_BIND */
 
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif
+#endif /* WLZ_EXT_BIND */
 
 #endif /* WLZINLINE_H */

@@ -51,17 +51,13 @@ WlzBibToMeshTrans - generates a mesh transform from a bibfiile
 		    with basis function parameters and tie-points.
 \par Synopsis
 \verbatim
-WlzBibToMeshTrans [-h] [-v] [-b<bibfile>] [-f<obj>] [<input file>]
+WlzBibToMeshTrans [-h] [-b<bibfile>] [-f<obj>] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Prints usage information.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Version operation.</td>
   </tr>
   <tr> 
     <td><b>-b</b></td>
@@ -111,23 +107,23 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s -b <parameter bibfile>"
-	  " [-o <output file>] [-h] [-v]"
+	  " [-o <output file>] [-h]"
 	  " <2D object input file>\n"
 	  "\tConvert an MAPaint warp bibfile to a mesh transform\n"
 	  "\twriting the mesh transform object to standard output.\n"
 	  "\tA 2D image is required to define the mesh extent, read\n"
 	  "\tfrom standard input by default\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -b<bibfile>        bibfile defining the warp parameters e.g.\n"
 	  "\t                     from MAPaint\n"
 	  "\t  -f<2D image file>  2D Woolz image used to define the mesh\n"
 	  "\t  -o<output file>    Output filename, default to stdout\n"
-	  "\t  -h                 Help - this message\n"
-	  "\t  -v                 verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -h                 Help - this message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  
@@ -140,12 +136,11 @@ int main(int	argc,
   WlzValues	values;
   FILE		*inFP, *outFP, *bibFP;
   char		*outFile, *bibFile;
-  char 		optList[] = "b:f:o:hv";
+  char 		optList[] = "b:f:o:h";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   BibFileRecord	*bibfileRecord;
   BibFileError	bibFileErr;
-  int		verboseFlg=0;
   WlzMeshTransform *meshTr = NULL;
   WlzFnType		wlzFnType;
   WlzMeshGenMethod	meshMthd;
@@ -183,10 +178,6 @@ int main(int	argc,
     default:
       usage(argv[0]);
       return 0;
-
-    case 'v':
-      verboseFlg = 1;
-      break;
 
     }
   }

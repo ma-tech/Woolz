@@ -71,7 +71,7 @@ WlzObject *WlzIntersect3d(WlzObject	**objs,
   WlzPlaneDomain 	*pdom, *newpdom;
   WlzVoxelValues	*voxtab, *newvoxtab;
   WlzDomain 		*domains, domain;
-  WlzValues 		*values, vals;
+  WlzValues 		*values = NULL, vals;
   WlzPixelV		bgd;
   int 			i, p, np, min_plane, max_plane, emptyFlag;
   WlzErrorNum		errNum = WLZ_ERR_NONE;

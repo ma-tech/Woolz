@@ -107,6 +107,7 @@ bin_PROGRAMS		= \
 			  WlzFacts \
 			  WlzFile \
 			  WlzFilterNObjsValues \
+			  WlzFourierTransform \
 			  WlzGauss \
 			  WlzGaussNoise \
 			  WlzGeometryTrackUpAndDown \
@@ -146,6 +147,7 @@ bin_PROGRAMS		= \
 			  WlzLabel \
 			  WlzLaplacian \
 			  WlzLUTGreyTransformObj \
+			  WlzLUTGreyTransformMerge \
 			  WlzMakeEmpty \
 			  WlzMakeRect \
 			  WlzMarkerLatticeFromDomain \
@@ -449,6 +451,10 @@ WlzFilterNObjsValues_SOURCES		= WlzFilterNObjsValues.c
 WlzFilterNObjsValues_LDADD		= $(LDADD)
 WlzFilterNObjsValues_LDFLAGS		= $(AM_LFLAGS)
 
+WlzFourierTransform_SOURCES		= WlzFourierTransform.c
+WlzFourierTransform_LDADD		= $(LDADD)
+WlzFourierTransform_LDFLAGS		= $(AM_LFLAGS)
+
 WlzGauss_SOURCES			= WlzGauss.c
 WlzGauss_LDADD				= $(LDADD)
 WlzGauss_LDFLAGS			= $(AM_LFLAGS)
@@ -604,6 +610,10 @@ WlzLaplacian_LDFLAGS			= $(AM_LFLAGS)
 WlzLUTGreyTransformObj_SOURCES		= WlzLUTGreyTransformObj.c
 WlzLUTGreyTransformObj_LDADD		= $(LDADD)
 WlzLUTGreyTransformObj_LDFLAGS		= $(AM_LFLAGS)
+
+WlzLUTGreyTransformMerge_SOURCES	= WlzLUTGreyTransformMerge.c
+WlzLUTGreyTransformMerge_LDADD		= $(LDADD)
+WlzLUTGreyTransformMerge_LDFLAGS	= $(AM_LFLAGS)
 
 WlzMakeEmpty_SOURCES			= WlzMakeEmpty.c
 WlzMakeEmpty_LDADD			= $(LDADD)

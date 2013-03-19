@@ -41,9 +41,11 @@ static char _AlcType_h[] = "University of Edinburgh $Id$";
 *		library.
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 extern "C" {
 #endif
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \enum 	_AlcErrno
@@ -447,8 +449,10 @@ typedef struct _AlcHeap
   void                  *entries;       /*!< Allocated heap entries. */
 } AlcHeap;
 
+#ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 }					       /* Close scope of 'extern "C" */
 #endif
+#endif /* WLZ_EXT_BIND */
 
 #endif /* ALCTYPE_H */

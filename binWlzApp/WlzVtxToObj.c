@@ -98,15 +98,16 @@ static void usage(
   char	*str)
 {
   fprintf(stderr,
-	  "Usage:\n"
-	  "%s\n"
-	  "\tBuild a Woolz domain object from a vertex reading the\n"
-	  "\tvertex values from standard input\n"
+	  "Usage:\t%s [-d#] [-h] [-v]\n"
+	  "\tBuild a Woolz domain object from a vertex reading the vertex\n"
+	  "\tvalues from standard input\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t-d#     input dimension, can be 2 or 3 (default 2)\n"
 	  "\t-h      help message\n"
-	  "\t-v     verbose operation\n"
-	  "\n",
-	  str);
+	  "\t-v     verbose operation\n",
+	  str,
+	  WlzVersion());
 
   return;
 }
@@ -173,9 +174,8 @@ int main(
   
   WlzObject     	*obj;
   WlzDVertex3		vtx;
-  char 	optList[] = "d:hv";
+  char 	optList[] = "d:h";
   int		option;
-  int		verboseFlg=0;
   int		dimension=2;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
@@ -192,10 +192,6 @@ int main(
 	usage(argv[0]);
 	return 1;
       }
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

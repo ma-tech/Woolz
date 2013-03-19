@@ -612,20 +612,20 @@ WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 		n1,
   		nTV,
   		nSV,
-		nOSS,
 		maxVI,
 		maxTVI,
 		maxSVI,
-		sgnNrm = 0,
 		brkIdx,
+		nOSS = 0,
 		convFlg,
+		sgnNrm = 0,
 		nMatch = 0,
   	 	dbgFlg = 0;
-  size_t	vSz;
+  size_t	vSz = 0;
   int		*vIBuf = NULL;
   double	*wBuf = NULL;
-  WlzGMModel	*tGM,
-  		*sGM;
+  WlzGMModel	*tGM = NULL,
+  		*sGM = NULL;
   WlzVertexP	tVx,
 		tNr,
   		sVx,
@@ -646,7 +646,7 @@ WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
   		*lElm1;
   WlzMatchICPShellList *dSList = NULL;
   AlcCPQQueue	*sMSQueue = NULL;
-  AlcCPQItem	*qTop;
+  AlcCPQItem	*qTop = NULL;
   WlzMatchICPCbData cbData;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	trSrcFlg = 0; 	/* This needs to be 0 for valid tie point
@@ -1707,7 +1707,7 @@ static int	WlzMatchICPGetMSPoints2D(WlzGMModel *tGM, WlzGMModel *sGM,
 		*tS1;
   WlzGMLoopT	*sLT;
   WlzGMVertex	*sV,
-  		*tV;
+  		*tV = NULL;
   WlzGMEdgeT	*fET,
   		*lET,
 		*tET0;
@@ -2604,7 +2604,7 @@ static WlzGMVertex *WlzMatchICPLoopTMinCurv2D(WlzGMLoopT *gLT,
   		*fET,
 		*lET,
   		*tET0,
-		*mET,
+		*mET = NULL,
 		*nET,
 		*pET;
   WlzGMVertex	*mV = NULL;
@@ -2881,7 +2881,6 @@ static double	WlzMatchICPWeightMatches2D(WlzAffineTransform *curTr,
   int		idN;
   double	wgt = 1.0;
   WlzDVertex2	disp,
-		sMTVx,
    		tMVx0,
  		sMTVx0,
    		sMVx0;
@@ -2899,7 +2898,6 @@ static double	WlzMatchICPWeightMatches2D(WlzAffineTransform *curTr,
   {
     wgt = 0.0;
     tMV = WlzGMModelMatchVertexG2D(tGM, tMVx);
-    sMTVx = WlzAffineTransformVertexD2(curTr, sMVx, NULL);
     tMLT = tMV->diskT->vertexT->parent->parent;
     tMS = tMLT->parent;
     for(idN = 0; idN < nScatter; ++idN)

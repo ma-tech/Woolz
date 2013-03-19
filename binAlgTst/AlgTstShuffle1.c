@@ -39,6 +39,7 @@ static char _AlgTstShuffle1_c[] = "University of Edinburgh $Id$";
 * \ingroup	binAlgTst
 */
 
+#include <unistd.h>
 #include <stdio.h>
 #include <Alc.h>
 #include <Alg.h>

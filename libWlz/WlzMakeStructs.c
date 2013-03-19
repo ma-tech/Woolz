@@ -210,6 +210,78 @@ WlzMakePlaneDomain(WlzObjectType type,
 }
 
 /*!
+* \return	New object or NULL on error.
+* \ingroup	WlzAllocation
+* \brief	Creaes a new object with the domain of the given object
+*		and a new values.
+*
+*		This function conveniently wraps up WlzNewValueTb(),
+*		WlzNewValuesVox(), WlzMakeMain() and WlzGreySetValue().
+* \param	sObj			Given object.
+* \param	tType			Grey table type.
+* \param	bgdV			Background value.
+* \param	setFG			Set forground value if non zero.
+* \param	fgdV			Foreground value to be set.
+* \param	dstErr			Destinaition error pointer, may be NULL.
+*/
+WlzObject	*WlzNewObjectValues(WlzObject *sObj, WlzObjectType tType,
+				    WlzPixelV bgdV, int setFG, WlzPixelV fgdV,
+				    WlzErrorNum *dstErr)
+{
+  WlzValues 	val;
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(sObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(sObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(sObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
+      case WLZ_3D_DOMAINOBJ:
+	if(sObj->type == WLZ_2D_DOMAINOBJ)
+	{
+	  val.v = WlzNewValueTb(sObj, tType, bgdV, &errNum);
+	}
+	else
+	{
+	  val.vox = WlzNewValuesVox(sObj, tType, bgdV, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  rObj = WlzMakeMain(sObj->type, sObj->domain, val, NULL, NULL,
+			     &errNum);
+	}
+	if((errNum == WLZ_ERR_NONE) && setFG)
+	{
+	  errNum = WlzGreySetValue(rObj, fgdV);
+	}
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  (void )WlzFreeObj(rObj);
+	  rObj = NULL;
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
 * \return	New voxel value table.
 * \ingroup      WlzAllocation
 * \brief	From the domain of the given source object a new voxel
@@ -651,8 +723,7 @@ WlzMakeRectValueTb(WlzObjectType	type,
 
   /* allocate space */
   if( errNum == WLZ_ERR_NONE ){
-    if( (vtb = (WlzRectValues *) AlcMalloc(sizeof(WlzRectValues)))
-       == NULL ){
+    if( (vtb = (WlzRectValues *) AlcMalloc(sizeof(WlzRectValues))) == NULL ){
       errNum = WLZ_ERR_MEM_ALLOC;
     }
     else {
@@ -790,13 +861,14 @@ WlzObject 	*WlzMakeMarkers(WlzVertexType vType,
                                 WlzErrorNum *dstErr)
 {
   int           idx,
-                dim;
+                dim = 0;
   WlzObjectType oType;
   WlzObject     *mObj = NULL;
   WlzObject     *tObj[4];
   WlzIVertex3   off;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
+  off.vtX = off.vtY = off.vtZ = 0;
   tObj[0] = tObj[1] = tObj[2] = tObj[3] = NULL;
   if((nVtx <= 0) || (mSz <= 0))
   {
@@ -1101,8 +1173,8 @@ WlzMakePolygonDomain(WlzObjectType	type,
 	       int 		copy,
 	       WlzErrorNum		*dstErr)
 {
-  WlzPolygonDomain	*p=NULL;
-  int 			vertexsize;
+  WlzPolygonDomain	*p = NULL;
+  int 			vertexsize = 0;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check type and set vertex size */
@@ -1146,7 +1218,7 @@ WlzMakePolygonDomain(WlzObjectType	type,
       else {
 	p->vtx = (WlzIVertex2 *) (p + 1);
 	if( vertices ){
-	  memcpy((void *) p->vtx, (void *) vertices, n*vertexsize);
+	  (void )memcpy((void * )p->vtx, (void * )vertices, n * vertexsize);
 	}
       }
     }
@@ -1195,8 +1267,7 @@ WlzMakeBoundList(WlzObjectType		type,
 
   /* allocate space */
   if( errNum == WLZ_ERR_NONE ){
-    if( (blist = ( WlzBoundList *) AlcMalloc(sizeof( WlzBoundList)))
-       == NULL ){
+    if( (blist = ( WlzBoundList *) AlcMalloc(sizeof( WlzBoundList))) == NULL ){
     errNum = WLZ_ERR_MEM_ALLOC;
     }
     else {
@@ -1347,15 +1418,15 @@ WlzObject	*WlzMakeCuboid(int plane1, int lastpl,
 {
   int		pPos;
   size_t	arSz,
-  		arElmSz;
+  		arElmSz = 0;
   void		*arDat = NULL;
   WlzDomain	dom,
   		dom2D;
-  WlzDomain	*dom2DP;
+  WlzDomain	*dom2DP = NULL;
   WlzObjectType	tbType;
   WlzValues	val,
   		val2D;
-  WlzValues	*val2DP;
+  WlzValues	*val2DP = NULL;
   WlzObject	*obj = NULL;
   AlcErrno	alcErr = ALC_ER_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1789,11 +1860,12 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
   WlzDomain		idom;
   WlzIntervalWSpace	iwsp;
   WlzGreyP		g;
-  int 			k1, table_size, bgd_val;
+  int 			k1 = 0, table_size, bgd_val;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check the object */
   v.v = NULL;
+  g.v = NULL;
   if( obj == NULL || obj->domain.core == NULL ){
     errNum = WLZ_ERR_OBJECT_NULL;
   }

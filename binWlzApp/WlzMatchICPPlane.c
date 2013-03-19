@@ -366,6 +366,7 @@ int             main(int argc, char **argv)
   	        outFileStrDef[] = "-";
 
   matchRP.v = matchSP.v = NULL;
+  srcCOfM.vtX = srcCOfM.vtY = 0.0;
   inFileStr = (char *)inFileStrDef;
   outFileBaseStr = (char *)outFileStrDef;
   (void )memset(&inTrPrim, 0, sizeof(WlzAffineTransformPrim));
@@ -665,7 +666,7 @@ int             main(int argc, char **argv)
   {
     if(((refObj3D = WlzAssignObject(
 		    WlzEffReadObj(NULL, refObjFileStr, refObjFileType,
-				  0, &errNum), NULL)) == NULL) ||
+				  0, 0, 0, &errNum), NULL)) == NULL) ||
        (errNum != WLZ_ERR_NONE))
     {
       ok = 0;
@@ -1069,15 +1070,18 @@ int             main(int argc, char **argv)
   if(usage)
   {
       (void )fprintf(stderr,
-      "Usage: %s%s",
+      "Usage: %s%s%s%s",
       *argv,
       " [-h] [-d] [-v] [-V]\n"
-      "          [-o<output file base>] [-r <reference file>] [-Y]\n" 
-      "          [-t#] [-x#] [-y#] [-a#] [-s#] [-e]\n"
-      "          [-g#,#] [-k#,#] [-u#,#] [-b #] [-B #]\n"
-      "          [-f] [-i#] [-s#] [-A#] [-S#] [-F#] [-m#] [-n#]\n"
-      "          [-c<contour file base>] [-N] [-L]\n"
-      "          [<section parameters file>]\n"
+      "                        [-o<output file base>] [-r <reference file>]\n"
+      "                        [-Y] [-t#] [-x#] [-y#] [-a#] [-s#] [-e]\n"
+      "                        [-g#,#] [-k#,#] [-u#,#] [-b #] [-B #]\n"
+      "                        [-f] [-i#] [-s#] [-A#] [-S#] [-F#] [-m#] [-n#]\n"
+      "                        [-c<contour file base>] [-N] [-L]\n"
+      "                        [<section parameters file>]\n"
+      "Version: ",
+      WlzVersion(),
+      "\n"
       "Options:\n"
       "  -h  Prints this usage information.\n"
       "  -d  Perform extra tests to aid debuging.\n"
@@ -1191,7 +1195,7 @@ static WlzErrorNum WlzMatchICPPlaneReadSecParam(FILE *fP,
   char		*fileStr;
   WlzEffFormat	fileType;
   BibFileRecord	*bibRec;
-  BibFileError  bibErr;
+  BibFileError  bibErr = BIBFILE_ER_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   *dstView = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum);
@@ -1219,7 +1223,7 @@ static WlzErrorNum WlzMatchICPPlaneReadSecParam(FILE *fP,
 	{
 	  *dstSrcObj = WlzAssignObject(
 		       WlzEffReadObj(NULL, fileStr, fileType,
-		       		     0, &errNum), NULL);
+		       		     0, 0, 0, &errNum), NULL);
 	}
       }
     }
@@ -1236,8 +1240,8 @@ static WlzErrorNum WlzMatchICPPlaneReadSecParam(FILE *fP,
 	if(dstRefObj)
 	{
 	  *dstRefObj = WlzAssignObject(
-		       WlzEffReadObj(NULL, fileStr, fileType, 0,
-		       		     &errNum), NULL);
+		       WlzEffReadObj(NULL, fileStr, fileType,
+		       		     0, 0, 0, &errNum), NULL);
 	}
       }
     }

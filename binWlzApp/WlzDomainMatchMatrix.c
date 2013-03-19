@@ -146,7 +146,7 @@ A_{contrib} & = & \sum_{Pixels} \left \{ \begin{array}{c@{\quad \mbox{if} \quad}
 1 & C_{ll'} \ne 0,\\
 0 & C_{ll'} = 0,
 \end{array}\right.
-\f}
+\f
 In these formulae the \f$S()\f$ is the size of the domain - volume or area depending on the nature of the image. \f$l, l'\f$ are the pixel values of the two input category images.
 
 \par Examples
@@ -177,13 +177,15 @@ static void usage(
   char	*str)
 {
   fprintf(stderr,
-	  "Usage:\n"
-	  "%s -d <delta> -t <type> -m <matrix-file> -h -v  <rows> <cols>\n"
+	  "Usage: "
+	  "%s -d <delta> -t <type> -m <matrix-file> -h\n"
+	  "                            -v <rows> <cols>\n"
 	  "\tRead in domains from stdin and calculate the match value\n"
 	  "\tmatrix according to type, writing to stdout. The row domains\n"
 	  "\tare read first followed by the column domains, there must be\n"
 	  "\tsufficient for the match type.\n"
-	  "Arguments:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t-d#        delta value (default 0.01), must be < 1\n"
 	  "\t-m<file>   input the name of a file containing the mixing\n"
 	  "\t           and contrib matrices - csv format\n"
@@ -200,9 +202,9 @@ static void usage(
 	  "\t               domains\n"
 	  "\t             = 8 - Area/volume of intersection.\n"
 	  "\t-h         print this message\n"
-	  "\t-v         verbose operation\n"
-	  "\n",
-	  str);
+	  "\t-v         verbose operation\n",
+	  str,
+	  WlzVersion());
 
   return;
 }
@@ -254,7 +256,7 @@ double WlzMixtureValue(
   double	**contrib,
   WlzErrorNum	*dstErr)
 {
-  double	val, con;
+  double	val = 0.0, con = 0.0;
   WlzObject	*tmpObj, *tmpObj1, *tmpObj2;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
@@ -378,9 +380,9 @@ int main(
   int		verboseFlg=0;
   int		type=1;
   int		numRows=0, numCols=0;
-  WlzObject	*obj, *obj1, *obj2, *obj3;
-  WlzObject	**rowDoms, **colDoms;
-  WlzObjectType	objType;
+  WlzObject	*obj = NULL, *obj1 = NULL, *obj2 = NULL, *obj3 = NULL;
+  WlzObject	**rowDoms = NULL, **colDoms = NULL;
+  WlzObjectType	objType = WLZ_NULL;
   double	matchVal=0.0;
   double	s1, s2, s3, s4;
   double	delta=0.01;

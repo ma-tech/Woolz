@@ -115,18 +115,19 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [i#] [-M#] [-v] [-h] [<input file>]\n"
 	  "\tLabel (segment) the input objects and write the result\n"
 	  "\tto stdout. Non-domain objects are ignored, the number\n"
 	  "\tof segments found is written to stderr\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -i#       Ignore objects with number of lines < #\n"
 	  "\t  -M#       Maximum number of segmented objects.\n"
 	  "\t  -v        Verbose flag\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "",
-	  proc_str);
+	  "\t  -h        Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  

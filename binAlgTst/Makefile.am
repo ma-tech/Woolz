@@ -45,6 +45,7 @@ LDADD 			= -L$(top_srcdir)/libAlg/.libs -lAlg \
 bin_PROGRAMS		= \
 			  AlgTstConvolve1 \
 			  AlgTstCrossCorr1 \
+			  AlgTstFourier \
 			  AlgTstGamma1 \
 			  AlgTstGrayCode \
 			  AlgTstHeapSort \
@@ -71,6 +72,10 @@ AlgTstConvolve1_LDFLAGS			= $(AM_LFLAGS)
 AlgTstCrossCorr1_SOURCES		= AlgTstCrossCorr1.c
 AlgTstCrossCorr1_LDADD			= $(LDADD)
 AlgTstCrossCorr1_LDFLAGS		= $(AM_LFLAGS)
+
+AlgTstFourier_SOURCES			= AlgTstFourier.c
+AlgTstFourier_LDADD			= $(LDADD)
+AlgTstFourier_LDFLAGS			= $(AM_LFLAGS)
 
 AlgTstGamma1_SOURCES			= AlgTstGamma1.c
 AlgTstGamma1_LDADD			= $(LDADD)

@@ -218,7 +218,8 @@ WlzErrorNum	WlzMeshVxVecAdd(WlzMeshTransform *mesh, WlzDVertex2 *vxVec,
     if(tryVxFlg)
     {
       /* Find new vertex in the mesh. */
-      eId0 = WlzMeshElemFindVx(mesh, *vxVecP0, startElm, &extFlg, &errNum);
+      eId0 = WlzMeshElemFindVx(mesh, *vxVecP0, startElm, NULL, &extFlg,
+      			       &errNum);
       if((errNum == WLZ_ERR_NONE) && (eId0 >= 0))
       {
 	elm = mesh->elements + eId0;
@@ -366,7 +367,8 @@ WlzErrorNum	WlzMeshIDomAdd(WlzMeshTransform *mesh, WlzObject *obj,
       if(tryVxFlg)
       {
 	/* Find new vertex in the mesh. */
-	eId0 = WlzMeshElemFindVx(mesh, newVx, startElm, &extFlg, &errNum);
+	eId0 = WlzMeshElemFindVx(mesh, newVx, startElm, NULL, &extFlg,
+	                         &errNum);
 	if((errNum == WLZ_ERR_NONE) && (eId0 >= 0))
 	{
 	  elm = mesh->elements + eId0;
@@ -478,8 +480,8 @@ WlzErrorNum	WlzMeshPolyDomAdd(WlzMeshTransform *mesh, WlzObject *obj,
   int		vxCnt0,
 		vxCnt2,
 		vxId0,
-		dVxCnt,
-		sVxCnt;
+		dVxCnt = 0,
+		sVxCnt = 0;
   double	tD0,
 		tD1,
 		tD2,
@@ -1125,16 +1127,19 @@ int		WlzMeshElemNbrIdxFromNodes(WlzMeshElem *elm,
 * \param	gvnVx			Given vertex.
 * \param	startElm		If >= 0, the index of the element from
 * 					which to start the search.
+* \param	lastElm			Destination ptr for index of the last
+* 					element visited. May be NULL.
 * \param	existsFlg		Destination ptr for vertex already
-* 					exists flag.
+* 					exists flag. May be NULL.
 * \param	dstErr			Destination pointer for error number,
 * 					may be NULL.
 */
 int		WlzMeshElemFindVx(WlzMeshTransform *mesh, WlzDVertex2 gvnVx,
-				  int startElm, int *existsFlg,
+				  int startElm, int *lastElm, int *existsFlg,
 				  WlzErrorNum *dstErr)
 {
   int		elmId,
+		elmIdWlk,
 		extFlg = 0,
 		fndFlg = 0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1153,12 +1158,17 @@ int		WlzMeshElemFindVx(WlzMeshTransform *mesh, WlzDVertex2 gvnVx,
   }
   else if(mesh->nElem > 0)
   {
-    elmId = ((startElm < 0) || (startElm >= mesh->nElem))? 0: startElm;
-    errNum = WlzMeshElemFindVxWalk(mesh, gvnVx, &elmId, &fndFlg, &extFlg);
+    elmIdWlk = ((startElm < 0) || (startElm >= mesh->nElem))? 0: startElm;
+    errNum = WlzMeshElemFindVxWalk(mesh, gvnVx, &elmIdWlk, &fndFlg, &extFlg);
+    elmId = elmIdWlk;
     if((fndFlg == 0) && (errNum == WLZ_ERR_NONE))
     {
       WlzMeshElemFindVxForce(mesh, gvnVx, &elmId, &fndFlg, &extFlg);
     }
+  }
+  if(lastElm)
+  {
+    *lastElm = (fndFlg)? elmId: elmIdWlk;
   }
   if(fndFlg == 0)
   {
@@ -1191,8 +1201,8 @@ WlzErrorNum	WlzMeshElemSplit(WlzMeshTransform *mesh, int sElmId)
   double	sElmArea,
 		sElmArea0,
 		sElmArea1;
-  WlzMeshElem	*sElm;
-  WlzMeshNode	*nodes;
+  WlzMeshElem	*sElm = NULL;
+  WlzMeshNode	*nodes = NULL;
   WlzDVertex2	nVx,
 		sVx0,
 		sVx1,
@@ -1367,7 +1377,7 @@ WlzErrorNum	WlzMeshNodeAdd(WlzMeshTransform *mesh, int startElm,
   else if(mesh->nElem > 0)
   {
     /* Find vertex in the mesh. */
-    eId0 = WlzMeshElemFindVx(mesh, newVx, startElm, &extFlg, &errNum);
+    eId0 = WlzMeshElemFindVx(mesh, newVx, startElm, NULL, &extFlg, &errNum);
     if(eId0 < 0)
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
@@ -1561,7 +1571,7 @@ static WlzErrorNum WlzMeshNodeDel(WlzMeshTransform *mesh,
 				     WLZ_MESH_ELEM_FLAGS_NBR_1,
 				     WLZ_MESH_ELEM_FLAGS_NBR_2};
 
-  eId0 = WlzMeshElemFindVx(mesh, nodVx, startElm, &extFlg, &errNum);
+  eId0 = WlzMeshElemFindVx(mesh, nodVx, startElm, NULL, &extFlg, &errNum);
   if((eId0 < 0) || (extFlg == 0))
   {
     errNum = WLZ_ERR_PARAM_DATA;
@@ -2361,18 +2371,18 @@ static WlzErrorNum WlzMeshElemReplaceNWithN(WlzMeshTransform *mesh,
 		rId,
 		wId,
 		zId,
-		zNId,
 		fndFlg,
 		wElmCnt,
 		mElmCnt,
 		mNodCnt,
-		newNodId;
-  WlzMeshElem	*nElm,
-		*rElm,
-		*wElm,
-		*zElm,
-		*zNElm;
-  WlzMeshNode	*nNod;
+		newNodId,
+		zNId = 0;
+  WlzMeshElem	*nElm = NULL,
+		*rElm = NULL,
+		*wElm = NULL,
+		*zElm = NULL,
+		*zNElm = NULL;
+  WlzMeshNode	*nNod = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const unsigned int nbrFlgTbl[3] = {WLZ_MESH_ELEM_FLAGS_NBR_0,
 				     WLZ_MESH_ELEM_FLAGS_NBR_1,
@@ -2883,7 +2893,7 @@ static WlzErrorNum WlzMeshEarListRealloc(WlzMeshEarList *earList,
 		\f]
 *		Where the given (CCW order) nodes are (x0,y0), (x1,y1)
 *		and (x2,y2). The node to be deleted is (xp, yp). In practice
-*		this function first checks that the nodesare not co-linear,
+*		this function first checks that the nodes are not co-linear,
 *		then that the nodes are CCW and if all ok so far then computes
 *		the power.
 * \param	mesh			Given mesh transform.
@@ -3305,4 +3315,213 @@ WlzErrorNum	WlzMeshGetNodesAndEdges(WlzMeshTransform *mesh,
     *dstEdg = edg;
   }
   return(errNum);
+}
+
+/*!
+* \return	Maximum squared edge length, >= 0.0.
+* \ingroup	WlzTransform
+* \brief	Computes the maximum squared edge length of the mesh elements.
+* \param	mesh			Given mesh.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+double		WlzMeshMaxEdgeLenSq(WlzMeshTransform *mesh,
+				    WlzErrorNum *dstErr)
+{
+  int		idE;
+  double	dSqMax = 0.0;
+  WlzMeshElem	*elm;
+
+  for(idE = 0; idE < mesh->maxElem; ++idE)
+  {
+    elm = &(mesh->elements[idE]);
+    if((elm->flags & WLZ_MESH_ELEM_FLAGS_ZOMBIE) == 0)
+    {
+      int	idN;
+
+      for(idN = 0; idN < 3; ++idN)
+      {
+	double	    dSq;
+        WlzDVertex2 p0,
+		    p1,
+		    del;
+
+	p0 = mesh->nodes[elm->nodes[idN]].position;
+	p1 = mesh->nodes[elm->nodes[(idN + 1) % 3]].position;
+        WLZ_VTX_2_SUB(del, p0, p1);
+        dSq = WLZ_VTX_2_SQRLEN(del);
+	if(dSq > dSqMax)
+	{
+	  dSqMax = dSq;
+	}
+      }
+    }
+  }
+  return(dSqMax);
+}
+
+/*!
+* \return	Index of the closest node in the mesh to the given position
+* 		or -1 if the mesh has no nodes.
+* \ingroup	WlzTransform
+* \brief	Finds the closest node in the mesh to the given vertex
+* 		position.
+* \param	mesh			Given mesh.
+* \param	pos			The vertex position.
+*/
+int		WlzMeshClosestNod2D(WlzMeshTransform *mesh, WlzDVertex2 pos)
+{
+  int		idE0,
+  		idE1,
+		idNR = -1;
+
+  /* Find a valid element in the mesh. */
+  idE0 = -1;
+  for(idE1 = 0; idE1 < mesh->maxElem; ++idE1)
+  {
+    WlzMeshElem	*elm1;
+
+    elm1 = &(mesh->elements[idE1]);
+    if((elm1->flags & WLZ_MESH_ELEM_FLAGS_ZOMBIE) == 0)
+    {
+      idE0 = idE1;
+      break;
+    }
+  }
+  if(idE0 >= 0)
+  {
+    int	        cntOut;
+    WlzMeshElem *elm0,
+      		*elm1,
+    	        *elmF = NULL;
+
+    /* Because the mesh is convex the vertex position can be reached just by
+     * walking towards it from the valid element. Unless the vertex is outside
+     * the mesh when the walk will stop at the closest edge. */
+    elm0 = NULL;
+    cntOut = mesh->nElem * 2;
+    while(cntOut-- > 0)
+    {
+      double	  eA2;
+      double	  pA2[2];
+      WlzDVertex2 eV[3];
+
+      elm1 = &(mesh->elements[idE0]);
+      eV[0] = (mesh->nodes[elm1->nodes[0]]).position;
+      eV[1] = (mesh->nodes[elm1->nodes[1]]).position;
+      eV[2] = (mesh->nodes[elm1->nodes[2]]).position;
+      eA2 = WlzGeomTriangleSnArea2(eV[0], eV[1], eV[2]);
+      if(eA2 < WLZ_MESH_TOLERANCE_SQ)
+      {
+	/* Mesh is invalid. */
+	break;
+      }
+      else
+      {
+	if((ALG_SQR(eV[0].vtX - pos.vtX) < WLZ_MESH_TOLERANCE_SQ) &&
+	   (ALG_SQR(eV[0].vtY - pos.vtY) < WLZ_MESH_TOLERANCE_SQ))
+        {
+	  /* Position of vertex is node 0 of current element. */
+	  idNR = elm1->nodes[0];
+	  break;
+	}
+	else if ((ALG_SQR(eV[1].vtX - pos.vtX) < WLZ_MESH_TOLERANCE_SQ) &&
+	         (ALG_SQR(eV[1].vtY - pos.vtY) < WLZ_MESH_TOLERANCE_SQ))
+	{
+	  /* Position of vertex is node 1 of current element. */
+	  idNR = elm1->nodes[1];
+	  break;
+	}
+	else if((ALG_SQR(eV[2].vtX - pos.vtX) < WLZ_MESH_TOLERANCE_SQ) &&
+	        (ALG_SQR(eV[2].vtY - pos.vtY) < WLZ_MESH_TOLERANCE_SQ))
+	{
+	  /* Position of vertex is node 2 of current element. */
+	  idNR = elm1->nodes[2];
+	  break;
+	}
+	else if((pA2[0] = WlzGeomTriangleSnArea2(eV[1], eV[2], pos)) < 0.0)
+	{
+	  if(elm1->flags & WLZ_MESH_ELEM_FLAGS_NBR_0)
+	  {
+	    idE1 = elm1->neighbours[0];
+	    if(elm1 && elm0 && (idE1 == elm0->idx))
+	    {
+	      elmF = elm1;
+	      break;
+	    }
+	  }
+	  else
+	  {
+	    elmF = elm1;
+	    break;
+	  }
+	}
+	else if((pA2[1] = WlzGeomTriangleSnArea2(eV[2], eV[0], pos)) < 0.0)
+	{
+	  if(elm1->flags & WLZ_MESH_ELEM_FLAGS_NBR_1)
+	  {
+	    idE1 = elm1->neighbours[1];
+	    if(elm1 && elm0 && (idE1 == elm0->idx))
+	    {
+	      elmF = elm1;
+	      break;
+	    }
+	  }
+	  else
+	  {
+	    elmF = elm1;
+	    break;
+	  }
+	}
+	else if(eA2 - pA2[0] - pA2[1] < 0.0)
+	{
+	  if(elm1->flags & WLZ_MESH_ELEM_FLAGS_NBR_2)
+	  {
+	    idE1 = elm1->neighbours[2];
+	    if(elm1 && elm0 && (idE1 == elm0->idx))
+	    {
+	      elmF = elm1;
+	      break;
+	    }
+	  }
+	  else
+	  {
+	    elmF = elm1;
+	    break;
+	  }
+	}
+	else
+	{
+	  elmF = elm1;
+	  break;
+	}
+      }
+      idE0 = idE1;
+      elm0 = elm1;
+    }
+    if(elmF != NULL)
+    {
+      int	idN;
+      double	dSq,
+      		dSqMin;
+      WlzDVertex2 eV,
+      		  del;
+
+      idNR = elmF->nodes[0];
+      eV = (mesh->nodes[elmF->nodes[0]]).position;
+      WLZ_VTX_2_SUB(del, eV, pos);
+      dSqMin = WLZ_VTX_2_SQRLEN(del);
+      for(idN = 1; idN < 2; ++idN)
+      {
+        eV = (mesh->nodes[elmF->nodes[0]]).position;
+	WLZ_VTX_2_SUB(del, eV, pos);
+	dSq = WLZ_VTX_2_SQRLEN(del);
+	if(dSq < dSqMin)
+	{
+	  dSqMin = dSq;
+	  idNR = elmF->nodes[idN];
+	}
+      }
+    }
+  }
+  return(idNR);
 }

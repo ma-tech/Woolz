@@ -68,9 +68,9 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-1] [-2] [-ffilename1] [-Ffilename2] "
-	  "[-h] [-v] [<bibfile1>] [<bibfile2>]\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-1] [-2] [-ffilename1] [-Ffilename2] [-h]\n"
+	  "                           [<bibfile1>] [<bibfile2>]\n"
 	  "\tReset the transforms in bibfile2 so that the planes that\n"
 	  "\tmatch plane in bibfile1 - the fixed planes - are put back\n"
 	  "\tto the fixed positions defined by bibfile1. Planes\n"
@@ -80,13 +80,13 @@ static void usage(char *proc_str)
 	  "\tnot between two fixed planes are transformed as per the\n"
           "\tthe nearest fixed plane. All bibfiles are assumed to be\n"
 	  "\tfrom Reconstruct. The modified bibfile2 goes to stdout\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -1                transform 1 is absolute (def: relative)\n"
 	  "\t  -2                transform 2 is absolute (def: relative)\n"
-	  "\t  -h                Help - prints this usage message\n"
-	  "\t  -v                verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -h                Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -231,9 +231,8 @@ int main(int	argc,
 	 char	**argv)
 {
   FILE		*inFile1=NULL, *inFile2=NULL;
-  char 		optList[] = "f:F:hV";
+  char 		optList[] = "f:F:h";
   int		option;
-  int		verboseFlg=0;
   RecSectionList	recSecList1, recSecList2;
   RecSectionList	*secList1=&recSecList1, *secList2=&recSecList2;
   HGUDlpListItem	*listItem1, *listItem2;
@@ -284,10 +283,6 @@ int main(int	argc,
 	usage(argv[0]);
 	return 1;
       }
-      break;
-
-    case 'V':
-      verboseFlg = 1;
       break;
 
     case 'h':

@@ -71,6 +71,7 @@ bin_PROGRAMS		=  \
 			  WlzDomainAdjacencyMatrix \
 			  WlzDomainMatch \
 			  WlzDomainMatchMatrix \
+			  WlzDomainOccupancy \
 			  WlzDomainToTiles \
 			  WlzDrawDomainObj \
 			  WlzEMAPDomainTransform \
@@ -154,6 +155,10 @@ WlzDomainAdjacencyMatrix_LDFLAGS	= $(AM_LFLAGS)
 WlzDomainMatch_SOURCES		= WlzDomainMatch.c
 WlzDomainMatch_LDADD		= $(LDADD)
 WlzDomainMatch_LDFLAGS		= $(AM_LFLAGS)
+
+WlzDomainOccupancy_SOURCES	= WlzDomainOccupancy.c
+WlzDomainOccupancy_LDADD	= $(LDADD)
+WlzDomainOccupancy_LDFLAGS	= $(AM_LFLAGS)
 
 WlzDomainMatchMatrix_SOURCES	= WlzDomainMatchMatrix.c
 WlzDomainMatchMatrix_LDADD	= $(LDADD)

@@ -70,12 +70,12 @@ RecError	RecAuto(RecControl *rCtrl, RecPPControl *ppCtrl,
 			RecWorkFunction workFn, void *workData,
 			char **eMsg)
 {
-  RecSection	*oSec0,
-		*oSec1,
-		*nSec0,
-		*nSec1;
-  HGUDlpListItem *item;
   RecState	rState;
+  RecSection	*oSec0 = NULL,
+		*oSec1 = NULL,
+		*nSec0 = NULL,
+		*nSec1 = NULL;
+  HGUDlpListItem *item = NULL;
   static char	errMsgInvalidListStr[] =
 	     		"Section list or the registration limits are invalid.",
 	     	errMsgMallocStr[] = "Not enough memory available.";

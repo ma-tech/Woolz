@@ -86,8 +86,10 @@ extern WlzErrorNum	WlzDbgObjWrite(WlzObject *, int);
 	 ((((F)&(wlzDbgObjMask))==(F))?(*wlzDbgOutObjFn)((O),(X)):WLZ_ERR_NONE)
 
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif	/* !WLZ_DEBUG_H Don't put anything after this line */

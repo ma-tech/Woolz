@@ -107,7 +107,7 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s -n cols[,rows] -O overlap -h -v <input file>\n"
 	  "\tConvert a TIFF stack to a compound image\n"
 	  "\trepresenting the set of patches or mosaic\n"
@@ -117,13 +117,14 @@ static void usage(char *proc_str)
 	  "\tinput. Also required is the estimated pixel\n"
 	  "\toverlap. The TIFF is read from the given file,\n"
 	  "\toutput to stdout.\n"
-	  "\tOptions are:\n" 
+	  "Version: %s\n"
+	  "Options:\n" 
 	  "\t  -n#,#     Number (columns, rows) estimated if omitted\n"
 	  "\t  -O#       Estimated pixel overlap (default 50)\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -268,7 +269,7 @@ int main(int	argc,
 {
   char 		optList[] = "n:O:hv";
   int		option;
-  int		verboseFlg=0;
+  /* int		verboseFlg=0; */
   int		rows=0, cols=0;
   int		overlap=50;
   int		rowShift, colShift;
@@ -314,7 +315,7 @@ int main(int	argc,
       break;
 
     case 'v':
-      verboseFlg = 1;
+      /* verboseFlg = 1; */
       break;
 
     case 'h':
@@ -335,8 +336,8 @@ int main(int	argc,
 
   /* read the TIFF file */
   if( (inObj = WlzAssignObject(
-	 WlzEffReadObj(NULL, tiffFile, WLZEFF_FORMAT_TIFF, 0,
-		       &errNum), NULL)) == NULL ){
+	 WlzEffReadObj(NULL, tiffFile, WLZEFF_FORMAT_TIFF,
+	               0, 0, 0, &errNum), NULL)) == NULL ){
     usage(argv[0]);
     return errNum;
   }

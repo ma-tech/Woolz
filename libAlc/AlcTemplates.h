@@ -44,9 +44,11 @@ static char _AlcTemplates_h[] = "University of Edinburgh $Id$";
 * \bug          None known.
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 extern "C" {
 #endif
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \def		ALC_TEMPLATE_C1D(D,T,M,F)
@@ -466,8 +468,10 @@ extern "C" {
   } \
   return(alcErrno);
 
+#ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 }  					       /* Close scope of 'extern "C" */
 #endif
+#endif /* WLZ_EXT_BIND */
 
 #endif /* ALCTEMPLATES_H */

@@ -49,17 +49,13 @@ static char _WlzSetVoxelSize_c[] = "University of Edinburgh $Id$";
 WlzSetVoxelSize - sets the voxel size of a 3D domain object.
 \par Synopsis
 \verbatim
-WlzSetVoxelSize [-h] [-v] [-x#] [-y#] [-z#] [<input file>]
+WlzSetVoxelSize [-h] [-x#] [-y#] [-z#] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
   <tr> 
     <td><b>-x</b></td>
@@ -109,20 +105,20 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-x#] [-y#] [-z#] [-h] [-v] [<input file>]\n"
+	  "Usage:\t%s [-x#] [-y#] [-z#] [-h] [<input file>]\n"
 	  "\tReset the voxel sizes of the input 3D object\n"
 	  "\twriting the new object to standard output.\n"
 	  "\tThis is required until the 3D objects are converted to\n"
 	  "\tWLZ_TRANS_OBJ type. If a voxel size is not defined then\n"
 	  "\tthe original size is retained\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -x#       x voxel size\n"
 	  "\t  -y#       y voxel size\n"
 	  "\t  -z#       z voxel size\n"
-	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -h        help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  
@@ -132,11 +128,10 @@ int main(int	argc,
 
   WlzObject	*obj;
   FILE		*inFile;
-  char 		optList[] = "x:y:z:hv";
+  char 		optList[] = "x:y:z:h";
   int		option;
   int		xFlg=0, yFlg=0, zFlg=0;
   float		x_size=1.0, y_size=1.0, z_size=1.0;
-  int		verboseFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
     
@@ -159,10 +154,6 @@ int main(int	argc,
     case 'z':
       z_size = atof(optarg);
       zFlg = 1;
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

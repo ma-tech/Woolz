@@ -197,8 +197,8 @@ int             main(int argc, char **argv)
   		option,
 		ok = 1,
 		usage = 0,
-      		inR,
-		inC,
+      		inR = 0,
+		inC = 0,
 		iVtx = 0,
       		nV = 0,
       		nN = 0,
@@ -431,13 +431,18 @@ int             main(int argc, char **argv)
     }
     else
     {
-      if(AlcDouble2ReadAsci(fP, &inData, (size_t *) &inR, (size_t *) &inC) != ALC_ER_NONE)
+      size_t nM = 0,
+             nN = 0;
+
+      if(AlcDouble2ReadAsci(fP, &inData, &nM, &nN) != ALC_ER_NONE)
       {
         ok = 0;
 	(void )fprintf(stderr,
 		       "%s: failed to read input file %s.\n",
 		       *argv, inFileStr);
       }
+      inR = nM;
+      inC = nN;
       if(fP && strcmp(inFileStr, "-"))
       {
 	fclose(fP);
@@ -634,11 +639,14 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%s",
+    "Usage: %s%s%s%s",
     *argv,
     " [-o<out obj>] [-A<algorithm>]\n"
     "                             [-2] [-3] [-T] [-a] [-r] [-t] [-h]\n"
     "                             [-w<weights>] [<in data>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -2  Compute a 2D transform, requires verticies in 2D format.\n"
     "  -3  Compute a 3D transform, requires verticies in 3D format.\n"

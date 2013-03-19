@@ -156,10 +156,10 @@ extern char     *optarg;
 int		main(int argc, char *argv[])
 {
   int		idx,
+		nV = 0,
 		dim = 0,
-		maxV = 0,
-		nV,
   		inv = 0,
+		maxV = 0,
 		nStep = 1,
 		useStep = 0,
   		ok = 1,
@@ -497,6 +497,7 @@ int		main(int argc, char *argv[])
 	    "                   [<constrained mesh transform object>]\n"
 	    "Reads a constrained mesh transform object and input vertices\n"
 	    "and outputs transformed vertices.\n"
+	    "Version: %s\n"
 	    "Options are:\n"
             "  -h  Help, prints this usage message.\n"
             "  -i  Invert the transform after reading.\n"
@@ -533,7 +534,9 @@ int		main(int argc, char *argv[])
 	    "inverts it as instructed by the -i flag. Vertices are then read\n"
 	    "from the file in.num, transformed and written to the file\n"
 	    "out.num.\n",
-	    argv[0], argv[0]);
+	    argv[0],
+	    WlzVersion(),
+	    argv[0]);
 
   }
   return(!ok);

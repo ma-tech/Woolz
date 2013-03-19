@@ -308,9 +308,11 @@ int             main(int argc, char **argv)
   {
     (void )fprintf(stderr,
     "Usage: "
-    "%s [-x#] [-y#] [-z#] [-k#] [-l#] [-g] [-m] [-p] [-h] [<in object>]\n"
+    "%s [-x#] [-y#] [-z#] [-k#] [-l#] [-g] [-m] [-p] [-h]\n"
+    "                    [<in object>]\n"
     "Sub-samples a woolz interval domain object with grey values.\n"
-    "Options are:\n"
+    "Version: %s\n"
+    "Options:\n"
     "  -x#   Sampling factor for rows (set to %d).\n"
     "  -y#   Sampling factor for columns (set to %d).\n"
     "  -z#   Sampling factor for planes (set to %d).\n"
@@ -323,6 +325,7 @@ int             main(int argc, char **argv)
     "  -p    Use point sampling (%sset).\n"
     "  -h    Display this usage information.\n",
     *argv,
+    WlzVersion(),
     samFac.vtX, samFac.vtY, samFac.vtZ,
     (samFn == WLZ_SAMPLEFN_MAX) ? "" : "not ",
     (samFn == WLZ_SAMPLEFN_MEDIAN) ? "" : "not ",

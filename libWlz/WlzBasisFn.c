@@ -1465,6 +1465,7 @@ WlzBasisFn *WlzBasisFnConf2DFromCPts(int nPts, int order,
   WlzBasisFn *basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  aM.core = vM.core = NULL;
   if((order < 0) || (nPts <= 0))
   {
     errNum = WLZ_ERR_PARAM_DATA;
@@ -3564,11 +3565,10 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
   double  	**vA;
   AlgMatrix	vM;
 #else
-  double  	**wA;
   double	*xV = NULL;
   AlgMatrix	wM;
 #endif
-  double	**aA;
+  double	**aA = NULL;
   AlgMatrix	aM;
   WlzBasisFn	*basisFn = NULL;
   WlzDVertex3	tV0,
@@ -3577,6 +3577,12 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
   WlzHistogramDomain *evalData = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  aM.core = NULL;
+#ifdef WLZ_BASISFN_MOS_SOLVER_SVD
+  vM.core = NULL;
+#else
+  wM.core = NULL;
+#endif
   delta = *(param + 0);
   tau = *(param + 1);
   if((delta < DBL_EPSILON) || (tau < DBL_EPSILON) ||
@@ -3616,8 +3622,6 @@ WlzBasisFn *WlzBasisFnScalarMOS3DFromCPts(int nPts,
   {
 #ifdef WLZ_BASISFN_MOS_SOLVER_SVD
     vA = vM.rect->array;
-#else
-    wA = wM.rect->array;
 #endif
     aA = aM.rect->array;
     *((double *)(basisFn->param) + 0) = delta;

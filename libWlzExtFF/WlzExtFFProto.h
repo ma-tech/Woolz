@@ -42,9 +42,11 @@ static char _WlzExtFFProto_h[] = "University of Edinburgh $Id$";
 * \ingroup	WlzExtFF
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 
 /* From WlzExtFF.c */
@@ -62,6 +64,8 @@ extern WlzObject 		*WlzEffReadObj(
 				  const char *fName,
 				  WlzEffFormat fFmt,
 				  int split,
+				  int sTrans,
+				  int gTrans,
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum 		WlzEffWriteObj(
 				  FILE *fP,
@@ -397,8 +401,10 @@ extern WlzThreeDViewStruct 	*WlzEffBibRead3DView(
 
 #endif /* WLZ_EXT_BIND */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif /* ! WLZEXTFF_PROTO_H */

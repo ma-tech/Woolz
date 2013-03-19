@@ -119,8 +119,8 @@ AlgMatrixRect	*AlgMatrixRectNew(size_t nR, size_t nC, AlgError *dstErr)
   else
   {
     mat->type = ALG_MATRIX_RECT;
-    mat->nR = nR;
-    mat->nC = nC;
+    mat->maxR = mat->nR = nR;
+    mat->maxC = mat->nC = nC;
     if((errNum = AlcDouble2Calloc(&(mat->array), nR, nC)) != ALG_ERR_NONE)
     {
       AlcFree(mat);
@@ -195,6 +195,7 @@ AlgMatrixSym	*AlgMatrixSymNew(size_t nN, AlgError *dstErr)
   else
   {
     mat->type = ALG_MATRIX_SYM;
+    mat->maxN =nN;
     mat->nR = nN;
     mat->nC = nN;
     nE = ((nN + 1) * nN) / 2;
@@ -502,8 +503,7 @@ AlgMatrix	AlgMatrixReadAscii(AlgMatrixType mType, double tol,
 				   AlgError *dstErr)
 {
   size_t	nC,
-  		nR,
-		nV;
+  		nR;
   AlgMatrix	mat;
   AlcVector	*vec = NULL;
   AlcErrno	alcErr = ALC_ER_NONE;

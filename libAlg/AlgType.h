@@ -43,9 +43,11 @@ static char _AlgType_h[] = "University of Edinburgh $Id$";
 */
 
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif
+#endif /* WLZ_EXT_BIND */
 
 /* Standard min, max, absolute value and nearest integer macros */
 #define	ALG_MAX(X,Y)	(((X)>(Y))?(X):(Y))
@@ -150,6 +152,8 @@ typedef struct _AlgMatrixRect
   AlgMatrixType	type;		/*!< From AlgmatrixCore. */
   size_t	nR;		/*!< From AlgmatrixCore. */
   size_t	nC;		/*!< From AlgmatrixCore. */
+  size_t	maxR;		/*!< Rows space allocated for. */
+  size_t	maxC;		/*!< Columns space allocated for. */
   double	**array;	/* Array of elements. */
 } AlgMatrixRect;
 
@@ -163,6 +167,7 @@ typedef struct _AlgMatrixSym
   AlgMatrixType	type;		/*!< From AlgmatrixCore. */
   size_t	nR;		/*!< From AlgmatrixCore. */
   size_t	nC;		/*!< From AlgmatrixCore. */
+  size_t	maxN;		/*!< Max rows/columns space allocated for. */
   double	**array;
 } AlgMatrixSym;
 
@@ -279,8 +284,10 @@ extern AlgDbgFn		algDbgOutFn;
 #define ALG_DBG_FN      (*algDbgOutFn)
 #define ALG_DBG(F,M)    ((((F)&(algDbgMask))==(F))?ALG_DBG_FN M:ALG_ERR_NONE)
  
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus 
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif /* ! ALGTYPE_H */

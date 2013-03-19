@@ -231,7 +231,7 @@ int             main(int argc, char *argv[])
     {
       (void )printf("%s\n(\n", opStr);
       AlgMatrixWriteAscii(a[0], stdout);
-      (void )printf(")\n=\n", opStr);
+      (void )printf(")\n=\n");
     }
     AlgMatrixWriteAscii(a[1], stdout);
     if(timer)

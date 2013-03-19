@@ -49,8 +49,8 @@ static char _WlzMeshTransformObj_c[] = "University of Edinburgh $Id$";
 WlzMeshTransformObj - applies a mesh transform to an object.
 \par Synopsis
 \verbatim
-WlzMeshTransformObj -m <mesh transform file> [-o <output file>] [-h] [-v]
-                    <2D object input file>
+WlzMeshTransformObj [-i] [-L] -m <mesh transform file> [-o <output file>]
+                    [-h] <2D object input file>
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -73,10 +73,6 @@ WlzMeshTransformObj -m <mesh transform file> [-o <output file>] [-h] [-v]
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
 </table>
 \par Description
@@ -142,19 +138,20 @@ static void usage(char *proc_str)
 {
   fprintf(stderr,
 	  "Usage:\t%s -m <mesh transform file>"
-	  " [-o <output file>] [-h] [-v]"
-	  " [<2D object input file>]\n"
+	  " [-o <output file>] [-h]\n"
+	  "                            [<2D object input file>]\n"
 	  "\tApply a mesh transform to given input objects\n"
 	  "\twriting the warped objects to standard output.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -i                 Inverse transform\n"
-	  "\t  -L                 Use linear interpolation instead of nearest-neighbour\n"
+	  "\t  -L                 Use linear interpolation instead of\n"
+	  "\t                     nearest-neighbour\n"
 	  "\t  -m<meshfile>       Mesh transform object\n"
 	  "\t  -o<output file>    Output filename, default to stdout\n"
-	  "\t  -h                 Help - this message\n"
-	  "\t  -v                 verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -h                 Help - this message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -164,10 +161,9 @@ int main(int	argc,
   WlzObject	*inObj, *meshObj, *outObj;
   FILE		*inFP, *outFP, *meshFP;
   char		*outFile, *meshFile;
-  char 		optList[] = "iLm:o:hv";
+  char 		optList[] = "iLm:o:h";
   int		option;
   int		inverseFlg = 0;
-  int		verboseFlg = 0;
   const char    *errMsg;
   WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
@@ -201,10 +197,6 @@ int main(int	argc,
     default:
       usage(argv[0]);
       return 0;
-
-    case 'v':
-      verboseFlg = 1;
-      break;
 
     }
   }

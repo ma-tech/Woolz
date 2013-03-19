@@ -1,5 +1,5 @@
-Core Woolz README
-=================
+The Woolz Image Processing System
+=================================
 ($Id$)
 
 Bill.Hill@igmm.mrc.ac.uk 2012
@@ -29,22 +29,24 @@ Contents
 
 Woolz is a set of software libraries and executables for image processing
 and pattern recognition that was initially developed at the MRC Clinical
-Population and Cytogenetics Unit, now called the MRC Human Genetics Unit,
-for fast microscope slide scanning, chromosome image analysis, pattern
-recognition and a wide range of image processing and analysis problems.
-The original authors of the software are Dr. Denis Rutovitz and Dr Jim Piper
-although the software has developed and expanded considerably since their
-initial work.
+Population and Cytogenetics Unit. This has now become the MRC Human Genetics
+Unit (HGU) and is part of the Institute of Genetics and Molecular Medicine
+(IGMM) at the University of Edinburgh. Woolz was initially developed for fast
+microscope slide scanning, chromosome image analysis, pattern recognition
+and a wide range of image processing and analysis problems. The original
+authors of the software are Dr. Denis Rutovitz and Dr Jim Piper although
+the software has developed and expanded considerably since their initial
+work.
 
 Woolz has been adopted as the standard for the Mouse Atlas Databases
 (http://www.emouseatlas.org) and is used for all the reconstructions,
 anatomical, gene-expression and spatial domains. This is because the
-interval coding provides significant computing advantages in a range of
-image processing functions specifically in set operations (such as union,
-intersection, etc.) morphological operations (erosion, dilation etc.) and
-other binary image processing such as distance transforms, skeletonization,
-segmentation and labelling. In general Woolz is very efficient with respect
-to both memory use and time.
+interval coding used in Woolz provides significant computing advantages
+in a range of image processing functions specifically in set operations
+(such as union, intersection, etc.) morphological operations (erosion,
+dilation etc.) and other binary image processing such as distance
+transforms, segmentation and labelling. In general Woolz is very efficient
+with respect to both memory use and time.
 
 The Woolz data structures are, in general, compact and in terms of
 grey-level data minimise memory usage without compression (which in
@@ -52,11 +54,20 @@ principle could also be applied). It is especially efficient for
 morphological and set operations because of the way it's 2 and 3D
 domain objects are encoded using intervals.
 
+All pixel or voxel based image processing systems which allow
+image query via floating point coordinates need to define what a pixel
+is by the relationship between the integer pixel/voxel coordinates and
+the floating point query coordinates. In Woolz a pixel or voxel is
+defined to be an image sample centred at the integer coordinate.
+Following from this definition the C macro WLZ_NINT(), which returns
+the nearest integer to the given float, should be used in queries of
+pixel/voxel values when using floating point coordinates.
+
 Since it's adoption by the Mouse Atlas Project there have been many
 significant developments in Woolz, which have primarily been focused on
 3D reconstruction, transforms, registration and warping.
 
- Woolz has been written in ANSI standard C so that it will build and
+Woolz has been written in ANSI standard C so that it will build and
 run on all computing platforms that support some basic requirements,
 such as supporting at least 32 bit integers and IEEE floating point.
 The software is know to build on GNU/Linux, MacOSX and Solaris systems.
@@ -92,18 +103,18 @@ Margaret Stark
 Nick Burton
 Richard Baldock
 
+To contact the authors please use ma-tech@hgu.mrc.ac.uk.
+
 The skeleton for the autoconf system was shamelessly copied from Tina
 (http://www.tina-vision.net).
 
 2) Where can I get the Woolz software?
 --------------------------------------
 
-While we plan to release Woolz to some public code repository, currently it
-can only be obtained (both as source code and compiled code) from:
-MRC Human Genetics Unit
-MRC IGMM, University of Edinburgh
-Western General Hospital
-Crewe Road, Edinburgh EH4 2XU, UK.
+Woolz is available as source from GitHub (https://github.com/ma-tech/)
+and can be downloaded pre-built for some architectures from the e-Mouse
+Atlas Project
+(http://www.emouseatlas.org/emap/analysis_tools_resources/software.html).
 
 3. How can I build Woolz?
 -------------------------
@@ -111,24 +122,35 @@ Crewe Road, Edinburgh EH4 2XU, UK.
 Woolz should build easily on most modern systems that have the GNU Build
 system (see http://en.wikipedia.org/wiki/GNU_build_system).
 
-In most cases the following should be sufficient to build Woolz:
+In most cases the simple script build.sh should be sufficient to build Woolz.
+This script simply runs autoreconf followed by ./configure with various
+options. It's probably best to copy build.sh to mybuild.sh and then set the
+required options for the build you want.
 
-tar -zxf Woolz.tgz
-cd Woolz/src
+Sometimes the configuration will fail with messages relating to libtool.
+In these cases running
+  autoreconf -i --force
+may fix the problems.
 
-aclocal
-automake -a
-autoconf
-libtoolize (Linux) or glibtoolize (Mac)
-./configure --enable-extff --enable-optimise
-make 
+The build script build.sh simply runs
+  autoreconf
+followed by
+  ./configure
+
+If building JavaWoolz then the build requires all libraries (including
+external file format libraries such as Jpeg, NIfTI and Tiff) to be built
+with relocatable code (use -fPIC with gcc). Sometimes the JavaWoolz
+build fails because of something to do with the Java classpath. You
+can often work around this by running make within the JavaWoolz C2Java
+directory and then rerunning make from the top level directory again.
 
 A prefix can be given in the configure stage to define where the programs,
-libraries etc will be installed. Use
+libraries are will be installed, conventionally this is /opt/MouseAtlas.
+Use
 
 ./configure --help
 
-to see this and more options.
+to see all the options available.
 
 4) How can I use Woolz?
 -----------------------
@@ -163,7 +185,6 @@ The program WlzExtFFConvert can be used to convert between supported
 file formats. The library functions WlzEffReadObj() and WlzEffWriteObj()
 (in libWlzExtFF) can also be used to read and write non-Woolz format
 files.
-
 
 6) How can I write my own Woolz code?
 -------------------------------------

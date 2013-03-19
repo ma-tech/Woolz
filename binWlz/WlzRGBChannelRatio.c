@@ -257,14 +257,16 @@ int		main(int argc, char *argv[])
       "No multiplier is used unless given on the command line.\n"
       "By default the input object is read from the standard input and the\n"
       "output object is written to standard the output.\n"
-      "Options are:\n"
+      "Version: %s\n"
+      "Options:\n"
       "  -N  Output is normalised to range 0-255.\n"
       "  -d  Denominator colour channel.\n"
       "  -n  Numerator colour channel.\n"
       "  -m  Multiplier colour channel.\n"
       "  -o  Output file.\n"
       "  -h  Help, prints this usage message.\n",
-      *argv);
+      *argv,
+      WlzVersion());
   }
   exit(errNum);
 }

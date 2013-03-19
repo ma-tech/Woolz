@@ -42,9 +42,11 @@ static char _WlzType_h[] = "University of Edinburgh $Id$";
 * \ingroup	Wlz
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \typedef	WlzUByte
@@ -490,10 +492,12 @@ typedef enum _WlzTransformType
   WLZ_TRANSFORM_2D5_MESH,     		/*!< 2.5D (plane wise) triangular
   					     mesh transform. */
   WLZ_TRANSFORM_3D_MESH,		/*!< 3D tetrahedral mesh transform. */
-  WLZ_TRANSFORM_2D_CMESH,		/*!< 2D conforming triangular mesh
-  				             transform */
-  WLZ_TRANSFORM_3D_CMESH		/*!< 3D conforming tetrahedral mesh
-  					     transform */
+  WLZ_TRANSFORM_2D_CMESH = WLZ_CMESH_2D, /*!< 2D conforming triangular mesh
+  				              transform. */
+  WLZ_TRANSFORM_2D5_CMESH = WLZ_CMESH_2D5, /*!< 3D conforming triangular mesh
+  				                transform. */
+  WLZ_TRANSFORM_3D_CMESH = WLZ_CMESH_3D	/*!< 3D conforming tetrahedral mesh
+  					     transform. */
 } WlzTransformType;
 
 /*!
@@ -712,7 +716,9 @@ typedef enum _WlzInterpolationType
   WLZ_INTERPOLATION_CLASSIFY_1,		/*!< Classification by probability. */
   WLZ_INTERPOLATION_CALLBACK,		/*!< Callback function computes
 					     each interpolated value. */
-  WLZ_INTERPOLATION_ORDER_2		/*!< Second order interpolation. */
+  WLZ_INTERPOLATION_ORDER_2,		/*!< Second order interpolation. */
+  WLZ_INTERPOLATION_BARYCENTRIC,	/*!< Barycentric mesh interpolation. */
+  WLZ_INTERPOLATION_KRIG 	        /*!< Kriging mesh interpolation. */
 } WlzInterpolationType;
 
 /*!
@@ -1203,6 +1209,8 @@ typedef union _WlzGreyP
   float   	*flp;
   double  	*dbp;
   WlzUInt 	*rgbp;
+  char		**bytes;
+  unsigned char **ubytes;
 } WlzGreyP;
 
 /*!
@@ -1213,6 +1221,7 @@ typedef union _WlzGreyP
 */
 typedef union _WlzGreyV
 {
+  void		*v;		        /*!< Can save a cast when assigning. */
   WlzLong 	lnv;
   int 		inv;
   short 	shv;
@@ -1220,6 +1229,8 @@ typedef union _WlzGreyV
   float 	flv;
   double 	dbv;
   WlzUInt 	rgbv;
+  char		bytes[8];
+  unsigned char	ubytes[8];
 } WlzGreyV;
 
 /*!
@@ -1245,6 +1256,26 @@ typedef struct _WlzPixelP
   WlzGreyType	type;			/*!< Type of grey value. */
   WlzGreyP	p;			/*!< Pointer to the grey value(s). */
 } WlzPixelP;
+
+/*!
+* \struct	_WlzGreyTransformParam
+* \ingroup	WlzTransform
+* \brief	Grey-level transform parameters.
+*		Typedef: ::WlzGreyTransformParam.
+*/
+typedef struct _WlzGreyTransformParam
+{
+  WlzGreyTransformType type; 		/*!< Grey transform type. */
+  WlzPixelV	il;       		/*!< Input minimum grey value. */
+  WlzPixelV	iu;       		/*!< Input maximum grey value. */
+  WlzPixelV	ol;       		/*!< Output minimum grey value. */
+  WlzPixelV	ou;       		/*!< Output maximum grey value. */
+  double	p0;			/*!< First parameter, used for
+                                             gamma (\f$\gamma\f$) or
+                                             sigmoid (\f$\mu\f$). */
+  double	p1;			/*!< Second parameter, used for
+                                             sigmoid (\f$\sigma\f$). */
+} WlzGreyTransformParam;
 
 /************************************************************************
 * Markers.
@@ -3253,16 +3284,14 @@ typedef enum _WlzCMeshElmFlags
   WLZ_CMESH_ELM_FLAG_BOUNDARY	= (1),	/*!< Element intersects the boundary
   					     of the domain to which it
 					     should conform. */
-  WLZ_CMESH_ELM_FLAG_OUTSIDE 	= (2),	/*!< Element is outside the domain to
+  WLZ_CMESH_ELM_FLAG_OUTSIDE 	= (1<<1), /*!< Element is outside the domain to
   					     which the mesh should
 					     conform. */
-  WLZ_CMESH_ELM_FLAG_KNOWN	= (4),	/*!< A property of the element is
+  WLZ_CMESH_ELM_FLAG_KNOWN	= (1<<2), /*!< A property of the element is
   					     known. */
-#ifndef WLZ_EXT_BIND
-  WLZ_CMESH_ELM_FLAG_ALL	= (0xffffffff) /*!< All possible flags. */
-#else
-  WLZ_CMESH_ELM_FLAG_ALL	= (-1)  /*!< All possible flags. */
-#endif
+  WLZ_CMESH_ELM_FLAG_ALL	= (65535) /*!< All possible flags, 0xffff
+                                               decimal representation required
+					       for JavaWoolz. */
 } WlzCMeshElmFlags;
 
 /*!
@@ -3285,11 +3314,12 @@ typedef enum _WlzCMeshNodFlags
   						and is being processed. */
   WLZ_CMESH_NOD_FLAG_KNOWN	= (1<<4),  /*!< Property associated with
                                                 node is known. */
-#ifndef WLZ_EXT_BIND
-  WLZ_CMESH_NOD_FLAG_ALL	= (0xffffffff) /*!< All possible flags. */
-#else
-  WLZ_CMESH_NOD_FLAG_ALL	= (-1)  /*!< All possible flags. */
-#endif
+  WLZ_CMESH_NOD_FLAG_OUTSIDE 	= (1<<5),  /*!< Node is outside the domain to
+  					        which the mesh should
+						conform. */
+  WLZ_CMESH_NOD_FLAG_ALL	= (65535) /*!< All possible flags, 0xffff
+  					       decimal representation required
+					       for JavaWoolz. */
 } WlzCMeshNodFlags;
 
 /*!
@@ -3435,7 +3465,7 @@ typedef union _WlzCMeshEdgUP
 */
 typedef struct _WlzCMeshFace
 {
-  struct _WlzCMeshEdgU3D edu[3];      /*!< Directed edges of the face. */
+  struct _WlzCMeshEdgU3D edu[3];        /*!< Directed edges of the face. */
   struct _WlzCMeshFace *opp;            /*!< Opposite face on neighboring
                                              mesh element. */
   struct _WlzCMeshElm3D *elm;           /*!< Parent mesh element. */
@@ -4122,10 +4152,13 @@ typedef int (*WlzThreshCbFn)(WlzObject *, void *, WlzThreshCbStr *);
 typedef union _WlzTransform
 {
   struct _WlzCoreTransform *core;	/*!< Core transform. */
+  struct _WlzEmptyTransform *empty;	/*!< Empty (zero) transform. */
   struct _WlzAffineTransform *affine;	/*!< Affine transforms, 2D or 3D. */
   struct _WlzBasisFnTransform *basis;	/*!< Any basis function transform. */
   struct _WlzMeshTransform *mesh;	/*!< Any convex mesh transform. */
-  struct _WlzObject *obj;               /*!< Some transforms are objects						     with a domain and values. */
+  struct _WlzObject *obj;               /*!< Some transforms are objects
+  					     with a domain and values (eg
+					     conforming mesh transforms). */
 } WlzTransform;
 
 /*!
@@ -4140,6 +4173,21 @@ typedef struct _WlzCoreTransform
   int           linkcount;      	/*!< From WlzCoreDomain. */
   void 		*freeptr;		/*!< From WlzCoreDomain. */
 } WlzCoreTransform;
+
+/*!
+* \struct	_WlzEmptyTransform
+* \ingroup	WlzTransform
+* \brief	An empty transform, with members common to all transforms.
+* 		An empty transform is a compact represetation of a zero
+* 		transform avoiding the use of NULL which implies an error.
+*		Typedef: ::WlzCoreTransform.
+*/
+typedef struct _WlzEmptyTransform
+{
+  WlzTransformType type;       		/*!< From WlzCoreDomain. */
+  int           linkcount;      	/*!< From WlzCoreDomain. */
+  void 		*freeptr;		/*!< From WlzCoreDomain. */
+} WlzEmptyTransform;
 
 /*!
 * \struct	_WlzAffineTransform
@@ -4294,7 +4342,7 @@ typedef struct _WlzMeshElem3D
 /*!
 * \struct	_WlzMeshTransform
 * \ingroup	WlzTransform
-* \brief	A mesh transform.
+* \brief	A mesh convex transform.
 *		Typedef: ::WlzMeshElem.
 */
 typedef struct _WlzMeshTransform
@@ -4312,10 +4360,6 @@ typedef struct _WlzMeshTransform
 } WlzMeshTransform;
 
 
-/* 
-   nickb 27.02.03
-   to prevent parse errors in WlzC2Java.c
-*/
 #ifndef WLZ_EXT_BIND
 /*!
 * \struct	_WlzMeshTransform3D
@@ -4949,11 +4993,54 @@ typedef struct _WlzThreeDViewStruct
 typedef WlzPixelV (*Wlz3DProjectionIntFn)(WlzPixelP, int, int, void *,
 					  WlzErrorNum *);
 #endif
+/*!
+* \enum         _WlzKrigModelFnType
+* \ingroup      WlzType
+* \brief        Enumerated values for kriging variogram model functions. See
+* 		the functions for details.
+*/
+typedef enum _WlzKrigModelFnType
+{
+  WLZ_KRIG_MODELFN_INVALID      = 0,    /*!< Invalid function, may be used
+                                             to indicate an error. */
+  WLZ_KRIG_MODELFN_NUGGET,		/*!< Nugget model function, see
+  					     WlzKrigModelFnNugget(). */
+  WLZ_KRIG_MODELFN_LINEAR,		/*!< Linear model function, see
+  					     WlzKrigModelFnNugget(). */
+  WLZ_KRIG_MODELFN_SPHERICAL,           /*!< Spherical model function, see
+                                             WlzKrigModelFnSpherical(). */
+  WLZ_KRIG_MODELFN_EXPONENTIAL,         /*!< Exponential model function, see
+                                             WlzKrigModelFnExponential(). */
+  WLZ_KRIG_MODELFN_GAUSSIAN,            /*!< Gaussian model function, see
+                                             WlzKrigModelFnGaussian(). */
+  WLZ_KRIG_MODELFN_QUADRATIC            /*!< Quadratic model function, see
+                                             WlzKrigModelFnQuadratic(). */
+} WlzKrigModelFnType;
+
+/*!
+* \struct       _WlzKrigModelFn
+* \ingroup      WlzType
+* \brief        Parameters and function pointer for a kriging model function.
+*/
+typedef struct _WlzKrigModelFn
+{
+  WlzKrigModelFnType    type;           /*!< Kriging model function type. */
+  double                c0;             /*!< Nugget (offset) parameter. */
+  double                c1;             /*!< Sill (slope) parameter. */
+  double                a;              /*!< Range parameter. */
+#ifdef WLZ_EXT_BIND
+  void                  *fn;
+#else
+  double                (*fn)(struct _WlzKrigModelFn *, double h);
+#endif
+                                        /*!< Function pointer. */
+} WlzKrigModelFn;
 
 
-
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif	/* !WLZ_TYPE_H Don't put anything after this line */

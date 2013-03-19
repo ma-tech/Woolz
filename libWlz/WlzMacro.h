@@ -41,9 +41,13 @@ static char _WlzMacro_h[] = "University of Edinburgh $Id$";
 * \ingroup	Wlz
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
+
+#define WLZ_VERSION	PACKAGE_VERSION
 
 /************************************************************************
 * Simple macros not always available elsewhere.				*
@@ -308,8 +312,10 @@ extern "C" {
 #define WLZ_CMESH_ELM3D_GET_NODE_2(e)	((e)->face[0].edu[2].nod)
 #define WLZ_CMESH_ELM3D_GET_NODE_3(e)	((e)->face[1].edu[1].nod)
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif /* WLZMACRO_H */

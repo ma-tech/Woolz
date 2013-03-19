@@ -50,7 +50,7 @@ static char _WlzExtFFConvert_c[] = "University of Edinburgh $Id$";
 WlzExtFFConvert - converts image objects between file formats.
 \par Synopsis
 \verbatim
-WlzExtFFConvert [-h] [-s] [-b<background>]
+WlzExtFFConvert [-h] [-s] [-G] [-S] [-b<background>]
                 [-f<input format>] [-F<output format>]
 		[-x<x size>] [-y<y size>] [-z<z size>]
 		[-o<output file>] [<input file>)]
@@ -65,6 +65,15 @@ WlzExtFFConvert [-h] [-s] [-b<background>]
   <tr> 
     <td><b>-s</b></td>
     <td>Split labeled volumes into domains.</td>
+  </tr>
+  <tr>
+    <td><b>-G</b></td>
+    <td>Apply grey value transforms.</td>
+  </tr>
+  <tr>
+    <td><b>-S</b></td>
+    <td>Use spatial transforms to create WLZ_TRANS_OBJ objects
+        (by default just offsets are applied).</td>
   </tr>
   <tr> 
     <td><b>-b</b></td>
@@ -188,9 +197,11 @@ extern int      optind,
 
 int             main(int argc, char **argv)
 {
-  int		bgdFlag = 0,
+  int		option,
+  		bgdFlag = 0,
 		split = 0,
-  		option,
+		gTrans = 0,
+		sTrans = 0,
 		ok = 1,
 		usage = 0;
   int		minDimension, maxDimension;
@@ -208,7 +219,7 @@ int             main(int argc, char **argv)
   		bgdV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char    *errMsg;
-  static char	optList[] = "b:d:D:f:F:Lo:x:y:z:hs",
+  static char	optList[] = "b:d:D:f:F:Lo:x:y:z:hsGS",
 		outObjFileStrDef[] = "-",
 		inObjFileStrDef[] = "-";
  
@@ -304,6 +315,12 @@ int             main(int argc, char **argv)
       case 's':
         split = 1;
 	break;
+      case 'G':
+        gTrans = 1;
+	break;
+      case 'S':
+        sTrans = 1;
+	break;
       case 'h': /* FALLTHROUGH */
       default:
 	usage = 1;
@@ -373,6 +390,7 @@ int             main(int argc, char **argv)
     }
     errNum = WLZ_ERR_READ_EOF;
     if((inObj = WlzAssignObject(WlzEffReadObj(fP, fStr, inFmt, split,
+					      sTrans, gTrans,
     					      &errNum), NULL)) == NULL)
     {
       ok = 0;
@@ -485,19 +503,25 @@ int             main(int argc, char **argv)
       fmtStr = WlzEffFormatTable(2, 50, 10, NULL);
       (void )fprintf(
 	stderr,
-	"Usage: %s%s%s%s%s%s%s%s%s\n",
+	"Usage: %s%s%s%s%s%s%s%s%s%s%s\n",
 	*argv,
 	" [-h] [-s] [-b<background>]\n"
-	"        [-d<min-dimension>] [-D<max-dimension>]\n"
-	"        [-f<input format>] [-F<output format>]\n"
-	"        [-x<x size>] [-y<y size>] [-z<z size>]\n"
-	"        [-o<output file>] [<input file>)]\n"
+	"                       [-d<min-dimension>] [-D<max-dimension>]\n"
+	"                       [-f<input format>] [-F<output format>]\n"
+	"                       [-x<x size>] [-y<y size>] [-z<z size>]\n"
+	"                       [-o<output file>] [<input file>)]\n"
 	"Converts objects between one file format and another, neither of\n"
 	"which need be the Woolz data file format.\n"
-	"Options are:\n"
+	"Version: ",
+	WlzVersion(),
+	"\n"
+	"Options:\n"
 	"  -h    Help, prints this usage information.\n"
 	"  -s    Split labeled volumes into domains.This will also split\n"
 	"        a tiled or pyramidal tiff into resolution slices and tiles.\n"
+	"  -G    Apply grey value transforms.\n"
+	"  -S    Use spatial transforms to create WLZ_TRANS_OBJ objects\n"
+        "        (by default just offsets are applied).\n"
 	"  -b#   Set background to value,\n"
 	"  -d#   Set size of minimum dimension, i.e. min of width or height\n"
 	"  -D#   Set size of maximum dimension, i.e. max of width or height\n"

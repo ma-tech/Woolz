@@ -54,12 +54,13 @@ WlzErrorNum WlzEffWriteObjTxt(
   char		*params)
 {
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  int		width, height;
+  int		width = 0, height = 0;
   int		i, j;
   WlzObject	*rectObj=NULL;
-  WlzGreyType 	gType;
+  WlzGreyType 	gType = WLZ_GREY_ERROR;
   WlzGreyP	gValuesP;
 
+  gValuesP.v = NULL;
   /* check input */
   if( fP == NULL ){
     errNum = WLZ_ERR_PARAM_NULL;

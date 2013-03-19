@@ -220,7 +220,7 @@ double WlzRGBAPixelValue(
 void WlzRGBAConvertRGBToHSV_UBYTENormalised(
   int		*col)
 {
-  int	h, s, b;
+  int	s, b, h = 0;
   int	max, min;
 
   /* algorithm from Foley, van Dam, Feiner, Hughes,

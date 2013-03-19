@@ -67,10 +67,6 @@ WlzClassMap
     <td><b>-h</b></td>
     <td>Help - print help message</td>
   </tr>
-  <tr>
-    <td><b>-v</b></td>
-    <td>Verbose operation</td>
-  </tr>
 </table>
 
 \par Description
@@ -167,13 +163,16 @@ static void usage(char *proc_str)
 {
   fprintf(stderr,
 	  "Usage:\t%s [-b <background col>] [-B <zero col>] [-d <domainfile>]"
-	  "[-i <indexfile>][-n <num>] [-N] [-s] [-S] [-h] [-v] [<input file>]\n"
+	  "[-i <indexfile>][-n <num>] [-N] [-s] [-S] [-h] [<input file>]\n"
 	  "\tGenerate a classification map from a series of input image.\n"
 	  "\tEach image is assumed to represent a class \"probability\", scaled\n"
 	  "\tbetween 0 and 255. For each pixel the class with the maximum\n"
 	  "\tprobability value is selected and the colour set appropriately.\n"
-	  "\tOptions are:\n"
-	  "\t  -b r,g,b  Colour for background, i.e. outside of the domain: default (0,0,0)\n"
+	  "\tNote colour values are 0-255\n"
+	  "Version: %s\n"
+	  "Options:\n"
+	  "\t  -b r,g,b  Colour for background, i.e. outside of the domain:\n"
+	  "\t            default (0,0,0)\n"
 	  "\t  -B r,g,b  Colour for zero values  default (0,0,0)\n"
 	  "\t  -d <file> Optional input domain over which class-map\n"
 	  "\t            will be calculated, default - union of input.\n"
@@ -183,11 +182,9 @@ static void usage(char *proc_str)
 	  "\t  -o        Display an outline of the domain\n"
 	  "\t  -s        Sort on size - smallest first.\n"
 	  "\t  -S        Sort on size - largest first.\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
-	  "\n"
-	  "Note colour values are 0-255\n",
-	  proc_str);
+	  "\t  -h        Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -199,13 +196,12 @@ int main(int	argc,
   WlzObjectType	type = (WlzObjectType) -1;
   int 		i, n, nmax;
   FILE		*inFile;
-  char 		optList[] = "b:B:d:i:n:NosShv";
+  char 		optList[] = "b:B:d:i:n:NosSh";
   int		option;
   char 		*indexFile=NULL;
-  int		normFlg=0;
+  /* int	normFlg=0; */
   int		outlineFlg=0;
   int		sortFlg=0;
-  int		verboseFlg = 0;
   WlzPixelV	bckgrnd;
   WlzPixelV	zeroVal;
   int		red, green, blue;
@@ -282,7 +278,7 @@ int main(int	argc,
       break;
 
     case 'N':
-      normFlg = 1;
+      /* normFlg = 1; */
       break;
 
     case 'o':
@@ -295,10 +291,6 @@ int main(int	argc,
 
     case 'S':
       sortFlg = 2;
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

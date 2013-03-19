@@ -87,7 +87,7 @@ int		WlzConvHullClarkson2D(WlzDVertex2 *vtx, int n, int **dstIdx,
 				      WlzErrorNum *dstErr)
 {
   int		i,
-  		u;
+  		u = 0;
   int		*idx = NULL;
   WlzDVertex2	**v = NULL;
   WlzDVertex2	*vSmall[WLZ_CONVHULL_CLARKSON_SM_2D];

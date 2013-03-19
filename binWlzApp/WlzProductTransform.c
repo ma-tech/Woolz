@@ -49,7 +49,7 @@ static char _WlzProductTransform_c[] = "University of Edinburgh $Id$";
 WlzProductTransform - computes the product transform for bibfiles.
 \par Synopsis
 \verbatim
-WlzProductTransform  [-h] [-v] [-A] [-R] [-1] [-2] [-3] [-i] [-I]
+WlzProductTransform  [-h] [-A] [-R] [-1] [-2] [-3] [-i] [-I]
                      [-f<filename1>] [-F<filename2>] 
 		     [-x#] [-y#] [-z#] [-s#] [-a#] [-b#] [-u#] [-v#] [-w#]
 		     [<bibfile1>] [<bibfile2>]
@@ -59,10 +59,6 @@ WlzProductTransform  [-h] [-v] [-A] [-R] [-1] [-2] [-3] [-i] [-I]
   <tr> 
     <td><b>-h</b></td>
     <td>Prints usage information.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Version output.</td>
   </tr>
   <tr> 
     <td><b>-A</b></td>
@@ -174,11 +170,11 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-A] [-R] [-1] [-2] [-3]\n"
 	  "\t[-ffilename1] [-Ffilename2] [-3]\n"
 	  "\t[-i] [-I] [-x#] [-y#] [-z#] [-s#] [-a#] [-b#]\n"
-	  "\t[-u#] [-v#] [-w#] [-h] [-v] [<bibfile1>] [<bibfile2>]\n"
+	  "\t[-u#] [-v#] [-w#] [-h] [<bibfile1>] [<bibfile2>]\n"
 	  "\tFind the product transform for the given bibfiles.\n"
 	  "\tBibfile data from stdin is also read and fitted in\n"
 	  "\tas per the command line arguments i.e. if filename1\n"
@@ -187,9 +183,9 @@ static void usage(char *proc_str)
 	  "\ton the command line then stdin is ignored.\n"
 	  "\tThe transform entered as arguments assume degree angles\n"
 	  "\tand will be applied after transform 1 or 2.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h                Help - prints this usage message\n"
-	  "\t  -v                verbose operation\n"
 	  "\t  -A                calculate absolute transform(default)\n"
 	  "\t  -R                calculate relative transform\n"
 	  "\t  -1                transform 1 is relative (def: absolute)\n"
@@ -205,9 +201,9 @@ static void usage(char *proc_str)
 	  "\t  -w                3D shear angle.\n"
 	  "\t  -x                Column (x) translation.\n"
 	  "\t  -y                Row (y) translation.\n"
-	  "\t  -z                Plane (z) translation.\n"
-	  "",
-	  proc_str);
+	  "\t  -z                Plane (z) translation.\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -359,7 +355,7 @@ WlzObject *ReadMAPaintRealignTransforms(
   WlzObject	*rtnObj=NULL;
   BibFileRecord		*bibfileRecord;
   BibFileError		bibFileErr=BIBFILE_ER_NONE;
-  int		p, pMin, pMax;
+  int		p, pMin = 0, pMax = 0;
   int		identFlg=0, planeFlg=0;
   WlzDomain	domain;
   WlzValues	values;
@@ -463,6 +459,9 @@ WlzObject *ReadMAPaintRealignTransforms(
 	     (void *) &ty, "%lg", "TransformTy",
 	     (void *) &theta, "%lg", "TransformTheta",
 	     NULL);
+	if(numParsedFields < 1) {
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
 
 	  /* make the transform for this record */
 	  inTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
@@ -637,17 +636,17 @@ int main(int	argc,
 	 char	**argv)
 {
   FILE		*inFile1=NULL, *inFile2=NULL;
-  char 		optList[] = "AR123f:F:iIx:y:z:s:a:b:u:v:w:hV";
+  char 		optList[] = "AR123f:F:iIx:y:z:s:a:b:u:v:w:h";
   int		option;
-  int		trans1RelFlg=0, trans2RelFlg=0, trans3DFlg=0, outputRelFlg=0;
-  int		invertFlg=0, inverseFlg=0, threeDFlg=0;
+  int		trans1RelFlg=0, trans2RelFlg=0, /*trans3DFlg=0,*/
+  		outputRelFlg=0;
+  int		invertFlg=0, /* inverseFlg=0, */ threeDFlg=0;
   WlzAffineTransform	*cmdLineTrans=NULL;
   double	tx, ty, tz, scale, theta, phi, alpha, psi, xsi;
-  int		verboseFlg=0;
   RecSectionList	recSecList1, recSecList2;
   RecSectionList	*secList1=&recSecList1, *secList2=&recSecList2;
   HGUDlpListItem	*listItem, *listItem1;
-  RecSection	*sec, *sec1;
+  RecSection	*sec = NULL, *sec1 = NULL;
   char		*errMsg = NULL;
   RecError	errFlg = REC_ERR_NONE;
   int		numSec1, numSec2;
@@ -689,7 +688,7 @@ int main(int	argc,
       break;
 
     case '3':
-      trans3DFlg = 1;
+      /* trans3DFlg = 1; */
       break;
 
     case 'f':
@@ -727,7 +726,7 @@ int main(int	argc,
       break;
 
     case 'I':
-      inverseFlg = 1;
+      /* inverseFlg = 1; */
       break;
 
     case 'a':
@@ -800,10 +799,6 @@ int main(int	argc,
 	usage(argv[0]);
 	return 1;
       }
-      break;
-
-    case 'V':
-      verboseFlg = 1;
       break;
 
     case 'h':

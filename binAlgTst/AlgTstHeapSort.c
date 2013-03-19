@@ -57,10 +57,10 @@ int             main(int argc, char *argv[])
                 doChar = 0,
                 doIdx = 0,
                 doRand = 0;
-  int           *dataI;
-  char          *dataC;
-  void          *data;
-  int           *idx;
+  int           *dataI = NULL;
+  char          *dataC = NULL;
+  void          *data = NULL;
+  int           *idx = NULL;
   static char   optList[] = "cirs:";
 
   opterr = 0;

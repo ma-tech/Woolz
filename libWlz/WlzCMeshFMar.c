@@ -206,11 +206,16 @@ static WlzErrorNum 		WlzCMeshFMarElmQInit3D(
 * 					NULL iff the number of seed nodes
 * 					is \f$<\f$ 1. It is an error if
 *					are not within the mesh.
+* \param	interp			Interpolation for 3D volumes
+* 					(should be
+* 					WLZ_INTERPOLATION_BARYCENTRIC
+* 					or WLZ_INTERPOLATION_KRIG).
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject	*WlzCMeshDistance2D(WlzObject *objG,
                                 WlzObjectType rObjType,
 				int nSeeds, WlzDVertex2 *seeds,
+				WlzInterpolationType interp,
 				WlzErrorNum *dstErr)
 {
   int		idN;
@@ -218,11 +223,10 @@ WlzObject	*WlzCMeshDistance2D(WlzObject *objG,
   WlzObject	*objM = NULL,
 		*objR = NULL;
   WlzCMesh2D 	*mesh;
-  WlzValues	valD,
-  		valI;
+  WlzValues	valI;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  valD.core = valI.core = NULL;
+  valI.core = NULL;
   if(objG == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -297,8 +301,7 @@ WlzObject	*WlzCMeshDistance2D(WlzObject *objG,
       objT = WlzCMeshToDomObj(objM, 0, 1.0, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-	objR = WlzCMeshToDomObjValues(objT, objM, WLZ_INTERPOLATION_LINEAR,
-				      &errNum);
+	objR = WlzCMeshToDomObjValues(objT, objM, interp, &errNum);
       }
       (void )WlzFreeObj(objT);
       (void )WlzFreeObj(objM);
@@ -332,11 +335,16 @@ WlzObject	*WlzCMeshDistance2D(WlzObject *objG,
 * 					NULL iff the number of seed nodes
 * 					is \f$<\f$ 1. It is an error if
 *					are not within the mesh.
+* \param	interp			Interpolation for 3D volumes
+* 					(should be
+* 					WLZ_INTERPOLATION_BARYCENTRIC
+* 					or WLZ_INTERPOLATION_KRIG).
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject	*WlzCMeshDistance3D(WlzObject *objG,
 				WlzObjectType rObjType,
 				int nSeeds, WlzDVertex3 *seeds,
+				WlzInterpolationType interp,
 				WlzErrorNum *dstErr)
 {
   int		idN;
@@ -344,11 +352,10 @@ WlzObject	*WlzCMeshDistance3D(WlzObject *objG,
   WlzObject	*objM = NULL,
 		*objR = NULL;
   WlzCMesh3D  	*mesh;
-  WlzValues	valD,
-  		valI;
+  WlzValues	valI;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  valD.core = valI.core = NULL;
+  valI.core = NULL;
   if(objG == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -423,8 +430,7 @@ WlzObject	*WlzCMeshDistance3D(WlzObject *objG,
       objT = WlzCMeshToDomObj(objM, 0, 1.0, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-	objR = WlzCMeshToDomObjValues(objT, objM, WLZ_INTERPOLATION_LINEAR,
-				      &errNum);
+	objR = WlzCMeshToDomObjValues(objT, objM, interp, &errNum);
       }
       (void )WlzFreeObj(objT);
       (void )WlzFreeObj(objM);
@@ -1015,6 +1021,7 @@ static int	WlzCMeshFMarCompute2D(WlzCMeshNod2D *nod0,
       }
     }
   }
+  len[1] = 0.0; 			  /* Just to silence dumb compiller. */
   dist[0] = distances[nod0->idx];
   dist[1] = distances[nod1->idx];
   if(dist[1] < dist[0])
@@ -1874,6 +1881,7 @@ static WlzErrorNum WlzCMeshFMarAddSeed2D(AlcHeap  *sElmQ,
   }
   /* Pop element that has the min(maximum node distance) from the edge
    * queue. */
+#ifndef WLZ_CMESHFM_NOLINEOFSIGHT
   while((errNum == WLZ_ERR_NONE) &&
         ((sElmQEnt = (WlzCMeshFMarQEnt *)AlcHeapTop(sElmQ)) != NULL))
   {
@@ -1972,6 +1980,7 @@ static WlzErrorNum WlzCMeshFMarAddSeed2D(AlcHeap  *sElmQ,
     }
   }
   return(errNum);
+#endif /* !WLZ_CMESHFM_NOLINEOFSIGHT */
 }
 
 /*!

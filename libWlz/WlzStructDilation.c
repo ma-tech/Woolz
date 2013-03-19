@@ -84,7 +84,7 @@ WlzObject *WlzStructDilation(
   WlzObject	*structElm,
   WlzErrorNum	*dstErr)
 {
-  WlzObject 		*rtnObj, *bObj, *sObj;
+  WlzObject 		*rtnObj = NULL, *bObj = NULL, *sObj = NULL;
   WlzDomain		bDom,
   			sDom,
   			domain;

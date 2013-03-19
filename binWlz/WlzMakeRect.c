@@ -316,7 +316,7 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExamples:\n%s%s%s%s%s%s",
+    "Usage: %s%s%s%sExamples:\n%s%s%s%s%s%s",
     *argv,
     " [-23h] [-o<out object>]\n"
          "       [-x<x min>,<x max>] [-y<y min>,<y max>] [-z<z min>,<z max>]\n"
@@ -324,6 +324,9 @@ int             main(int argc, char **argv)
     "or a plane domain with rectangular domains. By default an object is\n"
     "created for a single 2D pixel at the origin and the output object is\n"
     "written to the standard output.\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -2  Create a 2D rectangular domain object (default).\n"
     "  -3  Create a 3D cuboid domain object.\n"

@@ -403,7 +403,8 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
   				WlzRGBAColorSpace cSpc, WlzErrorNum *dstErr)
 {
   int		i,
-  		j;
+  		j,
+		numObjs = 3;
   WlzObject	*rtnObj=NULL;
   WlzPixelV	bckgrnd;
   WlzObject	*objs[4];
@@ -413,16 +414,21 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
 
   /* Make a copy of the object pointers because WlzUnionN() modifies the
    * array if it contains empty objects. */
-  for(i = 0; i < 3; ++i)
+  if(cObj->n >= 4)
+  {
+    numObjs = 4;
+  }
+  for(i = 0; i < numObjs; ++i)
   {
     objs[i] = cObj->o[i];
   }
-  rtnObj = WlzUnionN(3, objs, 0, &errNum);
+  rtnObj = WlzUnionN(numObjs, objs, 0, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     /* Add an RGBA valuetable, extract background for each channel */
     vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_RGBA, &errNum);
-    for(i=0; (errNum == WLZ_ERR_NONE) && (i < 3); i++)
+    b[0] = b[1] = b[2] = b[3] = 255;
+    for(i=0; (errNum == WLZ_ERR_NONE) && (i < numObjs); i++)
     {
       bckgrnd = WlzGetBackground(cObj->o[i], &errNum);
       if(errNum == WLZ_ERR_NONE)
@@ -437,7 +443,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
     WlzValues	values;
 
     bckgrnd.type = WLZ_GREY_RGBA;
-    WLZ_RGBA_RGBA_SET(bckgrnd.v.rgbv, b[0], b[1], b[2], 255);
+    WLZ_RGBA_RGBA_SET(bckgrnd.v.rgbv, b[0], b[1], b[2], b[3]);
     values.v = WlzNewValueTb(rtnObj, vType, bckgrnd, &errNum);
     if(values.v != NULL)
     {
@@ -459,7 +465,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
 
     /* do it dumb fashion for now, rgb only */
     gValWSpc[0] = gValWSpc[1] = gValWSpc[2] = gValWSpc[3] = NULL;
-    for(i=0; i < 3; i++)
+    for(i=0; i < numObjs; i++)
     {
       if((cObj->o[i] != NULL) && (cObj->o[i]->type != WLZ_EMPTY_OBJ))
       {
@@ -481,7 +487,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
 
       for(j = iwsp.lftpos; j <= iwsp.rgtpos; j++)
       {
-	for(i = 0; i < 3; i++)
+	for(i = 0; i < numObjs; i++)
 	{
 	  if(gValWSpc[i] == NULL)
 	  {
@@ -505,7 +511,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
     {
       errNum = WLZ_ERR_NONE;
     }
-    for(i=0; i < 3; i++)
+    for(i=0; i < numObjs; i++)
     {
       WlzGreyValueFreeWSp(gValWSpc[i]);
     }
@@ -580,8 +586,6 @@ static WlzObject *WlzCompoundToRGBA3D(WlzCompoundArray *cObj,
 	idC = 0;
 	while((errNum2 == WLZ_ERR_NONE) && (idC < cObj->n))
 	{
-	  int		idP2,
-	  		nPl2;
 	  WlzDomain	dom2;
 	  WlzValues	val2;
 
@@ -590,11 +594,12 @@ static WlzObject *WlzCompoundToRGBA3D(WlzCompoundArray *cObj,
 	  if((cObj->o[idC] != NULL) &&
 	     (cObj->o[idC]->type == WLZ_3D_DOMAINOBJ))
 	  {
-	    idP2 = bBox.zMin + idP - cObj->o[idC]->domain.p->plane1;
-	    nPl2 = cObj->o[idC]->domain.p->lastpl - 
-	           cObj->o[idC]->domain.p->plane1 + 1;
-	    if((idP2 >= 0) && (idP2 <= nPl2))
+	    if((bBox.zMin + idP >= cObj->o[idC]->domain.p->plane1) &&
+	       (bBox.zMin + idP <= cObj->o[idC]->domain.p->lastpl))
 	    {
+	      int	idP2;
+
+	      idP2 = bBox.zMin + idP - cObj->o[idC]->domain.p->plane1;
 	      dom2 = *(cObj->o[idC]->domain.p->domains + idP2);
 	      val2 = *(cObj->o[idC]->values.vox->values + idP2);
 	    }
@@ -764,17 +769,106 @@ WlzObject *WlzRGBAToModulus(
   return rtnObj;
 }
 
-static WlzObject *WlzRGBAToModulus3D(
-  WlzObject	*obj,
-  WlzErrorNum	*dstErr)
+static WlzObject *WlzRGBAToModulus3D(WlzObject *obj, WlzErrorNum *dstErr)
 {
-  WlzObject	*rtnObj=NULL;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  int           pln;
+  WlzPlaneDomain *gDom,
+  		 *rDom = NULL;
+  WlzVoxelValues *gVal,
+                 *rVal = NULL;
+  WlzObject	*rObj=NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  if( dstErr ){
+  gDom = obj->domain.p;
+  gVal = obj->values.vox;
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rDom = WlzMakePlaneDomain(gDom->type,
+			      gDom->plane1, gDom->lastpl,
+			      gDom->line1, gDom->lastln,
+			      gDom->kol1, gDom->lastkl,
+			      &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rVal = WlzMakeVoxelValueTb(gVal->type, gVal->plane1, gVal->lastpl,
+    			       gVal->bckgrnd, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzDomain dom;
+    WlzValues val;
+
+    dom.p = rDom;
+    val.vox = rVal;
+    rObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, dom, val, NULL, obj, &errNum);
+  }
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for(pln = gDom->plane1; pln <= gDom->lastpl; ++pln)
+  {
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzDomain *gDom2,
+      		*rDom2;
+      WlzValues *gVal2,
+                *rVal2;
+      WlzErrorNum errNum2 = WLZ_ERR_NONE;
+
+      if(((gDom2 = gDom->domains + pln - gDom->plane1) != NULL) &&
+	 ((*gDom2).core != NULL) &&
+         ((rDom2 = rDom->domains + pln - rDom->plane1) != NULL) &&
+         ((gVal2 = gVal->values  + pln - gDom->plane1) != NULL) &&
+         ((rVal2 = rVal->values  + pln - rDom->plane1) != NULL))
+      {
+        WlzObject *gObj2 = NULL,
+                  *rObj2 = NULL;
+
+        if((gObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *gDom2, *gVal2, NULL, NULL,
+                                &errNum2)) != NULL)
+        {
+          rObj2 = WlzRGBAToModulus(gObj2, &errNum2);
+	  if(errNum2 == WLZ_ERR_NONE)
+	  {
+	    *rDom2 = WlzAssignDomain(rObj2->domain, NULL);
+	    *rVal2 = WlzAssignValues(rObj2->values, NULL);
+	  }
+        }
+        (void )WlzFreeObj(gObj2);
+        (void )WlzFreeObj(rObj2);
+      }
+#ifdef _OPENMP
+#pragma omp critical
+      {
+#endif
+        if(errNum2 != WLZ_ERR_NONE)
+        {
+          errNum = errNum2;
+        }
+#ifdef _OPENMP
+      }
+#endif
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(rObj)
+    {
+      WlzFreeObj(rObj);
+      rObj = NULL;
+    }
+    else
+    {
+      (void )WlzFreePlaneDomain(rDom);
+      (void )WlzFreeVoxelValueTb(rVal);
+    }
+  }
+  if(dstErr)
+  {
     *dstErr = errNum;
   }
-  return rtnObj;
+  return(rObj);
 }
 
 
@@ -805,7 +899,7 @@ WlzObject *WlzIndexToRGBA(
   WlzObjectType		newvtbltype;
   WlzPixelV		bg;
   WlzValues		values;
-  int 			k, greyVal, redVal, greenVal, blueVal;
+  int 			k, redVal, greenVal, blueVal, greyVal = 0;
   unsigned int		rgbaVal;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 

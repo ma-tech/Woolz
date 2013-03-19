@@ -55,8 +55,8 @@ WlzScalarBinaryOp
 \par Options
 <table width="500" border="0">
   <tr>
-    <td><b>-</b></td>
-    <td> </td>
+    <td><b>-b</b></td>
+    <td>Operator code.</td>
   </tr>
   <tr>
     <td><b>-o</b></td>
@@ -65,10 +65,6 @@ WlzScalarBinaryOp
   <tr>
     <td><b>-h</b></td>
     <td>Help - print help message</td>
-  </tr>
-  <tr>
-    <td><b>-v</b></td>
-    <td>Verbose operation</td>
   </tr>
 </table>
 
@@ -98,12 +94,13 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-b <op>] [-h] [-v] [<value>] [<input file>]\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-b <op>] [-h] [<value>] [<input file>]\n"
 	  "\tApply a scalar binary operation to the grey values of\n"
 	  "\tthe given image with respect to the input value. Note\n"
 	  "\tmost options require an input value.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -b <op>  convert to a given channel\n"
 	  "\t           op =  %d - Add\n"   
 	  "\t              =  %d - SUBTRACT\n"
@@ -122,10 +119,9 @@ static void usage(char *proc_str)
 	  "\t              =  %d - MAX\n"
 	  "\t              =  %d - MIN\n"
 	  "\t              =  %d - MAGNITUDE\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
+	  "\t  -h        Help - prints this usage message\n",
 	  proc_str,
+	  WlzVersion(),
 	  WLZ_BO_ADD,
 	  WLZ_BO_SUBTRACT,
 	  WLZ_BO_MULTIPLY,
@@ -150,9 +146,8 @@ int main(int	argc,
 	 char	**argv)
 {
 
-  char 		optList[] = "b:hv";
+  char 		optList[] = "b:h";
   int		option;
-  int		verboseFlg=0;
   WlzBinaryOperatorType operator = WLZ_BO_ADD;
   FILE		*inFile;
   double	val;
@@ -191,10 +186,6 @@ int main(int	argc,
 	usage(argv[0]);
 	return( 1 );
       }
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

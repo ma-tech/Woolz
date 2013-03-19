@@ -134,3 +134,75 @@ int WlzIntervalCount(WlzIntervalDomain *idom, WlzErrorNum *wlzErr)
   }
   return(intcount);
 }
+
+/*!
+* \return	Number of intervals in object. This is always zero on
+* 		error but may also be zero if the object has no intervals.
+* \ingroup	WlzDomainOps
+* \brief	Counts the number of intervals in an object,
+* 		where the object type is WLZ_EMPTY_OBJ,
+* 		WLZ_2D_DOMAINOBJ or WLZ_3D_DOMAINOBJ. Any other
+* 		object type (including compound objects is an
+* 		error).
+* \param	obj		Given object.
+* \param	dstErr		Destination error pointer, may be NULL.
+*/
+size_t		WlzIntervalCountObj(WlzObject *obj,
+				    WlzErrorNum *dstErr)
+{
+  size_t	iCnt = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    switch(obj->type)
+    {
+      case WLZ_EMPTY_OBJ:
+        break;
+      case WLZ_2D_DOMAINOBJ:
+        if(obj->domain.core != NULL)
+	{
+	  iCnt = WlzIntervalCount(obj->domain.i, &errNum);
+	}
+	break;
+      case WLZ_3D_DOMAINOBJ:
+        if(obj->domain.core != NULL)           
+	{
+	  int 	p,
+	  	pCnt;
+	  WlzPlaneDomain *pDom;
+
+	  pDom = obj->domain.p;
+	  pCnt = pDom->lastpl - pDom->plane1;
+	  for(p = 0; p <= pCnt; ++p)
+	  {
+	    WlzDomain dom;
+
+	    dom = pDom->domains[p];
+	    if(dom.core != NULL)
+	    {
+	      iCnt += WlzIntervalCount(dom.i, &errNum);
+	    }
+	  }
+	}
+	break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      iCnt = 0;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(iCnt);
+}
+

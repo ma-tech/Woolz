@@ -231,7 +231,6 @@ static WlzObject *WlzRegCCorNormaliseObj2D(WlzObject *obj, int inv,
   WlzGreyType	gType;
   WlzPixelV	min,
   		max,
-		mean,
 		minN,
 		maxN,
 		zero;
@@ -244,11 +243,9 @@ static WlzObject *WlzRegCCorNormaliseObj2D(WlzObject *obj, int inv,
   zero.v.ubv = 0;
   min.type = WLZ_GREY_DOUBLE;
   max.type = WLZ_GREY_DOUBLE;
-  mean.type = WLZ_GREY_UBYTE;
   minN.type = WLZ_GREY_UBYTE;
   maxN.type = WLZ_GREY_UBYTE;
   zero.type = WLZ_GREY_UBYTE;
-  mean.v.ubv = 128;
   if(inv)
   {
     minN.v.ubv = 255;
@@ -301,12 +298,9 @@ static WlzObject *WlzRegCCorPProcessObj2D(WlzObject *obj,
 				WlzIVertex2 centre, WlzIVertex2 radius,
 				WlzErrorNum *dstErr)
 {
-  WlzPixelV	thr;
   WlzObject	*obj0 = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  thr.v.ubv = 0;
-  thr.type = WLZ_GREY_DOUBLE;
   /* Window the normalised object. */
   if(errNum == WLZ_ERR_NONE)
   {
@@ -391,12 +385,12 @@ static WlzAffineTransform *WlzRegCCorObjs2D(WlzObject *tObj, WlzObject *sObj,
 {
   int		tI1,
 		samIdx,
-  		nSam,
-		conv;
-  double	cCor,
-  		rot0,
+		conv,
+  		nSam = 0;
+  double	rot0,
 		rot1,
-		sMaxRot;
+		sMaxRot,
+  		cCor = 0.0;
   WlzPixelV	gV[4];
   WlzIVertex2	tIV0,
   		tIV1;
@@ -639,7 +633,6 @@ static WlzAffineTransform *WlzRegCCorObjs2D1(WlzObject *tObj, WlzObject *sObj,
 		*curTr = NULL,
 		*regTr = NULL;
   double	rot,
-		lastRot,
   		cCor;
   WlzDVertex2	tran;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -670,7 +663,6 @@ static WlzAffineTransform *WlzRegCCorObjs2D1(WlzObject *tObj, WlzObject *sObj,
      * number of itterations exceeds the maximum. */
     itr = 0;
     rot = 0.0;
-    lastRot = 1.0;
     /* The convergence test must only test the translation and not the
      * rotation too, as the rotation has already been applied when
      * finding the translation. */
@@ -680,7 +672,6 @@ static WlzAffineTransform *WlzRegCCorObjs2D1(WlzObject *tObj, WlzObject *sObj,
 	  ((maxItr < 0) || (itr++ < maxItr)))
     {
       /* Register for rotation. */
-      lastRot = rot;
       rot = WlzRegCCorObjs2DRot(tObj, sObj, curTr, 
 				maxRot, winFn, noise, &errNum);
       if(errNum == WLZ_ERR_NONE)

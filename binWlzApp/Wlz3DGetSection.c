@@ -164,15 +164,15 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]"
-	  " [-b <parameter bibfile>] [-m <mode>] [-s <scale>]"
-	  " [-o <output file>] [-u<ux,uy,uz>] [-A] [-C] [-L] [-N]"
-	  " [-R <ROI domain>]"
-	  " [<3D object input file>]\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]\n"
+	  "\t[-b <parameter bibfile>] [-m <mode>] [-s <scale>]\n"
+	  "\t[-o <output file>] [-u<ux,uy,uz>] [-A] [-C] [-L] [-N]\n"
+	  "\t[-R <ROI domain>] [<3D object input file>]\n"
 	  "\tGet an arbitrary slice from a 3D object\n"
 	  "\twriting the 2D object to standard output\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -A                 Output all sections in the transformed view.\n"
 	  "\t                     This will output each section with the given\n"
 	  "\t                     view orientation into files using the output\n"
@@ -201,9 +201,9 @@ static void usage(char *proc_str)
 	  "\t  -L                 Use linear interpolation\n"
 	  "\t  -N                 Use nearest neighbour interpolation\n"
 	  "\t  -R<ROI domain>     Only calculate values within the ROI domain.\n"
-	  "\t  -h                 Help - prints this usage message\n"
-	  "",
-	  proc_str);
+	  "\t  -h                 Help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  
@@ -211,9 +211,9 @@ int main(int	argc,
 	 char	**argv)
 {
 
-  WlzObject	*obj, *nobj, *subDomain;
-  FILE		*inFP, *outFP, *bibFP;
-  char		*outFile, *bibFile;
+  WlzObject	*obj = NULL, *nobj = NULL, *subDomain = NULL;
+  FILE		*inFP = NULL, *outFP = NULL, *bibFP = NULL;
+  char		*outFile = NULL, *bibFile = NULL;
   char 		optList[] = "ACLNa:b:d:f:m:o:r:s:u:R:h";
   int		option;
   int		i,

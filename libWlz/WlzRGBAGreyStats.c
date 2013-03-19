@@ -76,7 +76,7 @@ int WlzRGBAGreyStats(
   double 	*dstStdDev,
   WlzErrorNum 	*dstErr)
 {
-  int		area;
+  int		area = 0;
   WlzCompoundArray	*cmpnd;
   int		i;
   WlzGreyType	gType;
@@ -99,5 +99,5 @@ int WlzRGBAGreyStats(
   if( dstErr ){
     *dstErr = errNum;
   }
-  return area;
+  return(area);
 }

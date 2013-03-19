@@ -356,8 +356,7 @@ WlzErrorNum	WlzEffWriteObjEMT(FILE *fP, WlzObject *obj)
    * avoid deleted elements. */
   if(errNum == WLZ_ERR_NONE)
   {
-    int		idC = 0,
-    		idE;
+    int		idE;
 
     nNod = mesh->res.nod.numEnt;
     for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)

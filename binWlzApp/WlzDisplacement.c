@@ -78,9 +78,9 @@ int             main(int argc, char **argv)
                 relFlag,
                 meshMinDist,
                 meshMaxDist;
-  char 		*srcFileStr,
+  char 		*srcFileStr = NULL,
 		*bibFileStr = NULL,
-                *outFileStr,
+                *outFileStr = NULL,
                 *bibErrMsg;
   const char    *errMsg;
   FILE		*inFile = NULL,
@@ -101,7 +101,7 @@ int             main(int argc, char **argv)
   WlzMeshGenMethod genMethod;
   WlzErrorNum	errNum = WLZ_ERR_NONE; 
   BibFileRecord	       *bibfileRecord;
-  BibFileError         bibFileErr;
+  BibFileError         bibFileErr = BIBFILE_ER_NONE;
   
   /* read the argument list and check for an input file */
 
@@ -310,19 +310,18 @@ int             main(int argc, char **argv)
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-h] \n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-h] [-s<source file>] [-b<bib file>]\n"
+	  "                        [-d<output file>] \n"
 	  "\tDetermine displacement object.\n"
-	  "\n"
-	  "\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -s        Source file\n"
           "\t  -b        Bib files\n"
-	  "\t  -d        Output displacement file\n"
-	  "\t                                                      \n"
-					  "",
-	  proc_str);
+	  "\t  -d        Output displacement file\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 

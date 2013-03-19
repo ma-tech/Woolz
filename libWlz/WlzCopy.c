@@ -128,6 +128,54 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
 	  outObj = WlzMakeMain(inObj->type, dom, val, pLst, NULL, &errNum);
 	}
 	break;
+      case WLZ_CMESH_2D:	/* FALLTHROUGH */
+      case WLZ_CMESH_2D5:	/* FALLTHROUGH */
+      case WLZ_CMESH_3D:
+	if(inObj->values.core != NULL)
+	{
+	  if(inObj->values.core->type != WLZ_INDEXED_VALUES)
+	  {
+	    errNum = WLZ_ERR_VALUES_TYPE;
+	  }
+	  else
+	  {
+	    WlzIndexedValues *ixv;
+
+	    ixv = inObj->values.x;
+	    val.x = WlzMakeIndexedValues(inObj, ixv->rank, ixv->dim,
+	                                 ixv->vType, ixv->attach, &errNum);
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  size_t datSz;
+	  WlzCMeshP meshP;
+	  AlcVector *newVec = NULL;
+
+	  datSz = WlzIndexedValueSize(val.x, NULL);
+	  /* Although the 2D conforming mesh union member is used all that
+	   * really matters is that the pointer is passed. */
+	  meshP.m2 = inObj->domain.cm2;
+	  meshP =  WlzCMeshCopy(meshP, 1, datSz,
+				(val.core)? &newVec: NULL,
+				(val.core)? (inObj->values.x->values): NULL,
+				&errNum);
+	  dom.cm2 = meshP.m2;
+	  if(newVec)
+	  {
+	    (void )AlcVectorFree(val.x->values);
+	    val.x->values = newVec;
+	  }
+	}
+	if((errNum == WLZ_ERR_NONE) && inObj->plist)
+	{
+	  pLst = WlzCopyPropertyList(inObj->plist, &errNum);
+        }
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  outObj = WlzMakeMain(inObj->type, dom, val, pLst, NULL, &errNum);
+	}
+	break;
       case WLZ_EMPTY_OBJ:
         outObj = WlzMakeEmpty(&errNum);
 	break;
@@ -717,8 +765,8 @@ WlzErrorNum	WlzCopyObjectGreyValues(WlzObject *dObj, WlzObject *sObj)
 */
 static WlzErrorNum WlzCopyObjectGreyValues2D(WlzObject *dObj, WlzObject *sObj)
 {
-  WlzObjectType dGTType,
-  		sGTType;
+  WlzObjectType dGTType = WLZ_NULL,
+  		sGTType = WLZ_NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   dGTType = WlzGreyTableTypeToTableType(dObj->values.core->type, &errNum);
@@ -836,7 +884,9 @@ static WlzErrorNum WlzCopyObjectGreyValuesAny3D(WlzObject *dObj,
       WlzErrorNum errNum2D = WLZ_ERR_NONE;
 
       if(((dDom2D = dPDom->domains + idP - dPDom->plane1) != NULL) &&
-	 ((sDom2D = sPDom->domains + idP - sPDom->plane1) != NULL))
+	 ((sDom2D = sPDom->domains + idP - sPDom->plane1) != NULL) &&
+	 ((*dDom2D).core != NULL) &&
+	 ((*sDom2D).core != NULL))
       {
 	WlzObject *dObj2D = NULL,
 		  *sObj2D = NULL;
@@ -969,10 +1019,8 @@ static WlzErrorNum WlzCopyObjectGreyValuesScan3D(WlzObject *dObj,
   		 *sVVal;
   WlzPlaneDomain *dPDom,
   		 *sPDom;
-  WlzValues	nullVal;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  nullVal.core = NULL;
   dPDom = dObj->domain.p;
   sPDom = sObj->domain.p;
   dVVal = dObj->values.vox;

@@ -49,17 +49,13 @@ static char _WlzGreyTemplate_c[] = "University of Edinburgh $Id$";
 WlzGreyTemplate - applies a template to an object's values.
 \par Synopsis
 \verbatim
-WlzGreyTemplate [-t#] [-h] [-v] [<input template> [<input obj>]]
+WlzGreyTemplate [-t#] [-h] [<input template> [<input obj>]]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
   <tr> 
     <td><b>-t</b></td>
@@ -115,12 +111,12 @@ static void usage(char *proc_str)
 	  "\t a domain. The template is always the second object if read\n"
 	  "\tfrom the standard input. Pixels outside the domain of the\n"
 	  "\tobject are set to the template value.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -t#       the template value - default 0\n"
-	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -h        help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
  
@@ -130,10 +126,9 @@ int main(int	argc,
 
   WlzObject	*obj, *tmpl, *newobj;
   FILE		*inFile;
-  char 		optList[] = "t:hv";
+  char 		optList[] = "t:h";
   int		option;
   WlzPixelV	tmplVal;
-  int		verboseFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
     
@@ -147,10 +142,6 @@ int main(int	argc,
 
     case 't':
       tmplVal.v.flv = atof(optarg);
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

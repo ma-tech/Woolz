@@ -130,14 +130,15 @@ static int		verboseFlg=0;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-b] [-d] [-h] [-v] [-t#[,#]] [-p] [-g] [-G] [-T#] "
-	  "[<input file>]\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s [-b] [-d] [-h] [-v] [-t#[,#]] [-p] [-g] [-G] [-T#]\n"
+	  "                            [<input file>]\n"
 	  "\tWoolz in a compound woolz object assumed\n"
 	  "\tto be output of patch images from xmgrab.\n"
 	  "\tRegister the patches and output the single\n"
 	  "\tdomain object.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -b        Ordered breadth-first search, darkest\n"
 	  "\t            images first (default)\n"
 	  "\t  -d        Unordered depth-first search\n"
@@ -152,9 +153,9 @@ static void usage(char *proc_str)
 	  "\t  -T#       Threshold the input images e.g. to remove\n"
 	  "\t            spurious lines around the edge\n"
 	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -v        Verbose operation\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -1033,13 +1034,14 @@ WlzErrorNum WlzRegisterPatchTreeDF(
   WlzDVertex2	shift;
   double	ccVal;
   WlzIVertex2	maxShift;
-  RecPPControl	ppCtrl;
+  /* RecPPControl	ppCtrl; */
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* calculate the offsets for each child then
      register each child tree */
   maxShift.vtX = defMaxShift.vtX;
   maxShift.vtY = defMaxShift.vtY;
+  /*
   ppCtrl.method = REC_PP_WINDOW;
   ppCtrl.window.function = WLZ_WINDOWFN_RECTANGLE;
   ppCtrl.window.size.vtX = 90;
@@ -1049,6 +1051,7 @@ WlzErrorNum WlzRegisterPatchTreeDF(
   ppCtrl.sample.function = (WlzSampleFn) NULL;
   ppCtrl.sample.factor = 0;
   ppCtrl.erode = 0;
+  */
   for(i=0; i < patchTree->nchildren; i++){
     WlzStandardIntervalDomain(patchTree->obj->domain.i);
     WlzStandardIntervalDomain(patchTree->children[i]->obj->domain.i);

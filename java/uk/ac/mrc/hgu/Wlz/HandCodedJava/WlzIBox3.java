@@ -1,17 +1,38 @@
-/************************************************************************
-* Project:      Java Woolz
-* Title:        WlzIBox3.java
-* Date:         January 1999
-* Purpose:      Java object to mirror the Woolz WlzIBox3 structure.
-* Copyright:	1997 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Maintenance:	Log changes below, with most recent at top of list.
-* @author       Bill Hill (bill@hgu.mrc.ac.uk)
-* @version 	MRC HGU %I%, %G%
-************************************************************************/
+/*!
+* @file         WlzIBox3.java
+* @author       Bill Hill
+* @date         January 1999
+* @version      $Id$
+* @par
+* Address:
+*               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* @par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
+*
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* @brief        Java object to mirror the Woolz WlzIBox3 structure.
+* @ingroup      JWlz
+*/
 package uk.ac.mrc.hgu.Wlz;
 
 import java.lang.*;
@@ -20,26 +41,28 @@ import uk.ac.mrc.hgu.Wlz.*;
 
 public class WlzIBox3 extends WlzIBox2 implements Cloneable
 {
+  // Version string.
+  public static String ident = "Id$$";
+
   public int	zMin;
   public int	zMax;
 
-  /**********************************************************************
-  * Purpose:    Constructor
-  * @param:     void
-  **********************************************************************/
+  /*!
+  * @brief      Constructor
+  */
   public	WlzIBox3()
   {
     zMin = 0;
     zMax = 0;
   }
 
-  /**********************************************************************
-  * Purpose:    Constructor
-  * @param:     xmin		minimum box x value
-  * @param:     ymin		minimum box y value
-  * @param:     xmax		maximum box x value
-  * @param:     ymax		maximum box y value
-  **********************************************************************/
+  /*!
+  * @brief      Constructor
+  * @param      xmin		Minimum box x value.
+  * @param      ymin		Minimum box y value.
+  * @param      xmax		Maximum box x value.
+  * @param      ymax		Maximum box y value.
+  */
   public	WlzIBox3(int xmin, int ymin, int zmin,
   			 int xmax, int ymax, int zmax)
   {
@@ -51,23 +74,22 @@ public class WlzIBox3 extends WlzIBox2 implements Cloneable
     zMax = zmax;
   }
 
-  /**********************************************************************
-  * Purpose:    Implements cloning.
-  * @return:    Clone of this object.
-  * @param:     void
-  **********************************************************************/
+  /*!
+  * @return     Clone of this object.
+  * @brief      Implements cloning.
+  */
   public Object clone()
   {
     return(new WlzIBox3(xMin, yMin, zMin, xMax, yMax, zMax));
   }
 
-  /**********************************************************************
-  * Purpose:    Indicates whether some other object is "equal to" this
-  *		Woolz pointer.
+  /*!
   * @return     true if this object is the same as the given object,
   *		otherwise false.
-  * @param:     obj		the given object for comparison.
-  **********************************************************************/
+  * @brief      Indicates whether some other object is "equal to" this
+  *		Woolz pointer.
+  * @param      obj		the given object for comparison.
+  */
   public boolean equals(Object other)
   {
     boolean	isEqual;

@@ -1,27 +1,51 @@
-/************************************************************************
-* Project:      Java Woolz
-* Title:        WlzJavaUtils.c
-* Date:         January 1999
-* Purpose:      Misc functions for the C side of Java Woolz.
-* Copyright:	1997 Medical Research Council, UK.
-*		All rights reserved.
-* Address:	MRC Human Genetics Unit,
-*		Western General Hospital,
-*		Edinburgh, EH4 2XU, UK.
-* Maintenance:	Log changes below, with most recent at top of list.
-* @author       Bill Hill (bill@hgu.mrc.ac.uk)
-* @version 	MRC HGU %I%, %G%
-************************************************************************/
+#if defined(__GNUC__)
+#ident "University of Edinburgh $Id$"
+#else
+static char _WlzJavaUtils_c[] = "University of Edinburgh $Id$";
+#endif
+/*!
+* \file         WlzJavaUtils.c
+* \author       Bill Hill
+* \date         January 1999
+* \version      $Id$
+* \par
+* Address:
+*               MRC Human Genetics Unit,
+*               MRC Institute of Genetics and Molecular Medicine,
+*               University of Edinburgh,
+*               Western General Hospital,
+*               Edinburgh, EH4 2XU, UK.
+* \par
+* Copyright (C), [2012],
+* The University Court of the University of Edinburgh,
+* Old College, Edinburgh, UK.
+* 
+* This program is free software; you can redistribute it and/or
+* modify it under the terms of the GNU General Public License
+* as published by the Free Software Foundation; either version 2
+* of the License, or (at your option) any later version.
+*
+* This program is distributed in the hope that it will be
+* useful but WITHOUT ANY WARRANTY; without even the implied
+* warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+* PURPOSE.  See the GNU General Public License for more
+* details.
+*
+* You should have received a copy of the GNU General Public
+* License along with this program; if not, write to the Free
+* Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+* Boston, MA  02110-1301, USA.
+* \brief	Misc functions for the C side of Java Woolz.
+* \ingroup	JWlz
+*/
 #include <WlzJava.h>
 
-/************************************************************************
-* Function:	WlzJavaBuildFQClassName					*
-* Returns:	void							*
-* Purpose:	Builds a fully qualified class name string which should	*
-*		be free'd (using free()) when no longer required.	*
-* Global refs:	-							*
-* Parameters:	const char *name:	Given class name.		*
-************************************************************************/
+/*!
+* \ingroup	JWlz
+* \brief	Builds a fully qualified class name string which should
+* 		be free'd (using free()) when no longer required.
+* \param	name			Given class name.
+*/
 char		*WlzJavaBuildFQClassName(const char *name)
 {
   int		fqLen;
@@ -36,14 +60,13 @@ char		*WlzJavaBuildFQClassName(const char *name)
   return(fqName);
 }
 
-/************************************************************************
-* Function:	WlzJavaThrowWlzException				*
-* Returns:	void							*
-* Purpose:	Throws a WlzException with the Woolz error string as	*
-*		the message.						*
-* Global refs:	int errno:		System error number.		*
-* Parameters:	JNIEnv *jEnv:		Given JNI environment ptr.	*
-************************************************************************/
+/*!
+* \ingroup	JWlz
+* \brief	Throws a WlzException with the Woolz error string as
+* 		the message.
+* \param	jEnv			Given JNI environment pointer.
+* \param	errNum			Woolz error code.
+*/
 void		WlzJavaThrowWlzException(JNIEnv *jEnv, WlzErrorNum errNum)
 {
   char		*eName;

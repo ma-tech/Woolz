@@ -41,9 +41,11 @@ static char _ReconstructType_h[] = "University of Edinburgh $Id$";
 * \ingroup	Reconstruct
 */
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
 extern "C" {
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 /*!
 * \enum         _RecError
@@ -323,8 +325,10 @@ extern RecDbgWlzFn recDbgOutWlzFn;
 		((((F)&(recDbgWlzMask))==(F))?REC_DBGW_FN((O),(X)):REC_ERR_NONE)
 
 
+#ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus 
 }
 #endif /* __cplusplus */
+#endif /* WLZ_EXT_BIND */
 
 #endif /* RECONSTRUCTTYPE_H */

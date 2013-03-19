@@ -711,6 +711,71 @@ WlzObject *WlzMakeSpecialStructElement(
   return rtnObj;
 }
 
+/*! 
+* \return       Single pixel object with coordinates (k,l,p).
+* \ingroup      WlzMorphologyOps
+* \brief        Make a single pixel/voxel object at the specified
+*		coordinate position.
+* \param    oType		Object type -
+*                               <tt>WLZ_2D_DOMAINOBJ</tt> for a
+*                               WLZ_INTERVALDOMAIN_INTVL or 
+*				<tt>WLZ_3D_DOMAINOBJ</tt> for a
+*				WLZ_PLANEDOMAIN_DOMAIN.
+* \param    k			Column (x) coordinate.
+* \param    l			Line (y) coordinate.
+* \param    p			Plane (z) coordinate.
+* \param    dstErr		Destination error pointer, may be NULL.
+*/
+static WlzDomain WlzMakeSinglePixelDomain(
+  WlzObjectType	oType,
+  int		k,
+  int		l,
+  int		p,
+  WlzErrorNum	*dstErr)
+{
+  WlzInterval	*itv;
+  WlzDomain	domain;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  domain.core = NULL;
+  switch( oType ){
+  case WLZ_2D_DOMAINOBJ:
+    if((itv = (WlzInterval *)AlcMalloc(sizeof(WlzInterval))) == NULL) {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else {
+      itv->ileft = 0;
+      itv->iright = 0;
+      if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
+                                           l, l, k, k, &errNum)) != NULL){
+	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, itv,
+					     NULL);
+	domain.i->intvlines->nintvs = 1;
+	domain.i->intvlines->intvs = itv;
+      }
+    }
+    break;
+  case WLZ_3D_DOMAINOBJ:
+    if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+                                      p, p, l, l, k, k, &errNum)) != NULL){
+      domain.p->domains[0] = WlzAssignDomain(
+			     WlzMakeSinglePixelDomain(WLZ_INTERVALDOMAIN_INTVL,
+						      k, l, p, &errNum), NULL);
+      if(errNum != WLZ_ERR_NONE) {
+        (void )WlzFreePlaneDomain(domain.p);
+	domain.core = NULL;
+      }
+    }
+    break;
+  default:
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+    break;
+  }
+  if( dstErr ){
+    *dstErr = errNum;
+  }
+  return domain;
+}
 
 /*! 
 * \return       Single pixel object with coordinates (k,l,p).
@@ -732,60 +797,18 @@ WlzObject *WlzMakeSinglePixelObject(
   WlzErrorNum	*dstErr)
 {
   WlzObject	*rtnObj=NULL;
-  WlzInterval	*itv;
   WlzDomain	domain;
   WlzValues	values;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
-  /* check type */
-  switch( oType ){
-  case WLZ_2D_DOMAINOBJ:
-    if((itv = (WlzInterval *)AlcMalloc(sizeof(WlzInterval))) == NULL) {
-      errNum = WLZ_ERR_MEM_ALLOC;
+  values.core = NULL;
+  domain = WlzMakeSinglePixelDomain(oType, k, l, p, &errNum);
+  if(errNum == WLZ_ERR_NONE) {
+    rtnObj = WlzMakeMain(oType, domain, values, NULL, NULL, &errNum);
+    if(errNum != WLZ_ERR_NONE) {
+      (void )WlzFreeDomain(domain);
     }
-    else {
-      itv->ileft = 0;
-      itv->iright = 0;
-      if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
-					   l, l, k, k, &errNum)) != NULL){
-	domain.i->freeptr = AlcFreeStackPush(domain.i->freeptr, itv,
-					     NULL);
-	domain.i->intvlines->nintvs = 1;
-	domain.i->intvlines->intvs = itv;
-	values.core = NULL;
-	if( (rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
-				  NULL, NULL, &errNum)) == NULL ){
-	  WlzFreeIntervalDomain(domain.i);
-	}
-      }
-    }
-    break;
-
-  case WLZ_3D_DOMAINOBJ:
-    if((domain.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
-				      p, p, l, l, k, k, &errNum)) != NULL){
-      values.core = NULL;
-      if( (rtnObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
-				NULL, NULL, &errNum)) == NULL ){
-	WlzFreePlaneDomain(domain.p);
-	break;
-      }
-      if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,
-					 l, l, k, k, &errNum)) != NULL){
-	rtnObj->domain.p->domains[0] = WlzAssignDomain(domain, NULL);
-      }
-      else {
-	WlzFreeObj(rtnObj);
-	rtnObj = NULL;
-      }
-    }
-    break;
-
-  default:
-    errNum = WLZ_ERR_PARAM_TYPE;
-    break;
   }
-
   if( dstErr ){
     *dstErr = errNum;
   }

@@ -119,17 +119,18 @@ static WlzErrorNum		WlzEffNiftiToWlzType(
 *		grey scaling will result in floating point image grey
 *		values.
 * \param	gvnFileName		Given file name.
-* \param	spatialTr		Apply the NIfTI sform spatial
-* 					transform (mapping the image to some
-* 					global coordinate system) to the image.
-* 					This is not required to recover a
-* 					simple offset.
-* \param	greySc			Apply the NIfTI grey scaling.
+* \param	sTrans			If non-zero the NIfTI spatial transform
+* 					is used to build a WLZ_TRANS_OBJ,
+* 					otherwise any shift is applied but the
+* 					remaining transform components are
+* 					ignored.
+* \param	gTrans			Apply the NIfTI grey scaling if
+* 					non-zero.
 * \param	dstErr			Destination error code, may be NULL.
 */
 WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
-				    int spatialTr,
-				    int greySc,
+				    int sTrans,
+				    int gTrans,
 				    WlzErrorNum *dstErr)
 #if HAVE_NIFTI == 0
 {
@@ -201,7 +202,7 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
   /* Apply grey value scale and offset if required. */
   if(errNum == WLZ_ERR_NONE)
   {
-    if((greySc != 0) &&
+    if((gTrans != 0) &&
        (fabs(nim->scl_slope) > FLT_MIN) &&
        ((fabs(nim->scl_slope - 1.0) > FLT_MIN) ||
         (fabs(nim->scl_inter) > FLT_MIN)))
@@ -279,10 +280,13 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
 	  }
 	}
       }
-      if(((nim->ndim == 2) && (sTrType == WLZ_TRANSFORM_2D_TRANS)) ||
-         ((nim->ndim == 3) && (sTrType == WLZ_TRANSFORM_3D_TRANS)))
+      if((sTrans == 0) &&
+         (((nim->ndim == 2) && ((sTrType == WLZ_TRANSFORM_2D_TRANS) ||
+	                        (sTrType == WLZ_TRANSFORM_2D_AFFINE))) ||
+          ((nim->ndim == 3) && ((sTrType == WLZ_TRANSFORM_3D_TRANS) ||
+	                        (sTrType == WLZ_TRANSFORM_3D_AFFINE)))))
       {
-        /* Shift the 2D object(s). */
+        /* Shift the 2 or 3D object(s). */
 	int	  idN;
 	WlzIVertex3 sft;
 	WlzObject *nObj;
@@ -318,6 +322,7 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
 	        break;
 	      }
 	    }
+	    break;
 	  case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
 	  case WLZ_3D_DOMAINOBJ:
 	    nObj = WlzShiftObject(obj, sft.vtX, sft.vtY, sft.vtZ,
@@ -328,100 +333,58 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
 	      (void )WlzFreeObj(obj);
 	      obj = nObj;
 	    }
+	    break;
 	  default:
 	    errNum = WLZ_ERR_OBJECT_TYPE;
 	    break;
 	}
       }
-      else if(sTrType == WLZ_TRANSFORM_3D_AFFINE)
+      else
       {
-        if(spatialTr == 0)
+	/* Create a trans-obj. */
+	WlzProperty p;
+	WlzPropertyList *pLst = NULL;
+
+	p.name = WlzMakeNameProperty("NIfTI sto_ijk", &errNum);
+	if(errNum == WLZ_ERR_NONE)
 	{
-	  /* Create a trans-obj. */
-	  WlzProperty p;
-	  WlzPropertyList *pLst = NULL;
-
-	  p.name = WlzMakeNameProperty("NIfTI sto_ijk", &errNum);
-	  if(errNum == WLZ_ERR_NONE)
+	  if((pLst = WlzMakePropertyList(NULL)) == NULL)
 	  {
-	    if((pLst = WlzMakePropertyList(NULL)) == NULL)
-	    {
-	      errNum = WLZ_ERR_MEM_ALLOC;
-	    }
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    if(AlcDLPListEntryAppend(pLst->list, NULL, (void *)(p.core),
-				     WlzFreePropertyListEntry) != ALC_ER_NONE)
-	    {
-	      errNum = WLZ_ERR_MEM_ALLOC;
-	    }
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    WlzDomain dom;
-	    WlzValues val;
-	    WlzObject	*nObj;
-
-	    dom.t = sTr;
-	    val.obj = obj;
-	    nObj = WlzMakeMain(WLZ_TRANS_OBJ, dom, val, pLst, NULL, &errNum);
-	    if(errNum == WLZ_ERR_NONE)
-	    {
-	      obj = nObj;
-	      sTr = NULL;
-	    }
-	  }
-	  if(errNum != WLZ_ERR_NONE)
-	  {
-	    if(pLst != NULL)
-	    {
-	      WlzFreePropertyListEntry(pLst);
-	    }
-	    else if(p.core != NULL)
-	    {
-	      (void )WlzFreeProperty(p);
-	    }
+	    errNum = WLZ_ERR_MEM_ALLOC;
 	  }
 	}
-	else
+	if(errNum == WLZ_ERR_NONE)
 	{
-          /* Affine transform the 2 or 3D object(s). */
-	  int	  idN;
-	  WlzObject *nObj;
-
-	  switch(obj->type)
+	  if(AlcDLPListEntryAppend(pLst->list, NULL, (void *)(p.core),
+				   WlzFreePropertyListEntry) != ALC_ER_NONE)
 	  {
-	    case WLZ_COMPOUND_ARR_1:
-	      for(idN = 0; idN < ((WlzCompoundArray *)obj)->n; ++idN)
-	      {
-		nObj = WlzAffineTransformObj(((WlzCompoundArray *)obj)->o[idN],
-				      sTr, WLZ_INTERPOLATION_NEAREST,
-				      &errNum);
-		if(errNum == WLZ_ERR_NONE)
-		{
-		  (void )WlzFreeObj(((WlzCompoundArray *)obj)->o[idN]);
-		  ((WlzCompoundArray *) obj)->o[idN] =
-				  WlzAssignObject(nObj, NULL);
-		}
-		else
-		{
-		  break;
-		}
-	      }
-	    case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
-	    case WLZ_3D_DOMAINOBJ:
-	      nObj = WlzAffineTransformObj(((WlzCompoundArray *)obj)->o[idN],
-				    sTr, WLZ_INTERPOLATION_NEAREST,
-				    &errNum);
-	      if(errNum == WLZ_ERR_NONE)
-	      {
-		(void )WlzFreeObj(obj);
-		obj = nObj;
-	      }
-	    default:
-	      errNum = WLZ_ERR_OBJECT_TYPE;
-	      break;
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  WlzDomain dom;
+	  WlzValues val;
+	  WlzObject	*nObj;
+
+	  dom.t = sTr;
+	  val.obj = obj;
+	  nObj = WlzMakeMain(WLZ_TRANS_OBJ, dom, val, pLst, NULL, &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    obj = nObj;
+	    sTr = NULL;
+	  }
+	}
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  if(pLst != NULL)
+	  {
+	    WlzFreePropertyListEntry(pLst);
+	  }
+	  else if(p.core != NULL)
+	  {
+	    (void )WlzFreeProperty(p);
 	  }
 	}
       }
@@ -433,7 +396,7 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
   {
     WlzProperty	p;
     char 	*s = NULL;
-    WlzPropertyList *pLst;
+    WlzPropertyList *pLst = NULL;
 
     p.core = NULL;
     nim->descrip[79] = '\0';
@@ -744,7 +707,7 @@ WlzErrorNum	WlzEffWriteObjNifti(const char *gvnFileName, WlzObject *obj)
 * 		forms transforms of the NIfTI image are not applied and
 * 		neither is the pixel value scaling.
 * \param	nim			NIfTI image.
-* 					WlzEffReadObjNifti().
+* 					See WlzEffReadObjNifti().
 * \param	dstErr			Destination error code, may be NULL.
 */
 static WlzObject *WlzEffNiftiToObj2D(nifti_image *nim,
@@ -1188,7 +1151,7 @@ static WlzErrorNum WlzEffNiftiToWlzType(nifti_image *nim, int *dstNVPP,
       break;
     case NIFTI_TYPE_UINT16:	/* Unsigned short, promote to int. */
       *dstNVPP = 1;
-      *dstWGType = WLZ_GREY_SHORT;
+      *dstWGType = WLZ_GREY_INT;
       break;
     case NIFTI_TYPE_UINT32:	/* Unsigned int, promote to long long. */
       *dstNVPP = 1;
@@ -1254,6 +1217,7 @@ static char 	*WlzEffNiftiInfoToStr(nifti_image *nim, WlzErrorNum *dstErr)
 		   "qform_code=%d\n"
 		   "qto_ijk=%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g\n"
 		   "sform_code=%d\n"
+		   "sto_xyz=%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g\n"
 		   "slice_code=%d\n"
 		   "slice_start=%d\n"
 		   "slice_end=%d\n"
@@ -1280,6 +1244,14 @@ static char 	*WlzEffNiftiInfoToStr(nifti_image *nim, WlzErrorNum *dstErr)
 		   nim->qto_ijk.m[3][0], nim->qto_ijk.m[3][1],
 		   nim->qto_ijk.m[3][2], nim->qto_ijk.m[3][3],
 		   nim->sform_code,
+		   nim->sto_xyz.m[0][0], nim->sto_xyz.m[0][1],
+		   nim->sto_xyz.m[0][2], nim->sto_xyz.m[0][3],
+		   nim->sto_xyz.m[1][0], nim->sto_xyz.m[1][1],
+		   nim->sto_xyz.m[1][2], nim->sto_xyz.m[1][3],
+		   nim->sto_xyz.m[2][0], nim->sto_xyz.m[2][1],
+		   nim->sto_xyz.m[2][2], nim->sto_xyz.m[2][3],
+		   nim->sto_xyz.m[3][0], nim->sto_xyz.m[3][1],
+		   nim->sto_xyz.m[3][2], nim->sto_xyz.m[3][3],
 		   nim->slice_code,
 		   nim->slice_start,
 		   nim->slice_end,

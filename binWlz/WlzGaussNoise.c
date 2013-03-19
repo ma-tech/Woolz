@@ -49,17 +49,13 @@ static char _WlzGaussNoise_c[] = "University of Edinburgh $Id$";
 WlzGaussNoise - add Gaussian noise to the grey values of an object.
 \par Synopsis
 \verbatim
-WlzGaussNoise [-s#] [-h] [-v] [<input mask> [<input obj>]]
+WlzGaussNoise [-s#] [-h] [<input mask> [<input obj>]]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
   <tr> 
     <td><b>-s</b></td>
@@ -99,12 +95,12 @@ static void usage(char *proc_str)
   fprintf(stderr,
 	  "Usage:\t%s [-s#] [-h] [-v] [<input mask> [<input obj>]]\n"
 	  "\tAdd gaussian noise to the grey value of an object.\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -s#       standard deviation of the noise - default 5\n"
-	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n"
-	  "",
-	  proc_str);
+	  "\t  -h        help - prints this usage message\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -114,9 +110,8 @@ int main(int	argc,
 {
   WlzObject	*obj;
   FILE		*inFile;
-  char 		optList[] = "hs:v";
+  char 		optList[] = "hs:";
   int		option;
-  int		verboseFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzPixelV	val;
     
@@ -131,11 +126,6 @@ int main(int	argc,
     case 's':
       val.v.flv = atof(optarg);
       break;
-
-    case 'v':
-      verboseFlg = 1;
-      break;
-
     case 'h':
     default:
       usage(argv[0]);

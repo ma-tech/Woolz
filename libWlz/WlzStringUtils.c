@@ -39,6 +39,7 @@ static char _WlzStringUtils_c[] = "University of Edinburgh $Id$";
 * \ingroup	WlzStrings
 */
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
@@ -133,4 +134,29 @@ int		WlzValueMatchString(char **datum,
   }
   va_end(ap);
   return(matchedFlag);
+}
+
+/*!
+* \return	The given string.
+* \ingroup	WlzStrings
+* \brief	Removes all white space characters (as determined by
+* 		isspace(3)) from the given string.
+* \param	str			Given string.
+*/
+char		*WlzStringWhiteSpSkip(char *str)
+{
+  char		*s0,
+  		*s1;
+
+  if(str)
+  {
+    s0 = s1 = str;
+    while(*s1)
+    {
+      *s0 = *s1++;
+      s0 += (isspace(*s0) == 0);
+    }
+    *s0 = '\0';
+  }
+  return(str);
 }

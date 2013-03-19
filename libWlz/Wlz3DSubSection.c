@@ -102,7 +102,7 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
   WlzObject		**maskRtn,
   WlzErrorNum		*dstErr)
 {
-  WlzObject		*newObj, *tmpObj, *mask;
+  WlzObject		*newObj = NULL, *tmpObj = NULL, *mask = NULL;
   WlzDomain		domain;
   WlzValues		values;
   WlzPixelV		pixval;

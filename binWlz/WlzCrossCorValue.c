@@ -116,8 +116,6 @@ int             main(int argc, char **argv)
   		unionFlg = 0;
   double 	cCor = 0.0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzDomain	outDom;
-  WlzValues	nullVal;
   WlzObject	*inObj[2];
   FILE		*fP = NULL;
   char 		*outFileStr;
@@ -128,8 +126,6 @@ int             main(int argc, char **argv)
   		inObjFileStrDef[] = "-";
 
   opterr = 0;
-  outDom.core = NULL;
-  nullVal.core = NULL;
   inObj[0] = NULL;
   inObj[1] = NULL;
   outFileStr = outFileStrDef;
@@ -268,9 +264,12 @@ int             main(int argc, char **argv)
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s%sExample: %s%s",
+    "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-n] [-o<out file>] [-u] [<in obj 0>] [<in obj 1>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
     "  -n  Normalise the cross-correlation value by dividing it by the\n"

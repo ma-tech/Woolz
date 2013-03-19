@@ -278,6 +278,39 @@ WlzAffineTransform *WlzAssignAffineTransform(
 }
 
 /*!
+* \return	Given transform with incremented linkcount or NULL on
+*		error.
+* \ingroup      WlzAllocation
+* \brief	Assign a transform by incrementing it's linkcount.
+* \param	t			Given transform.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzTransform 	WlzAssignTransform(WlzTransform t, WlzErrorNum *dstErr)
+{
+  WlzTransform	tR;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  tR.core = NULL;
+  if(t.core)
+  {
+    if(t.core->linkcount < 0)
+    {
+      errNum = WLZ_ERR_LINKCOUNT_DATA;
+    }
+    else
+    {
+      ++(t.core->linkcount);
+      tR = t;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tR);
+}
+
+/*!
 * \return	Given 3D view structure with incremented linkcount or NULL on
 *		error.
 * \ingroup      WlzAllocation

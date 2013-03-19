@@ -66,10 +66,6 @@ WlzIndexBoundaries
     <td><b>-h</b></td>
     <td>Help - print help message</td>
   </tr>
-  <tr>
-    <td><b>-v</b></td>
-    <td>Verbose operation</td>
-  </tr>
 </table>
 
 \par Description
@@ -98,15 +94,15 @@ extern char     *optarg;
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
-	  "Usage:\t%s  [-R] [-h] [-v] [<input file>]\n"
-	  "\tOptions are:\n"
+  (void )fprintf(stderr,
+	  "Usage:\t%s  [-R] [-h] [<input file>]\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -R        Output polyline coordinates relative to\n"
 	  "\t            the image bounding box.\n"
-	  "\t  -h        Help - prints this usage message.\n"
-	  "\t  -v        Verbose operation.\n"
-	  "",
-	  proc_str);
+	  "\t  -h        Help - prints this usage message.\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
@@ -198,9 +194,8 @@ int main(
   WlzIVertex2	*vtxs;
   int		i, index;
   int		relativeFlg;
-  int		verboseFlg;
   FILE		*inFile;
-  char 		optList[] = "Rhv";
+  char 		optList[] = "Rh";
   int		option;
   AlcDLPList	*polyList;
   AlcDLPItem	*listItem;
@@ -211,7 +206,6 @@ int main(
 
   /* default values */
   relativeFlg = 0;
-  verboseFlg = 0;
   
   /* check input arguments */
   opterr = 0;
@@ -220,10 +214,6 @@ int main(
 
     case 'R':
       relativeFlg = 1;
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

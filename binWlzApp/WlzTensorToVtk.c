@@ -60,16 +60,17 @@ static WlzErrorNum WlzTensorToVtk(FILE *, WlzObject *, WlzObject *,
 
 static void usage(char *proc_str)
 {
-  fprintf(stderr,
+  (void )fprintf(stderr,
 	  "Usage:\t%s [-h] [-t] [<tensor file>] [-v] [<vtk file>] [-n]\n"
 	  "\tConverts Woolz tensor object to VTK format\n"
-	  "\tOptions are:\n"
+	  "Version: %s\n"
+	  "Options:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -t        tensor file\n"
 	  "\t  -v        VTK file\n"
-          "\t  -n        normalise tensors\n"
-	  "",
-	  proc_str);
+          "\t  -n        normalise tensors\n",
+	  proc_str,
+	  WlzVersion());
   return;
 }
 
