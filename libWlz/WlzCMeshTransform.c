@@ -189,21 +189,66 @@ static void			WlzCMeshScanClearOlpBuf(
 				  int clrWidth);
 static void			WlzCMeshSqzRedundantItv3D(
 				  WlzCMeshScanWSp3D *mSWSp);
-static WlzErrorNum 		WlzCMeshInterpolate2DKrig(
+static WlzErrorNum 		WlzCMeshInterpolateNod2DKrig(
 				  WlzGreyP dst,
 				  int ln,
 				  int kolL,
 				  int kolR,
 				  WlzCMesh2D *mesh,
 				  WlzIndexedValues *ixv);
-static void	 		WlzCMeshInterpolate2DLinear(
+static WlzErrorNum 		WlzCMeshInterpolateElm2DNearest(
 				  WlzGreyP dst,
 				  int ln,
 				  int kolL,
 				  int kolR,
 				  WlzCMesh2D *mesh,
 				  WlzIndexedValues *ixv);
-static void	 		WlzCMeshInterpolate3DLinear(
+static WlzErrorNum 		WlzCMeshInterpolateElm2DLinear(
+				  WlzGreyP dst,
+				  int ln,
+				  int kolL,
+				  int kolR,
+				  WlzCMesh2D *mesh,
+				  WlzIndexedValues *ixv);
+static WlzErrorNum 		WlzCMeshInterpolateElm3DLinear(
+				  WlzGreyP dst,
+				  int pl,
+				  int ln,
+				  int kolL,
+				  int kolR,
+				  WlzCMesh3D *mesh,
+				  WlzIndexedValues *ixv);
+static WlzErrorNum 		WlzCMeshInterpolateNod2DNearest(
+				  WlzGreyP dst,
+				  int ln,
+				  int kolL,
+				  int kolR,
+				  WlzCMesh2D *mesh,
+				  WlzIndexedValues *ixv);
+static WlzErrorNum 		WlzCMeshInterpolateNod2DLinear(
+				  WlzGreyP dst,
+				  int ln,
+				  int kolL,
+				  int kolR,
+				  WlzCMesh2D *mesh,
+				  WlzIndexedValues *ixv);
+static WlzErrorNum 		WlzCMeshInterpolateNod3DNearest(
+				  WlzGreyP dst,
+				  int pl,
+				  int ln,
+				  int kolL,
+				  int kolR,
+				  WlzCMesh3D *mesh,
+				  WlzIndexedValues *ixv);
+static WlzErrorNum 		WlzCMeshInterpolateNod3DLinear(
+				  WlzGreyP dst,
+				  int pl,
+				  int ln,
+				  int kolL,
+				  int kolR,
+				  WlzCMesh3D *mesh,
+				  WlzIndexedValues *ixv);
+static WlzErrorNum 		WlzCMeshInterpolateElm3DNearest(
 				  WlzGreyP dst,
 				  int pl,
 				  int ln,
@@ -331,10 +376,14 @@ static WlzObject 		*WlzCMeshToDomObjValues3D(
                                   WlzInterpolationType itp,
 				  WlzErrorNum *dstErr);
 static WlzObject 		*WlzCMeshExpansion2D(
-				  WlzObject *tObj,
+				  WlzObject *cObj,
+				  int inverse,
+				  int eigen,
 				  WlzErrorNum *dstErr);
 static WlzObject 		*WlzCMeshExpansion3D(
-				  WlzObject *tObj,
+				  WlzObject *cObj,
+				  int inverse,
+				  int eigen,
 				  WlzErrorNum *dstErr);
 static WlzPolygonDomain 	*WlzCMeshTransformPoly(
 				  WlzPolygonDomain *srcPoly,
@@ -1910,21 +1959,54 @@ static WlzObject *WlzCMeshToDomObjValues2D(WlzObject *dObj, WlzObject *mObj,
     while((errNum == WLZ_ERR_NONE) &&
           ((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE))
     {
-      switch(itp)
+      switch(ixv->attach)
       {
-	case WLZ_INTERPOLATION_LINEAR: /* FALLTHROUGH */
-	case WLZ_INTERPOLATION_BARYCENTRIC:
-	  WlzCMeshInterpolate2DLinear(gWsp.u_grintptr, 
-				      iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
-				      mesh, ixv);
-	  break;
-	case WLZ_INTERPOLATION_KRIG:
-	  errNum = WlzCMeshInterpolate2DKrig(gWsp.u_grintptr, 
-	  			    iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
+	case WLZ_VALUE_ATTACH_NOD:
+	  switch(itp)
+	  {
+	    case WLZ_INTERPOLATION_NEAREST:
+	      errNum = WlzCMeshInterpolateNod2DNearest(gWsp.u_grintptr,
+	      				iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
+					mesh, ixv);
+	      break;
+	    case WLZ_INTERPOLATION_LINEAR: /* FALLTHROUGH */
+	    case WLZ_INTERPOLATION_BARYCENTRIC:
+	      errNum = WlzCMeshInterpolateNod2DLinear(gWsp.u_grintptr, 
+				     iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
+				     mesh, ixv);
+	      break;
+	    case WLZ_INTERPOLATION_KRIG:
+	      errNum = WlzCMeshInterpolateNod2DKrig(gWsp.u_grintptr, 
+				    iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
 				    mesh, ixv);
+	      break;
+	    default:
+	      errNum = WLZ_ERR_PARAM_TYPE;
+	      break;
+	  }
 	  break;
-        default:
-	  errNum = WLZ_ERR_PARAM_TYPE;
+	case WLZ_VALUE_ATTACH_ELM:
+	  switch(itp)
+	  {
+	    case WLZ_INTERPOLATION_NEAREST:
+	      errNum = WlzCMeshInterpolateElm2DNearest(gWsp.u_grintptr,
+	      				iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
+					mesh, ixv);
+	      break;
+	    case WLZ_INTERPOLATION_LINEAR:
+	      errNum = WlzCMeshInterpolateElm2DLinear(gWsp.u_grintptr,
+	      				iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
+					mesh, ixv);
+	      break;
+	    default:
+	      errNum = WLZ_ERR_PARAM_TYPE;
+	      break;
+	  }
+	  break;
+	  errNum = WLZ_ERR_UNIMPLEMENTED;
+	  break;
+	default:
+	  errNum = WLZ_ERR_VALUES_TYPE;
 	  break;
       }
     }
@@ -2045,16 +2127,54 @@ static WlzObject *WlzCMeshToDomObjValues3D(WlzObject *dObj, WlzObject *mObj,
 	while((errNum == WLZ_ERR_NONE) &&
 	      ((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE))
 	{
-	  switch(itp)
+	  switch(ixv->attach)
 	  {
-	    case WLZ_INTERPOLATION_LINEAR:
-	      WlzCMeshInterpolate3DLinear(gWsp.u_grintptr, 
-					  plnPos, iWsp.linpos,
-					  iWsp.lftpos, iWsp.rgtpos,
-					  mesh, ixv);
+	    case WLZ_VALUE_ATTACH_NOD:
+	      switch(itp)
+	      {
+	        case WLZ_INTERPOLATION_NEAREST:
+		  errNum = WlzCMeshInterpolateNod3DNearest(gWsp.u_grintptr,
+		  			plnPos, iWsp.linpos,
+					iWsp.lftpos, iWsp.rgtpos,
+					mesh, ixv);
+		  break;
+	        case WLZ_INTERPOLATION_LINEAR: /* FALLTHROUGH */
+	        case WLZ_INTERPOLATION_BARYCENTRIC:
+		  errNum = WlzCMeshInterpolateNod3DLinear(gWsp.u_grintptr, 
+					plnPos, iWsp.linpos,
+					iWsp.lftpos, iWsp.rgtpos,
+					mesh, ixv);
+		  break;
+		case WLZ_INTERPOLATION_KRIG:
+		  errNum = WLZ_ERR_UNIMPLEMENTED; /* TODO */
+		  break;
+		default:
+		  errNum = WLZ_ERR_PARAM_TYPE;
+		  break;
+	      }
+	      break;
+	    case WLZ_VALUE_ATTACH_ELM:
+	      switch(itp)
+	      {
+	        case WLZ_INTERPOLATION_NEAREST:
+		  errNum = WlzCMeshInterpolateElm3DNearest(gWsp.u_grintptr, 
+					plnPos, iWsp.linpos,
+					iWsp.lftpos, iWsp.rgtpos,
+					mesh, ixv);
+		  break;
+	        case WLZ_INTERPOLATION_LINEAR:
+                  errNum = WlzCMeshInterpolateElm3DLinear(gWsp.u_grintptr,
+		  			plnPos, iWsp.linpos,
+					iWsp.lftpos, iWsp.rgtpos,
+					mesh, ixv);
+		  break;
+		default:
+		  errNum = WLZ_ERR_PARAM_TYPE;
+		  break;
+	      }
 	      break;
 	    default:
-	      errNum = WLZ_ERR_PARAM_TYPE;
+	      errNum = WLZ_ERR_VALUES_TYPE;
 	      break;
 	  }
 	}
@@ -2103,7 +2223,7 @@ static WlzObject *WlzCMeshToDomObjValues3D(WlzObject *dObj, WlzObject *mObj,
 * \param	mesh				The mesh.
 * \param	ixv				The indexed values.
 */
-static WlzErrorNum WlzCMeshInterpolate2DKrig(WlzGreyP dst,
+static WlzErrorNum WlzCMeshInterpolateNod2DKrig(WlzGreyP dst,
                                           int ln, int kolL, int kolR,
 					  WlzCMesh2D *mesh,
 					  WlzIndexedValues *ixv)
@@ -2228,6 +2348,110 @@ static WlzErrorNum WlzCMeshInterpolate2DKrig(WlzGreyP dst,
 }
 
 /*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Interpolates values along the pixels of a single interval
+* 		from the given mesh and it's indexed values. Uses nearest
+* 		node interpolation within each mesh element.
+* \param	dst				The interval values.
+* \param	ln				Line coordinate of the
+* 						interval.
+* \param	kolL				leftmost column coordinate of
+* 						the interval.
+* \param	kolR				Rightmost column coordinate of
+* 						the interval.
+* \param	mesh				The mesh.
+* \param	ixv				The indexed values.
+*/
+static WlzErrorNum WlzCMeshInterpolateNod2DNearest(WlzGreyP dst,
+					int ln, int kolL, int kolR,
+					WlzCMesh2D *mesh,
+					WlzIndexedValues *ixv)
+{
+  int		kl,
+  		idE,
+		idI,
+		idN;
+  WlzDVertex2	pos;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  idI = 0;
+  idE = -1;
+  pos.vtY = ln;
+  for(kl = kolL; kl <= kolR; ++kl)
+  {
+    WlzCMeshNod2D *nNod = NULL;
+
+    pos.vtX = kl;
+    /* Find nearest node within the element. */
+    if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE, pos.vtX, pos.vtY,
+    					0, &idN)) >= 0)
+    {
+      int	idN;
+      double    dMin;
+      WlzDVertex2 del;
+      WlzCMeshElm2D *elm;
+      WlzCMeshNod2D *nod[3];
+
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+      nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+      nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
+      nNod = nod[0];
+      WLZ_VTX_2_SUB(del, pos, nod[0]->pos);
+      dMin = WLZ_VTX_2_SQRLEN(del);
+      for(idN = 1; idN < 3; ++idN)
+      {
+	double	d;
+
+        WLZ_VTX_2_SUB(del, pos, nod[idN]->pos);
+	d = WLZ_VTX_2_SQRLEN(del);
+	if(d < dMin)
+	{
+	  nNod = nod[idN];
+	  dMin = d;
+	}
+      }
+    }
+    else if(idN >= 0)
+    {
+      nNod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+    }
+    /* Set value. */
+    if(nNod)
+    {
+      switch(ixv->vType)
+      {
+	case WLZ_GREY_LONG:
+	  *(dst.lnp + idI) = *(WlzLong *)WlzIndexedValueGet(ixv, nNod->idx);
+	  break;
+	case WLZ_GREY_INT:
+	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, nNod->idx);
+	  break;
+	case WLZ_GREY_SHORT:
+	  *(dst.shp + idI) = *(short *)WlzIndexedValueGet(ixv, nNod->idx);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, nNod->idx);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  *(dst.flp + idI) = *(float *)WlzIndexedValueGet(ixv, nNod->idx);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, nNod->idx);
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
+      }
+    }
+    ++idI;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
 * \ingroup	WlzMesh
 * \brief	Interpolates values along the pixels of a single interval
 * 		from the given mesh and it's indexed values. Uses linear
@@ -2242,16 +2466,17 @@ static WlzErrorNum WlzCMeshInterpolate2DKrig(WlzGreyP dst,
 * \param	mesh				The mesh.
 * \param	ixv				The indexed values.
 */
-static void 	WlzCMeshInterpolate2DLinear(WlzGreyP dst,
-                                            int ln, int kolL, int kolR,
-					    WlzCMesh2D *mesh,
-					    WlzIndexedValues *ixv)
+static WlzErrorNum WlzCMeshInterpolateNod2DLinear(WlzGreyP dst,
+					int ln, int kolL, int kolR,
+					WlzCMesh2D *mesh,
+					WlzIndexedValues *ixv)
 {
   int		kl,
   		idE,
 		idI,
 		idN;
   WlzDVertex2	pos;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   idI = 0;
   idE = -1;
@@ -2321,6 +2546,7 @@ static void 	WlzCMeshInterpolate2DLinear(WlzGreyP dst,
 			pos);
 	  break;
 	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
 	  break;
       }
     }
@@ -2350,19 +2576,21 @@ static void 	WlzCMeshInterpolate2DLinear(WlzGreyP dst,
 	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, nod->idx);
 	  break;
 	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
 	  break;
       }
     }
     ++idI;
   }
+  return(errNum);
 }
 
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
-* \brief	Interpolates values along the pixels of a single interval
-* 		from the given mesh and it's indexed values. Uses linear
-* 		interpolation within each mesh element.
+* \brief	Sets values along the pixels of a single interval
+* 		from the given mesh and it's indexed values. The pixels
+* 		are set to the first value attached to the mesh element.
 * \param	dst				The interval values.
 * \param	ln				Line coordinate of the
 * 						interval.
@@ -2373,16 +2601,581 @@ static void 	WlzCMeshInterpolate2DLinear(WlzGreyP dst,
 * \param	mesh				The mesh.
 * \param	ixv				The indexed values.
 */
-static void 	WlzCMeshInterpolate3DLinear(WlzGreyP dst,
-                                            int pl, int ln, int kolL, int kolR,
-					    WlzCMesh3D *mesh,
-					    WlzIndexedValues *ixv)
+static WlzErrorNum WlzCMeshInterpolateElm2DNearest(WlzGreyP dst,
+					int ln, int kolL, int kolR,
+					WlzCMesh2D *mesh,
+					WlzIndexedValues *ixv)
+{
+  int		kl,
+  		idE,
+		idI;
+  WlzDVertex2	pos;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  idI = 0;
+  idE = -1;
+  pos.vtY = ln;
+  for(kl = kolL; kl <= kolR; ++kl)
+  {
+    pos.vtX = kl;
+    if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE, pos.vtX, pos.vtY,
+    					0, NULL)) >= 0)
+    {
+      WlzCMeshElm2D *elm;
+
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      switch(ixv->vType)
+      {
+	case WLZ_GREY_LONG:
+	  *(dst.lnp + idI) = *(WlzLong *)WlzIndexedValueGet(ixv, elm->idx);
+	  break;
+	case WLZ_GREY_INT:
+	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, elm->idx);
+	  break;
+	case WLZ_GREY_SHORT:
+	  *(dst.ubp + idI) = *(short *)WlzIndexedValueGet(ixv, elm->idx);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, elm->idx);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  *(dst.flp + idI) = *(float *)WlzIndexedValueGet(ixv, elm->idx);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, elm->idx);
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
+      }
+    }
+    ++idI;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Sets values along the pixels of a single interval
+* 		from the given mesh and it's indexed values. The pixels
+* 		are set using linear interpolation.
+* \param	dst				The interval values.
+* \param	ln				Line coordinate of the
+* 						interval.
+* \param	kolL				leftmost column coordinate of
+* 						the interval.
+* \param	kolR				Rightmost column coordinate of
+* 						the interval.
+* \param	mesh				The mesh.
+* \param	ixv				The indexed values.
+*/
+static WlzErrorNum WlzCMeshInterpolateElm2DLinear(WlzGreyP dst,
+					int ln, int kolL, int kolR,
+					WlzCMesh2D *mesh,
+					WlzIndexedValues *ixv)
+{
+  int		kl,
+  		idE,
+		idI,
+		maxNbr = 0;
+  int		*nbrIdxBuf = NULL;
+  double	*nbrDstBuf = NULL;
+  WlzDVertex2	pos;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  idI = 0;
+  idE = -1;
+  pos.vtY = ln;
+  for(kl = kolL; kl <= kolR; ++kl)
+  {
+    int		nE = 0;
+
+    pos.vtX = kl;
+    if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE, pos.vtX, pos.vtY,
+    					0, NULL)) >= 0)
+    {
+      WlzCMeshElm2D *elm;
+      int	    lastMaxNbr;
+
+      lastMaxNbr = maxNbr;
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      /* Find elements connected to the given element. */
+      nE = WlzCMeshElmRingElmIndices2D(elm, &maxNbr, &nbrIdxBuf, &errNum);
+      /* Reallocate the distance buffer if required. */
+      if((errNum == WLZ_ERR_NONE) && (lastMaxNbr < maxNbr))
+      {
+	nbrDstBuf = AlcRealloc(nbrDstBuf, maxNbr * sizeof(double));
+        if(nbrDstBuf == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	int	setElmIdx = -1;
+	double	v = 0.0;
+
+        /* Compute inverse of distances to centroids of these elements from
+	 * position. */
+	for(idE = 0; idE < nE; ++idE)
+	{
+	  double	d;
+	  WlzDVertex2	cen,
+	  		del;
+	  WlzCMeshElm2D *elm0;
+	  WlzDVertex2	*nPos[3];
+
+	  elm0 = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec,
+	                                           nbrIdxBuf[idE]);
+	  nPos[0] = &(elm0->edu[0].nod->pos);
+	  nPos[1] = &(elm0->edu[1].nod->pos);
+	  nPos[2] = &(elm0->edu[2].nod->pos);
+	  cen.vtX = (nPos[0]->vtX + nPos[1]->vtX + nPos[2]->vtX) / 3.0;
+	  cen.vtY = (nPos[0]->vtY + nPos[1]->vtY + nPos[2]->vtY) / 3.0;
+	  WLZ_VTX_2_SUB(del, cen, pos);
+	  d = WLZ_VTX_2_LENGTH(del);
+	  if(d < WLZ_MESH_TOLERANCE)
+	  {
+	    setElmIdx = nbrIdxBuf[idE];
+	    break;
+	  }
+	  else
+	  {
+	    nbrDstBuf[idE] = 1.0 / d;
+	  }
+	}
+        /* Interpolate values. */
+	if(setElmIdx >= 0)
+	{
+	  switch(ixv->vType)
+	  {
+	    case WLZ_GREY_LONG:
+	      v = *(WlzLong *)WlzIndexedValueGet(ixv, setElmIdx);
+	      break;
+	    case WLZ_GREY_INT:
+	      v = *(int *)WlzIndexedValueGet(ixv, setElmIdx);
+	      break;
+	    case WLZ_GREY_SHORT:
+	      v = *(short *)WlzIndexedValueGet(ixv, setElmIdx);
+	      break;
+	    case WLZ_GREY_UBYTE:
+	      v = *(WlzUByte *)WlzIndexedValueGet(ixv, setElmIdx);
+	      break;
+	    case WLZ_GREY_FLOAT:
+	      v = *(float *)WlzIndexedValueGet(ixv, setElmIdx);
+	      break;
+	    case WLZ_GREY_DOUBLE:
+	      v = *(double *)WlzIndexedValueGet(ixv, setElmIdx);
+	      break;
+	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
+	      break;
+	  }
+	}
+	else
+	{
+	  double  sum0 = 0.0,
+		  sum1 = 0.0;
+
+	  for(idE = 0; idE < nE; ++idE)
+	  {
+	    switch(ixv->vType)
+	    {
+	      case WLZ_GREY_LONG:
+		v = *(WlzLong *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		break;
+	      case WLZ_GREY_INT:
+		v = *(int *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		break;
+	      case WLZ_GREY_SHORT:
+		v = *(short *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		break;
+	      case WLZ_GREY_UBYTE:
+		v = *(WlzUByte *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		break;
+	      case WLZ_GREY_FLOAT:
+		v = *(float *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		break;
+	      case WLZ_GREY_DOUBLE:
+		v = *(double *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		break;
+	      default:
+		errNum = WLZ_ERR_GREY_TYPE;
+		break;
+	    }
+	    sum0 += v * nbrDstBuf[idE];
+	    sum1 += nbrDstBuf[idE];
+	  }
+	  v = sum0 / sum1;
+	}
+	switch(ixv->vType)
+	{
+	  case WLZ_GREY_LONG:
+	    *(dst.lnp + idI) = WLZ_NINT(v);
+	    break;
+	  case WLZ_GREY_INT:
+	    *(dst.inp + idI) = WLZ_NINT(v);
+				WlzIndexedValueGet(ixv, setElmIdx);
+	    break;
+	  case WLZ_GREY_SHORT:
+	    *(dst.ubp + idI) = WLZ_NINT(v);
+	    break;
+	  case WLZ_GREY_UBYTE:
+	    *(dst.ubp + idI) = WLZ_NINT(v);
+	    break;
+	  case WLZ_GREY_FLOAT:
+	    *(dst.flp + idI) = v;
+	    break;
+	  case WLZ_GREY_DOUBLE:
+	    *(dst.dbp + idI) = v;
+	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
+	    break;
+	}
+      }
+    }
+    ++idI;
+  }
+  AlcFree(nbrIdxBuf);
+  AlcFree(nbrDstBuf);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Sets values along the pixels of a single interval
+* 		from the given mesh and it's indexed values. The pixels
+* 		are set using linear interpolation.
+* \param	dst				The interval values.
+* \param	pl				Plane coordinate of the
+* 						interval.
+* \param	ln				Line coordinate of the
+* 						interval.
+* \param	kolL				leftmost column coordinate of
+* 						the interval.
+* \param	kolR				Rightmost column coordinate of
+* 						the interval.
+* \param	mesh				The mesh.
+* \param	ixv				The indexed values.
+*/
+static WlzErrorNum WlzCMeshInterpolateElm3DLinear(WlzGreyP dst,
+					int pl, int ln, int kolL, int kolR,
+					WlzCMesh3D *mesh,
+					WlzIndexedValues *ixv)
+{
+  int		kl,
+  		idE,
+		idI,
+		maxNbr = 0;
+  int		*nbrIdxBuf = NULL;
+  double	*nbrDstBuf = NULL;
+  WlzDVertex3	pos;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  idI = 0;
+  idE = -1;
+  pos.vtY = ln;
+  pos.vtZ = pl;
+  for(kl = kolL; kl <= kolR; ++kl)
+  {
+    int		nE = 0;
+
+    pos.vtX = kl;
+    if((idE = WlzCMeshElmEnclosingPos3D(mesh, idE, pos.vtX, pos.vtY, pos.vtZ,
+    					0, NULL)) >= 0)
+    {
+      WlzCMeshElm3D *elm;
+      int	    lastMaxNbr;
+
+      lastMaxNbr = maxNbr;
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      /* Find elements connected to the given element. */
+      nE = WlzCMeshElmRingElmIndices3D(elm, &maxNbr, &nbrIdxBuf, &errNum);
+      /* Reallocate the distance buffer if required. */
+      if((errNum == WLZ_ERR_NONE) && (lastMaxNbr < maxNbr))
+      {
+	nbrDstBuf = AlcRealloc(nbrDstBuf, maxNbr * sizeof(double));
+        if(nbrDstBuf == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	int	setElmIdx = -1;
+	double	v = 0.0;
+
+        /* Compute inverse of distances to centroids of these elements from
+	 * position. */
+	for(idE = 0; idE < nE; ++idE)
+	{
+	  double	d;
+	  WlzDVertex3	cen,
+	  		del;
+	  WlzCMeshNod3D *nod0;
+	  WlzCMeshElm3D *elm0;
+	  WlzDVertex3	*nPos[4];
+
+	  elm0 = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec,
+	                                           nbrIdxBuf[idE]);
+	  nod0 = WLZ_CMESH_ELM3D_GET_NODE_0(elm0); nPos[0] = &(nod0->pos);
+	  nod0 = WLZ_CMESH_ELM3D_GET_NODE_1(elm0); nPos[1] = &(nod0->pos);
+	  nod0 = WLZ_CMESH_ELM3D_GET_NODE_2(elm0); nPos[2] = &(nod0->pos);
+	  nod0 = WLZ_CMESH_ELM3D_GET_NODE_3(elm0); nPos[3] = &(nod0->pos);
+	  cen.vtX = (nPos[0]->vtX + nPos[1]->vtX + 
+	             nPos[2]->vtX + nPos[3]->vtX) / 4.0;
+	  cen.vtY = (nPos[0]->vtY + nPos[1]->vtY +
+	             nPos[2]->vtY + nPos[3]->vtY) / 4.0;
+	  cen.vtZ = (nPos[0]->vtZ + nPos[1]->vtZ +
+	             nPos[2]->vtZ + nPos[3]->vtZ) / 4.0;
+	  WLZ_VTX_3_SUB(del, cen, pos);
+	  d = WLZ_VTX_3_LENGTH(del);
+	  if(d < WLZ_MESH_TOLERANCE)
+	  {
+	    setElmIdx = nbrIdxBuf[idE];
+	    break;
+	  }
+	  else
+	  {
+	    nbrDstBuf[idE] = 1.0 / d;
+	  }
+	}
+        /* Interpolate values. */
+	if(setElmIdx >= 0)
+	{
+	  switch(ixv->vType)
+	  {
+	    case WLZ_GREY_LONG:
+	      v = *(WlzLong *)WlzIndexedValueGet(ixv, setElmIdx);
+	      break;
+	    case WLZ_GREY_INT:
+	      v = *(int *)WlzIndexedValueGet(ixv, setElmIdx);
+	      break;
+	    case WLZ_GREY_SHORT:
+	      v = *(short *)WlzIndexedValueGet(ixv, setElmIdx);
+	      break;
+	    case WLZ_GREY_UBYTE:
+	      v = *(WlzUByte *)WlzIndexedValueGet(ixv, setElmIdx);
+	      break;
+	    case WLZ_GREY_FLOAT:
+	      v = *(float *)WlzIndexedValueGet(ixv, setElmIdx);
+	      break;
+	    case WLZ_GREY_DOUBLE:
+	      v = *(double *)WlzIndexedValueGet(ixv, setElmIdx);
+	      break;
+	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
+	      break;
+	  }
+	}
+	else
+	{
+	  double  sum0 = 0.0,
+		  sum1 = 0.0;
+
+	  for(idE = 0; idE < nE; ++idE)
+	  {
+	    switch(ixv->vType)
+	    {
+	      case WLZ_GREY_LONG:
+		v = *(WlzLong *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		break;
+	      case WLZ_GREY_INT:
+		v = *(int *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		break;
+	      case WLZ_GREY_SHORT:
+		v = *(short *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		break;
+	      case WLZ_GREY_UBYTE:
+		v = *(WlzUByte *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		break;
+	      case WLZ_GREY_FLOAT:
+		v = *(float *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		break;
+	      case WLZ_GREY_DOUBLE:
+		v = *(double *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		break;
+	      default:
+		errNum = WLZ_ERR_GREY_TYPE;
+		break;
+	    }
+	    sum0 += v * nbrDstBuf[idE];
+	    sum1 += nbrDstBuf[idE];
+	  }
+	  v = sum0 / sum1;
+	}
+	switch(ixv->vType)
+	{
+	  case WLZ_GREY_LONG:
+	    *(dst.lnp + idI) = WLZ_NINT(v);
+	    break;
+	  case WLZ_GREY_INT:
+	    *(dst.inp + idI) = WLZ_NINT(v);
+	    break;
+	  case WLZ_GREY_SHORT:
+	    *(dst.ubp + idI) = WLZ_NINT(v);
+	    break;
+	  case WLZ_GREY_UBYTE:
+	    *(dst.ubp + idI) = WLZ_NINT(v);
+	    break;
+	  case WLZ_GREY_FLOAT:
+	    *(dst.flp + idI) = v;
+	    break;
+	  case WLZ_GREY_DOUBLE:
+	    *(dst.dbp + idI) = v;
+	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
+	    break;
+	}
+      }
+    }
+    ++idI;
+  }
+  AlcFree(nbrIdxBuf);
+  AlcFree(nbrDstBuf);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Interpolates values along the pixels of a single interval
+* 		from the given mesh and it's indexed values. Uses nearest
+* 		node interpolation within each mesh element.
+* \param	dst				The interval values.
+* \param	pl				Plane coordinate of the
+* 						interval.
+* \param	ln				Line coordinate of the
+* 						interval.
+* \param	kolL				leftmost column coordinate of
+* 						the interval.
+* \param	kolR				Rightmost column coordinate of
+* 						the interval.
+* \param	mesh				The mesh.
+* \param	ixv				The indexed values.
+*/
+static WlzErrorNum WlzCMeshInterpolateNod3DNearest(WlzGreyP dst,
+					int pl, int ln, int kolL, int kolR,
+					WlzCMesh3D *mesh,
+					WlzIndexedValues *ixv)
 {
   int		kl,
   		idE,
 		idI,
 		idN;
   WlzDVertex3	pos;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  idI = 0;
+  idE = -1;
+  pos.vtY = ln;
+  pos.vtZ = pl;
+  for(kl = kolL; kl <= kolR; ++kl)
+  {
+    WlzCMeshNod3D *nNod = NULL;
+
+    pos.vtX = kl;
+    /* Find nearest node within the element. */
+    if((idE = WlzCMeshElmEnclosingPos3D(mesh, idE, pos.vtX, pos.vtY, pos.vtZ,
+    					0, &idN)) >= 0)
+    {
+      int	idN;
+      double    dMin;
+      WlzDVertex3 del;
+      WlzCMeshElm3D *elm;
+      WlzCMeshNod3D *nod[4];
+
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+      nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+      nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+      nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
+      nNod = nod[0];
+      WLZ_VTX_3_SUB(del, pos, nod[0]->pos);
+      dMin = WLZ_VTX_3_SQRLEN(del);
+      for(idN = 1; idN < 4; ++idN)
+      {
+	double	d;
+
+        WLZ_VTX_3_SUB(del, pos, nod[idN]->pos);
+	d = WLZ_VTX_3_SQRLEN(del);
+	if(d < dMin)
+	{
+	  nNod = nod[idN];
+	  dMin = d;
+	}
+      }
+    }
+    else if(idN >= 0)
+    {
+      nNod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+    }
+    /* Set value. */
+    if(nNod)
+    {
+      switch(ixv->vType)
+      {
+	case WLZ_GREY_LONG:
+	  *(dst.lnp + idI) = *(WlzLong *)WlzIndexedValueGet(ixv, nNod->idx);
+	  break;
+	case WLZ_GREY_INT:
+	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, nNod->idx);
+	  break;
+	case WLZ_GREY_SHORT:
+	  *(dst.shp + idI) = *(short *)WlzIndexedValueGet(ixv, nNod->idx);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, nNod->idx);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  *(dst.flp + idI) = *(float *)WlzIndexedValueGet(ixv, nNod->idx);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, nNod->idx);
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
+      }
+    }
+    ++idI;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Interpolates values along the pixels of a single interval
+* 		from the given mesh and it's indexed values. Uses linear
+* 		interpolation within each mesh element.
+* \param	dst				The interval values.
+* \param	pl				Plane coordinate of the
+* 						interval.
+* \param	ln				Line coordinate of the
+* 						interval.
+* \param	kolL				leftmost column coordinate of
+* 						the interval.
+* \param	kolR				Rightmost column coordinate of
+* 						the interval.
+* \param	mesh				The mesh.
+* \param	ixv				The indexed values.
+*/
+static WlzErrorNum WlzCMeshInterpolateNod3DLinear(WlzGreyP dst,
+					int pl, int ln, int kolL, int kolR,
+					WlzCMesh3D *mesh,
+					WlzIndexedValues *ixv)
+{
+  int		kl,
+  		idE,
+		idI,
+		idN;
+  WlzDVertex3	pos;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   idI = 0;
   idE = -1;
@@ -2465,6 +3258,7 @@ static void 	WlzCMeshInterpolate3DLinear(WlzGreyP dst,
 			pos);
 	  break;
 	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
 	  break;
       }
     }
@@ -2494,11 +3288,85 @@ static void 	WlzCMeshInterpolate3DLinear(WlzGreyP dst,
 	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, nod->idx);
 	  break;
 	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
 	  break;
       }
     }
     ++idI;
   }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Sets values along the pixels of a single interval
+* 		from the given mesh and it's indexed values. The pixels
+* 		are set to the first value attached to the mesh element.
+* \param	dst				The interval values.
+* \param	pl				Plane coordinate of the
+* 						interval.
+* \param	ln				Line coordinate of the
+* 						interval.
+* \param	kolL				leftmost column coordinate of
+* 						the interval.
+* \param	kolR				Rightmost column coordinate of
+* 						the interval.
+* \param	mesh				The mesh.
+* \param	ixv				The indexed values.
+*/
+static WlzErrorNum WlzCMeshInterpolateElm3DNearest(WlzGreyP dst,
+					int pl, int ln, int kolL, int kolR,
+					WlzCMesh3D *mesh,
+					WlzIndexedValues *ixv)
+{
+  int		kl,
+  		idE,
+		idI;
+  WlzDVertex3	pos;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  idI = 0;
+  idE = -1;
+  pos.vtY = ln;
+  pos.vtZ = pl;
+  for(kl = kolL; kl <= kolR; ++kl)
+  {
+    pos.vtX = kl;
+    if((idE = WlzCMeshElmEnclosingPos3D(mesh, idE, pos.vtX, pos.vtY, pos.vtZ,
+    					0, NULL)) >= 0)
+    {
+      WlzCMeshElm3D *elm;
+
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      switch(ixv->vType)
+      {
+	case WLZ_GREY_LONG:
+	  *(dst.lnp + idI) = *(WlzLong *)WlzIndexedValueGet(ixv, elm->idx);
+	  break;
+	case WLZ_GREY_INT:
+	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, elm->idx);
+	  break;
+	case WLZ_GREY_SHORT:
+	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, elm->idx);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, elm->idx);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  *(dst.flp + idI) = *(float *)WlzIndexedValueGet(ixv, elm->idx);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, elm->idx);
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
+      }
+    }
+    ++idI;
+  }
+  return(errNum);
 }
 
 /*!
@@ -8505,39 +9373,35 @@ static WlzObject *WlzCMeshProduct3D(WlzObject *tr0, WlzObject *tr1,
 * 		of the given conforming mesh transform. The expansion
 * 		factors are attached to the elements of the returned
 * 		conforming mesh object.
-* 		The expansion factor is defined to be the square root (for
-* 		2D) or cube root (for 3D) of the ration of the the displaced
-* 		element area (for 2D) or volume (for 3D) (\f$a_d\f$) to the
-* 		undisplaced element area or volume (\f$\_0\f$):
-		\f[
-		e = \left{
-		    \begin{array}{ll}
-		    e = \sqrt{\frac{a_d}{a_0}}, & 2D \\
-		    e = \sqrt[3]{\frac{a_d}{a_0}} & 3D
-		    \end{array}
-		    \right.
- 		\f]
-* \param	tObj			Given conforming mesh transform.
+* 		The expansion factor is defined to be the trace of the
+* 		strain tensor but in many cases the maximum eigenvalue
+* 		is a more sensitive feature.
+* \param	cObj			Given conforming mesh transform.
+* \param	inverse			Use inverse of transform if non zero.
+* \param	eigen			Use maximum eigenvalue instead of
+* 					the trace if non-zero.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject	*WlzCMeshExpansion(WlzObject *tObj, WlzErrorNum *dstErr)
+WlzObject	*WlzCMeshExpansion(WlzObject *cObj,
+				   int inverse, int eigen,
+				   WlzErrorNum *dstErr)
 {
   WlzObject	*eObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(tObj == NULL)
+  if(cObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
   }
   else
   {
-    switch(tObj->type)
+    switch(cObj->type)
     {
       case WLZ_CMESH_2D:
-	eObj = WlzCMeshExpansion2D(tObj, &errNum);
+	eObj = WlzCMeshExpansion2D(cObj, inverse, eigen, &errNum);
 	break;
       case WLZ_CMESH_3D:
-	eObj = WlzCMeshExpansion3D(tObj, &errNum);
+	eObj = WlzCMeshExpansion3D(cObj, inverse, eigen, &errNum);
         break;
       default: 
         errNum = WLZ_ERR_OBJECT_TYPE;
@@ -8560,114 +9424,20 @@ WlzObject	*WlzCMeshExpansion(WlzObject *tObj, WlzErrorNum *dstErr)
 * 		of the given 2D conforming mesh transform. The expansion
 * 		factors are attached to the elements of the returned
 * 		conforming mesh object.
-* 		The expansion factor is defined to be the square root of
-* 		ratio of the the displaced element area (\f$a_d\f$) to the
-* 		undisplaced element area (\f$\_0\f$):
-* 		\f$ e = \sqrt{\frac{a_d}{a_0}}\f$.
-* \param	tObj			Given conforming mesh transform.
+* 		See WlzCMeshExpansion().
+* \param	cObj			Given conforming mesh transform.
+* \param	inverse			Use inverse of transform if non zero.
+* \param	eigen			Use maximum eigenvalue instead of
+* 					the trace if non-zero.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static WlzObject *WlzCMeshExpansion2D(WlzObject *tObj, WlzErrorNum *dstErr)
+static WlzObject *WlzCMeshExpansion2D(WlzObject *cObj,
+				      int inverse, int eigen,
+				      WlzErrorNum *dstErr)
 {
   WlzObject	*eObj = NULL;
-  WlzCMesh2D	*mesh;
-  WlzIndexedValues *ixvT,
-  		   *ixvE = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
 
-  if((mesh = tObj->domain.cm2) == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(mesh->type != WLZ_CMESH_2D)
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  else if((ixvT = tObj->values.x) == NULL)
-  {
-    errNum = WLZ_ERR_VALUES_NULL;
-  }
-  else if(ixvT->type != WLZ_INDEXED_VALUES)
-  {
-    errNum = WLZ_ERR_VALUES_TYPE;
-  }
-  else if((ixvT->rank != 1) ||
-          (ixvT->dim[0] < 2) ||
-          (ixvT->vType != WLZ_GREY_DOUBLE) ||
-	  (ixvT->attach != WLZ_VALUE_ATTACH_NOD))
-  {
-    errNum = WLZ_ERR_VALUES_TYPE;
-  }
-  else
-  {
-    ixvE = WlzMakeIndexedValues(tObj, 0, NULL, WLZ_GREY_DOUBLE,
-                                WLZ_VALUE_ATTACH_ELM, &errNum);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      WlzDomain	dom;
-      WlzValues val;
-
-      dom.cm2 = mesh;
-      val.x = ixvE;
-      eObj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
-    }
-    if(errNum != WLZ_ERR_NONE)
-    {
-      (void )WlzFreeIndexedValues(ixvE);
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    int		idE;
-
-    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
-    {
-      double	*fac;
-      WlzCMeshElm2D *elm;
-
-      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-      if(elm->idx >= 0)
-      {
-	double	a0,
-		a1;
-	WlzCMeshNod2D *nod[3];
-
-	nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
-	nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
-	nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
-        a0 = fabs(
-	     WlzGeomTriangleSnArea2(nod[0]->pos, nod[1]->pos, nod[2]->pos));
-	if(a0 > WLZ_MESH_TOLERANCE_SQ)
-	{
-	  int	idN;
-	  WlzDVertex2 dVx[3];
-
-	  for(idN = 0; idN < 3; ++idN)
-	  {
-	    double	*dsp;
-
-	    dsp = (double *)WlzIndexedValueGet(ixvT, nod[idN]->idx);
-	    dVx[idN] = nod[idN]->pos;
-	    dVx[idN].vtX += dsp[0];
-	    dVx[idN].vtY += dsp[1];
-	  }
-	  a1 = fabs(
-	       WlzGeomTriangleSnArea2(dVx[0], dVx[1], dVx[2]));
-	  a0 = a1 / a0;
-        }
-	else
-	{
-	  a0 = DBL_MAX;
-	}
-	fac = (double *)WlzIndexedValueGet(ixvE, elm->idx);
-	*fac = sqrt(a0);
-      }
-    }
-  }
-  if(errNum != WLZ_ERR_NONE)
-  {
-    (void )WlzFreeObj(eObj);
-  }
   if(dstErr)
   {
     *dstErr = errNum;
@@ -8684,46 +9454,31 @@ static WlzObject *WlzCMeshExpansion2D(WlzObject *tObj, WlzErrorNum *dstErr)
 * 		of the given 3D conforming mesh transform. The expansion
 * 		factors are attached to the elements of the returned
 * 		conforming mesh object.
-* 		The expansion factor is defined to be the cube root of
-* 		ratio of the the displaced element area (\f$a_d\f$) to the
-* 		undisplaced element area (\f$\_0\f$):
-* 		\f$ e = \sqrt[3]{\frac{a_d}{a_0}}\f$.
+* 		See WlzCMeshExpansion().
 * \param	tObj			Given conforming mesh transform.
+* \param	inverse			Use inverse of transform if non zero.
+* \param	eigen			Use maximum eigenvalue instead of
+* 					the trace if non-zero.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static WlzObject *WlzCMeshExpansion3D(WlzObject *tObj, WlzErrorNum *dstErr)
+static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
+				      int inverse, int eigen,
+				      WlzErrorNum *dstErr)
 {
-  WlzObject	*eObj = NULL;
+  WlzObject	*eObj = NULL,
+  		*tObj = NULL;
   WlzCMesh3D	*mesh;
+  AlgMatrix	mat;
   WlzIndexedValues *ixvT,
   		   *ixvE = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((mesh = tObj->domain.cm3) == NULL)
+  mat.core = NULL;
+  tObj = WlzCMeshStrainTensor(cObj, inverse, &errNum);
+  if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if(mesh->type != WLZ_CMESH_3D)
-  {
-    errNum = WLZ_ERR_DOMAIN_TYPE;
-  }
-  else if((ixvT = tObj->values.x) == NULL)
-  {
-    errNum = WLZ_ERR_VALUES_NULL;
-  }
-  else if(ixvT->type != WLZ_INDEXED_VALUES)
-  {
-    errNum = WLZ_ERR_VALUES_TYPE;
-  }
-  else if((ixvT->rank != 1) ||
-          (ixvT->dim[0] < 3) ||
-          (ixvT->vType != WLZ_GREY_DOUBLE) ||
-	  (ixvT->attach != WLZ_VALUE_ATTACH_NOD))
-  {
-    errNum = WLZ_ERR_VALUES_TYPE;
-  }
-  else
-  {
+    mesh = tObj->domain.cm3;
+    ixvT = tObj->values.x;
     ixvE = WlzMakeIndexedValues(tObj, 0, NULL, WLZ_GREY_DOUBLE,
                                 WLZ_VALUE_ATTACH_ELM, &errNum);
     if(errNum == WLZ_ERR_NONE)
@@ -8738,8 +9493,17 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *tObj, WlzErrorNum *dstErr)
     if(errNum != WLZ_ERR_NONE)
     {
       (void )WlzFreeIndexedValues(ixvE);
+      ixvE = NULL;
     }
   }
+  if((errNum == WLZ_ERR_NONE) && (eigen != 0))
+  {
+    if((mat.rect = AlgMatrixRectNew(3, 3, NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+
   if(errNum == WLZ_ERR_NONE)
   {
     int		idE;
@@ -8752,45 +9516,38 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *tObj, WlzErrorNum *dstErr)
       elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       if(elm->idx >= 0)
       {
-	double	a0,
-		a1;
-	WlzCMeshNod3D *nod[4];
+        double *ten;
 
-	nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
-	nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
-	nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
-	nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
-        a0 = fabs(
-	     WlzGeomTetraSnVolume6(nod[0]->pos, nod[1]->pos, nod[2]->pos,
-	                           nod[3]->pos));
-	if(a0 > WLZ_MESH_TOLERANCE_SQ)
+        ten = (double *)WlzIndexedValueGet(ixvT, elm->idx);
+	fac = (double *)WlzIndexedValueGet(ixvE, elm->idx);
+	if(eigen)
 	{
-	  int	idN;
-	  WlzDVertex3 dVx[4];
+	  int 		idU,
+			idV,
+	  		idT;
+	  double	val[3];
 
-	  for(idN = 0; idN < 4; ++idN)
+	  idT = 0;
+	  val[0] = val[1] = val[2] = 0.0;
+	  for(idV = 0; idV < 3; ++idV)
 	  {
-	    double	*dsp;
-
-	    dsp = (double *)WlzIndexedValueGet(ixvT, nod[idN]->idx);
-	    dVx[idN] = nod[idN]->pos;
-	    dVx[idN].vtX += dsp[0];
-	    dVx[idN].vtY += dsp[1];
-	    dVx[idN].vtZ += dsp[2];
+	    for(idU = 0; idU < 3; ++idU)
+	    {
+	      mat.rect->array[idV][idU] = ten[idT++];
+	    }
 	  }
-	  a1 = fabs(
-	       WlzGeomTetraSnVolume6(dVx[0], dVx[1], dVx[2], dVx[3]));
-	  a0 = a1 / a0;
-        }
+	  (void )AlgMatrixRSEigen(mat, val, 0);
+	  *fac = ALG_MAX3(val[0], val[1], val[2]);
+	}
 	else
 	{
-	  a0 = DBL_MAX;
+	  *fac = ten[0] + ten[4] + ten[8];
 	}
-	fac = (double *)WlzIndexedValueGet(ixvE, elm->idx);
-	*fac = cbrt(a0);
       }
     }
   }
+  (void )AlgMatrixFree(mat);
+  (void )WlzFreeObj(tObj);
   if(errNum != WLZ_ERR_NONE)
   {
     (void )WlzFreeObj(eObj);
