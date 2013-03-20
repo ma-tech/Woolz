@@ -4046,8 +4046,9 @@ typedef enum _WlzFnType
   WLZ_FN_SCALAR_MOD,			/*!< Modulus (abs() or fabs()). */
   WLZ_FN_SCALAR_EXP,                    /*!< Exponential (exp()). */
   WLZ_FN_SCALAR_LOG,                    /*!< Logarithm (log()). */
-  WLZ_FN_SCALAR_SQRT,		        /*!< Inverse square root (x^-1/2). */
+  WLZ_FN_SCALAR_SQRT,		        /*!< Square root (x^-1/2). */
   WLZ_FN_SCALAR_INVSQRT,		/*!< Inverse square root (x^-1/2). */
+  WLZ_FN_SCALAR_SQR,			/*!< Square (x * x). */
   WLZ_FN_COUNT				/*!< Not a function but the number
   					     of functions. Keep this the
 					     last of the enums! */
