@@ -1606,6 +1606,8 @@ extern WlzObject		*WlzCMeshProduct(
 				  WlzErrorNum *dstErr);
 extern WlzObject       		*WlzCMeshExpansion(
 				  WlzObject *cObj,
+				  int inverse,
+				  int eigenvalue,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -1797,6 +1799,16 @@ extern int			WlzCMeshNodRingNodIndices3D(
 				  WlzCMeshNod3D *nod, 
 				  int *maxIdxBuf,
 				  int **idxBuf, 
+				  WlzErrorNum *dstErr);
+extern int			WlzCMeshElmRingElmIndices2D(
+				  WlzCMeshElm2D *elm,
+				  int *maxIdxBuf,
+				  int **idxBuf,
+				  WlzErrorNum *dstErr);
+extern int			WlzCMeshElmRingElmIndices3D(
+				  WlzCMeshElm3D *elm,
+				  int *maxIdxBuf,
+				  int **idxBuf,
 				  WlzErrorNum *dstErr);
 extern double                   WlzCMeshElmSnArea22D(
                                   WlzCMeshElm2D *elm);
@@ -3145,6 +3157,10 @@ extern int			WlzGeomTetraAffineSolve(
 				  WlzDVertex3 *sVx,
 				  WlzDVertex3 *dVx,
 				  double thresh);
+extern int			WlzGeomTetraAffineSolveLU(
+				  double *tr,
+				  WlzDVertex3 *sVx,
+				  WlzDVertex3 *dVx);
 extern WlzDVertex2		WlzGeomObjLineSegIntersect2D(
 				  WlzObject *obj,
 				  WlzDVertex2 p0,
@@ -4975,6 +4991,19 @@ extern WlzObject		*WlzNMSuppress(
 				  WlzObject *grdX,
 			          WlzPixelV minThrV,
 				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzNObjGreyStats.c							*
+************************************************************************/
+extern WlzErrorNum		WlzNObjGreyStats(
+				  WlzObject *gObj,
+				  int mean,
+				  int stddev,
+				  int *dstN,
+				  WlzObject **dstMinObj,
+				  WlzObject **dstMaxObj,
+				  WlzObject **dstSumObj,
+				  WlzObject **dstSSqObj);
 
 /************************************************************************
 * WlzObjToBoundary.c							*
