@@ -1,0 +1,181 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" >
+  <title>
+  Frequently Asked Questions About Woolz
+  </title>
+</head>
+
+<body>
+
+<h1 align=center>
+Frequently Asked Questions About Woolz
+</h1>
+
+<h2 id="general-questions">General questions</h2>
+<ol>
+<li><a href="#general_000000">What is a Woolz object?</a></li>
+<li><a href="#general_000001">What is a domain?</a></li>
+<li><a href="#general_000002">How can I export a Woolz domain?</a></li>
+</ol>
+
+<h2 id="import-questions">Importing and Exporting Woolz Objects</h2>
+<ol>
+<li><a href="#import_000000">What image format does Woolz use?</a></li>
+<li><a href="#import_000001">How can I import/export to/from Woolz objects?</a></li>
+<li><a href="#import_000002">I've exported Woolz objects and they've lost their alignment, why is this?</a></li>
+<li><a href="#import_000003">How can I create a 3D object from a set of 2D TIFF images?</a></li>
+<li><a href="#import_000004">Is Woolz more compact than other file formats?</a></li>
+</ol>
+
+<h2 id="usage-questions">Usage examples</h2>
+<ol>
+<li><a href="#usage_000000">How can I find out what's in a Woolz object?</a></li>
+<li><a href="#usage_000001">How can I threshold an object to segment it and then
+compute the volume of the segmented parts?</a></li>
+</ol>
+
+<h2 id="general-questions">General questions</h2>
+
+<p>
+<dt id="general_000000"><font size=+1>Q.</font>
+What is a Woolz Object?</dt>
+<font size=+1>A.</font> 
+ A Woolz object contains a definition of a region of space.
+The object may also contain the values within that region and properties
+associated with the object. Much of the power of Woolz comes from the
+separation of spatial region and the values within it.
+
+<p>
+<dt id="general_000002"><font size=+1>Q.</font> 
+What is a domain?</dt>
+<font size=+1>A.</font> 
+A woolz domain is usually a region of space, a 2 or 3D
+image region, a polygon, boundary list, mesh, transform, ....
+For historical reasons histograms are also domains.
+
+<p>
+<h2 id="import-questions">Importing and Exporting Woolz Objects</h2>
+
+<p>
+<dt id="import_000000"><font size=+1>Q.</font> 
+What image format does Woolz use?</dt>
+<font size=+1>A.</font> 
+Woolz has it's own image format (which is defined by it's source code)
+it can however read and write to a variety of other formats. In doing
+this some information may be lost.
+
+<p>
+<dt id="import_000001"><font size=+1>Q.</font> 
+How can I import/export to/from Woolz objects?</dt>
+<font size=+1>A.</font> 
+Woolz has a format conversion filter (small program) WlzExtFFConvert
+which will read and write a variety of formats. A number of filters
+(particularly those whose name starts with WlzExtFF) can also use
+these formats.
+
+<p>
+<dt id="import_000002"><font size=+1>Q.</font> 
+How can I export a Woolz domain?</dt>
+<font size=+1>A.</font> 
+Woolz domains don't have a simple equivalent in many other systems
+so often the best way to export them is as images with constant
+image values, eg
+<pre>
+  WlzGreySetValue -g 100 domain.wlz | \
+  WlzExtFFConvert -f wlz -o domain.tif
+</pre>
+<p>
+If you have a compound object with domains these can be exported as
+an index object using something like:
+<pre>
+  WlzIndexObjFromCompound compound.wlz | \
+  WlzExtFFConvert -f wlz -o labels.tif
+</pre>
+
+<p>
+<dt id="import_000003"><font size=+1>Q.</font> 
+How can I create a 3D object from a set of 2D TIFF images?</dt>
+<font size=+1>A.</font> 
+You can build a 3D object directly from registered 2D images using
+WlzExtFFConstruct3D. This will read/write all the formats supported by
+WlzExtFF not just TIFF. For a small number 2D images you can list them on the
+command line, eg:
+<pre>
+  WlzExtFFConstruct3D -o recon.tif plane0.tif plane1.tif plane3.tif
+</pre>
+but when the maximum command line length of your system is to small
+you will need to go via a file list, eg:
+<pre>
+  /bin/ls plane*.tif >file.txt
+  WlzExtFFConstruct3D -o recon.tif -f file.txt
+</pre>
+
+<p>
+<dt id="import_000004"><font size=+1>Q.</font> 
+I've exported Woolz objects and they've lost their alignment, why is this?</dt>
+<font size=+1>A.</font> 
+Woolz has a global origin and all Woolz objects have an object offset
+with respect to this global origin. Very few image formats support
+this an offsets may be lost through exporting from Woolz. Two other
+image formats that do support offsets are the Amira Lattice and NIfTI
+formats.
+
+<p>
+<dt id="import_000005"><font size=+1>Q.</font>
+Is Woolz more compact than other file formats?</dt>
+<font size=+1>A.</font>
+Woolz does not use compression as in JPEG or TIFF but for image objects it
+does only store those image values within the domain of the object. Where
+image values are not needed, then they are they are not stored. In many
+cases the proportion of forground in a a segmented image is as low as a
+third of cubiod containing it.  If the segmented domain is reasonably
+compact then the storing the domain with just the values within it will
+require approximately one third of the storage; storing just the domain
+(without image values) may result in an order of magnitude reduction.
+
+<h2 id="usage-questions">Usage examples</h2>
+
+<dt id="usage_000000"><font size=+1>Q.</font>
+How can I find out what's in a Woolz object?</dt>
+<font size=+1>A.</font>
+Use WlzFacts to print out basic information about the object, eg:
+<pre>
+  WlzFacts ts14.wlz 
+    Object type: WLZ_3D_DOMAINOBJ.
+      Linkcount: 0.
+      Domain type: WLZ_PLANEDOMAIN_DOMAIN.
+      Linkcount: 1.
+      Domain plane bounds: 0 305
+      Domain line bounds: 42 230
+      Domain column bounds: 50 396
+      VoxelSize: 4 4 7
+      Values type: WLZ_VOXELVALUETABLE_GREY.
+      Linkcount: 1.
+      Background type: WLZ_GREY_UBYTE.
+      Background value: 0.
+      Values plane bounds: 0 305
+      Property list NULL.
+</pre>
+
+<p>
+<dt id="usage_000001"><font size=+1>Q.</font>
+How can I threshold an object to segment it and then
+compute the volume of the segmented parts?</dt>
+<font size=+1>A.</font>
+<pre>
+  WlzThreshold -v100 -H image.wlz | \
+  WlzLabel | \
+  WlzVolume
+</pre>
+WlzThreshold keeps only regions of the input image (read from image.wlz)
+where the image values are greater than or equal to the given value (100),
+splits the segmentation into separate objects using connectivity (using
+WlzLabel) and then computes (and prints) the volume of each of these
+separate objects where the values are above threshold.
+
+</ol>
+
+</body>
+</html>
