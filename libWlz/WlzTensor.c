@@ -333,7 +333,8 @@ WlzObject	*WlzCMeshStrainTensorAtPts(WlzObject *cObj, int invert,
 static WlzObject *WlzCMeshDGTensor3D(WlzObject *cObj, int invert,
 				     WlzErrorNum *dstErr)
 {
-  WlzObject	*tObj = NULL;
+  WlzObject	*iObj = NULL,
+  		*tObj = NULL;
   WlzCMesh3D	*mesh = NULL;
   WlzIndexedValues *cIxv = NULL,
   		   *tIxv = NULL;
@@ -354,6 +355,19 @@ static WlzObject *WlzCMeshDGTensor3D(WlzObject *cObj, int invert,
     errNum = WLZ_ERR_VALUES_DATA;
   }
   else
+  {
+    if(invert)
+    {
+      iObj = WlzCMeshTransformInvert(cObj, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	cObj = iObj;
+        mesh = cObj->domain.cm3;
+	cIxv = cObj->values.x;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
   {
     int		dim[2];
 
@@ -381,7 +395,10 @@ static WlzObject *WlzCMeshDGTensor3D(WlzObject *cObj, int invert,
 
     elmVec = mesh->res.elm.vec;
     maxElm = mesh->res.elm.maxEnt;
-    for(idE = 0; idE < maxElm; ++idE) /* TODO use OpenMP */
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(idE = 0; idE < maxElm; ++idE)
     {
       WlzCMeshElm3D *elm;
 
@@ -391,9 +408,13 @@ static WlzObject *WlzCMeshDGTensor3D(WlzObject *cObj, int invert,
 	double	*ten;
 
 	ten = (double *)WlzIndexedValueGet(tIxv, elm->idx);
-	WlzCMeshElmSetDGTensor3D(elm, invert, cIxv, ten);
+	WlzCMeshElmSetDGTensor3D(elm, 0, cIxv, ten);
       }
     }
+  }
+  if(invert)
+  {
+    WlzFreeObj(iObj);
   }
   if(errNum != WLZ_ERR_NONE)
   {
