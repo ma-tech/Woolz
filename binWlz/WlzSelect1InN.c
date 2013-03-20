@@ -227,7 +227,7 @@ static WlzObject *WlzSelect1InN(
   WlzErrorNum	*dstErr)
 {
   WlzObject	*nobj=NULL;
-  int		p, new_p, new_plane1, new_lastpl;
+  int		p, new_p, new_plane1 = 0, new_lastpl = 0;
   WlzDomain	domain;
   WlzValues	values;
   WlzErrorNum	errNum=WLZ_ERR_NONE;

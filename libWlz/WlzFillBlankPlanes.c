@@ -70,7 +70,7 @@ WlzErrorNum WlzFillBlankPlanes(
   WlzPlaneDomain	*planedmn;
   WlzDomain		domain, *domains;
   WlzValues		values, *valuess;
-  WlzObjectType		valTbType;
+  WlzObjectType		valTbType = WLZ_NULL;
   WlzGreyType		gType;
   int			p;
   WlzErrorNum		errNum=WLZ_ERR_NONE;

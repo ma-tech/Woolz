@@ -81,7 +81,7 @@ AlgError	AlgMatrixGaussSolve(AlgMatrix aMat, double *xMat)
 	  ("AlgMatrixGaussSolve FE\n"));
   if((aMat.core == NULL) || (aMat.core->type != ALG_MATRIX_RECT) ||
      (aMat.core->nR < 1) || (aMat.core->nC < 1) ||
-     (aMat.core->nR != aMat.core->nC) || (xMat == NULL))
+     (aMat.core->nR >= aMat.core->nC) || (xMat == NULL))
   {
     errCode = ALG_ERR_FUNC;
   }

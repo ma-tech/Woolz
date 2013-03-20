@@ -94,7 +94,7 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-h] [-v] [<input file>]\n"
+	  "Usage:\t%s [-h] [<input file>]\n"
           "\tOutputs the domain of a  woolz object, this only affects\n"
 	  "\tgrey-level 2D and 3D objects and conforming meshes.\n"
 	  "\tUsing this function can significantly reduce the size of\n"
@@ -102,8 +102,7 @@ static void usage(char *proc_str)
 	  "\tis required.\n"
 	  "Version: %s\n"
 	  "Options:\n"
-	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n",
+	  "\t  -h        help - prints this usage message\n",
 	  proc_str,
 	  WlzVersion());
   return;
@@ -116,9 +115,8 @@ int main(int	argc,
   WlzObject	*obj, *tmpObj;
   WlzValues	values;
   FILE		*inFile;
-  char 		optList[] = "hv";
+  char 		optList[] = "h";
   int		option;
-  int		verboseFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
     
@@ -127,16 +125,10 @@ int main(int	argc,
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
-
-    case 'v':
-      verboseFlg = 1;
-      break;
-
     case 'h':
     default:
       usage(argv[0]);
       return 1;
-
     }
   }
 

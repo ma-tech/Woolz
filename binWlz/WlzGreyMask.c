@@ -49,17 +49,13 @@ static char _WlzGreyMask_c[] = "University of Edinburgh $Id$";
 WlzGreyMask - sets all object values within a mask domain to a mask value.
 \par Synopsis
 \verbatim
-WlzGreyMask [-m#] [-h] [-v] [<input mask> [<input obj>]]
+WlzGreyMask [-m#] [-h] [<input mask> [<input obj>]]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
   <tr> 
     <td><b>-m</b></td>
@@ -104,7 +100,7 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   (void )fprintf(stderr,
-	  "Usage:\t%s [-m#] [-h] [-v] [<input mask> [<input obj>]]\n"
+	  "Usage:\t%s [-m#] [-h] [<input mask> [<input obj>]]\n"
 	  "\tApply the mask to the given object setting all pixels\n"
 	  "\twithin the mask to the mask value. The object must be\n"
 	  "\t a woolz grey-level object, the mask can be a domain object,\n"
@@ -114,8 +110,7 @@ static void usage(char *proc_str)
 	  "Version: %s\n"
 	  "Options:\n"
 	  "\t  -m#       the mask value - default 0\n"
-	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n",
+	  "\t  -h        help - prints this usage message\n",
 	  proc_str,
 	  WlzVersion());
   return;
@@ -127,10 +122,9 @@ int main(int	argc,
 
   WlzObject	*obj, *mask, *newobj;
   FILE		*inFile = NULL;
-  char 		optList[] = "m:hv";
+  char 		optList[] = "m:h";
   int		option;
   WlzPixelV	maskVal;
-  int		verboseFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
     
@@ -141,20 +135,13 @@ int main(int	argc,
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
-
     case 'm':
       maskVal.v.flv = atof(optarg);
       break;
-
-    case 'v':
-      verboseFlg = 1;
-      break;
-
     case 'h':
     default:
       usage(argv[0]);
       return 1;
-
     }
   }
 

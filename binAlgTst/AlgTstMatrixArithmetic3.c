@@ -77,7 +77,6 @@ int             main(int argc, char *argv[])
 {
   int           id0,
                 id1,
-		id2,
                 option,
 		usage = 0,
                 ok = 1,
@@ -87,7 +86,7 @@ int             main(int argc, char *argv[])
   long		seed = 0;
   double	zFrac = 0.2;
   double	param[2];
-  const char	*opStr;
+  const char	*opStr = NULL;
   AlgTstMatOp	op = ALG_TST_MAT_OP_VMUL;
   AlgMatrixType aType = ALG_MATRIX_RECT;
   double	*v[3];

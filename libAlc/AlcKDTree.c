@@ -166,7 +166,7 @@ AlcKDTTree	*AlcKDTTreeNew(AlcPointType type, int dim, double tol,
 */
 int		AlcKDTTreeFacts(AlcKDTTree *tree, FILE *fP)
 {
-  int		nNodes;
+  int		nNodes = 0;
 
   if(tree)
   {

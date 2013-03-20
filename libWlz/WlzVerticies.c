@@ -298,10 +298,8 @@ WlzErrorNum	WlzVerticesFromObjBnd3I(WlzObject *obj,
   WlzIVertex3	*vtx = NULL;
   WlzObject	*tObj = NULL,
   		*bObj = NULL;
-  WlzValues	dumVal;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  dumVal.core = NULL;
   if(obj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -525,7 +523,7 @@ static WlzVertexP WlzVerticesFromPoly2(WlzPolygonDomain *poly,
 					WlzErrorNum *dstErr)
 {
   int		cnt;
-  WlzVertexType	type;
+  WlzVertexType	type = WLZ_VERTEX_I2;
   WlzVertexP	vData;
   WlzDVertex2	*vNorm = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -605,7 +603,7 @@ static WlzVertexP WlzVerticesFromBound(WlzBoundList *bound,
 {
   int		off,
   		cnt;
-  WlzVertexType	type;
+  WlzVertexType	type = WLZ_VERTEX_I2;
   WlzVertexP    vData;
   WlzDVertex2	*vNorm = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;

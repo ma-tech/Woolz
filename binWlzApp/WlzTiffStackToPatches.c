@@ -269,7 +269,7 @@ int main(int	argc,
 {
   char 		optList[] = "n:O:hv";
   int		option;
-  int		verboseFlg=0;
+  /* int		verboseFlg=0; */
   int		rows=0, cols=0;
   int		overlap=50;
   int		rowShift, colShift;
@@ -315,7 +315,7 @@ int main(int	argc,
       break;
 
     case 'v':
-      verboseFlg = 1;
+      /* verboseFlg = 1; */
       break;
 
     case 'h':

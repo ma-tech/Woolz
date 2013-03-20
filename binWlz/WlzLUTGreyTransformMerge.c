@@ -107,10 +107,6 @@ By default the merged look up table is written to the standard output.
 #include <string.h>
 #include <Wlz.h>
 
-static int			WlzLGTOParsePixel(
-				  char *str,
-				  WlzPixelV *pix);
-
 extern int      getopt(int argc, char * const *argv, const char *optstring);
  
 extern char     *optarg;

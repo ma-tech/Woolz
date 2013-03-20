@@ -50,7 +50,7 @@ static char _WlzOccupancy_c[] = "University of Edinburgh $Id$";
 WlzOccupancy - calculate pixel occupancy with respect to a series of domains.
 \par Synopsis
 \verbatim
-WlzOccupancy [-d <domainfile>] [-m] [-n#] [-h] [-v] [<input file>]
+WlzOccupancy [-d <domainfile>] [-m] [-n#] [-h] [<input file>]
 
 \endverbatim
 \par Options
@@ -71,10 +71,6 @@ WlzOccupancy [-d <domainfile>] [-m] [-n#] [-h] [-v] [<input file>]
   <tr>
     <td><b>-h</b></td>
     <td>Help - print help message</td>
-  </tr>
-  <tr>
-    <td><b>-v</b></td>
-    <td>Verbose operation</td>
   </tr>
 </table>
 
@@ -111,7 +107,7 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   (void )fprintf(stderr,
-	  "Usage:\t%s [-d <domainfile>] [-n#] [-h] [-v] [<input file>]\n"
+	  "Usage:\t%s [-d <domainfile>] [-n#] [-h] [<input file>]\n"
 	  "\tCalculate the occupancy given a series of domains.\n"
 	  "Version: %s\n"
 	  "Options:\n"
@@ -119,8 +115,7 @@ static void usage(char *proc_str)
 	  "\t            will be calculated, default - union of input.\n"
 	  "\t  -m        Calculate a normalised mean (1.e. *255/n).\n"
 	  "\t  -n#       Maximum number of objects -default=100\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n",
+	  "\t  -h        Help - prints this usage message\n",
 	  proc_str,
 	  WlzVersion());
   return;
@@ -201,8 +196,8 @@ WlzErrorNum	WlzGreyScalarAddValue(
   WlzDomain		*domains;
   WlzValues		*values;
   int			i, nplanes;
-  int			red, green, blue, alpha;
-  WlzErrorNum		errNum=WLZ_ERR_NONE;
+  int			red = 0, green = 0, blue = 0, alpha = 0;
+  WlzErrorNum		errNum = WLZ_ERR_NONE;
 
   /* check object */
   if( obj == NULL ){
@@ -337,8 +332,8 @@ WlzErrorNum	WlzGreyScalarMultValue(
   WlzDomain		*domains;
   WlzValues		*values;
   int			i, nplanes;
-  int			red, green, blue, alpha;
-  WlzErrorNum		errNum=WLZ_ERR_NONE;
+  int			red = 0, green = 0, blue = 0, alpha = 0;
+  WlzErrorNum		errNum = WLZ_ERR_NONE;
 
   /* check object */
   if( obj == NULL ){
@@ -473,7 +468,7 @@ WlzErrorNum	WlzGreyScalarDivValue(
   WlzDomain		*domains;
   WlzValues		*values;
   int			i, nplanes;
-  int			red, green, blue, alpha;
+  int			red = 0, green = 0, blue = 0, alpha = 0;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* check object */
@@ -601,14 +596,13 @@ int main(int	argc,
 	 char	**argv)
 {
 
-  WlzObject	*obj1, *obj, **objlist, *rtnObj;
+  WlzObject	*obj1 = NULL, *obj = NULL, **objlist = NULL, *rtnObj = NULL;
   WlzObjectType	type = (WlzObjectType) -1;
   int 		i, n, nmax, p;
   FILE		*inFile;
-  char 		optList[] = "d:mn:hv";
+  char 		optList[] = "d:mn:h";
   int		option;
   int		meanFlg=0;
-  int		verboseFlg = 0;
   WlzPixelV	bckgrnd;
   WlzValues	values;
   const char	*errMsg;
@@ -664,10 +658,6 @@ int main(int	argc,
 	usage(argv[0]);
 	return( 1 );
       }
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

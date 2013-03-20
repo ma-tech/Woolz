@@ -49,13 +49,18 @@ static char _WlzGreyValue_c[] = "University of Edinburgh $Id$";
 WlzGreyValue - gets a single grey value in an object.
 \par Synopsis
 \verbatim
-WlzGreyValue [-v#] [-x#] [-y#] [-z#] [-h] [<in object>]
+WlzGreyValue [-b] [-v#] [-x#] [-y#] [-z#] [-h] [<in object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-b</b></td>
+    <td>Indicate background or foreground with b or f following value
+        written, default false.</td>
   </tr>
   <tr> 
     <td><b>-v</b></td>
@@ -113,6 +118,7 @@ extern int      optind,
 int             main(int argc, char **argv)
 {
   int		option,
+		bgdFlag = 0,
 		setVal = 0,
   		ok = 1,
 		usage = 0;
@@ -126,7 +132,7 @@ int             main(int argc, char **argv)
   FILE		*fP = NULL;
   WlzObject	*inObj = NULL;
   const char	*errMsg;
-  static char	optList[] = "o:v:x:y:z:h",
+  static char	optList[] = "bo:v:x:y:z:h",
 		outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -143,6 +149,9 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
+      case 'b':
+        bgdFlag = 1;
+	break;
       case 'o':
         outFileStr = optarg;
 	break;
@@ -281,10 +290,68 @@ int             main(int argc, char **argv)
     errNum = WLZ_ERR_WRITE_EOF;
     if(setVal == 0)
     {
-      if(((fP = (strcmp(outFileStr, "-")?
-		fopen(outFileStr, "w"):
-		stdout)) == NULL) ||
-	 (fprintf(fP, "%g\n", pix0.v.dbv) < 2))
+      if((fP = (strcmp(outFileStr, "-")? fopen(outFileStr, "w"):
+		                         stdout)) != NULL)
+      {
+	const char *borf;
+
+	borf = (bgdFlag)? (((gVWSp->bkdFlag & 1) != 0)? " b": " f"): "";
+	errNum = WLZ_ERR_NONE;
+        switch(pix1.type)
+	{
+	  case WLZ_GREY_LONG:
+	    if(fprintf(fP, "%lld%s\n", pix1.v.lnv, borf) < 2)
+	    {
+	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	    }
+	    break;
+	  case WLZ_GREY_INT:
+	    if(fprintf(fP, "%d%s\n", pix1.v.inv, borf) < 2)
+	    {
+	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	    }
+	    break;
+	  case WLZ_GREY_SHORT:
+	    if(fprintf(fP, "%d%s\n", pix1.v.shv, borf) < 2)
+	    {
+	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	    }
+	    break;
+	  case WLZ_GREY_UBYTE:
+	    if(fprintf(fP, "%d%s\n", pix1.v.ubv, borf) < 2)
+	    {
+	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	    }
+	    break;
+	  case WLZ_GREY_FLOAT:
+	    if(fprintf(fP, "%g%s\n", pix1.v.flv, borf) < 2)
+	    {
+	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	    }
+	    break;
+	  case WLZ_GREY_DOUBLE:
+	    if(fprintf(fP, "%lg%s\n", pix1.v.dbv, borf) < 2)
+	    {
+	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	    }
+	    break;
+	  case WLZ_GREY_RGBA:
+	    if(fprintf(fP, "%d,%d,%d,%d%s\n",
+	               WLZ_RGBA_RED_GET(pix1.v.rgbv),
+	               WLZ_RGBA_GREEN_GET(pix1.v.rgbv),
+	               WLZ_RGBA_BLUE_GET(pix1.v.rgbv),
+	               WLZ_RGBA_ALPHA_GET(pix1.v.rgbv),
+		       borf) < 2)
+	    {
+	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_GREY_TYPE;
+	    break;
+	}
+      }
+      if(errNum != WLZ_ERR_NONE)
       {
 	ok = 0;
 	(void )WlzStringFromErrorNum(errNum, &errMsg);
@@ -324,7 +391,7 @@ int             main(int argc, char **argv)
   {
     (void )fprintf(stderr,
     "Usage: "
-    "%s [-v#] [-x#] [-y#] [-z#] [-h] [<in object>]\n"
+    "%s [-b] [-v#] [-x#] [-y#] [-z#] [-h] [<in object>]\n"
     "Either sets or gets a grey value within th given objects values.\n"
     "If the -v flag is given the objects value is set and the modified\n"
     "object is written to the output file, but if the flag is not set\n"
@@ -332,6 +399,8 @@ int             main(int argc, char **argv)
     "character.\n"
     "Version: %s\n"
     "Options:\n"
+    "  -b    Indicate background or foreground with b or f following value\n"
+    "        written (set to %s).\n"
     "  -v#   Grey value to be set (set to %g).\n"
     "  -x#   Column position (set to %g).\n"
     "  -y#   Line position (set to %g).\n"
@@ -340,6 +409,7 @@ int             main(int argc, char **argv)
     "  -h    Display this usage information.\n",
     *argv,
     WlzVersion(),
+    (bgdFlag)? "true": "false",
     pix0.v.dbv,
     pos.vtX, pos.vtY, pos.vtZ);
   }

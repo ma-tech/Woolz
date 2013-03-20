@@ -421,7 +421,7 @@ static WlzErrorNum WlzToArrayBit2D(WlzUByte ***dstP, WlzObject *srcObj,
   int		ivY,
 		lstY,
 		bytWidth;
-  WlzUByte	*bitLnP;
+  WlzUByte	*bitLnP = NULL;
   WlzIntervalWSpace iWSp;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
@@ -960,7 +960,7 @@ static WlzErrorNum WlzToArrayBit3D(WlzUByte ****dstP, WlzObject *srcObj,
   WlzDomain	srcDom,
   		dumDom;
   WlzValues	dumVal;
-  WlzObject	*srcObj2D;
+  WlzObject	*srcObj2D = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
@@ -2171,7 +2171,7 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 		txFlag = 0;
   size_t	aSz,
   		planeOff;
-  int		*tIP0;
+  int		*tIP0 = NULL;
   double	*bufP = NULL;
   WlzGreyP	dstValP,
   		srcValP;
@@ -2883,6 +2883,7 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
   WlzPixelV	bgdV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  cDat.v = NULL;
   dom.core = NULL;
   val.core = NULL;
   bgdV.type = gType;

@@ -184,12 +184,13 @@ WlzObject	*WlzEffReadObjAnl(const char *gvnFileName, WlzErrorNum *dstErr)
   WlzVertex	org,
   		sz;
   WlzEffAnlDsr 	dsr;
-  int 		swap;
+  int 		swap = 0;
   WlzObject	*obj = NULL;
   WlzGreyType	gType = WLZ_GREY_ERROR;
   WlzPixelV	bgdV;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  sz.i3.vtX = sz.i3.vtY = sz.i3.vtZ = 0;
   /* Compute .hdr and .img file names. */
   if((gvnFileName == NULL) || (*gvnFileName == '\0'))
   {
@@ -436,7 +437,7 @@ WlzObject	*WlzEffReadObjAnl(const char *gvnFileName, WlzErrorNum *dstErr)
 */
 WlzErrorNum	WlzEffWriteObjAnl(const char *gvnFileName, WlzObject *obj)
 {
-  int  		cnt;
+  int  		cnt = 0;
   double	dMin,
   		dMax;
   FILE		*fP = NULL;
@@ -451,6 +452,7 @@ WlzErrorNum	WlzEffWriteObjAnl(const char *gvnFileName, WlzObject *obj)
 		*imgFileName = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  dataP.v = NULL;
   if((gvnFileName == NULL) || (*gvnFileName == '\0'))
   {
     errNum = WLZ_ERR_PARAM_NULL;

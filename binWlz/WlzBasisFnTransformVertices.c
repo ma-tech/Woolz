@@ -148,17 +148,17 @@ extern int      optind,
 
 int             main(int argc, char **argv)
 {
-  int		nTiePP,
-  		nVertP,
-		option,
+  int		option,
+		nTiePP = 0,
+  		nVertP = 0,
 		vxCount = 0,
 		vxLimit = 0,
 		basisFnPolyOrder = 3,
 		ok = 1,
 		ic = 0,
 		usage = 0;
-  WlzDVertex2	*vx0,
-  		*vx1,
+  WlzDVertex2	*vx0 = NULL,
+  		*vx1 = NULL,
 		*vxVec0  = NULL,
 		*vxVec1  = NULL,
 		*vertVec = NULL,

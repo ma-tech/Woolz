@@ -64,7 +64,8 @@ WlzObject *WlzDiffDomain3d(
   WlzObject		*newobj, *obj, o1, o2;
   WlzPlaneDomain	*newpdom, *oldpdom1, *oldpdom2;
   WlzVoxelValues	*newvdom, *oldvdom;
-  WlzDomain		domain;
+  WlzDomain		domain,
+  			nullDom;
   WlzValues		values;
   int			i, j, p;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
@@ -74,6 +75,7 @@ WlzObject *WlzDiffDomain3d(
        in WlzProto.h and the procedure must not be called directly.
        We do need to check the planedomain type however */
   newobj = NULL;
+  nullDom.core = NULL;
   if( obj1->domain.core->type != WLZ_2D_DOMAINOBJ ){
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
@@ -128,7 +130,7 @@ WlzObject *WlzDiffDomain3d(
 
       /* test for non-overlapping planes and make a copy */
       if( p < oldpdom2->plane1 || p > oldpdom2->lastpl ){
-	newpdom->domains[i] =
+	newpdom->domains[i] = (oldpdom1->domains[i].core == NULL)? nullDom:
 	  WlzAssignDomain(WlzCopyDomain(oldpdom1->type, oldpdom1->domains[i],
 					&errNum), NULL);
 	continue;
@@ -149,7 +151,7 @@ WlzObject *WlzDiffDomain3d(
       /* test for NULL domain in obj2
 	 this will become an error - replaced by WLZ_EMPTY_DOMAIN */
       if( oldpdom2->domains[j].core == NULL ){
-	newpdom->domains[i] = 
+	newpdom->domains[i] =  (oldpdom1->domains[i].core == NULL)? nullDom:
 	  WlzAssignDomain(WlzCopyDomain(oldpdom1->type, oldpdom1->domains[i],
 					&errNum), NULL);
 	continue;

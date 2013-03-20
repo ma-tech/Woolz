@@ -68,9 +68,9 @@ double		WlzCCorS2D(WlzObject *obj0, WlzObject *obj1,
 			   int unionFlg, int normFlg, WlzErrorNum *dstErr)
 {
   int		area = 0;
-  double	gV0,
-  		gV1,
-		gV2,
+  double	gV0 = 0.0,
+  		gV1 = 0.0,
+		gV2 = 0.0,
 		cCor = 0.0;
   WlzIVertex2	pos;
   WlzGreyValueWSpace *gVWSp0 = NULL,

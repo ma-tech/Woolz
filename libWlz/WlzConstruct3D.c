@@ -71,7 +71,7 @@ WlzObject	*WlzConstruct3DObjFromFile(int nFileStr, char **fileStr,
   		lastpl;
   WlzDomain	dom3D;
   WlzValues	val3D;
-  WlzObject	*obj2D,
+  WlzObject	*obj2D = NULL,
   		*obj3D = NULL;
   WlzPixelV	bgd;
   FILE		*fP = NULL;

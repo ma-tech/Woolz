@@ -488,7 +488,7 @@ int             main(int argc, char **argv)
     fmtStr = WlzEffFormatTable(2, 50, 10, NULL);
 
     (void )fprintf(stderr,
-    "Usage: %s%s%s%sExample: %s%s%s%s",
+    "Usage: %s%s%s%sExample: %s%s%s%s%s",
     *argv,
     " [-h] [-o<output object>] [-b] [-g] [-i] [-l]\n"
     "                          [-L] [-N] [-U] [-p#] [-s#] [-n#] [-v#] [-w#]\n"

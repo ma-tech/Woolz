@@ -93,15 +93,15 @@ RecError	RecRegisterPair(WlzAffineTransform **dstTrans,
 				RecWorkFunction workFn, void *workData,
 				char **eMsg)
 {
-  int		approach,
+  int		approach = 0,
 		approach0 = 0,
 		approach1 = 1,
 		freeObjFlag = 0;
   double	correl = 1.0,
 		distInc = 1.0,
 		angleInc = (2.0 * WLZ_M_PI / 512.0),
-		tD0,
-		tD1;
+		tD0 = 0.0,
+		tD1 = 0.0;
   WlzAffineTransform	*tTr;
   WlzIVertex3	samFac;
   WlzIVertex2	tIV0,
@@ -748,8 +748,8 @@ RecError	RecRegisterTiePoints(WlzAffineTransform **dstTr,
 {
   int		tppIdx;
   double	newCC,
-  		sumCC,
-		sumED;
+  		sumCC = 0.0,
+		sumED = 0.0;
   WlzAffineTransform *newTr = NULL;
   WlzDVertex2	dVtx,
   		trVtx;

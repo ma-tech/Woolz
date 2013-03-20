@@ -152,6 +152,8 @@ typedef struct _AlgMatrixRect
   AlgMatrixType	type;		/*!< From AlgmatrixCore. */
   size_t	nR;		/*!< From AlgmatrixCore. */
   size_t	nC;		/*!< From AlgmatrixCore. */
+  size_t	maxR;		/*!< Rows space allocated for. */
+  size_t	maxC;		/*!< Columns space allocated for. */
   double	**array;	/* Array of elements. */
 } AlgMatrixRect;
 
@@ -165,6 +167,7 @@ typedef struct _AlgMatrixSym
   AlgMatrixType	type;		/*!< From AlgmatrixCore. */
   size_t	nR;		/*!< From AlgmatrixCore. */
   size_t	nC;		/*!< From AlgmatrixCore. */
+  size_t	maxN;		/*!< Max rows/columns space allocated for. */
   double	**array;
 } AlgMatrixSym;
 

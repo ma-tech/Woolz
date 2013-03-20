@@ -648,7 +648,7 @@ WlzGMModel	*WlzCMeshToGMModel(WlzObject *mObj, double disp,
 */
 WlzObject	*WlzCMeshFlatten2D5(WlzObject *gObj, WlzErrorNum *dstErr)
 {
-  WlzCMesh2D5	*gMesh;
+  WlzCMesh2D5	*gMesh = NULL;
   WlzCMesh2D	*rMesh = NULL;
   WlzObject	*rObj = NULL;
   WlzIndexedValues *gIxv;
@@ -813,7 +813,7 @@ static WlzGMModel *WlzCMeshToGMModel2D(WlzObject *mObj, double disp,
 		nNod = 0;
   WlzCMesh2D	*mesh;
   WlzGMModel	*model = NULL;
-  WlzIndexedValues *ixv;
+  WlzIndexedValues *ixv = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	minBkSz = 1024,
   		minHTSz = 1024;

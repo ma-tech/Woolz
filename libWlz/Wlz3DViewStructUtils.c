@@ -952,7 +952,7 @@ double Wlz3DViewGetIntersectionAngle(
   WlzThreeDViewStruct *v2,
   WlzErrorNum	*dstErr)
 {
-  double	rtnAngle;
+  double	rtnAngle = 0.0;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   WlzAffineTransform	*t1, *t2;
   double	vector_prod[3], l[3];
@@ -982,11 +982,12 @@ double Wlz3DViewGetIntersectionAngle(
 	}
 
 	/* check for undefined angle - from planes with the same normal */
-	if((fabs(l[1]) < DBL_EPSILON) && (fabs(l[0]) < DBL_EPSILON))
+	if((fabs(l[1]) < DBL_EPSILON) && (fabs(l[0]) < DBL_EPSILON)) {
 	  rtnAngle = 0.0;
-	else
+	}
+	else {
 	  rtnAngle = viewStructAtan2(l[1], l[0]);
-
+	}
 	WlzFreeAffineTransform(t2);
       }
       WlzFreeAffineTransform(t1);
@@ -996,7 +997,7 @@ double Wlz3DViewGetIntersectionAngle(
   if( dstErr ){
     *dstErr = errNum;
   }
-  return rtnAngle;
+  return(rtnAngle);
 }
 
 /*!

@@ -156,10 +156,10 @@ extern char     *optarg;
 int		main(int argc, char *argv[])
 {
   int		idx,
+		nV = 0,
 		dim = 0,
-		maxV = 0,
-		nV,
   		inv = 0,
+		maxV = 0,
 		nStep = 1,
 		useStep = 0,
   		ok = 1,

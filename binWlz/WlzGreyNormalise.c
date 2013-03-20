@@ -108,7 +108,7 @@ static void usage(char *proc_str)
 	  "Options:\n"
 	  "\t  -h        help - prints this usage message\n"
 	  "\t  -d        dither values\n"
-	  "\t  -v        verbose operation\n"
+	  "\t  -u        convert to unsigned byte values\n"
 	  "",
 	  proc_str,
 	  WlzVersion());
@@ -121,10 +121,10 @@ int main(int	argc,
 
   WlzObject	*obj;
   FILE		*inFile;
-  char 		optList[] = "dhv";
-  int		dither = 0,
-  		option;
-  int		verboseFlg=0;
+  char 		optList[] = "dhu";
+  int		option,
+		dither = 0,
+  		ubyteFlg = 0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
     
@@ -137,8 +137,8 @@ int main(int	argc,
     case 'd':
       dither = 1;
       break;
-    case 'v':
-      verboseFlg = 1;
+    case 'u':
+      ubyteFlg = 1;
       break;
     case 'h': /* FALLTHROUGH */
     default:
@@ -163,9 +163,32 @@ int main(int	argc,
   {
     switch( obj->type )
     {
-    case WLZ_2D_DOMAINOBJ:
-    case WLZ_3D_DOMAINOBJ:
-      if( (errNum = WlzGreyNormalise(obj, dither)) == WLZ_ERR_NONE ){
+      case WLZ_2D_DOMAINOBJ:
+      case WLZ_3D_DOMAINOBJ:
+	if((errNum = WlzGreyNormalise(obj, dither)) == WLZ_ERR_NONE ){
+	  if(ubyteFlg) {
+	    WlzGreyType gType;
+	    gType = WlzGreyTypeFromObj(obj, &errNum);
+	    if((errNum == WLZ_ERR_NONE) && (gType != WLZ_GREY_UBYTE)){
+	      WlzObject *obj1;
+	      obj1 = WlzConvertPix(obj, WLZ_GREY_UBYTE, &errNum);
+	      if(errNum == WLZ_ERR_NONE){
+	        (void )WlzFreeObj(obj);
+		obj = obj1;
+	      }
+	    }
+	  }
+	  if((errNum = WlzWriteObj(stdout, obj)) != WLZ_ERR_NONE) {
+	    (void )WlzStringFromErrorNum(errNum, &errMsg);
+	    (void )fprintf(stderr,
+			   "%s: failed to write object (%s).\n",
+			   argv[0], errMsg);
+	    return(1);
+	  }
+	}
+	break;
+
+      default:
 	if((errNum = WlzWriteObj(stdout, obj)) != WLZ_ERR_NONE) {
 	  (void )WlzStringFromErrorNum(errNum, &errMsg);
 	  (void )fprintf(stderr,
@@ -173,20 +196,9 @@ int main(int	argc,
 			 argv[0], errMsg);
 	  return(1);
 	}
-      }
-      break;
-
-    default:
-      if((errNum = WlzWriteObj(stdout, obj)) != WLZ_ERR_NONE) {
-	(void )WlzStringFromErrorNum(errNum, &errMsg);
-	(void )fprintf(stderr,
-		       "%s: failed to write object (%s).\n",
-		       argv[0], errMsg);
-	return(1);
-      }
-      break;
+	break;
     }
-    WlzFreeObj(obj);
+    (void )WlzFreeObj(obj);
   }
 
   return 0;

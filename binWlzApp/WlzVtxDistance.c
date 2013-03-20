@@ -102,6 +102,7 @@ static void usage(char *proc_str)
 	  "Usage:\t%s x1,y1,z1 x2,y2,z2\n"
 	  "\tCalculate the distance between the two vertices writing the\n"
 	  "\tdistance to standard output\n"
+	  "Version: %s\n"
 	  "Options:\n"
 	  "\t  -h                 Help - prints this usage message\n",
 	  proc_str,

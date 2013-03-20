@@ -208,7 +208,8 @@ int main(int	argc,
 	}
 	(void) fclose(inFile);
 	if( bibFileErr != BIBFILE_ER_NONE ){
-	  fprintf(stderr, "%s: can't read bibfile: %s\n", argv[0], optarg);
+	  (void )fprintf(stderr,
+	                 "%s: can't read bibfile: %s\n", argv[0], optarg);
 	  usage(argv[0]);
 	  return 1;
 	}
@@ -229,6 +230,13 @@ int main(int	argc,
 	   (void *) &(upVectorVtx.vtZ), "%*lg ,%*lg ,%lg", "UpVector",
 	   (void *) &(viewModeStr[0]), "%s", "ViewMode",
 	   NULL);
+	if(numParsedFields < 1) {
+	  (void )fprintf(stderr,
+	                 "%s: can't read section transform from bibfile: %s\n",
+	                 argv[0], optarg);
+	  usage(argv[0]);
+	  return 1;
+	}
 	/* doesn't read the view mode correctly - ask Bill */
 	bibfileField = bibfileRecord->field;
 	while( bibfileField ){
@@ -257,7 +265,8 @@ int main(int	argc,
 
       }
       else {
-	fprintf(stderr, "%s: can't open bibfile: %s\n", argv[0], optarg);
+	(void )fprintf(stderr,
+	               "%s: can't open bibfile: %s\n", argv[0], optarg);
 	usage(argv[0]);
 	return 1;
       }
@@ -289,7 +298,7 @@ int main(int	argc,
 	viewMode = WLZ_ZETA_MODE;
       }
       else {
-	fprintf(stderr, "%s: invalid view mode: %s\n", argv[0], optarg);
+	(void )fprintf(stderr, "%s: invalid view mode: %s\n", argv[0], optarg);
 	usage(argv[0]);
 	return 1;
       }
@@ -333,7 +342,8 @@ int main(int	argc,
 
   /* check size and offset have been set */
   if( offsetFlg || sizeFlg ){
-    fprintf(stderr, "%s: bitmap size and offset must be set\n", argv[0]);
+    (void )fprintf(stderr,
+                   "%s: bitmap size and offset must be set\n", argv[0]);
     usage(argv[0]);
     return 1;
   }
@@ -341,25 +351,52 @@ int main(int	argc,
   /* get the bitmap data */
   if( optind < argc ){
     if( (inFile = fopen(*(argv+optind), "r")) == NULL ){
-      fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
+      (void )fprintf(stderr,
+                     "%s: can't open file %s\n", argv[0], *(argv+optind));
       usage(argv[0]);
       return 1;
     }
     numBytes = (int) (((double) width*height)/8.0 + 1.0);
     if((bitData = AlcMalloc(sizeof(char) * (numBytes + 1) )) != NULL){
       if( fread(bitData, sizeof(char), numBytes, inFile) < numBytes ){
-	fprintf(stderr, "%s: not enough data\n", argv[0]);
+	(void )fprintf(stderr,
+	               "%s: not enough data\n", argv[0]);
       }
     }
     else {
-      fprintf(stderr, "%s: can't alloc memory for bit data\n", argv[0]);
+      (void )fprintf(stderr,
+                     "%s: can't alloc memory for bit data\n", argv[0]);
       return 1;
     }
   }
   else {
-    fprintf(stderr, "%s: please supply a bitmap file\n", argv[0]);
+    (void )fprintf(stderr, "%s: please supply a bitmap file\n", argv[0]);
     usage(argv[0]);
     return 1;
+  }
+
+  if(verboseFlg) {
+    (void )fprintf(stderr,
+		   "%s: Bitmap and section parameters are\n"
+                   "  width = %d\n"
+		   "  height = %d\n"
+		   "  xOffset = %d\n"
+		   "  yOffset = %d\n"
+		   "  fixed = %lg,%lg,%lg\n"
+		   "  theta = %lg\n"
+		   "  phi = %lg\n"
+		   "  dist = %lg\n"
+		   "  viewMode = %s\n",
+		   argv[0],
+		   width,
+		   height,
+		   xOffset,
+		   yOffset,
+		   fixed.vtX, fixed.vtY, fixed.vtZ,
+		   theta,
+		   phi,
+		   dist,
+		   WlzStringFromThreeDViewMode(viewMode, NULL));
   }
 
   /* read bitmap data and section if possible */
@@ -371,9 +408,6 @@ int main(int	argc,
     WlzWriteObj(stdout, obj);
     WlzFreeObj(obj);
   }
-  else {
-  }
-
   return WLZ_ERR_NONE;
 }
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

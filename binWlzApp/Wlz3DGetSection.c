@@ -211,9 +211,9 @@ int main(int	argc,
 	 char	**argv)
 {
 
-  WlzObject	*obj, *nobj, *subDomain;
-  FILE		*inFP, *outFP, *bibFP;
-  char		*outFile, *bibFile;
+  WlzObject	*obj = NULL, *nobj = NULL, *subDomain = NULL;
+  FILE		*inFP = NULL, *outFP = NULL, *bibFP = NULL;
+  char		*outFile = NULL, *bibFile = NULL;
   char 		optList[] = "ACLNa:b:d:f:m:o:r:s:u:R:h";
   int		option;
   int		i,

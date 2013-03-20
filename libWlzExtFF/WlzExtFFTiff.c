@@ -171,9 +171,10 @@ static unsigned char *WlzEFFTiffToWlzRowData(
   WlzErrorNum	*dstErr)
 {
   WlzGreyP	wlzData;
-  int		col, offset;
+  int		col, offset = 0;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
+  wlzData.v = NULL;
   if( inp == NULL ){
     errNum = WLZ_ERR_VALUES_NULL;
   }
@@ -346,7 +347,7 @@ static WlzObject *WlzExtFFReadTiffDirObj(
   int		split,
   WlzErrorNum	*dstErr)
 {
-  WlzObject	*obj=NULL, **objs;
+  WlzObject	*obj = NULL, **objs = NULL;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   short		bitspersample;
   short		samplesperpixel;
@@ -360,11 +361,11 @@ static WlzObject *WlzExtFFReadTiffDirObj(
   int		wlzDepth;
   WlzGreyType	newpixtype;
   WlzPixelV	bckgrnd;
-  int		i, y, row, col, tileIndx;
+  int		i, y, row, col, tileIndx = 0;
   float		xPosition, yPosition;
   int		colMin, rowMin;
   unsigned char	*buf=NULL;
-  unsigned char *dstPtr, *srcPtr;
+  unsigned char *dstPtr = NULL, *srcPtr = NULL;
   WlzGreyP	wlzData;
 
   /* don't need to check tif file pointer since already checked
@@ -480,7 +481,7 @@ static WlzObject *WlzExtFFReadTiffDirObj(
 	    if( split ){
 	      len = ((col + tileWidth) > width) ? width - col : tileWidth;
 	      obj = WlzMakeRect(0, ((row+tileHeight > height)?height-row:tileHeight)-1,
-				0, len-1, newpixtype, (int *) dstPtr, bckgrnd,
+				0, len-1, newpixtype, (int *)dstPtr, bckgrnd,
 				NULL, NULL, &errNum);
 	      objs[tileIndx-1] = WlzAssignObject(obj, NULL);
 	      if( tileIndx == 1 ){
@@ -637,10 +638,12 @@ WlzObject	*WlzEffReadObjTiff(
     }
     else {
       WlzObject	*tmpObj;
-      WlzDomain	domain, *domains;
-      WlzValues	values, *valuess;
+      WlzDomain	domain, *domains = NULL;
+      WlzValues	values, *valuess = NULL;
       WlzPixelV 	bckgrnd;
 
+      domain.core = NULL;
+      values.core = NULL;
       /* use width, height and position of first object for the plane-domain
 	 standardise later */
       if((tmpObj = WlzExtFFReadTiffDirObj(tif, 0, split, &errNum)) != NULL){
@@ -892,10 +895,10 @@ WlzErrorNum WlzEffWriteObjTiff(
   const char *tiffFileName,
   WlzObject *obj)
 {
-  TIFF 		*out;
-  WlzObject	*tmpObj;
-  WlzDomain	*domains;
-  WlzValues	*valuess;
+  TIFF 		*out = NULL;
+  WlzObject	*tmpObj = NULL;
+  WlzDomain	*domains = NULL;
+  WlzValues	*valuess = NULL;
   int		p;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 

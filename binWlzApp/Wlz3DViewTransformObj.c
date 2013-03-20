@@ -219,6 +219,13 @@ int main(int	argc,
 	   (void *) &(upVectorVtx.vtZ), "%*lg ,%*lg ,%lg", "UpVector",
 	   (void *) &(viewModeStr[0]), "%s", "ViewMode",
 	   NULL);
+	if(numParsedFields < 1) {
+	  (void )fprintf(stderr,
+	                 "%s: can't read section transform from bibfile: %s\n",
+	                 argv[0], optarg);
+	  usage(argv[0]);
+	  return 1;
+	}
 	/* doesn't read the view mode correctly - ask Bill */
 	bibfileField = bibfileRecord->field;
 	while( bibfileField ){
@@ -331,6 +338,28 @@ int main(int	argc,
       usage(argv[0]);
       return 1;
     }
+  }
+
+  if(verboseFlg) {
+    (void )fprintf(stderr,
+		   "%s: Section parameters are\n"
+		   "  fixed = %lg,%lg,%lg\n"
+		   "  theta = %lg\n"
+		   "  phi = %lg\n"
+		   "  zeta = %lg\n"
+		   "  dist = %lg\n"
+		   "  scale = %lg\n"
+		   "  viewMode = %s\n"
+		   "  up = %lg,%lg,%lg\n",
+		   argv[0],
+		   fixed.vtX, fixed.vtY, fixed.vtZ,
+		   theta,
+		   phi,
+		   zeta,
+		   dist,
+		   scale,
+		   WlzStringFromThreeDViewMode(viewMode, NULL),
+		   upVectorVtx.vtX, upVectorVtx.vtY, upVectorVtx.vtZ);
   }
 
   /* read objects and section if possible */

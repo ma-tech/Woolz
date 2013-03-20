@@ -227,11 +227,12 @@ int main(int	argc,
   int           iloop=1, test=0;
   double        DisForInOut = 15, DisForInOutGuid = 15;
   double        minDis = 10.;
-  char         *outFileStr;
+  /* char       *outFileStr; unused */
   unsigned char        **TwoDImageFilesNameList;
-  char         *ContourFilesNameList;
-  char         *surfacePointFileName, *surfaceInPointFileName, *surfaceOutPointFileName;
-  WlzDVertex3          *SurfacePatchPoints;
+  char         *ContourFilesNameList = NULL;
+  char         *surfacePointFileName = NULL, *surfaceInPointFileName = NULL,
+               *surfaceOutPointFileName = NULL;
+  /* WlzDVertex3          *SurfacePatchPoints; unused */
   WlzErrorNum	       errNum = WLZ_ERR_NONE;
   AlcErrno             alcErr = ALC_ER_NONE;
 
@@ -326,7 +327,7 @@ int main(int	argc,
 	     }
 	     break;
        case 'o':
-	     outFileStr = optarg;
+	     /* outFileStr = optarg; unused */
 	     break;
        case 's':
 	     surfacePointFileName = optarg;
@@ -433,7 +434,8 @@ int main(int	argc,
     /*---------- extract contour and track down or up  to get the surface patch ----------- */
     if( (!test)  && ( errNum == WLZ_ERR_NONE ) )
     {
-      SurfacePatchPoints = WlzGeometryTrackUpAndDown_s(      
+      /* SurfacePatchPoints = unused */
+      (void )WlzGeometryTrackUpAndDown_s(      
 							numP_in_Z,
                                                         startTrackingFile,
 							numOfTrackUpOrDown,

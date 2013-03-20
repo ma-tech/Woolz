@@ -49,17 +49,13 @@ static char _WlzDomainFill_c[] = "University of Edinburgh $Id$";
 WlzDomainFill - Fills the domain of a  woolz object.
 \par Synopsis
 \verbatim
-WlzDomainFill [-h] [-v] [<input file>]
+WlzDomainFill [-h] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
 </table>
 \par Description
@@ -102,8 +98,7 @@ static void usage(char *proc_str)
 	  "\twritten to standard output."
 	  "Version: %s\n"
 	  "Options:\n"
-	  "\t  -h        help - prints this usage message\n"
-	  "\t  -v        verbose operation\n",
+	  "\t  -h        help - prints this usage message\n",
 	  proc_str,
 	  WlzVersion());
   return;
@@ -114,11 +109,9 @@ int main(int	argc,
 {
 
   WlzObject	*obj, *tmpObj;
-  WlzValues	values;
   FILE		*inFile;
-  char 		optList[] = "hv";
+  char 		optList[] = "h";
   int		option;
-  int		verboseFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
     
@@ -127,16 +120,10 @@ int main(int	argc,
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
-
-    case 'v':
-      verboseFlg = 1;
-      break;
-
     case 'h':
     default:
       usage(argv[0]);
       return 1;
-
     }
   }
 
@@ -157,7 +144,6 @@ int main(int	argc,
     {
     case WLZ_2D_DOMAINOBJ:
     case WLZ_3D_DOMAINOBJ:
-      values.core = NULL;
       if((tmpObj = WlzDomainFill(obj, &errNum)) != NULL){
 	if((errNum = WlzWriteObj(stdout, tmpObj)) != WLZ_ERR_NONE) {
 	  (void )WlzStringFromErrorNum(errNum, &errMsg);

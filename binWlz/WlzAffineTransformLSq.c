@@ -197,8 +197,8 @@ int             main(int argc, char **argv)
   		option,
 		ok = 1,
 		usage = 0,
-      		inR,
-		inC,
+      		inR = 0,
+		inC = 0,
 		iVtx = 0,
       		nV = 0,
       		nN = 0,
@@ -431,13 +431,18 @@ int             main(int argc, char **argv)
     }
     else
     {
-      if(AlcDouble2ReadAsci(fP, &inData, (size_t *) &inR, (size_t *) &inC) != ALC_ER_NONE)
+      size_t nM = 0,
+             nN = 0;
+
+      if(AlcDouble2ReadAsci(fP, &inData, &nM, &nN) != ALC_ER_NONE)
       {
         ok = 0;
 	(void )fprintf(stderr,
 		       "%s: failed to read input file %s.\n",
 		       *argv, inFileStr);
       }
+      inR = nM;
+      inC = nN;
       if(fP && strcmp(inFileStr, "-"))
       {
 	fclose(fP);

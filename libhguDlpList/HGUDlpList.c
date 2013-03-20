@@ -713,7 +713,7 @@ void		*HGUDlpListEntryGet(HGUDlpList *list,
 void		*HGUDlpListEntrySet(HGUDlpList *list,
 				    HGUDlpListItem *item, void *newEntry)
 {
-  void		*oldEntry;
+  void		*oldEntry = NULL;
 
   if(list && item)
   {

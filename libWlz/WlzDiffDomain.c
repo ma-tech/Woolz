@@ -68,6 +68,7 @@ WlzObject *WlzDiffDomain(
   WlzObject 		*diff=NULL;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
+  diffdom.core = NULL;
   /* check object 1 */
   if( obj1 == NULL ){
     errNum = WLZ_ERR_OBJECT_NULL;

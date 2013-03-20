@@ -78,7 +78,7 @@ static double	WlzCMeshElmRingInterpolateNodCrvValue(WlzCMeshElm2D *elm,
 		nCnt = 0;
   double	crv = 0.0,
   		sWgt = 0.0;
-  int		nNI[3];
+  /* int	nNI[3]; */
   double	*wgt = NULL;
   WlzCMeshNod2D **nod = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -118,7 +118,7 @@ static double	WlzCMeshElmRingInterpolateNodCrvValue(WlzCMeshElm2D *elm,
       WlzCMeshEdgU2D *e0,
 		     *e1;
 
-      nNI[i] = k;
+      /* nNI[i] = k; */
       e0 = e1 = nod[i]->edu;
       do
       {
@@ -338,7 +338,7 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, double scale,
       int    idE,
       	     idK,
 	     idN;
-      double d;
+      double d = 0;
       double *c,
       	     *dst;
       WlzDVertex2 dPos;
@@ -702,7 +702,7 @@ WlzObject     	*WlzCMeshComputeCurvaturesFromNodNorm(WlzObject *inObj,
 				        WlzErrorNum *dstErr)
 {
   WlzCMesh2D5	*mesh;
-  WlzIndexedValues *nIxv,
+  WlzIndexedValues *nIxv = NULL,
   		   *cIxv = NULL;
   WlzObject	*outObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;

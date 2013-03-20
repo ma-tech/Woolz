@@ -366,6 +366,7 @@ int             main(int argc, char **argv)
   	        outFileStrDef[] = "-";
 
   matchRP.v = matchSP.v = NULL;
+  srcCOfM.vtX = srcCOfM.vtY = 0.0;
   inFileStr = (char *)inFileStrDef;
   outFileBaseStr = (char *)outFileStrDef;
   (void )memset(&inTrPrim, 0, sizeof(WlzAffineTransformPrim));
@@ -1194,7 +1195,7 @@ static WlzErrorNum WlzMatchICPPlaneReadSecParam(FILE *fP,
   char		*fileStr;
   WlzEffFormat	fileType;
   BibFileRecord	*bibRec;
-  BibFileError  bibErr;
+  BibFileError  bibErr = BIBFILE_ER_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   *dstView = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum);

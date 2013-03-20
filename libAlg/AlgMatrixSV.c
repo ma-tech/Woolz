@@ -70,12 +70,12 @@ static double	AlgMatrixSVPythag(double, double);
 AlgError	AlgMatrixSVSolve(AlgMatrix aMat, double *bVec, double tol,
                                  int *dstIC)
 {
-  int		cnt0,
-  		cntIC;
+  int		cnt0 = 0,
+  		cntIC = 0;
   size_t	nM,
   		nN;
   double	thresh,
-  		wMax;
+  		wMax = 0.0;
   double	*tDP0,
   		*wVec = NULL;
   AlgMatrix	vMat;
@@ -105,7 +105,6 @@ AlgError	AlgMatrixSVSolve(AlgMatrix aMat, double *bVec, double tol,
   if(errCode == ALG_ERR_NONE)
   {
     /* Find maximum singular value. */
-    wMax = 0.0;
     cnt0 = nN;
     cntIC = 0;
     tDP0 = wVec;
@@ -172,7 +171,7 @@ AlgError	AlgMatrixSVDecomp(AlgMatrix aMat, double *wVec, AlgMatrix vMat)
   		idI,
 		idJ,
 		idK,
-		idL,
+		idL = 0,
 		its,
 		nNL,
 		nMI,

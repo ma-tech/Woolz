@@ -48,7 +48,6 @@ int             main(int argc, char **argv)
   int           idx,
                 ok,
                 done,
-                ioCnt,
                 iMax = 1000,
                 nCls,
                 nDbn,

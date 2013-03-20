@@ -45,6 +45,20 @@ static char _WlzGeometry_c[] = "University of Edinburgh $Id$";
 #include <limits.h>
 #include <Wlz.h>
 
+/*!
+* \struct	_WlzGeomPolyListItem2D
+* \ingroup	WlzGeometry
+* \brief	Item for polygon vertex list.
+* 		See WlzGeomPolyTriangulate2D().
+*/
+typedef struct _WlzGeomPolyListItem2D
+{
+  int		v;	/*!< Index of the vertex in the given polygon. */
+  int		cvx;	/*!< Non zero if polygon is convex at vertex. */
+  struct _WlzGeomPolyListItem2D	*prev;	/*!< Previous vertex. */
+  struct _WlzGeomPolyListItem2D	*next;	/*!< Next vertex. */
+} WlzGeomPolyListItem2D;
+
 extern double			cbrt(double c);
 
 static int			WlzGeomVtxSortRadialFn(
@@ -91,10 +105,18 @@ static int			WlzGeomTriangleTriangleIntersect2DA(
 static int			WlzGeomTriangleTriangleIntersect3DA(
 				  WlzDVertex3 s[],
 				  WlzDVertex3 t[]);
+static int			WlzGeomPolyListIsEar2D(
+				  int n,
+				  WlzDVertex2 *v,
+				  WlzGeomPolyListItem2D *p,
+				  WlzErrorNum *dstErr);
 static double			WlzGeomCot2D3(
 				  WlzDVertex2 a,
 				  WlzDVertex2 b,
 				  WlzDVertex2 c);
+static void 			WlzGeomPolyTriSetCvx(
+				  WlzDVertex2 *v,
+				  WlzGeomPolyListItem2D *p);
 
 /*!
 * \return	Position of the centroid of the given triangle.
@@ -1208,88 +1230,75 @@ int		WlzGeomTriangleAABBIntersect2D(WlzDVertex2 t0,
     /* Compute the AABB of the triangle. */
     WlzDVertex2	bT[2];
 
-    bT[0] = bT[1] = t[0];
-    for(idx = 1; idx <= 2; ++idx)
-    {
-      if(t[idx].vtX < bT[0].vtX)
-      {
-	bT[0].vtX = t[idx].vtX;
-      }
-      else if(t[idx].vtX > bT[1].vtX)
-      {
-	bT[1].vtX = t[idx].vtX;
-      }
-      if(t[idx].vtY < bT[0].vtY)
-      {
-	bT[0].vtY = t[idx].vtY;
-      }
-      else if(t[idx].vtY > bT[1].vtY)
-      {
-	bT[1].vtY = t[idx].vtY;
-      }
-    }
+    bT[0].vtX = ALG_MIN3(t[0].vtX, t[1].vtX, t[2].vtX);
+    bT[1].vtX = ALG_MAX3(t[0].vtX, t[1].vtX, t[2].vtX);
     /* Compare AABB of triangle with given AABB. If is an intersection
      * when using tolerance then there may be an intersection. Set
      * intersection (will keep looking below). */
-    if((-b.vtX - bT[1].vtX > tol) || (bT[0].vtX - b.vtX > tol) ||
-       (-b.vtY - bT[1].vtY > tol) || (bT[0].vtY - b.vtY > tol))
+    if((-b.vtX - bT[1].vtX > tol) || (bT[0].vtX - b.vtX > tol))
     {
       isn = 0;
     }
-  }
-  if((tst == 0) || (tst == 2))
-  {
-    if(isn != 0)
+    else
     {
-      WlzDVertex2	e,
-		  f;
-      double	p[2],
-		  q[3];
-
-      for(idx = 0; idx < 3; ++idx)
+      bT[0].vtY = ALG_MIN3(t[0].vtY, t[1].vtY, t[2].vtY);
+      bT[1].vtY = ALG_MAX3(t[0].vtY, t[1].vtY, t[2].vtY);
+      if((-b.vtY - bT[1].vtY > tol) || (bT[0].vtY - b.vtY > tol))
       {
-	/* Compute an edge vector for the triangle. */
-	WLZ_VTX_2_SUB(e, t[(idx + 1) % 3], t[idx]);
-	/* Project two vertices onto perpendicular to first edge. */
-	p[0] = t[idx].vtX * e.vtY - t[idx].vtY * e.vtX;
-	p[1] = t[(idx + 2) % 3].vtX * e.vtY - t[(idx + 2) % 3].vtY * e.vtX;
-	if(p[0] > p[1])
-	{
-	  q[2] = p[0]; p[0] = p[1]; p[1] = q[2];
-	}
-	/* Project AABB vertices onto perpendicular and find limits. */
-	f.vtX = b.vtX * e.vtY;
-	f.vtY = b.vtY * e.vtX;
-	q[0] = -f.vtX + f.vtY;
-	q[1] =  f.vtX + f.vtY;
-	if(q[1] < q[0])
-	{
-	  q[2] = q[0]; q[0] = q[1]; q[1] = q[2];
-	}
-	q[2] =  f.vtX - f.vtY;
-	if(q[2] < q[0])
-	{
-	  q[0] = q[2];
-	}
-	else if(q[2] > q[1])
-	{
-	  q[1] = q[2];
-	}
-	q[2] = -f.vtX - f.vtY;
-	if(q[2] < q[0])
-	{
-	  q[0] = q[2];
-	}
-	else if(q[2] > q[1])
-	{
-	  q[1] = q[2];
-	}
-	/* Look for intersection of projections. */
-	if((p[0] - q[1] > -tol) || (q[0] + p[1] > -tol))
-	{
-	  isn = 0;
-	  break;
-	}
+	isn = 0;
+      }
+    }
+  }
+  if((isn != 0) && ((tst == 0) || (tst == 2)))
+  {
+    WlzDVertex2	e,
+		f;
+    double	p[2],
+		q[3];
+
+    for(idx = 0; idx < 3; ++idx)
+    {
+      /* Compute an edge vector for the triangle. */
+      WLZ_VTX_2_SUB(e, t[(idx + 1) % 3], t[idx]);
+      /* Project two vertices onto perpendicular to first edge. */
+      p[0] = t[idx].vtX * e.vtY - t[idx].vtY * e.vtX;
+      p[1] = t[(idx + 2) % 3].vtX * e.vtY - t[(idx + 2) % 3].vtY * e.vtX;
+      if(p[0] > p[1])
+      {
+	q[2] = p[0]; p[0] = p[1]; p[1] = q[2];
+      }
+      /* Project AABB vertices onto perpendicular and find limits. */
+      f.vtX = b.vtX * e.vtY;
+      f.vtY = b.vtY * e.vtX;
+      q[0] = -f.vtX + f.vtY;
+      q[1] =  f.vtX + f.vtY;
+      if(q[1] < q[0])
+      {
+	q[2] = q[0]; q[0] = q[1]; q[1] = q[2];
+      }
+      q[2] =  f.vtX - f.vtY;
+      if(q[2] < q[0])
+      {
+	q[0] = q[2];
+      }
+      else if(q[2] > q[1])
+      {
+	q[1] = q[2];
+      }
+      q[2] = -f.vtX - f.vtY;
+      if(q[2] < q[0])
+      {
+	q[0] = q[2];
+      }
+      else if(q[2] > q[1])
+      {
+	q[1] = q[2];
+      }
+      /* Look for intersection of projections. */
+      if((p[0] - q[1] > -tol) || (q[0] + p[1] > -tol))
+      {
+	isn = 0;
+	break;
       }
     }
   }
@@ -1372,7 +1381,7 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
    * onto vectors perpendicular to the faces of the AABB. */
   if((tst == 0) || (tst == 1))
   {
-    /* Compute the AABB of the tetrahedron. */
+    /* Compute the AABB of the tetrahedron and check for intersection. */
     WlzDVertex3	bT[2];
 
     bT[0] = bT[1] = t[0];
@@ -1386,29 +1395,46 @@ int		WlzGeomTetrahedronAABBIntersect3D(WlzDVertex3 t0,
       {
 	bT[1].vtX = t[idx].vtX;
       }
-      if(t[idx].vtY < bT[0].vtY)
-      {
-	bT[0].vtY = t[idx].vtY;
-      }
-      else if(t[idx].vtY > bT[1].vtY)
-      {
-	bT[1].vtY = t[idx].vtY;
-      }
-      if(t[idx].vtZ < bT[0].vtZ)
-      {
-	bT[0].vtZ = t[idx].vtZ;
-      }
-      else if(t[idx].vtZ > bT[1].vtZ)
-      {
-	bT[1].vtZ = t[idx].vtZ;
-      }
     }
-    /* Compare AABB of triangle with given AABB. */
-    if((-b.vtX - bT[1].vtX > tol) || (bT[0].vtX - b.vtX > tol) ||
-       (-b.vtY - bT[1].vtY > tol) || (bT[0].vtY - b.vtY > tol) ||
-       (-b.vtZ - bT[1].vtZ > tol) || (bT[0].vtZ - b.vtZ > tol))
+    if((-b.vtX - bT[1].vtX > tol) || (bT[0].vtX - b.vtX > tol))
     {
-      isn = 0;        /* No intersection of the AABB with AABB(tetrahedron). */
+     isn = 0;
+    }
+    else
+    {
+      for(idx = 1; idx <= 3; ++idx)
+      {
+	if(t[idx].vtY < bT[0].vtY)
+	{
+	  bT[0].vtY = t[idx].vtY;
+	}
+	else if(t[idx].vtY > bT[1].vtY)
+	{
+	  bT[1].vtY = t[idx].vtY;
+	}
+      }
+      if((-b.vtY - bT[1].vtY > tol) || (bT[0].vtY - b.vtY > tol))
+      {
+	isn = 0;
+      }
+      else
+      {
+	for(idx = 1; idx <= 3; ++idx)
+	{
+	  if(t[idx].vtZ < bT[0].vtZ)
+	  {
+	    bT[0].vtZ = t[idx].vtZ;
+	  }
+	  else if(t[idx].vtZ > bT[1].vtZ)
+	  {
+	    bT[1].vtZ = t[idx].vtZ;
+	  }
+	}
+	if((-b.vtZ - bT[1].vtZ > tol) || (bT[0].vtZ - b.vtZ > tol))
+	{
+	  isn = 0;
+	}
+      }
     }
   }
   /* Check for intersection using projections of the AABB onto vectors
@@ -2928,52 +2954,99 @@ int             WlzGeomTetraAffineSolve(double *tr,
 *					should be inside or on the
 *					boundary, if zero it will be
 *					outside or on the boundary.
+* \param	method			Method for finding intersection:
+* 					0 - bisection, 1 - increment.
+* 					If increment is used each point
+* 				        along the line segment will be
+* 				        tested until termination, this may
+* 				        be very slow if tol is small, with
+* 				        possibly 1/tol incremental steps.
 * \param        dstStat                 Destination pointer for status,
 *                                       may be NULL.
 */
 WlzDVertex2	WlzGeomObjLineSegIntersect2D(WlzObject *obj,
 					WlzDVertex2 p0, WlzDVertex2 p1,
-					double tol, int inside, int *dstStat)
+					double tol, int inside, int method,
+					int *dstStat)
 {
-  int           s0,
-                s1,
+  int           s1,
+                s0,
                 s2,
                 stat;
-  double        dErr;
+  double        dErr,
+  		tolSq;
   WlzDVertex2   p2;
 
-  tol *= tol;
+  tol = fabs(tol);
+  tolSq = tol * tol;
   s0 = WlzInsideDomain(obj, 0.0, p0.vtY, p0.vtX, NULL);
   s1 = WlzInsideDomain(obj, 0.0, p1.vtY, p1.vtX, NULL);
   if(s0 != s1)
   {
     stat = 0;
-    if(s0 != 0)
+    if(s1 != 0)
     {
-      /* Ensure that p0 is outside the domain. */
-      p2 = p0; p0 = p1; p1 = p2;
-      s2 = s0; s0 = s1; s1 = s2;
+      /* Ensure that p1 is outside the domain. */
+      p2 = p1; p1 = p0; p0 = p2;
+      s2 = s1; s1 = s0; s0 = s2;
     }
-    do
+    switch(method)
     {
-      /* Find midpoint of p0 and p1. */
-      p2.vtX = 0.5 * (p0.vtX + p1.vtX);
-      p2.vtY = 0.5 * (p0.vtY + p1.vtY);
-      /* Check if the midpoint is within the object and update end points. */
-      s2 = WlzInsideDomain(obj, 0.0, p2.vtY, p2.vtX, NULL);
-      if(s2 != 0)
-      {
-        p1 = p2;
-      }
-      else
-      {
-        p0 = p2;
-      }
-      /* Check distance error. */
-      WLZ_VTX_2_SUB(p2, p0, p1);
-      dErr = WLZ_VTX_2_SQRLEN(p2);
+      case 0: /* Bisection. */
+	do
+	{
+	  /* Find midpoint of p1 and p0. */
+	  p2.vtX = 0.5 * (p1.vtX + p0.vtX);
+	  p2.vtY = 0.5 * (p1.vtY + p0.vtY);
+	  /* Check if the midpoint is within the object and update end
+	   * points. */
+	  s2 = WlzInsideDomain(obj, 0.0, p2.vtY, p2.vtX, NULL);
+	  if(s2 != 0)
+	  {
+	    p0 = p2;
+	  }
+	  else
+	  {
+	    p1 = p2;
+	  }
+	  /* Check distance error. */
+	  WLZ_VTX_2_SUB(p2, p1, p0);
+	  dErr = WLZ_VTX_2_SQRLEN(p2);
+	}
+	while(dErr > tolSq);
+	break;
+      case 1: /* Increment. */ /* FALLTHROUGH */
+      default:
+	if(tolSq > DBL_EPSILON)
+	{
+	  double      l;
+	  WlzDVertex2 inc;
+
+	  p2 = p1;
+	  dErr = 0;
+	  WLZ_VTX_2_SUB(p1, p2, p0);
+	  l = WLZ_VTX_2_LENGTH(p1);
+	  l = tol / l; /* fabs(l) must be >= 1 since s0 != s1 above. */
+	  WLZ_VTX_2_SCALE(inc, p1, l);
+	  p1 = p0;
+	  do
+	  {
+	    WlzDVertex2 d;
+
+	    p0 = p1;
+	    WLZ_VTX_2_ADD(p1, p0, inc);
+	    s1 = WlzInsideDomain(obj, 0.0, p1.vtY, p1.vtX, NULL);
+	    if(s1 != 0)
+	    {
+	      WLZ_VTX_2_SUB(d, p2, p1);
+	      d.vtX = copysign(d.vtX, inc.vtX);
+	      d.vtY = copysign(d.vtY, inc.vtY);
+	      dErr = ALG_MAX(d.vtX, d.vtY);
+	    }
+	  } while((s1 != 0) && (dErr > tol));
+	}
+	break;
     }
-    while(dErr > tol);
   }
   else if(s0 != 0)
   {
@@ -2983,7 +3056,7 @@ WlzDVertex2	WlzGeomObjLineSegIntersect2D(WlzObject *obj,
   {
     stat = 2;
   }
-  p2 = (inside)? p1: p0;
+  p2 = (inside)? p0: p1;
   if(dstStat)
   {
     *dstStat = stat;
@@ -3020,53 +3093,101 @@ WlzDVertex2	WlzGeomObjLineSegIntersect2D(WlzObject *obj,
 *					should be inside or on the
 *					boundary, if zero it will be
 *					outside or on the boundary.
+* \param	method			Method for finding intersection:
+* 					0 - bisection, 1 - increment.
+* 					If increment is used each point
+* 				        along the line segment will be
+* 				        tested until termination, this may
+* 				        be very slow if tol is small, with
+* 				        possibly 1/tol incremental steps.
 * \param        dstStat                 Destination pointer for status,
 *                                       may be NULL.
 */
 WlzDVertex3	WlzGeomObjLineSegIntersect3D(WlzObject *obj,
 					WlzDVertex3 p0, WlzDVertex3 p1,
-					double tol, int inside, int *dstStat)
+					double tol, int inside, int method,
+					int *dstStat)
 {
   int           s0,
                 s1,
                 s2,
                 stat;
-  double        dErr;
+  double        dErr,
+  		tolSq;
   WlzDVertex3   p2;
 
-  tol *= tol;
+  tol = fabs(tol);
+  tolSq = tol * tol;
   s0 = WlzInsideDomain(obj, p0.vtZ, p0.vtY, p0.vtX, NULL);
   s1 = WlzInsideDomain(obj, p1.vtZ, p1.vtY, p1.vtX, NULL);
   if(s0 != s1)
   {
     stat = 0;
-    if(s0 != 0)
+    if(s1 != 0)
     {
-      /* Ensure that p0 is outside the domain. */
-      p2 = p0; p0 = p1; p1 = p2;
-      s2 = s0; s0 = s1; s1 = s2;
+      /* Ensure that p1 is outside the domain. */
+      p2 = p1; p1 = p0; p0 = p2;
+      s2 = s1; s1 = s0; s0 = s2;
     }
-    do
+    switch(method)
     {
-      /* Find midpoint of p0 and p1. */
-      p2.vtX = 0.5 * (p0.vtX + p1.vtX);
-      p2.vtY = 0.5 * (p0.vtY + p1.vtY);
-      p2.vtZ = 0.5 * (p0.vtZ + p1.vtZ);
-      /* Check if the midpoint is within the object and update end points. */
-      s2 = WlzInsideDomain(obj, p2.vtZ, p2.vtY, p2.vtX, NULL);
-      if(s2 != 0)
-      {
-        p1 = p2;
-      }
-      else
-      {
-        p0 = p2;
-      }
-      /* Check distance error. */
-      WLZ_VTX_3_SUB(p2, p0, p1);
-      dErr = WLZ_VTX_3_SQRLEN(p2);
+      case 0: /* Bisection. */
+	do
+	{
+	  /* Find midpoint of p1 and p0. */
+	  p2.vtX = 0.5 * (p1.vtX + p0.vtX);
+	  p2.vtY = 0.5 * (p1.vtY + p0.vtY);
+	  p2.vtZ = 0.5 * (p1.vtZ + p0.vtZ);
+	  /* Check if the midpoint is within the object and update end
+	   * points. */
+	  s2 = WlzInsideDomain(obj, p2.vtZ, p2.vtY, p2.vtX, NULL);
+	  if(s2 != 0)
+	  {
+	    p0 = p2;
+	  }
+	  else
+	  {
+	    p1 = p2;
+	  }
+	  /* Check distance error. */
+	  WLZ_VTX_3_SUB(p2, p1, p0);
+	  dErr = WLZ_VTX_3_SQRLEN(p2);
+	}
+	while(dErr > tolSq);
+	break;
+      case 1: /* FALLTHROUGH */
+      default:
+	if(tolSq > DBL_EPSILON)
+	{
+	  double      l;
+	  WlzDVertex3 inc;
+
+	  p2 = p1;
+	  dErr = 0;
+	  WLZ_VTX_3_SUB(p1, p2, p0);
+	  l = WLZ_VTX_3_LENGTH(p1);
+	  l = tol / l; /* fabs(l) must be >= 1 since s0 != s1 above. */
+	  WLZ_VTX_3_SCALE(inc, p1, l);
+	  p1 = p0;
+	  do
+	  {
+	    WlzDVertex3 d;
+
+	    p0 = p1;
+	    WLZ_VTX_3_ADD(p1, p0, inc);
+	    s1 = WlzInsideDomain(obj, p1.vtZ, p1.vtY, p1.vtX, NULL);
+	    if(s1 != 0)
+	    {
+	      WLZ_VTX_3_SUB(d, p2, p1);
+	      d.vtX = copysign(d.vtX, inc.vtX);
+	      d.vtY = copysign(d.vtY, inc.vtY);
+	      d.vtZ = copysign(d.vtZ, inc.vtZ);
+	      dErr = ALG_MAX3(d.vtX, d.vtY, d.vtZ);
+	    }
+	  } while((s1 != 0) && (dErr > tol));
+	}
+	break;
     }
-    while(dErr > tol);
   }
   else if(s0 != 0)
   {
@@ -3076,7 +3197,7 @@ WlzDVertex3	WlzGeomObjLineSegIntersect3D(WlzObject *obj,
   {
     stat = 2;
   }
-  p2 = (inside)? p1: p0;
+  p2 = (inside)? p0: p1;
   if(dstStat)
   {
     *dstStat = stat;
@@ -6167,4 +6288,225 @@ double 		WlzGeomTetrahedronVtxDistSq3D(WlzDVertex3 *dstU, int *dstFI,
     *dstFI = fIdx;
   }
   return(dSq);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzGeometry
+* \brief	Given a sorted list or polygon vertex positions. The polygon
+* 		is triangulated by ear clipping and the resulting triangulation
+* 		is returned.
+*
+* 		The algorithm is based on the paper:
+* 		Kong, X., H. Everett, and G.T. Toussaint. 
+* 		The Graham scan triangulates simple polygons. 
+* 		Pattern Recognition Letters. November 1990, 713-716.
+*
+* 		In this algorithm the input is a simple polygon stored
+* 		as a doubly linked circular list. With next(Pi) and
+* 		prev(Pi) the successor and predecessor of Pi respectively.
+* 		The algorithm produces a set D of diagonals comprising a
+* 		triangulation of P. R is a set containing all the concave
+* 		vertices of P.
+* \verbatim
+  1.  pi = p2;
+  2.  while (pi==Po) do
+  3.  if(IsAnEar(P,R, prev(pi)) and P is not a triangle // prev(Pi) is an ear
+  4.  D = D U (prev (prev (Pi)), Pi) // Store a diagonal
+  5.  P = P - prev(Pi) // Cut the ear
+  6.  if Pi in R and Pi is a convex vertex // Pi has become convex
+  7.  R = R - Pi
+  8.  if prev(Pi) in R and prev(Pi) is a convex vertex // prev(Pi) now convex
+  9.  R = R - prev(pi)
+  10. if (prev(Pi)=P0) // next(P0) was cut
+  11. Pi = next(Pi) // Advance the scan
+  12. else pi = next(pi) // prev(pi) not an ear or P is triangle. Advance scan.
+  13. end while
+  \endverbatim
+*
+* \param	nPVtx			Number of polygon vertices.
+* \param	pVtx			The polygon vertices.
+* \param	dstNTri			Destination pointer for the number of
+* 					triangles.
+* \param 	dstTri			Indices (triples) of the vertices
+* 					for each triangle. This should be
+* 					freed using AlcFree().
+*/
+WlzErrorNum	WlzGeomPolyTriangulate2D(int nPVtx, WlzDVertex2 *pVtx,
+				         int *dstNTri, int **dstTri)
+{
+  int		nTri = 0;
+  int		*tri = NULL;
+  WlzGeomPolyListItem2D *polyList = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((pVtx == NULL) || (dstNTri == NULL) || (dstTri == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(nPVtx < 3)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    /* Create a linked list for the polygon vertices and a return
+     * array for the triangles. */
+    if(((polyList = (WlzGeomPolyListItem2D *)
+                AlcMalloc(nPVtx *  sizeof(WlzGeomPolyListItem2D))) == NULL) ||
+       ((tri = (int *)AlcMalloc(3 * (nPVtx - 2) * sizeof(int))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nTri = nPVtx - 2;
+    if(nPVtx == 3)
+    {
+      /* Trivial case of polygon is a triangle. */
+      tri[0] = 0;
+      tri[1] = 1;
+      tri[2] = 2;
+    }
+    else
+    {
+      int	idV,
+      		idT,
+		repMax;
+      WlzGeomPolyListItem2D *p;
+
+      idT = 0;
+      /* Set up the linked list of polygon vertices. */
+      for(idV = 0; idV < nPVtx; ++idV)
+      {
+	p = &(polyList[idV]);
+        p->v = idV;
+	p->prev = &(polyList[(idV + nPVtx - 1) % nPVtx]);
+	p->next = &(polyList[(idV + 1) % nPVtx]);
+      }
+      /* Set convexity. */
+      for(idV = 0; idV < nPVtx; ++idV)
+      {
+	p = &(polyList[idV]);
+	WlzGeomPolyTriSetCvx(pVtx, p);
+      }
+      /* Pull of ears until there are none left. */
+      repMax = nPVtx * 2;
+      p = polyList;
+      do
+      {
+	if(p == p->next->next->next)
+	{
+	  int	*t;
+
+	  t = &(tri[idT++ * 3]);
+	  t[0] = p->v;
+	  t[1] = p->next->v;
+	  t[2] = p->next->next->v;
+	}
+	else if(WlzGeomPolyListIsEar2D(nPVtx, pVtx, p, &errNum))
+	{
+	  int	*t;
+
+	  /* Add the ear triangle. */
+	  t = &(tri[idT++ * 3]);
+	  t[0] = p->prev->v;
+	  t[1] = p->v;
+	  t[2] = p->next->v;
+	  /* Cut off the ear. */
+	  p->prev->next = p->next;
+	  p->next->prev = p->prev;
+	  /* Update convexity of previous and next vertices. */
+          WlzGeomPolyTriSetCvx(pVtx, p->prev);
+          WlzGeomPolyTriSetCvx(pVtx, p->next);
+	  /* advance to the next vertex. */
+	}
+	p = p->next;
+      } while((errNum == WLZ_ERR_NONE) && (idT < nTri) && (repMax-- > 0));
+      if(repMax <= 0)
+      {
+        errNum = WLZ_ERR_DOMAIN_DATA;
+      }
+    }
+  }
+  AlcFree(polyList);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    AlcFree(tri);
+    tri = NULL;
+    nTri = 0;
+  }
+  if(dstTri)
+  {
+    *dstTri = tri;
+  }
+  if(dstNTri)
+  {
+    *dstNTri = nTri;
+  }
+  return(errNum);
+}
+
+
+/*!
+* \return	Status of vertex Pi in polygon P, true if Pi is an ear in
+* 		polygon P and false otherwise.
+* \ingroup	WlzGeometry
+* \brief	Determines whether the vertex of the given polygon is an ear.
+*		See WlzGeomPolyTriangulate2D().
+* \param	n		Number of vertices in the polygon.
+* \param	v		Polygon vertex coordinates.
+* \param	p		Polygon list item for vertex.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static int	WlzGeomPolyListIsEar2D(int n, WlzDVertex2 *v,
+				       WlzGeomPolyListItem2D *p,
+				       WlzErrorNum *dstErr)
+{
+  int		ear = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(p->cvx)
+  {
+    WlzDVertex2	v0,
+    		v1,
+		v2;
+    WlzGeomPolyListItem2D *p0,
+    		*p1;
+    
+    ear = 1;
+    p0 = p->prev;
+    p1 = p->next;
+    v0 = v[p0->v];
+    v1 = v[p->v];
+    v2 = v[p1->v];
+    while((ear == 1) && ((p1 = p1->next) != p0) && (n-- >= 0))
+    {
+      ear = (WlzGeomVxInTriangle2D(v0, v1, v2, v[p1->v]) < 0);
+    }
+  }
+  if(n < 0)
+  {
+    ear = 0;
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(ear);
+}
+
+/*!
+* \ingroup	WlzGeometry
+* \brief	sets the convexity flag for the vertex in it's polygon
+* 		list item.
+*		See WlzGeomPolyTriangulate2D().
+* \param	v		Polygon vertex coordinates.
+* \param	p		Polygon list item for vertex.
+*/
+static void 	WlzGeomPolyTriSetCvx(WlzDVertex2 *v, WlzGeomPolyListItem2D *p)
+{
+  p->cvx = (WlzGeomTriangleSnArea2(v[p->prev->v], v[p->v], v[p->next->v]) > 0);
 }

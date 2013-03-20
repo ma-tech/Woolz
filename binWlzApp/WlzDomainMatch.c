@@ -245,7 +245,7 @@ double WlzMixtureValue(
   double	**contrib,
   WlzErrorNum	*dstErr)
 {
-  double	val, con;
+  double	val = 0.0, con = 0.0;
   WlzObject	*tmpObj, *tmpObj1, *tmpObj2;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;

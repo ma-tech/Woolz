@@ -33,7 +33,7 @@
 # \brief        Process this file with autoconf to produce a configure script.
 ##
 
-m4_define([WOOLZ_VERSION], [1.1.4])
+m4_define([WOOLZ_VERSION], [1.2.3])
 
 AC_INIT(Woolz, WOOLZ_VERSION, ma-tech@hgu.mrc.ac.uk)
 AC_CANONICAL_TARGET
@@ -245,20 +245,20 @@ AC_ARG_ENABLE(optimise,
     then
       case ${target_cpu} in
 	i386|i486|i586|i686)
-	  CFLAGS="${CFLAGS} -O2 -fomit-frame-pointer"
+	  CFLAGS="${CFLAGS} -fPIC -O2 -fomit-frame-pointer"
 	  ;;
 	x86_64|amd64)
-          CFLAGS="${CFLAGS} -O2"
+          CFLAGS="${CFLAGS} -fPIC -O3 -mfpmath=sse"
 	  ;;
         *)
-          CFLAGS="${CFLAGS} -O2"
+          CFLAGS="${CFLAGS} -fPIC -O2"
 	  ;;
       esac
     else
       #Intel CC
       if test "$CC" = "icc"
       then
-	CFLAGS="${CFLAGS} -O3 -ip"
+	CFLAGS="${CFLAGS} -fPIC -O3 -ip"
       else
 	# AIX CC
 	if test "`uname`" = "AIX"
@@ -336,39 +336,6 @@ AC_CONFIG_FILES([	Makefile \
 
 if test x${ENABLE_EXTFF} = "xyes"
 then
-  AC_ARG_WITH(nifti, [  --with-nifti=DIR         Directory containing NIfTI
-                          lib and include directories.],
-	      NIFTI_DIR=$withval, NIFTI_DIR=no)
-  if test ${NIFTI_DIR} = "no"
-  then
-    AC_CHECK_HEADER(nifti1_io.h,
-		    AC_CHECK_LIB(nifti, nifti_simple_init_nim,
-				 [
-				   HAVE_NIFTI=yes
-				   LIBS_EXTFF="-lniftiio -lznz ${LIBS_EXTFF}"
-				 ]))
-  else
-    HAVE_NIFTI=yes
-    INCL_EXTFF="-I${NIFTI_DIR}/include ${INCL_EXTFF}"
-    LIBS_EXTFF="-L${NIFTI_DIR}/lib -lniftiio -lznz ${LIBS_EXTFF}"
-  fi
-
-  AC_ARG_WITH(tiff, [  --with-tiff=DIR         Directory containing the tiff
-                          lib and include directories.],
-	      TIFF_DIR=$withval, TIFF_DIR=no)
-  if test ${TIFF_DIR} = "no"
-  then
-    AC_CHECK_HEADER(tiff.h,
-		    AC_CHECK_LIB(tiff, TIFFOpen,
-				 [
-				   HAVE_TIFF=yes
-				   LIBS_EXTFF="-ltiff ${LIBS_EXTFF}"
-				 ]))
-  else
-    HAVE_TIFF=yes
-    INCL_EXTFF="-I${TIFF_DIR}/include ${INCL_EXTFF}"
-    LIBS_EXTFF="-L${TIFF_DIR}/lib -ltiff ${LIBS_EXTFF}"
-  fi
   AC_ARG_WITH(jpeg, [  --with-jpeg=DIR         Directory containing the jpeg
                           lib and include directories.],
 	      JPEG_DIR=$withval, JPEG_DIR=no)
@@ -382,8 +349,42 @@ then
 				 ]))
   else
     HAVE_JPEG=yes
-    INCL_EXTFF="-I${JPEG_DIR}/include ${INCL_EXTFF}"
+    INCL_EXTFF="${INCL_EXTFF} -I${JPEG_DIR}/include"
     LIBS_EXTFF="-L${JPEG_DIR}/lib -ljpeg ${LIBS_EXTFF}"
+  fi
+
+  AC_ARG_WITH(tiff, [  --with-tiff=DIR         Directory containing the tiff
+                          lib and include directories.],
+	      TIFF_DIR=$withval, TIFF_DIR=no)
+  if test ${TIFF_DIR} = "no"
+  then
+    AC_CHECK_HEADER(tiff.h,
+		    AC_CHECK_LIB(tiff, TIFFOpen,
+				 [
+				   HAVE_TIFF=yes
+				   LIBS_EXTFF="-ltiff  ${LIBS_EXTFF} "
+				 ]))
+  else
+    HAVE_TIFF=yes
+    INCL_EXTFF="${INCL_EXTFF} -I${TIFF_DIR}/include"
+    LIBS_EXTFF="-L${TIFF_DIR}/lib -ltiff ${LIBS_EXTFF}"
+  fi
+
+  AC_ARG_WITH(nifti, [  --with-nifti=DIR         Directory containing NIfTI
+                          lib and include directories.],
+	      NIFTI_DIR=$withval, NIFTI_DIR=no)
+  if test ${NIFTI_DIR} = "no"
+  then
+    AC_CHECK_HEADER(nifti1_io.h,
+		    AC_CHECK_LIB(nifti, nifti_simple_init_nim,
+				 [
+				   HAVE_NIFTI=yes
+				   LIBS_EXTFF=" -lniftiio -lznz ${LIBS_EXTFF}"
+				 ]))
+  else
+    HAVE_NIFTI=yes
+    INCL_EXTFF="${INCL_EXTFF} -I${NIFTI_DIR}/include"
+    LIBS_EXTFF="-L${NIFTI_DIR}/lib -lniftiio -lznz ${LIBS_EXTFF}"
   fi
   if test ${NIFTI_DIR} = "no"
   then
@@ -391,6 +392,7 @@ then
   else
     CFLAGS="${CFLAGS} -DHAVE_NIFTI=1"
   fi
+
   AC_CONFIG_FILES([	libbibfile/Makefile \
 			libhguDlpList/Makefile \
 			libReconstruct/Makefile \

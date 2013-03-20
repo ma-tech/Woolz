@@ -368,8 +368,7 @@ static WlzErrorNum WlzEffWriteObjCM2D5Stl(FILE *fP, WlzObject *obj)
 */
 static WlzErrorNum WlzEffWriteObjCtrStl(FILE *fP, WlzObject *obj)
 {
-  int		nFce,
-  		nVtx;
+  int		nFce;
   WlzGMModel	*model;
   WlzGMResIdxTb *resIdxTb = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;

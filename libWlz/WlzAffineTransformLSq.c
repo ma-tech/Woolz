@@ -1517,7 +1517,7 @@ WlzAffineTransform *WlzAffineTransformLSqRegWlz2D(WlzDVertex2 *vT,
   double	**aA = NULL,
 		**trA = NULL;
   double	*bV = NULL;
-  WlzAffineTransform *tr;
+  WlzAffineTransform *tr = NULL;
   double	aV[12];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -1639,7 +1639,6 @@ WlzAffineTransform *WlzAffineTransformLSqDQ2D(int nV, double *vW,
   double	**aA,
   		**t0A,
   		**t1A,
-  		**t2A,
 		**c1A,
 		**c3A;
   AlgMatrix	aM,	 		/* Walker's A */
@@ -1677,7 +1676,6 @@ WlzAffineTransform *WlzAffineTransformLSqDQ2D(int nV, double *vW,
     c3A = c3M.rect->array;
     t0A = t0M.rect->array;
     t1A = t1M.rect->array;
-    t2A = t2M.rect->array;
     if(vW)
     {
       sumVW = 0.0;
@@ -1924,7 +1922,6 @@ WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
   double	**aA,
   		**t0A,
   		**t1A,
-  		**t2A,
 		**c1A,
 		**c3A;
   WlzDVertex3	t0V,
@@ -1955,7 +1952,6 @@ WlzAffineTransform *WlzAffineTransformLSqDQ3D(int nV, double *vW,
     aA = aM.rect->array;
     t0A = t0M.rect->array;
     t1A = t1M.rect->array;
-    t2A = t2M.rect->array;
     c1A = c1M.rect->array;
     c3A = c3M.rect->array;
     sumVW = 0.0;
@@ -2131,6 +2127,7 @@ static WlzErrorNum WlzAffineTransformLSqLinSysSolve(AlgMatrix aM,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	itr = 1000;
 
+  wCM.core = NULL;
   if(((aCM.rect = AlgMatrixRectNew(aM.core->nR, aM.core->nC, NULL)) == NULL) ||
      ((wCM.rect = AlgMatrixRectNew(4, aM.core->nC, NULL)) == NULL) ||
      ((bCV = (double *)AlcMalloc(aM.core->nR * sizeof(double))) == NULL))

@@ -51,8 +51,8 @@ static char _WlzCMeshDistance_c[] = "University of Edinburgh $Id$";
 WlzCMeshDistance - computes distances within conforming meshes.
 \par Synopsis
 \verbatim
-WlzCMeshDistance [-b] [-h] [-i] [-o<out obj file>] [-r<ref obj file>] [-s #,#,#]
-                 [<input mesh file>]
+WlzCMeshDistance [-b] [-h] [-i] [-L] [-o<out obj file>] [-r<ref obj file>]
+                 [-s #,#,#] [<input mesh file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -68,6 +68,10 @@ WlzCMeshDistance [-b] [-h] [-i] [-o<out obj file>] [-r<ref obj file>] [-s #,#,#]
     <td><b>-i</b></td>
     <td>Output and image with interpolated distance values rather than a
         mesh with indexed values.</td>
+  </tr>
+  <tr> 
+    <td><b>-L</b></td>
+    <td>Use expensive interpolation (mainly useful as a test)..</td>
   </tr>
   <tr> 
     <td><b>-o</b></td>
@@ -126,14 +130,14 @@ int		main(int argc, char *argv[])
   		nBndSeeds,
 		boundFlg = 0,
 		imgFlg = 0,
+		interp = 0,
   		seedFlg = 0,
   		ok = 1,
   		option,
   		usage = 0;
   size_t	vtxSize = sizeof(WlzDVertex2);
   WlzObjectType	outObjType;
-  WlzVertexType vtxType,
-  		bndVtxType;
+  WlzVertexType bndVtxType;
   WlzVertex	seed;
   WlzVertexP	bndSeeds,
 		seeds;
@@ -148,7 +152,7 @@ int		main(int argc, char *argv[])
   		*refObj = NULL;
   WlzCMeshP 	mesh;
   WlzCMeshNodP	nod;
-  static char   optList[] = "bhio:r:s:";
+  static char   optList[] = "bhiLo:r:s:";
   const char    meshFileStrDef[] = "-",
   	        outObjFileStrDef[] = "-";
 
@@ -182,6 +186,9 @@ int		main(int argc, char *argv[])
 	break;
       case 'r':
         refObjFileStr = optarg;
+	break;
+      case 'L':
+        interp = 1;
 	break;
       case 'h': /* FALLTHROUGH */
       default:
@@ -271,7 +278,6 @@ int		main(int argc, char *argv[])
     switch(mshObj->type)
     {
       case WLZ_CMESH_2D:
-	vtxType = WLZ_VERTEX_D2;
 	vtxSize = sizeof(WlzDVertex2);
         if((refObj != NULL) && (refObj->type != WLZ_2D_DOMAINOBJ))
 	{
@@ -279,7 +285,6 @@ int		main(int argc, char *argv[])
 	}
 	break;
       case WLZ_CMESH_3D:
-	vtxType = WLZ_VERTEX_D3;
 	vtxSize = sizeof(WlzDVertex3);
         if((refObj != NULL) && (refObj->type != WLZ_3D_DOMAINOBJ))
 	{
@@ -394,7 +399,10 @@ int		main(int argc, char *argv[])
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  outObj = WlzCMeshDistance2D(mshObj, outObjType,
-	                              nSeeds, seeds.d2, &errNum);
+	                              nSeeds, seeds.d2,
+				      (interp)? WLZ_INTERPOLATION_KRIG:
+				                WLZ_INTERPOLATION_BARYCENTRIC,
+				      &errNum);
 	}
 	break;
       case WLZ_CMESH_3D:
@@ -444,7 +452,10 @@ int		main(int argc, char *argv[])
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  outObj = WlzCMeshDistance3D(mshObj, outObjType,
-	  	                      nSeeds, seeds.d3, &errNum);
+	  	                      nSeeds, seeds.d3,
+				      (interp)? WLZ_INTERPOLATION_KRIG:
+				                WLZ_INTERPOLATION_BARYCENTRIC,
+				      &errNum);
 	}
 	break;
 	break;
@@ -487,7 +498,7 @@ int		main(int argc, char *argv[])
   {
     fprintf(stderr,
             "Usage: %s [-b] [-h] [-o<out obj file>] [-r<ref obj file>]\n"
-	    "                        [-s #,#,#] [<input mesh file>]\n"
+	    "                        [-L] [-s #,#,#] [<input mesh file>]\n"
 	    "Constructs a 2D or 3D domain object the values of which are\n"
 	    "the minimum distance from the given seeds points in the given\n"
 	    "conforming mesh. The domain of the output object covers the\n"
@@ -498,6 +509,7 @@ int		main(int argc, char *argv[])
             "  -i  Output and image (ie a 2 or 3D domain object) with\n"
 	    "      interpolated distance values rather than a mesh with\n"
 	    "      indexed values.\n"
+	    "  -L  Use expensive interpolation (mainly useful as a test).\n"
 	    "  -o  Output object.\n"
 	    "  -b  Set seed points around the boundary of the mesh.\n"
 	    "  -s  Single seed position.\n"

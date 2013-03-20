@@ -42,14 +42,6 @@ static char _WlzCMeshIntersect_c[] = "University of Edinburgh $Id$";
 #include <Wlz.h>
 #include <float.h>
 
-#ifdef WLZ_UNUSED_FUNCTIONS
-static int			WlzIntersectDomAABBTri3D(
-				  WlzObject *dObj,
-				  WlzDVertex3 p0,
-				  WlzDVertex3 p1,
-				  WlzDVertex3 p2,
-				  WlzErrorNum *dstErr);
-#endif /* WLZ_UNUSED_FUNCTIONS */
 static int			WlzCMeshIntersectSortVtx2D(
 				  void *data,
 				  int *idx,
@@ -60,6 +52,956 @@ static int			WlzCMeshIntersectDomIsInside3D(
 				  WlzDVertex3 q,
 				  WlzDVertex3 nrm,
 				  double delta);
+static WlzCMesh2D 		*WlzCMeshIntersect2D(
+				  WlzCMesh2D *mesh0,
+				  WlzCMesh2D *mesh1,
+				  WlzIndexedValues *ixv0,
+				  int **dstNodTab,
+				  WlzErrorNum *dstErr);
+static WlzCMesh3D 		*WlzCMeshIntersect3D(
+				  WlzCMesh3D *mesh0,
+				  WlzCMesh3D *mesh1,
+				  WlzIndexedValues *ixv0,
+				  int **dstNodTab,
+				  WlzErrorNum *dstErr);
+
+/*!
+* \return	New conforming mesh object which covers the intersection of
+* 		the two given conforming mesh objects.
+* \ingroup	WlzMesh
+* \brief	Computes a new conforming mesh which covers the intersection
+* 		the two given conforming mesh objects.
+* 		The new mesh will have the nodes and elements of the first
+* 		mesh when these are contained in the second mesh.
+* \param	obj0			The first conforming mesh object.
+* \param	obj1			The second conforming mesh object.
+* \param	dsp0			If non-zero then use the displaced
+* 					nodes of the first mesh.
+* 					be valid node displacements.
+* \param	dstNodTab		Destination pointer for the node
+* 					index table. This is a look up
+* 					table from the nodes of tr0 to
+* 					those of the new conforming mesh
+* 					with invalid entries being marked
+* 					with a negative index. May be NULL
+* 					if not required. A returned node
+* 					table should be freed using AlcFree().
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzCMeshIntersect(WlzObject *obj0, WlzObject *obj1,
+				   int dsp0, int **dstNodTab,
+				   WlzErrorNum *dstErr)
+{
+  WlzObject	*rObj = NULL;
+  WlzDomain 	dom;
+  WlzValues 	val;
+  WlzIndexedValues *ixv0 = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dom.core = NULL;
+  val.core = NULL;
+  if((obj0 == NULL) || (obj1 == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((obj0->domain.core == NULL) || (obj1->domain.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(obj0->type != obj1->type)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else
+  {
+    switch(obj0->type)
+    {
+      case WLZ_CMESH_2D:
+	if(dsp0)
+	{
+          if(obj0->values.core == NULL)
+	  {
+	    errNum = WLZ_ERR_VALUES_NULL;
+	  }
+	  else if(obj0->values.core->type != WLZ_INDEXED_VALUES)
+	  {
+	    errNum = WLZ_ERR_VALUES_TYPE;
+	  }
+	  else if((obj0->values.x->rank != 1) ||
+                  (obj0->values.x->dim[0] < 2) ||
+                  (obj0->values.x->vType != WLZ_GREY_DOUBLE) ||
+                  (obj0->values.x->attach != WLZ_VALUE_ATTACH_NOD))
+	  {
+	    errNum = WLZ_ERR_VALUES_DATA;
+	  }
+	  else
+	  {
+	    ixv0 = obj0->values.x;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  dom.cm2 = WlzCMeshIntersect2D(obj0->domain.cm2, obj1->domain.cm2,
+					ixv0, dstNodTab, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  rObj = WlzMakeMain(WLZ_CMESH_2D, dom, val, NULL, NULL, &errNum);
+	}
+        break;
+      case WLZ_CMESH_3D:
+	if(dsp0)
+	{
+          if(obj0->values.core == NULL)
+	  {
+	    errNum = WLZ_ERR_VALUES_NULL;
+	  }
+	  else if(obj0->values.core->type != WLZ_INDEXED_VALUES)
+	  {
+	    errNum = WLZ_ERR_VALUES_TYPE;
+	  }
+	  else if((obj0->values.x->rank != 1) ||
+                  (obj0->values.x->dim[0] < 3) ||
+                  (obj0->values.x->vType != WLZ_GREY_DOUBLE) ||
+                  (obj0->values.x->attach != WLZ_VALUE_ATTACH_NOD))
+	  {
+	    errNum = WLZ_ERR_VALUES_DATA;
+	  }
+	  else
+	  {
+	    ixv0 = obj0->values.x;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  dom.cm3 = WlzCMeshIntersect3D(obj0->domain.cm3, obj1->domain.cm3,
+					ixv0, dstNodTab, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  rObj = WlzMakeMain(WLZ_CMESH_3D, dom, val, NULL, NULL, &errNum);
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
+* \return	New conforming mesh object which covers the intersection of
+* 		the two given (convex) mesh objects.
+* \ingroup	WlzMesh
+* \brief	Computes a new conforming mesh which covers the intersection
+* 		the two given (convex) mesh objects.
+* 		The new mesh will have the nodes and elements of the first
+* 		mesh when these are contained in the second mesh.
+* \param	tr0			The first convex mesh transform.
+* \param	dsp0			Use displaced node positions of the
+* 					first convex mesh if non null.
+* \param	tr1			The second convex mesh transform.
+* \param	dsp0			Use the displaced node positions of
+* 					tr0 to find intersection if non-zero.
+* 					The new node positions are always
+* 					those of tr0 irespective of the
+* 					vale of dsp0.
+* \param	dstNodTab		Destination pointer for the node
+* 					index table. May be NULL. See
+* 					WlzCMeshIntersect().
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCMesh2D	*WlzCMeshIntersect2Mesh2D(WlzMeshTransform *tr0,
+				          WlzMeshTransform *tr1,
+					  int dsp0, int **dstNodTab,
+					  WlzErrorNum *dstErr)
+{
+  int		eCnt = 0,
+  		nCnt = 0;
+  WlzUByte	*eTab = NULL;
+  int  		*nTab = NULL;
+  WlzCMesh2D	*meshN = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Create a pair of integer element and node index tables.
+   * Initialy these tables record whether a node or element of tr0
+   * has been checked and whether it is within and element of tr1
+   * using the values:
+   * 0 - not visited,
+   * 1 - node visited but not in an elment of tr1 and nor is any node of
+   *     any element which shares this node,
+   * 2 - node not in an element of tr1 but at least one node in an element
+   *     of tr1 which shares this node is inside an element of tr1,
+   * 3 - node is within an element of tr1.
+   * As the nodes are allocated in the new mesh these are replaced with
+   * either the new mesh node index or -1. The element table is only used
+   * to record the initial code (0 or 3) and not the new element indices. */
+  if(((eTab = (WlzUByte *)AlcCalloc(tr0->maxElem,
+				    sizeof(WlzUByte))) == NULL) ||
+     ((nTab = (int *)AlcCalloc(tr0->maxNodes, sizeof(int))) == NULL))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  /* For each element of tr0 that has at least one node in an element
+   * of tr1, flag these in the element and node buffers and increment
+   * the element / node counts. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE;
+
+    for(idE = 0; idE < tr0->maxElem; ++idE)
+    {
+      WlzMeshElem *e0;
+
+      e0 = &(tr0->elements[idE]);
+      if((e0->flags & WLZ_MESH_ELEM_FLAGS_ZOMBIE) == 0)
+      {
+	int	idN,
+		eIn = 0;
+
+	for(idN = 0; idN < 3; ++idN)
+	{
+	  int	nIdx,
+	  	ePrv = -1;
+
+	  nIdx = e0->nodes[idN];
+	  switch(nTab[nIdx])
+	  {
+	    case 0:
+	      {
+		int 	eIdx;
+		WlzMeshNode *n0;
+		WlzDVertex2 pos0;
+
+		n0 = &(tr0->nodes[nIdx]);
+		pos0 = n0->position;
+		if(dsp0)
+		{
+		  WLZ_VTX_2_ADD(pos0, pos0, n0->displacement);
+		}
+		eIdx = WlzMeshElemFindVx(tr1, pos0, ePrv, NULL, NULL, &errNum);
+		if(eIdx < 0)
+		{
+		  nTab[nIdx] = 1;
+		}
+		else
+		{
+		  ++nCnt;
+		  eIn = 1;
+		  ePrv = eIdx;
+		  nTab[nIdx] = 3;
+		}
+	      }
+	      break;
+	    case 3:
+	      eIn = 1;
+	      break;
+	    default:
+	      break;
+	  }
+	}
+	if(eIn)
+	{
+	  for(idN = 0; idN < 3; ++idN)
+	  {
+	    int	nIdx;
+
+	    nIdx = e0->nodes[idN];
+	    if(nTab[nIdx] == 1)
+	    {
+	      nTab[nIdx] = 2;
+	    }
+	  }
+	  ++eCnt;
+	  eTab[e0->idx] = 3;
+	}
+      }
+    }
+  }
+  /* Create the new mesh for the intersection then allocate sufficient nodes
+   * and elements. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    meshN = WlzCMeshNew2D(&errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((AlcVectorExtend(meshN->res.nod.vec, nCnt) != ALC_ER_NONE) ||
+       (AlcVectorExtend(meshN->res.elm.vec, eCnt) != ALC_ER_NONE))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Copy the nodes (setting the entries in the node table) and then
+   * update the new mesh node grid cells. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idN;
+
+    for(idN = 0; idN < tr0->maxNodes; ++idN)
+    {
+      if(nTab[idN] >= 2)
+      {
+        WlzMeshNode 	*n0;
+        WlzCMeshNod2D 	*nN;
+
+        n0 = &(tr0->nodes[idN]);
+	nN = WlzCMeshNewNod2D(meshN, n0->position, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  nTab[idN] = nN->idx;
+	}
+	else
+	{
+	  break;
+	}
+      }
+      else
+      {
+        nTab[idN] = -1;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzCMeshUpdateBBox2D(meshN); 
+    errNum = WlzCMeshReassignGridCells2D(meshN, 0);
+  }
+  /* Copy the elements and then update the maximum edge length. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE;
+
+    for(idE = 0; idE < tr0->maxElem; ++idE)
+    {
+      if(eTab[idE] == 3)
+      {
+	int		idN;
+        WlzMeshElem 	*e0;
+        WlzCMeshElm2D 	*nE;
+	WlzCMeshNod2D 	*nodN[3];      
+
+        e0 = &(tr0->elements[idE]);
+	for(idN = 0; idN < 3; ++idN)
+	{
+	  nodN[idN] = (WlzCMeshNod2D *)
+	              AlcVectorItemGet(meshN->res.nod.vec,
+	                               nTab[e0->nodes[idN]]);
+	}
+	nE = WlzCMeshNewElm2D(meshN, nodN[0], nodN[1], nodN[2], 1, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  eTab[idE] = nE->idx;
+	}
+	else
+	{
+	  break;
+	}
+      }
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzCMeshFree2D(meshN);
+    meshN = NULL;
+  }
+  /* Free the node and element tables as required. */
+  AlcFree(eTab);
+  if(dstNodTab)
+  {
+    *dstNodTab = nTab;
+  }
+  else
+  {
+    AlcFree(nTab);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(meshN);
+}
+
+/*!
+* \return	New 2D conforming mesh object which covers the intersection of
+* 		the two given 2D conforming mesh objects.
+* \ingroup	WlzMesh
+* \brief	Computes a new 2D conforming mesh which covers the intersection
+* 		the two given 2D conforming mesh objects.
+* 		The new mesh will have the nodes and elements of the first
+* 		mesh when these are contained in the second mesh.
+* \param	mesh0			The first conforming mesh.
+* \param	mesh1			The second conforming mesh.
+* \param	ixv0			The indexed values for node
+* 				        displacements of the first mesh,
+* 					make be NULL, but otherwise must
+* 					be valid node displacements.
+* \param	dstNodTab		Destination pointer for a node index
+* 					look up table from the index of a
+* 					node in the first mesh to the
+* 					corresponding node in the returned
+* 					intersection mesh. Non valid nodes
+* 					and those with no corresponding
+* 					node in the returned mesh have
+* 					index value -1. May be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzCMesh2D *WlzCMeshIntersect2D(WlzCMesh2D *mesh0, WlzCMesh2D *mesh1,
+				    WlzIndexedValues *ixv0, int **dstNodTab,
+				    WlzErrorNum *dstErr)
+{
+  int		eCnt = 0,
+  		nCnt = 0;
+  WlzUByte	*eTab = NULL;
+  int  		*nTab = NULL;
+  WlzCMesh2D	*meshN = NULL;
+  WlzDBox2	bBox;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  bBox.xMin = bBox.yMin = 0.0;
+  bBox.yMin = bBox.yMax = 0.0;
+  /* Create a pair of integer element and node index tables.
+   * Initialy these tables record whether a node or element of mesh0
+   * has been checked and whether it is within and element of mesh1
+   * using the values:
+   * 0 - not visited,
+   * 1 - node visited but not in an elment of mesh1 and nor is any node of
+   *     any element which shares this node,
+   * 2 - node not in an element of mesh1 but at least one node in an element
+   *     of mesh 1 which shares this node is inside an element of mesh1,
+   * 3 - node is within an element of mesh1.
+   * As the nodes are allocated in the new mesh these are replaced with
+   * either the new mesh node index or -1. The element table is only used
+   * to record the initial code (0 or 3) and not the new element indices. */
+  if(((eTab = (WlzUByte *)AlcCalloc(mesh0->res.elm.maxEnt,
+				    sizeof(WlzUByte))) == NULL) ||
+     ((nTab = (int *)AlcCalloc(mesh0->res.nod.maxEnt,
+			       sizeof(int))) == NULL))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  /* For each element of mesh m0 that has at least one node in an element
+   * of mesh1, flag these in the element and node buffers and increment
+   * the element / node counts. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE,
+    		maxE;
+    AlcVector	*eV0;
+
+    eV0 = mesh0->res.elm.vec;
+    maxE = mesh0->res.elm.maxEnt;
+    for(idE = 0; idE < maxE; ++idE)
+    {
+      WlzCMeshElm2D *e0;
+
+      e0 = (WlzCMeshElm2D *)AlcVectorItemGet(eV0, idE);
+      if(e0->idx >= 0)
+      {
+	int	idN,
+		eIn = 0;
+	WlzCMeshNod2D *nod0[3];
+
+	nod0[0] = WLZ_CMESH_ELM2D_GET_NODE_0(e0);
+	nod0[1] = WLZ_CMESH_ELM2D_GET_NODE_1(e0);
+	nod0[2] = WLZ_CMESH_ELM2D_GET_NODE_2(e0);
+	for(idN = 0; idN < 3; ++idN)
+	{
+	  switch(nTab[nod0[idN]->idx])
+	  {
+	    case 0:
+	      {
+		int 	eIdx;
+		WlzDVertex2 pos;
+
+		pos = nod0[idN]->pos;
+		if(ixv0)
+		{
+		  double *dsp;
+
+	          dsp = (double *)WlzIndexedValueGet(ixv0, nod0[idN]->idx);
+		  pos.vtX += dsp[0];
+		  pos.vtY += dsp[1];
+		}
+		eIdx = WlzCMeshElmEnclosingPos2D(mesh1, -1, pos.vtX, pos.vtY,
+		                                 0, NULL);
+		if(eIdx < 0)
+		{
+		  nTab[nod0[idN]->idx] = 1;
+		}
+		else
+		{
+		  if(nCnt == 0)
+		  {
+		      bBox.xMin = bBox.xMax = pos.vtX;
+		      bBox.yMin = bBox.yMax = pos.vtY;
+		  }
+		  else
+		  {
+		    if(pos.vtX < bBox.xMin)
+		    {                     
+		      bBox.xMin = pos.vtX;
+		    }
+		    else if(pos.vtX > bBox.xMax)
+		    {
+		      bBox.xMax = pos.vtX;
+		    }
+		    if(pos.vtY < bBox.yMin)
+		    {
+		      bBox.yMin = pos.vtY;
+		    }
+		    else if(pos.vtY > bBox.yMax)
+		    {
+		      bBox.yMax = pos.vtY;
+		    }
+		  }
+		  ++nCnt;
+		  eIn = 1;
+		  nTab[nod0[idN]->idx] = 3;
+		}
+	      }
+	      break;
+	    case 3:
+	      eIn = 1;
+	      break;
+	    default:
+	      break;
+	  }
+	}
+	if(eIn)
+	{
+	  for(idN = 0; idN < 3; ++idN)
+	  {
+	    if(nTab[nod0[idN]->idx] == 1)
+	    {
+	      nTab[nod0[idN]->idx] = 2;
+	    }
+	  }
+	  ++eCnt;
+	  eTab[e0->idx] = 3;
+	}
+      }
+    }
+  }
+  /* Create the new mesh for the intersection then allocate sufficient nodes
+   * and elements. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    meshN = WlzCMeshNew2D(&errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(nCnt > 0)
+    {
+      if((AlcVectorExtend(meshN->res.nod.vec, nCnt) != ALC_ER_NONE) ||
+	 (AlcVectorExtend(meshN->res.elm.vec, eCnt) != ALC_ER_NONE))
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+  }
+  /* Set the bounding box of the new mesh to approximate values (will correct
+   * latter) and then allocate the grid cells for node/element location. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    meshN->bBox = bBox;
+    errNum = WlzCMeshReassignGridCells2D(meshN, 0);
+  }
+  /* Copy the nodes (setting the entries in the node table) and then
+   * update the new mesh node grid cells. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idN;
+
+    for(idN = 0; idN < mesh0->res.nod.maxEnt; ++idN)
+    {
+      if(nTab[idN] >= 2)
+      {
+        WlzCMeshNod2D 	*n0,
+			*nN;
+
+	nTab[idN] = -1;
+        n0 = (WlzCMeshNod2D *)AlcVectorItemGet(mesh0->res.nod.vec, idN);
+	nN = WlzCMeshNewNod2D(meshN, n0->pos, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  nTab[idN] = nN->idx;
+	}
+	else
+	{
+	  break;
+	}
+      }
+      else
+      {
+        nTab[idN] = -1;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzCMeshUpdateBBox2D(meshN); 
+    WlzCMeshUpdateMaxSqEdgLen2D(meshN);
+    errNum = WlzCMeshReassignGridCells2D(meshN, 0);
+  }
+  /* Copy the elements and then update the maximum edge length. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE;
+
+    for(idE = 0; idE < mesh0->res.elm.maxEnt; ++idE)
+    {
+      if(eTab[idE] == 3)
+      {
+	int		idN;
+        WlzCMeshElm2D 	*e0,
+			*nE;
+	WlzCMeshNod2D 	*nod0[3],
+		      	*nodN[3];      
+
+        e0 = (WlzCMeshElm2D *)AlcVectorItemGet(mesh0->res.elm.vec, idE);
+	nod0[0] = WLZ_CMESH_ELM2D_GET_NODE_0(e0);
+	nod0[1] = WLZ_CMESH_ELM2D_GET_NODE_1(e0);
+	nod0[2] = WLZ_CMESH_ELM2D_GET_NODE_2(e0);
+	for(idN = 0; idN < 3; ++idN)
+	{
+	  nodN[idN] = (WlzCMeshNod2D *)AlcVectorItemGet(meshN->res.nod.vec,
+	                                                nTab[nod0[idN]->idx]);
+	}
+	nE = WlzCMeshNewElm2D(meshN, nodN[0], nodN[1], nodN[2], 1,
+	                      &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  eTab[idE] = nE->idx;
+	}
+	else
+	{
+	  break;
+	}
+      }
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzCMeshFree2D(meshN);
+    meshN = NULL;
+  }
+  /* Free the node and element tables. */
+  AlcFree(eTab);
+  if(dstNodTab)
+  {
+    *dstNodTab = nTab;
+  }
+  else
+  {
+    AlcFree(nTab);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(meshN);
+}
+
+/*!
+* \return	New 3D conforming mesh object which covers the intersection
+* 		of the two given 3D conforming mesh objects.
+* \ingroup	WlzMesh
+* \brief	Computes a new 3D conforming mesh which covers the intersection
+* 		the two given 3D conforming mesh objects.
+* 		The new mesh will have the nodes and elements of the first
+* 		mesh when these are contained in the second mesh.
+* \param	mesh0			The first conforming mesh.
+* \param	mesh1			The second conforming mesh.
+* \param	ixv0			The indexed values for node
+* 				        displacements of the first mesh,
+* 					make be NULL, but otherwise must
+* 					be valid node displacements.
+* \param	dstNodTab		Destination pointer for a node index
+* 					look up table from the index of a
+* 					node in the first mesh to the
+* 					corresponding node in the returned
+* 					intersection mesh. Non valid nodes
+* 					and those with no corresponding
+* 					node in the returned mesh have
+* 					index value -1. May be NULL.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzCMesh3D *WlzCMeshIntersect3D(WlzCMesh3D *mesh0, WlzCMesh3D *mesh1,
+				       WlzIndexedValues *ixv0, int **dstNodTab,
+				       WlzErrorNum *dstErr)
+{
+  int		eCnt = 0,
+  		nCnt = 0;
+  WlzUByte	*eTab = NULL;
+  int  		*nTab = NULL;
+  WlzCMesh3D	*meshN = NULL;
+  WlzDBox3	bBox;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  bBox.xMin = bBox.yMin = 0.0;
+  bBox.yMin = bBox.yMax = 0.0;
+  bBox.zMin = bBox.zMax = 0.0;
+  /* Create a pair of integer element and node index tables.
+   * Initialy these tables record whether a node or element of mesh0
+   * has been checked and whether it is within and element of mesh1
+   * using the values:
+   * 0 - not visited,
+   * 1 - node visited but not in an elment of mesh1 and nor is any node of
+   *     any element which shares this node,
+   * 2 - node not in an element of mesh1 but at least one node in an element
+   *     of mesh 1 which shares this node is inside an element of mesh1,
+   * 3 - node is within an element of mesh1.
+   * As the nodes are allocated in the new mesh these are replaced with
+   * either the new mesh node index or -1. The element table is only used
+   * to record the initial code (0 or 3) and not the new element indices. */
+  if(((eTab = (WlzUByte *)AlcCalloc(mesh0->res.elm.maxEnt,
+				    sizeof(WlzUByte))) == NULL) ||
+     ((nTab = (int *)AlcCalloc(mesh0->res.nod.maxEnt,
+			       sizeof(int))) == NULL))
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  /* For each element of mesh m0 that has at least one node in an element
+   * of mesh1, flag these in the element and node buffers and increment
+   * the element / node counts. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE,
+    		maxE;
+    AlcVector	*eV0;
+
+    eV0 = mesh0->res.elm.vec;
+    maxE = mesh0->res.elm.maxEnt;
+    for(idE = 0; idE < maxE; ++idE)
+    {
+      WlzCMeshElm3D *e0;
+
+      e0 = (WlzCMeshElm3D *)AlcVectorItemGet(eV0, idE);
+      if(e0->idx >= 0)
+      {
+	int	idN,
+		eIn = 0;
+	WlzCMeshNod3D *nod0[4];
+
+	nod0[0] = WLZ_CMESH_ELM3D_GET_NODE_0(e0);
+	nod0[1] = WLZ_CMESH_ELM3D_GET_NODE_1(e0);
+	nod0[2] = WLZ_CMESH_ELM3D_GET_NODE_2(e0);
+	nod0[3] = WLZ_CMESH_ELM3D_GET_NODE_3(e0);
+	for(idN = 0; idN < 4; ++idN)
+	{
+	  switch(nTab[nod0[idN]->idx])
+	  {
+	    case 0:
+	      {
+		int 	eIdx;
+		WlzDVertex3 pos;
+
+		pos = nod0[idN]->pos;
+		if(ixv0)
+		{
+		  double *dsp;
+
+	          dsp = (double *)WlzIndexedValueGet(ixv0, nod0[idN]->idx);
+		  pos.vtX += dsp[0];
+		  pos.vtY += dsp[1];
+		  pos.vtZ += dsp[2];
+		}
+		eIdx = WlzCMeshElmEnclosingPos3D(mesh1, -1,
+		                                 pos.vtX, pos.vtY, pos.vtZ,
+		                                 0, NULL);
+		if(eIdx < 0)
+		{
+		  nTab[nod0[idN]->idx] = 1;
+		}
+		else
+		{
+		  if(nCnt == 0)
+		  {
+		      bBox.xMin = bBox.xMax = pos.vtX;
+		      bBox.yMin = bBox.yMax = pos.vtY;
+		      bBox.zMin = bBox.zMax = pos.vtZ;
+		  }
+		  else
+		  {
+		    if(pos.vtX < bBox.xMin)
+		    {                     
+		      bBox.xMin = pos.vtX;
+		    }
+		    else if(pos.vtX > bBox.xMax)
+		    {
+		      bBox.xMax = pos.vtX;
+		    }
+		    if(pos.vtY < bBox.yMin)
+		    {
+		      bBox.yMin = pos.vtY;
+		    }
+		    else if(pos.vtY > bBox.yMax)
+		    {
+		      bBox.yMax = pos.vtY;
+		    }
+		    if(pos.vtZ < bBox.zMin)
+		    {
+		      bBox.zMin = pos.vtZ;
+		    }
+		    else if(pos.vtZ > bBox.zMax)
+		    {
+		      bBox.zMax = pos.vtZ;
+		    }
+		  }
+		  ++nCnt;
+		  eIn = 1;
+		  nTab[nod0[idN]->idx] = 3;
+		}
+	      }
+	      break;
+	    case 3:
+	      eIn = 1;
+	      break;
+	    default:
+	      break;
+	  }
+	}
+	if(eIn)
+	{
+	  for(idN = 0; idN < 4; ++idN)
+	  {
+	    if(nTab[nod0[idN]->idx] == 1)
+	    {
+	      nTab[nod0[idN]->idx] = 2;
+	    }
+	  }
+	  ++eCnt;
+	  eTab[e0->idx] = 3;
+	}
+      }
+    }
+  }
+  /* Create the new mesh for the intersection then allocate sufficient nodes
+   * and elements. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    meshN = WlzCMeshNew3D(&errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(nCnt > 0)
+    {
+      if((AlcVectorExtend(meshN->res.nod.vec, nCnt) != ALC_ER_NONE) ||
+	 (AlcVectorExtend(meshN->res.elm.vec, eCnt) != ALC_ER_NONE))
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+  }
+  /* Set the bounding box of the new mesh to approximate values (will correct
+   * latter) and then allocate the grid cells for node/element location. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    meshN->bBox = bBox;
+    errNum = WlzCMeshReassignGridCells3D(meshN, 0);
+  }
+  /* Copy the nodes (setting the entries in the node table) and then
+   * update the new mesh node grid cells. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idN;
+
+    for(idN = 0; idN < mesh0->res.nod.maxEnt; ++idN)
+    {
+      if(nTab[idN] >= 2)
+      {
+        WlzCMeshNod3D 	*n0,
+			*nN;
+
+	nTab[idN] = -1;
+        n0 = (WlzCMeshNod3D *)AlcVectorItemGet(mesh0->res.nod.vec, idN);
+	nN = WlzCMeshNewNod3D(meshN, n0->pos, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  nTab[idN] = nN->idx;
+	}
+	else
+	{
+	  break;
+	}
+      }
+      else
+      {
+        nTab[idN] = -1;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzCMeshUpdateBBox3D(meshN); 
+    WlzCMeshUpdateMaxSqEdgLen3D(meshN);
+    errNum = WlzCMeshReassignGridCells3D(meshN, 0);
+  }
+  /* Copy the elements and then update the maximum edge length. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE;
+
+    for(idE = 0; idE < mesh0->res.elm.maxEnt; ++idE)
+    {
+      if(eTab[idE] == 3)
+      {
+	int		idN;
+        WlzCMeshElm3D 	*e0,
+			*nE;
+	WlzCMeshNod3D 	*nod0[4],
+		      	*nodN[4];      
+
+        e0 = (WlzCMeshElm3D *)AlcVectorItemGet(mesh0->res.elm.vec, idE);
+	nod0[0] = WLZ_CMESH_ELM3D_GET_NODE_0(e0);
+	nod0[1] = WLZ_CMESH_ELM3D_GET_NODE_1(e0);
+	nod0[2] = WLZ_CMESH_ELM3D_GET_NODE_2(e0);
+	nod0[3] = WLZ_CMESH_ELM3D_GET_NODE_3(e0);
+	for(idN = 0; idN < 4; ++idN)
+	{
+	  nodN[idN] = (WlzCMeshNod3D *)AlcVectorItemGet(meshN->res.nod.vec,
+	                                                nTab[nod0[idN]->idx]);
+	}
+	nE = WlzCMeshNewElm3D(meshN, nodN[0], nodN[1], nodN[2], nodN[3], 1,
+	                      &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  eTab[idE] = nE->idx;
+	}
+	else
+	{
+	  break;
+	}
+      }
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzCMeshFree3D(meshN);
+    meshN = NULL;
+  }
+  /* Free the node and element tables. */
+  AlcFree(eTab);
+  if(dstNodTab)
+  {
+    *dstNodTab = nTab;
+  }
+  else
+  {
+    AlcFree(nTab);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(meshN);
+}
 
 /*!
 * \return	New 2D spatial domain obect.
@@ -82,8 +1024,8 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 					WlzErrorNum *dstErr)
 {
   int		idN;
-  WlzCMesh2D5	*mesh;
-  WlzIndexedValues *ixv;
+  WlzCMesh2D5	*mesh = NULL;
+  WlzIndexedValues *ixv = NULL;
   WlzObject	*fObj = NULL,
   		*rObj = NULL;
   WlzObject	*tObj[5];	         	       /* Temporary objects. */
@@ -297,11 +1239,7 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 	        a = p2[2].vtY / p2[2].vtX;
 		for(x2 = 0.0; x2 < p2[2].vtX + eps; x2 += 1.0)
 		{
-		  WlzDVertex2	q2;
-
 		  y2 = a * x2;
-		  q2.vtX = x2;
-		  q2.vtY = y2;
 		  b = x2 / p2[2].vtX;
 		  q3.vtX = p3[0].vtX + b * (p3[2].vtX - p3[0].vtX);
 		  q3.vtY = p3[0].vtY + b * (p3[2].vtY - p3[0].vtY);
@@ -324,11 +1262,7 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 	        a = p2[2].vtX / p2[2].vtY;
 		for(y2 = 0.0; y2 < p2[2].vtY + eps; y2 += 1.0)
 		{
-	          WlzDVertex2	q2;
-
 		  x2 = a * y2;
-		  q2.vtX = x2;
-		  q2.vtY = y2;
 		  b = y2 / p2[2].vtY;
 		  q3.vtX = p3[0].vtX + b * (p3[2].vtX - p3[0].vtX);
 		  q3.vtY = p3[0].vtY + b * (p3[2].vtY - p3[0].vtY);
@@ -509,7 +1443,7 @@ WlzDVertex2	WlzCMeshClosePointDom2D5(WlzObject *vObj, WlzObject *mObj,
   double	mDst = DBL_MAX;
   double	mL[2];
   WlzDVertex2	mPos2;
-  WlzCMesh2D5	*mesh;
+  WlzCMesh2D5	*mesh = NULL;
   WlzIterateWSpace *itWSp = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -672,42 +1606,3 @@ static int	WlzCMeshIntersectSortVtx2D(void *data, int *idx,
   }
   return(cmp);
 }
-
-#ifdef WLZ_UNUSED_FUNCTIONS
-/*!
-* \return	Zero if no intersection is possible otherwise non-zero.
-* \ingroup	WlzGeometry
-* \brief	Determines whether the axis aligned bounding box of the
-* 		given object's domain and the given 3D triangle intersect.
-* \param	dObj			Given object with domain.
-* \param	p0			First vertex of triangle.
-* \param	p1			Second vertex of triangle.
-* \param	p2			Third vertex of triangle.
-* \param	dstErr			Destination error pointer, may be NULL.
-*/
-static int	WlzIntersectDomAABBTri3D(WlzObject *dObj, WlzDVertex3 p0,
-				     WlzDVertex3 p1, WlzDVertex3 p2,
-				     WlzErrorNum *dstErr)
-{
-  int		isn = 0;
-
-  if((dObj != NULL) && (dObj->type == WLZ_3D_DOMAINOBJ) &&
-     (dObj->domain.core != NULL) &&
-     (dObj->domain.core->type == WLZ_PLANEDOMAIN_DOMAIN))
-  {
-    WlzDVertex3	b0,
-		b1;
-    WlzPlaneDomain *pDom = NULL;
-    
-    pDom = dObj->domain.p;
-    b0.vtX = pDom->kol1;
-    b0.vtY = pDom->line1;
-    b0.vtZ = pDom->plane1;
-    b1.vtX = pDom->lastkl;
-    b1.vtY = pDom->lastln;
-    b1.vtZ = pDom->lastpl;
-    isn = WlzGeomTriangleAABBIntersect3D(p0, p1, p2, b0, b1, 0);
-  }
-  return(isn);
-}
-#endif /* WLZ_UNUSED_FUNCTIONS */

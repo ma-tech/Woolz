@@ -49,7 +49,7 @@ static char _WlzShadeCorrect_c[] = "University of Edinburgh $Id$";
 WlzShadeCorrect - shade corrects a domain object with values.
 \par Synopsis
 \verbatim
-WlzShadeCorrect [-h] [-v] [-p] [-d <dark-field image>]
+WlzShadeCorrect [-h] [-p] [-d <dark-field image>]
                 -b <bright-field image> [<input file>]
 \endverbatim
 \par Options
@@ -57,10 +57,6 @@ WlzShadeCorrect [-h] [-v] [-p] [-d <dark-field image>]
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-v</b></td>
-    <td>Verbose operation.</td>
   </tr>
   <tr> 
     <td><b>-p</b></td>
@@ -114,8 +110,8 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s -b <bright-field image> -d <dark-field image> "
-	  "-p -h -v [<input file>]\n"
+	  "Usage:\t%s -b <bright-field image> [-d <dark-field image>] "
+	  "[-p] [-h] [<input file>]\n"
 	  "\tApply a shade correction to the input objects. The shade\n"
 	  "\tcorrection using the bright-field and dark-field images\n"
 	  "\tassumes intensity images and calculates a normalised\n"
@@ -124,9 +120,9 @@ static void usage(char *proc_str)
 	  "Options:\n" 
 	  "\t  -b <file> Bright-field image - REQUIRED\n"
 	  "\t  -d <file> Dark-field image - optional\n"
-	  "\t  -p        Patch image, shade images shifted to correct each patch\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -v        Verbose operation\n",
+	  "\t  -p        Patch image, shade images shifted to correct each\n"
+	  "\t            patch\n"
+	  "\t  -h        Help - prints this usage message\n",
 	  proc_str,
 	  WlzVersion());
   return;
@@ -135,9 +131,8 @@ static void usage(char *proc_str)
 int main(int	argc,
 	 char	**argv)
 {
-  char 		optList[] = "b:d:phv";
+  char 		optList[] = "b:d:ph";
   int		option;
-  int		verboseFlg=0;
   int		patchFlg=0;
   int		i, xShift, yShift, zShift;
   FILE		*fp;
@@ -180,10 +175,6 @@ int main(int	argc,
 
     case 'p':
       patchFlg = 1;
-      break;
-
-    case 'v':
-      verboseFlg = 1;
       break;
 
     case 'h':

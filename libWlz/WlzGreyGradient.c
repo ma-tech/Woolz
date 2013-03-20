@@ -130,7 +130,7 @@ static WlzObject *WlzGreyMagnitude2D3(WlzObject *srcObj0, WlzObject *srcObj1,
   WlzObject	*iObjA[3],
   		*tObjA[3];
   WlzGreyP	tGP0;
-  WlzGreyType	dstGType;
+  WlzGreyType	dstGType = WLZ_GREY_ERROR;
   WlzGreyType	gTypeA[3];
   WlzPixelV	dstBgd;
   WlzPixelV	bgdA[3];
@@ -533,8 +533,8 @@ static WlzObject *WlzGreyGradient2D(WlzObject **dstGrdY, WlzObject **dstGrdX,
 				    WlzObject *srcObj,
 				    WlzRsvFilter *flt, WlzErrorNum *dstErr)
 {
-  WlzObject	*grdX,
-  		*grdY,
+  WlzObject	*grdX = NULL,
+  		*grdY = NULL,
 		*dstObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 

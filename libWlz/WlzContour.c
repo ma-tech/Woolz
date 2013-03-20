@@ -917,7 +917,7 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
 		bufRgt,
 		bufLnIdx,
   		itvLen,
-		itvBufWidth;
+		itvBufWidth = 0;
   WlzDomain	srcDom;
   WlzUByte	*itvBuf[2] = {NULL, NULL};
   double	*valBuf[2] = {NULL, NULL};
@@ -927,6 +927,7 @@ static WlzContour *WlzContourIsoObj2D(WlzObject *srcObj, double isoVal,
   WlzGreyWSpace	srcGWSp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  srcDom.core = NULL;
   if(srcObj->values.core == NULL)
   {
     errNum = WLZ_ERR_VALUES_NULL;
@@ -1296,8 +1297,8 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
 		dCode,
 		iCnt,
 		iLen,
-		iBufSz,
-		lnInc;
+		lnInc,
+		iBufSz = 0;
   WlzUByte	doLn;
   double	tD0,
   		grdM0,
@@ -1305,8 +1306,8 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
 		grdM2,
 		grdX0,
 		grdY0,
-		grdMLft,
-		grdMRgt;
+		grdMLft = 0.0,
+		grdMRgt = 0.0;
   WlzGreyP	grdGP,
   		grdXGP,
   		grdYGP;
@@ -1336,6 +1337,9 @@ WlzContour 	*WlzContourGrdObj2D(WlzObject *srcObj,
   		gYGWSp;
   const WlzUByte dTable[8] = {3, 2, 0, 1, 4, 5, 7, 6};
 
+  bufSz.vtX = bufSz.vtY = 0;
+  posRel.vtX = posRel.vtY = 0;
+  grdGP.v = grdXGP.v = grdYGP.v = NULL;
   if(srcObj == NULL)
   {
     if((gGXObj == NULL) || (gGYObj == NULL))
@@ -2105,7 +2109,7 @@ static WlzContour *WlzContourBndObj2D(WlzObject *gObj, WlzErrorNum *dstErr)
 static WlzContour *WlzContourBndCMeshObj2D(WlzObject *gObj, WlzErrorNum *dstErr)
 {
   WlzCMesh2D	*mesh;
-  WlzGMModel 	*model;
+  WlzGMModel 	*model = NULL;
   WlzContour 	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -2197,7 +2201,7 @@ ERROR:
 static WlzContour *WlzContourBndCMeshObj3D(WlzObject *gObj, WlzErrorNum *dstErr)
 {
   WlzCMesh3D	*mesh;
-  WlzGMModel 	*model;
+  WlzGMModel 	*model = NULL;
   WlzContour 	*ctr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -3994,6 +3998,8 @@ static WlzErrorNum WlzContourGrdCube3D(WlzContour *ctr,
   double	gF[2],
   		lIP[4];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  gF[0] = gF[1] = 0.0;
   /* Compute gradient vector at centre of cube as a unit vector and it's
    * modulus. */
   aCC.vtX = bufPos.vtX + 1;

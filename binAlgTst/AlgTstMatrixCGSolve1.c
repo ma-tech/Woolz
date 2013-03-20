@@ -132,7 +132,7 @@ int		main(int argc, char *argv[])
     x[1] = 1.0;
     x[2] = 1.0;
     errCode = AlgMatrixCGSolve(a, x, b, w, NULL, NULL, tol, itr, &tol, &itr);
-    if(errCode != NULL)
+    if(errCode != ALG_ERR_NONE)
     {
       (void )fprintf(stderr, "%s: Failed to solve using CG, error code = %d\n",
                      *argv, (int )errCode);

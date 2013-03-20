@@ -277,7 +277,14 @@ int main(int	argc,
 	 (void *) &scaleY, "%*lg %lg %*lg", "Scale",
 	 (void *) &scaleZ, "%*lg %*lg %lg", "Scale",
 	 NULL);
-
+      if(numParsedFields < 1) {
+	(void )fprintf(stderr,
+		       "%s: can't read scale from bibfile: %s\n",
+		       argv[0], optarg);
+	usage(argv[0]);
+	return 1;
+      }
+	
       /* make the transform for this record */
       reconTrans = WlzAffineTransformFromPrimVal(WLZ_TRANSFORM_2D_AFFINE,
 						 0.0, 0.0, 0.0, scaleX,

@@ -67,10 +67,6 @@ WlzEMAPDomainTransform
     <td><b>-h</b></td>
     <td>Help - print help message</td>
   </tr>
-  <tr>
-    <td><b>-v</b></td>
-    <td>Verbose operation</td>
-  </tr>
 </table>
 
 \par Description
@@ -102,14 +98,13 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s -m <src> -M <dest> [-h] [-v]"
+	  "Usage:\t%s -m <src> -M <dest> [-h]"
 	  " <object input file>\n"
 	  "Version: %s\n"
 	  "Options:\n"
 	  "\t-m\t\tSource model.\n"
 	  "\t-M\t\tDestination model.\n"
-	  "\t-h\t\tHelp - this message\n"
-	  "\t-v\t\tverbose operation\n",
+	  "\t-h\t\tHelp - this message\n",
 	  proc_str,
 	  WlzVersion());
   return;
@@ -118,11 +113,10 @@ static void usage(char *proc_str)
 int main(int	argc,
 	 char	**argv)
 {
-  char 		optList[] = "m:M:hv";
+  char 		optList[] = "m:M:h";
   int		option;
   FILE		*inFP;
   WlzObject	*inObj, *outObj;
-  int		verboseFlg=0;
   char	      	*srcModel, *dstModel;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
@@ -147,10 +141,6 @@ int main(int	argc,
     default:
       usage(argv[0]);
       return 0;
-
-    case 'v':
-      verboseFlg = 1;
-      break;
 
     }
   }

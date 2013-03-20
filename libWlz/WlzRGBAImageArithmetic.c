@@ -63,10 +63,10 @@ WlzObject *WlzRGBAImageArithmetic(
   int 			overwrite,
   WlzErrorNum 		*dstErr)
 {
-  WlzObject	*rtnObj=NULL, *objs[4];
-  WlzCompoundArray	*cmpnd0, *cmpnd1, *rtnCmpnd;
+  WlzObject	*rtnObj = NULL, *objs[4];
+  WlzCompoundArray	*cmpnd0 = NULL, *cmpnd1 = NULL, *rtnCmpnd = NULL;
   int		i;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* check objects */
   if( (obj0 == NULL) || (obj1 == NULL) ){
@@ -112,7 +112,7 @@ WlzObject *WlzRGBAImageArithmetic(
     rtnObj = WlzCompoundToRGBA(rtnCmpnd, WLZ_RGBA_SPACE_RGB, &errNum);
   }
   if( rtnCmpnd ){
-    WlzFreeObj((WlzObject *) rtnCmpnd);
+    WlzFreeObj((WlzObject *)rtnCmpnd);
   }
 
   if( dstErr ){

@@ -969,8 +969,8 @@ static WlzErrorNum WlzBFTOGetVertices2D(int *dstNVx,
   int		vxCount = 0,
   		vxLimit = 0;
   char 		*rec;
-  WlzDVertex2	*vx0,
-  		*vx1,
+  WlzDVertex2	*vx0 = NULL,
+  		*vx1 = NULL,
 		*vxA0 = NULL,
 		*vxA1 = NULL;
   const char    *errMsg;
@@ -1080,8 +1080,8 @@ static WlzErrorNum WlzBFTOGetVertices3D(int *dstNVx,
   int		vxCount = 0,
   		vxLimit = 0;
   char 		*rec;
-  WlzDVertex3	*vx0,
-  		*vx1,
+  WlzDVertex3	*vx0 = NULL,
+  		*vx1 = NULL,
 		*vxA0 = NULL,
 		*vxA1 = NULL;
   const char    *errMsg;

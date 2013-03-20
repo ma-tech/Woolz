@@ -149,7 +149,7 @@ int             main(int argc, char **argv)
   		sigma,
 		alpha,
 		binCnt,
-		sumArea,
+		sumArea = 0.0,
   		pkSigma = 1.0,
   		pkThresh = 1.0,
 		fitTol = 0.1;

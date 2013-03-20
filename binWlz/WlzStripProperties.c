@@ -114,9 +114,8 @@ int main(int	argc,
 
   WlzObject	*obj;
   FILE		*inFile;
-  char 		optList[] = "hv";
+  char 		optList[] = "h";
   int		option;
-  int		verboseFlg=0;
     
   /* read the argument list and check for an input file */
   opterr = 0;
@@ -126,10 +125,6 @@ int main(int	argc,
     case 'h':
       usage(argv[0]);
       return( 0 );
-
-    case 'v':
-      verboseFlg = 1;
-      break;
 
     default:
       usage(argv[0]);

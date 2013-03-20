@@ -76,7 +76,7 @@ WlzObject	*WlzHyThreshold(WlzObject *srcObj,
   		*sThrObj = NULL,
 		*dThrObj = NULL,
 		*iThrObj = NULL,
-		*uThrObj;
+		*uThrObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(srcObj == NULL)

@@ -43,6 +43,9 @@ static char _WlzGreyValue_c[] = "University of Edinburgh $Id$";
 #include <stdlib.h>
 #include <limits.h>
 #include <Wlz.h>
+#ifndef WLZ_FAST_CODE
+#define WLZ_FAST_CODE
+#endif
 
 static void			WlzGreyValueSetBkdP(
 				  WlzGreyV *gVP,
@@ -130,7 +133,7 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
   WlzValues	*planeValues;
   WlzObjectType	gTabType0,
 	        gTabType1 = WLZ_DUMMY_ENTRY;
-  WlzGreyType	gType0,
+  WlzGreyType	gType0 = WLZ_GREY_ERROR,
 		gType1 = WLZ_GREY_ERROR;
   WlzPixelV	bkdPix;
   WlzAffineTransform *trans0,
@@ -138,6 +141,8 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
   WlzGreyValueWSpace *gVWSp = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  bkdPix.v.ubv = 0;
+  bkdPix.type = WLZ_GREY_INT;
   WLZ_DBG((WLZ_DBG_LVL_1),
   	   ("WlzGreyValueMakeWSp FE %p %p\n",
 	    obj, dstErrNum));
@@ -709,13 +714,20 @@ double		WlzGreyValueGetD(WlzGreyValueWSpace *gVWSp,
 void		WlzGreyValueGetDir(WlzGreyValueWSpace *gVWSp,
 				   int plane, int line, int kol)
 {
-  int		tI0,
+  int		pln0,
+  		pln1,
   		valSet = 0;
   WlzDomain	*domP;
   WlzValues	*valP;
 
+  pln0 = plane - gVWSp->domain.p->plane1;
+  pln1 = gVWSp->domain.p->lastpl - gVWSp->domain.p->plane1;
+#ifdef WLZ_FAST_CODE
+  if((unsigned int)(pln0) <= (unsigned int)(pln1))
+#else
   if((plane >= gVWSp->domain.p->plane1) &&
      (plane <= gVWSp->domain.p->lastpl))
+#endif
   {
     if(gVWSp->gTabType == WLZ_GREY_TAB_TILED)
     {
@@ -731,9 +743,8 @@ void		WlzGreyValueGetDir(WlzGreyValueWSpace *gVWSp,
       }
       else
       {
-	tI0 = plane - gVWSp->domain.p->plane1;
-	domP = gVWSp->domain.p->domains + tI0;
-	valP = gVWSp->values.vox->values + tI0;
+	domP = gVWSp->domain.p->domains + pln0;
+	valP = gVWSp->values.vox->values + pln0;
 	/* check for non-NULL domain and valuetable
 	   pointers until empty obj consistently implemented */
 	/*if(domP && valP)*/
@@ -742,7 +753,7 @@ void		WlzGreyValueGetDir(WlzGreyValueWSpace *gVWSp,
 	  gVWSp->plane = plane;
 	  gVWSp->iDom2D = (*domP).i;
 	  gVWSp->values2D = (*valP);
-	  gVWSp->gTabType2D = gVWSp->gTabTypes3D[tI0];
+	  gVWSp->gTabType2D = gVWSp->gTabTypes3D[pln0];
 	  WlzGreyValueGet2D1(gVWSp, line, kol);
 	  valSet = 1;
 	}
@@ -982,11 +993,22 @@ static void	WlzGreyValueComputeGreyP2D(WlzGreyP *baseGVP,
       vLn = vILn->vtbint;
       while(itvCount-- > 0)
       {
+        int	kol1;
+#ifdef WLZ_FAST_CODE
+	int	kol2;
+#endif
+
+        kol1 = kol0 - vLn->vkol1;
+#ifdef WLZ_FAST_CODE
+	kol2 = vLn->vlastkl - vLn->vkol1 + 1;
+        if((unsigned int )(kol1 + 1) <= (unsigned int )kol2)
+#else
 	if((kol0 >= vLn->vkol1 - 1) && (kol0 <= vLn->vlastkl))
+#endif
 	{
 	  *baseGVP = vLn->values;
-	  *offset = kol0 - vLn->vkol1;
-	  itvCount = 0;				      /* Break from the loop */
+	  *offset = kol1;
+	  break;
 	}
 	++vLn;
       }
@@ -1024,26 +1046,40 @@ static void	WlzGreyValueComputeGreyPTiled2D(WlzGreyP *baseGVP,
   *offset = 0;
   (*baseGVP).v = NULL;
   rPos.vtX = kol - tVal->kol1;
-  rPos.vtY = line - tVal->line1;
   tIdx.vtX = rPos.vtX / tVal->tileWidth;
-  tIdx.vtY = rPos.vtY / tVal->tileWidth;
-  if((tIdx.vtX >= 0) && (tIdx.vtX < tVal->nIdx[0]) &&
-     (tIdx.vtY >= 0) && (tIdx.vtY < tVal->nIdx[1]))
+#ifdef WLZ_FAST_CODE
+  if((unsigned int )(tIdx.vtX) < (unsigned int )(tVal->nIdx[0]))
+#else
+  if((tIdx.vtX >= 0) && (tIdx.vtX < tVal->nIdx[0]))
+#endif
   {
-    size_t      idx;
-
-    idx = (tIdx.vtY * tVal->nIdx[0]) + tIdx.vtX;
-    idx = *(tVal->indices + idx);
-    if((idx >= 0) && (idx < tVal->numTiles))
+    rPos.vtY = line - tVal->line1;
+    tIdx.vtY = rPos.vtY / tVal->tileWidth;
+#ifdef WLZ_FAST_CODE
+    if((unsigned int )(tIdx.vtY) < (unsigned int )(tVal->nIdx[1]))
+#else
+    if((tIdx.vtY >= 0) && (tIdx.vtY < tVal->nIdx[1]))
+#endif
     {
-      size_t    off;
-      WlzIVertex2 tOff;
+      size_t      idx;
 
-      tOff.vtX = rPos.vtX % tVal->tileWidth;
-      tOff.vtY = rPos.vtY % tVal->tileWidth;
-      off = (tOff.vtY * tVal->tileWidth) + tOff.vtX;
-      (*baseGVP).v = tVal->tiles.v;
-      *offset = (idx * tVal->tileSz) + off;
+      idx = (tIdx.vtY * tVal->nIdx[0]) + tIdx.vtX;
+      idx = *(tVal->indices + idx);
+#ifdef WLZ_FAST_CODE
+      if((unsigned int)(idx) < (unsigned int)(tVal->numTiles))
+#else
+      if((idx >= 0) && (idx < tVal->numTiles))
+#endif
+      {
+	size_t    off;
+	WlzIVertex2 tOff;
+
+	tOff.vtX = rPos.vtX % tVal->tileWidth;
+	tOff.vtY = rPos.vtY % tVal->tileWidth;
+	off = (tOff.vtY * tVal->tileWidth) + tOff.vtX;
+	(*baseGVP).v = tVal->tiles.v;
+	*offset = (idx * tVal->tileSz) + off;
+      }
     }
   }
 }
@@ -1073,31 +1109,52 @@ static void	WlzGreyValueComputeGreyPTiled3D(WlzGreyP *baseGVP,
   *offset = 0;
   (*baseGVP).v = NULL;
   rPos.vtX = kol - tVal->kol1;
-  rPos.vtY = line - tVal->line1;
-  rPos.vtZ = plane - tVal->plane1;
   tIdx.vtX = rPos.vtX / tVal->tileWidth;
-  tIdx.vtY = rPos.vtY / tVal->tileWidth;
-  tIdx.vtZ = rPos.vtZ / tVal->tileWidth;
-  if((tIdx.vtX >= 0) && (tIdx.vtX < tVal->nIdx[0]) &&
-     (tIdx.vtY >= 0) && (tIdx.vtY < tVal->nIdx[1]) &&
-     (tIdx.vtZ >= 0) && (tIdx.vtZ < tVal->nIdx[2]))
+#ifdef WLZ_FAST_CODE
+  if((unsigned int)(tIdx.vtX) < (unsigned int)(tVal->nIdx[0]))
+#else
+  if((tIdx.vtX >= 0) && (tIdx.vtX < tVal->nIdx[0]))
+#endif
   {
-    size_t	idx;
-
-    idx = ((tIdx.vtZ * tVal->nIdx[1] + tIdx.vtY) * tVal->nIdx[0]) + tIdx.vtX;
-    idx = *(tVal->indices + idx);
-    if((idx >= 0) && (idx < tVal->numTiles))
+    rPos.vtY = line - tVal->line1;
+    tIdx.vtY = rPos.vtY / tVal->tileWidth;
+#ifdef WLZ_FAST_CODE
+    if((unsigned int)(tIdx.vtY) < (unsigned int)(tVal->nIdx[1]))
+#else
+    if((tIdx.vtY >= 0) && (tIdx.vtY < tVal->nIdx[1]))
+#endif
     {
-      size_t	off;
-      WlzIVertex3 tOff;
+      rPos.vtZ = plane - tVal->plane1;
+      tIdx.vtZ = rPos.vtZ / tVal->tileWidth;
+#ifdef WLZ_FAST_CODE
+      if((unsigned int)(tIdx.vtZ) < (unsigned int)(tVal->nIdx[2]))
+#else
+      if((tIdx.vtZ >= 0) && (tIdx.vtZ < tVal->nIdx[2]))
+#endif
+      {
+	size_t	idx;
 
-      tOff.vtX = rPos.vtX % tVal->tileWidth;
-      tOff.vtY = rPos.vtY % tVal->tileWidth;
-      tOff.vtZ = rPos.vtZ % tVal->tileWidth;
-      off = ((tOff.vtZ * tVal->tileWidth + tOff.vtY) * tVal->tileWidth) +
-            tOff.vtX;
-      (*baseGVP).v = tVal->tiles.v;
-      *offset = (idx * tVal->tileSz) + off;
+	idx = ((tIdx.vtZ * tVal->nIdx[1] + tIdx.vtY) * tVal->nIdx[0]) +
+	      tIdx.vtX;
+	idx = *(tVal->indices + idx);
+#ifdef WLZ_FAST_CODE
+	if((unsigned int)(idx) < (unsigned int)(tVal->numTiles))
+#else
+	if((idx >= 0) && (idx < tVal->numTiles))
+#endif
+	{
+	  size_t	off;
+	  WlzIVertex3 tOff;
+
+	  tOff.vtX = rPos.vtX % tVal->tileWidth;
+	  tOff.vtY = rPos.vtY % tVal->tileWidth;
+	  tOff.vtZ = rPos.vtZ % tVal->tileWidth;
+	  off = ((tOff.vtZ * tVal->tileWidth + tOff.vtY) * tVal->tileWidth) +
+	        tOff.vtX;
+	  (*baseGVP).v = tVal->tiles.v;
+	  *offset = (idx * tVal->tileSz) + off;
+	}
+      }
     }
   }
 }
@@ -1117,6 +1174,7 @@ static void	WlzGreyValueGet2D1(WlzGreyValueWSpace *gVWSp,
   int		kol1,
 		kolRel,
 		count,
+		lnRel,
 		valSet = 0;
   size_t 	offset;
   WlzGreyP	baseGVP;
@@ -1124,13 +1182,23 @@ static void	WlzGreyValueGet2D1(WlzGreyValueWSpace *gVWSp,
   WlzIntervalLine *itvLn;
 
   gVWSp->bkdFlag = 0;
-  if(gVWSp->iDom2D != NULL)
+  if((gVWSp->iDom2D != NULL) && (gVWSp->values2D.core != NULL))
   {
     kol1 = gVWSp->iDom2D->kol1;
-    if((gVWSp->values2D.core) && 
-       (kol >= kol1) && (kol <= gVWSp->iDom2D->lastkl))
+    kolRel = kol - kol1;
+#ifdef WLZ_FAST_CODE
+    if((unsigned int )kolRel <= (unsigned )(gVWSp->iDom2D->lastkl - kol1))
+#else
+    if((kol >= kol1) && (kol <= gVWSp->iDom2D->lastkl))
+#endif
     {
+      lnRel = line - gVWSp->iDom2D->line1;
+#ifdef WLZ_FAST_CODE
+      if(((unsigned int )lnRel <= 
+          (unsigned int )(gVWSp->iDom2D->lastln - gVWSp->iDom2D->line1)))
+#else
       if((line >= gVWSp->iDom2D->line1) && (line <= gVWSp->iDom2D->lastln))
+#endif
       {
 	if(gVWSp->iDom2D->type == WLZ_INTERVALDOMAIN_RECT)
 	{
@@ -1141,10 +1209,9 @@ static void	WlzGreyValueGet2D1(WlzGreyValueWSpace *gVWSp,
 	}
 	else	          /* gVWSp->iDom2D->type == WLZ_INTERVALDOMAIN_INTVL */
 	{
-	  itvLn = gVWSp->iDom2D->intvlines + line - gVWSp->iDom2D->line1;
+	  itvLn = gVWSp->iDom2D->intvlines + lnRel;
 	  count = itvLn->nintvs;
 	  itv = itvLn->intvs;
-	  kolRel = kol - kol1;
 	  while(count-- > 0)
 	  {
 	    if(kolRel < itv->ileft)
@@ -1192,19 +1259,37 @@ static void	WlzGreyValueGet3DTiled(WlzGreyValueWSpace *gVWSp,
 
   gVWSp->bkdFlag = 0;
   plRel = plane - gVWSp->domain.p->plane1;
+#ifdef WLZ_FAST_CODE
+  if((unsigned int )plRel <=
+     (unsigned int )(gVWSp->domain.p->lastpl - gVWSp->domain.p->plane1))
+#else
   if((plRel >= 0) && (plane <= gVWSp->domain.p->lastpl))
+#endif
   {
     dom = gVWSp->domain.p->domains + plRel;
     if((dom != NULL) && ((*dom).core != NULL))
     {
-      int	kol1;
+      int	kol1,
+      		kolRel;
       WlzIntervalDomain *iDom;
 
       iDom = (*dom).i;
       kol1 = iDom->kol1;
+      kolRel = kol - kol1;
+#ifdef WLZ_FAST_CODE
+      if((unsigned int )kolRel <= (unsigned int )(iDom->lastkl - kol1))
+#else
       if((kol >= kol1) && (kol <= iDom->lastkl))
+#endif
       {
+        int	lnRel;
+
+        lnRel = line - iDom->line1;
+#ifdef WLZ_FAST_CODE
+        if((unsigned int )lnRel <= (unsigned int )(iDom->lastln - iDom->line1))
+#else
 	if((line >= iDom->line1) && (line <= iDom->lastln))
+#endif
 	{
 	  if(iDom->type == WLZ_INTERVALDOMAIN_RECT)
 	  {
@@ -1212,9 +1297,7 @@ static void	WlzGreyValueGet3DTiled(WlzGreyValueWSpace *gVWSp,
 	  }
 	  else
 	  {
-	    int count,
-		kolRel,
-		lnRel;
+	    int count;
 	    WlzInterval *itv;
 	    WlzIntervalLine *itvLn;
 
@@ -1222,7 +1305,6 @@ static void	WlzGreyValueGet3DTiled(WlzGreyValueWSpace *gVWSp,
 	    itvLn = iDom->intvlines + lnRel;
 	    count = itvLn->nintvs;
 	    itv = itvLn->intvs;
-	    kolRel = kol - kol1;
 	    while(count-- > 0)
 	    {
 	      if(kolRel < itv->ileft)
@@ -1278,7 +1360,12 @@ static void	WlzGreyValueGet3D1(WlzGreyValueWSpace *gVWSp,
 
   gVWSp->bkdFlag = 0;
   plRel = plane - gVWSp->domain.p->plane1;
+#ifdef WLZ_FAST_CODE
+  if((unsigned )plRel <= (unsigned )(gVWSp->domain.p->lastpl -
+                                     gVWSp->domain.p->plane1))
+#else
   if((plRel >= 0) && (plane <= gVWSp->domain.p->lastpl))
+#endif
   {
     if(gVWSp->plane == plane)
     {
@@ -1341,64 +1428,78 @@ static void	WlzGreyValueGet2DCon(WlzGreyValueWSpace *gVWSp,
   gVP = gVWSp->gVal;
   gPP = gVWSp->gPtr;
   WlzGreyValueSetBkdPN(gVP, gPP, gVWSp->gType, gVWSp->gBkd, 4);
-  if((gVWSp->values2D.core) &&
-     ((kol + 1) >= kol1) && (kol <= gVWSp->iDom2D->lastkl))
+  if(gVWSp->values2D.core)
   {
-    pass = 0;
-    while(pass < 2)
+#ifdef WLZ_FAST_CODE
+    if((unsigned int )(kol - kol1 + 1) <=
+       (unsigned int )(gVWSp->iDom2D->lastkl - kol1 + 1))
+#else
+    if(((kol + 1) >= kol1) && (kol <= gVWSp->iDom2D->lastkl))
+#endif
     {
-      if((line >= gVWSp->iDom2D->line1) && (line <= gVWSp->iDom2D->lastln))
+      pass = 0;
+      while(pass < 2)
       {
-	if(gVWSp->iDom2D->type == WLZ_INTERVALDOMAIN_RECT)
+#ifdef WLZ_FAST_CODE
+	if((unsigned int )(line - gVWSp->iDom2D->line1) <=
+	   (unsigned int )(gVWSp->iDom2D->lastln - gVWSp->iDom2D->line1))
+#else
+	if((line >= gVWSp->iDom2D->line1) && (line <= gVWSp->iDom2D->lastln))
+#endif
 	{
-	  WlzGreyValueComputeGreyP2D(&baseGVP, &offset, gVWSp, line, kol);
-	  if(kol >= kol1)
+	  if(gVWSp->iDom2D->type == WLZ_INTERVALDOMAIN_RECT)
 	  {
-	    hitMsk |= 1 << (pass * 2);
-	    WlzGreyValueSetGreyP(gVP, gPP, gVWSp->gType, baseGVP, offset);
+	    WlzGreyValueComputeGreyP2D(&baseGVP, &offset, gVWSp, line, kol);
+	    if(kol >= kol1)
+	    {
+	      hitMsk |= 1 << (pass * 2);
+	      WlzGreyValueSetGreyP(gVP, gPP, gVWSp->gType, baseGVP, offset);
+	    }
+	    if(kol <= (gVWSp->iDom2D->lastkl - 1))
+	    {
+	      hitMsk |= 1 << ((pass * 2) + 1);
+	      WlzGreyValueSetGreyP(gVP + 1, gPP + 1, gVWSp->gType,
+				   baseGVP, offset + 1);
+	    }
 	  }
-	  if(kol <= (gVWSp->iDom2D->lastkl - 1))
+	  else		  /* gVWSp->iDom2D->type == WLZ_INTERVALDOMAIN_INTVL */
 	  {
-	    hitMsk |= 1 << ((pass * 2) + 1);
-	    WlzGreyValueSetGreyP(gVP + 1, gPP + 1, gVWSp->gType,
-	    			 baseGVP, offset + 1);
+	    itvLn = gVWSp->iDom2D->intvlines + line - gVWSp->iDom2D->line1;
+	    count = itvLn->nintvs;
+	    itv = itvLn->intvs;
+	    kolRel = kol - kol1;
+	    while(count-- > 0)
+	    {
+	      if((kolRel + 1) < itv->ileft)
+	      {
+		count = 0;			      /* Break from the loop */
+	      }
+	      else if(kolRel <= itv->iright)
+	      {
+		WlzGreyValueComputeGreyP2D(&baseGVP, &offset, gVWSp, line,
+					   kol);
+		if(kol >= (kol1 + itv->ileft))
+		{
+		  hitMsk |= 1 << (pass * 2);
+		  WlzGreyValueSetGreyP(gVP, gPP, gVWSp->gType, baseGVP,
+		                       offset);
+		}
+		if(kol <= (itv->iright + kol1 - 1))
+		{
+		  hitMsk |= 1 << ((pass * 2) + 1);
+		  WlzGreyValueSetGreyP(gVP + 1, gPP + 1, gVWSp->gType,
+				       baseGVP, offset + 1);
+		}
+	      }
+	      ++itv;
+	    }
 	  }
 	}
-	else		  /* gVWSp->iDom2D->type == WLZ_INTERVALDOMAIN_INTVL */
-	{
-	  itvLn = gVWSp->iDom2D->intvlines + line - gVWSp->iDom2D->line1;
-	  count = itvLn->nintvs;
-	  itv = itvLn->intvs;
-	  kolRel = kol - kol1;
-	  while(count-- > 0)
-	  {
-	    if((kolRel + 1) < itv->ileft)
-	    {
-	      count = 0;			      /* Break from the loop */
-	    }
-	    else if(kolRel <= itv->iright)
-	    {
-	      WlzGreyValueComputeGreyP2D(&baseGVP, &offset, gVWSp, line, kol);
-	      if(kol >= (kol1 + itv->ileft))
-	      {
-	        hitMsk |= 1 << (pass * 2);
-		WlzGreyValueSetGreyP(gVP, gPP, gVWSp->gType, baseGVP, offset);
-	      }
-	      if(kol <= (itv->iright + kol1 - 1))
-	      {
-	        hitMsk |= 1 << ((pass * 2) + 1);
-		WlzGreyValueSetGreyP(gVP + 1, gPP + 1, gVWSp->gType,
-				     baseGVP, offset + 1);
-	      }
-	    }
-	    ++itv;
-	  }
-	}
+	++pass;
+	++line;
+	gVP += 2;
+	gPP += 2;
       }
-      ++pass;
-      ++line;
-      gVP += 2;
-      gPP += 2;
     }
   }
   gVWSp->bkdFlag = 0xf & ~hitMsk;
@@ -1420,11 +1521,11 @@ static void	WlzGreyValueGet3DCon(WlzGreyValueWSpace *gVWSp,
   int		tI0,
   		planeOff,
 		planeRel,
-		savePlane;
+		savePlane = 0;
   WlzDomain	*domP;
   WlzValues	*valP;
-  WlzObjectType	saveGTabType2D;
-  WlzIntervalDomain *saveIDom2D;
+  WlzObjectType	saveGTabType2D = WLZ_NULL;
+  WlzIntervalDomain *saveIDom2D = NULL;
   WlzValues	saveValues2D;
   int		planeSet[2];
   WlzGreyP	saveGPtr[4];
@@ -1434,7 +1535,12 @@ static void	WlzGreyValueGet3DCon(WlzGreyValueWSpace *gVWSp,
   while(planeOff < 2)
   {
     planeSet[planeOff] = 0;
+#ifdef WLZ_FAST_CODE
+    if((unsigned int )(plane - gVWSp->domain.p->plane1 - 1) <=
+       (unsigned int )(gVWSp->domain.p->lastpl - gVWSp->domain.p->plane1 - 2))
+#else
     if((plane > gVWSp->domain.p->plane1) && (plane < gVWSp->domain.p->lastpl))
+#endif
     {
       if(plane == gVWSp->plane)
       {
@@ -1528,7 +1634,12 @@ static void	WlzGreyValueGet3DConTiled(WlzGreyValueWSpace *gVWSp,
 
     pl = plane + idP;
     plRel = pl - gVWSp->domain.p->plane1;
+#ifdef WLZ_FAST_CODE
+    if((unsigned int )plRel >=
+       (unsigned int )(gVWSp->domain.p->lastpl - gVWSp->domain.p->plane1))
+#else
     if((plRel >= 0) && (pl <= gVWSp->domain.p->lastpl))
+#endif
     {
       WlzDomain *dom;
 
@@ -1540,13 +1651,24 @@ static void	WlzGreyValueGet3DConTiled(WlzGreyValueWSpace *gVWSp,
         iDom = (*dom).i;
 	for(idL = 0; idL < 2; ++idL)
 	{
-	  int	ln;
+	  int	ln,
+	  	lnRel;
 
 	  ln = line + idL;
-	  if((ln >= iDom->line1) && (ln <= iDom->line1))
+	  lnRel = ln - iDom->line1;
+#ifdef WLZ_FAST_CODE
+	  if((unsigned int )lnRel <=
+	     (unsigned int )(iDom->lastln - iDom->line1))
+#else
+	  if((ln >= iDom->line1) && (ln <= iDom->lastln))
+#endif
 	  {
-	    if((kol + 1 >= iDom->kol1) &&
-	       (kol <= iDom->lastkl))
+#ifdef WLZ_FAST_CODE
+	    if((unsigned int )(iDom->kol1 - kol - 1) <=
+	       (unsigned int )(iDom->lastkl - iDom->kol1 + 1))
+#else
+	    if((kol + 1 >= iDom->kol1) && (kol <= iDom->lastkl))
+#endif
 	    {
 	      idV = ((idP << 1) + idL) << 1;
 	      if(iDom->type == WLZ_INTERVALDOMAIN_RECT)
@@ -1558,12 +1680,10 @@ static void	WlzGreyValueGet3DConTiled(WlzGreyValueWSpace *gVWSp,
 	      else /* iDom->type == WLZ_INTERVALDOMAIN_INTVL */
 	      {
 		int	idI,
-			klRel,
-			lnRel;
+			klRel;
 		WlzIntervalLine *itvLn;
 		WlzInterval *itv;
 
-	        lnRel = ln - iDom->line1;
 		itvLn = iDom->intvlines + lnRel;
 		itv = itvLn->intvs;
 		klRel = kol - iDom->kol1;
@@ -1587,7 +1707,7 @@ static void	WlzGreyValueGet3DConTiled(WlzGreyValueWSpace *gVWSp,
     }
   }
   /* Now set grey values and pointers knowing which are within the domain. */
-  if(gVWSp->bkdFlag == 0xff)
+  if(valMsk == 0)
   {
     WlzGreyValueSetBkdPN(gVWSp->gVal, gVWSp->gPtr,
                          gVWSp->gType, gVWSp->gBkd, 8);
@@ -1615,14 +1735,14 @@ static void	WlzGreyValueGet3DConTiled(WlzGreyValueWSpace *gVWSp,
 	tOff.vtY = (tOff.vtZ + (rPos.vtY % tVal->tileWidth)) * tVal->tileWidth;
 	for(idK = 0; idK < 2; ++idK)
 	{
-	  if((valMsk & (1 < idV)) == 0)
+	  if((valMsk & (1 << idV)) == 0)
 	  {
 	    WlzGreyValueSetBkdPN(gVWSp->gVal + idV, gVWSp->gPtr + idV,
 	                         gVWSp->gType, gVWSp->gBkd, 1);
 	  }
 	  else
 	  {
-            rPos.vtX = line - tVal->kol1 + idK;
+            rPos.vtX = kol - tVal->kol1 + idK;
 	    tIdx.vtX = tIdx.vtY + (rPos.vtX / tVal->tileWidth);
             tOff.vtX = tOff.vtY + (rPos.vtX % tVal->tileWidth);
             offset = *(tVal->indices + tIdx.vtX) * tVal->tileSz + tOff.vtX;

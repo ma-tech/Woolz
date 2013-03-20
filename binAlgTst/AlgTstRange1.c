@@ -133,6 +133,7 @@ int             main(int argc, char **argv)
     {
       (void )fprintf(stderr,
                      "%s: This test is restricted to %d data records.\n",
+		     *argv,
                      ALG_RANGE_TEST_BUFSZ);
     }
   }

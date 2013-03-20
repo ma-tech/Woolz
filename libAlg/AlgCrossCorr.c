@@ -78,11 +78,8 @@ AlgError	AlgCrossCorrelate2D(double **data0, double **data1,
 		tD4;
   double	*tDP1,
 		*tDP2;
-  double	*reBuf = NULL,
-		*imBuf = NULL;
   AlgError	errNum = ALG_ERR_NONE;
-  const int	cThr = 1,
-  		minN = 8,
+  const int	minN = 8,
   		maxN = 1048576;
 
   if((data0 == NULL) || (data1 == NULL) ||
@@ -101,16 +98,8 @@ AlgError	AlgCrossCorrelate2D(double **data0, double **data1,
   }
   if(errNum == ALG_ERR_NONE)
   {
-    if(((reBuf = (double *)AlcMalloc(sizeof(double) * nY)) == NULL) ||
-       ((imBuf = (double *)AlcMalloc(sizeof(double) * nY)) == NULL))
-    {
-      errNum = ALG_ERR_MALLOC;
-    }
-  }
-  if(errNum == ALG_ERR_NONE)
-  {
-    AlgFourReal2D(data0, reBuf, imBuf, nX, nY, cThr);
-    AlgFourReal2D(data1, reBuf, imBuf, nX, nY, cThr);
+    AlgFourReal2D(data0, 1, nX, nY);
+    AlgFourReal2D(data1, 1, nX, nY);
     nX2 = nX / 2;
     nY2 = nY / 2;
     for(idY = 0; idY < nY; ++idY)
@@ -147,15 +136,7 @@ AlgError	AlgCrossCorrelate2D(double **data0, double **data1,
     **(data0 + nY2) *= **(data1 + nY2);
     *(*data0 + nX2) *= *(*data1 + nX2);
     *(*(data0 + nY2) + nX2) *= *(*(data1 + nY2) + nX2);
-    AlgFourRealInv2D(data0, reBuf, imBuf, nX, nY, cThr);
-  }
-  if(reBuf)
-  {
-    AlcFree(reBuf);
-  }
-  if(imBuf)
-  {
-    AlcFree(imBuf);
+    AlgFourRealInv2D(data0, 1, nX, nY);
   }
   return(errNum);
 }

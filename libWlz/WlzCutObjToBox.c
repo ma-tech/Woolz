@@ -521,8 +521,8 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
   size_t	sz2D,
   		sz3D,
 		tSz;
-  WlzObject	*sObj2D,
-		*dObj2D,
+  WlzObject	*sObj2D = NULL,
+		*dObj2D = NULL,
 		*dObj = NULL;
   WlzDomain	dom2D,
   		dDom,

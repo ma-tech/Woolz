@@ -50,7 +50,7 @@ static char _WlzEuclidDistanceMap_c[] = "University of Edinburgh $Id$";
 WlzEuclidDistanceMap - calculate the Euclidean distance from a vertex.
 \par Synopsis
 \verbatim
-WlzEuclidDistanceMap -p x,y,z  -h -v 
+WlzEuclidDistanceMap -p x,y,z  -h
 
 \endverbatim
 \par Options
@@ -62,10 +62,6 @@ WlzEuclidDistanceMap -p x,y,z  -h -v
   <tr>
     <td><b>-h</b></td>
     <td>Help - print help message</td>
-  </tr>
-  <tr>
-    <td><b>-v</b></td>
-    <td>Verbose operation</td>
   </tr>
 </table>
 
@@ -105,15 +101,14 @@ static void usage(
 {
   fprintf(stderr,
 	  "Usage: "
-	  "%s -p x,y,z  -h -v \n"
+	  "%s -p x,y,z  -h\n"
 	  "\tRead in domain object from stdin and calculate the Euclidean\n"
 	  "\tdistance from the input vertex to each point in the domain,\n"
 	  "\twriting to stdout.\n"
 	  "Version: %s\n"
 	  "Options:\n"
 	  "\t-p#,#,#    input vertex, default (0,0,0)\n"
-	  "\t-h         print this message\n"
-	  "\t-v         verbose operation\n",
+	  "\t-h         print this message\n",
 	  str,
 	  WlzVersion());
 
@@ -125,11 +120,10 @@ int main(
   char  **argv)
 {
   FILE		*inFile=stdin;
-  char 		optList[] = "p:hv";
+  char 		optList[] = "p:h";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  int		verboseFlg=0;
-  int		type;
+  /* int	type; */
   WlzObject	*obj, *obj1;
   int		i;
   double	x, y, z, val;
@@ -152,11 +146,7 @@ int main(
       break;
 
     case 't':
-      type = atoi(optarg);
-      break;
-
-    case 'v':
-      verboseFlg = 1;
+      /* type = atoi(optarg); */
       break;
 
     case 'h':

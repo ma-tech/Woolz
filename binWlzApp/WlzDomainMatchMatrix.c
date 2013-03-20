@@ -146,7 +146,7 @@ A_{contrib} & = & \sum_{Pixels} \left \{ \begin{array}{c@{\quad \mbox{if} \quad}
 1 & C_{ll'} \ne 0,\\
 0 & C_{ll'} = 0,
 \end{array}\right.
-\f}
+\f
 In these formulae the \f$S()\f$ is the size of the domain - volume or area depending on the nature of the image. \f$l, l'\f$ are the pixel values of the two input category images.
 
 \par Examples
@@ -256,7 +256,7 @@ double WlzMixtureValue(
   double	**contrib,
   WlzErrorNum	*dstErr)
 {
-  double	val, con;
+  double	val = 0.0, con = 0.0;
   WlzObject	*tmpObj, *tmpObj1, *tmpObj2;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
@@ -380,9 +380,9 @@ int main(
   int		verboseFlg=0;
   int		type=1;
   int		numRows=0, numCols=0;
-  WlzObject	*obj, *obj1, *obj2, *obj3;
-  WlzObject	**rowDoms, **colDoms;
-  WlzObjectType	objType;
+  WlzObject	*obj = NULL, *obj1 = NULL, *obj2 = NULL, *obj3 = NULL;
+  WlzObject	**rowDoms = NULL, **colDoms = NULL;
+  WlzObjectType	objType = WLZ_NULL;
   double	matchVal=0.0;
   double	s1, s2, s3, s4;
   double	delta=0.01;

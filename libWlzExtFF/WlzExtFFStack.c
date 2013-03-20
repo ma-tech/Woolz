@@ -902,7 +902,7 @@ static WlzErrorNum WlzEffHeadParseStackCtr(WlzEffStackCtrHeader *header,
 					   FILE *fP)
 {
   int		parsedFlag = 0,
-  		volSzFlag = 0,
+  		/* volSzFlag = 0, */
 		recIdx = 0;
   char		*tCP0,
   		*recTok;
@@ -965,10 +965,12 @@ static WlzErrorNum WlzEffHeadParseStackCtr(WlzEffStackCtrHeader *header,
 	    {
 	      errNum = WLZ_ERR_READ_INCOMPLETE;
 	    }
+	    /*
 	    else
 	    {
 	      volSzFlag = 1;
 	    }
+	    */
 	  }
 	  else if(strcmp(recTok, WLZEFF_STACK_CTR_VOXSIZE) == 0)
 	  {

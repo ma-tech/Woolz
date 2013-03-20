@@ -38,7 +38,8 @@ static char _AlgFourier_c[] = "University of Edinburgh $Id$";
 * \brief        Fast Fourier and Hartley transform functions.
 *
 * \par
-*		The history of this software is (as stated by Mayer):
+*		The history of this software is (as stated by Mayer
+*		with my later addition):
 <table width="500" border="0">
                   <tr>
 		  <td>Euler</td> <td>Probable inventor of the fourier
@@ -62,25 +63,17 @@ static char _AlgFourier_c[] = "University of Edinburgh $Id$";
 				  multi dimensional FFT's and for
 				  compatability with our existing FFT
 				  routines here at MRC HGU.
-				  Added multithreading for increased
-				  speed on multi-cpu system VR4 (Sun
-				  Solaris 2.X) machines.</td>
+				  Multithreaded and integrated into
+				  libAlg for Woolz.</td>
 		  </tr>
 </table>
-* 		The two dimensional transform routines may be supplied
-*		with buffers sufficient to hold a column of complex
-*		data, or NULLS may be given. If supplied then these
-*		buffers will be used to hold each column of data during
-*		the transforms of the columns. When the size of the
-*		data being transformed is comparable with or greater
-*		than the size of the data cache of the target machine,
-*		then it is far more efficient (a factor of 10 faster on
-*		a Sun 10/411) to supply these buffers.
-*		All code which depends on threads and can't be ignored
-*		is controlled by ALC_THREADS_USED. All functions pass
-*		the number of concurrent threads available as a
-*		parameter, this can be 0 or 1 if multi-threading is not
-*		required.
+* 		The multi-dimensional transform routines may be supplied
+*		with a use buffers flag, which if set will allocate
+*		buffers sufficient to hold copies of the data to
+*		ensure the transforms are only computed for contiguous
+*		data. Using buffers can result in an order of magnitude
+*		lower run times depending on whether the array fit into
+*		the fastest caches of the CPUs.
 * \ingroup      AlgFourier
 * \todo         -
 * \bug          None known.
@@ -88,129 +81,64 @@ static char _AlgFourier_c[] = "University of Edinburgh $Id$";
 
 #include <Alg.h>
 #include <float.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
-#ifdef ALG_THREADS_USED
-#include <pthread.h>
-#define ALG_THREADS_MAX	(64)
-#endif /* ALG_THREADS_USED */
 
 /*!
-* \enum 	_AlgFourDirection
-* \brief	 Forward or inverse Fourier transform.
+* \enum 	 _AlgFourDir
+* \brief	 Transform direction: Forward or inverse Fourier transform.
 */
-enum _AlgFourDirection
+typedef enum _AlgFourDir
 {
   ALG_FOUR_DIR_FWD = 0,
   ALG_FOUR_DIR_INV = 1
-};
-typedef enum _AlgFourDirection  AlgFourDirection;
-
-#ifdef ALG_THREADS_USED
-#define ALG_FOUR_THR_NUM1D 512  /* Min size of 1D complex FT, to use threads */
+} AlgFourDir;
 
 /*!
-* \struct 	_AlgFourArgs1
-* \brief	Used for args by AlgFourThrHart1D(), AlgFourThrReal1D()
-*		and AlgFourThrRealInv1D()
+* \enum         _AlgFourAxis
+* \brief        Axis for partial transform evaluation.
 */
-struct _AlgFourArgs1
+typedef enum _AlgFourAxis
 {
-  double	*data;
-  int		num;
-  int		step;
-  int		cThr;
-};
-typedef struct _AlgFourArgs1 AlgFourArgs1;
+  ALG_FOUR_AXIS_X = 0,
+  ALG_FOUR_AXIS_Y = 1,
+  ALG_FOUR_AXIS_Z = 2
+} AlgFourAxis;
 
-/*!
-* \struct	_AlgFourArgs2
-* \brief	Used for args by AlgFourThr1D() and AlgFourThrInv1D.
-*/
-struct _AlgFourArgs2
-{
-  double	*real;
-  double	*imag;
-  int		num;
-  int		step;
-  int		cThr;
-};
-typedef struct _AlgFourArgs2  AlgFourArgs2;
-
-/*!
-* \struct	_AlgFourArgs3
-* \brief	Used for args by AlgFourThrRepXYReal1D().
-*/
-struct _AlgFourArgs3
-{
-  double	**data;
-  double	*reBuf;
-  double	*imBuf;
-  int		numData;
-  int		stepData;
-  int		repX;
-  int		repY;
-  AlgFourDirection dir;
-  int		cThr;
-};
-typedef struct _AlgFourArgs3  AlgFourArgs3;
-
-/*!
-* \struct	_AlgFourArgs4
-* \brief	Used for args by AlgFourThrRepXY1D().
-*/
-struct _AlgFourArgs4
-{
-  double	**real;
-  double	**imag;
-  double	*reBuf;
-  double	*imBuf;
-  int		numData;
-  int		stepData;
-  int		repX;
-  int		repY;
-  AlgFourDirection dir;
-  int		cThr;
-};
-typedef struct _AlgFourArgs4  AlgFourArgs4;
-#endif /* ALG_THREADS_USED */
-
-static void			AlgFourRepXY1D(
+static AlgError			AlgFourRepXY1D(
 				  double **real,
 				  double **imag,
-				  double *reBuf,
-				  double *imBuf,
-				  int numData,
-				  int stepData,
-				  int repX,
-				  int repY,
-			          AlgFourDirection dir,
-				  int cThr);
-static void			AlgFourRepXYReal1D(
+			          AlgFourAxis axis,
+				  int useBuf,
+			          int numX,
+				  int numY,
+				  AlgFourDir dir);
+static AlgError			AlgFourRepXYReal1D(
 				  double **data,
-				  double *reBuf,
-				  double *imBuf,
-				  int numData,
-				  int stepData,
-				 int repX,
-				 int repY,
-				 AlgFourDirection dir,
-				 int cThr);
-#ifdef ALG_THREADS_USED
-static void			*AlgFourThrHart1D(
-				  AlgFourArgs1 *args);
-static void			*AlgFourThrReal1D(
-				  AlgFourArgs1 *args);
-static void			*AlgFourThrRealInv1D(
-				  AlgFourArgs1 *args);
-static void			*AlgFourThr1D(
-				  AlgFourArgs2 *args);
-static void			*AlgFourThrInv1D(
-				  AlgFourArgs2 *args);
-static void			*AlgFourThrRepXYReal1D(
-				  AlgFourArgs3 *args);
-static void			*AlgFourThrRepXY1D(
-				  AlgFourArgs4 *args);
-#endif /* ALG_THREADS_USED */
+				  AlgFourAxis axis,
+				  int useBuf,
+				  int numX,
+				  int numY,
+				  AlgFourDir dir);
+static AlgError			AlgFourRepXYZ1D(
+				  double ***real,
+				  double ***imag,
+			          AlgFourAxis axis,
+				  int useBuf,
+			          int numX,
+				  int numY,
+				  int numZ,
+				  AlgFourDir dir);
+static AlgError			AlgFourRepXYZReal1D(
+				  double ***data,
+				  AlgFourAxis axis,
+				  int useBuf,
+				  int numX,
+				  int numY,
+				  int numZ,
+				  AlgFourDir dir);
 
 /*!
 * \return	void
@@ -221,11 +149,8 @@ static void			*AlgFourThrRepXY1D(
 * \param	num		Number of data.
 * \param	step		Offset in data elements between
 *				the data to be transformed.
-* \param	cThr		Concurrent threads available,
-*				if cThr <= 1 then no threads
-*				will be created.
 */
-void		AlgFourHart1D(double *data, int num, int step, int cThr)
+void		AlgFourHart1D(double *data, int num, int step)
 {
 #ifdef ALG_FOUR_LONGDBL_TRIG
   long
@@ -350,8 +275,8 @@ void		AlgFourHart1D(double *data, int num, int step, int cThr)
 #endif /* ALG_FOUR_LONGDBL_TRIG */
 
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgFourHart1D FE 0x%lx %d %d %d\n",
-	   (unsigned long )data, num, step, cThr));
+	  ("AlgFourHart1D FE %p %d %d\n",
+	   data, num, step));
   pTwo1 = 1;
   pTwo2 = 0;
   if(step == 1)
@@ -396,7 +321,9 @@ void		AlgFourHart1D(double *data, int num, int step, int cThr)
   }
   pTwo0 = 0;
   while((1 << pTwo0) < num)
+  {
     ++pTwo0;
+  }
   pTwo0  &= 1;
   tDp0 = data;
   count = num;
@@ -734,37 +661,117 @@ void		AlgFourHart1D(double *data, int num, int step, int cThr)
 	  ("AlgFourHart1D FX\n"));
 }
 
-#ifdef ALG_THREADS_USED
 /*!
-* \return	Always NULL.
+* \return	Error code, may be set if buffers can not be allocated.
 * \ingroup      AlgFourier
-* \brief	Simple wrapper for AlgFourHart1D(), used for thread
-*		creation.
-* \param	args			Parameter list.
+* \brief	Computes the Hartley transform of the given two
+*		dimensional data, and does it in place.
+* \param	data			Given data.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
+* \param	numX			Number of data in each row.
+* \param	numY			Number of data in each column.
 */
-static void	*AlgFourThrHart1D(AlgFourArgs1 *args)
+AlgError 	AlgFourHart2D(double **data, int useBuf, int numX, int numY)
 {
-  AlgFourHart1D(args->data, args->num, args->step, args->cThr);
-  return(NULL);
+  double	*buf = NULL;
+  AlgError	errNum = ALG_ERR_NONE;
+
+  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
+	  ("AlgFourHart2D FE %p %d %d %d\n",
+	   data, useBuf, numX, numY));
+  if(useBuf && ((buf = (double*)AlcMalloc(numY * sizeof(double))) == NULL))
+  {
+    errNum = ALG_ERR_MALLOC;
+  }
+  else
+  {
+    int		idX,
+		idY,
+		halfX,
+     		halfY;
+
+    halfX = numX/2;
+    halfY = numY/2;
+#ifdef _OPENMP
+#pragma omp parallel for private(idX,idY)
+#endif
+    for(idX = 1; idX < halfX; ++idX)
+    {
+      int 	idU;
+
+      idU = numX - idX;
+      for(idY = 1; idY < halfY; ++idY)
+      {
+	int	idV;
+	double	t[4];
+	double	*p[4];
+
+	idV = numY - idY;
+	p[0] = data[idY] + idX;
+	p[1] = data[idY] + idU;
+	p[2] = data[idV] + idX;
+	p[3] = data[idV] + idU;
+	t[0] = *p[0];
+	t[1] = *p[1];
+	t[2] = *p[2];
+	t[3] = *p[3];
+	*p[0] = ( t[0] + t[1] + t[2] - t[3]) * 0.5;
+	*p[1] = ( t[0] + t[1] - t[2] + t[3]) * 0.5;
+	*p[2] = ( t[0] - t[1] + t[2] + t[3]) * 0.5;
+	*p[3] = (-t[0] + t[1] + t[2] + t[3]) * 0.5;
+      }
+    }
+#ifdef _OPENMP
+#pragma omp parallel for private(idY)
+#endif
+    for(idY = 0; idY < numY; ++idY)
+    {
+      AlgFourHart1D(data[idY], numX, 1);
+    }
+#ifdef _OPENMP
+#pragma omp parallel for private(idX,idY)
+#endif
+    for(idX = 0; idX < numX; ++idX)
+    {
+      if(useBuf)
+      {
+	for(idY = 0; idY < numY; ++idY)
+	{
+	  buf[idY] = data[idY][idX];
+	}
+	AlgFourHart1D(buf, numY, 1);
+	for(idY = 0; idY < numY; ++idY)
+	{
+	  data[idY][idX] = buf[idY];
+	}
+      }
+      else
+      {
+	AlgFourHart1D(data[0] + idX, numY, numX);
+      }
+    }
+  }
+  AlcFree(buf);
+  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
+	  ("AlgFourHart2D FX\n"));
+  return(errNum);
 }
-#endif /* ALG_THREADS_USED */
 
 /*!
 * \return	void
 * \ingroup   	AlgFourier
 * \brief	Computes the Fourier transform of the given one
 *		dimensional complex data, and does it in place.
+*		The transformed values data are scaled by a factor
+*		of \f$\sqrt{n}\f$.
 * \param	real			Given real data.
 * \param	imag			Given imaginary data.
 * \param	num			Number of data.
 * \param	step			Offset in data elements between
 *					the data to be transformed.
-* \param	cThr			Concurrent threads available,
-*					if cThr <= 1 then no threads
-*					will be created.
 */
-void		AlgFour1D(double *real, double *imag, int num, int step,
-			  int cThr)
+void		AlgFour1D(double *real, double *imag, int num, int step)
 {
   double	tD0,
 		tD1,
@@ -775,16 +782,11 @@ void		AlgFour1D(double *real, double *imag, int num, int step,
 		*tRp1,
 		*tIp0,
 		*tIp1;
-  int		count,
-  		threadCreated = 0;
-#ifdef ALG_THREADS_USED
-  AlgFourArgs1	thrArgs;
-  pthread_t	thrId;
-#endif /* ALG_THREADS_USED */
+  int		count;
 
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgFour1D FE 0x%lx 0x%lx %d %d %d\n",
-	   (unsigned long )real, (unsigned long )imag, num, step, cThr));
+	  ("AlgFour1D FE %p %p %d %d\n",
+	   real, imag, num, step));
   tRp0 = real + step;
   tRp1 = real + ((num - 1) * step);
   tIp0 = imag + step;
@@ -809,63 +811,41 @@ void		AlgFour1D(double *real, double *imag, int num, int step,
     *tIp1 = (tD3 + tD2) * 0.5;
     tIp1 -= step;
   }
-#ifdef ALG_THREADS_USED
-  if((cThr > 1) && (num >= ALG_FOUR_THR_NUM1D))
+#ifdef _OPENMP
+#pragma omp parallel sections
+#endif
   {
-    --cThr;
-    thrArgs.data = real;
-    thrArgs.num = num;
-    thrArgs.step = step;
-    thrArgs.cThr = cThr;
-    if(pthread_create(&thrId, NULL, (void *(*)(void *) )AlgFourThrHart1D,
-    		      (void *)&thrArgs) == 0)
+#ifdef _OPENMP
+#pragma omp section
+#endif
     {
-      threadCreated = 1;
-      AlgFourHart1D(imag, num, step, cThr);
-      (void )pthread_join(thrId, NULL);
-      ++cThr;
+      AlgFourHart1D(real, num, step);
     }
-  }
-#endif /* ALG_THREADS_USED */
-  if(threadCreated == 0)
-  {
-    AlgFourHart1D(real, num, step, cThr);
-    AlgFourHart1D(imag, num, step, cThr);
+#ifdef _OPENMP
+#pragma omp section
+#endif
+    {
+      AlgFourHart1D(imag, num, step);
+    }
   }
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
 	  ("AlgFour1D FX\n"));
 }
-
-#ifdef ALG_THREADS_USED
-/*!
-* \return	Always NULL.
-* \brief	Simple wrapper for AlgFour1D(), used for thread
-*		creation.
-* \param	args			Parameter list.
-*/
-static void	*AlgFourThr1D(AlgFourArgs2 *args)
-{
-  AlgFour1D(args->real, args->imag, args->num, args->step, args->cThr);
-  return(NULL);
-}
-#endif /* ALG_THREADS_USED */
 
 /*!
 * \return	void
 * \ingroup   	AlgFourier
 * \brief	Computes the inverse Fourier transform of the given
 *		complex one dimensional data, and does it in place.
+*		The transformed values data are scaled by a factor
+*		of \f$\sqrt{n}\f$.
 * \param	real			Given real data.
 * \param	imag			Given imaginary data.
 * \param	num			Number of data.
 * \param	step			Offset in data elements between
 *					the data to be transformed.
-* \param	cThr			Concurrent threads available,
-*					if cThr <= 1 then no threads
-*					will be created.
 */
-void		AlgFourInv1D(double *real, double *imag, int num, int step,
-			     int cThr)
+void		AlgFourInv1D(double *real, double *imag, int num, int step)
 {
   double	tD0,
 		tD1,
@@ -876,38 +856,27 @@ void		AlgFourInv1D(double *real, double *imag, int num, int step,
 		*tRp1,
 		*tIp0,
 		*tIp1;
-  int		count,
-  		threadCreated = 0;
-#ifdef ALG_THREADS_USED
-  AlgFourArgs1  thrArgs;
-  pthread_t      thrId;
-#endif /* ALG_THREADS_USED */
+  int		count;
 
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgFourInv1D FE 0x%lx 0x%lx %d %d %d\n",
-	   (unsigned long )real, (unsigned long )imag, num, step, cThr));
-#ifdef ALG_THREADS_USED
-  if((cThr > 1) && (num >= ALG_FOUR_THR_NUM1D))
+	  ("AlgFourInv1D FE %p %p %d %d\n",
+	   real, imag, num, step));
+#ifdef _OPENMP
+#pragma omp parallel sections
+#endif
   {
-    --cThr;
-    thrArgs.data = real;
-    thrArgs.num = num;
-    thrArgs.step = step;
-    thrArgs.cThr = cThr;
-    if(pthread_create(&thrId, NULL, (void *(*)(void *) )AlgFourThrHart1D,
-    		      (void *)&thrArgs) == 0)
+#ifdef _OPENMP
+#pragma omp section
+#endif
     {
-      threadCreated = 1;
-      AlgFourHart1D(imag, num, step, cThr);
-      (void )pthread_join(thrId, NULL);
-      ++cThr;
+      AlgFourHart1D(real, num, step);
     }
-  }
-#endif /* ALG_THREADS_USED */
-  if(threadCreated == 0)
-  {
-    AlgFourHart1D(real, num, step, cThr);
-    AlgFourHart1D(imag, num, step, cThr);
+#ifdef _OPENMP
+#pragma omp section
+#endif
+    {
+      AlgFourHart1D(imag, num, step);
+    }
   }
   tRp0 = real + step;
   tRp1 = real + ((num - 1) * step);
@@ -938,285 +907,34 @@ void		AlgFourInv1D(double *real, double *imag, int num, int step,
 	  ("AlgFourInv1D FX\n"));
 }
 
-#ifdef ALG_THREADS_USED
-/*!
-* \return	Always NULL.
-* \brief	Simple wrapper for AlgFourInv1D(), used for thread
-*		creation.
-* \param	args			Parameter list.
-*/
-void		*AlgFourThrInv1D(AlgFourArgs2 *args)
-{
-  AlgFourInv1D(args->real, args->imag, args->num, args->step, args->cThr);
-  return(NULL);
-}
-#endif /* ALG_THREADS_USED */
-
-/*!
-* \return	void
-* \brief	Computes repeated the Fourier transforms of the given
-*	 	one dimensional complex data sets.
-*		These may either be done wrt the rows or columns of
-*		the data. Buffers may be provided for the columns to
-*		improve efficiency, if provided (non NULL) then these
-*		should be large enough to hold a single column of data.
-*		Multiple threads may be used (if cThr > 1) for repeated
-*		rows, but (because of the column buffers) not for the
-*		columns. Although AlgFour1D()/AlgFourInv1D() can make
-*		use of two threads in themselves.
-* \param	real			Given real data sets.
-* \param	imag			Given imaginary data sets.
-* \param	reBuf			Given buffer(s) for real data.
-* \param	imBuf			Given buffer(s) for imaginary
-*					data.
-* \param	numData			Number of data in a row/column.
-* \param	stepData		Offset in data elements between
-*					the data to be transformed.
-* \param	repX			Number of data columns to be
-*					transformed.
-* \param	repY			Number of data rows to be
-*					transformed.
-* \param	dir			Forward or inverse transform.
-* \param	cThr			Concurrent threads available,
-*					if cThr <= 1 then no threads
-*					will be created.
-*/
-static void	AlgFourRepXY1D(double **real, double **imag,
-			       double *reBuf, double *imBuf,
-			       int numData, int stepData,
-			       int repX, int repY,
-			       AlgFourDirection dir, int cThr)
-{
-  int		idX,
-		idY,
-		threadCreated = 0;
-  double	*tDp0,
-		*tDp1,
-		*tDp2,
-		*tDp3;
-#ifdef ALG_THREADS_USED
-  int           offY,
-                numThr,
-                repThr;
-  AlgFourArgs4  *thrArgP;
-  AlgFourArgs4  thrArgs[ALG_THREADS_MAX];
-  pthread_t      thrIds[ALG_THREADS_MAX];
-#endif /* ALG_THREADS_USED */
-
-  if(repY)			                           /* Transform rows */
-  {
-#ifdef ALG_THREADS_USED
-    if(cThr > 1)  /* Calc num threads and num of repeated FT for each thread */
-    {
-      if(ALG_THREADS_MAX > cThr)
-      {
-        if(cThr < repY)
-	{
-	  numThr = cThr;
-	}
-	else
-	{
-	  numThr = repY;
-	}
-      }
-      else
-      {
-        if(ALG_THREADS_MAX > repY)
-	{
-	  numThr = ALG_THREADS_MAX;
-	}
-	else
-	{
-	  numThr = repY;
-	}
-      }
-      repThr = repY / numThr;
-    }
-    else
-    {
-      numThr = 1;
-      repThr = repY;
-    }
-    offY = 0;                      /* Build parameter structures for threads */
-    thrArgP = thrArgs;
-    for(idY = 0; idY < numThr; ++idY)
-    {
-      thrArgP->real = real + offY;
-      thrArgP->imag = imag + offY;
-      thrArgP->reBuf = NULL;
-      thrArgP->imBuf = NULL;
-      thrArgP->numData = numData;
-      thrArgP->stepData = stepData;
-      thrArgP->repX = 0;
-      thrArgP->repY = repThr;
-      thrArgP->dir = dir;
-      thrArgP->cThr = 1;
-      offY += repThr;
-      ++thrArgP;
-    }
-    if(numThr > 1)
-    {
-      thrArgP = thrArgs + numThr - 1;
-      if((cThr - numThr) > 0)           /* Don't waste any left over threads */
-      {
-        thrArgP->cThr += cThr - numThr;
-      }
-      thrArgP->repY += repY % numThr;     /* Add on any remaining FT repeats */
-      for(idY = 1; idY < numThr; ++idY)            /* Create the new threads */
-      {
-	if(pthread_create(thrIds + idY, NULL,
-			  (void *(*)(void *))AlgFourThrRepXY1D,
-			  (void *)(thrArgs + idY)) == 0)
-	{
-	  threadCreated = 1;
-	}
-      }
-    }
-    if(threadCreated)
-    {
-      thrArgP = thrArgs;      /* Use this thread and terminate any recursion */
-      if(dir == ALG_FOUR_DIR_FWD)
-      {
-	for(idY = 0; idY < thrArgP->repY; ++idY)
-	{
-	  AlgFour1D(*(thrArgP->real + idY), *(thrArgP->imag + idY),
-		    thrArgP->numData, thrArgP->stepData, thrArgP->cThr);
-	}
-      }
-      else
-      {
-	for(idY = 0; idY < thrArgP->repY; ++idY)
-	{
-	  AlgFourInv1D(*(thrArgP->real + idY), *(thrArgP->imag + idY),
-		       thrArgP->numData, thrArgP->stepData, thrArgP->cThr);
-	}
-      }
-      if(numThr > 1) /* Wait for all of the threads created for repeated FTs */
-      {
-	for(idY = 1; idY < numThr; ++idY)
-	{
-	  (void )pthread_join(thrIds[idY], NULL);
-        }
-      }
-    }
-#endif /* ALG_THREADS_USED */
-    if(threadCreated == 0)
-    {
-      if(dir == ALG_FOUR_DIR_FWD)
-      {
-	for(idY = 0; idY < repY; ++idY)
-	{
-	  AlgFour1D(*(real + idY), *(imag + idY), numData, stepData, cThr);
-	}
-      }
-      else
-      {
-	for(idY = 0; idY < repY; ++idY)
-	{
-	  AlgFourInv1D(*(real + idY), *(imag + idY), numData, stepData, cThr);
-	}
-      }
-    }
-  }
-  else if(repX)						/* Transform columns */
-  {
-    if(reBuf && imBuf)                     /* Use column buffers if provided */
-    {
-      tDp0 = reBuf;				          /* Copy 1st column */
-      tDp1 = imBuf;
-      for(idY = 0; idY < numData; ++idY)
-      {
-	*tDp0++ = **(real + idY);
-	*tDp1++ = **(imag + idY);
-      }
-      if(dir == ALG_FOUR_DIR_FWD)		     /* Transform 1st column */
-      {
-	AlgFour1D(reBuf, imBuf, numData, 1, cThr);
-      }
-      else
-      {
-	AlgFourInv1D(reBuf, imBuf, numData, 1, cThr);
-      }
-      for(idX = 1; idX < repX; ++idX)
-      {
-	tDp0 = reBuf;	         /* Copy back previous, and copy next column */
-	tDp1 = imBuf;
-	for(idY = 0; idY < numData; ++idY)
-	{
-	  tDp2 = *(real + idY) + idX - 1;
-	  *tDp2++ = *tDp0;
-	  *tDp0++ = *tDp2;
-	  tDp3 = *(imag + idY) + idX - 1;
-	  *tDp3++ = *tDp1;
-	  *tDp1++ = *tDp3;
-	}
-	if(dir == ALG_FOUR_DIR_FWD)		 /* Transform current column */
-	{
-	  AlgFour1D(reBuf, imBuf, numData, 1, cThr);
-	}
-	else
-	{
-	  AlgFourInv1D(reBuf, imBuf, numData, 1, cThr);
-        }
-      }
-      tDp0 = reBuf;                                 /* Copy back last column */
-      tDp1 = imBuf;
-      for(idY = 0; idY < numData; ++idY)
-      {
-	*(*(real + idY) + repX - 1) = *tDp0++;
-	*(*(imag + idY) + repX - 1) = *tDp1++;
-      }
-    }
-    else              /* If no column buffers transform the columns in place */
-    {
-      if(dir == ALG_FOUR_DIR_FWD)
-      {
-	for(idX = 0; idX < repX; ++idX)
-	{
-	  AlgFour1D(*real + idX, *imag + idX, numData, stepData, cThr);
-        }
-      }
-      else
-      {
-	for(idX = 0; idX < repX; ++idX)
-	{
-	  AlgFourInv1D(*real + idX, *imag + idX, numData, stepData, cThr);
-        }
-      }
-    }
-  }
-}
-
-#ifdef ALG_THREADS_USED
-/*!
-* \return	Always NULL.
-* \brief	Simple wrapper for AlgFourRepXY1D(), used for thread
-*		creation.
-* \param	args			Parameter list.
-*/
-static void	*AlgFourThrRepXY1D(AlgFourArgs4 *args)
-{
-  AlgFourRepXY1D(args->real, args->imag, args->reBuf, args->imBuf,
-  		 args->numData, args->stepData,
-		 args->repX, args->repY, args->dir, args->cThr);
-  return(NULL);
-}
-#endif /* ALG_THREADS_USED */
-
 /*!
 * \return	void
 * \ingroup   	AlgFourier
 * \brief	Computes the Fourier transform of the given one
 *		dimensional real data, and does it in place.
+*	 	Data are returned in the array of size \f$N\f$ as:
+*		The data are returned in the array of size N with the layout
+*		as shown in the table (with 2M = N, r = real, i = imaginary):
+ 		|----------|
+ 		| r0\f$    |
+ 		| r1\f$    |
+		| ..       |
+ 		| r(M-1)   |
+		| rM       |
+		| i1       |
+		| i2       |
+		| ...      |
+		| i(M - 1) |
+*		where the real and imaginary components are indexed as in
+*		the arrays computed with AlgFour1D().
+*		The transformed values data are scaled by a factor
+*		of \f$\sqrt{n}\f$.
 * \param	real			Given real data.
-* \param	num			Number of data.
+* \param	num			Number of data (N).
 * \param	step			Offset in data elements between
 *					the data to be transformed.
-* \param	cThr			Concurrent threads available,
-*					if cThr <= 1 then no threads
-*					will be created.
 */
-void		AlgFourReal1D(double *real, int num, int step, int cThr)
+void		AlgFourReal1D(double *real, int num, int step)
 {
   double	tD0,
 		tD1;
@@ -1225,12 +943,12 @@ void		AlgFourReal1D(double *real, int num, int step, int cThr)
   int		count;
 
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgFourReal1D FE 0x%lx %d %d %d\n",
-	   (unsigned long )real, num, step, cThr));
+	  ("AlgFourReal1D FE %p %d %d\n",
+	   real, num, step));
   tRp0 = real + step;
   tRp1 = real + ((num - 1) * step);
   count = num / 2;
-  AlgFourHart1D(real, num, step, cThr);
+  AlgFourHart1D(real, num, step);
   while(--count > 0)
   {
     tD0 = *tRp0;
@@ -1257,34 +975,21 @@ void		AlgFourReal1D(double *real, int num, int step, int cThr)
 	  ("AlgFourReal1D FX\n"));
 }
 
-#ifdef ALG_THREADS_USED
-/*!
-* \return       Always NULL.
-* \brief	Simple wrapper for AlgFourReal1D(), used for thread
-*		creation.
-* \param	args			Parameter list.
-*/
-void		*AlgFourThrReal1D(AlgFourArgs1 *args)
-{
-  AlgFourReal1D(args->data, args->num, args->step, args->cThr);
-  return(NULL);
-}
-#endif /* ALG_THREADS_USED */
-
 /*!
 * \return	void
 * \ingroup   	AlgFourier
 * \brief	Computes the inverse Fourier transform of the given one
 *		one dimensional real data, and does it in place.
+*		The data should layed out in the array as returned by
+*		AlgFourReal1D().
+*		The transformed values data are scaled by a factor
+*		of \f$\sqrt{n}\f$.
 * \param	real			Given real/complex data.
 * \param	num			Number of data.
 * \param	step			Offset in data elements between
 *					the data to be transformed.
-* \param	cThr			Concurrent threads available,
-*					if cThr <= 1 then no threads
-*					will be created.
 */
-void		AlgFourRealInv1D(double *real, int num, int step, int cThr)
+void		AlgFourRealInv1D(double *real, int num, int step)
 {
   double	tD0,
 		tD1;
@@ -1293,8 +998,8 @@ void		AlgFourRealInv1D(double *real, int num, int step, int cThr)
   int		count;
 
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgFourRealInv1D FE 0x%lx %d %d %d\n",
-	   (unsigned long )real, num, step, cThr));
+	  ("AlgFourRealInv1D FE %p %d %d\n",
+	   real, num, step));
   count = (num / 2);
   tRp0 = real + ((count + 1) * step);
   tRp1 = real + ((num - 1) * step);
@@ -1320,462 +1025,1252 @@ void		AlgFourRealInv1D(double *real, int num, int step, int cThr)
     tRp0 += step;
     tRp1 -= step;
   }
-  AlgFourHart1D(real, num, step, cThr);
+  AlgFourHart1D(real, num, step);
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
 	  ("AlgFourRealInv1D FX\n"));
 }
 
-#ifdef ALG_THREADS_USED
 /*!
-* \return	Always NULL.
-* \brief	Simple wrapper for AlgFourRealInv1D(), used for thread
-*		creation.
-* \param	args			Parameter list.
-*/
-void		*AlgFourThrRealInv1D(AlgFourArgs1 *args)
-{
-  AlgFourRealInv1D(args->data, args->num, args->step, args->cThr);
-  return(NULL);
-}
-#endif /* ALG_THREADS_USED */
-
-/*!
-* \return	void
-* \brief	Computes repeated the Fourier transforms of the given
-*	 	one dimensional real data sets.
-*		These may either be done wrt the rows or columns of
-*		the data. Buffers may be provided for the columns to
-*		improve efficiency, if provided (non NULL) then thes
-*		should be large enough to hold a single column of data.
-*		Multiple threads may be used (if cThr > 1) for repeated
-*		rows, but (because of the column buffers) not for the
-*		columns. Although AlgFour1D()/AlgFourInv1D() can make
-*		use of two threads in themselves.
-* \param	data			Given data sets.
-* \param	reBuf			Given buffer(s) for real data.
-* \param	imBuf			Given buffer(s) for imaginary
-*					data.
-* \param	numData			Number of data in row/column.
-* \param	stepData		Offset in data elements between
-*					the data to be transformed.
-* \param	repX			Number of data columns to be
-*					transformed.
-* \param	repY			Number of data rows to be
-*					transformed.
-* \param	dir			Forward or inverse transform.
-* \param	cThr			Concurrent threads available,
-*					if cThr <= 1 then no threads
-*					will be created.
-*/
-static void	AlgFourRepXYReal1D(double **data, double *reBuf, double *imBuf,
-				   int numData, int stepData,
-				   int repX, int repY,
-				   AlgFourDirection dir, int cThr)
-{
-  int		idX,
-		idY,
-		halfData,
-		threadCreated = 0;
-  double	*tDp0,
-		*tDp1,
-		*tDp2,
-		*tDp3;
-#ifdef ALG_THREADS_USED
-  int		offY,
-  		numThr,
-  		repThr;
-  AlgFourArgs3	*thrArgP;
-  AlgFourArgs3	thrArgs[ALG_THREADS_MAX];
-  pthread_t	thrIds[ALG_THREADS_MAX];
-#endif /* ALG_THREADS_USED */
-
-  if(repY)						   /* Transform rows */
-  {
-#ifdef ALG_THREADS_USED
-    if(cThr > 1)  /* Calc num threads and num of repeated FT for each thread */
-    {
-      if(ALG_THREADS_MAX > cThr)
-      {
-        if(cThr < repY)
-	{
-	  numThr = cThr;
-	}
-	else
-	{
-	  numThr = repY;
-	}
-      }
-      else
-      {
-        if(ALG_THREADS_MAX > repY)
-	{
-	  numThr = ALG_THREADS_MAX;
-	}
-	else
-	{
-	  numThr = repY;
-	}
-      }
-      repThr = repY / numThr;
-    }
-    else
-    {
-      numThr = 1;
-      repThr = repY;
-    }
-    offY = 0;			   /* Build parameter structures for threads */
-    thrArgP = thrArgs;
-    for(idY = 0; idY < numThr; ++idY)
-    {
-      thrArgP->data = data + offY;
-      thrArgP->reBuf = NULL;
-      thrArgP->imBuf = NULL;
-      thrArgP->numData = numData;
-      thrArgP->stepData = stepData;
-      thrArgP->repX = 0;
-      thrArgP->repY = repThr;
-      thrArgP->dir = dir; 
-      thrArgP->cThr = 1;
-      offY += repThr;
-      ++thrArgP;
-    }
-    if(numThr > 1)
-    {
-      thrArgP = thrArgs + numThr - 1;
-      if((cThr - numThr) > 0)		/* Don't waste any left over threads */
-      {
-	thrArgP->cThr += cThr - numThr;
-      }
-      thrArgP->repY += repY % numThr;	  /* Add on any remaining FT repeats */
-      for(idY = 1; idY < numThr; ++idY) 	   /* Create the new threads */
-      {
-	if(pthread_create(thrIds + idY, NULL,
-			  (void *(*)(void *) )AlgFourThrRepXYReal1D,
-			  (void *)(thrArgs + idY)) == 0)
-	{
-	  threadCreated = 1;
-	}
-      }
-    }
-    if(threadCreated)
-    {
-      thrArgP = thrArgs;      /* Use this thread and terminate any recursion */
-      if(dir == ALG_FOUR_DIR_FWD)
-      {
-	for(idY = 0; idY < thrArgP->repY; ++idY)
-	{
-	  AlgFourReal1D(*(thrArgP->data + idY), thrArgP->numData,
-			thrArgP->stepData, thrArgP->cThr);
-	}
-      }
-      else
-      {
-	for(idY = 0; idY < thrArgP->repY; ++idY)
-	{
-	  AlgFourRealInv1D(*(thrArgP->data + idY), thrArgP->numData,
-			   thrArgP->stepData, thrArgP->cThr);
-	}
-      }
-      if(numThr > 1) /* Wait for all of the threads created for repeated FTs */
-      {
-	for(idY = 1; idY < numThr; ++idY) 
-	{
-	  (void )pthread_join(thrIds[idY], NULL);
-	}
-      }
-    }
-#endif /* ALG_THREADS_USED */
-    if(threadCreated == 0)
-    {
-      if(dir == ALG_FOUR_DIR_FWD)
-      {
-	for(idY = 0; idY < repY; ++idY)
-	{
-	  AlgFourReal1D(*(data + idY), numData, 1, cThr);
-	}
-      }
-      else
-      {
-	for(idY = 0; idY < repY; ++idY)
-	{
-	  AlgFourRealInv1D(*(data + idY), numData, 1, cThr);
-	}
-      }
-    }
-  }
-  else if(repX)						/* Transform columns */
-  {
-    halfData = repX / 2;
-    if(reBuf && imBuf)			   /* Use column buffers if provided */
-    {
-      tDp0 = reBuf;
-      for(idY = 0; idY < numData; ++idY)		    /* Copy column 0 */
-      {
-	*tDp0++ = **(data + idY);
-      }
-      if(dir == ALG_FOUR_DIR_FWD)		       /* Transform column 0 */
-      {
-	AlgFourReal1D(reBuf, numData, 1, cThr);
-      }
-      else
-      {
-	AlgFourRealInv1D(reBuf, numData, 1, cThr);
-      }
-      tDp0 = reBuf;
-      for(idY = 0; idY < numData; ++idY) /* Copy back col 0, copy col numX/2 */
-      {
-	**(data + idY) = *tDp0;
-	*tDp0++ = *(*(data + idY)+ halfData);
-      }
-      if(dir == ALG_FOUR_DIR_FWD)		  /* Transform column numX/2 */
-      {
-	AlgFourReal1D(reBuf, numData, 1, cThr);
-      }
-      else
-      {
-	AlgFourRealInv1D(reBuf, numData, 1, cThr);
-      }
-      tDp0 = reBuf;
-      for(idY = 0; idY < numData; ++idY)	  /* Copy back column numX/2 */
-      {
-	*(*(data + idY)+ halfData) = *tDp0++;
-      }
-      tDp0 = reBuf;
-      tDp1 = imBuf;
-      for(idY = 0; idY < numData; ++idY)    /* Copy columns 1 and numX/2 + 1 */
-      {
-	tDp2 = *(data + idY) + 1;
-	*tDp0++ = *tDp2;
-	*tDp1++ = *(tDp2 + halfData);
-      }
-      if(dir == ALG_FOUR_DIR_FWD)      /* Transform columns 1 and numX/2 + 1 */
-      {
-        AlgFour1D(reBuf, imBuf, numData, 1, cThr); 
-      }
-      else
-      {
-        AlgFourInv1D(reBuf, imBuf, numData, 1, cThr);
-      }
-      for(idX = 2; idX < halfData;
-          ++idX)    /* Copy back previous, copy and transform current column */
-      {
-	tDp0 = reBuf;
-	tDp1 = imBuf;
-	for(idY = 0; idY < numData; ++idY)
-	{
-	  tDp2 = *(data + idY) + idX - 1;
-	  tDp3 = tDp2 + halfData;
-	  *tDp2++ = *tDp0;
-	  *tDp0++ = *tDp2;
-	  *tDp3++ = *tDp1;
-	  *tDp1++ = *tDp3;
-	}
-	if(dir == ALG_FOUR_DIR_FWD)
-	{
-	  AlgFour1D(reBuf, imBuf, numData, 1, cThr);
-	}
-        else
-	{
-	  AlgFourInv1D(reBuf, imBuf, numData, 1, cThr);
-        }
-      }
-      tDp0 = reBuf;
-      tDp1 = imBuf;
-      for(idY = 0; idY < numData; ++idY)      /* Copy back  last two columns */
-      {
-	*(*(data + idY) + halfData - 1) = *tDp0++;
-	*(*(data + idY) + repX - 1) = *tDp1++;
-      }
-    }
-    else    /* If no column buffers then just transform the columns in place */
-    {
-      if(dir == ALG_FOUR_DIR_FWD)
-      {
-	AlgFourReal1D(*data, numData, stepData, cThr); /* Transform column 0 */
-	AlgFourReal1D(*data + halfData, numData, stepData,
-		      cThr);			  /* Transform column numX/2 */
-	for(idX = 1; idX < halfData; ++idX)	  /* Transform other columns */
-	{
-	  AlgFour1D(*data + idX, *data + halfData + idX, numData,
-		    stepData, cThr);
-	}
-      }
-      else
-      {
-	AlgFourRealInv1D(*data, numData, stepData, cThr); /* Transform col 0 */
-	AlgFourRealInv1D(*data + halfData, numData, stepData,
-		      cThr);			  /* Transform column numX/2 */
-	for(idX = 1; idX < halfData; ++idX)	  /* Transform other columns */
-	{
-	  AlgFourInv1D(*data + idX, *data + halfData + idX, numData,
-		    stepData, cThr);
-	}
-      }
-    }
-  }
-}
-
-#ifdef ALG_THREADS_USED
-/*!
-* \return	Always NULL.
-* \brief	Simple wrapper for AlgFourRepXYReal1D(), used for
-*		thread creation.
-* \param	args			Parameter list.
-*/
-static void	*AlgFourThrRepXYReal1D(AlgFourArgs3 *args)
-{
-  AlgFourRepXYReal1D(args->data, args->reBuf, args->imBuf,
-  		     args->numData, args->stepData,
-  	             args->repX, args->repY, args->dir, args->cThr);
-  return(NULL);
-}
-#endif /* ALG_THREADS_USED */
-
-/*!
-* \return	void
+* \return	Error code, may be set if buffers can not be allocated.
 * \ingroup   	AlgFourier
 * \brief	Computes the Fourier transform of the given two
 *		dimensional complex data, and does it in place.
-*		If the two buffer pointers are NULL then the transform
-*		will be done without copying the data between temporary
-*		buffers.
+*		The transformed values data are scaled by a factor
+*		of \f$\sqrt{n_x} \sqrt{n_y}\f$.
 * \param	real			Given real data.
 * \param	imag			Given imaginary data.
-* \param	reBuf			Given buffer for real data,
-*					may be NULL or a buffer region
-*					suitable for a single column.
-* \param	imBuf			Given buffer for imaginary data
-*					may be NULL or a buffer region
-*					suitable for a single column.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
 * \param	numX			Number of data in each row.
 * \param	numY			Number of data in each column.
-* \param	cThr			Concurrent threads available,
-*					if cThr <= 1 then no threads
-*					will be created.
 */
-void		AlgFour2D(double **real, double **imag,
-			  double *reBuf, double *imBuf, int numX, int numY,
-			  int cThr)
+AlgError	AlgFour2D(double **real, double **imag,
+			  int useBuf, int numX, int numY)
 {
+  AlgError	errNum;
+
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgFour2D FE 0x%lx 0x%lx 0x%lx 0x%lx %d %d %d\n",
-	   (unsigned long )real, (unsigned long )imag,
-	   (unsigned long )reBuf, (unsigned long)imBuf, numX, numY, cThr));
-  AlgFourRepXY1D(real, imag, NULL,  NULL, numX, 1,
-  		 0, numY, ALG_FOUR_DIR_FWD, cThr);	   /* Transform rows */
-  AlgFourRepXY1D(real, imag, reBuf, imBuf, numY, numX,
-  		 numX, 0, ALG_FOUR_DIR_FWD, cThr);	/* Transform columns */
+	  ("AlgFour2D FE %p %p %d %d %d\n",
+	   real, imag, useBuf, numX, numY));
+  errNum = AlgFourRepXY1D(real, imag, ALG_FOUR_AXIS_X, useBuf,
+                          numX, numY, ALG_FOUR_DIR_FWD);
+  if(errNum == ALG_ERR_NONE)
+  {
+    errNum = AlgFourRepXY1D(real, imag, ALG_FOUR_AXIS_Y, useBuf,
+                            numX, numY, ALG_FOUR_DIR_FWD);
+  }
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
 	  ("AlgFour2D FX\n"));
+  return(errNum);
 }
 
 /*!
-* \return	void
+* \return	Error code, may be set if buffers can not be allocated.
 * \ingroup   	AlgFourier
 * \brief	Computes the inverse Fourier transform of the given two
 *		dimensional complex data, and does it in place.
-*		If the two buffer pointers are NULL then the transform
-*		will be done without copying the data between temporary
-*		buffers.
+*		The transformed values data are scaled by a factor
+*		of \f$\sqrt{n_x} \sqrt{n_y}\f$.
 * \param	real			Given real data.
 * \param	imag			Given imaginary data.
-* \param	reBuf			Given buffer for real data,
-*					may be NULL or a buffer region
-*					suitable for a single column.
-* \param	imBuf			Given buffer for imaginary data
-*					may be NULL or a buffer region
-*					suitable for a single column.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
 * \param	numX			Number of data in each row.
 * \param	numY			Number of data in each column.
-* \param	cThr			Concurrent threads available,
-*					if cThr <= 1 then no threads
-*					will be created.
 */
-void		AlgFourInv2D(double **real, double **imag,
-			     double *reBuf, double *imBuf,
-			     int numX, int numY, int cThr)
+AlgError	AlgFourInv2D(double **real, double **imag,
+			     int useBuf, int numX, int numY)
 {
+  AlgError	errNum;
+
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgFourInv2D FE 0x%lx 0x%lx 0x%lx 0x%lx %d %d %d\n",
-	   (unsigned long )real, (unsigned long )imag,
-	   (unsigned long )reBuf, (unsigned long)imBuf, numX, numY, cThr));
-  AlgFourRepXY1D(real, imag, NULL,  NULL, numX, 1,
-  		 0, numY, ALG_FOUR_DIR_INV, cThr);	   /* Transform rows */
-  AlgFourRepXY1D(real, imag, reBuf, imBuf, numY, numX,
-  		 numX, 0, ALG_FOUR_DIR_INV, cThr);	/* Transform columns */
+	  ("AlgFourInv2D FE %p %p %d %d %d\n",
+	   real, imag, useBuf, numX, numY));
+  errNum = AlgFourRepXY1D(real, imag, ALG_FOUR_AXIS_Y, useBuf,
+                          numX, numY, ALG_FOUR_DIR_INV);
+  if(errNum == ALG_ERR_NONE)
+  {
+    errNum = AlgFourRepXY1D(real, imag, ALG_FOUR_AXIS_X, useBuf,
+                            numX, numY, ALG_FOUR_DIR_INV);
+  }
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
 	  ("AlgFourInv2D FX\n"));
+  return(errNum);
 }
 
 /*!
-* \return	void
+* \return	Error code, may be set if buffers can not be allocated.
 * \ingroup   	AlgFourier
 * \brief	Computes the Fourier transform of the given two
 *		dimensional real data, and does it in place.
-*		If the two buffer pointers are NULL then the transform
-*		will be done without copying the data between temporary
-*		buffers.
+*
+*		The layout of the array is similar to that in AlgFourReal1D()
+*		and as shown in the table (with 2M = N, r = real,
+*		i = imaginary):
+*
+	-------|--------|---|------------|-------|--------|---|-----------
+	r00    |r01     |...|r0(M-1)     |r0M    |i01     |...|i0(M-1)
+	...    |...     |...|...         |...    |...     |...|...
+	r(M-1)0|r(M-1)1 |...|r(M-1)(M-1) |r(M-1)M|i(M-1)1 |...|i(M-1)(M-1)
+	rM0    |rM1     |...|rM(M-1)     |rMM    |iM1     |...|iM(M-1)
+	i10    |r(M+1)1 |...|r(M+1)(M-1) |i1M    |i(M+1)1 |...|i(M+1)(M-1)
+	...    |...     |...|...         |...    |...     |...|...
+	i(M-1)0|r(2M-1)1|...|r(2M-1)(M-1)|i(M-1)M|i(2M-1)1|...|i(2M-1)(M-1)
+
+*		Using contiguous buffers has a large effect for
+*		data larger than a CPU's fastest cache and little
+*		cost for smaller data arrays.
+*		The times below were measured for on a Lenovo T430s
+*		with a i7-2640M with 4kB cache. Data sizes are the
+*		number of double values. These times include buffer
+*		allocation but not array allocation or file I/O
+*		and are the mean of 5 runs using elapsed (wall
+*		clock) time.
+*	data sz | tm (no buf, 1 thr) | tm (buf, 1 thr) | tm (buf, 2 thr)
+ 	--------|--------------------|-----------------|-------------
+          256^2 |     3ms            |    3ms          |    2ms
+          512^2 |    12ms            |    6ms          |    4ms
+         1024^2 |   120ms            |   44ms          |   35ms
+         2048^2 |   600ms            |  170ms          |  110ms
+         4096^2 |  3300ms            |  764ms          |  460ms
+         8192^2 | 17000ms            | 3600ms          | 2100ms
+*		The transformed values data are scaled by a factor
+*		of \f$\sqrt{n_x} \sqrt{n_y}\f$.
 * \param	real			Given real data.
-* \param	reBuf			Given buffer for real data,
-*					may be NULL or a buffer region
-*					suitable for a single column.
-* \param	imBuf			Given buffer for imaginary data
-*					may be NULL or a buffer region
-*					suitable for a single column.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
 * \param	numX			Number of data in each row.
 * \param	numY			Number of data in each column.
-* \param	cThr			Concurrent threads available,
-*					if cThr <= 1 then no threads
-*					will be created.
 */
-void		AlgFourReal2D(double **real, double *reBuf, double *imBuf,
-			      int numX, int numY, int cThr)
+AlgError	AlgFourReal2D(double **real,
+			      int useBuf, int numX, int numY)
 {
+  AlgError	errNum;
+
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgFourReal2D FE 0x%lx 0x%lx 0x%lx %d %d %d\n",
-	   (unsigned long )real, (unsigned long )reBuf, (unsigned long)imBuf,
-	   numX, numY, cThr));
-  AlgFourRepXYReal1D(real, NULL,  NULL, numX, 1,
-  		     0, numY, ALG_FOUR_DIR_FWD, cThr);	   /* Transform rows */
-  AlgFourRepXYReal1D(real, reBuf, imBuf, numY, numX,
-  		     numX, 0, ALG_FOUR_DIR_FWD, cThr);	   /* Transform cols */
+	  ("AlgFourReal2D FE %p %d %d %d\n",
+	   real, useBuf, numX, numY));
+  errNum = AlgFourRepXYReal1D(real, ALG_FOUR_AXIS_X, useBuf, numX, numY,
+                              ALG_FOUR_DIR_FWD);
+  if(errNum == ALG_ERR_NONE)
+  {
+    errNum = AlgFourRepXYReal1D(real, ALG_FOUR_AXIS_Y, useBuf, numX, numY,
+    				ALG_FOUR_DIR_FWD);
+  }
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
 	  ("AlgFourReal2D FX\n"));
+  return(errNum);
 }
 
 /*!
-* \return	void
+* \return	Error code, may be set if buffers can not be allocated.
 * \ingroup   	AlgFourier
 * \brief	Computes the Fourier transform of the given two
 *		dimensional data which resulted from a transform using
 *		AlgFourReal2D(), and does it in place.
-*		If the two buffer pointers are NULL then the transform
-*		will be done without copying the data between temporary
-*		buffers.
+*		The transformed values data are scaled by a factor
+*		of \f$\sqrt{n_x} \sqrt{n_y}\f$.
 * \param	real			Given real/complex data.
-* \param	reBuf			Given buffer for real data,
-*					may be NULL or a buffer region
-*					suitable for a single column.
-* \param	imBuf			Given buffer for imaginary data
-*					may be NULL or a buffer region
-*					suitable for a single column.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
 * \param	numX			Number of data in each row.
 * \param	numY			Number of data in each column.
-* \param	cThr			Concurrent threads available,
-*					if cThr <= 1 then no threads
-*					will be created.
 */
-void		AlgFourRealInv2D(double **real,double *reBuf, double *imBuf,
-				 int numX, int numY, int cThr)
+AlgError	AlgFourRealInv2D(double **real,
+				 int useBuf, int numX, int numY)
 {
+  AlgError	errNum;
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
-	  ("AlgFourRealInv2D FE 0x%lx 0x%lx 0x%lx %d %d %d\n",
-	   (unsigned long )real, (unsigned long )reBuf, (unsigned long)imBuf,
-	   numX, numY, cThr));
-  AlgFourRepXYReal1D(real, reBuf, imBuf, numY, numX,
-  		     numX, 0, ALG_FOUR_DIR_INV, cThr);	   /* Transform cols */
-  AlgFourRepXYReal1D(real, NULL,  NULL, numX, 1,
-  		     0, numY, ALG_FOUR_DIR_INV, cThr);	   /* Transform rows */
+	  ("AlgFourRealInv2D FE %p %d %d %d\n",
+	   real, useBuf, numX, numY));
+  errNum = AlgFourRepXYReal1D(real, ALG_FOUR_AXIS_Y, useBuf, numX, numY,
+                              ALG_FOUR_DIR_INV);
+  if(errNum == ALG_ERR_NONE)
+  {
+    errNum = AlgFourRepXYReal1D(real, ALG_FOUR_AXIS_X, useBuf, numX, numY,
+  				ALG_FOUR_DIR_INV);
+  }
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
 	  ("AlgFourRealInv2D FX\n"));
+  return(errNum);
+}
+
+/*!
+* \return	Error code, may be set if buffers can not be allocated.
+* \ingroup   	AlgFourier
+* \brief	Computes the Fourier transform of the given three
+*		dimensional complex data, and does it in place.
+*		The transformed values data are scaled by a factor
+*		of \f$\sqrt{n_x} \sqrt{n_y} \sqrt{n_z}\f$.
+*
+*		Using contiguous buffers has a large effect for
+*		data larger than a CPU's fastest cache and little
+*		cost for smaller data arrays.
+* \param	real			Given real data.
+* \param	imag			Given imaginary data.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
+* \param	numX			Number of data in each row.
+* \param	numY			Number of data in each column.
+* \param	numZ			Number of data in each plane.
+*/
+AlgError	AlgFour3D(double ***real, double ***imag,
+			  int useBuf, int numX, int numY, int numZ)
+{
+  AlgError	errNum;
+
+  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
+	  ("AlgFour3D FE %p %p %d %d %d %d\n",
+	   real, imag, useBuf, numX, numY, numZ));
+  errNum = AlgFourRepXYZ1D(real, imag, ALG_FOUR_AXIS_X, useBuf,
+                           numX, numY, numZ, ALG_FOUR_DIR_FWD);
+  if(errNum == ALG_ERR_NONE)
+  {
+    errNum = AlgFourRepXYZ1D(real, imag, ALG_FOUR_AXIS_Y, useBuf,
+                             numX, numY, numZ, ALG_FOUR_DIR_FWD);
+  }
+  if(errNum == ALG_ERR_NONE)
+  {
+    errNum = AlgFourRepXYZ1D(real, imag, ALG_FOUR_AXIS_Z, useBuf,
+                             numX, numY, numZ, ALG_FOUR_DIR_FWD);
+  }
+  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
+	  ("AlgFour3D FX\n"));
+  return(errNum);
+}
+
+/*!
+* \return	Error code, may be set if buffers can not be allocated.
+* \ingroup   	AlgFourier
+* \brief	Computes the inverse Fourier transform of the given three
+*		dimensional complex data, and does it in place.
+*		The transformed values data are scaled by a factor
+*		of \f$\sqrt{n_x} \sqrt{n_y} \sqrt{n_z}\f$.
+* \param	real			Given real data.
+* \param	imag			Given imaginary data.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
+* \param	numX			Number of data in each row.
+* \param	numY			Number of data in each column.
+* \param	numZ			Number of data in each plane.
+*/
+AlgError	AlgFourInv3D(double ***real, double ***imag,
+			     int useBuf, int numX, int numY, int numZ)
+{
+  AlgError	errNum;
+
+  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
+	  ("AlgFourInv3D FE %p %p %d %d %d %d\n",
+	   real, imag, useBuf, numX, numY, numZ));
+  errNum = AlgFourRepXYZ1D(real, imag, ALG_FOUR_AXIS_Z, useBuf,
+                          numX, numY, numZ, ALG_FOUR_DIR_INV);
+  if(errNum == ALG_ERR_NONE)
+  {
+    errNum = AlgFourRepXYZ1D(real, imag, ALG_FOUR_AXIS_Y, useBuf,
+                            numX, numY, numZ, ALG_FOUR_DIR_INV);
+  }
+  if(errNum == ALG_ERR_NONE)
+  {
+    errNum = AlgFourRepXYZ1D(real, imag, ALG_FOUR_AXIS_X, useBuf,
+                            numX, numY, numZ, ALG_FOUR_DIR_INV);
+  }
+  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
+	  ("AlgFourInv3D FX\n"));
+  return(errNum);
+}
+
+/*!
+* \return	Error code, may be set if buffers can not be allocated.
+* \ingroup   	AlgFourier
+* \brief	Computes the Fourier transform of the given three
+*		dimensional real data, and does it in place.
+*		The transformed values data are scaled by a factor
+*		of \f$\sqrt{n_x} \sqrt{n_y} \sqrt{n_z}\f$.
+*
+*		Using contiguous buffers has a large effect for
+*		data larger than a CPU's fastest cache and little
+* \param	real			Given real data.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
+* \param	numX			Number of data in each row.
+* \param	numY			Number of data in each column.
+* \param	numZ			Number of data in each plane.
+*/
+AlgError	AlgFourReal3D(double ***real,
+			      int useBuf, int numX, int numY, int numZ)
+{
+  AlgError	errNum;
+
+  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
+	  ("AlgFourReal3D FE %p %d %d %d %d\n",
+	   real, useBuf, numX, numY, numZ));
+  errNum = AlgFourRepXYZReal1D(real, ALG_FOUR_AXIS_X, useBuf,
+                               numX, numY, numZ, ALG_FOUR_DIR_FWD);
+  if(errNum == ALG_ERR_NONE)
+  {
+    errNum = AlgFourRepXYZReal1D(real, ALG_FOUR_AXIS_Y, useBuf,
+                                 numX, numY, numZ, ALG_FOUR_DIR_FWD);
+  }
+  if(errNum == ALG_ERR_NONE)
+  {
+    errNum = AlgFourRepXYZReal1D(real, ALG_FOUR_AXIS_Z, useBuf,
+    				 numX, numY, numZ, ALG_FOUR_DIR_FWD);
+  }
+  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
+	  ("AlgFourReal3D FX\n"));
+  return(errNum);
+}
+
+/*!
+* \return	Error code, may be set if buffers can not be allocated.
+* \ingroup   	AlgFourier
+* \brief	Computes the Fourier transform of the given three
+*		dimensional data which resulted from a transform using
+*		AlgFourReal3D(), and does it in place.
+*		The transformed values data are scaled by a factor
+*		of \f$\sqrt{n_x} \sqrt{n_y} \sqrt{n_z}\f$.
+* \param	real			Given real/complex data.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
+* \param	numX			Number of data in each row.
+* \param	numY			Number of data in each column.
+* \param	numZ			Number of data in each plane.
+*/
+AlgError	AlgFourRealInv3D(double ***real,
+				 int useBuf, int numX, int numY, int numZ)
+{
+  AlgError	errNum;
+  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
+	  ("AlgFourRealInv3D FE %p %d %d %d %d\n",
+	   real, useBuf, numX, numY, numZ));
+  errNum = AlgFourRepXYZReal1D(real, ALG_FOUR_AXIS_Z, useBuf,
+                               numX, numY, numZ, ALG_FOUR_DIR_INV);
+  if(errNum == ALG_ERR_NONE)
+  {
+    errNum = AlgFourRepXYZReal1D(real, ALG_FOUR_AXIS_Y, useBuf,
+                                 numX, numY, numZ, ALG_FOUR_DIR_INV);
+  }
+  if(errNum == ALG_ERR_NONE)
+  {
+    errNum = AlgFourRepXYZReal1D(real, ALG_FOUR_AXIS_X, useBuf,
+                                 numX, numY, numZ, ALG_FOUR_DIR_INV);
+  }
+  ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
+	  ("AlgFourRealInv3D FX\n"));
+  return(errNum);
+}
+
+/*!
+* \return	Error code, may be set if buffers can not be allocated.
+* \brief	Computes repeated Fourier transforms of a 1D complex
+*	 	array within a complex array 2D.
+* \param	real			Given real 2D data array.
+* \param	imag			Given imaginary 2D data array.
+* \param	axis			Axis for partial evaluation.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
+* \param	numX			Number of data columns in given
+*					data array.
+* \param	numY			Number of data rows in given
+*					data array.
+* \param	dir			Forward or inverse transform.
+*/
+static AlgError	AlgFourRepXY1D(double **real, double **imag,
+			       AlgFourAxis axis, int useBuf,
+			       int numX, int numY, AlgFourDir dir)
+{
+  AlgError	errNum = ALG_ERR_NONE;
+
+  if(axis == ALG_FOUR_AXIS_X)                              /* Transform rows */
+  {
+    if(dir == ALG_FOUR_DIR_FWD)
+    {
+      int	idY;
+
+#ifdef _OPENMP
+#pragma omp parallel for private(idY)
+#endif
+      for(idY = 0; idY < numY; ++idY)
+      {
+	AlgFour1D(*(real + idY), *(imag + idY), numX, 1);
+      }
+    }
+    else
+    {
+      int	idY;
+
+#ifdef _OPENMP
+#pragma omp parallel for private(idY)
+#endif
+      for(idY = 0; idY < numY; ++idY)
+      {
+	AlgFourInv1D(*(real + idY), *(imag + idY), numX, 1);
+      }
+    }
+  }
+  else /* axis == ALG_FOUR_AXIS_Y */                    /* Transform columns */
+  {
+    if(useBuf)	                           /* Use column buffers if provided */
+    {
+      int	nThr = 1;
+      double	*bufBase = NULL;
+
+#ifdef _OPENMP
+#pragma omp parallel
+      {
+#pragma omp master
+        {
+	  nThr = omp_get_num_threads();
+	}
+      }
+#endif
+      if((bufBase = AlcMalloc(sizeof(double) * numY * 2 * nThr)) == NULL)
+      {
+	errNum = ALG_ERR_MALLOC;
+      }
+      if(errNum == ALG_ERR_NONE)
+      {
+        int	idX;
+
+#ifdef _OPENMP
+#pragma omp parallel for private(idX) num_threads(nThr)
+#endif
+	for(idX = 0; idX < numX; ++idX)
+	{
+	  int	  idY,
+	  	  thrId = 0;
+	  double  *reBuf,
+		  *imBuf;
+
+#ifdef _OPENMP
+	  thrId = omp_get_thread_num();
+#endif
+	  reBuf = bufBase + (2 * numY * thrId);
+	  imBuf = reBuf + numY;
+	  /* Copy to buffer. */
+	  for(idY = 0; idY < numY; ++idY)
+	  {
+	    *(reBuf + idY) = *(*(real + idY) + idX);
+	    *(imBuf + idY) = *(*(imag + idY) + idX);
+	  }
+	  /* Transform buffer. */
+	  if(dir == ALG_FOUR_DIR_FWD)
+	  {
+	    AlgFour1D(reBuf, imBuf, numY, 1);
+	  }
+	  else
+	  {
+	    AlgFourInv1D(reBuf, imBuf, numY, 1);
+	  }
+	  /* Copy back from buffer. */
+	  for(idY = 0; idY < numY; ++idY)
+	  {
+	    *(*(real + idY) + idX) = *(reBuf + idY);
+	    *(*(imag + idY) + idX) = *(imBuf + idY);
+	  }
+	}
+	AlcFree(bufBase);
+      }
+    }
+    else              /* If no column buffers transform the columns in place */
+    {
+      int	idX;
+
+      if(dir == ALG_FOUR_DIR_FWD)
+      {
+#ifdef _OPENMP
+#pragma omp parallel for private(idX)
+#endif
+	for(idX = 0; idX < numX; ++idX)
+	{
+	  AlgFour1D(*real + idX, *imag + idX, numY, numX);
+        }
+      }
+      else
+      {
+#ifdef _OPENMP
+#pragma omp parallel for private(idX)
+#endif
+	for(idX = 0; idX < numX; ++idX)
+	{
+	  AlgFourInv1D(*real + idX, *imag + idX, numY, numX);
+        }
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Error code, may be set if buffers can not be allocated.
+* \brief	Computes repeated the Fourier transforms of the given
+*	 	one dimensional real data array.
+* \brief	Computes repeated Fourier transforms of a 1D real/
+*	 	complex conjugate array within a 2D real/complex conjugate
+*	 	array.
+* \param	data			Given 2D data array.
+* \param	axis			Axis for partial evaluation.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
+* \param	numX			Number of data columns in given
+*					data array.
+* \param	numY			Number of data rows in given
+*					data array.
+* \param	dir			Forward or inverse transform.
+*/
+static AlgError	AlgFourRepXYReal1D(double **data, AlgFourAxis axis, int useBuf,
+				   int numX, int numY, AlgFourDir dir)
+{
+  AlgError	errNum = ALG_ERR_NONE;
+
+  if(axis == ALG_FOUR_AXIS_X)			 	   /* Transform rows */
+  {
+    if(dir == ALG_FOUR_DIR_FWD)
+    {
+      int 	idY;
+
+#ifdef _OPENMP
+#pragma omp parallel for private(idY)
+#endif
+      for(idY = 0; idY < numY; ++idY)
+      {
+	AlgFourReal1D(*(data + idY), numX, 1);
+      }
+    }
+    else
+    {
+      int	idY;
+
+#ifdef _OPENMP
+#pragma omp parallel for private(idY)
+#endif
+      for(idY = 0; idY < numY; ++idY)
+      {
+	AlgFourRealInv1D(*(data + idY), numX, 1);
+      }
+    }
+  }
+  else /* axis == ALG_FOUR_AXIS_Y */			/* Transform columns */
+  {
+    int		halfData;
+
+    halfData = numX / 2;
+    if(useBuf)
+    {
+      int	nThr = 1;
+      double	*bufBase = NULL;
+
+#ifdef _OPENMP
+#pragma omp parallel
+      {
+#pragma omp master
+        {
+          nThr = omp_get_num_threads();
+	}
+      }
+#endif
+      if((bufBase = AlcMalloc(sizeof(double) * numY * 2 * nThr)) == NULL)
+      {
+	errNum = ALG_ERR_MALLOC;
+      }
+      if(errNum == ALG_ERR_NONE)
+      {
+#ifdef _OPENMP
+#pragma omp parallel sections
+#endif
+	{
+#ifdef _OPENMP
+#pragma omp section
+#endif
+	  {
+	    int	    idY,
+		    thrId = 0;
+	    double  *reBuf;
+
+#ifdef _OPENMP
+	    thrId = omp_get_thread_num();
+#endif
+	    reBuf = bufBase + (numY * thrId);
+	    for(idY = 0; idY < numY; ++idY)
+	    {
+	      *(reBuf + idY) = **(data + idY);
+	    }
+	    if(dir == ALG_FOUR_DIR_FWD)
+	    {
+	      AlgFourReal1D(reBuf, numY, 1);
+	    }
+	    else
+	    {
+	      AlgFourRealInv1D(reBuf, numY, 1);
+	    }
+	    for(idY = 0; idY < numY; ++idY)
+	    {
+	      **(data + idY) = *(reBuf + idY);
+	    }
+	  }
+#ifdef _OPENMP
+#pragma omp section
+#endif
+	  {
+	    int	    idY,
+		    thrId = 0;
+	    double  *reBuf;
+
+#ifdef _OPENMP
+	    thrId = omp_get_thread_num();
+#endif
+	    reBuf = bufBase + (numY * thrId);
+	    for(idY = 0; idY < numY; ++idY)
+	    {
+	      *(reBuf + idY) = *(*(data + idY) + halfData);
+	    }
+	    if(dir == ALG_FOUR_DIR_FWD)
+	    {
+	      AlgFourReal1D(reBuf, numY, 1);
+	    }
+	    else
+	    {
+	      AlgFourRealInv1D(reBuf, numY, 1);
+	    }
+	    for(idY = 0; idY < numY; ++idY)
+	    {
+	      *(*(data + idY) + halfData) = *(reBuf + idY);
+	    }
+	  }
+	}
+	{
+	  int	idX;
+
+#ifdef _OPENMP
+#pragma omp parallel for private(idX)
+#endif
+	  for(idX = 1; idX < halfData; ++idX)
+	  {
+	    int	   idY,
+		   thrId = 0;
+	    double *reBuf,
+		   *imBuf;
+
+#ifdef _OPENMP
+	    thrId = omp_get_thread_num();
+#endif
+	    reBuf = bufBase + (2 * numY * thrId);
+	    imBuf = reBuf + numY;
+	    for(idY = 0; idY < numY; ++idY)
+	    {
+	      *(reBuf + idY) = *(*(data + idY) + idX);
+	      *(imBuf + idY) = *(*(data + idY) + halfData + idX);
+	    }
+	    if(dir == ALG_FOUR_DIR_FWD)
+	    {
+	      AlgFour1D(reBuf, imBuf, numY, 1);
+	    }
+	    else
+	    {
+	      AlgFourInv1D(reBuf, imBuf, numY, 1);
+	    }
+	    for(idY = 0; idY < numY; ++idY)
+	    {
+	      *(*(data + idY) + idX) = *(reBuf + idY);
+	      *(*(data + idY) + halfData + idX) = *(imBuf + idY);
+	    }
+	  }
+	}
+      }
+    }
+    else
+    {
+      /* If no column buffers then just transform the columns in place this
+       * is done by: transforming column 0, transform column numX/2 and then
+       * transforming the remaining columns. */
+      if(dir == ALG_FOUR_DIR_FWD)
+      {
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+	{
+	  int	idX;
+#ifdef _OPENMP
+#pragma omp sections
+#endif
+	  {
+#ifdef _OPENMP
+#pragma omp section
+#endif
+	    {
+	      AlgFourReal1D(*data, numY, numX);
+	    }
+#ifdef _OPENMP
+#pragma omp section
+#endif
+	    {
+	      AlgFourReal1D(*data + halfData, numY, numX);
+	    }
+	  }
+#ifdef _OPENMP
+#pragma omp for private(idX)
+#endif
+	  for(idX = 1; idX < halfData; ++idX)
+	  {
+	    AlgFour1D(*data + idX, *data + halfData + idX, numY, numX);
+	  }
+	}
+      }
+      else
+      {
+        int 	idX;
+
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+	{
+#ifdef _OPENMP
+#pragma omp sections
+#endif
+	  {
+#ifdef _OPENMP
+#pragma omp section
+#endif
+	    {
+	      AlgFourRealInv1D(*data, numY, numX);
+	    }
+#ifdef _OPENMP
+#pragma omp section
+#endif
+	    {
+	      AlgFourRealInv1D(*data + halfData, numY, numX);
+	    }
+	  }
+#ifdef _OPENMP
+#pragma omp for private(idX)
+#endif
+	  for(idX = 1; idX < halfData; ++idX)
+	  {
+	    AlgFourInv1D(*data + idX, *data + halfData + idX, numY,
+		numX);
+	  }
+	}
+      }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Error code, may be set if buffers can not be allocated.
+* \brief	Computes repeated Fourier transforms of a 1D complex
+*	 	array within a complex array 3D.
+* \param	real			Given 3D real data array.
+* \param	imag			Given 3D imaginary data array.
+* \param	axis			Axis for partial evaluation.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
+* \param	numX			Number of data columns in given
+*					data array.
+* \param	numY			Number of data rows in given
+*					data array.
+* \param	numZ			Number of data planes in given
+*					data array.
+* \param	dir			Forward or inverse transform.
+*/
+static AlgError	AlgFourRepXYZ1D(double ***real, double ***imag,
+			        AlgFourAxis axis, int useBuf,
+			        int numX, int numY, int numZ, AlgFourDir dir)
+{
+  int		idX,
+  		idY,
+		idZ;
+  AlgError	errNum = ALG_ERR_NONE;
+
+  switch(axis)
+  {
+    case ALG_FOUR_AXIS_X:
+      /* Transform rows */
+#ifdef _OPENMP
+#pragma omp parallel for private(idY,idZ)
+#endif
+      for(idZ = 0; idZ < numZ; ++idZ)
+      {
+	for(idY = 0; idY < numY; ++idY)
+	{
+	  if(dir == ALG_FOUR_DIR_FWD)
+	  {
+	    AlgFour1D(*(*(real + idZ) + idY), *(*(imag + idZ) + idY),
+		numX, 1);
+	  }
+	  else
+	  {
+	    AlgFourInv1D(*(*(real + idZ) + idY), *(*(imag + idZ) + idY),
+		numX, 1);
+	  }
+	}
+      }
+      break;
+    case ALG_FOUR_AXIS_Y:
+      /* Transform columns */
+      if(useBuf)
+      {
+	int	nThr = 1;
+	double	*bufBase = NULL;
+
+#ifdef _OPENMP
+#pragma omp parallel
+	{
+#pragma omp master
+	  {
+	    nThr = omp_get_num_threads();
+	  }
+	}
+#endif
+	if((bufBase = AlcMalloc(sizeof(double) * numY * 2 * nThr)) == NULL)
+	{
+	  errNum = ALG_ERR_MALLOC;
+	}
+	if(errNum == ALG_ERR_NONE)
+	{
+#ifdef _OPENMP
+#pragma omp parallel for private(idX,idY,idZ) num_threads(nThr)
+#endif
+	  for(idZ = 0; idZ < numZ; ++idZ)
+	  {
+	    int	    thrId = 0;
+	    double  *reBuf,
+		    *imBuf;
+
+#ifdef _OPENMP
+	    thrId = omp_get_thread_num();
+#endif
+	    reBuf = bufBase + (2 * numY * thrId);
+	    imBuf = reBuf + numY;
+	    for(idX = 0; idX < numX; ++idX)
+	    {
+	      /* Copy to buffer. */
+	      for(idY = 0; idY < numY; ++idY)
+	      {
+		*(reBuf + idY) = *(*(*(real + idZ) + idY) + idX);
+		*(imBuf + idY) = *(*(*(imag + idZ) + idY) + idX);
+	      }
+	      /* Transform buffer. */
+	      if(dir == ALG_FOUR_DIR_FWD)
+	      {
+		AlgFour1D(reBuf, imBuf, numY, 1);
+	      }
+	      else
+	      {
+		AlgFourInv1D(reBuf, imBuf, numY, 1);
+	      }
+	      /* Copy back from buffer. */
+	      for(idY = 0; idY < numY; ++idY)
+	      {
+		*(*(*(real + idZ) + idY) + idX) = *(reBuf + idY);
+		*(*(*(imag + idZ) + idY) + idX) = *(imBuf + idY);
+	      }
+	    }
+	  }
+	  AlcFree(bufBase);
+	}
+      }
+      else
+      {
+#ifdef _OPENMP
+#pragma omp parallel for private(idX,idY,idZ)
+#endif
+	for(idZ = 0; idZ < numZ; ++idZ)
+	{
+	  for(idX = 0; idX < numX; ++idX)
+	  {
+	    if(dir == ALG_FOUR_DIR_FWD)
+	    {
+	      AlgFour1D(**(real + idZ) + idX, **(imag + idZ) + idX,
+		  numY, numX);
+	    }
+	    else
+	    {
+	      AlgFourInv1D(**(real + idZ) + idX, **(imag + idZ) + idX,
+		  numY, numX);
+	    }
+	  }
+	}
+      }
+      break;
+    case ALG_FOUR_AXIS_Z:
+      /* Transform columns */
+      if(useBuf)
+      {
+	int	nThr = 1;
+	double	*bufBase = NULL;
+
+#ifdef _OPENMP
+#pragma omp parallel
+	{
+#pragma omp master
+	  {
+	    nThr = omp_get_num_threads();
+	  }
+	}
+#endif
+	if((bufBase = AlcMalloc(sizeof(double) * numZ * 2 * nThr)) == NULL)
+	{
+	  errNum = ALG_ERR_MALLOC;
+	}
+	if(errNum == ALG_ERR_NONE)
+	{
+#ifdef _OPENMP
+#pragma omp parallel for private(idX,idY,idZ) num_threads(nThr)
+#endif
+	  for(idY = 0; idY < numY; ++idY)
+	  {
+	    int	    thrId = 0;
+	    double  *reBuf,
+		    *imBuf;
+
+#ifdef _OPENMP
+	    thrId = omp_get_thread_num();
+#endif
+	    reBuf = bufBase + (2 * numZ * thrId);
+	    imBuf = reBuf + numZ;
+	    for(idX = 0; idX < numX; ++idX)
+	    {
+	      /* Copy to buffer. */
+	      for(idZ = 0; idZ < numZ; ++idZ)
+	      {
+		*(reBuf + idZ) = *(*(*(real + idZ) + idY) + idX);
+		*(imBuf + idZ) = *(*(*(imag + idZ) + idY) + idX);
+	      }
+	      /* Transform buffer. */
+	      if(dir == ALG_FOUR_DIR_FWD)
+	      {
+		AlgFour1D(reBuf, imBuf, numZ, 1);
+	      }
+	      else
+	      {
+		AlgFourInv1D(reBuf, imBuf, numZ, 1);
+	      }
+	      /* Copy back from buffer. */
+	      for(idZ = 0; idZ < numZ; ++idZ)
+	      {
+		*(*(*(real + idZ) + idY) + idX) = *(reBuf + idZ);
+		*(*(*(imag + idZ) + idY) + idX) = *(imBuf + idZ);
+	      }
+	    }
+	  }
+	  AlcFree(bufBase);
+	}
+      }
+      else
+      {
+#ifdef _OPENMP
+#pragma omp parallel for private(idX,idY)
+#endif
+	for(idY = 0; idY < numY; ++idY)
+	{
+	  for(idX = 0; idX < numX; ++idX)
+	  {
+	    if(dir == ALG_FOUR_DIR_FWD)
+	    {
+	      AlgFour1D(*(*real + idY) + idX, *(*imag + idY) + idX,
+		  numZ, numX * numY);
+	    }
+	    else
+	    {
+	      AlgFourInv1D(*(*real + idY) + idX, *(*imag + idY) + idX,
+		  numZ, numX * numY);
+	    }
+	  }
+	}
+      }
+      break;
+    default:
+      break;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Error code, may be set if buffers can not be allocated.
+* \brief	Computes repeated the Fourier transforms of the given
+*	 	one dimensional real data array.
+* \brief	Computes repeated Fourier transforms of a 1D real/
+*	 	complex conjugate array within a 3D real/complex conjugate
+*	 	array.
+* \param	data			Given 2D data array.
+* \param	axis			Axis for partial evaluation.
+* \param	useBuf			Allocate private buffers to make
+* 					columns contiguous.
+* \param	numX			Number of data columns in given
+*					data array.
+* \param	numY			Number of data rows in given
+*					data array.
+* \param	numZ			Number of data planes in given
+*					data array.
+* \param	dir			Forward or inverse transform.
+*/
+static AlgError	AlgFourRepXYZReal1D(double ***data, AlgFourAxis axis,
+				    int useBuf,
+				    int numX, int numY, int numZ,
+				    AlgFourDir dir)
+{
+  int		idX,
+		idY,
+		idZ,
+		halfData;
+  AlgError	errNum = ALG_ERR_NONE;
+
+  switch(axis)
+  {
+    case  ALG_FOUR_AXIS_X:
+      /* Transform rows */
+#ifdef _OPENMP
+#pragma omp parallel for private(idX,idY,idZ)
+#endif
+      for(idZ = 0; idZ < numZ; ++idZ)
+      {
+	for(idY = 0; idY < numY; ++idY)
+	{
+	  if(dir == ALG_FOUR_DIR_FWD)
+	  {
+	    AlgFourReal1D(*(*(data + idZ) + idY), numX, 1);
+	  }
+	  else
+	  {
+	    AlgFourRealInv1D(*(*(data + idZ) + idY), numX, 1);
+	  }
+	}
+      }
+      break;
+    case  ALG_FOUR_AXIS_Y:
+      /* Transform columns */
+      halfData = numY / 2;
+      if(useBuf)
+      {
+	int	nThr = 1;
+	double	*bufBase = NULL;
+
+#ifdef _OPENMP
+#pragma omp parallel
+	{
+#pragma omp master
+	  {
+	    nThr = omp_get_num_threads();
+	  }
+	}
+#endif
+	if((bufBase = AlcMalloc(sizeof(double) * numY * 2 * nThr)) == NULL)
+	{
+	  errNum = ALG_ERR_MALLOC;
+	}
+	if(errNum == ALG_ERR_NONE)
+	{
+#ifdef _OPENMP
+#pragma omp parallel for private(idX,idY,idZ)
+#endif
+	  for(idZ = 0; idZ < numZ; ++idZ)
+	  {
+	    int	thrId = 0;
+	    double  *reBuf,
+	    	    *imBuf;
+#ifdef _OPENMP
+	    thrId = omp_get_thread_num();
+#endif
+	    reBuf = bufBase + (2 * numY * thrId);
+	    imBuf = reBuf + numY;
+	    /* Copy to buffer. */
+	    for(idY = 0; idY < numY; ++idY)
+	    {
+	      *(reBuf + idY) = **(*(data + idZ) + idY);
+	      *(imBuf + idY) = *(*(*(data + idZ) + idY) + halfData);
+	    }
+	    if(dir == ALG_FOUR_DIR_FWD)
+	    {
+	      AlgFourReal1D(reBuf, numY, 1);
+	      AlgFourReal1D(imBuf, numY, 1);
+	    }
+	    else
+	    {
+	      AlgFourRealInv1D(reBuf, numY, 1);
+	      AlgFourRealInv1D(imBuf, numY, 1);
+	    }
+	    /* Copy back from buffer again. */
+	    for(idY = 0; idY < numY; ++idY)
+	    {
+	      **(*(data + idZ) + idY) = *(reBuf + idY);
+	      *(*(*(data + idZ) + idY) + halfData) = *(imBuf + idY);
+	    }
+	    for(idX = 1; idX < halfData; ++idX)
+	    {
+	      /* Copy to buffer. */
+	      for(idY = 0; idY < numY; ++idY)
+	      {
+		*(reBuf + idY) = *(*(*(data + idZ) + idY) + idX);
+		*(imBuf + idY) = *(*(*(data + idZ) + idY) + halfData + idX);
+	      }
+	      if(dir == ALG_FOUR_DIR_FWD)
+	      {
+		AlgFour1D(reBuf, imBuf, numY, 1);
+	      }
+	      else
+	      {
+		AlgFourInv1D(reBuf, imBuf, numY, 1);
+	      }
+	      /* Copy back. */
+	      for(idY = 0; idY < numY; ++idY)
+	      {
+		*(*(*(data + idZ) + idY) + idX) = *(reBuf + idY);
+		*(*(*(data + idZ) + idY) + halfData + idX) = *(imBuf + idY);
+	      }
+	    }
+	  }
+	  AlcFree(bufBase);
+        }
+      }
+      else
+      {
+#ifdef _OPENMP
+#pragma omp parallel for private(idX,idY,idZ)
+#endif
+	for(idZ = 0; idZ < numZ; ++idZ)
+	{
+	  if(dir == ALG_FOUR_DIR_FWD)
+	  {
+	    AlgFourReal1D(**(data + idZ), numY, numX);
+	    AlgFourReal1D(**(data + idZ) + halfData, numY, numX);
+	    for(idX = 1; idX < halfData; ++idX)
+	    {
+	      AlgFour1D(**(data + idZ) + idX,
+		  **(data + idZ) + halfData + idX, numY, numX);
+	    }
+	  }
+	  else
+	  {
+	    AlgFourRealInv1D(**(data + idZ), numY, numX);
+	    AlgFourRealInv1D(**(data + idZ) + halfData, numY, numX);
+	    for(idX = 1; idX < halfData; ++idX)
+	    {
+	      AlgFourInv1D(**(data + idZ) + idX,
+		  **(data + idZ) + halfData + idX, numY, numX);
+	    }
+	  }
+	}
+      }
+      break;
+    case  ALG_FOUR_AXIS_Z:
+      /* Transform planes */
+      halfData = numX / 2;
+      if(useBuf)
+      {
+	int	nThr = 1;
+	double	*bufBase = NULL;
+
+#ifdef _OPENMP
+#pragma omp parallel
+	{
+#pragma omp master
+	  {
+	    nThr = omp_get_num_threads();
+	  }
+	}
+#endif
+	if((bufBase = AlcMalloc(sizeof(double) * numZ * 2 * nThr)) == NULL)
+	{
+	  errNum = ALG_ERR_MALLOC;
+	}
+	if(errNum == ALG_ERR_NONE)
+	{
+#ifdef _OPENMP
+#pragma omp parallel for private(idX,idY,idZ)
+#endif
+	  for(idY = 0; idY < numY; ++idY)
+	  {
+	    int	thrId = 0;
+	    double  *reBuf,
+	    	    *imBuf;
+#ifdef _OPENMP
+	    thrId = omp_get_thread_num();
+#endif
+	    reBuf = bufBase + (2 * numZ * thrId);
+	    imBuf = reBuf + numZ;
+	    /* Copy to buffer. */
+	    for(idZ = 0; idZ < numZ; ++idZ)
+	    {
+	      *(reBuf + idZ) = **(*(data + idZ) + idY);
+	      *(imBuf + idZ) = *(*(*(data + idZ) + idY) + halfData);
+	    }
+	    if(dir == ALG_FOUR_DIR_FWD)
+	    {
+	      AlgFourReal1D(reBuf, numZ, 1);
+	      AlgFourReal1D(imBuf, numZ, 1);
+	    }
+	    else
+	    {
+	      AlgFourRealInv1D(reBuf, numZ, 1);
+	      AlgFourRealInv1D(imBuf, numZ, 1);
+	    }
+	    /* Copy back from buffer. */
+	    for(idZ = 0; idZ < numZ; ++idZ)
+	    {
+	      **(*(data + idZ) + idY) = *(reBuf + idZ);
+	      *(*(*(data + idZ) + idY) + halfData) = *(imBuf + idZ);
+	    }
+	    for(idX = 1; idX < halfData; ++idX)
+	    {
+	      /* Copy to buffer. */
+	      for(idZ = 0; idZ < numZ; ++idZ)
+	      {
+	        *(reBuf + idZ) = *(*(*(data + idZ) + idY) + idX);
+	        *(imBuf + idZ) = *(*(*(data + idZ) + idY) + halfData + idX);
+	      }
+	      if(dir == ALG_FOUR_DIR_FWD)
+	      {
+		AlgFour1D(reBuf, imBuf, numZ, 1);
+	      }
+	      else
+	      {
+		AlgFourInv1D(reBuf, imBuf, numZ, 1);
+	      }
+	      /* Copy back from buffer. */
+	      for(idZ = 0; idZ < numZ; ++idZ)
+	      {
+	        *(*(*(data + idZ) + idY) + idX) = *(reBuf + idZ);
+		*(*(*(data + idZ) + idY) + halfData + idX) = *(imBuf + idZ);
+	      }
+	    }
+
+	  }
+	  AlcFree(bufBase);
+	}
+      }
+      else
+      {
+#ifdef _OPENMP
+#pragma omp parallel for private(idX,idY,idZ)
+#endif
+	for(idY = 0; idY < numY; ++idY)
+	{
+	  if(dir == ALG_FOUR_DIR_FWD)
+	  {
+	    AlgFourReal1D(*(*data + idY), numZ, numX * numY);
+	    AlgFourReal1D(*(*data + idY) + halfData, numZ, numX * numY);
+	    for(idX = 1; idX < halfData; ++idX)
+	    {
+	      AlgFour1D(*(*data + idY) + idX,
+		  *(*data + idY) + halfData + idX, numZ, numX * numY);
+	    }
+	  }
+	  else
+	  {
+	    AlgFourRealInv1D(*(*data + idY), numZ, numX * numY);
+	    AlgFourRealInv1D(*(*data + idY) + halfData, numZ, numX * numY);
+	    for(idX = 1; idX < halfData; ++idX)
+	    {
+	      AlgFourInv1D(*(*data + idY) + idX,
+		  *(*data + idY) + halfData + idX, numZ, numX * numY);
+	    }
+	  }
+	}
+      }
+      break;
+    default:
+      break;
+  }
+  return(errNum);
 }

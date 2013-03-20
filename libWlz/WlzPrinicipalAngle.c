@@ -81,14 +81,14 @@ double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
   int 		tI0,
 		tI1,
   		iCount;
-  double 	pAngle,
-		tD0,
+  double 	tD0,
 		tD1,
 		root0,
 		root1,
 		ixx = 0.0,
 		iyy = 0.0,
-		ixy = 0.0;
+		ixy = 0.0,
+		pAngle = 0.0;
   WlzIVertex2	delta;
   WlzIntervalWSpace iWsp;
   WlzGreyWSpace	gWsp;

@@ -115,8 +115,8 @@ WlzErrorNum	WlzScalarFeatures2D(WlzObject *obj,
 {
   int		tI0,
   		cIdx,
-  		fCnt,
-  		rIdx,
+  		fCnt = 0,
+  		rIdx = 0,
   		nVal = 0;
   double	dist;
   WlzGreyType	vType;

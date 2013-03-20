@@ -184,7 +184,7 @@ int main(int	argc,
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		byteOrderFlg=1;
   WlzGreyType	newpixtype;
-  int		verboseFlg=0;
+  /* int	verboseFlg=0; */
   int		width, height, type, depth, wlzDepth;
   InputDataU	data;
   void		***data3D;
@@ -240,7 +240,7 @@ int main(int	argc,
       break;
 
     case 'v':
-      verboseFlg = 1;
+      /* verboseFlg = 1; */
       break;
 
     case 'h':

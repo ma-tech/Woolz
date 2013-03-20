@@ -385,12 +385,12 @@ static WlzAffineTransform *WlzRegCCorObjs2D(WlzObject *tObj, WlzObject *sObj,
 {
   int		tI1,
 		samIdx,
-  		nSam,
-		conv;
-  double	cCor,
-  		rot0,
+		conv,
+  		nSam = 0;
+  double	rot0,
 		rot1,
-		sMaxRot;
+		sMaxRot,
+  		cCor = 0.0;
   WlzPixelV	gV[4];
   WlzIVertex2	tIV0,
   		tIV1;

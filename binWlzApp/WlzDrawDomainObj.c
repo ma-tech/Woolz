@@ -218,7 +218,6 @@ int             main(int argc, char **argv)
 		ok = 1,
 		usage = 0;
   WlzDVertex2	org;
-  WlzDVertex3	upVector;
   WlzThreeDViewStruct *view = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*dwnObj = NULL,
@@ -237,7 +236,6 @@ int             main(int argc, char **argv)
   opterr = 0;
   errMsg = errMsg0 = "";
   org.vtX = org.vtY = 0.0;
-  upVector.vtX = 0.0; upVector.vtY = 0.0; upVector.vtZ = 1.0;
   inFileStr = inFileStrDef;
   outFileStr = outFileStrDef;
   if((view = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) == NULL)

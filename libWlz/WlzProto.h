@@ -918,7 +918,10 @@ extern WlzValues 		WlzAssignValues(
 				  WlzErrorNum *dstErr);
 extern WlzProperty		WlzAssignProperty(
 				  WlzProperty property,
-				  WlzErrorNum *dstErr );
+				  WlzErrorNum *dstErr);
+extern WlzTransform		WlzAssignTransform(
+				  WlzTransform t,
+				  WlzErrorNum *dstErr);
 extern WlzPropertyList          *WlzAssignPropertyList(
                                   WlzPropertyList *plist,
                                   WlzErrorNum *dstErr);
@@ -1382,6 +1385,20 @@ extern WlzObject		*WlzCMeshComputeCurvaturesFromNodNorm(
 /************************************************************************
 * WlzCMeshIntersect.c							*
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzObject		*WlzCMeshIntersect(
+				  WlzObject *obj0,
+				  WlzObject *obj1,
+				  int dsp0,
+				  int **dstNodTab,
+				  WlzErrorNum *dstErr);
+extern WlzCMesh2D		*WlzCMeshIntersect2Mesh2D(
+				  WlzMeshTransform *tr0,
+				  WlzMeshTransform *tr1,
+				  int dsp0,
+				  int **dstNodTab,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 extern WlzObject		*WlzCMeshIntersectDom2D5(
 				  WlzObject *sObj,
 				  WlzObject *cObj,
@@ -1473,12 +1490,14 @@ extern WlzObject		*WlzCMeshDistance2D(
 				  WlzObjectType rObjType,
 				  int sizeArraySeeds,
 				  WlzDVertex2 *arraySeeds,
+                                  WlzInterpolationType itp,
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzCMeshDistance3D(
 				  WlzObject *mObj,
 				  WlzObjectType rObjType,
 				  int sizeArraySeeds,
 				  WlzDVertex3 *arraySeeds,
+                                  WlzInterpolationType itp,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -1568,11 +1587,34 @@ extern WlzDBox3			WlzCMeshTransformGetBBox3D(
 				  int trans,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
+extern	WlzErrorNum		WlzCMeshAffineProduct(
+				  WlzObject *trC,
+				  WlzAffineTransform *trA,
+                                  int order);
+extern WlzObject       		*WlzCMeshMeshMeshProduct(
+				  WlzMeshTransform *tr0,
+                                  WlzMeshTransform *tr1,
+				  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzCMeshMeshProduct(
+				  WlzObject *tr0,
+                                  WlzMeshTransform *tr1,
+				  int order,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzCMeshProduct(
+				  WlzObject *tr0,
+				  WlzObject *tr1,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzCMeshUtils.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
+extern double			WlzCMeshElmMaxSqEdgLen2D(
+				  WlzCMeshElm2D *elm);
+extern double			WlzCMeshElmMaxSqEdgLen2D5(
+				  WlzCMeshElm2D5 *elm);
+extern double			WlzCMeshElmMaxSqEdgLen3D(
+				  WlzCMeshElm3D *elm);
 extern void                     WlzCMeshUpdateMaxSqEdgLen2D(
                                   WlzCMesh2D *mesh);
 extern void                     WlzCMeshUpdateMaxSqEdgLen2D5(
@@ -1728,8 +1770,18 @@ extern int			*WlzCMeshMakeElmIdxTbl2D5(
 extern int			*WlzCMeshMakeElmIdxTbl3D(
 				  WlzCMesh3D *mesh,
 				  int *dstNElm);
+extern int			WlzCMeshElmRingNodIndices2D(
+				  WlzCMeshElm2D *elm,
+				  int *maxIdxBuf,
+				  int **idxBuf,
+				  WlzErrorNum *dstErr);
 extern int			WlzCMeshNodRingElmIndices2D5(
 				  WlzCMeshNod2D5 *nod, 
+				  int *maxIdxBuf,
+				  int **idxBuf, 
+				  WlzErrorNum *dstErr);
+extern int			WlzCMeshNodRingNodIndices2D(
+				  WlzCMeshNod2D *nod, 
 				  int *maxIdxBuf,
 				  int **idxBuf, 
 				  WlzErrorNum *dstErr);
@@ -1738,8 +1790,15 @@ extern int			WlzCMeshNodRingNodIndices2D5(
 				  int *maxIdxBuf,
 				  int **idxBuf, 
 				  WlzErrorNum *dstErr);
+extern int			WlzCMeshNodRingNodIndices3D(
+				  WlzCMeshNod3D *nod, 
+				  int *maxIdxBuf,
+				  int **idxBuf, 
+				  WlzErrorNum *dstErr);
 extern double                   WlzCMeshElmSnArea22D(
                                   WlzCMeshElm2D *elm);
+extern double			WlzCMeshElmSqArea22D5(
+				  WlzCMeshElm2D5 *elm);
 extern double                   WlzCMeshElmSnVolume63D(
                                   WlzCMeshElm3D *elm);
 extern WlzDBox2			WlzCMeshElmBBox2D(
@@ -2357,6 +2416,14 @@ extern WlzErrorNum		WlzFreeContour(
 extern WlzErrorNum 		WlzFreeIndexedValues(
 				  WlzIndexedValues *ixv);
 #endif /* !WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzFourier.c
+************************************************************************/
+extern WlzObject       		*WlzFourierTransformObj(
+				  WlzObject *iObj,
+				  int fwd,
+                                  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzDrawDomain.c
@@ -3072,6 +3139,7 @@ extern WlzDVertex2		WlzGeomObjLineSegIntersect2D(
 				  WlzDVertex2 p1,
 				  double tol,
 				  int inside,
+				  int method,
 				  int *dstStat);
 extern WlzDVertex3		WlzGeomObjLineSegIntersect3D(
 				  WlzObject *obj,
@@ -3079,6 +3147,7 @@ extern WlzDVertex3		WlzGeomObjLineSegIntersect3D(
 				  WlzDVertex3 p1,
 				  double tol,
 				  int inside,
+				  int method,
 				  int *dstStat);
 extern double                   WlzGeomPolar2D(
                                   WlzDVertex2 org,
@@ -3202,6 +3271,13 @@ extern double			WlzGeomTetrahedronVtxDistSq3D(
 				  WlzDVertex3 v1,
 				  WlzDVertex3 v2,
 				  WlzDVertex3 v3);
+#ifndef WLZ_EXT_BIND
+extern WlzErrorNum		WlzGeomPolyTriangulate2D(
+				  int sizeArrayPVtx,
+				  WlzDVertex2 *arrayPVtx,
+				  int *dstSizeArrayTri,
+				  int **dstArrayTri);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzGreyCrossing.c							*
@@ -3608,7 +3684,9 @@ extern int			WlzIDomMaxItvLn(
 extern int 			WlzIntervalCount(
 				  WlzIntervalDomain *idom,
 			    	  WlzErrorNum *dstErr);
-
+extern size_t			WlzIntervalCountObj(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
 /************************************************************************
 * WlzIntervalDomScan.c							*
 ************************************************************************/
@@ -3650,6 +3728,81 @@ extern WlzIterateWSpace		*WlzIterateInit(
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzIterate(
 				  WlzIterateWSpace *itWSp);
+
+/************************************************************************
+* WlzKrig.c								*
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern void			WlzKrigSetModelFn(
+				  WlzKrigModelFn *fn,
+				  WlzKrigModelFnType type,
+				  double c0,
+				  double c1,
+				  double a);
+extern double          		WlzKrigModelFnNugget(
+				  WlzKrigModelFn *f,
+				  double h);
+extern double          		WlzKrigModelFnLinear(
+				  WlzKrigModelFn *f,
+				  double h);
+extern double          		WlzKrigModelFnSpherical(
+				  WlzKrigModelFn *f,
+				  double h);
+extern double          		WlzKrigModelFnExponential(
+				  WlzKrigModelFn *f,
+				  double h);
+extern double          		WlzKrigModelFnGaussian(
+				  WlzKrigModelFn *f,
+				  double h);
+extern double          		WlzKrigModelFnQuadratic(
+				  WlzKrigModelFn *f,
+				  double h);
+extern WlzErrorNum     		WlzKrigOSetModelSV2D(
+				  AlgMatrix modelSV,
+				  WlzKrigModelFn *modelFn,
+				  int n,
+				  WlzDVertex2 *nbr,
+				  int *wSp);
+extern WlzErrorNum     		WlzKrigOSetModelSV3D(
+				  AlgMatrix modelSV,
+				  WlzKrigModelFn *modelFn,
+				  int n,
+				  WlzDVertex3 *nbr,
+				  int *wSp);
+extern WlzErrorNum     		WlzKrigOSetPosSV2D(
+				  double *posSV,
+				  WlzKrigModelFn *modelFn,
+				  int n,
+				  WlzDVertex2 *nbr,
+				  WlzDVertex2 pos);
+extern WlzErrorNum     		WlzKrigOSetPosSV3D(
+				  double *posSV,
+				  WlzKrigModelFn *modelFn,
+				  int n,
+				  WlzDVertex3 *nbr,
+				  WlzDVertex3 pos);
+extern WlzErrorNum     		WlzKrigOWeightsSolve(
+				  AlgMatrix modelSV,
+				  double *posSV,
+				  int *wSp,
+				  double eps);
+extern WlzErrorNum		WlzKrigReallocBuffers2D(
+				  WlzDVertex2 **dstNbrPosBuf,
+				  double **dstPosSV,
+				  int **dstWSp,
+				  AlgMatrix *dstModelSV,
+				  int *dstMaxNbrIdxBuf,
+				  int nNbrC,
+				  int nNbrL);
+extern WlzErrorNum		WlzKrigReallocBuffers3D(
+				  WlzDVertex3 **dstNbrPosBuf,
+				  double **dstPosSV,
+				  int **dstWSp,
+				  AlgMatrix *dstModelSV,
+				  int *dstMaxNbrIdxBuf,
+				  int nNbrC,
+				  int nNbrL);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzLBTDomain.c							*
@@ -4076,6 +4229,13 @@ extern WlzVoxelValues		*WlzMakeVoxelValueTb(
 				  WlzPixelV bckgrnd,
 				  WlzObject *original,
 				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzNewObjectValues(
+				  WlzObject *sObj,
+				  WlzObjectType tType,
+				  WlzPixelV bgdV,
+				  int setFG,
+				  WlzPixelV fgdV,
+				  WlzErrorNum *dstErr);
 extern WlzVoxelValues		*WlzNewValuesVox(
 				  WlzObject *sObj,
 				  WlzObjectType gTType,
@@ -4209,6 +4369,9 @@ extern double          		WlzMatchICPWeightMatches(
 * WlzMeshGen.c								*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
+extern WlzErrorNum		WlzCMeshElmFuse2D(
+				  WlzCMesh2D *mesh,
+				  WlzCMeshElm2D *gElm);
 extern WlzObject		*WlzCMeshComputeNormalsIxv2D5(
 				  WlzObject *gObj,
 				  int nrmFlg,
@@ -4459,10 +4622,12 @@ extern WlzErrorNum		WlzCMeshDelNod2D5(
 extern WlzErrorNum		WlzCMeshBoundConform2D(
 				  WlzCMesh2D *mesh,
 				  WlzObject *obj,
+				  int method,
 				  double tol);
 extern WlzErrorNum		WlzCMeshBoundConform3D(
 				  WlzCMesh3D *mesh,
 				  WlzObject *obj,
+				  int method,
 				  double tol);
 extern double			WlzCMeshElmMinEdgLnSq2D(
 				  WlzCMeshElm2D *elm);
@@ -4679,7 +4844,8 @@ extern WlzMeshTransform 	*WlzMeshTransformFromCPts(
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzMeshAffineProduct(
 				  WlzMeshTransform *mTr,
-				  WlzAffineTransform *aTr);
+				  WlzAffineTransform *aTr,
+				  int order);
 extern WlzDVertex2 		WlzMeshTransformVtx(
 				  WlzDVertex2 vtx,
 				  WlzMeshTransform *mesh,
@@ -4714,8 +4880,15 @@ extern int			WlzMeshElemFindVx(
 				  WlzMeshTransform *mesh,
 				  WlzDVertex2 gVx,
 				  int startElm,
+				  int *lastElm,
 				  int *existsFlg,
 				  WlzErrorNum *dstErr);
+extern int             		WlzMeshClosestNod2D(
+				  WlzMeshTransform *mesh,
+				  WlzDVertex2 pos);
+extern double          		WlzMeshMaxEdgeLenSq(
+				  WlzMeshTransform *mesh,
+                                  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzMeshDomainAdd(
 				  WlzMeshTransform *mesh,
 				  WlzObject *obj,
@@ -4759,7 +4932,6 @@ extern WlzErrorNum		WlzMeshGetNodesAndEdges(
 				  WlzDVertex2 **dstArrayDsp,
 				  int *dstSizeArrayEdg,
 				  int **dstArrayEdg);
-
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -4779,6 +4951,23 @@ extern WlzObject		*WlzNMSuppress(
 extern WlzObject 		*WlzObjToBoundary(
 				  WlzObject *obj,
 				  int wrap,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzOccupancy.c
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern	WlzErrorNum		Wlz3DSectionOcc(
+				  WlzObject *obj,
+				  WlzThreeDViewStruct *vs,
+				  double sep,
+				  double *dstFirst,
+				  double *dstLast,
+				  int *dstArraySizeOcc,
+				  int **dstArrayOcc);
+#endif /* WLZ_EXT_BIND */
+extern WlzObject		*WlzDomainOccupancy(
+				  WlzObject *gObj,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -5120,6 +5309,11 @@ extern WlzErrorNum     		WlzSampleValuesAndCoords(
 /************************************************************************
 * WlzScalarArithmeticOp.c
 ************************************************************************/
+extern WlzErrorNum     		WlzGreyIncValues2D(
+				  WlzObject *obj);
+extern WlzErrorNum		WlzGreyIncValuesInDomain(
+				  WlzObject *gObj,
+				  WlzObject *dObj);
 extern WlzObject		*WlzScalarAdd(
 				  WlzObject *o1,
 				  WlzPixelV pval,
@@ -5461,6 +5655,12 @@ extern const char		*WlzStringFromMarkerType(
 extern WlzMarkerType		WlzStringToMarkerType(
 				  const char *mStr,
 				  WlzErrorNum *dstErr);
+extern const char      		*WlzStringFromThreeDViewMode(
+				  WlzThreeDViewMode vMode,
+                                  WlzErrorNum *dstErr);
+extern WlzThreeDViewMode 	WlzStringToThreeDViewMode(
+				  const char *vStr,
+                                  WlzErrorNum *dstErr);
 extern const char 		*WlzStringFromErrorNum(
 				  WlzErrorNum gvnErr,
 			          const char **dstMsgStr);
@@ -5668,8 +5868,16 @@ extern WlzObject		*WlzMakeTiledValuesFromObj(
 * WlzTransform.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
+extern WlzEmptyTransform	*WlzMakeEmptyTransform(
+				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzFreeTransform(
 				  WlzTransform tr);
+extern WlzErrorNum		WlzFreeEmptyTransform(
+				  WlzEmptyTransform *tr);
+extern WlzTransform		WlzTransformProduct(
+				  WlzTransform tr0,
+				  WlzTransform tr1,
+				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -6097,6 +6305,13 @@ extern void			WlzValueCopyIVertexToIVertex3(
 				  WlzIVertex3 *dst,
 				  WlzIVertex3 *src,
 				  size_t count);
+extern void			WlzIndexedValueBufWeight(
+				  WlzGreyP gP,
+				  int gO,
+				  WlzIndexedValues *ixv,
+				  double *wgt,
+				  int nIdx,
+				  int *idx);
 extern WlzErrorNum 		WlzValueConvertPixel(
 				  WlzPixelV *dstPix,
 				  WlzPixelV srcPix,
@@ -6111,6 +6326,9 @@ extern int			WlzValueDitherI(
 				  int p0,
 				  int p1,
 				  int p2);
+extern size_t			WlzIndexedValueSize(
+				  WlzIndexedValues *ixv,
+				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************

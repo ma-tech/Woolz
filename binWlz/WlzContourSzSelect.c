@@ -101,7 +101,6 @@ int             main(int argc, char *argv[])
   char		*inObjFileStr,
 		*outObjFileStr;
   WlzObject	*obj;
-  WlzDomain	ctrDom;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char    *errMsgStr;
   static char	optList[] = "ho:s:";
@@ -109,7 +108,6 @@ int             main(int argc, char *argv[])
 		inObjFileStrDef[] = "-";
 
   obj = NULL;
-  ctrDom.core = NULL;
   inObjFileStr = (char *)inObjFileStrDef;
   outObjFileStr = (char *)outObjFileStrDef;
   while(ok && ((option = getopt(argc, argv, optList)) != -1))

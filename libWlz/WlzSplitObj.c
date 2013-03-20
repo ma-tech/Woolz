@@ -87,8 +87,8 @@ WlzErrorNum	WlzSplitObj(WlzObject *refObj, WlzObject *ppObj,
 			      int nReqComp, int *dstNComp,
 			      WlzObject ***dstComp)
 {
-  int		dim,
-  		idC;
+  int		idC,
+		dim = 0;
   WlzObject	*hObj = NULL,
   		*tObj = NULL;
   WlzObject 	**comp = NULL;
@@ -96,7 +96,7 @@ WlzErrorNum	WlzSplitObj(WlzObject *refObj, WlzObject *ppObj,
   WlzPixelV	tV;
   WlzSplitObjData split;
   WlzThresholdType tType;
-  WlzConnectType lCon;
+  WlzConnectType lCon = WLZ_0_CONNECTED;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	maxComp = 1024;
 
