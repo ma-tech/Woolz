@@ -44,6 +44,9 @@ static char _WlzCMeshTransform_c[] = "University of Edinburgh $Id$";
 #include <string.h>
 #include <limits.h>
 #include <float.h>
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 #include <Wlz.h>
 
 #define WLZ_CMESH_POS_DTOI(X) ((int )floor(X))
@@ -9465,15 +9468,15 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
 				      int inverse, int eigen,
 				      WlzErrorNum *dstErr)
 {
+  int		nThr = 1;
   WlzObject	*eObj = NULL,
   		*tObj = NULL;
   WlzCMesh3D	*mesh;
-  AlgMatrix	mat;
+  AlgMatrixRect	**matTbl = NULL;
   WlzIndexedValues *ixvT,
   		   *ixvE = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  mat.core = NULL;
   tObj = WlzCMeshStrainTensor(cObj, inverse, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
@@ -9496,27 +9499,59 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
       ixvE = NULL;
     }
   }
-  if((errNum == WLZ_ERR_NONE) && (eigen != 0))
-  {
-    if((mat.rect = AlgMatrixRectNew(3, 3, NULL)) == NULL)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-  }
-
   if(errNum == WLZ_ERR_NONE)
   {
-    int		idE;
-
-    for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
+#ifdef _OPENMP
+#pragma omp parallel
     {
-      double	*fac;
+#pragma omp master
+      {
+	nThr = omp_get_num_threads();
+      }
+    }
+#endif
+    if(eigen != 0)
+    {
+      if((matTbl = (AlgMatrixRect **)
+                   AlcCalloc(nThr, sizeof(AlgMatrixRect *))) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else
+      {
+	int	idN;
+
+	for(idN = 0; idN < nThr; ++idN)
+	{
+	  if((matTbl[idN] = AlgMatrixRectNew(3, 3, NULL)) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	    break;
+	  }
+	}
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE,
+    		maxEnt;
+    AlcVector	*vec;
+
+    vec = mesh->res.elm.vec;
+    maxEnt = mesh->res.elm.maxEnt;
+#ifdef _OPENMP
+#pragma omp parallel for private(idE) num_threads(nThr)
+#endif
+    for(idE = 0; idE < maxEnt; ++idE)
+    {
       WlzCMeshElm3D *elm;
 
-      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(vec, idE);
       if(elm->idx >= 0)
       {
-        double *ten;
+        double 	*fac,
+		*ten;
 
         ten = (double *)WlzIndexedValueGet(ixvT, elm->idx);
 	fac = (double *)WlzIndexedValueGet(ixvE, elm->idx);
@@ -9524,10 +9559,16 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
 	{
 	  int 		idU,
 			idV,
-	  		idT;
+	  		idT,
+			thrId = 0;
 	  double	val[3];
+          AlgMatrix 	mat;
 
 	  idT = 0;
+#ifdef _OPENMP
+	  thrId = omp_get_thread_num();
+#endif
+	  mat.rect = matTbl[thrId];
 	  val[0] = val[1] = val[2] = 0.0;
 	  for(idV = 0; idV < 3; ++idV)
 	  {
@@ -9546,7 +9587,15 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
       }
     }
   }
-  (void )AlgMatrixFree(mat);
+  if(matTbl)
+  {
+    int		idN;
+
+    for(idN = 0; idN < nThr; ++idN)
+    {
+      AlgMatrixRectFree(matTbl[idN]);
+    }
+  }
   (void )WlzFreeObj(tObj);
   if(errNum != WLZ_ERR_NONE)
   {
