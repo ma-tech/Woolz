@@ -42,6 +42,7 @@ static char _WlzTstGeomTetraAffineSolve_c[] = "University of Edinburgh $Id$";
 #include <stdio.h>
 #include <float.h>
 #include <sys/time.h>
+#include <string.h>
 #include <Wlz.h>
 
 /* Externals required by getopt  - not in ANSI C standard */
@@ -60,34 +61,49 @@ static double	MyRandom(void)
   return(rnd);
 }
 
-static void	SetVertices(WlzDVertex3 *sVx, WlzDVertex3 *dVx)
+static int	SetVertices(FILE *fP, int noRandom,
+			    WlzDVertex3 *sVx, WlzDVertex3 *dVx)
 {
- int		idN;
+ int		idN,
+ 		ok = 1;
 
- for(idN = 0; idN < 4; ++idN)
+ if(fP)
  {
-   sVx[idN].vtX = MyRandom();
-   sVx[idN].vtY = MyRandom();
-   sVx[idN].vtZ = MyRandom();
-   dVx[idN].vtX = (sVx[idN].vtX * MyRandom()) + MyRandom();
-   dVx[idN].vtY = (sVx[idN].vtY * MyRandom()) + MyRandom();
-   dVx[idN].vtZ = (sVx[idN].vtZ * MyRandom()) + MyRandom();
+   for(idN = 0; (ok != 0) && (idN < 4); ++idN)
+   {
+     ok = fscanf(fP, "%lg %lg %lg %lg %lg %lg",
+                 &(sVx[idN].vtX), &(sVx[idN].vtY), &(sVx[idN].vtZ),
+                 &(dVx[idN].vtX), &(dVx[idN].vtY), &(dVx[idN].vtZ)) == 6;
+   }
+ }
+ else if(noRandom == 0)
+ {
+   for(idN = 0; idN < 4; ++idN)
+   {
+     sVx[idN].vtX = MyRandom();
+     sVx[idN].vtY = MyRandom();
+     sVx[idN].vtZ = MyRandom();
+     dVx[idN].vtX = (sVx[idN].vtX * MyRandom()) + MyRandom();
+     dVx[idN].vtY = (sVx[idN].vtY * MyRandom()) + MyRandom();
+     dVx[idN].vtZ = (sVx[idN].vtZ * MyRandom()) + MyRandom();
+    }
+    if(MyRandom() < 0.0)
+    {
+      if(MyRandom() < -0.3)
+      {
+	dVx[3].vtX = dVx[2].vtX = dVx[1].vtX = dVx[0].vtX;
+      }
+      if(MyRandom() < -0.3)
+      {
+	dVx[3].vtY = dVx[2].vtY = dVx[1].vtY = dVx[0].vtY;
+      }
+      if(MyRandom() < -0.3)
+      {
+	dVx[3].vtZ = dVx[2].vtZ = dVx[1].vtZ = dVx[0].vtZ;
+      }
+    }
   }
-  if(MyRandom() < 0.0)
-  {
-    if(MyRandom() < -0.3)
-    {
-      dVx[3].vtX = dVx[2].vtX = dVx[1].vtX = dVx[0].vtX;
-    }
-    if(MyRandom() < -0.3)
-    {
-      dVx[3].vtY = dVx[2].vtY = dVx[1].vtY = dVx[0].vtY;
-    }
-    if(MyRandom() < -0.3)
-    {
-      dVx[3].vtZ = dVx[2].vtZ = dVx[1].vtZ = dVx[0].vtZ;
-    }
-  }
+  return(ok);
 }
 
 int		main(int argc, char *argv[])
@@ -103,13 +119,14 @@ int		main(int argc, char *argv[])
 		usage = 0;
   double	ss,
   		delta = 0.000001;
+  FILE		*fP = NULL;
   WlzAffineTransform *tr = NULL;
   struct timeval times[3];
   WlzDVertex3	eVx;
   WlzDVertex3	sVx[4],
 		tVx[4],
   		dVx[4];
-  static char	optList[] = "hlstd:r:";
+  static char	optList[] = "hLSTr:t:";
 
   opterr = 0;
   while((usage == 0) && ((option = getopt(argc, argv, optList)) != EOF))
@@ -122,20 +139,20 @@ int		main(int argc, char *argv[])
 	  usage = 1;
 	}
 	break;
-      case 'l':
+      case 'L':
 	useLU = 1;
 	break;
-      case 't':
-	timer = 1;
+      case 'S':
+	silent = 1;
 	break;
-      case 'r':
+      case 't':
 	if(sscanf(optarg, "%d", &repeats) != 1)
 	{
 	  usage = 1;
 	}
 	break;
-      case 's':
-	silent = 1;
+      case 'T':
+	timer = 1;
 	break;
       case 'h':  /* FALLTHROUGH */
       default:
@@ -143,16 +160,36 @@ int		main(int argc, char *argv[])
 	break;
     }
   }
+  if(optind < argc)
+  {
+    if((optind + 1) != argc)
+    {
+      usage = 1;
+    }
+    else
+    {
+      char	*inFile;
+      
+      inFile = *(argv + optind);
+      if((fP = (strcmp(inFile, "-")? fopen(inFile, "r"): stdin)) == NULL)
+      {
+        (void )
+	fprintf(stderr, "%s: Failed to open file %s.\n", *argv, inFile);
+      }
+    }
+  }
   if(!usage)
   {
+    int		loop = 1;
+
     (void )AlgRandSeed(0);
     tr = WlzMakeAffineTransform(WLZ_TRANSFORM_3D_AFFINE, NULL);
-    SetVertices(sVx, dVx);
+    loop = SetVertices(fP, 0, sVx, dVx);
     if(timer)
     {
       gettimeofday(&(times[0]), NULL);
     }
-    for(idR = 0; idR < repeats; ++idR)
+    for(idR = 0; (loop != 0) && (idR < repeats); ++idR)
     {
       ss = 0.0;
       if(useLU)
@@ -203,10 +240,7 @@ int		main(int argc, char *argv[])
 		 tr->mat[idN][2], tr->mat[idN][3]);
 	}
       }
-      if(!silent)
-      {
-	SetVertices(sVx, dVx);
-      }
+      loop = SetVertices(fP, silent, sVx, dVx);
     }
     if(timer)
     {
@@ -223,20 +257,32 @@ int		main(int argc, char *argv[])
   else
   {
     (void )fprintf(stderr,
-      "Usage: %s [-h] [-l] [-s] [-t] [-r #] [-d #]\n"
+      "Usage: %s [-h] [-L] [-S] [-T] [-r #] [-t #] [<vertex list>]\n"
       "Runs tests on functions WlzGeomTetraAffineSolve() and\n"
       "WlzGeomTetraAffineSolveLU().\n"
+      "If given vertices are read from the vertex list which must have\n"
+      "quads of vertices (for the tetrahedron) set out as:\n"
+      " s0_x s0_y s0_z d0_x d0_y d0_z\n"
+      " s1_x s1_y s1_z d1_x d1_y d1_z\n"
+      " s2_x s2_y s2_z d2_x d2_y d2_z\n"
+      " s3_x s3_y s3_z d3_x d3_y d3_z\n"
+      "where s and d denote source and destination (absolute and not\n"
+      "displacment).\n"
       "Version: %s\n"
       "Options are:\n"
       "  -h  Help, prints this usage message.\n"
-      "  -l  Use WlzGeomTetraAffineSolveLU() instead of\n"
+      "  -L  Use WlzGeomTetraAffineSolveLU() instead of\n"
       "      WlzGeomTetraAffineSolve().\n"
-      "  -s  Silent - not matrices etc output.\n"
-      "  -t  Output timings.\n"
+      "  -S  Silent - not matrices etc output.\n"
+      "  -T  Output timings.\n"
       "  -r  Number of repeat calls.\n"
-      "  -d  Threshold volume (x 6) for WlzGeomTetraAffineSolve().\n",
+      "  -t  Threshold volume (x 6) for WlzGeomTetraAffineSolve().\n",
       argv[0],
       WlzVersion());
+  }
+  if(fP && (fP != stdin))
+  {
+    (void )fclose(fP);
   }
   return(0);
 }
