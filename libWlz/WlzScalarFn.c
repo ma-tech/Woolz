@@ -156,7 +156,6 @@ WlzObject	*WlzScalarFn(WlzObject *sObj, WlzFnType fn,
 static WlzObject *WlzScalarFn2D(WlzObject *sObj, WlzFnType fn,
 			        WlzErrorNum *dstErr)
 {
-  int		len;
   WlzGreyType	sGType,
   		dGType;
   WlzPixelV	sBgd,
@@ -210,10 +209,15 @@ static WlzObject *WlzScalarFn2D(WlzObject *sObj, WlzFnType fn,
           ((errNum = WlzNextGreyInterval(&sIWSp)) == WLZ_ERR_NONE) &&
           ((errNum = WlzNextGreyInterval(&dIWSp)) == WLZ_ERR_NONE))
     {
+      int	len;
+      WlzGreyP	dGP,
+      		sGP;
+
       len = sIWSp.rgtpos - sIWSp.lftpos + 1;
-      WlzValueCopyGreyToGrey(dGWSp.u_grintptr, 0, dGType,
-                             sGWSp.u_grintptr, 0, sGType, len);
-      WlzScalarFnItv(dGWSp.u_grintptr, dGType, len, fn);
+      dGP = dGWSp.u_grintptr;
+      sGP = sGWSp.u_grintptr;
+      WlzValueCopyGreyToGrey(dGP, 0, dGType, sGP, 0, sGType, len);
+      WlzScalarFnItv(dGP, dGType, len, fn);
     }
     if(errNum == WLZ_ERR_EOO)
     {
