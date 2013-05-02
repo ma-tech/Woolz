@@ -44,6 +44,8 @@ static char _Wlz3DSubSection_c[] = "University of Edinburgh $Id$";
 
 #include <Wlz.h>
 
+/* #define HACK_OLD_CODE */
+
 static WlzObject *WlzGetSubSectionFrom3DDomObj(
   WlzObject 		*obj,
   WlzObject		*subDomain,
@@ -93,6 +95,12 @@ WlzObject 	*WlzGetSubSectionFromObject(
   return(newObj);
 }
 
+#ifndef HACK_OLD_CODE
+#define WLZ_GETSUBSEC_POS(P,V,X,Y) \
+		(P).vtX=(V)->xp_to_x[(X)]+(V)->yp_to_x[(Y)], \
+	        (P).vtY=(V)->xp_to_y[(X)]+(V)->yp_to_y[(Y)], \
+	        (P).vtZ=(V)->xp_to_z[(X)]+(V)->yp_to_z[(Y)]
+#endif /* HACK_OLD_CODE */
 
 static WlzObject *WlzGetSubSectionFrom3DDomObj(
   WlzObject		*obj,
@@ -109,7 +117,11 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
   WlzGreyValueWSpace	*gVWSp = NULL;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
+#ifdef HACK_OLD_CODE
   WlzFVertex3		vtx;
+#else /* HACK_OLD_CODE */
+  WlzDVertex3		vtx;
+#endif /* HACK_OLD_CODE */
   int			k, xp, yp;
   WlzDVertex3		tDV0, tDV1;
   double		tD0;
@@ -240,7 +252,7 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
 						    WLZ_GREY_UBYTE, NULL),
 				   pixval, &errNum))){
         mask = WlzMakeMain(WLZ_2D_DOMAINOBJ, newObj->domain, values, NULL, NULL,
-                              &errNum);  //Changed 10/02/10 by Zsolt Husz
+			   &errNum);
       }
 
       /* newObj is redundant if mask only required */
@@ -258,6 +270,7 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
       while((errNum == WLZ_ERR_NONE) && 
 	    ((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE)){
 	yp = iwsp.linpos - WLZ_NINT(viewStr->minvals.vtY);
+#ifdef HACK_OLD_CODE
 	for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
 	  xp = k - WLZ_NINT(viewStr->minvals.vtX);
 	  vtx.vtX = (float )(viewStr->xp_to_x[xp] + viewStr->yp_to_x[yp]);
@@ -420,6 +433,203 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
 	    break;
 	  }
 	}
+#else /* not HACK_OLD_CODE ie new code below */
+	switch(interp)
+	{
+	  case WLZ_INTERPOLATION_NEAREST:
+	    switch(gVWSp->gType){
+	      case WLZ_GREY_INT:
+	        for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
+		  xp = k - WLZ_NINT(viewStr->minvals.vtX);
+		  WLZ_GETSUBSEC_POS(vtx,viewStr,xp,yp);
+		  WlzGreyValueGet(gVWSp, WLZ_NINT(vtx.vtZ), WLZ_NINT(vtx.vtY),
+				  WLZ_NINT(vtx.vtX));
+	          *(gwsp.u_grintptr.inp)++ = gVWSp->gVal[0].inv;
+		}
+		break;
+	      case WLZ_GREY_SHORT:
+	        for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
+		  xp = k - WLZ_NINT(viewStr->minvals.vtX);
+		  WLZ_GETSUBSEC_POS(vtx,viewStr,xp,yp);
+		  WlzGreyValueGet(gVWSp, WLZ_NINT(vtx.vtZ), WLZ_NINT(vtx.vtY),
+				  WLZ_NINT(vtx.vtX));
+	          *(gwsp.u_grintptr.shp)++ = gVWSp->gVal[0].shv;
+		}
+		break;
+	      case WLZ_GREY_UBYTE:
+	        for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
+		  xp = k - WLZ_NINT(viewStr->minvals.vtX);
+		  WLZ_GETSUBSEC_POS(vtx,viewStr,xp,yp);
+		  WlzGreyValueGet(gVWSp, WLZ_NINT(vtx.vtZ), WLZ_NINT(vtx.vtY),
+				  WLZ_NINT(vtx.vtX));
+	          *(gwsp.u_grintptr.ubp)++ = gVWSp->gVal[0].ubv;
+		}
+		break;
+	      case WLZ_GREY_FLOAT:
+	        for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
+		  xp = k - WLZ_NINT(viewStr->minvals.vtX);
+		  WLZ_GETSUBSEC_POS(vtx,viewStr,xp,yp);
+		  WlzGreyValueGet(gVWSp, WLZ_NINT(vtx.vtZ), WLZ_NINT(vtx.vtY),
+				  WLZ_NINT(vtx.vtX));
+	          *(gwsp.u_grintptr.flp)++ = gVWSp->gVal[0].flv;
+		}
+		break;
+	      case WLZ_GREY_DOUBLE:
+	        for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
+		  xp = k - WLZ_NINT(viewStr->minvals.vtX);
+		  WLZ_GETSUBSEC_POS(vtx,viewStr,xp,yp);
+		  WlzGreyValueGet(gVWSp, WLZ_NINT(vtx.vtZ), WLZ_NINT(vtx.vtY),
+				  WLZ_NINT(vtx.vtX));
+	          *(gwsp.u_grintptr.dbp)++ = gVWSp->gVal[0].dbv;
+		}
+		break;
+	      case WLZ_GREY_RGBA:
+	        for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
+		  xp = k - WLZ_NINT(viewStr->minvals.vtX);
+		  WLZ_GETSUBSEC_POS(vtx,viewStr,xp,yp);
+		  WlzGreyValueGet(gVWSp, WLZ_NINT(vtx.vtZ), WLZ_NINT(vtx.vtY),
+				  WLZ_NINT(vtx.vtX));
+	          *(gwsp.u_grintptr.rgbp)++ = gVWSp->gVal[0].rgbv;
+		}
+		break;
+	      default:
+		break;
+	    }
+	    break;
+	  case WLZ_INTERPOLATION_LINEAR:
+	    switch(gVWSp->gType){
+	      case WLZ_GREY_INT:
+		for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
+		  xp = k - WLZ_NINT(viewStr->minvals.vtX);
+		  WLZ_GETSUBSEC_POS(vtx,viewStr,xp,yp);
+		  WlzGreyValueGetCon(gVWSp, floor(vtx.vtZ), floor(vtx.vtY),
+		                     floor(vtx.vtX));
+		  tDV0.vtX = vtx.vtX - floor(vtx.vtX);
+		  tDV0.vtY = vtx.vtY - floor(vtx.vtY);
+		  tDV0.vtZ = vtx.vtZ - floor(vtx.vtZ);
+		  tDV1.vtX = 1.0 - tDV0.vtX;
+		  tDV1.vtY = 1.0 - tDV0.vtY;
+		  tDV1.vtZ = 1.0 - tDV0.vtZ;
+		  tD0 =
+		    ((gVWSp->gVal[0]).inv * tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[1]).inv * tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[2]).inv * tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[3]).inv * tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[4]).inv * tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[5]).inv * tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[6]).inv * tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[7]).inv * tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		  tD0 = WLZ_CLAMP(tD0, INT_MIN, INT_MAX);
+		  *(gwsp.u_grintptr.inp)++ = WLZ_NINT(tD0);
+		}
+		break;
+	      case WLZ_GREY_SHORT:
+		for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
+		  xp = k - WLZ_NINT(viewStr->minvals.vtX);
+		  WLZ_GETSUBSEC_POS(vtx,viewStr,xp,yp);
+		  WlzGreyValueGetCon(gVWSp, floor(vtx.vtZ), floor(vtx.vtY),
+		                     floor(vtx.vtX));
+		  tDV0.vtX = vtx.vtX - floor(vtx.vtX);
+		  tDV0.vtY = vtx.vtY - floor(vtx.vtY);
+		  tDV0.vtZ = vtx.vtZ - floor(vtx.vtZ);
+		  tDV1.vtX = 1.0 - tDV0.vtX;
+		  tDV1.vtY = 1.0 - tDV0.vtY;
+		  tDV1.vtZ = 1.0 - tDV0.vtZ;
+		  tD0 =
+		    ((gVWSp->gVal[0]).shv * tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[1]).shv * tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[2]).shv * tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[3]).shv * tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[4]).shv * tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[5]).shv * tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[6]).shv * tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[7]).shv * tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		  tD0 = WLZ_CLAMP(tD0, SHRT_MIN, SHRT_MAX);
+		  *(gwsp.u_grintptr.shp)++ = WLZ_NINT(tD0);
+		}
+		break;
+	      case WLZ_GREY_UBYTE:
+		for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
+		  xp = k - WLZ_NINT(viewStr->minvals.vtX);
+		  WLZ_GETSUBSEC_POS(vtx,viewStr,xp,yp);
+		  WlzGreyValueGetCon(gVWSp, floor(vtx.vtZ), floor(vtx.vtY),
+		                     floor(vtx.vtX));
+		  tDV0.vtX = vtx.vtX - floor(vtx.vtX);
+		  tDV0.vtY = vtx.vtY - floor(vtx.vtY);
+		  tDV0.vtZ = vtx.vtZ - floor(vtx.vtZ);
+		  tDV1.vtX = 1.0 - tDV0.vtX;
+		  tDV1.vtY = 1.0 - tDV0.vtY;
+		  tDV1.vtZ = 1.0 - tDV0.vtZ;
+		  tD0 =
+		    ((gVWSp->gVal[0]).ubv * tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[1]).ubv * tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[2]).ubv * tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[3]).ubv * tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[4]).ubv * tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[5]).ubv * tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[6]).ubv * tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[7]).ubv * tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		  tD0 = WLZ_CLAMP(tD0, 0, 255);
+		  *(gwsp.u_grintptr.ubp)++ = WLZ_NINT(tD0);
+		}
+		break;
+	      case WLZ_GREY_FLOAT:
+		for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
+		  xp = k - WLZ_NINT(viewStr->minvals.vtX);
+		  WLZ_GETSUBSEC_POS(vtx,viewStr,xp,yp);
+		  WlzGreyValueGetCon(gVWSp, floor(vtx.vtZ), floor(vtx.vtY),
+		                     floor(vtx.vtX));
+		  tDV0.vtX = vtx.vtX - floor(vtx.vtX);
+		  tDV0.vtY = vtx.vtY - floor(vtx.vtY);
+		  tDV0.vtZ = vtx.vtZ - floor(vtx.vtZ);
+		  tDV1.vtX = 1.0 - tDV0.vtX;
+		  tDV1.vtY = 1.0 - tDV0.vtY;
+		  tDV1.vtZ = 1.0 - tDV0.vtZ;
+		  tD0 =
+		    ((gVWSp->gVal[0]).flv * tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[1]).flv * tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[2]).flv * tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[3]).flv * tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[4]).flv * tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[5]).flv * tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[6]).flv * tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[7]).flv * tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		  *(gwsp.u_grintptr.flp)++ = WLZ_CLAMP(tD0, FLT_MIN, FLT_MAX);
+		}
+		break;
+	      case WLZ_GREY_DOUBLE:
+		for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
+		  xp = k - WLZ_NINT(viewStr->minvals.vtX);
+		  WLZ_GETSUBSEC_POS(vtx,viewStr,xp,yp);
+		  WlzGreyValueGetCon(gVWSp, floor(vtx.vtZ), floor(vtx.vtY),
+		                     floor(vtx.vtX));
+		  tDV0.vtX = vtx.vtX - floor(vtx.vtX);
+		  tDV0.vtY = vtx.vtY - floor(vtx.vtY);
+		  tDV0.vtZ = vtx.vtZ - floor(vtx.vtZ);
+		  tDV1.vtX = 1.0 - tDV0.vtX;
+		  tDV1.vtY = 1.0 - tDV0.vtY;
+		  tDV1.vtZ = 1.0 - tDV0.vtZ;
+		  tD0 =
+		    ((gVWSp->gVal[0]).dbv * tDV1.vtX * tDV1.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[1]).dbv * tDV0.vtX * tDV1.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[2]).dbv * tDV1.vtX * tDV0.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[3]).dbv * tDV0.vtX * tDV0.vtY * tDV1.vtZ) +
+		    ((gVWSp->gVal[4]).dbv * tDV1.vtX * tDV1.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[5]).dbv * tDV0.vtX * tDV1.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[6]).dbv * tDV1.vtX * tDV0.vtY * tDV0.vtZ) +
+		    ((gVWSp->gVal[7]).dbv * tDV0.vtX * tDV0.vtY * tDV0.vtZ);
+		  *(gwsp.u_grintptr.dbp)++ = WLZ_NINT(tD0);
+		}
+		break;
+	      default:
+	        errNum = WLZ_ERR_GREY_TYPE;
+		break;
+	    }
+	  default:
+	    errNum = WLZ_ERR_UNIMPLEMENTED;
+	    break;
+	}
+#endif /* HACK_OLD_CODE */
       }
       if(errNum == WLZ_ERR_EOO)	   /* Reset error from end of intervals */ 
       {
