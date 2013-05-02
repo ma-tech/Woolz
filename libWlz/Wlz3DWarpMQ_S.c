@@ -2375,7 +2375,7 @@ void  static GetTheSourceSurfaceOfTheCutPlanePoints(int nIntersect,
   WlzDVertex3 sr0, sr1, sr2, sr3;
   WlzDVertex3 targ0, targ1, targ2, targ3;
   double **Affine3D4pointsTrFun;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  /* WlzErrorNum	errNum = WLZ_ERR_NONE; unused */
   /* allocate memory for Affine transformation */
   if( (AlcDouble2Malloc(&Affine3D4pointsTrFun, 3, 4) !=  ALC_ER_NONE)  )
   {
