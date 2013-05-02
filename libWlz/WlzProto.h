@@ -663,7 +663,7 @@ extern WlzAffineTransform 	*WlzAffineTransformLSqDQ3D(
 /************************************************************************
 * WlzArea.c								*
 ************************************************************************/
-extern int 			WlzArea(
+extern WlzLong 			WlzArea(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
 
@@ -3712,15 +3712,9 @@ extern int			WlzIDomMaxItvLn(
 extern int 			WlzIntervalCount(
 				  WlzIntervalDomain *idom,
 			    	  WlzErrorNum *dstErr);
-#ifdef WLZ_EXT_BIND
-extern int   			WlzIntervalCountObj(
+extern WlzLong 			WlzIntervalCountObj(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
-#else /* WLZ_EXT_BIND */
-extern size_t			WlzIntervalCountObj(
-				  WlzObject *obj,
-				  WlzErrorNum *dstErr);
-#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzIntervalDomScan.c							*
@@ -5565,7 +5559,7 @@ extern WlzErrorNum		WlzSplitMontageObj(
 				  WlzPixelV gapV,
 				  double tol,
 				  int bWidth,
-				  int minArea,
+				  WlzLong minArea,
 				  int maxComp,
 				  int *dstNComp,
 				  WlzObject ***dstComp);
@@ -5745,6 +5739,10 @@ extern int 			WlzValueMatchString(
 				  const char *testStr,
 				  ...);
 extern char 			*WlzStringWhiteSpSkip(
+				  char *str);
+extern char			*WlzStringToUpper(
+				  char *str);
+extern char			*WlzStringToLower(
 				  char *str);
 #endif /* WLZ_EXT_BIND */
 
@@ -6504,7 +6502,7 @@ extern AlcKDTTree      		*WlzVerticesBuildTree(
 /************************************************************************
 * WlzVolume.c								*
 ************************************************************************/
-extern int 			WlzVolume(
+extern WlzLong 			WlzVolume(
 				  WlzObject *obj,
 		     		  WlzErrorNum *dstErr);
 
