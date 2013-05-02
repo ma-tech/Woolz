@@ -52,7 +52,7 @@ static char _WlzVolume_c[] = "University of Edinburgh $Id$";
 * \par      Source:
 *                WlzVolume.c
 */
-int WlzVolume(
+WlzLong WlzVolume(
   WlzObject 	*obj,
   WlzErrorNum 	*wlzErr)
 {
@@ -60,7 +60,7 @@ int WlzVolume(
   WlzPlaneDomain	*pldom;
   WlzDomain		domain;
   WlzValues		values;
-  int			vol = -1,
+  WlzLong		vol = -1,
   			p;
   WlzErrorNum		errNum = WLZ_ERR_NONE; 
 

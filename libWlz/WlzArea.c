@@ -50,11 +50,11 @@ static char _WlzArea_c[] = "University of Edinburgh $Id$";
 * \param	dstErr			Destination error pointer, may be
 *					NULL.
 */
-int WlzArea(
+WlzLong WlzArea(
   WlzObject *obj,
   WlzErrorNum *dstErr)
 {
-  int 			size;
+  WlzLong 		size = -1;
   WlzIntervalWSpace 	iwsp;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
@@ -104,5 +104,5 @@ int WlzArea(
   if( dstErr ){
     *dstErr = errNum;
   }
-  return size;
+  return(size);
 }
