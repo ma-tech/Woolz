@@ -41,6 +41,7 @@ static char _WlzVerticies_c[] = "University of Edinburgh $Id$";
 * \ingroup	WlzFeatures
 */
 
+#include <limits.h>
 #include <float.h>
 #include <Wlz.h>
 
@@ -419,8 +420,8 @@ WlzErrorNum	WlzVerticesFromObj3I(WlzObject *obj,
 				     int *dstNVtx, WlzIVertex3 **dstVtx)
 {
   int		idP,
-		pCnt,
-		vCnt,
+		pCnt;
+  WlzLong	vCnt,
   		nVtx = 0;
   WlzDomain	*domP;
   WlzIVertex3	*vtx0 = NULL,
@@ -439,7 +440,7 @@ WlzErrorNum	WlzVerticesFromObj3I(WlzObject *obj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if(nVtx <= 0)
+    if((nVtx <= 0) || (nVtx > INT_MAX))
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
@@ -497,8 +498,11 @@ WlzErrorNum	WlzVerticesFromObj3I(WlzObject *obj,
       ++idP;
     }
   }
-  *dstNVtx = nVtx;
-  *dstVtx = vtx0;
+  if(errNum == WLZ_ERR_NONE)
+  {
+    *dstNVtx = (int )nVtx;
+    *dstVtx = vtx0;
+  }
   return(errNum);
 }
 
