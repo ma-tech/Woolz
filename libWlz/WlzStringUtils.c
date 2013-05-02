@@ -160,3 +160,47 @@ char		*WlzStringWhiteSpSkip(char *str)
   }
   return(str);
 }
+
+/*!
+* \return	The given string.
+* \ingroup	WlzStrings
+* \brief	Converts the string to all upper case using toupper(3).
+* \param	str			Given string.
+*/
+char		*WlzStringToUpper(char *str)
+{
+  char		*s0;
+
+  if(str)
+  {
+    s0 = str;
+    while(*s0)
+    {
+      *s0 = toupper(*s0);
+      ++s0;
+    }
+  }
+  return(str);
+}
+
+/*!
+* \return	The given string.
+* \ingroup	WlzStrings
+* \brief	Converts the string to all lower case using tolower(3).
+* \param	str			Given string.
+*/
+char		*WlzStringToLower(char *str)
+{
+  char		*s0;
+
+  if(str)
+  {
+    s0 = str;
+    while(*s0)
+    {
+      *s0 = tolower(*s0);
+      ++s0;
+    }
+  }
+  return(str);
+}
