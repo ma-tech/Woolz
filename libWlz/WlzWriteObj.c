@@ -3839,7 +3839,7 @@ static WlzErrorNum      WlzWritePointValues(FILE *fP, WlzObject *obj)
 	  errNum = WlzWriteDouble(fP, gP.dbp, vCount);
 	  break;
 	case WLZ_GREY_RGBA:
-	  errNum = WlzWriteInt(fP, (WlzUInt *)(gP.rgbp), vCount);
+	  errNum = WlzWriteInt(fP, (int *)(gP.rgbp), vCount);
 	  break;
 	default:
 	  errNum = WLZ_ERR_GREY_TYPE;
