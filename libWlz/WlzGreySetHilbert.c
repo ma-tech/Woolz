@@ -57,7 +57,7 @@ static WlzErrorNum		WlzGreySetHilbertRankValues3D(
 				  unsigned int *rVal);
 static void			WlzGreyNewHilbertSortUI(
 				  unsigned int *iVal,
-				  int nVal);
+				  WlzLong nVal);
 static int			WlzGreyHilbertRankFn0(
 				  const void *v0,
 				  const void *v1);
@@ -421,8 +421,8 @@ static WlzErrorNum WlzGreySetHilbertRankValues3D(WlzObject *obj,
 {
   int		nB,
 		nP,
-  		nVal,
 		minVal;
+  WlzLong	nVal;
   unsigned int  i;
   unsigned int  *iV,
   		*iVal = NULL;
@@ -574,6 +574,7 @@ static WlzErrorNum WlzGreySetHilbertRankValues3D(WlzObject *obj,
   }
   return(errNum);
 }
+
 /*!
 * \ingroup	WlzValuesUtils
 * \brief	Sorts  integer pairs by Hilbert index, changes the Hilbert
@@ -581,9 +582,9 @@ static WlzErrorNum WlzGreySetHilbertRankValues3D(WlzObject *obj,
 * \param	iVal			The integer value pairs.
 * \param	nVal			The number of value pairs.
 */
-static void	WlzGreyNewHilbertSortUI(unsigned int *iVal, int nVal)
+static void	WlzGreyNewHilbertSortUI(unsigned int *iVal, WlzLong nVal)
 {
-  int		i;
+  WlzLong	i;
   unsigned int	*iV;
 
   iV = iVal;
