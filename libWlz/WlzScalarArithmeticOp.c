@@ -156,7 +156,7 @@ static WlzErrorNum WlzGreyIncValuesInDomain3D(WlzObject *gObj, WlzObject *dObj)
     {
       if(errNum == WLZ_ERR_NONE)
       {
-	WlzDomain   *doms;
+	WlzDomain    *doms;
 	WlzValues    *vals;
 	WlzErrorNum  errNum2D = WLZ_ERR_NONE;
 
@@ -173,18 +173,21 @@ static WlzErrorNum WlzGreyIncValuesInDomain3D(WlzObject *gObj, WlzObject *dObj)
 	    errNum2D = WlzGreyIncValues2D(obj2D);
 	    (void )WlzFreeObj(obj2D);
 	  }
-	}
+	    if(errNum2D != WLZ_ERR_NONE)
+	  {
 #ifdef _OPENMP
 #pragma omp critical
-	{
+	    {
 #endif
-	  if((errNum == WLZ_ERR_NONE) && (errNum2D != WLZ_ERR_NONE))
-	  {
-	    errNum = errNum2D;
-	  }
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		errNum = errNum2D;
+	      }
 #ifdef _OPENMP
-	}
+	    }
 #endif
+	  }
+	}
       }
     }
   }
@@ -512,7 +515,6 @@ WlzObject *WlzScalarBinaryOp2(
 }
 
 
-/* function:     WlzScalarAdd    */
 /*! 
 * \ingroup      WlzArithmetic
 * \brief        Add a value to each pixel of an object.
@@ -521,8 +523,6 @@ WlzObject *WlzScalarBinaryOp2(
 * \param    o1	Input object
 * \param    pval	Value to be added.
 * \param    dstErr	Error return.
-* \par      Source:
-*                WlzScalarArithmeticOp.c
 */
 WlzObject *WlzScalarAdd(
   WlzObject	*o1,
@@ -532,7 +532,6 @@ WlzObject *WlzScalarAdd(
   return WlzScalarBinaryOp2(o1, pval, WLZ_BO_ADD, dstErr);
 }
 
-/* function:     WlzScalarSubtract    */
 /*! 
 * \ingroup      WlzArithmetic
 * \brief        Subtract a value from each pixel of an object.
@@ -541,8 +540,6 @@ WlzObject *WlzScalarAdd(
 * \param    o1	Input object
 * \param    pval	Value to be subtracted.
 * \param    dstErr	Error return.
-* \par      Source:
-*                WlzScalarArithmeticOp.c
 */
 WlzObject *WlzScalarSubtract(
   WlzObject	*o1,
@@ -803,17 +800,20 @@ static WlzObject *WlzScalarMulAdd3D(WlzObject *iObj, WlzPixelV m, WlzPixelV a,
 	  (void )WlzFreeObj(rObj2D);
 	}
       }
+      if(errNum2D != WLZ_ERR_NONE)
+      {
 #ifdef _OPENMP
 #pragma omp critical
-      {
-#endif
-	if(errNum2D != WLZ_ERR_NONE)
 	{
-	  errNum = errNum2D;
-	}
-#ifdef _OPENMP
-      }
 #endif
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = errNum2D;
+	  }
+#ifdef _OPENMP
+	}
+#endif
+      }
     }
   }
   if(errNum == WLZ_ERR_NONE)
