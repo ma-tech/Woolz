@@ -60,7 +60,7 @@ static WlzErrorNum 		WlzNObjGreyStats2D(
 				  WlzObject *maxObj,
 				  WlzObject *sumObj,
 				  WlzObject *sSqObj);
-static void			WlzNObjGreyStats2D1(
+static WlzErrorNum		WlzNObjGreyStats2D1(
 				  int first,
 				  WlzIntervalWSpace *gIWSp,
 				  WlzGreyWSpace *gGWSp,
@@ -513,11 +513,11 @@ static WlzErrorNum WlzNObjGreyStats2D(int first, int nObj, WlzObject **aObj,
       }
       if(errNum == WLZ_ERR_NONE)
       {
-	WlzNObjGreyStats2D1(first, &iIWSp, &iGWSp,
-			    minObj, &minIWSp, &minGWSp,
-			    maxObj, &maxIWSp, &maxGWSp,
-			    sumObj, &sumIWSp, &sumGWSp,
-			    sSqObj, &sSqIWSp, &sSqGWSp);
+	errNum = WlzNObjGreyStats2D1(first, &iIWSp, &iGWSp,
+				     minObj, &minIWSp, &minGWSp,
+				     maxObj, &maxIWSp, &maxGWSp,
+				     sumObj, &sumIWSp, &sumGWSp,
+				     sSqObj, &sSqIWSp, &sSqGWSp);
         first = 0;
       }
     }
@@ -531,6 +531,7 @@ static WlzErrorNum WlzNObjGreyStats2D(int first, int nObj, WlzObject **aObj,
 }
 
 /*!
+* \return	Woolz error code.
 * \ingroup	WlzFeatures
 * \brief	Sets the value of square of value in the minimum, maximum,
 * 		sum and sum of squares objects from a given object using
@@ -563,7 +564,7 @@ static WlzErrorNum WlzNObjGreyStats2D(int first, int nObj, WlzObject **aObj,
 * \param	sSqGWSp			Sum of squares object grey value
 * 					workspace.
 */
-static void	WlzNObjGreyStats2D1(int first,
+static WlzErrorNum WlzNObjGreyStats2D1(int first,
 				    WlzIntervalWSpace *gIWSp,
 				    WlzGreyWSpace *gGWSp,
 				    WlzObject *minObj,
@@ -579,7 +580,10 @@ static void	WlzNObjGreyStats2D1(int first,
 				    WlzIntervalWSpace *sSqIWSp,
 				    WlzGreyWSpace *sSqGWSp)
 {
-  while((WlzNextGreyInterval(gIWSp) == 0) &&
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) &&
+        ((errNum = WlzNextGreyInterval(gIWSp)) == WLZ_ERR_NONE) &&
         ((minObj == NULL) || (WlzNextGreyInterval(minIWSp) == 0)) &&
         ((maxObj == NULL) || (WlzNextGreyInterval(maxIWSp) == 0)) &&
         ((sumObj == NULL) || (WlzNextGreyInterval(sumIWSp) == 0)) &&
@@ -737,9 +741,14 @@ static void	WlzNObjGreyStats2D1(int first,
 	  }
 	}
 	break;
-      /* HACK TODO Add grey other types. HACK TODO */
       default:
+	errNum = WLZ_ERR_GREY_TYPE;
 	break;
     }
   }
+  if(errNum == WLZ_ERR_EOO)
+  {
+    errNum = WLZ_ERR_NONE;
+  }
+  return(errNum);
 }
