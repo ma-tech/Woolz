@@ -1,9 +1,11 @@
 *.o
 *.lo
+*.so
 Makefile
 Makefile.in
 tags
 ctags
+TAGS
 .deps
 aclocal.m4
 config.guess

@@ -68,6 +68,20 @@ static WlzDVertex3 		WlzCMeshFilterLPLDelta3D(
 				  WlzCMeshNod3D *nod,
 				  WlzDVertex3 *vBuf,
 				  int doBnd);
+static WlzErrorNum		WlzCMeshValuesNormalise2D(
+				  WlzObject *cObj,
+				  int mapZero,
+				  double vZero,
+				  double vMin,
+				  double vMax,
+				  double oFrac);
+static WlzErrorNum		WlzCMeshValuesNormalise3D(
+				  WlzObject *cObj,
+				  int mapZero,
+				  double vZero,
+				  double vMin,
+				  double vMax,
+				  double oFrac);
 
 /*!
 * \return	Maximum square edge length for the element.
@@ -5245,4 +5259,1001 @@ int		WlzCMeshElmRingNodIndices2D(WlzCMeshElm2D *elm, int *maxIdxBuf,
     *dstErr = errNum;
   }
   return(nN);
+}
+
+/*!
+* \return	Number of elements in the ring or zero on error.
+* \ingroup	WlzMesh
+* \brief	Gathers the indices of the elements that form a ring
+* 		around (ie are directly connected to) the given element.
+* 		The element indices will be partially ordered with the
+* 		given element's index first, followed by edge connected
+* 		neighbouring elements and then the remaining node only
+* 		connected elements. There will not be duplicates.
+* \param	elm			Given element which must be valid.
+* \param	maxIdxBuf		Pointer to the current maximum number
+* 					of indices possible in the current
+* 					buffer. This must be valid and may
+* 					be modified on return.
+* \param	idxBuf			Pointer to the current element index
+* 					buffer. This must either be valid
+* 					or a pointer to a NULL array. The
+* 					array pointer may be modified on
+* 					return.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int		WlzCMeshElmRingElmIndices2D(WlzCMeshElm2D *elm, int *maxIdxBuf,
+					    int **idxBuf, WlzErrorNum *dstErr)
+{
+  int		idE,
+  		nE;
+  WlzCMeshEdgU2D *edu0,
+  		*edu1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Count the number of edge uses directed away from each node of the
+   * given element, there will be one per element, but elements may be
+   * counted several times. */
+  nE = 0;
+  for(idE = 0; idE < 3; ++idE)
+  {
+    edu1 = edu0 = elm->edu[idE].nod->edu;
+    do
+    {
+      ++nE;
+      edu1 = edu1->nnxt;
+    } while((edu1 != NULL) && (edu1 != edu0));
+  }
+  /* Re-allocate the index buffer if required. */
+  if((*idxBuf == NULL) || (*maxIdxBuf < nE))
+  {
+    *maxIdxBuf = 2 * nE;
+    if((*idxBuf = (int *)
+                  AlcRealloc(*idxBuf, sizeof(int) * *maxIdxBuf)) == NULL)
+    {
+      nE = 0;
+      *maxIdxBuf = 0;
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Fill the buffer with the indices of the elements that use the nodes. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		*buf;
+
+    /* First the given element. */
+    nE = 1;
+    buf = *idxBuf;
+    buf[0] = elm->idx;
+    /* Then edge connected neighbouring elements. */
+    for(idE = 0; idE < 3; ++idE)
+    {
+      edu0 = elm->edu[idE].opp;
+      if((edu0 != NULL) && (edu0 != edu0->opp))
+      {
+        buf[nE++] = edu0->elm->idx;
+      }
+    }
+    /* Finally the remaining node connected elements. */
+    for(idE = 0; idE < 3; ++idE)
+    {
+      edu1 = edu0 = elm->edu[idE].nod->edu;
+      do
+      {
+        int	idB,
+		eIdx;
+
+	eIdx = edu1->elm->idx;
+	for(idB = 0; idB < nE; ++idB)
+	{
+	  if(eIdx == buf[idB])
+	  {
+	    eIdx = -1;
+	    break;
+	  }
+	}
+	if(eIdx >= 0)
+	{
+	  buf[nE++] = eIdx;
+	}
+        edu1 = edu1->nnxt;
+      } while((edu1 != NULL) && (edu1 != edu0));
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    nE = 0;
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(nE);
+}
+
+/*!
+* \return	Number of elements in the ring or zero on error.
+* \ingroup	WlzMesh
+* \brief	Gathers the indices of the elements that form a ring
+* 		around (ie are directly connected to) the given element.
+* 		The element indices will be partially ordered with the
+* 		given element's index first, followed by face connected
+* 		neighbouring elements and then the remaining node or
+* 		edge only connected elements. There will not be duplicates.
+* \param	elm			Given element which must be valid.
+* \param	maxIdxBuf		Pointer to the current maximum number
+* 					of indices possible in the current
+* 					buffer. This must be valid and may
+* 					be modified on return.
+* \param	idxBuf			Pointer to the current element index
+* 					buffer. This must either be valid
+* 					or a pointer to a NULL array. The
+* 					array pointer may be modified on
+* 					return.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int		WlzCMeshElmRingElmIndices3D(WlzCMeshElm3D *elm, int *maxIdxBuf,
+					    int **idxBuf, WlzErrorNum *dstErr)
+{
+  int		idE,
+  		nE;
+  WlzCMeshEdgU3D *edu0,
+  		*edu1;
+  WlzCMeshNod3D *nodes[4];
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Count the number of edge uses directed away from each node of the
+   * given element, there will be one per face and so three per element,
+   * but elements may be counted several times. */
+  nE = 0;
+  nodes[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+  nodes[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+  nodes[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+  nodes[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
+  for(idE = 0; idE < 4; ++idE)
+  {
+    edu1 = edu0 = nodes[idE]->edu;
+    do
+    {
+      ++nE;
+      edu1 = edu1->nnxt;
+    } while((edu1 != NULL) && (edu1 != edu0));
+  }
+  nE /= 3;
+  /* Re-allocate the index buffer if required. */
+  if((*idxBuf == NULL) || (*maxIdxBuf < nE))
+  {
+    *maxIdxBuf = 2 * nE;
+    if((*idxBuf = (int *)
+                  AlcRealloc(*idxBuf, sizeof(int) * *maxIdxBuf)) == NULL)
+    {
+      nE = 0;
+      *maxIdxBuf = 0;
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Fill the buffer with the indices of the elements that use the nodes. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		*buf;
+
+    /* First the given element. */
+    nE = 1;
+    buf = *idxBuf;
+    buf[0] = elm->idx;
+    /* Then face connected neighbouring elements. */
+    for(idE = 0; idE < 4; ++idE)
+    {
+      WlzCMeshFace *fce;
+
+      fce = elm->face[idE].opp;
+      if((fce != NULL) && (fce != fce->opp))
+      {
+        buf[nE++] = fce->elm->idx;
+      }
+    }
+    /* Finally the remaining node connected elements. */
+    for(idE = 0; idE < 4; ++idE)
+    {
+      edu1 = edu0 = nodes[idE]->edu;
+      do
+      {
+        int	idB,
+		eIdx;
+
+	eIdx = edu1->face->elm->idx;
+	for(idB = 0; idB < nE; ++idB)
+	{
+	  if(eIdx == buf[idB])
+	  {
+	    eIdx = -1;
+	    break;
+	  }
+	}
+	if(eIdx >= 0)
+	{
+	  buf[nE++] = eIdx;
+	}
+        edu1 = edu1->nnxt;
+      } while((edu1 != NULL) && (edu1 != edu0));
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    nE = 0;
+  }
+  if(dstErr != NULL)
+  {
+    *dstErr = errNum;
+  }
+  return(nE);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Given a conforming mesh with attached values; this function
+* 		normalises the values to the given range in place.
+* 		If the zero value is not mapped to a given value explicitly
+* 		then the the output values will be given using:
+* 		\f[
+ 		V = \frac{U - L}{u - l} (v - l) + L 
+		\f]
+*		otherwise with the zero value explicitly mapped the values
+*		will be
+*		\f[
+		\begin{array}{l}
+		f = \min{\frac{U - V_0}{u}, \frac{L - V_0}{l}} \\
+ 		V = f v + V_0
+		\end{array}
+		\f]
+		Here \f$U\f$ and \f$L\f$ are the required maximum and minimum
+		values on return, \f$u\f$ and \f$l\f$ are the given mesh
+		maximum and minimum values, \f$v\f$ is a given value and
+		\f$V\f$ is a returned value. \f$V_0\f$ is the returned value
+		corresponding to the given value of zero.
+* \param	cObj			Conforming mesh object with values
+* 					to be normalised attached..
+* \param	mapZero			Map the value of zero to the zero
+* 					value if non zero.
+* \param	vZero			Value for zero if mapZero is non-zero.
+* \param	vMin			Minimum value on return.
+* \param	vMax			Maximum value on return.
+* \param	oFrac			Outlier fraction. Assumes that this
+* 					fraction of the values are extremal
+* 					outliers and normalises to the range
+* 					of mesh values minus this fraction at
+* 					both ends of the value range.
+* \param	dstErr
+*/
+WlzErrorNum	WlzCMeshValuesNormalise(WlzObject *cObj,
+					int mapZero,
+				        double vZero,
+					double vMin, double vMax,
+					double oFrac)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(cObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(cObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(cObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    switch(cObj->type)
+    {
+      case WLZ_CMESH_2D:
+	errNum = WlzCMeshValuesNormalise2D(cObj, mapZero, vZero, vMin, vMax,
+					   oFrac);
+        break;
+      case WLZ_CMESH_3D:
+	errNum = WlzCMeshValuesNormalise3D(cObj, mapZero, vZero, vMin, vMax,
+					   oFrac);
+        break;
+      default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+        break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Given a 2D conforming mesh with attached values; this function
+* 		normalises the values to the given range in place.
+* 		See WlzCMeshValuesNormalise().
+* \param	cObj			Conforming mesh object with values
+* 					to be normalised attached..
+* \param	mapZero			Map the value of zero to the zero
+* 					value if non zero.
+* \param	vZero			Value for zero if mapZero is non-zero.
+* \param	vMin			Minimum value on return.
+* \param	vMax			Maximum value on return.
+* \param	oFrac			Outlier fraction. Assumes that this
+* 					fraction of the values are extremal
+* 					outliers and normalises to the range
+* 					of mesh values minus this fraction at
+* 					both ends of the value range.
+* \param	dstErr
+*/
+WlzErrorNum	WlzCMeshValuesNormalise2D(WlzObject *cObj,
+					  int mapZero,
+					  double vZero,
+					  double vMin, double vMax,
+					  double oFrac)
+{
+  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
+
+  return(errNum);
+}
+
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzMesh
+* \brief	Given a 3D conforming mesh with attached values; this function
+* 		normalises the values to the given range in place.
+* 		See WlzCMeshValuesNormalise().
+* \param	cObj			Conforming mesh object with values
+* 					to be normalised attached..
+* \param	mapZero			Map the value of zero to the zero
+* 					value if non zero.
+* \param	vZero			Value for zero if mapZero is non-zero.
+* \param	vMin			Minimum value on return.
+* \param	vMax			Maximum value on return.
+* \param	oFrac			Outlier fraction. Assumes that this
+* 					fraction of the values are extremal
+* 					outliers and normalises to the range
+* 					of mesh values minus this fraction at
+* 					both ends of the value range.
+* \param	dstErr
+*/
+WlzErrorNum	WlzCMeshValuesNormalise3D(WlzObject *cObj,
+					  int mapZero,
+					  double vZero,
+					  double vMin, double vMax,
+					  double oFrac)
+{
+  int		nVal = 0;
+  double	g0,
+  		g1,
+		grd,
+  		off0,
+		off1,
+		uMin,
+  		uMax;
+  WlzCMesh3D	*mesh;
+  WlzIndexedValues *ixv;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	eps = 1.0e-06;
+
+  if((mesh = cObj->domain.cm3)->type != WLZ_CMESH_3D)
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((ixv = cObj->values.x)->type != WLZ_INDEXED_VALUES)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else
+  {
+    if((ixv->rank < 0) || ((ixv->rank > 0) && (ixv->dim[0] < 1)))
+    {
+      errNum = WLZ_ERR_VALUES_DATA;
+    }
+    else
+    {
+      int       idX;
+
+      if(ixv->rank == 0)
+      {
+        nVal = 1;
+      }
+      else
+      {
+	nVal = ixv->dim[0];
+	for(idX = 1; idX < ixv->rank; ++idX)
+	{
+	  if(ixv->dim[idX] < 1)
+	  {
+	    errNum = WLZ_ERR_VALUES_DATA;
+	    break;
+	  }
+	  nVal *= ixv->dim[idX];
+	}
+      }
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && (nVal <= 0))
+  {
+    errNum = WLZ_ERR_VALUES_DATA;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(ixv->vType)
+    {
+      case WLZ_GREY_LONG:  /* FALLTHROUGH */
+      case WLZ_GREY_INT:   /* FALLTHROUGH */
+      case WLZ_GREY_SHORT: /* FALLTHROUGH */
+      case WLZ_GREY_UBYTE: /* FALLTHROUGH */
+      case WLZ_GREY_FLOAT: /* FALLTHROUGH */
+      case WLZ_GREY_DOUBLE:
+	break;
+      default:
+	errNum = WLZ_ERR_VALUES_DATA;
+	break;
+      
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(ixv->attach)
+    {
+      case WLZ_VALUE_ATTACH_NOD: /* FALLTHROUGH */
+      case WLZ_VALUE_ATTACH_ELM:
+	break;
+      default:
+	errNum = WLZ_ERR_VALUES_DATA;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idN,
+	      	firstVal = 1;
+
+    switch(ixv->attach)
+    {
+
+      case WLZ_VALUE_ATTACH_NOD:
+        for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+	{
+	  WlzCMeshNod3D *nod;
+
+	  nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	  if(nod->idx >= 0)
+	  {
+	    int		idX;
+	    WlzGreyP	v;
+
+	    v.v = WlzIndexedValueGet(ixv, nod->idx);
+	    switch(ixv->vType)
+	    {
+  	      case WLZ_GREY_LONG:
+		idX = 0;
+		if(firstVal)
+		{
+		  idX = 1;
+		  firstVal = 0;
+		  uMin = uMax = v.lnp[0];
+		}
+	        while(idX < nVal)
+		{
+		  if(v.lnp[idX] < uMin)
+		  {
+		    uMin = v.lnp[idX];
+		  }
+		  else if(v.lnp[idX] > uMax)
+		  {
+		    uMax = v.lnp[idX];
+		  }
+		  ++idX;
+		}
+		break;
+  	      case WLZ_GREY_INT:
+		idX = 0;
+		if(firstVal)
+		{
+		  idX = 1;
+		  firstVal = 0;
+		  uMin = uMax = v.inp[0];
+		}
+	        while(idX < nVal)
+		{
+		  if(v.inp[idX] < uMin)
+		  {
+		    uMin = v.inp[idX];
+		  }
+		  else if(v.inp[idX] > uMax)
+		  {
+		    uMax = v.inp[idX];
+		  }
+		  ++idX;
+		}
+		break;
+  	      case WLZ_GREY_SHORT:
+		idX = 0;
+		if(firstVal)
+		{
+		  idX = 1;
+		  firstVal = 0;
+		  uMin = uMax = v.shp[0];
+		}
+	        while(idX < nVal)
+		{
+		  if(v.shp[idX] < uMin)
+		  {
+		    uMin = v.shp[idX];
+		  }
+		  else if(v.shp[idX] > uMax)
+		  {
+		    uMax = v.shp[idX];
+		  }
+		  ++idX;
+		}
+		break;
+  	      case WLZ_GREY_UBYTE:
+		idX = 0;
+		if(firstVal)
+		{
+		  idX = 1;
+		  firstVal = 0;
+		  uMin = uMax = v.ubp[0];
+		}
+	        while(idX < nVal)
+		{
+		  if(v.ubp[idX] < uMin)
+		  {
+		    uMin = v.ubp[idX];
+		  }
+		  else if(v.ubp[idX] > uMax)
+		  {
+		    uMax = v.ubp[idX];
+		  }
+		  ++idX;
+		}
+		break;
+  	      case WLZ_GREY_FLOAT:
+		idX = 0;
+		if(firstVal)
+		{
+		  idX = 1;
+		  firstVal = 0;
+		  uMin = uMax = v.flp[0];
+		}
+	        while(idX < nVal)
+		{
+		  if(v.flp[idX] < uMin)
+		  {
+		    uMin = v.flp[idX];
+		  }
+		  else if(v.flp[idX] > uMax)
+		  {
+		    uMax = v.flp[idX];
+		  }
+		  ++idX;
+		}
+		break;
+  	      case WLZ_GREY_DOUBLE:
+		idX = 0;
+		if(firstVal)
+		{
+		  idX = 1;
+		  firstVal = 0;
+		  uMin = uMax = v.dbp[0];
+		}
+	        while(idX < nVal)
+		{
+		  if(v.dbp[idX] < uMin)
+		  {
+		    uMin = v.dbp[idX];
+		  }
+		  else if(v.dbp[idX] > uMax)
+		  {
+		    uMax = v.dbp[idX];
+		  }
+		  ++idX;
+		}
+		break;
+	      default:
+		break;
+	    }
+	  }
+	}
+	break;
+      case WLZ_VALUE_ATTACH_ELM:
+        for(idN = 0; idN < mesh->res.elm.maxEnt; ++idN)
+	{
+	  WlzCMeshElm3D *elm;
+
+	  elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idN);
+	  if(elm->idx >= 0)
+	  {
+	    int		idX;
+	    WlzGreyP	v;
+
+	    v.v = WlzIndexedValueGet(ixv, elm->idx);
+	    switch(ixv->vType)
+	    {
+  	      case WLZ_GREY_LONG:
+		idX = 0;
+		if(firstVal)
+		{
+		  idX = 1;
+		  firstVal = 0;
+		  uMin = uMax = v.lnp[0];
+		}
+	        while(idX < nVal)
+		{
+		  if(v.lnp[idX] < uMin)
+		  {
+		    uMin = v.lnp[idX];
+		  }
+		  else if(v.lnp[idX] > uMax)
+		  {
+		    uMax = v.lnp[idX];
+		  }
+		  ++idX;
+		}
+		break;
+  	      case WLZ_GREY_INT:
+		idX = 0;
+		if(firstVal)
+		{
+		  idX = 1;
+		  firstVal = 0;
+		  uMin = uMax = v.inp[0];
+		}
+	        while(idX < nVal)
+		{
+		  if(v.inp[idX] < uMin)
+		  {
+		    uMin = v.inp[idX];
+		  }
+		  else if(v.inp[idX] > uMax)
+		  {
+		    uMax = v.inp[idX];
+		  }
+		  ++idX;
+		}
+		break;
+  	      case WLZ_GREY_SHORT:
+		idX = 0;
+		if(firstVal)
+		{
+		  idX = 1;
+		  firstVal = 0;
+		  uMin = uMax = v.shp[0];
+		}
+	        while(idX < nVal)
+		{
+		  if(v.shp[idX] < uMin)
+		  {
+		    uMin = v.shp[idX];
+		  }
+		  else if(v.shp[idX] > uMax)
+		  {
+		    uMax = v.shp[idX];
+		  }
+		  ++idX;
+		}
+		break;
+  	      case WLZ_GREY_UBYTE:
+		idX = 0;
+		if(firstVal)
+		{
+		  idX = 1;
+		  firstVal = 0;
+		  uMin = uMax = v.ubp[0];
+		}
+	        while(idX < nVal)
+		{
+		  if(v.ubp[idX] < uMin)
+		  {
+		    uMin = v.ubp[idX];
+		  }
+		  else if(v.ubp[idX] > uMax)
+		  {
+		    uMax = v.ubp[idX];
+		  }
+		  ++idX;
+		}
+		break;
+  	      case WLZ_GREY_FLOAT:
+		idX = 0;
+		if(firstVal)
+		{
+		  idX = 1;
+		  firstVal = 0;
+		  uMin = uMax = v.flp[0];
+		}
+	        while(idX < nVal)
+		{
+		  if(v.flp[idX] < uMin)
+		  {
+		    uMin = v.flp[idX];
+		  }
+		  else if(v.flp[idX] > uMax)
+		  {
+		    uMax = v.flp[idX];
+		  }
+		  ++idX;
+		}
+		break;
+  	      case WLZ_GREY_DOUBLE:
+		idX = 0;
+		if(firstVal)
+		{
+		  idX = 1;
+		  firstVal = 0;
+		  uMin = uMax = v.dbp[0];
+		}
+	        while(idX < nVal)
+		{
+		  if(v.dbp[idX] < uMin)
+		  {
+		    uMin = v.dbp[idX];
+		  }
+		  else if(v.dbp[idX] > uMax)
+		  {
+		    uMax = v.dbp[idX];
+		  }
+		  ++idX;
+		}
+		break;
+	      default:
+		break;
+	    }
+	  }
+	}
+	break;
+      default:
+	break;
+    }
+    if(fabs(oFrac) > eps)
+    {
+      g0 = (uMax - uMin) * oFrac;
+      uMin += g0;
+      uMax -= g0;
+      if(uMax - uMin < eps)
+      {
+        g0 = (uMax + uMin) * 0.5;
+	uMin = uMax = g0;
+      }
+    }
+    if(mapZero)
+    {
+      g0 = (fabs(uMax) > eps)? (vMax - vZero) / uMax: DBL_MAX;
+      g1 = (fabs(uMin) > eps)? (vZero - vMin) / uMin: DBL_MAX;
+      grd = ALG_MIN(g0, g1);
+      off0 = 0.0;
+      off1 = vZero;
+    }
+    else
+    {
+      if((g0 = uMax - uMin) < eps)
+      {
+        g0 = 1.0;
+      }
+      grd = (vMax - vMin) / g0;
+      off0 = uMin;
+      off1 = vMin;
+    }
+    switch(ixv->attach)
+    {
+      int	idN;
+
+      case WLZ_VALUE_ATTACH_NOD:
+        for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
+	{
+	  WlzCMeshNod3D *nod;
+
+	  nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	  if(nod->idx >= 0)
+	  {
+	    int		idX;
+	    WlzGreyP	v;
+
+	    v.v = WlzIndexedValueGet(ixv, nod->idx);
+	    switch(ixv->vType)
+	    {
+  	      case WLZ_GREY_LONG:
+		for(idX = 0; idX < nVal; ++idX)
+		{
+		  v.lnp[idX] = grd * (v.lnp[idX] - off0) + off1;
+		  if(v.lnp[idX] < vMin)
+		  {
+		    v.lnp[idX] = vMin;
+		  }
+		  else if(v.lnp[idX] > vMax)
+		  {
+		    v.lnp[idX] = vMax;
+		  }
+		}
+		break;
+  	      case WLZ_GREY_INT:
+		for(idX = 0; idX < nVal; ++idX)
+		{
+		  v.inp[idX] = grd * (v.inp[idX] - off0) + off1;
+		  if(v.inp[idX] < vMin)
+		  {
+		    v.inp[idX] = vMin;
+		  }
+		  else if(v.inp[idX] > vMax)
+		  {
+		    v.inp[idX] = vMax;
+		  }
+		}
+		break;
+  	      case WLZ_GREY_SHORT:
+		for(idX = 0; idX < nVal; ++idX)
+		{
+		  v.shp[idX] = grd * (v.shp[idX] - off0) + off1;
+		  if(v.shp[idX] < vMin)
+		  {
+		    v.shp[idX] = vMin;
+		  }
+		  else if(v.shp[idX] > vMax)
+		  {
+		    v.shp[idX] = vMax;
+		  }
+		}
+		break;
+  	      case WLZ_GREY_UBYTE:
+		for(idX = 0; idX < nVal; ++idX)
+		{
+		  v.ubp[idX] = grd * (v.ubp[idX] - off0) + off1;
+		  if(v.ubp[idX] < vMin)
+		  {
+		    v.ubp[idX] = vMin;
+		  }
+		  else if(v.ubp[idX] > vMax)
+		  {
+		    v.ubp[idX] = vMax;
+		  }
+		}
+		break;
+  	      case WLZ_GREY_FLOAT:
+		for(idX = 0; idX < nVal; ++idX)
+		{
+		  v.flp[idX] = grd * (v.flp[idX] - off0) + off1;
+		  if(v.flp[idX] < vMin)
+		  {
+		    v.flp[idX] = vMin;
+		  }
+		  else if(v.flp[idX] > vMax)
+		  {
+		    v.flp[idX] = vMax;
+		  }
+		}
+		break;
+  	      case WLZ_GREY_DOUBLE:
+		for(idX = 0; idX < nVal; ++idX)
+		{
+		  v.dbp[idX] = grd * (v.dbp[idX] - off0) + off1;
+		  if(v.dbp[idX] < vMin)
+		  {
+		    v.dbp[idX] = vMin;
+		  }
+		  else if(v.dbp[idX] > vMax)
+		  {
+		    v.dbp[idX] = vMax;
+		  }
+		}
+		break;
+	      default:
+		break;
+	    }
+	  }
+	}
+	break;
+      case WLZ_VALUE_ATTACH_ELM:
+        for(idN = 0; idN < mesh->res.elm.maxEnt; ++idN)
+	{
+	  WlzCMeshElm3D *elm;
+
+	  elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idN);
+	  if(elm->idx >= 0)
+	  {
+	    int		idX;
+	    WlzGreyP	v;
+
+	    v.v = WlzIndexedValueGet(ixv, elm->idx);
+	    switch(ixv->vType)
+	    {
+  	      case WLZ_GREY_LONG:
+		for(idX = 0; idX < nVal; ++idX)
+		{
+		  v.lnp[idX] = grd * (v.lnp[idX] - off0) + off1;
+		  if(v.lnp[idX] < vMin)
+		  {
+		    v.lnp[idX] = vMin;
+		  }
+		  else if(v.lnp[idX] > vMax)
+		  {
+		    v.lnp[idX] = vMax;
+		  }
+		}
+		break;
+  	      case WLZ_GREY_INT:
+		for(idX = 0; idX < nVal; ++idX)
+		{
+		  v.inp[idX] = grd * (v.inp[idX] - off0) + off1;
+		  if(v.inp[idX] < vMin)
+		  {
+		    v.inp[idX] = vMin;
+		  }
+		  else if(v.inp[idX] > vMax)
+		  {
+		    v.inp[idX] = vMax;
+		  }
+		}
+		break;
+  	      case WLZ_GREY_SHORT:
+		for(idX = 0; idX < nVal; ++idX)
+		{
+		  v.shp[idX] = grd * (v.shp[idX] - off0) + off1;
+		  if(v.shp[idX] < vMin)
+		  {
+		    v.shp[idX] = vMin;
+		  }
+		  else if(v.shp[idX] > vMax)
+		  {
+		    v.shp[idX] = vMax;
+		  }
+		}
+		break;
+  	      case WLZ_GREY_UBYTE:
+		for(idX = 0; idX < nVal; ++idX)
+		{
+		  v.ubp[idX] = grd * (v.ubp[idX] - off0) + off1;
+		  if(v.ubp[idX] < vMin)
+		  {
+		    v.ubp[idX] = vMin;
+		  }
+		  else if(v.ubp[idX] > vMax)
+		  {
+		    v.ubp[idX] = vMax;
+		  }
+		}
+		break;
+  	      case WLZ_GREY_FLOAT:
+		for(idX = 0; idX < nVal; ++idX)
+		{
+		  v.flp[idX] = grd * (v.flp[idX] - off0) + off1;
+		  if(v.flp[idX] < vMin)
+		  {
+		    v.flp[idX] = vMin;
+		  }
+		  else if(v.flp[idX] > vMax)
+		  {
+		    v.flp[idX] = vMax;
+		  }
+		}
+		break;
+  	      case WLZ_GREY_DOUBLE:
+		for(idX = 0; idX < nVal; ++idX)
+		{
+		  v.dbp[idX] = grd * (v.dbp[idX] - off0) + off1;
+		  if(v.dbp[idX] < vMin)
+		  {
+		    v.dbp[idX] = vMin;
+		  }
+		  else if(v.dbp[idX] > vMax)
+		  {
+		    v.dbp[idX] = vMax;
+		  }
+		}
+		break;
+	      default:
+		break;
+	    }
+	  }
+	}
+	break;
+      default:
+	break;
+    }
+  }
+  return(errNum);
 }

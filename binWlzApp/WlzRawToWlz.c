@@ -49,7 +49,7 @@ static char _WlzRawToWlz_c[] = "University of Edinburgh $Id$";
 WlzRawToWlz - converta raw data to a Woolz object.
 \par Synopsis
 \verbatim
-WlzRawToWlz  [-h] [-v] [-b] [-d#] [-l] [-o#,#,#]
+WlzRawToWlz  [-h] [-v] [-b] [-d#] [-l] [-o#,#,#] [-s#]
              <width> <height> [planes] <type> [<raw-data file>]
 \endverbatim
 \par Options
@@ -77,6 +77,10 @@ WlzRawToWlz  [-h] [-v] [-b] [-d#] [-l] [-o#,#,#]
   <tr> 
     <td><b>-o</b></td>
     <td>The x,y,z offsets, default 0,0,0.</td>
+  </tr>
+  <tr> 
+    <td><b>-s</b></td>
+    <td>Number of bytes to skip at the start of the file.</td>
   </tr>
   <tr> 
     <td><b>-X</b></td>
@@ -131,7 +135,7 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   (void )fprintf(stderr,
-	  "Usage:\t%s [-b] [-d#] [-l] [-o#,#,#] [-h] [-v]\n"
+	  "Usage:\t%s [-b] [-d#] [-l] [-o#,#,#] [-s#] [-h] [-v]\n"
 	  "\t\t<width> <height> [planes] <type> [<raw-data file>]\n"
 	  "\tConvert the given raw data to a woolz image.\n"
 	  "\tInput can be from standard input, the width,\n"
@@ -156,6 +160,7 @@ static void usage(char *proc_str)
 	  "\t                    If d=3 then planes must be specified\n"
 	  "\t  -l                little-endian byte ordering\n"
 	  "\t  -oxoff,yoff,zoff  x, y, z offsets (default 0,0,0)\n"
+	  "\t  -scount           Skip count bytes at start of file.\n"
 	  "\t  -h                Help - prints this usage message\n"
 	  "\t  -v                verbose operation\n",
 	  proc_str,
@@ -179,13 +184,13 @@ int main(int	argc,
 	 char	**argv)
 {
   FILE		*inFile;
-  char 		optList[] = "bd:lo:t:hv";
+  char 		optList[] = "bd:lo:s:t:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		byteOrderFlg=1;
   WlzGreyType	newpixtype;
   /* int	verboseFlg=0; */
-  int		width, height, type, depth, wlzDepth;
+  int		width, height, type, depth, wlzDepth, skip = 0;
   InputDataU	data;
   void		***data3D;
   WlzGreyP	wlzData;
@@ -229,6 +234,10 @@ int main(int	argc,
       break;
 
     case 'o':
+      sscanf(optarg, "%d", &skip);
+      break;
+
+    case 's':
       sscanf(optarg, "%d,%d,%d", &offX, &offY, &offZ);
       break;
 
@@ -360,6 +369,9 @@ int main(int	argc,
       usage(argv[0]);
       return 1;
     }
+  }
+  if(skip > 0) {
+    (void )fseek(inFile, skip, SEEK_SET);
   }
   if( fread(data.v, depth, width*height*planes, inFile) < (width*height*planes) ){
     fprintf(stderr,

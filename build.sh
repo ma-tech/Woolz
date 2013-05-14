@@ -16,7 +16,7 @@ export MA=/opt/MouseAtlas
 
 # Build; with debug and external file formats.
 # This requires jpeg, nifti and tiff libraries.
-#./configure --prefix=$MA --enable-debug --enable-extff --with-tiff=$MA --with-nifti=$MA
+#./configure --prefix=$MA --enable-debug --enable-extff --with-tiff=$MA --with-nifti=$MA --with-jpeg=$MA
 
 # The default build; optimised, using openmp and external file formats.
 # This requires jpeg, nifti and tiff libraries.

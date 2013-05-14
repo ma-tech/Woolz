@@ -72,6 +72,8 @@ bin_PROGRAMS		= \
 			  WlzCMeshIntersectDom \
 			  WlzCMeshSurfaceMap \
 			  WlzCMeshToContour \
+			  WlzCMeshTrExpansion \
+			  WlzCMeshTrStrainTensor \
 			  WlzCMeshCurvToImage \
 			  WlzCMeshToSpatialDomain \
 			  WlzCMeshTransformVtx \
@@ -154,6 +156,7 @@ bin_PROGRAMS		= \
 			  WlzMarkersToDomain \
 			  WlzMatchICPObj \
 			  WlzMeshTransformObj \
+			  WlzNObjsGreyStats \
 			  WlzObjToBoundary \
 			  WlzPolarSample \
 			  WlzPolygonToObj \
@@ -298,6 +301,14 @@ WlzCMeshFromContour_LDFLAGS		= $(AM_LFLAGS)
 WlzCMeshGen_SOURCES			= WlzCMeshGen.c
 WlzCMeshGen_LDADD			= $(LDADD)
 WlzCMeshGen_LDFLAGS			= $(AM_LFLAGS)
+
+WlzCMeshTrExpansion_SOURCES		= WlzCMeshTrExpansion.c
+WlzCMeshTrExpansion_LDADD		= $(LDADD)
+WlzCMeshTrExpansion_LDFLAGS		= $(AM_LFLAGS)
+
+WlzCMeshTrStrainTensor_SOURCES		= WlzCMeshTrStrainTensor.c
+WlzCMeshTrStrainTensor_LDADD		= $(LDADD)
+WlzCMeshTrStrainTensor_LDFLAGS		= $(AM_LFLAGS)
 
 WlzCMeshToContour_SOURCES		= WlzCMeshToContour.c
 WlzCMeshToContour_LDADD			= $(LDADD)
@@ -638,6 +649,10 @@ WlzMatchICPObj_LDFLAGS			= $(AM_LFLAGS)
 WlzMeshTransformObj_SOURCES		= WlzMeshTransformObj.c
 WlzMeshTransformObj_LDADD		= $(LDADD)
 WlzMeshTransformObj_LDFLAGS		= $(AM_LFLAGS)
+
+WlzNObjsGreyStats_SOURCES		= WlzNObjsGreyStats.c
+WlzNObjsGreyStats_LDADD			= $(LDADD)
+WlzNObjsGreyStats_LDFLAGS		= $(AM_LFLAGS)
 
 WlzObjToBoundary_SOURCES		= WlzObjToBoundary.c
 WlzObjToBoundary_LDADD			= $(LDADD)

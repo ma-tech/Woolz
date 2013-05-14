@@ -2703,6 +2703,108 @@ int             WlzGeomTriangleAffineSolve(double *xTr, double *yTr, double dd,
 *		\f[
                 T = D S^{-1}
                 \f]
+		LU decomposition is used to solve for \f$T\f$.
+*		For the degenerate cases the transformation is given as a
+*		simple translation. This function is slower than
+*		WlzGeomTetraAffineSolve() by about a factor of 8, but it
+*		may be more robust.
+* \param        tr                      Transform matrix with 4x4 contiguous
+* 					coefficients which are equivalent
+* 					to the base storage of the matrix
+*					in a WlzAffineTransform.
+* \param        sVx                     Source tetrahedron vertices.
+* \param        dVx                     Destination tetrahedron vertices.
+*/
+int             WlzGeomTetraAffineSolveLU(double *tr,
+				        WlzDVertex3 *sVx,
+					WlzDVertex3 *dVx)
+{
+  int		squashed = 0;
+  double	*sA[4];
+  double	sD[16];
+
+  sA[0] = &(sD[ 0]);
+  sA[1] = &(sD[ 4]);
+  sA[2] = &(sD[ 8]);
+  sA[3] = &(sD[12]);
+  sD[ 0] = sVx[0].vtX; sD[1]  = sVx[1].vtX;
+  sD[ 2] = sVx[2].vtX; sD[3]  = sVx[3].vtX;
+  sD[ 4] = sVx[0].vtY; sD[5]  = sVx[1].vtY;
+  sD[ 6] = sVx[2].vtY; sD[7]  = sVx[3].vtY;
+  sD[ 8] = sVx[0].vtZ; sD[9]  = sVx[1].vtZ;
+  sD[10] = sVx[2].vtZ; sD[11] = sVx[3].vtZ;
+  sD[12] = sD[13] = sD[14] = sD[15] = 1.0;
+  (void )AlgMatrixLUInvertRaw4(sA);
+  tr[ 0] = (dVx[0].vtX * sD[ 0]) + (dVx[1].vtX * sD[ 4]) +
+	   (dVx[2].vtX * sD[ 8]) + (dVx[3].vtX * sD[12]);
+  tr[ 1] = (dVx[0].vtX * sD[ 1]) + (dVx[1].vtX * sD[ 5]) +
+	   (dVx[2].vtX * sD[ 9]) + (dVx[3].vtX * sD[13]);
+  tr[ 2] = (dVx[0].vtX * sD[ 2]) + (dVx[1].vtX * sD[ 6]) +
+	   (dVx[2].vtX * sD[10]) + (dVx[3].vtX * sD[14]);
+  tr[ 3] = (dVx[0].vtX * sD[ 3]) + (dVx[1].vtX * sD[ 7]) +
+	   (dVx[2].vtX * sD[11]) + (dVx[3].vtX * sD[15]);
+  tr[ 4] = (dVx[0].vtY * sD[ 0]) + (dVx[1].vtY * sD[ 4]) +
+	   (dVx[2].vtY * sD[ 8]) + (dVx[3].vtY * sD[12]);
+  tr[ 5] = (dVx[0].vtY * sD[ 1]) + (dVx[1].vtY * sD[ 5]) +
+	   (dVx[2].vtY * sD[ 9]) + (dVx[3].vtY * sD[13]);
+  tr[ 6] = (dVx[0].vtY * sD[ 2]) + (dVx[1].vtY * sD[ 6]) +
+	   (dVx[2].vtY * sD[10]) + (dVx[3].vtY * sD[14]);
+  tr[ 7] = (dVx[0].vtY * sD[ 3]) + (dVx[1].vtY * sD[ 7]) +
+	   (dVx[2].vtY * sD[11]) + (dVx[3].vtY * sD[15]);
+  tr[ 8] = (dVx[0].vtZ * sD[ 0]) + (dVx[1].vtZ * sD[ 4]) +
+	   (dVx[2].vtZ * sD[ 8]) + (dVx[3].vtZ * sD[12]);
+  tr[ 9] = (dVx[0].vtZ * sD[ 1]) + (dVx[1].vtZ * sD[ 5]) +
+	   (dVx[2].vtZ * sD[ 9]) + (dVx[3].vtZ * sD[13]);
+  tr[10] = (dVx[0].vtZ * sD[ 2]) + (dVx[1].vtZ * sD[ 6]) +
+	   (dVx[2].vtZ * sD[10]) + (dVx[3].vtZ * sD[14]);
+  tr[11] = (dVx[0].vtZ * sD[ 3]) + (dVx[1].vtZ * sD[ 7]) +
+	   (dVx[2].vtZ * sD[11]) + (dVx[3].vtZ * sD[15]);
+  tr[12] = sD[ 0] + sD[ 4] + sD[ 8] + sD[12];
+  tr[13] = sD[ 1] + sD[ 5] + sD[ 9] + sD[13];
+  tr[14] = sD[ 2] + sD[ 6] + sD[10] + sD[14];
+  tr[15] = sD[ 3] + sD[ 7] + sD[11] + sD[15];
+  return(squashed);
+}
+
+/*!
+* \return       Non zero if the volume of the tetrahedron is very small.
+* \ingroup      WlzGeometry
+* \brief        Computes the affine transform coefficients from the
+*		source to target tetrahedron.
+*
+*		This is done by solving for general 3D affine transform
+*		matrix which transforms the source tetrahedrons vertices
+*		to those of the destination tetrahedron
+*		If the destination tetrahedron vertices are given by
+*		\f[
+                D = \left(
+		    \begin{array}{cccc}
+                    d_{x0} & d_{x0} & d_{x1} & d_{x2} \\
+                    d_{y0} & d_{y0} & d_{y1} & d_{y2} \\
+                    d_{z0} & d_{z0} & d_{z1} & d_{z2} \\
+                    1      & 1      & 1      & 1
+		    \end{array}
+		    \right)
+                \f]
+*		and the source vertices by
+*		\f[
+                S = \left(
+		    \begin{array}{cccc}
+                    s_{x0} & s_{x0} & s_{x1} & s_{x2} \\
+                    s_{y0} & s_{y0} & s_{y1} & s_{y2} \\
+                    s_{z0} & s_{z0} & s_{z1} & s_{z2} \\
+                    1      & 1      & 1      & 1
+		    \end{array}
+		    \right)
+                \f]
+*		then the transform being sought satisfies
+*		\f[
+                D = T S
+                \f]
+*		Solving for \f$T\f$
+*		\f[
+                T = D S^{-1}
+                \f]
 *		Setting
 *		\f[
 		U = S^{-1}

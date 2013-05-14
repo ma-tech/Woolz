@@ -654,7 +654,7 @@ AlgError	AlgMatrixSet(AlgMatrix mat,
 	}
 	break;
       case ALG_MATRIX_RECT:
-	*(*(mat.sym->array + row) + col) = val;
+	*(*(mat.rect->array + row) + col) = val;
 	break;
       default:
 	break;

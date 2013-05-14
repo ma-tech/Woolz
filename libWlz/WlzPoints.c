@@ -194,3 +194,19 @@ WlzObject	*WlzPointsToDomObj(WlzPoints *pnt, double scale,
   }
   return(dObj);
 }
+
+/*!
+* \return	Pointer to the points value.
+* \ingroup	WlzValueUtils
+* \brief	Computes the pointer to the individual value corresponding
+* 		to the given index.
+* \param	pts			Given points values.
+* \param	idx			Given index.
+*/
+void		*WlzPointValueGet(WlzPointValues *pts, int idx)
+{
+  void		*val;
+
+  val = (char *)pts->values.v + (idx * pts->pSz);
+  return(val);
+}

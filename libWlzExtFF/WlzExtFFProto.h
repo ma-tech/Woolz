@@ -226,6 +226,14 @@ extern WlzErrorNum 		WlzEffWriteObjPnm(
 				  const char *gvnFileName,
 				  WlzObject *obj);
 
+/* From WlzExtFFPvl.c */
+extern WlzObject		*WlzEffReadObjPvl(
+				  const char *gvnFileName,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzEffWriteObjPvl(
+				  const char *gvnFileName,
+				  WlzObject *obj);
+
 /* From WlzExtFFSlc.c */
 extern WlzObject 		*WlzEffReadObjSlc(
 				  FILE *fP,

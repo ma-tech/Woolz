@@ -53,7 +53,7 @@ static WlzCompoundArray 	*WlzCompDispIncGrey3D(
 				  WlzErrorNum *dstErr);
 static int			*WlzCompDispMakeValAry3D(
 				  WlzObject *obj,
-				  int *dstNAry,
+				  WlzLong *dstNAry,
 				  WlzErrorNum *dstErr);
 static WlzErrorNum 		WlzCompDispSetAry(
 				  int **ary,
@@ -63,8 +63,8 @@ static WlzErrorNum 		WlzCompDispSetAry(
 static int			WlzCompDispArySortFn3D(
 				  const void *p0,
 				  const void *p1);
-static int			WlzCompDispFindDsp(
-				  int arraySz,
+static WlzLong			WlzCompDispFindDsp(
+				  WlzLong arraySz,
 				  int *array,
 				  int vQ,
 				  int pad);
@@ -176,12 +176,11 @@ static WlzCompoundArray *WlzCompDispIncGrey2D(WlzObject *obj0, WlzObject *obj1,
 static WlzCompoundArray *WlzCompDispIncGrey3D(WlzObject *obj0, WlzObject *obj1,
 				              WlzErrorNum *dstErr)
 {
-  int		idF,
-  		idN,
+  int		idN,
   		idO,
 		idP,
-  		nAry = 0,
 		iWidth = 0;
+  WlzLong 	nAry = 0;
   int		*ary = NULL,
 		*valF = NULL;
   int		*val[4];
@@ -230,7 +229,8 @@ static WlzCompoundArray *WlzCompDispIncGrey3D(WlzObject *obj0, WlzObject *obj1,
   /* Scan through the first object computing displacements. */
   if(errNum == WLZ_ERR_NONE)
   {
-    idF = 0;
+    WlzLong	idF = 0;
+
     domP = obj0->domain.p;
     for(idP = domP->plane1; idP <= domP->lastpl; ++idP)
     {
@@ -332,12 +332,12 @@ static WlzCompoundArray *WlzCompDispIncGrey3D(WlzObject *obj0, WlzObject *obj1,
 * 					values, must not be NULL.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static int	*WlzCompDispMakeValAry3D(WlzObject *obj, int *dstNAry,
+static int	*WlzCompDispMakeValAry3D(WlzObject *obj, WlzLong *dstNAry,
 				         WlzErrorNum *dstErr)
 {
   int		idO,
-  		idP,
-		nAry;
+  		idP;
+  WlzLong	nAry;
   int		*ary = NULL,
   		*array = NULL;
   WlzObject	*obj2D;
@@ -467,32 +467,33 @@ static int	WlzCompDispArySortFn3D(const void *p0, const void *p1)
 * \param	vQ			Value to query.
 * \param	pad			Number of integers per array value.
 */
-static int	WlzCompDispFindDsp(int arraySz, int *array, int vQ, int pad)
+static WlzLong	WlzCompDispFindDsp(WlzLong arraySz, int *array,
+				   int vQ, int pad)
 {
-  int		i0,
-  		i1,
-		i2,
-		v2,
-		iF = -1;
+  int		v2;
+  WlzLong	l0,
+  		l1,
+		l2,
+		lF = -1;
 
-  i0 = 0;
-  i1 = arraySz;
-  while(i0 < i1)
+  l0 = 0;
+  l1 = arraySz;
+  while(l0 < l1)
   {
-    i2 = i0 + ((i1 - i0) / 2);
-    v2 = array[i2 * pad];
+    l2 = l0 + ((l1 - l0) / 2);
+    v2 = array[l2 * pad];
     if(v2 < vQ)
     {
-      i0 = i2 + 1; 
+      l0 = l2 + 1; 
     }
     else
     {
-      i1 = i2; 
+      l1 = l2; 
     }
   }
-  if((i0 < arraySz) && (array[i0 * pad] == vQ))
+  if((l0 < arraySz) && (array[l0 * pad] == vQ))
   {
-    iF = i0;
+    lF = l0;
   }
-  return(iF);
+  return(lF);
 }

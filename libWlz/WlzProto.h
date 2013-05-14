@@ -663,7 +663,7 @@ extern WlzAffineTransform 	*WlzAffineTransformLSqDQ3D(
 /************************************************************************
 * WlzArea.c								*
 ************************************************************************/
-extern int 			WlzArea(
+extern WlzLong 			WlzArea(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
 
@@ -1604,6 +1604,11 @@ extern WlzObject		*WlzCMeshProduct(
 				  WlzObject *tr0,
 				  WlzObject *tr1,
 				  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzCMeshExpansion(
+				  WlzObject *cObj,
+				  int inverse,
+				  int eigenvalue,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzCMeshUtils.c							*
@@ -1795,6 +1800,16 @@ extern int			WlzCMeshNodRingNodIndices3D(
 				  int *maxIdxBuf,
 				  int **idxBuf, 
 				  WlzErrorNum *dstErr);
+extern int			WlzCMeshElmRingElmIndices2D(
+				  WlzCMeshElm2D *elm,
+				  int *maxIdxBuf,
+				  int **idxBuf,
+				  WlzErrorNum *dstErr);
+extern int			WlzCMeshElmRingElmIndices3D(
+				  WlzCMeshElm3D *elm,
+				  int *maxIdxBuf,
+				  int **idxBuf,
+				  WlzErrorNum *dstErr);
 extern double                   WlzCMeshElmSnArea22D(
                                   WlzCMeshElm2D *elm);
 extern double			WlzCMeshElmSqArea22D5(
@@ -1908,6 +1923,13 @@ extern WlzErrorNum		WlzCMeshFixNegativeElms2D(
 				  WlzCMesh2D *mesh);
 extern WlzErrorNum		WlzCMeshFixNegativeElms3D(
 				  WlzCMesh3D *mesh);
+extern WlzErrorNum		WlzCMeshValuesNormalise(
+				  WlzObject *cObj,
+				  int mapZero,
+                                  double vZero,
+				  double vMin,
+				  double vMax,
+				  double oFrac);
 extern WlzCMeshP		WlzCMeshCopy(
 				  WlzCMeshP mesh,
 				  int squuze,
@@ -2415,6 +2437,8 @@ extern WlzErrorNum		WlzFreeContour(
 				  WlzContour *ctr);
 extern WlzErrorNum 		WlzFreeIndexedValues(
 				  WlzIndexedValues *ixv);
+extern WlzErrorNum		WlzFreePointValues(
+				  WlzPointValues *pv);
 #endif /* !WLZ_EXT_BIND */
 
 /************************************************************************
@@ -3133,6 +3157,10 @@ extern int			WlzGeomTetraAffineSolve(
 				  WlzDVertex3 *sVx,
 				  WlzDVertex3 *dVx,
 				  double thresh);
+extern int			WlzGeomTetraAffineSolveLU(
+				  double *tr,
+				  WlzDVertex3 *sVx,
+				  WlzDVertex3 *dVx);
 extern WlzDVertex2		WlzGeomObjLineSegIntersect2D(
 				  WlzObject *obj,
 				  WlzDVertex2 p0,
@@ -3684,9 +3712,10 @@ extern int			WlzIDomMaxItvLn(
 extern int 			WlzIntervalCount(
 				  WlzIntervalDomain *idom,
 			    	  WlzErrorNum *dstErr);
-extern size_t			WlzIntervalCountObj(
+extern WlzLong 			WlzIntervalCountObj(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
+
 /************************************************************************
 * WlzIntervalDomScan.c							*
 ************************************************************************/
@@ -4160,6 +4189,18 @@ extern WlzPoints		*WlzMakePoints(
 				  int nVtx,
 				  WlzVertexP vtxP,
 				  int maxVtx,
+				  WlzErrorNum *dstErr);
+extern WlzPointValues		*WlzNewPointValues(
+				  WlzObject *obj,
+				  int rank,
+				  int *dim,
+				  WlzGreyType vType,
+				  WlzErrorNum *dstErr);
+extern WlzPointValues		*WlzMakePointValues(
+				  size_t nP,
+				  int rank,
+				  int *dim,
+				  WlzGreyType vType,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 extern WlzPolygonDomain		*WlzMakePolygonDomain(
@@ -4946,6 +4987,19 @@ extern WlzObject		*WlzNMSuppress(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzNObjGreyStats.c							*
+************************************************************************/
+extern WlzErrorNum		WlzNObjGreyStats(
+				  WlzObject *gObj,
+				  int mean,
+				  int stddev,
+				  int *dstN,
+				  WlzObject **dstMinObj,
+				  WlzObject **dstMaxObj,
+				  WlzObject **dstSumObj,
+				  WlzObject **dstSSqObj);
+
+/************************************************************************
 * WlzObjToBoundary.c							*
 ************************************************************************/
 extern WlzObject 		*WlzObjToBoundary(
@@ -4978,6 +5032,9 @@ extern WlzObject		*WlzPointsToDomObj(
     				  WlzPoints *pnt,
 				  double scale,
 				  WlzErrorNum *dstErr);
+extern void			*WlzPointValueGet(
+				  WlzPointValues *pts,
+				  int idx);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -5502,7 +5559,7 @@ extern WlzErrorNum		WlzSplitMontageObj(
 				  WlzPixelV gapV,
 				  double tol,
 				  int bWidth,
-				  int minArea,
+				  WlzLong minArea,
 				  int maxComp,
 				  int *dstNComp,
 				  WlzObject ***dstComp);
@@ -5683,6 +5740,10 @@ extern int 			WlzValueMatchString(
 				  ...);
 extern char 			*WlzStringWhiteSpSkip(
 				  char *str);
+extern char			*WlzStringToUpper(
+				  char *str);
+extern char			*WlzStringToLower(
+				  char *str);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -5834,6 +5895,30 @@ extern WlzObject		*WlzCbThreshold(
 				  void *clientData,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
+
+/************************************************************************
+* WlzTensor.c								*
+************************************************************************/
+extern WlzObject       		*WlzCMeshDGTensor(
+				  WlzObject *cObj,
+				  int invert,
+				  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzCMeshDGTensorAtPts(
+				  WlzObject *cObj,
+				  int invert,
+				  WlzDVertex3 sd,
+				  int dither,
+				  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzCMeshStrainTensor(
+				  WlzObject *cObj,
+				  int invert,
+				  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzCMeshStrainTensorAtPts(
+				  WlzObject *cObj,
+				  int invert,
+				  WlzDVertex3 sd,
+				  int dither,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzThreshold.c							*
@@ -6417,7 +6502,7 @@ extern AlcKDTTree      		*WlzVerticesBuildTree(
 /************************************************************************
 * WlzVolume.c								*
 ************************************************************************/
-extern int 			WlzVolume(
+extern WlzLong 			WlzVolume(
 				  WlzObject *obj,
 		     		  WlzErrorNum *dstErr);
 

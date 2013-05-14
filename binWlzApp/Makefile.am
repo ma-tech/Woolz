@@ -93,12 +93,11 @@ bin_PROGRAMS		=  \
 			  WlzSizeSelect \
 			  WlzSplitImage \
 			  WlzSplitMontage \
-			  WlzTensor \
-			  WlzTensorToVtk \
 			  WlzTiffStackToPatches \
 			  WlzTiffStackToShade \
 			  WlzVtxDistance \
-			  WlzVtxToObj
+			  WlzVtxToObj \
+			  WlzVTKTensor
 
 Wlz3DGetProjection_SOURCES	= Wlz3DGetProjection.c
 Wlz3DGetProjection_LDADD	= $(LDADD)
@@ -252,14 +251,6 @@ WlzSplitMontage_SOURCES		= WlzSplitMontage.c
 WlzSplitMontage_LDADD		= $(LDADD)
 WlzSplitMontage_LDFLAGS		= $(AM_LFLAGS)
 
-WlzTensor_SOURCES		= WlzTensor.c
-WlzTensor_LDADD			= $(LDADD)
-WlzTensor_LDFLAGS		= $(AM_LFLAGS)
-
-WlzTensorToVtk_SOURCES		= WlzTensorToVtk.c
-WlzTensorToVtk_LDADD		= $(LDADD)
-WlzTensorToVtk_LDFLAGS		= $(AM_LFLAGS)
-
 WlzTiffStackToPatches_SOURCES	= WlzTiffStackToPatches.c
 WlzTiffStackToPatches_LDADD	= $(LDADD)
 WlzTiffStackToPatches_LDFLAGS	= $(AM_LFLAGS)
@@ -275,3 +266,7 @@ WlzVtxDistance_LDFLAGS		= $(AM_LFLAGS)
 WlzVtxToObj_SOURCES		= WlzVtxToObj.c
 WlzVtxToObj_LDADD		= $(LDADD)
 WlzVtxToObj_LDFLAGS		= $(AM_LFLAGS)
+
+WlzVTKTensor_SOURCES		= WlzVTKTensor.c
+WlzVTKTensor_LDADD		= $(LDADD)
+WlzVTKTensor_LDFLAGS		= $(AM_LFLAGS)
