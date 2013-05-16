@@ -148,6 +148,7 @@ bin_PROGRAMS		= \
 			  WlzIsEmpty \
 			  WlzLabel \
 			  WlzLaplacian \
+			  WlzLUTGreyTransformFromTxt \
 			  WlzLUTGreyTransformObj \
 			  WlzLUTGreyTransformMerge \
 			  WlzMakeEmpty \
@@ -617,6 +618,10 @@ WlzLabel_LDFLAGS			= $(AM_LFLAGS)
 WlzLaplacian_SOURCES			= WlzLaplacian.c
 WlzLaplacian_LDADD			= $(LDADD)
 WlzLaplacian_LDFLAGS			= $(AM_LFLAGS)
+
+WlzLUTGreyTransformFromTxt_SOURCES	= WlzLUTGreyTransformFromTxt.c
+WlzLUTGreyTransformFromTxt_LDADD	= $(LDADD)
+WlzLUTGreyTransformFromTxt_LDFLAGS	= $(AM_LFLAGS)
 
 WlzLUTGreyTransformObj_SOURCES		= WlzLUTGreyTransformObj.c
 WlzLUTGreyTransformObj_LDADD		= $(LDADD)
