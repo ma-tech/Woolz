@@ -220,15 +220,15 @@ AlgError	AlgMatrixLUInvertRaw4(double **aM)
   double	w[16];
   AlgError	errCode = ALG_ERR_NONE;
 
-  w[ 0] = 1.0; w[ 1] = 0.0; w[ 2] = 0.0; w[ 3] = 0.0;
-  w[ 4] = 0.0; w[ 5] = 1.0; w[ 6] = 0.0; w[ 7] = 0.0;
-  w[ 8] = 0.0; w[ 9] = 0.0; w[10] = 1.0; w[11] = 0.0;
-  w[12] = 0.0; w[13] = 0.0; w[14] = 0.0; w[15] = 1.0;
+  w[ 0] = 1.0; w[ 4] = 0.0; w[ 8] = 0.0; w[12] = 0.0;
+  w[ 1] = 0.0; w[ 5] = 1.0; w[ 9] = 0.0; w[13] = 0.0;
+  w[ 2] = 0.0; w[ 6] = 0.0; w[10] = 1.0; w[14] = 0.0;
+  w[ 3] = 0.0; w[ 7] = 0.0; w[11] = 0.0; w[15] = 1.0;
   errCode = AlgMatrixLUSolveRaw4(aM, w, 4);
-  aM[0][0] = w[ 0]; aM[0][1] = w[ 1]; aM[0][2] = w[ 2]; aM[0][3] = w[3];
-  aM[1][0] = w[ 4]; aM[1][1] = w[ 5]; aM[1][2] = w[ 6]; aM[1][3] = w[7];
-  aM[2][0] = w[ 8]; aM[2][1] = w[ 9]; aM[2][2] = w[10]; aM[2][3] = w[11];
-  aM[3][0] = w[12]; aM[3][1] = w[13]; aM[3][2] = w[14]; aM[3][3] = w[15];
+  aM[0][0] = w[ 0]; aM[0][1] = w[ 4]; aM[0][2] = w[ 8]; aM[0][3] = w[12];
+  aM[1][0] = w[ 1]; aM[1][1] = w[ 5]; aM[1][2] = w[ 9]; aM[1][3] = w[13];
+  aM[2][0] = w[ 2]; aM[2][1] = w[ 6]; aM[2][2] = w[10]; aM[2][3] = w[14];
+  aM[3][0] = w[ 3]; aM[3][1] = w[ 7]; aM[3][2] = w[11]; aM[3][3] = w[15];
   return(errCode);
 }
 
@@ -493,6 +493,7 @@ AlgError	AlgMatrixLUDecompRaw(double **aM, int aSz,
   double	*tDP0,
 		*tDP1,
   		*wSpace = NULL;
+  double	wSpace4[4];
   AlgError	errCode = ALG_ERR_NONE;
 
   if((aM == NULL) || (*aM == NULL) || (aSz <= 0) || (iV == NULL))
@@ -501,11 +502,18 @@ AlgError	AlgMatrixLUDecompRaw(double **aM, int aSz,
   }
   else
   {
-    if((wSpace = (double *)AlcMalloc(sizeof(double) * aSz)) == NULL)
+    if(aSz > 4)
     {
-      errCode = ALG_ERR_MALLOC;
+      if((wSpace = (double *)AlcMalloc(sizeof(double) * aSz)) == NULL)
+      {
+	errCode = ALG_ERR_MALLOC;
+      }
     }
     else
+    {
+      wSpace = wSpace4;
+    }
+    if(errCode == ALG_ERR_NONE)
     {
       even = 1;
       /* Calculate implicit scaling */
@@ -609,7 +617,7 @@ AlgError	AlgMatrixLUDecompRaw(double **aM, int aSz,
         *evenOdd = (even)? 1.0: -1.0;
       }
     }
-    if(wSpace)
+    if(wSpace && (wSpace != wSpace4))
     {
       AlcFree(wSpace);
     }
@@ -622,7 +630,7 @@ AlgError	AlgMatrixLUDecompRaw(double **aM, int aSz,
 * \ingroup      AlgMatrix
 * \brief	Solves the set of of linear equations A.x = b where
 *		A is input as its LU decomposition determined with
-*		AlgMatrixLUDecompRaw() of a row-wise permutation of
+*		AlgMatrixLUDecomp() of a row-wise permutation of
 *		itself. The given index vector is used to record the
 *		permutation effected by the partial pivoting
 * \param	aM			Matrix A.

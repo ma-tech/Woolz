@@ -47,7 +47,7 @@ typedef struct _WlzSplitObjData
 {
   int		nLComp;
   int		*compI;
-  int		*lCompSz;
+  WlzLong	*lCompSz;
   WlzObject	**lComp;
 } WlzSplitObjData;
 
@@ -181,8 +181,8 @@ WlzErrorNum	WlzSplitObj(WlzObject *refObj, WlzObject *ppObj,
     }
     if(((split.compI = (int *)AlcMalloc(sizeof(int) *
                                         split.nLComp)) == NULL) ||
-       ((split.lCompSz = (int *)AlcMalloc(sizeof(int) *
-                                          split.nLComp)) == NULL))
+       ((split.lCompSz = (WlzLong *)AlcMalloc(sizeof(WlzLong) *
+                                              split.nLComp)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -277,18 +277,13 @@ WlzErrorNum	WlzSplitObj(WlzObject *refObj, WlzObject *ppObj,
 static int	WlzSplitObjSortSzFn(const void *cData,
 				    const void *a, const void *b)
 {
-  int		idx,
-  		aSz,
-  		bSz,
-		cmp;
+  int		cmp;
+  WlzLong	dif;
   WlzSplitObjData *split;
 
   split = (WlzSplitObjData *)cData;
-  idx = *(int *)a;
-  aSz = *(split->lCompSz + idx);
-  idx = *(int *)b;
-  bSz = *(split->lCompSz + idx);
-  cmp = bSz - aSz;
+  dif = *(split->lCompSz + *(int *)b) - *(split->lCompSz + *(int *)a);
+  cmp = (dif > 0) - (dif < 0);
   return(cmp);
 }
 
@@ -320,14 +315,14 @@ static int	WlzSplitObjSortSzFn(const void *cData,
 *					components, must not be NULL.
 */
 WlzErrorNum 	WlzSplitMontageObj(WlzObject *mObj, WlzPixelV gapV,
-				      double tol, int bWidth, int minArea,
-				      int maxComp,
+				      double tol, int bWidth,
+				      WlzLong minArea, int maxComp,
 				      int *dstNComp, WlzObject ***dstComp)
 {
   int		id0,
   		id1,
-		area,
 		nLComp = 0;
+  WlzLong	area = 0;
   WlzObject	*gObj = NULL,
   		*tObj = NULL;
   WlzObject	**lComp;

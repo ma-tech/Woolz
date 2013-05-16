@@ -87,13 +87,11 @@ int		WlzIDomMaxItvLn(WlzIntervalDomain *iDom)
 * \brief        Count the number of intervals or equivalent if rectangular.
 *
 * \return       Number of intervals if the domain type is
- <tt>WLZ_INTERVALDOMAIN_INTVL</tt> else the number of lines.
-* \param    idom	Input domain.
-* \param    wlzErr	Error return.
-* \par      Source:
-*                WlzIntervalCount.c
+*               <tt>WLZ_INTERVALDOMAIN_INTVL</tt> else the number of lines.
+* \param    	idom			Input domain.
+* \param    	dstErr			Destination error pointer, may be NULL.
 */
-int WlzIntervalCount(WlzIntervalDomain *idom, WlzErrorNum *wlzErr)
+int 		WlzIntervalCount(WlzIntervalDomain *idom, WlzErrorNum *dstErr)
 {
   int		l,
 		ll,
@@ -128,9 +126,9 @@ int WlzIntervalCount(WlzIntervalDomain *idom, WlzErrorNum *wlzErr)
 	break;
     }
   }
-  if(wlzErr)
+  if(dstErr)
   {
-    *wlzErr = errNum;
+    *dstErr = errNum;
   }
   return(intcount);
 }
@@ -147,10 +145,10 @@ int WlzIntervalCount(WlzIntervalDomain *idom, WlzErrorNum *wlzErr)
 * \param	obj		Given object.
 * \param	dstErr		Destination error pointer, may be NULL.
 */
-size_t		WlzIntervalCountObj(WlzObject *obj,
+WlzLong		WlzIntervalCountObj(WlzObject *obj,
 				    WlzErrorNum *dstErr)
 {
-  size_t	iCnt = 0;
+  WlzLong	iCnt = 0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(obj == NULL)
@@ -205,4 +203,3 @@ size_t		WlzIntervalCountObj(WlzObject *obj,
   }
   return(iCnt);
 }
-

@@ -125,7 +125,23 @@ static WlzContour 		*WlzReadContour(
 static WlzErrorNum 		WlzReadInt(
 				  FILE *fP,
 				  int *iP,
-				  int nI);
+				  size_t nI);
+static WlzErrorNum 		WlzReadShort(
+				  FILE *fP,
+				  short *iP,
+				  size_t nI);
+static WlzErrorNum 		WlzReadUByte(
+				  FILE *fP,
+				  WlzUByte *iP,
+				  size_t nI);
+static WlzErrorNum 		WlzReadFloat(
+				  FILE *fP,
+				  float *iP,
+				  size_t nI);
+static WlzErrorNum 		WlzReadDouble(
+				  FILE *fP,
+				  double *iP,
+				  size_t nI);
 static WlzErrorNum 		WlzReadVertex2D(
 				  FILE *fP,
 				  WlzDVertex2 *vP,
@@ -176,6 +192,12 @@ static WlzErrorNum		WlzReadLUTValues(
 static WlzThreeDViewStruct 	*WlzRead3DViewStruct(
 				  FILE *fP,
 				  WlzErrorNum *dstErr);
+static WlzPoints		*WlzReadPointsDomain(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+static WlzErrorNum		WlzReadPointsValues(
+				  FILE *fP,
+				  WlzObject *obj);
 #ifdef WLZ_OLD_CMESH_TRANS_SUPPORT
 static WlzObject 		*WlzReadOldCMeshTransform(
 				  FILE *fP,
@@ -538,6 +560,17 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 	}
 	break;
 
+      case WLZ_POINTS:
+	if(((domain.pts = WlzReadPointsDomain(fp, &errNum)) != NULL) &&
+	   ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
+			       &errNum)) != NULL)){
+	  if((errNum = WlzReadPointsValues(fp, obj)) == WLZ_ERR_NONE){
+	    obj->plist = WlzAssignPropertyList(
+			 WlzReadPropertyList(fp, NULL), NULL);
+	  }
+	}
+	break;
+
       case WLZ_RECTANGLE:
 	if((domain.r = WlzReadRect(fp, &errNum)) != NULL){
 	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
@@ -607,14 +640,14 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzIO
-* \brief	Read's 4 byte integers the given file stream into a
+* \brief	Read's 4 byte integers from the given file stream into a
 *               buffer of native ints (which must have room for at
 *               least nI ints).
 * \param	fP			Given file.
 * \param	iP			Buffer for ints.
 * \param	nI			Number of ints.
 */
-static WlzErrorNum WlzReadInt(FILE *fP, int *iP, int nI)
+static WlzErrorNum WlzReadInt(FILE *fP, int *iP, size_t nI)
 {
   size_t	n;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
@@ -636,6 +669,138 @@ static WlzErrorNum WlzReadInt(FILE *fP, int *iP, int nI)
       in.inv = iP[i];
       WLZ_SWAP_IN_WORD(out, in);
       iP[i] = out.inv;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Read's 2 byte shorts from the given file stream into a
+*               buffer of native shorts (which must have room for at
+*               least nI shorts).
+* \param	fP			Given file.
+* \param	iP			Buffer for shorts.
+* \param	nI			Number of shorts.
+*/
+static WlzErrorNum WlzReadShort(FILE *fP, short *iP, size_t nI)
+{
+  size_t	n;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  n = 2 * nI;
+  if(fread(iP, sizeof(char), n, fP) < n)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else
+  {
+    int		i;
+
+    for(i = 0; i < nI; ++i)
+    {
+      WlzGreyV	in,
+		out;
+
+      in.shv = iP[i];
+      WLZ_SWAP_IN_SHORT(out, in);
+      iP[i] = out.shv;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Read's unsigned bytes from the given file stream into a
+*               buffer of native unsigned bytes (which must have room for
+*               at least nI unsigned bytes).
+* \param	fP			Given file.
+* \param	iP			Buffer for unsigned bytes.
+* \param	nI			Number of unsigned bytes.
+*/
+static WlzErrorNum WlzReadUByte(FILE *fP, WlzUByte *iP, size_t nI)
+{
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  if(fread(iP, sizeof(char), nI, fP) < nI)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Read's 4 byte floats from the given file stream into a
+*               buffer of native floats (which must have room for at
+*               least nI floats).
+* \param	fP			Given file.
+* \param	iP			Buffer for floats.
+* \param	nI			Number of floats.
+*/
+static WlzErrorNum WlzReadFloat(FILE *fP, float *iP, size_t nI)
+{
+  size_t	n;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  n = 4 * nI;
+  if(fread(iP, sizeof(char), n, fP) < n)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else
+  {
+    int		i;
+
+    for(i = 0; i < nI; ++i)
+    {
+      WlzGreyV	in,
+		out;
+
+      in.flv = iP[i];
+      WLZ_SWAP_IN_FLOAT(out, in);
+      iP[i] = out.flv;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Read's 8 byte double from the given file stream into a
+*               buffer of native doubles (which must have room for at
+*               least nI doubles).
+* \param	fP			Given file.
+* \param	iP			Buffer for doubles.
+* \param	nI			Number of doubles.
+*/
+static WlzErrorNum WlzReadDouble(FILE *fP, double *iP, size_t nI)
+{
+  size_t	n;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  n = 8 * nI;
+  if(fread(iP, sizeof(char), n, fP) < n)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else
+  {
+    int		i;
+
+    for(i = 0; i < nI; ++i)
+    {
+      WlzGreyV	in,
+		out;
+
+      in.dbv = iP[i];
+      WLZ_SWAP_IN_DOUBLE(out, in);
+      iP[i] = out.dbv;
     }
   }
   return(errNum);
@@ -4686,6 +4851,227 @@ static WlzThreeDViewStruct *WlzRead3DViewStruct(FILE *fP, WlzErrorNum *dstErr)
     *dstErr = errNum;
   }
   return(vs);
+}
+
+/*!
+* \return	New LUT domain.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz LUT domain.
+* \param	fP			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzPoints	*WlzReadPointsDomain(FILE *fP, WlzErrorNum *dstErr)
+{
+  int		type,
+  		version,
+		nPoints;
+  WlzPoints	*pts = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((type = getc(fP)) == EOF)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else
+  {
+    switch(type)
+    {
+      case WLZ_POINTS_2I: /* FALLTHROUGH */
+      case WLZ_POINTS_2D: /* FALLTHROUGH */
+      case WLZ_POINTS_3I: /* FALLTHROUGH */
+      case WLZ_POINTS_3D:
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((version = getc(fP)) == EOF)
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+    else if(version != 1)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nPoints = getword(fP);
+    if(feof(fP) != 0)
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+    else if(nPoints < 0)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzVertexP dum;
+
+    dum.v = NULL;
+    pts = WlzMakePoints(type, 0, dum, nPoints, &errNum);
+    pts->nPoints = nPoints;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(type)
+    {
+      case WLZ_POINTS_2I:
+        errNum = WlzReadVertex2I(fP, pts->points.i2, nPoints);
+        break;
+      case WLZ_POINTS_2D:
+        errNum = WlzReadVertex2D(fP, pts->points.d2, nPoints);
+        break;
+      case WLZ_POINTS_3I:
+        errNum = WlzReadVertex3I(fP, pts->points.i3, nPoints);
+        break;
+      case WLZ_POINTS_3D:
+        errNum = WlzReadVertex3D(fP, pts->points.d3, nPoints);
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pts);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz points values data structure.
+* 		This function ignores the current values of the given object,
+* 		overwritting the values with new points vales.
+* \param	fP			File pointer.
+* \param	obj			Object that the points values will be
+* 					added to.
+*/
+static WlzErrorNum	WlzReadPointsValues(FILE *fP, WlzObject *obj)
+{
+  int		rank,
+  		version;
+  size_t	nPoints,
+  		vCount = 1;
+  WlzObjectType	type;
+  WlzGreyType	vType;
+  int		*dim = NULL;
+  WlzValues 	values;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  
+  values.core = NULL;
+  type = (WlzObjectType )getc(fP);
+  switch(type)
+  {
+    case WLZ_POINT_VALUES:
+      break;
+    case WLZ_NULL:
+      errNum = WLZ_ERR_EOO;
+      break;
+    default:
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+      break;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((version = getc(fP)) == EOF)
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+    else if(version != 1)
+    {
+      errNum = WLZ_ERR_VALUES_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rank = getword(fP);
+    if(rank < 0)
+    {
+      errNum = WLZ_ERR_VALUES_DATA;
+    }
+    else if((rank >= 1) &&
+            ((dim = (int *)AlcMalloc((sizeof(int) * rank))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idx;
+
+    for(idx = 0; idx < rank; ++idx)
+    {
+      dim[idx] = getword(fP);
+      vCount *= dim[idx];
+    }
+    vType = (WlzGreyType )getc(fP);
+    nPoints = getword(fP);
+    if(feof(fP))
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    values.pts = WlzMakePointValues(nPoints, rank, dim, vType, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzGreyP	gP;
+
+    gP = values.pts->values;
+    vCount *= nPoints;
+    switch(vType)
+    {
+      case WLZ_GREY_INT:
+	errNum = WlzReadInt(fP, gP.inp, vCount);
+	break;
+      case WLZ_GREY_SHORT:
+	errNum = WlzReadShort(fP, gP.shp, vCount);
+	break;
+      case WLZ_GREY_UBYTE:
+	errNum = WlzReadUByte(fP, gP.ubp, vCount);
+	break;
+      case WLZ_GREY_FLOAT:
+	errNum = WlzReadFloat(fP, gP.flp, vCount);
+	break;
+      case WLZ_GREY_DOUBLE:
+	errNum = WlzReadDouble(fP, gP.dbp, vCount);
+	break;
+      case WLZ_GREY_RGBA:
+	errNum = WlzReadInt(fP, (int *)(gP.rgbp), vCount);
+	break;
+      default:
+	errNum = WLZ_ERR_GREY_TYPE;
+	break;
+    }
+  }
+  AlcFree(dim);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    obj->values = WlzAssignValues(values, NULL);
+  }
+  else
+  {
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;                        /* No values is allowed. */
+    }
+    else
+    {
+      (void )WlzFreePointValues(values.pts);
+    }
+  }
+  return(errNum);
 }
 	
 #ifdef WLZ_OLD_CMESH_TRANS_SUPPORT

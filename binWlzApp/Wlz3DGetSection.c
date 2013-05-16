@@ -150,6 +150,7 @@ Gets an arbitrary slice from a 3D object,
 #include <string.h>
 #include <limits.h>
 #include <float.h>
+#include <sys/time.h>
 #include <Wlz.h>
 #include <WlzExtFF.h>
 #include <bibFile.h>
@@ -201,6 +202,7 @@ static void usage(char *proc_str)
 	  "\t  -L                 Use linear interpolation\n"
 	  "\t  -N                 Use nearest neighbour interpolation\n"
 	  "\t  -R<ROI domain>     Only calculate values within the ROI domain.\n"
+	  "\t  -T                 Report section cutting time.\n"
 	  "\t  -h                 Help - prints this usage message\n",
 	  proc_str,
 	  WlzVersion());
@@ -214,11 +216,12 @@ int main(int	argc,
   WlzObject	*obj = NULL, *nobj = NULL, *subDomain = NULL;
   FILE		*inFP = NULL, *outFP = NULL, *bibFP = NULL;
   char		*outFile = NULL, *bibFile = NULL;
-  char 		optList[] = "ACLNa:b:d:f:m:o:r:s:u:R:h";
+  char 		optList[] = "ACLNTa:b:d:f:m:o:r:s:u:R:h";
   int		option;
   int		i,
   		j,
 		iVal,
+		timer = 0,
 		voxRescale = 0,
   		allFlg = 0;
   double	dist=0.0, pitch=0.0, yaw=0.0, roll=0.0;
@@ -231,6 +234,7 @@ int main(int	argc,
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   BibFileRecord	*bibfileRecord;
   BibFileError	bibFileErr;
+  struct timeval times[3];
   char		*errMsg;
     
   /* additional defaults */
@@ -356,6 +360,9 @@ int main(int	argc,
       }
       break;
 
+    case 'T':
+      timer = 1;
+      break;
     case 'h':
     default:
       usage(argv[0]);
@@ -459,6 +466,10 @@ int main(int	argc,
 	  viewStr->voxelSize[2] = obj->domain.p->voxel_size[2];
 	}
 	WlzInit3DViewStruct(viewStr, obj);
+	if(timer)
+	{
+	  gettimeofday(times + 0, NULL);
+	}
 	if( allFlg ){
 	  /* loop through all possible planes */
 	  for(i=WLZ_NINT(viewStr->minvals.vtZ), j=0;
@@ -491,6 +502,15 @@ int main(int	argc,
 	    return errNum;
 	  }
 	  WlzFreeObj(nobj);
+	}
+	if(timer)
+	{
+	  gettimeofday(times + 1, NULL);
+	  timersub(times + 1, times + 0, times + 2);
+	  (void )fprintf(stderr,
+	                 "%s: Elapsed time = %g\n",
+			 *argv,
+			 times[2].tv_sec + (0.000001 * times[2].tv_usec));
 	}
 	break;
 

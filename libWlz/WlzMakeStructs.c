@@ -953,7 +953,7 @@ WlzObject 	*WlzMakeMarkers(WlzVertexType vType,
 /*!
 * \return       New domain object without values.
 * \ingroup	WlzFeatures
-* \brief	icreates a new domain object that is a formed from a lattice
+* \brief	Creates a new domain object that is a formed from a lattice
 * 		of markers covering the given domain.
 * \param	gObj			Given spatial domain object.
 * \param	mType			Marker type.
@@ -1140,7 +1140,159 @@ WlzPoints 	*WlzMakePoints(WlzObjectType type, int nVtx, WlzVertexP vtxP,
   return(pnt);
 }
 
-/* function:     WlzMakePolygonDomain    */
+/*!
+* \return	New point value table or NULL on error.
+* \ingroup	WlzAllocation
+* \brief	Makes a new point value table which covers the points of
+* 		the given object.
+* \param	obj			Given object, the domain of which is
+* 					used to determine the value allocation.
+* 					This must have type WLZ_POINTS.
+* \param	rank			The rank of the individual values.
+* \param	dim			The dimensions of individual indexed
+* 					values.
+* \param	vType			The type of the data in the individual
+* 					values.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzPointValues	*WlzNewPointValues(WlzObject *obj,
+                                   int rank, int *dim, WlzGreyType vType,
+				   WlzErrorNum *dstErr)
+{
+  WlzPointValues *pVal = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->type != WLZ_POINTS)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    pVal = WlzMakePointValues(obj->domain.pts->nPoints, rank, dim, vType,
+    			      &errNum);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pVal);
+}
+
+/*!
+* \return	New point value table or NULL on error.
+* \ingroup	WlzAllocation
+* \brief	Makes a new point value table with space for the requested
+* 		number of points.
+* \param	nP:			Number of points to allocate space
+* 					for.
+* \param	rank			The rank of the individual values.
+* \param	dim			The dimensions of individual indexed
+* 					values.
+* \param	vType			The type of the data in the individual
+* 					values.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzPointValues	*WlzMakePointValues(size_t nP,
+                                    int rank, int *dim, WlzGreyType vType,
+				    WlzErrorNum *dstErr)
+{
+  int		pSz,
+  		gSz = 0,
+  		nDat = 0;
+  WlzPointValues *pv = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  /* Check parameters and compute the number of individual values per point. */
+  if((nP == 0) || (rank < 0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if(rank == 0)
+  {
+    nDat = 1;
+  }
+  else
+  {
+    if(dim[0] < 1)
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+    else
+    {
+      int	idx;
+
+      nDat = dim[0];
+      for(idx = 1; idx < rank; ++idx)
+      {
+	if(dim[idx] < 1)
+	{
+	  errNum = WLZ_ERR_PARAM_DATA;
+	  break;
+	}
+	nDat *= dim[idx];
+      }
+    }
+  }
+  /* Compute individual value size. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((vType == WLZ_GREY_BIT) ||
+       ((gSz = WlzGreySize(vType)) == 0))
+    {
+      errNum = WLZ_ERR_GREY_TYPE;
+    }
+  }
+  /* Allocate the point value table. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    pSz = gSz * nDat;
+    /* No dimension array allocated if rank == 0. */
+    if(((pv = (WlzPointValues *)
+              AlcCalloc(1, sizeof(WlzPointValues))) == NULL) ||
+       ((pv->values.v = AlcCalloc(nP, pSz)) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else if((rank > 0) &&
+            ((pv->dim = (int *)AlcMalloc(rank * sizeof(int))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idx;
+
+    pv->type = WLZ_POINT_VALUES;
+    pv->rank = rank;
+    pv->vType = vType;
+    pv->pSz = pSz;
+    for(idx = 0; idx < rank; ++idx)
+    {
+      pv->dim[idx] = dim[idx];
+    }
+    pv->maxPoints = nP;
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreePointValues(pv);
+    pv = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pv);
+}
+
 /*! 
 * \ingroup      WlzAllocation
 * \brief        Make a polygon domain, allocating space and copying as

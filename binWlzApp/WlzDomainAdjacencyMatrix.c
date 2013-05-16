@@ -174,16 +174,16 @@ int main(
   char  **argv)
 {
   FILE		*infileDomains, *infile, *outfile;
-  char 		optList[] = "a:f:hv";
+  char 		optList[] = "a:f:thv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
-  int		verboseFlg=0;
+  int		verboseFlg=0, tickFlg=0;
   WlzObject	**domains;
   int		numDomains;
   WlzObject	*obj, *obj1, *testDomain;
   WlzObjectType	objType;
   int		dim=0;
-  WlzObject	**structElements;
+  WlzObject	**structElements, **refDomains;
   int		i, j, radius;
   int		rMin=-10, rMax=100, rStep=1;
   int		adjVal;
@@ -223,6 +223,10 @@ int main(
 	return 1;
       }
       break; 
+
+    case 't':
+      tickFlg = 1;
+      break;
 
     case 'v':
       verboseFlg = 1;
@@ -300,6 +304,10 @@ int main(
   /* the first row is the set of radii for which the intersection volume is calculated */
   /* output radii and calculate structuring element */
   structElements = (WlzObject **) malloc(sizeof(WlzObject *) * ((rMax - rMin)/rStep + 2));
+  refDomains = (WlzObject **) malloc(sizeof(WlzObject *) * ((rMax - rMin)/rStep + 2));
+  if( tickFlg ) {
+    fprintf(stderr, "Make structuring elements and dilate testdomain:");
+  }
   for( radius=rMin, i=0; radius <= rMax; radius += rStep, i++){
 
     /* output the radius */
@@ -309,7 +317,7 @@ int main(
       fprintf(outfile, "%d, ", radius);
     }
 
-    /* create the structuring element for the erosion/dilation */
+    /* create the structuring element for the erosion/dilation and dilate the reference domain */
     if( radius < 0 ){
       switch( dim ){
       case 2:
@@ -320,6 +328,12 @@ int main(
 	break;
       }
       structElements[i] = WlzAssignObject(obj, &errNum);
+      if( (obj = WlzStructErosion( testDomain, structElements[i], &errNum)) ){
+	refDomains[i] = WlzAssignObject(obj, &errNum);
+      }
+      else {
+	refDomains[i] = NULL;
+      }
     }
     else if (radius > 0 ){
       switch( dim ){
@@ -331,40 +345,43 @@ int main(
 	break;
       }
       structElements[i] = WlzAssignObject(obj, &errNum);
+      if( (obj = WlzStructDilation( testDomain, structElements[i], &errNum)) ){
+	refDomains[i] = WlzAssignObject(obj, &errNum);
+      }
+      else {
+	refDomains[i] = NULL;
+      }
     }
     else {
       structElements[i] = NULL;
+      refDomains[i] = WlzAssignObject(testDomain, &errNum);
+    }
+
+    /* tickFlg to give feedback of progress */
+    if( tickFlg ) {
+      fprintf(stderr, ".");
     }
   }
+  if( tickFlg ){
+    fprintf(stderr, "done\n");
+  }
 
-  /* now erode/dilate as required and calculate intersection volume */
-  for( radius=rMin, i=0; radius <= rMax; radius += rStep, i++){
-    for( j=0; j < numDomains; j++){
+  /* now calculate intersection volume */
+  for( j=0; j < numDomains; j++){
+    if( tickFlg ) {
+      fprintf(stderr, "Calc Adjacencies index=%d:", j);
+    }
+    for( radius=rMin, i=0; radius <= rMax; radius += rStep, i++){
       adjVal = 0;
-      if( radius < 0 ){
-	if( (obj = WlzStructErosion( domains[j], structElements[i], &errNum)) ){
-	  if( (obj1 = WlzIntersect2(testDomain, obj, &errNum)) ){
-	    adjVal = WlzSize(obj1, &errNum);
-	    errNum = WlzFreeObj(obj1);
-	  }
-	  errNum = WlzFreeObj(obj);
-	}
-      } else if( radius > 0 ){
-	if( (obj = WlzStructDilation( domains[j], structElements[i], &errNum)) ){
-	  if( (obj1 = WlzIntersect2(testDomain, obj, &errNum)) ){
-	    adjVal = WlzSize(obj1, &errNum);
-	    errNum = WlzFreeObj(obj1);
-	  }
-	  errNum = WlzFreeObj(obj);
-	}
-      } else {
-	if( (obj1 = WlzIntersect2(testDomain, domains[j], &errNum)) ){
+      if( refDomains[i] != NULL ){
+	if( (obj1 = WlzIntersect2(refDomains[i], domains[j], &errNum)) ){
 	  adjVal = WlzSize(obj1, &errNum);
 	  errNum = WlzFreeObj(obj1);
 	}
-      }
+      }	
+
       if( verboseFlg ){
-	fprintf(stderr, "%s: radius=%d, domainIndx=%s, adjVal=%d\n", argv[0], radius, j, adjVal);
+	fprintf(stderr, "%s: radius=%d, domainIndx=%d, adjVal=%d\n", argv[0], radius, j, adjVal);
       }
 
       if ( (radius + rStep) > rMax ){
@@ -372,6 +389,14 @@ int main(
       } else {
 	fprintf(outfile, "%d, ", adjVal);
       }
+      if( tickFlg ){
+	fprintf(stderr, ".");
+      }
+
+    }
+
+    if( tickFlg ){
+      fprintf(stderr, "completed index\n");
     }
 
     if( verboseFlg ){

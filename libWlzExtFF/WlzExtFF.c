@@ -55,36 +55,37 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
   unsigned int	fileFmt;
 
   if(WlzStringMatchValue((int *)&fileFmt, extStr,
-			 "am",    WLZEFF_FORMAT_AM,
-			 "bmp",   WLZEFF_FORMAT_BMP,
-			 "den",   WLZEFF_FORMAT_DEN,
-			 "emt",   WLZEFF_FORMAT_EMT,
-			 "gif",   WLZEFF_FORMAT_GIF,
-			 "hdr",   WLZEFF_FORMAT_ANL,
-			 "ics",   WLZEFF_FORMAT_ICS,
-			 "ids",   WLZEFF_FORMAT_ICS,
-			 "img",   WLZEFF_FORMAT_ANL,
-			 "ipl",   WLZEFF_FORMAT_IPL,
-			 "jpeg",  WLZEFF_FORMAT_JPEG,
-			 "jpg",   WLZEFF_FORMAT_JPEG,
-			 "mesh",  WLZEFF_FORMAT_MESH,
-			 "nii",   WLZEFF_FORMAT_NIFTI,
-			 "node",  WLZEFF_FORMAT_NODEELE,
-			 "obj",   WLZEFF_FORMAT_OBJ,
-			 "pgm",   WLZEFF_FORMAT_PNM,
-			 "pic",   WLZEFF_FORMAT_PIC,
-			 "ply2",  WLZEFF_FORMAT_PLY2,
-			 "pnm",   WLZEFF_FORMAT_PNM,
-			 "raw",   WLZEFF_FORMAT_RAW,
-			 "slc",   WLZEFF_FORMAT_SLC,
-			 "smesh", WLZEFF_FORMAT_SMESH,
-			 "stl",   WLZEFF_FORMAT_STL,
-			 "tif",   WLZEFF_FORMAT_TIFF,
-			 "txt",   WLZEFF_FORMAT_TXT,
-			 "vmesh", WLZEFF_FORMAT_VMESH,
-			 "vff",   WLZEFF_FORMAT_VFF,
-			 "vtk",   WLZEFF_FORMAT_VTK,
-			 "wlz",   WLZEFF_FORMAT_WLZ,
+			 "am",     WLZEFF_FORMAT_AM,
+			 "bmp",    WLZEFF_FORMAT_BMP,
+			 "den",    WLZEFF_FORMAT_DEN,
+			 "emt",    WLZEFF_FORMAT_EMT,
+			 "gif",    WLZEFF_FORMAT_GIF,
+			 "hdr",    WLZEFF_FORMAT_ANL,
+			 "ics",    WLZEFF_FORMAT_ICS,
+			 "ids",    WLZEFF_FORMAT_ICS,
+			 "img",    WLZEFF_FORMAT_ANL,
+			 "ipl",    WLZEFF_FORMAT_IPL,
+			 "jpeg",   WLZEFF_FORMAT_JPEG,
+			 "jpg",    WLZEFF_FORMAT_JPEG,
+			 "mesh",   WLZEFF_FORMAT_MESH,
+			 "nii",    WLZEFF_FORMAT_NIFTI,
+			 "node",   WLZEFF_FORMAT_NODEELE,
+			 "obj",    WLZEFF_FORMAT_OBJ,
+			 "pgm",    WLZEFF_FORMAT_PNM,
+			 "pic",    WLZEFF_FORMAT_PIC,
+			 "ply2",   WLZEFF_FORMAT_PLY2,
+			 "pnm",    WLZEFF_FORMAT_PNM,
+			 "pvl.nc", WLZEFF_FORMAT_PVL,
+			 "raw",    WLZEFF_FORMAT_RAW,
+			 "slc",    WLZEFF_FORMAT_SLC,
+			 "smesh",  WLZEFF_FORMAT_SMESH,
+			 "stl",    WLZEFF_FORMAT_STL,
+			 "tif",    WLZEFF_FORMAT_TIFF,
+			 "txt",    WLZEFF_FORMAT_TXT,
+			 "vmesh",  WLZEFF_FORMAT_VMESH,
+			 "vff",    WLZEFF_FORMAT_VFF,
+			 "vtk",    WLZEFF_FORMAT_VTK,
+			 "wlz",    WLZEFF_FORMAT_WLZ,
 			 NULL) == 0)
   {
     fileFmt = (unsigned int )WLZEFF_FORMAT_NONE;
@@ -121,6 +122,7 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
 	 "PNM", WLZEFF_FORMAT_PNM,
 	 "Raw", WLZEFF_FORMAT_RAW,
 	 "Riken PLY2", WLZEFF_FORMAT_PLY2,
+	 "Drishti dot NC format", WLZEFF_FORMAT_PVL,
 	 "SLC", WLZEFF_FORMAT_SLC,
 	 "Stanford Density", WLZEFF_FORMAT_DEN,
 	 "Stereolithography format", WLZEFF_FORMAT_STL,
@@ -182,6 +184,8 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
   		*fmtPicStr  = "BioRad Confocal",
   		*extPly2Str = "ply2",
   		*fmtPly2Str = "Riken PLY2",
+  		*extPvlStr  = "pvl.nc",
+  		*fmtPvlStr  = "Drishti dot NC format",
 		*extRawStr  = "raw",
 		*fmtRawStr  = "Raw",
   		*extSlcStr  = "slc",
@@ -232,6 +236,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     case WLZEFF_FORMAT_PNM:
       fmtStr = fmtPnmStr;
       extStr = extPnmStr;
+      break;
+    case WLZEFF_FORMAT_PVL:
+      fmtStr = fmtPvlStr;
+      extStr = extPvlStr;
       break;
     case WLZEFF_FORMAT_PIC:
       fmtStr = fmtPicStr;
@@ -339,7 +347,7 @@ WlzEffFormat 	WlzEffStringFormatFromFileName(const char *fNameStr)
      (*(fNameStr + len - 1) != '/'))     /* Directory not plain file. */
   {
     sep = strrchr(fNameStr, '/');
-    if(((dot = strrchr(fNameStr, '.')) != NULL) &&
+    if(((dot = strchr(fNameStr, '.')) != NULL) &&
        ((sep == NULL) || ((dot - sep) > 1)))
     {
       ext = ++dot;
@@ -358,9 +366,9 @@ WlzEffFormat 	WlzEffStringFormatFromFileName(const char *fNameStr)
 * \brief	Reads a woolz object from the the given file names(s)
 *		or opened file, where the file format is that given as a
 *		parameter.
-*		The file ANL, ICS and PNM formats require a file name, for all
-*		other formats either the file name or a file pointer may be
-*		given.
+*		The ANL, ICS, PNM (and a few other multi file formats)
+*		require a file name, for all other formats either the
+*		file name or a file pointer may be given.
 * \param	fP			Input file.
 * \param	fName			File name (and path).
 * \param	fFmt			File format.
@@ -452,6 +460,9 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
 	break;
       case WLZEFF_FORMAT_PLY2:
 	obj = WlzEffReadObjPly2(fP, &errNum);
+	break;
+      case WLZEFF_FORMAT_PVL:
+	obj = WlzEffReadObjPvl(fName, &errNum);
 	break;
       case WLZEFF_FORMAT_SLC:
 	obj = WlzEffReadObjSlc(fP, &errNum);
@@ -598,6 +609,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 	break;
       case WLZEFF_FORMAT_PLY2:
 	errNum = WlzEffWriteObjPly2(fP, obj);
+	break;
+      case WLZEFF_FORMAT_PVL:
+	errNum = WlzEffWriteObjPvl(fName, obj);
 	break;
       case WLZEFF_FORMAT_SLC:
 	errNum = WlzEffWriteObjSlc(fP, obj);

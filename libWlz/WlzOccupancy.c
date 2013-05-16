@@ -39,6 +39,7 @@ static char _WlzOccupancy_c[] = "University of Edinburgh $Id$";
 * \ingroup	WlzFeatures
 */
 
+#include <limits.h>
 #include <float.h>
 #include <Wlz.h>
 
@@ -301,12 +302,12 @@ WlzObject	*WlzDomainOccupancy(WlzObject *gObj, WlzErrorNum *dstErr)
   else
   {
     WlzPixelV	gV,
-    		bgdV;
+    		zeroV;
     WlzObjectType tType;
 
-    bgdV.v.inv = 0;
-    bgdV.type = gV.type = WLZ_GREY_INT;
-    tType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
+    zeroV.v.ubv = 0;
+    zeroV.type = gV.type = WLZ_GREY_UBYTE;
+    tType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_UBYTE, NULL);
     switch(gObj->type)
     {
       case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
@@ -314,7 +315,11 @@ WlzObject	*WlzDomainOccupancy(WlzObject *gObj, WlzErrorNum *dstErr)
 	/* Easy for a simple spatial domain object, just create a new
 	 * object with the same domain and all values in it set to 1. */
 	gV.v.inv = 1;
-	oObj = WlzNewObjectValues(gObj, tType, bgdV, 1, gV, &errNum);
+	oObj = WlzNewObjectValues(gObj, tType, zeroV, 1, gV, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzGreySetValue(oObj, zeroV);
+	}
         break;
       case WLZ_COMPOUND_ARR_1: /* FALLTHROUGH */
       case WLZ_COMPOUND_ARR_2:
@@ -326,11 +331,26 @@ WlzObject	*WlzDomainOccupancy(WlzObject *gObj, WlzErrorNum *dstErr)
 	  cObj = (WlzCompoundArray *)gObj;
 	  /* Compute the union of the compound object's domains and set it's
 	   * values to 0. */
-	  gV.v.inv = 0;
+	  if(cObj->n > SHRT_MAX)
+	  {
+	    zeroV.v.inv = 0;
+	    zeroV.type = gV.type = WLZ_GREY_INT;
+	    tType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
+	  }
+	  else if(cObj->n > 255)
+	  {
+	    zeroV.v.shv = 0;
+	    zeroV.type = gV.type = WLZ_GREY_SHORT;
+	    tType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_SHORT, NULL);
+	  }
 	  uObj = WlzUnionN(cObj->n, cObj->o, 0, &errNum);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    oObj = WlzNewObjectValues(uObj, tType, bgdV, 1, gV, &errNum);
+	    oObj = WlzNewObjectValues(uObj, tType, zeroV, 1, gV, &errNum);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzGreySetValue(oObj, zeroV);
 	  }
 	  (void )WlzFreeObj(uObj);
 	  /* For each object of the compound object, increment all values

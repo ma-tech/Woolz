@@ -977,6 +977,7 @@ static WlzErrorNum WlzImageArithmetic3D(WlzObject *obj0, WlzObject *obj1,
     if(obj[2]->type != WLZ_EMPTY_OBJ)
     {
       pIdx[2] = 0;
+      vIdx[2] = 0;
       tI0 = obj[2]->domain.p->plane1;
       for(oIdx = 0; (oIdx < 2) && (errNum == WLZ_ERR_NONE); ++oIdx)
       {

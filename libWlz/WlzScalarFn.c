@@ -86,6 +86,10 @@ static void			WlzScalarFnItvInvSqrt(
 				  WlzGreyP gValP,
 				  WlzGreyType gType,
 				  int len);
+static void			WlzScalarFnItvSqr(
+				  WlzGreyP gValP,
+				  WlzGreyType gType,
+				  int len);
 
 /*!
 * \return	New domain object.
@@ -152,7 +156,6 @@ WlzObject	*WlzScalarFn(WlzObject *sObj, WlzFnType fn,
 static WlzObject *WlzScalarFn2D(WlzObject *sObj, WlzFnType fn,
 			        WlzErrorNum *dstErr)
 {
-  int		len;
   WlzGreyType	sGType,
   		dGType;
   WlzPixelV	sBgd,
@@ -206,10 +209,15 @@ static WlzObject *WlzScalarFn2D(WlzObject *sObj, WlzFnType fn,
           ((errNum = WlzNextGreyInterval(&sIWSp)) == WLZ_ERR_NONE) &&
           ((errNum = WlzNextGreyInterval(&dIWSp)) == WLZ_ERR_NONE))
     {
+      int	len;
+      WlzGreyP	dGP,
+      		sGP;
+
       len = sIWSp.rgtpos - sIWSp.lftpos + 1;
-      WlzValueCopyGreyToGrey(dGWSp.u_grintptr, 0, dGType,
-                             sGWSp.u_grintptr, 0, sGType, len);
-      WlzScalarFnItv(dGWSp.u_grintptr, dGType, len, fn);
+      dGP = dGWSp.u_grintptr;
+      sGP = sGWSp.u_grintptr;
+      WlzValueCopyGreyToGrey(dGP, 0, dGType, sGP, 0, sGType, len);
+      WlzScalarFnItv(dGP, dGType, len, fn);
     }
     if(errNum == WLZ_ERR_EOO)
     {
@@ -264,7 +272,7 @@ static WlzObject *WlzScalarFn3D(WlzObject *sObj, WlzFnType fn,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    for(idx = sObj->domain.p->plane1; idx < sObj->domain.p->lastpl; ++idx)
+    for(idx = sObj->domain.p->plane1; idx <= sObj->domain.p->lastpl; ++idx)
     {
       off = idx - sObj->domain.p->plane1;
       dObj2D = NULL;
@@ -331,6 +339,7 @@ static WlzGreyType WlzScalarFnPromoteGType(WlzFnType fn, WlzGreyType gType,
     case WLZ_FN_SCALAR_LOG:     /* FALLTHROUGH */
     case WLZ_FN_SCALAR_SQRT:    /* FALLTHROUGH */
     case WLZ_FN_SCALAR_INVSQRT:
+    case WLZ_FN_SCALAR_SQR:
       gType = WLZ_GREY_DOUBLE;
       break;
     default:
@@ -438,6 +447,9 @@ static void	WlzScalarFnItv(WlzGreyP gValP, WlzGreyType gType, int len,
       break;
     case WLZ_FN_SCALAR_INVSQRT:
       WlzScalarFnItvInvSqrt(gValP, gType, len);
+      break;
+    case WLZ_FN_SCALAR_SQR:
+      WlzScalarFnItvSqr(gValP, gType, len);
       break;
     default:
       break;
@@ -606,6 +618,32 @@ static void	WlzScalarFnItvInvSqrt(WlzGreyP gValP, WlzGreyType gType, int len)
       {
 	tD0 = sqrt(fabs(*(gValP.dbp)));
         *(gValP.dbp)++ = (tD0 > DBL_EPSILON)? 1.0 / tD0: DBL_MAX;
+      }
+    default:
+      /* Should only have WLZ_GREY_DOUBLE! */
+      break;
+  }
+}
+
+/*!
+* \ingroup	WlzArithmetic
+* \brief	Applies a square function(ie x^2) to data in the buffer.
+* \param	gValP			Buffer pointer.
+* \param	gType			Grey type.
+* \param	len			Interval buffer length.
+*/
+static void	WlzScalarFnItvSqr(WlzGreyP gValP, WlzGreyType gType, int len)
+{
+  int		idx;
+  double	tD0;
+
+  switch(gType)
+  {
+    case WLZ_GREY_DOUBLE:
+      for(idx = 0; idx < len; ++idx)
+      {
+	tD0 = *(gValP.dbp) * *(gValP.dbp);
+        *(gValP.dbp)++ = tD0;
       }
     default:
       /* Should only have WLZ_GREY_DOUBLE! */

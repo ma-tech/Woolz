@@ -59,7 +59,6 @@ WlzErrorNum WlzGreySetValue(
   WlzObject	*obj,
   WlzPixelV	val)
 {
-  WlzObject		*tmpObj;
   WlzIntervalWSpace	iwsp;
   WlzGreyWSpace		gwsp;
   WlzGreyP		gptr;
@@ -104,17 +103,46 @@ WlzErrorNum WlzGreySetValue(
 	domains = obj->domain.p->domains;
 	values = obj->values.vox->values;
 	nplanes = obj->domain.p->lastpl - obj->domain.p->plane1 + 1;
-	for(i=0; (errNum == WLZ_ERR_NONE) && (i < nplanes);
-	    i++, domains++, values++){
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+	for(i = 0; i < nplanes; ++i)
+	{
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    WlzDomain    *doms;
+	    WlzValues    *vals;
+	    WlzErrorNum  errNum2D = WLZ_ERR_NONE;
 
-	  if( (*domains).core == NULL || (*values).core == NULL ){
-	    continue;
-	  }
+	    doms = domains + i;
+	    vals = values + i;
+	    if(((*doms).core != NULL) && ((*vals).core != NULL))
+	    {
+	      WlzObject *obj2D = NULL;
 
-	  if((tmpObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
-				    NULL, NULL,	NULL)) != NULL){
-	    errNum = WlzGreySetValue(tmpObj, val);
-	    WlzFreeObj( tmpObj );
+	      if((obj2D = WlzAssignObject(
+		      WlzMakeMain(WLZ_2D_DOMAINOBJ, *doms, *vals,
+			NULL, NULL,
+			&errNum2D), NULL)) != NULL)
+	      {
+		errNum2D = WlzGreySetValue(obj2D, val);
+	        (void )WlzFreeObj(obj2D);
+	      }
+#ifdef _OPENMP
+	      {
+		if(errNum2D != WLZ_ERR_NONE)
+		{
+#pragma omp critical
+		  {
+		    if(errNum == WLZ_ERR_NONE)
+		    {
+		      errNum = errNum2D;
+		    }
+		  }
+		}
+	      }
+#endif
+	    }
 	  }
 	}
       }
