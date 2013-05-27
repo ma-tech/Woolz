@@ -85,6 +85,7 @@ JWlzStructList		= \
 			WlzIndexedValues.java \
 			WlzTiledValues.java \
 			WlzLUTValues.java \
+			WlzPointValues.java \
 			WlzPoints.java \
 			WlzPolygonDomain.java \
 			WlzPolygonDomain3.java \
