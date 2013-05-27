@@ -52,7 +52,7 @@ WlzBasisFnTransformObj - computes and applies Woolz basis function transforms.
 WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
 		       [-m<min mesh dist>] [-M<max mesh dist>]
 		       [-b<basis fn transform>] [-Y<order of polynomial>]
-		       [-D<flags>]
+		       [-D<flags>] [-P<param>]
 		       [-d] [-g] [-h] [-q] [-Q] [-s] [-t] [-y]
 		       [-B] [-C] [-G] [-L] [-N] [-T]
 		       [<in object>]
@@ -140,6 +140,10 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-P</b></td>
+    <td>Basis function parameter (eg MQ delta value).</td>
   </tr>
   <tr> 
     <td><b>-q</b></td>
@@ -254,6 +258,7 @@ extern int      optind,
 int             main(int argc, char **argv)
 {
   int		option,
+		nBasisFnParam = 0,
   		nTiePP = 0,
 		dim = 0,                /* Dimension will be set by objects. */
 		cdt = 0,
@@ -266,7 +271,8 @@ int             main(int argc, char **argv)
 		restrictToBasisFn = 0,
 		ok = 1,
 		usage = 0;
-  double	meshMinDist = 20.0,
+  double	basisFnParam = 0.001,
+  		meshMinDist = 20.0,
   		meshMaxDist = 40.0;
   WlzVertexP	vxA0,
   		vxA1;
@@ -289,7 +295,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   const int	delOut = 1;
   const char    *errMsg;
-  static char	optList[] = "b:m:o:p:t:D:M:Y:cdghqsyBCGLNQRTU",
+  static char	optList[] = "b:m:o:p:t:D:M:P:Y:cdghqsyBCGLNQRTU",
   		inObjFileStrDef[] = "-",
 		outObjFileStrDef[] = "-";
 
@@ -357,6 +363,16 @@ int             main(int argc, char **argv)
 	break;
       case 'q':
         basisFnType = WLZ_FN_BASIS_2DMQ;
+	break;
+      case 'P':
+        if(sscanf(optarg, "%lg", &basisFnParam) == 1)
+	{
+	  nBasisFnParam = 1;
+	}
+	else
+	{
+	  usage = 1;
+	}
 	break;
       case 'Q':
         basisFnType = WLZ_FN_BASIS_2DIMQ;
@@ -672,32 +688,36 @@ int             main(int argc, char **argv)
 	{
 	  if(dim == 2)
 	  {
-	    basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
-					   nTiePP, vxA0.d2, nTiePP, vxA1.d2,
-					   (cdt)? meshTr.obj->domain.cm2: NULL,
-					   &errNum);
+	    basisTr = WlzBasisFnTrFromCPts2DParam(
+				basisFnType, basisFnPolyOrder,
+				nTiePP, vxA0.d2, nTiePP, vxA1.d2,
+				(cdt)? meshTr.obj->domain.cm2: NULL,
+				nBasisFnParam, &basisFnParam, &errNum);
 	  }
 	  else /* dim == 3 */
 	  {
-	    basisTr = WlzBasisFnTrFromCPts3D(basisFnType, basisFnPolyOrder,
-					   nTiePP, vxA0.d3, nTiePP, vxA1.d3,
-					   (cdt)? meshTr.obj->domain.cm3: NULL,
-					   &errNum);
+	    basisTr = WlzBasisFnTrFromCPts3DParam(
+	    			basisFnType, basisFnPolyOrder,
+				nTiePP, vxA0.d3, nTiePP, vxA1.d3,
+				(cdt)? meshTr.obj->domain.cm3: NULL,
+				nBasisFnParam, &basisFnParam, &errNum);
 	  }
 	}
 	else
 	{
 	  if(dim == 2)
 	  {
-	    basisTr = WlzBasisFnTrFromCPts2D(basisFnType, basisFnPolyOrder,
-	    				     nTiePP, vxA1.d2, nTiePP, vxA0.d2,
-					     tarMesh.m2, &errNum);
+	    basisTr = WlzBasisFnTrFromCPts2DParam(
+	    			basisFnType, basisFnPolyOrder,
+	    			nTiePP, vxA1.d2, nTiePP, vxA0.d2, tarMesh.m2,
+				nBasisFnParam, &basisFnParam, &errNum);
 	  }
 	  else /* dim == 3 */
 	  {
-	    basisTr = WlzBasisFnTrFromCPts3D(basisFnType, basisFnPolyOrder,
-	    				     nTiePP, vxA1.d3, nTiePP, vxA0.d3,
-					     tarMesh.m3, &errNum);
+	    basisTr = WlzBasisFnTrFromCPts3DParam(
+	    			basisFnType, basisFnPolyOrder,
+	    			nTiePP, vxA1.d3, nTiePP, vxA0.d3, tarMesh.m3,
+				nBasisFnParam, &basisFnParam, &errNum);
 	  }
 	}
 	if(errNum != WLZ_ERR_NONE)
@@ -879,9 +899,9 @@ int             main(int argc, char **argv)
     " [-o<out object>] [-p<tie points file>]\n"
     "                  [-m<min mesh dist>] [-M<max mesh dist>]\n"
     "                  [-b<basis fn transform>] [-Y<order of polynomial>]\n"
-    "                  [-D<flags>]\n"
+    "                  [-D<flags>] [-P<param>]\n"
     "                  [-d] [-g] [-h] [-q] [-s] [-t] [-y]\n"
-    "                  [-B] [-C] [-G] [-L] [-N] [-T]\n"
+    "                  [-B] [-C] [-G] [-L] [-N] [-Q] [-T]\n"
     "                  [<in object>]\n"
     "Version: ",
     WlzVersion(),
@@ -914,6 +934,7 @@ int             main(int argc, char **argv)
     "  -g  Use Gaussian basis function if tie points are given.\n"
     "  -h  Help, prints this usage message.\n"
     "  -q  Use multi-quadric basis function if tie points are given.\n"
+    "  -P  Basis function parameter (eg MQ delta value).\n"
     "  -Q  Use inverse-multi-quadric basis function if tie points are given.\n"
     "  -s  Use thin plate spline basis function (default) if tie points\n"
     "      are given.\n"
