@@ -52,7 +52,8 @@ public class WlzLabelTest
 
 	if(firstPass)
 	{
-	  int idx, area;
+	  int idx;
+	  long area;
 	  String inFile = args[optIdx];
 	  WlzFileStream in = new WlzFileInputStream(args[optIdx]);
 	  WlzObject inObj = WlzObject.WlzReadObj(in);
