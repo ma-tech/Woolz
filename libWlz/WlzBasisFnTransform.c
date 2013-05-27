@@ -835,6 +835,50 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzObject *mObj,
         break;
     }
   }
+#ifdef WLZ_CMESH_DEBUG_MESH_DSP_ERR
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE,
+    		maxElmIdx;
+
+    maxElmIdx = mesh->res.elm.maxEnt;
+    for(idE = 0; idE < maxElmIdx; ++idE)
+    {
+      WlzCMeshElm2D *elm;
+
+      elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	double		erf,
+			lenB,
+			lenD;
+	WlzDVertex2	cPos,
+			cDspB,
+			cDspM;
+        WlzCMeshNod2D	*nods[3];
+	
+	WLZ_VTX_2_ZERO(cPos);
+	WLZ_VTX_2_ZERO(cDspM);
+	WlzCMeshElmGetNodes2D(elm, nods + 0, nods + 1, nods + 2);
+	for(idN = 0; idN < 3; ++idN)
+	{
+	  nod = nods[idN];
+	  dsp = (double *)WlzIndexedValueGet(ixv, nod->idx);
+	  WLZ_VTX_2_ADD(cPos, cPos, nod->pos);
+	  cDspM.vtX += dsp[0]; cDspM.vtY += dsp[1];
+	}
+	WLZ_VTX_2_SCALE(cPos, cPos, (1.0 / 3.0));
+	WLZ_VTX_2_SCALE(cDspM, cDspM, (1.0 / 3.0));
+	cDspB = WlzBasisFnValueMQ2D(basisTr->basisFn, cPos);
+	WLZ_VTX_2_SUB(cDspM, cDspB, cDspM);
+	lenB = WLZ_VTX_2_LENGTH(cDspB);
+	lenD = WLZ_VTX_2_LENGTH(cDspM);
+	erf = (lenB > WLZ_MESH_TOLERANCE)? lenD / lenB: 0.0;
+	(void )fprintf(stderr, "WlzBasisFnSetCMesh2D %d %lg\n", idE, erf);
+      }
+    }
+  }
+#endif /* WLZ_CMESH_DEBUG_MESH_DSP_ERR */
   return(errNum);
 }
 
@@ -940,6 +984,50 @@ WlzErrorNum    	WlzBasisFnSetCMesh3D(WlzObject *mObj,
 	break;
     }
   }
+#ifdef WLZ_CMESH_DEBUG_MESH_DSP_ERR
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idE,
+    		maxElmIdx;
+
+    maxElmIdx = mesh->res.elm.maxEnt;
+    for(idE = 0; idE < maxElmIdx; ++idE)
+    {
+      WlzCMeshElm3D *elm;
+
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+      if(elm->idx >= 0)
+      {
+	double		erf,
+			lenB,
+			lenD;
+	WlzDVertex3	cPos,
+			cDspB,
+			cDspM;
+        WlzCMeshNod3D	*nods[4];
+	
+	WLZ_VTX_3_ZERO(cPos);
+	WLZ_VTX_3_ZERO(cDspM);
+	WlzCMeshElmGetNodes3D(elm, nods + 0, nods + 1, nods + 2, nods + 3);
+	for(idN = 0; idN < 4; ++idN)
+	{
+	  nod = nods[idN];
+	  dsp = (double *)WlzIndexedValueGet(ixv, nod->idx);
+	  WLZ_VTX_3_ADD(cPos, cPos, nod->pos);
+	  cDspM.vtX += dsp[0]; cDspM.vtY += dsp[1]; cDspM.vtZ += dsp[2];
+	}
+	WLZ_VTX_3_SCALE(cPos, cPos, (1.0 / 4.0));
+	WLZ_VTX_3_SCALE(cDspM, cDspM, (1.0 / 4.0));
+	cDspB = WlzBasisFnValueMQ3D(basisTr->basisFn, cPos);
+	WLZ_VTX_3_SUB(cDspM, cDspB, cDspM);
+	lenB = WLZ_VTX_3_LENGTH(cDspB);
+	lenD = WLZ_VTX_3_LENGTH(cDspM);
+	erf = (lenB > WLZ_MESH_TOLERANCE)? lenD / lenB: 0.0;
+	(void )fprintf(stderr, "WlzBasisFnSetCMesh3D %d %lg\n", idE, erf);
+      }
+    }
+  }
+#endif /* WLZ_CMESH_DEBUG_MESH_DSP_ERR */
   return(errNum);
 }
 
