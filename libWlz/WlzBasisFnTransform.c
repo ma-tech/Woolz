@@ -40,6 +40,8 @@ static char _WlzBasisFnTransform_c[] = "University of Edinburgh $Id$";
 * \ingroup	WlzTransform
 */
 
+#define WLZ_CMESH_DEBUG_MESH_DSP_ERR /* HACK */
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
@@ -869,12 +871,29 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzObject *mObj,
 	}
 	WLZ_VTX_2_SCALE(cPos, cPos, (1.0 / 3.0));
 	WLZ_VTX_2_SCALE(cDspM, cDspM, (1.0 / 3.0));
-	cDspB = WlzBasisFnValueMQ2D(basisTr->basisFn, cPos);
+	switch(basisTr->basisFn->type)
+	{
+	  case WLZ_FN_BASIS_2DGAUSS:
+	    cDspB = WlzBasisFnValueGauss2D(basisTr->basisFn, cPos);
+	    break;
+          case WLZ_FN_BASIS_2DIMQ:
+	    cDspB = WlzBasisFnValueIMQ2D(basisTr->basisFn, cPos);
+	    break;
+          case WLZ_FN_BASIS_2DMQ:
+	    cDspB = WlzBasisFnValueMQ2D(basisTr->basisFn, cPos);
+	    break;
+          case WLZ_FN_BASIS_2DTPS:
+	    cDspB = WlzBasisFnValueTPS2D(basisTr->basisFn, cPos);
+	    break;
+	  default:
+	    break;
+	}
 	WLZ_VTX_2_SUB(cDspM, cDspB, cDspM);
 	lenB = WLZ_VTX_2_LENGTH(cDspB);
 	lenD = WLZ_VTX_2_LENGTH(cDspM);
 	erf = (lenB > WLZ_MESH_TOLERANCE)? lenD / lenB: 0.0;
-	(void )fprintf(stderr, "WlzBasisFnSetCMesh2D %d %lg\n", idE, erf);
+	(void )fprintf(stderr, "WlzBasisFnSetCMesh2D %d %lg %lg %lg\n",
+	               idE, lenB, lenD, erf);
       }
     }
   }
@@ -1018,7 +1037,17 @@ WlzErrorNum    	WlzBasisFnSetCMesh3D(WlzObject *mObj,
 	}
 	WLZ_VTX_3_SCALE(cPos, cPos, (1.0 / 4.0));
 	WLZ_VTX_3_SCALE(cDspM, cDspM, (1.0 / 4.0));
-	cDspB = WlzBasisFnValueMQ3D(basisTr->basisFn, cPos);
+	switch(basisTr->basisFn->type)
+	{
+          case WLZ_FN_BASIS_3DIMQ:
+	    cDspB = WlzBasisFnValueIMQ3D(basisTr->basisFn, cPos);
+	    break;
+          case WLZ_FN_BASIS_3DMQ:
+	    cDspB = WlzBasisFnValueMQ3D(basisTr->basisFn, cPos);
+	    break;
+	  default:
+	    break;
+	}
 	WLZ_VTX_3_SUB(cDspM, cDspB, cDspM);
 	lenB = WLZ_VTX_3_LENGTH(cDspB);
 	lenD = WLZ_VTX_3_LENGTH(cDspM);
