@@ -54,7 +54,7 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
 		       [-b<basis fn transform>] [-Y<order of polynomial>]
 		       [-D<flags>] [-P<param>]
 		       [-d] [-g] [-h] [-q] [-Q] [-s] [-t] [-y]
-		       [-B] [-C] [-G] [-L] [-N] [-T]
+		       [-B] [-C] [-G] [-L] [-N] [-R] [-S] [-T]
 		       [<in object>]
 \endverbatim
 \par Options
@@ -158,6 +158,10 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
     <td>Use thin plate spline basis function (default) if tie points
         are given.</td>
   </tr>
+  <tr> 
+    <td><b>-S</b></td>
+    <td>Snap tie point to mesh (only valid for conforming meshes).</td>
+  </tr>
   <tr>
     <td><b>-t</b></td>
     <td>Target mesh. Only valid for conforming meshes. If given then the
@@ -238,7 +242,8 @@ static WlzErrorNum 		WlzBFTOGetVertices2D(
 				  FILE *fP,
 				  WlzCMesh2D *tMesh,
 				  const char *prog,
-				  const char *fStr);
+				  const char *fStr,
+				  int snapToMesh);
 static WlzErrorNum 		WlzBFTOGetVertices3D(
 				  int *dstNVx,
 				  WlzDVertex3 **dstVx0,
@@ -246,7 +251,8 @@ static WlzErrorNum 		WlzBFTOGetVertices3D(
 				  FILE *fP,
 				  WlzCMesh3D *tMesh,
 				  const char *prog,
-				  const char *fStr);
+				  const char *fStr,
+				  int snapToMesh);
 
 extern int      getopt(int argc, char * const *argv, const char *optstring);
  
@@ -269,6 +275,7 @@ int             main(int argc, char **argv)
 		outBasisTrFlag = 0,
 		outMeshTrFlag = 0,
 		restrictToBasisFn = 0,
+		snapToMesh = 0,
 		ok = 1,
 		usage = 0;
   double	basisFnParam = 0.001,
@@ -295,7 +302,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   const int	delOut = 1;
   const char    *errMsg;
-  static char	optList[] = "b:m:o:p:t:D:M:P:Y:cdghqsyBCGLNQRTU",
+  static char	optList[] = "b:m:o:p:t:D:M:P:Y:cdghqsyBCGLNQRSTU",
   		inObjFileStrDef[] = "-",
 		outObjFileStrDef[] = "-";
 
@@ -382,6 +389,9 @@ int             main(int argc, char **argv)
 	break;
       case 's':
         basisFnType = WLZ_FN_BASIS_2DTPS;
+	break;
+      case 'S':
+        snapToMesh = 1;
 	break;
       case 't':
         tarMeshFileStr = optarg;
@@ -612,12 +622,14 @@ int             main(int argc, char **argv)
         if(dim == 2)
 	{
 	  errNum = WlzBFTOGetVertices2D(&nTiePP, &(vxA0.d2), &(vxA1.d2),
-	  				fP, tarMesh.m2, argv[0], tiePtFileStr);
+	  				fP, tarMesh.m2, argv[0], tiePtFileStr,
+					snapToMesh);
 	}
 	else /* dim == 3 */
 	{
 	  errNum = WlzBFTOGetVertices3D(&nTiePP, &(vxA0.d3), &(vxA1.d3),
-	  				fP, tarMesh.m3, argv[0], tiePtFileStr);
+	  				fP, tarMesh.m3, argv[0], tiePtFileStr,
+					snapToMesh);
 	}
 	if(errNum != WLZ_ERR_NONE)
 	{
@@ -901,7 +913,7 @@ int             main(int argc, char **argv)
     "                  [-b<basis fn transform>] [-Y<order of polynomial>]\n"
     "                  [-D<flags>] [-P<param>]\n"
     "                  [-d] [-g] [-h] [-q] [-s] [-t] [-y]\n"
-    "                  [-B] [-C] [-G] [-L] [-N] [-Q] [-T]\n"
+    "                  [-B] [-C] [-G] [-L] [-N] [-Q] [-R] [-S] [-T]\n"
     "                  [<in object>]\n"
     "Version: ",
     WlzVersion(),
@@ -938,6 +950,7 @@ int             main(int argc, char **argv)
     "  -Q  Use inverse-multi-quadric basis function if tie points are given.\n"
     "  -s  Use thin plate spline basis function (default) if tie points\n"
     "      are given.\n"
+    "  -S  Snap tie point to mesh (only valid for conforming meshes).\n"
     "  -t  Target mesh. Only valid for conforming meshes. If given then the\n"
     "      target mesh is used to compute a target-to-source radial basis\n"
     "      function, with distances computed in the target mesh. This is\n"
@@ -981,11 +994,15 @@ int             main(int argc, char **argv)
 * 					not be NULL.
 * \param	fStr			input file name for error output, must
 * 					not be NULL.
+* \param	snapToMesh		Snap any tiepoints into the mesh if
+* 					non-zero and the mesh is a conforming
+* 					mesh.
 */
 static WlzErrorNum WlzBFTOGetVertices2D(int *dstNVx,
 				WlzDVertex2 **dstVx0, WlzDVertex2 **dstVx1,
 				FILE *fP, WlzCMesh2D *tMesh,
-				const char *prog, const char *fStr)
+				const char *prog, const char *fStr,
+				int snapToMesh)
 {
   int		vxCount = 0,
   		vxLimit = 0;
@@ -997,6 +1014,7 @@ static WlzErrorNum WlzBFTOGetVertices2D(int *dstNVx,
   const char    *errMsg;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   char  	inRecord[IN_RECORD_MAX];
+  const double	maxDist = 16.0;
 
   while((errNum == WLZ_ERR_NONE) &&
         (fgets(inRecord, IN_RECORD_MAX - 1, fP) != NULL))
@@ -1045,11 +1063,15 @@ static WlzErrorNum WlzBFTOGetVertices2D(int *dstNVx,
 	if(WlzCMeshElmEnclosingPos2D(tMesh, -1, vx1->vtX, vx1->vtY,
 	                             0, NULL) < 0) 
 	{
-	  errNum = WLZ_ERR_DOMAIN_DATA;
-	  (void )WlzStringFromErrorNum(errNum, &errMsg);
-	  (void )fprintf(stderr,
-	      "%s: tie points line %d not in target mesh (%s).\n",
-	      prog, vxCount, errMsg);
+	  if((snapToMesh == 0) ||
+	     (WlzCMeshElmClosestPosIn2D(tMesh, vx1, *vx1, maxDist) < 0))
+	  {
+	    errNum = WLZ_ERR_DOMAIN_DATA;
+	    (void )WlzStringFromErrorNum(errNum, &errMsg);
+	    (void )fprintf(stderr,
+		"%s: tie points line %d not in target mesh (%s).\n",
+		prog, vxCount, errMsg);
+	  }
 	}
       }
       if(errNum == WLZ_ERR_NONE)
@@ -1092,11 +1114,15 @@ static WlzErrorNum WlzBFTOGetVertices2D(int *dstNVx,
 * 					not be NULL.
 * \param	fStr			input file name for error output, must
 * 					not be NULL.
+* \param	snapToMesh		Snap any tiepoints into the mesh if
+* 					non-zero and the mesh is a conforming
+* 					mesh.
 */
 static WlzErrorNum WlzBFTOGetVertices3D(int *dstNVx,
 				WlzDVertex3 **dstVx0, WlzDVertex3 **dstVx1,
 				FILE *fP, WlzCMesh3D *tMesh,
-				const char *prog, const char *fStr)
+				const char *prog, const char *fStr,
+				int snapToMesh)
 {
   int		vxCount = 0,
   		vxLimit = 0;
@@ -1108,6 +1134,7 @@ static WlzErrorNum WlzBFTOGetVertices3D(int *dstNVx,
   const char    *errMsg;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   char  	inRecord[IN_RECORD_MAX];
+  const double	maxDist = 16.0;
 
   while((errNum == WLZ_ERR_NONE) &&
         (fgets(inRecord, IN_RECORD_MAX - 1, fP) != NULL))
@@ -1158,11 +1185,15 @@ static WlzErrorNum WlzBFTOGetVertices3D(int *dstNVx,
 	if(WlzCMeshElmEnclosingPos3D(tMesh, -1, vx1->vtX, vx1->vtY, vx1->vtZ,
 				     0, NULL) < 0) 
 	{
-	  errNum = WLZ_ERR_DOMAIN_DATA;
-	  (void )WlzStringFromErrorNum(errNum, &errMsg);
-	  (void )fprintf(stderr,
-	      "%s: tie points line %d not in target mesh (%s).\n",
-	      prog, vxCount, errMsg);
+	  if((snapToMesh == 0) ||
+	     (WlzCMeshElmClosestPosIn3D(tMesh, vx1, *vx1, maxDist) < 0))
+	  {
+	    errNum = WLZ_ERR_DOMAIN_DATA;
+	    (void )WlzStringFromErrorNum(errNum, &errMsg);
+	    (void )fprintf(stderr,
+		"%s: tie points line %d not in target mesh (%s).\n",
+		prog, vxCount, errMsg);
+	  }
 	}
       }
       if(errNum == WLZ_ERR_NONE)
