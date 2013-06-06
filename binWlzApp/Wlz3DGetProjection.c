@@ -5,7 +5,7 @@ static char _Wlz3DGetProjection_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         binWlzApp/Wlz3DGetProjection.c
-* \author       Richard Baldock
+* \author       Richard Baldock, Bill Hill
 * \date         March 2005
 * \version      $Id$
 * \par
@@ -53,7 +53,9 @@ Wlz3DGetProjection - projects a Woolz object using a view transform.
 Wlz3DGetProjection [-h]
                    [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]
 		   [-b <parameter bibfile>] [-m <mode>] [-s <scale>]
-		   [-o <output file>] [-u<ux,uy,uz>] [<3D object input file>]
+		   [-o <output file>] [-u<ux,uy,uz>]
+		   [-i <int mod>] [-D <den>] [-V <val lut>]
+		   [<3D object input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -103,6 +105,26 @@ Wlz3DGetProjection [-h]
     <td><b>-u</b></td>
     <td>Up vector for up-is-up mode, default (0, 0, -1).</td>
   </tr>
+  <tr>
+    <td><b>-i</b></td>
+    <td>Integration mode, possible values:
+    <table width="500" border="0">
+    <tr> <td>n</td><td>none</td><td>shadow domain</td> </tr>
+    <tr> <td>d</td><td>domain</td><td>uniform domain (default)</td> </tr>
+    <tr> <td>v</td><td>values</td><td>value integration</td> </tr>
+    </table>
+    </td>
+  </tr>
+  <tr>
+    <td><b>-D</td>
+    <td>Domain density for use with uniform domain density integration
+        mode, range [0-255] (default 255).</td>
+  </tr>
+  <tr>
+    <td><b>-V</td>
+    <td>Value to density look up table for use with value integration
+        mode, all 256 entries to have range [0-255] (default identity).</td>
+  </tr>
 </table>
 \par Description
 Gets an arbitrary slice projection from a 3D object,
@@ -114,7 +136,7 @@ writing the 2D object to standard output.
 \ref Wlz3DGetProjection.c "Wlz3DGetProjection.c"
 \par See Also
 \ref BinWlzApp "WlzIntro(1)"
-\ref WlzGetProjectionFromObject "WlzGetProjectionFromObject(3)"
+\ref WlzProjectObjToPlane "WlzProjectObjToPlane(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -135,35 +157,44 @@ extern int 	optind, opterr, optopt;
 extern char     *optarg;
 #endif /* __STDC__ ] */
 
-static void usage(char *proc_str)
+static void ShowUsage(char *proc_str)
 {
   (void )fprintf(stderr,
-	  "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]\n"
-	  "\t[-b <parameter bibfile>] [-m <mode>] [-s <scale>]\n"
-	  "\t[-o <output file>] [-u<ux,uy,uz>] [-h]\n"
-	  "\t[<3D object input file>]\n"
-	  "\tGet an arbitrary sliceprojection from a 3D object\n"
-	  "\twriting the 2D object to standard output\n"
-	  "Version: %s\n"
-	  "Options:\n"
-	  "\t  -a<pitch,yaw[,roll]> viewing angles in degrees. If roll\n"
-	  "\t                       is defined then the mode is \"absolute\"\n"
-	  "\t  -b<bibfile>        bibfile defining the view parameters e.g.\n"
-	  "\t                     from MAPaint view or warp input I/O\n"
-	  "\t                     Override all other parameter input\n"
-	  "\t  -f<fx,fy,fz>       fixed point position, default - (0,0,0)\n"
-	  "\t  -d<dist>           distance parameter, default - 0.0\n"
-	  "\t  -m<mode>           viewing mode, possible values:\n"
-	  "\t                       mode = 0 - up-is-up (default)\n"
-	  "\t                       mode = 1 - statue\n"
-	  "\t                       mode = 2 - absolute\n"
-	  "\t  -o<output file>    Output filename, default to stdout\n"
-	  "\t  -s<scale>          Scale factor, default - 1.0\n"
-	  "\t  -u<ux,uy,uz>       Up vector for up-is-up mode.\n"
-	  "\t			  Default: (0,0,-1)\n"
-	  "\t  -h                 Help - prints this usage message\n",
-	  proc_str,
-	  WlzVersion());
+  "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]\n"
+  "\t[-b <parameter bibfile>] [-m <mode>] [-s <scale>]\n"
+  "\t[-o <output file>] [-u<ux,uy,uz>]\n"
+  "\t[-i<int mod> [-D <den>] [-V <val lut>] [-h]\n"
+  "\t[<3D object input file>]\n"
+  "\tGet an arbitrary sliceprojection from a 3D object\n"
+  "\twriting the 2D object to standard output\n"
+  "Version: %s\n"
+  "Options:\n"
+      "\t  -a<pitch,yaw[,roll]> viewing angles in degrees. If roll\n"
+      "\t                       is defined then the mode is \"absolute\"\n"
+      "\t  -b<bibfile>        bibfile defining the view parameters e.g.\n"
+      "\t                     from MAPaint view or warp input I/O\n"
+      "\t                     Override all other parameter input\n"
+      "\t  -f<fx,fy,fz>       fixed point position, default - (0,0,0)\n"
+      "\t  -d<dist>           distance parameter, default - 0.0\n"
+      "\t  -m<mode>           viewing mode, possible values:\n"
+      "\t                       mode = 0 - up-is-up (default)\n"
+      "\t                       mode = 1 - statue\n"
+      "\t                       mode = 2 - absolute\n"
+      "\t  -o<output file>    Output filename, default to stdout\n"
+      "\t  -s<scale>          Scale factor, default - 1.0\n"
+      "\t  -u<ux,uy,uz>       Up vector for up-is-up mode.\n"
+      "\t			  Default: (0,0,-1)\n"
+      "\t  -i<int mode>	      Integration mode, possible values:\n"
+      "\t                       mode = n - none, shadow domain\n"
+      "\t                       mode = d - domain, uniform domain (default)\n"
+      "\t                       mode = v - value, value integration\n"
+      "\t  -D                 Domain density for use with uniform domain\n"
+      "\t                     density integration mode, range [0-255]\n"
+      "\t  -V                 Look up table for use with value integration\n"
+      "\t                     mode, default is identity\n"
+      "\t  -h                 Help - prints this usage message\n",
+  proc_str,
+  WlzVersion());
   return;
 }
  
@@ -171,10 +202,17 @@ int main(int	argc,
 	 char	**argv)
 {
 
-  WlzObject	*obj, *nobj;
+  int		tI,
+  		usage = 0;
+  WlzObject	*obj = NULL, *nobj = NULL;
+  WlzProjectIntMode intMod = WLZ_PROJECT_INT_MODE_DOMAIN;
+  WlzUByte	denDom = 255;
+  WlzUByte	denVal[256];
   FILE		*inFP, *outFP, *bibFP;
-  char		*outFile, *bibFile;
-  char 		optList[] = "a:b:d:f:m:o:s:u:h";
+  char		*outFile = NULL,
+                *bibFile = NULL,
+  		*lutFile = NULL;
+  char 		optList[] = "a:b:d:D:f:i:m:o:s:u:V:h";
   int		option;
   int		iVal;
   double	dist=0.0, pitch=0.0, yaw=0.0, roll=0.0;
@@ -194,14 +232,14 @@ int main(int	argc,
 
   /* read the argument list and check for an input file */
   opterr = 0;
-  while( (option = getopt(argc, argv, optList)) != EOF ){
+  while(((option = getopt(argc, argv, optList)) != EOF) &&
+        (usage == 0)){
     switch( option ){
 
     case 'a':
       switch( sscanf(optarg, "%lg,%lg,%lg", &pitch, &yaw, &roll) ){
       default:
-	usage(argv[0]);
-	return 1;
+	break;
       case 2:
 	break;
       case 3:
@@ -216,29 +254,25 @@ int main(int	argc,
 
     case 'd':
       if( sscanf(optarg, "%lg", &dist) < 1 ){
-	usage(argv[0]);
-	return 1;
+	break;
       }
       break;
 
     case 'f':
       if( sscanf(optarg, "%lg,%lg,%lg", &(fixed.vtX), &(fixed.vtY),
 		 &(fixed.vtZ)) < 3 ){
-	usage(argv[0]);
-	return 1;
+	break;
       }
       break;
 
     case 'm':
       if( sscanf(optarg, "%d", &iVal) < 1 ){
-	usage(argv[0]);
-	return 1;
+	break;
       }
       else if( mode != WLZ_ZETA_MODE ){
 	switch( iVal ){
 	default:
-	  usage(argv[0]);
-	  return 1;
+	  usage = 2;
 	case 0:
 	  mode = WLZ_UP_IS_UP_MODE;
 	  break;
@@ -258,25 +292,59 @@ int main(int	argc,
 
     case 's':
       if( sscanf(optarg, "%lg", &scale) < 1 ){
-	usage(argv[0]);
-	return 1;
+	usage = 2;
       }
       break;
 
     case 'u':
       if( sscanf(optarg, "%lg,%lg,%lg", &(up.vtX), &(up.vtY),
 		 &(up.vtZ)) < 3 ){
-	usage(argv[0]);
-	return 1;
+	usage = 2;
       }
+      break;
+
+    case 'i':
+      switch(*optarg)
+      {
+        case 'n':
+	  intMod = WLZ_PROJECT_INT_MODE_NONE;
+	  break;
+	case 'd':
+	  intMod = WLZ_PROJECT_INT_MODE_DOMAIN;
+	  break;
+	case 'v':
+	  intMod = WLZ_PROJECT_INT_MODE_VALUES;
+	  break;
+	default:
+	  usage = 2;
+	  break;
+      }
+      break;
+
+    case 'D':
+      if((sscanf(optarg, "%d", &tI) < 1) || (tI < 0) || (tI > 255))
+      {
+        usage = 2;
+      }
+      else
+      {
+        denDom = tI;
+      }
+      break;
+
+    case 'V':
+      lutFile = optarg;
       break;
 
     case 'h':
     default:
-      usage(argv[0]);
-      return 0;
-
+      usage = 1;
     }
+  }
+  if(usage)
+  {
+    ShowUsage(argv[0]);
+    return(usage - 1);
   }
 
   /* check input file/stream */
@@ -284,7 +352,7 @@ int main(int	argc,
   if( optind < argc ){
     if( (inFP = fopen(*(argv+optind), "r")) == NULL ){
       fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
-      usage(argv[0]);
+      ShowUsage(argv[0]);
       return 1;
     }
   }
@@ -300,6 +368,82 @@ int main(int	argc,
   else
   {
     outFP = stdout;
+  }
+
+  /* check for values density look up table */
+  if(intMod == WLZ_PROJECT_INT_MODE_VALUES)
+  {
+    if(lutFile)
+    {
+      WlzObject *lutObj = NULL;
+      FILE 	*lutFP = NULL;
+
+      if(((lutFP = (strcmp(lutFile, "-")?
+		    fopen(lutFile, "r"): stdin)) == NULL) ||
+		   ((lutObj = WlzAssignObject(
+			      WlzReadObj(lutFP, &errNum), NULL)) == NULL))
+      {
+	(void )fprintf(stderr,
+	    "%s: failed to read look up table object from file %s\n",
+	    *argv, lutFile);
+        ShowUsage(argv[0]);
+	return(1);
+      }
+      if(lutFP && strcmp(lutFile, "-"))
+      {
+	fclose(lutFP);
+      }
+      if(lutObj)
+      {
+	int	lutOK = 1;
+
+        if((lutObj->type != WLZ_LUT) ||
+           (lutObj->domain.core == NULL) ||
+           (lutObj->values.core == NULL) ||
+           (lutObj->values.lut->vType != WLZ_GREY_INT) ||
+	   (lutObj->domain.lut->bin1 != 0) ||
+	   (lutObj->domain.lut->lastbin != 255))
+	{
+	  lutOK = 0;
+	}
+	else
+	{
+	  int	i;
+	  int	*lut;
+
+	  lut = lutObj->values.lut->val.inp;
+	  for(i = 0; i < 256; ++i)
+	  {
+	    if((lut[i] < 0) || (lut[i] > 255))
+	    {
+	      lutOK = 0;
+	      break;
+	    }
+	    else
+	    {
+	      denVal[i] = lut[i];
+	    }
+	  }
+	}
+	if(lutOK == 0)
+        {
+	  (void )fprintf(stderr,
+	      "%s: values density look up table must have 256 integer\n"
+	      "entries with each entry in the range [0-255]\n",
+	      *argv);
+	}
+        (void )WlzFreeObj(lutObj);
+      }
+    }
+    else
+    {
+      int	i;
+
+      for(i = 0; i < 256; ++i)
+      {
+        denVal[i] = i;
+      }
+    }
   }
 
   /* create view structure */
@@ -339,16 +483,17 @@ int main(int	argc,
     }
   }
   
-
   /* read objects and section if possible */
   while((errNum == WLZ_ERR_NONE) &&
-        ((obj = WlzReadObj(inFP, &errNum)) != NULL))
+        ((obj = WlzAssignObject(
+	        WlzReadObj(inFP, &errNum), NULL)) != NULL))
   {
     switch( obj->type )
     {
     case WLZ_3D_DOMAINOBJ:
       WlzInit3DViewStruct(viewStr, obj);
-      nobj = WlzGetProjectionFromObject(obj, viewStr, NULL, NULL, &errNum);
+      nobj = WlzProjectObjToPlane(obj, viewStr, intMod, denDom, denVal,
+      				  &errNum);
       if( nobj != NULL){
 	WlzWriteObj(outFP, nobj);
       }
@@ -365,11 +510,17 @@ int main(int	argc,
 
     WlzFreeObj(obj);
   }
+  if(inFP && (inFP != stdin)) {
+    (void )fclose(inFP);
+  }
+  if(outFP && (outFP != stdout)) {
+    (void )fclose(outFP);
+  }
+  (void )WlzFree3DViewStruct(viewStr);
   if(errNum == WLZ_ERR_READ_EOF)
   {
     errNum = WLZ_ERR_NONE;
   }
-
-  return errNum;
+  return(errNum);
 }
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
