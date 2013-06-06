@@ -5630,8 +5630,8 @@ WlzErrorNum	WlzCMeshValuesNormalise3D(WlzObject *cObj,
 		grd,
   		off0,
 		off1,
-		uMin,
-  		uMax;
+		uMin = 0.0,
+  		uMax = 0.0;
   WlzCMesh3D	*mesh;
   WlzIndexedValues *ixv;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
