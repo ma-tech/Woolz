@@ -128,7 +128,6 @@ WlzObject	*WlzEffReadObjPvl(const char *gvnFileName, WlzErrorNum *dstErr)
 */
 WlzErrorNum	WlzEffWriteObjPvl(const char *gvnFileName, WlzObject *obj)
 {
-  int  		tI0;
   FILE		*fP = NULL;
   unsigned char	 ***data = NULL;
   WlzDVertex3	voxSz;
