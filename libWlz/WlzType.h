@@ -2190,6 +2190,16 @@ typedef struct _WlzContour
 } WlzContour;
 
 
+#ifndef WLZ_EXT_BIND
+/*!
+* \typedef      Wlz3DProjectionIntFn
+* \ingroup      WlzFunction
+* \brief        Callback function for the WlzGetProjectionFromObject().
+*/
+typedef WlzPixelV (*Wlz3DProjectionIntFn)(WlzPixelP, int, int, void *,
+                                          WlzErrorNum *);
+#endif
+
 /*!
 * \struct	_WlzLUTDomain
 * \ingroup	WlzType
@@ -5022,15 +5032,20 @@ typedef struct _WlzThreeDViewStruct
 					  voxel size rescaling */
 } WlzThreeDViewStruct;
 
-#ifndef WLZ_EXT_BIND
 /*!
-* \typedef	Wlz3DProjectionIntFn
-* \ingroup	WlzFunction
-* \brief	Callback function for the WlzGetProjectionFromObject()
+* \typedef	WlzProjectIntMode
+* \ingroup	WlzTransform
+* \brief	3D to 2D projection integration modes.
 */
-typedef WlzPixelV (*Wlz3DProjectionIntFn)(WlzPixelP, int, int, void *,
-					  WlzErrorNum *);
-#endif
+typedef enum	_WlzProjectIntMode
+{
+  WLZ_PROJECT_INT_MODE_NONE,		/*!< No integration. */
+  WLZ_PROJECT_INT_MODE_DOMAIN,		/*!< Integration using constant
+  					     density within a domain. */
+  WLZ_PROJECT_INT_MODE_VALUES		/*!< Integration using voxel value
+  					     dependant density. */
+} WlzProjectIntMode;
+
 /*!
 * \enum         _WlzKrigModelFnType
 * \ingroup      WlzType
