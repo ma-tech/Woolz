@@ -2157,7 +2157,7 @@ void		WlzLBTClassifyNodeFace3D(WlzLBTDomain3D *lDom,
     {
       for(idE = 0; idE < 4; ++idE)
       {
-	idO = (idE % 2) + 1;
+	idO = (idE + 1) % 2;
 	sSz = (idE > 1)? -nSz: nSz;
         off.vtX = offTbl1[idF][idO][0] * sSz;
 	off.vtY = offTbl1[idF][idO][1] * sSz;
