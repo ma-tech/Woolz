@@ -1002,41 +1002,86 @@ static void	WlzProjectObjLineVal(int **ary, WlzUByte lut[256],
   if(gP)
   {
     /* Use the interval of values given by the grey pointer. */
-    while(1)
+    if(lut)
     {
-#ifdef WLZ_FAST_CODE
-      u.vtX = ((v00 * p0.vtX) / 1024) + vMZXI;
-      u.vtY = ((v01 * p0.vtX) / 1024) + vMZYI;
-#else
-      q.vtX = (vMat[0][0] * p0.vtX) + vMZX;
-      q.vtY = (vMat[1][0] * p0.vtY) + vMZY;
-      WLZ_VTX_2_NINT(u, q);
-#endif
-      *(*(ary + u.vtY) + u.vtX) += lut[*gP++];
-      if(++(p0.vtX) > p1.vtX)
+      while(1)
       {
-	break;
+#ifdef WLZ_FAST_CODE
+	u.vtX = ((v00 * p0.vtX) / 1024) + vMZXI;
+	u.vtY = ((v01 * p0.vtX) / 1024) + vMZYI;
+#else
+	q.vtX = (vMat[0][0] * p0.vtX) + vMZX;
+	q.vtY = (vMat[1][0] * p0.vtY) + vMZY;
+	WLZ_VTX_2_NINT(u, q);
+#endif
+	*(*(ary + u.vtY) + u.vtX) += *gP++;
+	if(++(p0.vtX) > p1.vtX)
+	{
+	  break;
+	}
+      }
+    }
+    else
+    {
+      while(1)
+      {
+#ifdef WLZ_FAST_CODE
+	u.vtX = ((v00 * p0.vtX) / 1024) + vMZXI;
+	u.vtY = ((v01 * p0.vtX) / 1024) + vMZYI;
+#else
+	q.vtX = (vMat[0][0] * p0.vtX) + vMZX;
+	q.vtY = (vMat[1][0] * p0.vtY) + vMZY;
+	WLZ_VTX_2_NINT(u, q);
+#endif
+	*(*(ary + u.vtY) + u.vtX) += lut[*gP++];
+	if(++(p0.vtX) > p1.vtX)
+	{
+	  break;
+	}
       }
     }
   }
   else
   {
     /* Need to use random access to the grey values since no grey pointer. */
-    while(1)
+    if(lut)
     {
-      WlzGreyValueGet(gVWSp, p0.vtZ, p0.vtY, p0.vtX);
-#ifdef WLZ_FAST_CODE
-      u.vtX = ((v00 * p0.vtX) / 1024) + vMZXI;
-      u.vtY = ((v01 * p0.vtX) / 1024) + vMZYI;
-#else
-      q.vtX = (vMat[0][0] * p0.vtX) + vMZX;
-      q.vtY = (vMat[1][0] * p0.vtY) + vMZY;
-      WLZ_VTX_2_NINT(u, q);
-#endif
-      *(*(ary + u.vtY) + u.vtX) += lut[gVWSp->gVal[0].ubv];
-      if(++(p0.vtX) > p1.vtX)
+      while(1)
       {
-	break;
+	WlzGreyValueGet(gVWSp, p0.vtZ, p0.vtY, p0.vtX);
+#ifdef WLZ_FAST_CODE
+	u.vtX = ((v00 * p0.vtX) / 1024) + vMZXI;
+	u.vtY = ((v01 * p0.vtX) / 1024) + vMZYI;
+#else
+	q.vtX = (vMat[0][0] * p0.vtX) + vMZX;
+	q.vtY = (vMat[1][0] * p0.vtY) + vMZY;
+	WLZ_VTX_2_NINT(u, q);
+#endif
+	*(*(ary + u.vtY) + u.vtX) += lut[gVWSp->gVal[0].ubv];
+	if(++(p0.vtX) > p1.vtX)
+	{
+	  break;
+	}
+      }
+    }
+    else
+    {
+      while(1)
+      {
+	WlzGreyValueGet(gVWSp, p0.vtZ, p0.vtY, p0.vtX);
+#ifdef WLZ_FAST_CODE
+	u.vtX = ((v00 * p0.vtX) / 1024) + vMZXI;
+	u.vtY = ((v01 * p0.vtX) / 1024) + vMZYI;
+#else
+	q.vtX = (vMat[0][0] * p0.vtX) + vMZX;
+	q.vtY = (vMat[1][0] * p0.vtY) + vMZY;
+	WLZ_VTX_2_NINT(u, q);
+#endif
+	*(*(ary + u.vtY) + u.vtX) += gVWSp->gVal[0].ubv;
+	if(++(p0.vtX) > p1.vtX)
+	{
+	  break;
+	}
       }
     }
   }
