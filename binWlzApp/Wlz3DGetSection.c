@@ -52,8 +52,8 @@ Wlz3DGetSection - gets an arbitrary slice from a 3D object.
 Wlz3DGetSection  [-h] [-A] [-C] [-L] [-N]
                  [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>]
                  [-d <dist>] [-b <parameter bibfile>] [-m <mode>]
-		 [-s <scale>] [-o <output file>] [-u<ux,uy,uz>]
-		 [<3D object input file>]
+		 [-r <vox scaling>] [-s <scale>] [-o <output file>]
+		 [-u<ux,uy,uz>] [<3D object input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
