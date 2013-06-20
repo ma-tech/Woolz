@@ -402,7 +402,7 @@ WlzObject *WlzGetProjectionFromObject(
 *		or the voxel density.
 *		The integration is controled by the integrate parameter
 *		with valid values:
-*		WLZ_PROJECT_INT_MODE_NONE - a "shadown domain" without values
+*		WLZ_PROJECT_INT_MODE_NONE - a "shadow domain" without values
 *               is computed,
 *		WLZ_PROJECT_INT_MODE_DOMAIN - the voxels of the domain are
 *		integrated using
@@ -452,6 +452,7 @@ WlzObject 	*WlzProjectObjToPlane(WlzObject *obj,
   double	**vMat;
   WlzValues	nullVal;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  WlzAffineTransform *rescaleTr = NULL;
   WlzGreyValueWSpace **gVWSp = NULL;
   void		***prjAry = NULL;
   const double	eps = 0.000001;
@@ -488,31 +489,99 @@ struct timeval	times[3];
 #ifdef WLZ_DEBUG_PROJECT3D_TIME
   gettimeofday(times + 0, NULL);
 #endif /* WLZ_DEBUG_PROJECT3D_TIME */
-  /* Create new view transform */
+  /* Create new view transform without voxel scaling. The voxel scaling
+   * is done after the projection. */
   if(errNum == WLZ_ERR_NONE)
   {
     if((vStr1 = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) != NULL)
     {
-      /* Need to worry about fixed line mode here sometime */
       vStr1->fixed = vStr->fixed;
       vStr1->theta = vStr->theta;
       vStr1->phi = vStr->phi;
       vStr1->zeta = vStr->zeta;
       vStr1->dist = vStr->dist;
       vStr1->scale = vStr->scale;
-      vStr1->voxelSize[0] = vStr->voxelSize[0];
-      vStr1->voxelSize[1] = vStr->voxelSize[1];
-      vStr1->voxelSize[2] = vStr->voxelSize[2];
-      vStr1->voxelRescaleFlg = vStr->voxelRescaleFlg;
+      vStr1->voxelSize[0] = 1.0;
+      vStr1->voxelSize[1] = 1.0;
+      vStr1->voxelSize[2] = 1.0;
+      vStr1->voxelRescaleFlg = 0;
       vStr1->interp = vStr->interp;
       vStr1->view_mode = vStr->view_mode;
       vStr1->up = vStr->up;
-      if((errNum = WlzInit3DViewStruct(vStr1, obj)) != WLZ_ERR_NONE)
+      vStr1->initialised = WLZ_3DVIEWSTRUCT_INIT_NONE;
+      vMat = vStr1->trans->mat;
+      errNum = WlzInit3DViewStructAffineTransform(vStr1);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = Wlz3DViewStructTransformBB(obj, vStr1);
+      }
+      if(errNum != WLZ_ERR_NONE)
       {
 	WlzFree3DViewStruct(vStr1);
 	vStr1 = NULL;
       }
-      vMat = vStr1->trans->mat;
+    }
+  }
+  /* Compute bounding box of the projection. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    prjBox.xMin = WLZ_NINT(vStr1->minvals.vtX);
+    prjBox.yMin = WLZ_NINT(vStr1->minvals.vtY);
+    prjBox.xMax = WLZ_NINT(vStr1->maxvals.vtX);
+    prjBox.yMax = WLZ_NINT(vStr1->maxvals.vtY);
+    prjSz.vtX = prjBox.xMax - prjBox.xMin + 1;
+    prjSz.vtY = prjBox.yMax - prjBox.yMin + 1;
+  }
+  /* Compute post projection scaling. */
+  if((errNum == WLZ_ERR_NONE) && (vStr->voxelRescaleFlg != 0))
+  {
+    WlzIBox2	sBox;
+    WlzIVertex2 sSz;
+    WlzThreeDViewStruct *vStr2;
+
+    vStr2 = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      vStr2->fixed = vStr->fixed;
+      vStr2->theta = vStr->theta;
+      vStr2->phi = vStr->phi;
+      vStr2->zeta = vStr->zeta;
+      vStr2->dist = vStr->dist;
+      vStr2->scale = vStr->scale;
+      vStr2->voxelSize[0] = vStr->voxelSize[0];
+      vStr2->voxelSize[1] = vStr->voxelSize[1];
+      vStr2->voxelSize[2] = vStr->voxelSize[2];
+      vStr2->voxelRescaleFlg = vStr->voxelRescaleFlg;
+      vStr2->interp = vStr->interp;
+      vStr2->view_mode = vStr->view_mode;
+      vStr2->up = vStr->up;
+      vStr2->initialised = WLZ_3DVIEWSTRUCT_INIT_NONE;
+      errNum = WlzInit3DViewStructAffineTransform(vStr2);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = Wlz3DViewStructTransformBB(obj, vStr2);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	sBox.xMin = WLZ_NINT(vStr2->minvals.vtX);
+	sBox.yMin = WLZ_NINT(vStr2->minvals.vtY);
+	sBox.xMax = WLZ_NINT(vStr2->maxvals.vtX);
+	sBox.yMax = WLZ_NINT(vStr2->maxvals.vtY);
+	sSz.vtX = sBox.xMax - sBox.xMin + 1;
+	sSz.vtY = sBox.yMax - sBox.yMin + 1;
+        rescaleTr = WlzMakeAffineTransform(WLZ_TRANSFORM_2D_AFFINE, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        double	**m;
+
+	m = rescaleTr->mat;
+	m[0][0] = (sSz.vtX * eps) / (prjSz.vtX * eps);
+	m[1][1] = (sSz.vtY * eps) / (prjSz.vtY * eps);
+	m[0][2] = sBox.xMin - WLZ_NINT(m[0][0] * prjBox.xMin);
+	m[1][2] = sBox.yMin - WLZ_NINT(m[1][1] * prjBox.yMin);
+      }
+      (void )WlzFree3DViewStruct(vStr2);
     }
   }
   /* Create rectangular projection array buffers, one for each thread,
@@ -521,12 +590,6 @@ struct timeval	times[3];
   {
     int		idB;
 
-    prjBox.xMin = WLZ_NINT(vStr1->minvals.vtX);
-    prjBox.yMin = WLZ_NINT(vStr1->minvals.vtY);
-    prjBox.xMax = WLZ_NINT(vStr1->maxvals.vtX);
-    prjBox.yMax = WLZ_NINT(vStr1->maxvals.vtY);
-    prjSz.vtX = prjBox.xMax - prjBox.xMin + 1;
-    prjSz.vtY = prjBox.yMax - prjBox.yMin + 1;
 #ifdef _OPENMP
 #pragma omp parallel
     {
@@ -808,6 +871,7 @@ struct timeval	times[3];
     }
     AlcFree(prjAry);
   }
+  /* Make return object using threshold. */
   if(errNum == WLZ_ERR_NONE)
   {
     WlzPixelV	tV;
@@ -826,14 +890,29 @@ struct timeval	times[3];
       }
       else
       {
-        prjObj = WlzMakeMain(tObj->type, tObj->domain, tObj->values,
+	prjObj = WlzMakeMain(tObj->type, tObj->domain, tObj->values,
 			     NULL, NULL, &errNum);
       }
     }
     (void )WlzFreeObj(tObj);
-    (void )WlzFreeObj(bufObj);
   }
+  (void )WlzFreeObj(bufObj);
   (void )WlzFree3DViewStruct(vStr1);
+  /* Scale image. */
+  if(rescaleTr != NULL)
+  {
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzObject	*tObj = NULL;
+
+      tObj = WlzAffineTransformObj(prjObj, rescaleTr, 
+				   WLZ_INTERPOLATION_NEAREST, &errNum);
+      
+      (void )WlzFreeObj(prjObj);
+      prjObj = tObj;
+    }
+    (void )WlzFreeAffineTransform(rescaleTr);
+  }
 #ifdef WLZ_DEBUG_PROJECT3D_TIME
   gettimeofday(times + 1, NULL);
   timersub(times + 1, times + 0, times + 2);
@@ -1014,7 +1093,7 @@ static void	WlzProjectObjLineVal(int **ary, WlzUByte lut[256],
 	q.vtY = (vMat[1][0] * p0.vtY) + vMZY;
 	WLZ_VTX_2_NINT(u, q);
 #endif
-	*(*(ary + u.vtY) + u.vtX) += *gP++;
+	*(*(ary + u.vtY) + u.vtX) += lut[*gP++];
 	if(++(p0.vtX) > p1.vtX)
 	{
 	  break;
@@ -1033,7 +1112,7 @@ static void	WlzProjectObjLineVal(int **ary, WlzUByte lut[256],
 	q.vtY = (vMat[1][0] * p0.vtY) + vMZY;
 	WLZ_VTX_2_NINT(u, q);
 #endif
-	*(*(ary + u.vtY) + u.vtX) += lut[*gP++];
+	*(*(ary + u.vtY) + u.vtX) += 255 - *gP++;
 	if(++(p0.vtX) > p1.vtX)
 	{
 	  break;
@@ -1077,7 +1156,7 @@ static void	WlzProjectObjLineVal(int **ary, WlzUByte lut[256],
 	q.vtY = (vMat[1][0] * p0.vtY) + vMZY;
 	WLZ_VTX_2_NINT(u, q);
 #endif
-	*(*(ary + u.vtY) + u.vtX) += gVWSp->gVal[0].ubv;
+	*(*(ary + u.vtY) + u.vtX) += 255 - gVWSp->gVal[0].ubv;
 	if(++(p0.vtX) > p1.vtX)
 	{
 	  break;
