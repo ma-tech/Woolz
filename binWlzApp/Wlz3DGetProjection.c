@@ -51,10 +51,10 @@ Wlz3DGetProjection - projects a Woolz object using a view transform.
 \par Synopsis
 \verbatim
 Wlz3DGetProjection [-h]
-                   [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]
-		   [-b <parameter bibfile>] [-m <mode>] [-s <scale>]
-		   [-o <output file>] [-u<ux,uy,uz>]
-		   [-i <int mod>] [-D <den>] [-V <val lut>]
+                   [-a <pitch,yaw[,roll]>] [-b <parameter bibfile>]
+		   [-d <dist>] [-f <fx,fy,fz>] [-i <int mod>]
+		   [-m <mode>] [-o <output file>] [-r <vox rescale>]
+		   [-s <scale>] [-u<ux,uy,uz>] [-D <den>] [-V <val lut>]
 		   [<3D object input file>]
 \endverbatim
 \par Options
@@ -92,6 +92,13 @@ Wlz3DGetProjection [-h]
       <tr> <td>2</td> <td>absolute</td> </tr>
     </table>
     </td>
+  </tr>
+  <tr>
+    <td><b>-r</b></td>
+    <td>Voxel size rescaling mode flags:
+         bit 1 set - use voxel-size rescaling,
+         bit 2 set - enable global scaling,
+        default 1.0.</td>
   </tr>
   <tr> 
     <td><b>-s</b></td>
@@ -162,7 +169,7 @@ static void ShowUsage(char *proc_str)
   (void )fprintf(stderr,
   "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]\n"
   "\t[-b <parameter bibfile>] [-m <mode>] [-s <scale>]\n"
-  "\t[-o <output file>] [-u<ux,uy,uz>]\n"
+  "\t[-o <output file>] [-u<ux,uy,uz>] [-r<vox rescale>]\n"
   "\t[-i<int mod> [-D <den>] [-V <val lut>] [-h]\n"
   "\t[<3D object input file>]\n"
   "\tGet an arbitrary sliceprojection from a 3D object\n"
@@ -181,6 +188,10 @@ static void ShowUsage(char *proc_str)
       "\t                       mode = 1 - statue\n"
       "\t                       mode = 2 - absolute\n"
       "\t  -o<output file>    Output filename, default to stdout\n"
+      "\t  -r<vox rescale>    Voxel size rescaling mode flags:\n"
+      "\t                       bit 1 set - use voxel-size rescaling\n"
+      "\t                       bit 2 set - enable global scaling\n"
+      "\t                     default - 0.\n"
       "\t  -s<scale>          Scale factor, default - 1.0\n"
       "\t  -u<ux,uy,uz>       Up vector for up-is-up mode.\n"
       "\t			  Default: (0,0,-1)\n"
@@ -203,7 +214,8 @@ int main(int	argc,
 {
 
   int		tI,
-  		usage = 0;
+  		usage = 0,
+		voxRescale = 0;
   WlzObject	*obj = NULL, *nobj = NULL;
   WlzProjectIntMode intMod = WLZ_PROJECT_INT_MODE_DOMAIN;
   WlzUByte	denDom = 255;
@@ -212,7 +224,7 @@ int main(int	argc,
   char		*outFile = NULL,
                 *bibFile = NULL,
   		*lutFile = NULL;
-  char 		optList[] = "a:b:d:D:f:i:m:o:s:u:V:h";
+  char 		optList[] = "a:b:d:D:f:i:m:o:r:s:u:V:h";
   int		option;
   int		iVal;
   double	dist=0.0, pitch=0.0, yaw=0.0, roll=0.0;
@@ -289,6 +301,12 @@ int main(int	argc,
     case 'o':
       outFile = optarg;
       break;
+
+    case 'r':
+      if( sscanf(optarg, "%d", &voxRescale) < 1 ){
+        usage = 2;
+	}
+	break;
 
     case 's':
       if( sscanf(optarg, "%lg", &scale) < 1 ){
@@ -456,6 +474,7 @@ int main(int	argc,
     viewStr->up = up;
     viewStr->view_mode = mode;
     viewStr->scale = scale;
+    viewStr->voxelRescaleFlg = voxRescale;
   }
 
   /* check bibfile - select first section parameters in the file */
@@ -491,6 +510,12 @@ int main(int	argc,
     switch( obj->type )
     {
     case WLZ_3D_DOMAINOBJ:
+      if(voxRescale && obj->domain.core)
+      {
+        viewStr->voxelSize[0] = obj->domain.p->voxel_size[0];
+        viewStr->voxelSize[1] = obj->domain.p->voxel_size[1];
+        viewStr->voxelSize[2] = obj->domain.p->voxel_size[2];
+      }
       WlzInit3DViewStruct(viewStr, obj);
       nobj = WlzProjectObjToPlane(obj, viewStr, intMod, denDom, denVal,
       				  &errNum);
