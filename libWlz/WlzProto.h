@@ -124,6 +124,7 @@ extern WlzObject 		*Wlz2DContains(
 /************************************************************************
 * Wlz3DProjection.c							*
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern WlzObject		*WlzProjectObjToPlane(
 				  WlzObject *obj,
 				  WlzThreeDViewStruct *vStr,
@@ -137,6 +138,7 @@ extern WlzObject		*WlzGetProjectionFromObject(
 				  Wlz3DProjectionIntFn intFunc,
 				  void *intFuncData,
 				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * Wlz3DSection.c							*
