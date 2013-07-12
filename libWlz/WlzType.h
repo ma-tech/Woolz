@@ -618,6 +618,37 @@ typedef enum _WlzDistanceType
 } WlzDistanceType;
 
 /*!
+* \enum 	_WlzRegConRCC8
+* \ingroup	WlzType
+* \brief	The dicrete Region Connected Calculus 8 (RCC8) clasification
+* 		of a pair of spatial regions.
+* 		Typedef: ::WlzRegConRCC8
+* 		\verbatim
+                RCC8           X = ---------,  Y = _________
+                DC(X,Y)        ---------       _________
+                EC(X,Y)        ---------_________
+                EQ(X,Y)        =========
+                PO(X,Y)        ------===______
+                TPP(X,Y)       ____=====
+                NTPP(X,Y)      __=====__
+                TPPI(X,Y)      -----====
+                NTPPI(X,Y)     --=====--
+                \endverbatim
+*/
+typedef enum _WlzRegConRCC8
+{
+  WLZ_REGCON_RCC8_DC	= 0, 	/*!< Diconnected. */
+  WLZ_REGCON_RCC8_EC,		/*!< External Connected. */
+  WLZ_REGCON_RCC8_EQ,		/*!< Equal. */
+  WLZ_REGCON_RCC8_PO,		/*!< Partial Overlap. */
+  WLZ_REGCON_RCC8_TPP,		/*!< Tangential Proper Part. */
+  WLZ_REGCON_RCC8_NTPP,		/*!< Non-Tangential Proper Part. */
+  WLZ_REGCON_RCC8_TPPI,		/*!< Tangential Proper Part Inverse. */
+  WLZ_REGCON_RCC8_NTPPI		/*!< Non-Tangential Proper Part
+  				     Inverse. */
+} WlzRegConRCC8;
+
+/*!
 * \enum		_WlzSpecialStructElmType
 * \ingroup	WlzMorphologyOps
 * \brief	Special structuring elements for morphological operations.
