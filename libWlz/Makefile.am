@@ -189,6 +189,7 @@ libWlz_la_SOURCES 	= \
 			  WlzReadObj.c \
 			  WlzRegCCor.c \
 			  WlzRegICP.c \
+			  WlzRegConCalc.c \
 			  WlzRGBAConvert.c \
 			  WlzRGBAGreyStats.c \
 			  WlzRGBAImageArithmetic.c \
