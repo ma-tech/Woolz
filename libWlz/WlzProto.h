@@ -720,6 +720,13 @@ extern WlzErrorNum		WlzToDArray2D(
 				  WlzIVertex2 origin,
 				  WlzIVertex2 size,
 				  int noiseFlag);
+extern WlzErrorNum		WlzToRArray2D(
+				  WlzIVertex2 *dstSizeArrayDat,
+				  unsigned int ***dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex2 origin,
+				  WlzIVertex2 size,
+				  int noiseFlag);
 extern WlzErrorNum		WlzToBArray3D(
 				  WlzIVertex3 *dstSizeArrayDat,
 				  unsigned char ****dstArrayDat,
@@ -758,6 +765,13 @@ extern WlzErrorNum		WlzToFArray3D(
 extern WlzErrorNum		WlzToDArray3D(
 				  WlzIVertex3 *dstSizeArrayDat,
 				  double ****dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex3 origin,
+				  WlzIVertex3 size,
+				  int noiseFlag);
+extern WlzErrorNum		WlzToRArray3D(
+				  WlzIVertex3 *dstSizeArrayDat,
+				  unsigned int ****dstArrayDat,
 				  WlzObject *srcObj,
 				  WlzIVertex3 origin,
 				  WlzIVertex3 size,
@@ -5318,6 +5332,15 @@ extern WlzAffineTransform	*WlzRegICPTreeAndVertices(
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
+* WlzRegConCalc.c
+************************************************************************/
+extern WlzRegConRCC8		WlzRegConCalcRCC8(
+				  WlzObject *obj0,
+				  WlzObject *obj1,
+				  double *dstNrmVol,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzRsvFilter.c
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
@@ -6012,12 +6035,14 @@ extern WlzObjectType 		WlzGreyTableTypeToTableType(
 				  WlzErrorNum *dstErr);
 extern WlzObjectType		WlzGreyTableIsTiled(
 				  WlzObjectType gTabType);
+#endif /* WLZ_EXT_BIND */
 extern WlzGreyType		WlzGreyTypeFromObj(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
 extern WlzDVertex3		WlzVozelSz(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern void			*WlzIndexedValueGet(
 				  WlzIndexedValues *ixv,
 				  int idx);
