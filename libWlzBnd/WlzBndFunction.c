@@ -5,7 +5,7 @@ static char _WlzBndFunction_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlzBnd/WlzBndFunction.c
-* \author       Guangjie Feng
+* \author       Guangjie Feng, Bill Hill
 * \date         August 2003
 * \version      $Id$
 * \par
@@ -41,41 +41,284 @@ static char _WlzBndFunction_c[] = "University of Edinburgh $Id$";
 #include <WlzBnd.h>
 
 
+/*!
+* \ingroup	LibWlzBnd
+* \brief	Simple wrapper to get version.
+* \param	dstStr			Destination pointer for the version
+* 					string.
+*/
+void		WlzGetVersion( char **dstStr)
+{
+  if(dstStr)
+  {
+    *dstStr = WlzVersion();
+  }
+}
+
+/*!
+* \return	Voxel size.
+* \ingroup	LibWlzBnd
+* \brief	Gets the object's voxelsize. It is and error if the
+* 		object is NULL, the object is not a 3D spatial domain
+* 		object or the object's domain is NULL.
+* \param	obj			Given object.
+* \param	x			Voxel x size.
+* \param	y			Voxel y size.
+* \param	z			Voxel z size.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzDVertex3	WlzGetVoxelSize(WlzObject *obj, WlzErrorNum *dstErr)
+{
+  WlzDVertex3	voxSz;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->type != WLZ_3D_DOMAINOBJ)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    voxSz.vtX = obj->domain.p->voxel_size[0];
+    voxSz.vtY = obj->domain.p->voxel_size[1];
+    voxSz.vtZ = obj->domain.p->voxel_size[2];
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(voxSz);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	LibWlzBnd
+* \brief	Sets the object's voxelsize. It is and error if the
+* 		object is NULL, the object is not a 3D spatial domain
+* 		object or the object's domain is NULL.
+* \param	obj			Given object.
+* \param	x			Voxel x size.
+* \param	y			Voxel y size.
+* \param	z			Voxel z size.
+*/
 WlzErrorNum	WlzSetVoxelSize(WlzObject *obj,
 				double x, double y, double z)
 {
-  WlzErrorNum errNum = WLZ_ERR_NONE;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
-  if(obj->type == WLZ_3D_DOMAINOBJ)
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->type != WLZ_3D_DOMAINOBJ)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
   {
     obj->domain.p->voxel_size[0] = x;
     obj->domain.p->voxel_size[1] = y;
     obj->domain.p->voxel_size[2] = z;
   }
-  else
-  {
-    errNum = WLZ_ERR_OBJECT_TYPE;
-  }
   return(errNum);
 }
 
 
-WlzObjectType	WlzGetObjectType(WlzObject *obj)
+/*!
+* \return	Non zero if the given object is NULL.
+* \ingroup	LibWlzBnd
+* \brief	Tests if an object is NULL.
+* \param	obj			Given object.
+*/
+int		WlzObjectIsNull(WlzObject *obj)
 {
-  return(obj->type);
+  int		t;
+
+  t = (obj == NULL);
+  return(t);
 }
 
+/*!
+* \return	Non zero if the given object's domain is NULL.
+* \ingroup	LibWlzBnd
+* \brief	Tests if an object's domain is NULL.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int		WlzObjectDomainIsNull(WlzObject *obj, WlzErrorNum *dstErr)
+{
+  int		t = 1;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    t = (obj->domain.core == NULL);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(t);
+}
+
+/*!
+* \return	Non zero if the given object's values is NULL.
+* \ingroup	LibWlzBnd
+* \brief	Tests if an object's values is NULL.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int		WlzObjectValuesIsNull(WlzObject *obj, WlzErrorNum *dstErr)
+{
+  int		t = 1;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    t = (obj->values.core == NULL);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(t);
+}
+
+/*!
+* \return	Woolz object type.
+* \ingroup	LibWlzBnd
+* \brief	Get's the given obejct's type.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObjectType	WlzGetObjectType(WlzObject *obj, WlzErrorNum *dstErr)
+{
+  WlzObjectType	t = WLZ_NULL;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    t = obj->type;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(t);
+}
+
+/*!
+* \return	Woolz object's domain type.
+* \ingroup	LibWlzBnd
+* \brief	Get's the given obejct's domain type.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObjectType	WlzGetObjectDomainType(WlzObject *obj, WlzErrorNum *dstErr)
+{
+  WlzObjectType t = WLZ_NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    t = obj->domain.core->type;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(t);
+}
+
+/*!
+* \return	Woolz object's values type.
+* \ingroup	LibWlzBnd
+* \brief	Get's the given obejct's values type.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObjectType	WlzGetObjectValuesType(WlzObject *obj, WlzErrorNum *dstErr)
+{
+  WlzObjectType t = WLZ_NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    t = obj->values.core->type;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(t);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	LibWlzBnd
+* \brief	Explodes the given compound array object into an array.
+* \param	dstExpObjCount		Destination pointer for number of
+* 					objects in array, must not be NULL.
+* \param	dstExpObjVecP		Destination pointer for the object
+* 					array, must not be NULL.
+* \param	obj			Given object.
+*/
 WlzErrorNum	WlzExplode(int *dstExpObjCount,
 			   WlzObject ***dstExpObjVecP,
-		           WlzObject *srcObj)
+		           WlzObject *obj)
 {
-  WlzErrorNum errNum = WLZ_ERR_NONE;
-  WlzCompoundArray *cmpObj = NULL;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
-  if((srcObj->type == WLZ_COMPOUND_ARR_1) ||
-     (srcObj->type == WLZ_COMPOUND_ARR_2))
+  if(obj == NULL)
   {
-    cmpObj = (WlzCompoundArray *)srcObj;
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((obj->type == WLZ_COMPOUND_ARR_1) ||
+          (obj->type == WLZ_COMPOUND_ARR_2))
+  {
+    WlzCompoundArray *cmpObj;
+
+    cmpObj = (WlzCompoundArray *)obj;
     *dstExpObjVecP = cmpObj->o;
     *dstExpObjCount = cmpObj->n;
   }
@@ -86,17 +329,29 @@ WlzErrorNum	WlzExplode(int *dstExpObjCount,
   return(errNum);
 }
 
-const char	*WlzGetPropName(WlzObject *obj)
+/*!
+* \return	Property name string.
+* \ingroup	LibWlzBnd
+* \brief	Get's an object's property name string.
+* \param	obj			Given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+const char	*WlzGetPropName(WlzObject *obj, WlzErrorNum *dstErr)
 {
-  WlzErrorNum errNum = WLZ_ERR_NONE;
-  WlzProperty prop;
   const char *name = NULL;
   char *dst = NULL;
+  WlzErrorNum errNum = WLZ_ERR_NONE;
 
-  if(obj->plist)
+  if(obj == NULL)
   {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->plist)
+  {
+    WlzProperty prop;
+
     prop = WlzGetProperty(obj->plist->list, WLZ_PROPERTY_NAME, &errNum);
-    if(prop.core && (errNum == WLZ_ERR_NONE))
+    if((errNum == WLZ_ERR_NONE) && prop.core)
     {
       switch(prop.core->type)
       {
@@ -110,13 +365,26 @@ const char	*WlzGetPropName(WlzObject *obj)
 	  errNum = WLZ_ERR_PROPERTY_TYPE;
 	  break;
       }
+      name = AlcStrDup((const char *)dst);
     }
   }
-  name = AlcStrDup((const char *) dst);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
   return(name);
 }
 
-WlzObject	*WlzGetContourObj(WlzObject *inObj){
+/*!
+* \return	Contour object.
+* \ingroup	LibWlzBnd
+* \brief	Extracts a smoothed iso-surface contour with iso-value 1.0
+* 		from the given 3D domain object with values.
+* \param	inObj			Given domain object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzGetContourObj(WlzObject *inObj, WlzErrorNum *dstErr)
+{
   int		flip = 1,
 		nrm = 0,
 		nItr = 10,
@@ -137,7 +405,6 @@ WlzObject	*WlzGetContourObj(WlzObject *inObj){
   WlzContourMethod ctrMtd = WLZ_CONTOUR_MTD_BND;
   const double	filterDPB = 0.25,
 		filterDSB = 0.10;
-  const char	*errMsgStr;
   WlzObject	*outObj = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
@@ -188,10 +455,19 @@ WlzObject	*WlzGetContourObj(WlzObject *inObj){
       }
     }
   }
-  (void)WlzStringFromErrorNum(errNum, &errMsgStr);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
   return(outObj);
 }
 
+/*!
+* \return	Non zero on success.
+* \ingroup	LibWlzBnd
+* \brief	Frees a Woolz object when called.
+* \param	obj			Given object.
+*/
 int		WlzDestroyObj(WlzObject *obj)
 {
   int success = 0;
