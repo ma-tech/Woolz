@@ -79,8 +79,8 @@ WlzDomainAdjacencyMatrix [-a min,max,step] [-f <domain file>] [-h] [-v] <test do
 \par Description
 Read in domains from the input file or from stdin, calculate the adjacency profile
 with respect to the test domain and output as a matrix of values. The first row are
-the adjacency distances used to calculate each column. The adjacency value for
-distance \f[r\f} is defined as:
+the adjacency distances used to calculate each column.
+The adjacency value for distance \f$r\f$ is defined as:
 \f[
 Adjacency (r) = Volume( Dilation(test domain, r) \wedge (target domain) )
 \f]
