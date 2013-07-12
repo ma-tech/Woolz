@@ -334,6 +334,44 @@ WlzErrorNum WlzToDArray2D(WlzIVertex2 *dstSizeArrayDat, double ***dstArrayDat,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzArray
+* \brief	Extracts a Alc unsigned int array for RGBA values from
+* 		any Woolz 2D domain object.		
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
+WlzErrorNum WlzToRArray2D(WlzIVertex2 *dstSizeArrayDat,
+			  unsigned int ***dstArrayDat,
+			  WlzObject *srcObj,
+			  WlzIVertex2 origin, WlzIVertex2 size,
+			  int noiseFlag)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    *dstSizeArrayDat = size;
+    errNum = WlzToArray2D((void ***)dstArrayDat, srcObj,
+    			  size, origin,
+    			  noiseFlag, WLZ_GREY_RGBA);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzArray
 * \brief	Extracts an Alc array from any Woolz 2D domain object.
 *		If the destination pointer points to a non-NULL 
 *		pointer then it is assumed to be a suitable Alc array.
@@ -858,6 +896,44 @@ WlzErrorNum WlzToDArray3D(WlzIVertex3 *dstSizeArrayDat, double ****dstArrayDat,
 
 /*!
 * \return	Woolz error code.
+* \ingroup	WlzArray
+* \brief	Extracts an unsigned int Alc array for RGBA values
+* 		from any Woolz 3D domain object.
+* \param	dstSizeArrayDat		Destination pointer for
+*					array size, may be NULL.
+* \param	dstArrayDat		Destination pointer for Alc
+*					double array.
+* \param	srcObj			Given Woolz object.
+* \param	origin			Array origin wrt given object.
+* \param	size			Required region size.
+* \param	noiseFlag		Fill background with random
+*                                       noise with the same mean and
+*                                       std. dev. as the given object
+*                                       if non-zero.
+*/
+WlzErrorNum WlzToRArray3D(WlzIVertex3 *dstSizeArrayDat,
+			  unsigned int ****dstArrayDat,
+			  WlzObject *srcObj,
+			  WlzIVertex3 origin, WlzIVertex3 size,
+			  int noiseFlag)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((dstArrayDat == NULL) || (dstSizeArrayDat == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else
+  {
+    *dstSizeArrayDat = size;
+    errNum = WlzToArray3D((void ****)dstArrayDat, srcObj, size,
+    			  origin, noiseFlag, WLZ_GREY_RGBA);
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
 * \ingroup 	WlzArray
 * \brief	Extracts an Alc array from any Woolz 3D domain object.
 *		If the destination pointer points to a non-NULL 
@@ -943,40 +1019,37 @@ WlzErrorNum	WlzToArray3D(void ****dstP, WlzObject *srcObj,
 *               pointer then it is assumed to be a suitable Alc array.
 * \param	dstP			Destination pointer (assumed
 *                                       valid if *dstP is non-NULL).
-* \param	srcObj			Given Woolz object.
-* \param	size			Size of the array.
-* \param	origin			Array origin wrt given object.
+* \param	obj			Given Woolz object.
+* \param	sz			Size of the array.
+* \param	og			Array origin wrt given object.
 */
-static WlzErrorNum WlzToArrayBit3D(WlzUByte ****dstP, WlzObject *srcObj,
-				   WlzIVertex3 size, WlzIVertex3 origin)
+static WlzErrorNum WlzToArrayBit3D(WlzUByte ****dstP, WlzObject *obj,
+				   WlzIVertex3 sz, WlzIVertex3 og)
 {
-  int		plnIdx,
+  int		idP,
   		plnCnt,
-		plnSz;
-  WlzDomain	*srcDomains;
-  WlzUByte	***dstP2D;
-  WlzIVertex2	size2D,
-  		origin2D;
-  WlzDomain	srcDom,
-  		dumDom;
-  WlzValues	dumVal;
-  WlzObject	*srcObj2D = NULL;
+		plnSz,
+		lastPIdx;
+  WlzDomain	*domains;
+  WlzDomain	dom;
+  WlzValues	nulVal;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  nulVal.core = NULL;
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
   	  ("WlzToArrayBit3D FE %p  %p {%d %d %d} {%d %d %d}\n",
-	   dstP, srcObj,
-	   size.vtX, size.vtY, size.vtZ, origin.vtX, origin.vtY, origin.vtZ));
+	   dstP, obj,
+	   sz.vtX, sz.vtY, sz.vtZ, og.vtX, og.vtY, og.vtZ));
 
-  if((srcDom = srcObj->domain).core == NULL)
+  if((dom = obj->domain).core == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(srcDom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
+  else if(dom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((srcDomains = srcDom.p->domains) == NULL)
+  else if((domains = dom.p->domains) == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
   }
@@ -984,7 +1057,7 @@ static WlzErrorNum WlzToArrayBit3D(WlzUByte ****dstP, WlzObject *srcObj,
   {
     if(*dstP == NULL)
     {
-      if(AlcBit3Malloc(dstP, size.vtZ, size.vtY, size.vtX) != ALC_ER_NONE)
+      if(AlcBit3Malloc(dstP, sz.vtZ, sz.vtY, sz.vtX) != ALC_ER_NONE)
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
@@ -992,37 +1065,61 @@ static WlzErrorNum WlzToArrayBit3D(WlzUByte ****dstP, WlzObject *srcObj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    dumDom.core = NULL;
-    dumVal.core = NULL;
-    srcObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dumDom, dumVal,
-    			   NULL, NULL, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    size2D.vtX = size.vtX;
-    size2D.vtY = size.vtY;
-    origin2D.vtX = origin.vtX;
-    origin2D.vtY = origin.vtY;
-    plnIdx =  0;
-    plnSz = size.vtY * ((size.vtX + 7) / 8);
-    plnCnt = srcDom.p->lastpl - srcDom.p->plane1 + 1;
-    while((errNum == WLZ_ERR_NONE) && (plnCnt-- > 0))
+    WlzIVertex2	sz2,
+		og2;
+
+    sz2.vtX = sz.vtX;
+    sz2.vtY = sz.vtY;
+    og2.vtX = og.vtX;
+    og2.vtY = og.vtY;
+    plnSz = sz.vtY * ((sz.vtX + 7) / 8);
+    plnCnt = sz.vtZ;
+    lastPIdx = dom.p->lastpl - dom.p->plane1;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(idP = 0; idP < plnCnt; ++idP)
     {
-      dstP2D = (*dstP + plnIdx);
-      srcObj2D->domain = *(srcDomains + plnIdx);
-      if(srcObj2D->domain.core == NULL)
+      if(errNum == WLZ_ERR_NONE)
       {
-        (void )memset(**dstP2D, 0, plnSz);
+        int	pIdx;
+	WlzDomain dom2;
+        WlzUByte ***dstP2;
+
+	pIdx = idP + og.vtZ - dom.p->plane1;
+	dstP2 = (*dstP + idP);
+	dom2 = *(domains + pIdx);
+	if((pIdx < 0) || (pIdx > lastPIdx) || (dom2.core == NULL))
+	{
+	  (void )memset(**dstP2, 0, plnSz);
+	}
+	else
+	{
+	  WlzObject *obj2;
+	  WlzErrorNum errNum2 = WLZ_ERR_NONE;
+
+	  obj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom2, nulVal, NULL, NULL,
+			     &errNum2);
+	  if(errNum2 == WLZ_ERR_NONE)
+	  {
+	    errNum2 = WlzToArrayBit2D(dstP2, obj2, sz2, og2);
+	  }
+#ifdef _OPENMP
+#pragma omp critical
+	  {
+#endif
+	    if(errNum2 != WLZ_ERR_NONE)
+	    {
+	      errNum = errNum2;
+	    }
+#ifdef _OPENMP
+	  }
+	  WlzFreeObj(obj2);
+#endif
+	}
       }
-      else
-      {
-        errNum = WlzToArrayBit2D(dstP2D, srcObj2D, size2D, origin2D);
-      }
-      ++plnIdx;
     }
   }
-  srcObj2D->domain = dumDom;
-  WlzFreeObj(srcObj2D);
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_2),
 	  ("WlzToArrayBit3D FX %d\n",
 	   errNum));
