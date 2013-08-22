@@ -1327,6 +1327,71 @@ extern WlzObject		*WlzBoundaryToObj(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzBuildObj.c
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzObject		*WlzBuildObj3(
+				  WlzObject *cObj,
+				  WlzIVertex3 og,
+				  WlzIVertex2 sz,
+				  WlzGreyType gType,
+				  int bufSz,
+				  WlzGreyP bufP,
+				  WlzErrorNum *dstErr);
+#endif
+extern WlzObject       		*WlzBuildObj3U(
+				  WlzObject *cObj,
+                                  WlzIVertex3 og,
+ 				  WlzIVertex2 sz,
+                                  int sizeArrayBuf,
+				  WlzUByte *arrayBuf,
+                                  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzBuildObj3S(
+				  WlzObject *cObj,
+                                  WlzIVertex3 og,
+ 				  WlzIVertex2 sz,
+                                  int sizeArrayBuf,
+				  short *arrayBuf,
+                                  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzBuildObj3I(
+				  WlzObject *cObj,
+                                  WlzIVertex3 og,
+ 				  WlzIVertex2 sz,
+                                  int sizeArrayBuf,
+				  int *arrayBuf,
+                                  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzBuildObj3F(
+				  WlzObject *cObj,
+                                  WlzIVertex3 og,
+ 				  WlzIVertex2 sz,
+                                  int sizeArrayBuf,
+				  float *arrayBuf,
+                                  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzBuildObj3D(
+				  WlzObject *cObj,
+                                  WlzIVertex3 og,
+ 				  WlzIVertex2 sz,
+                                  int sizeArrayBuf,
+				  double *arrayBuf,
+                                  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzBuildObj3R(
+				  WlzObject *cObj,
+                                  WlzIVertex3 og,
+ 				  WlzIVertex2 sz,
+                                  int sizeArrayBuf,
+				  WlzUInt *arrayBuf,
+                                  WlzErrorNum *dstErr);
+extern WlzObject		*WlzBuildObj3B(
+				  WlzObject *cObj,
+				  WlzIVertex3 og,
+				  WlzIVertex2 sz,
+				  WlzGreyType gType,
+				  int sizeArrayBuf,
+				  char *arrayBuf,
+				  WlzErrorNum *dstErr);
+
+
+/************************************************************************
  * WlzCannyDeriche.c							*
  ************************************************************************/
 extern WlzObject		*WlzCannyDeriche(
@@ -4314,8 +4379,10 @@ extern WlzObject		*WlzMakeRect(
 				  WlzPropertyList *plist,
 				  WlzObject *assoc_obj,
 				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 extern WlzObject		*WlzMakeEmpty(
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern WlzBoundList		*WlzMakeBoundList(
 				  WlzObjectType type,
 				  int wrap,
