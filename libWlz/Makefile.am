@@ -68,6 +68,7 @@ libWlz_la_SOURCES 	= \
 			  WlzBoundaryUtils.c \
 			  WlzBoundingBox.c \
 			  WlzBoundToObj.c \
+			  WlzBuildObj.c \
 			  WlzCannyDeriche.c \
 			  WlzCbThreshold.c \
 			  WlzCCor.c \
