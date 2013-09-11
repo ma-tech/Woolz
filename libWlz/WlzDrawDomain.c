@@ -94,11 +94,9 @@ typedef struct _WlzDrawDomWSp
   				             a copy of the current command
 					     being parsed. */
   int		bufMax;			/*!< Current buffer size. */
-#if defined _SVID_SOURCE || _BSD_SOURCE || _POSIX_C_SOURCE || _XOPEN_SOURCE
   char		*savPtr;		/*!< Used by strtok_r() if it's
                                              available, which makes the
 					     code reentrant. */
-#endif
 } WlzDrawDomWSp;
 
 static WlzErrorNum  		WlzDrawDomStrGetAct(
@@ -497,11 +495,7 @@ static WlzDrawDomCmd	WlzDrawDomStrGetCmd(WlzDrawDomWSp *wSp)
       }
     }
     /* Tokenize the buffer command string and get command name. */
-#if defined _SVID_SOURCE || _BSD_SOURCE || _POSIX_C_SOURCE || _XOPEN_SOURCE
-    str0 = strtok_r(wSp->buf, ":", &(wSp->savPtr));
-#else
-    str0 = strtok(wSp->buf, ":");
-#endif
+    str0 = ALC_STRTOK_R(wSp->buf, ":", &(wSp->savPtr));
     if(str0 != NULL)
     {
       if(WlzStringMatchValue(&id0, str0,
@@ -539,11 +533,7 @@ static WlzErrorNum  WlzDrawDomStrGetAct(WlzDrawDomWSp *wSp,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* Tokenize the buffer command string and get action. */
-#if defined _SVID_SOURCE || _BSD_SOURCE || _POSIX_C_SOURCE || _XOPEN_SOURCE
-  str0 = strtok_r(NULL, ",", &(wSp->savPtr));
-#else
-  str0 = strtok(NULL, ",");
-#endif
+  str0 = ALC_STRTOK_R(NULL, ",", &(wSp->savPtr));
   if(str0 == NULL)
   {
     errNum = WLZ_ERR_PARAM_DATA;
@@ -632,11 +622,7 @@ static WlzErrorNum WlzDrawDomStrGetValND(WlzDrawDomWSp *wSp,
   while(nVal-- > 0)
   {
     /* Tokenize the buffer command string and get action. */
-#if defined _SVID_SOURCE || _BSD_SOURCE || _POSIX_C_SOURCE || _XOPEN_SOURCE
-    str0 = strtok_r(NULL, ",", &(wSp->savPtr));
-#else
-    str0 = strtok(NULL, ",");
-#endif
+    str0 = ALC_STRTOK_R(NULL, ",", &(wSp->savPtr));
     if(str0 == NULL)
     {
       errNum = WLZ_ERR_EOO;
