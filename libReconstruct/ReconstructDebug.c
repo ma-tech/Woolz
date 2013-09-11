@@ -110,7 +110,7 @@ RecError	RecDbgWlzWrite(WlzObject *obj, int freeFlg)
       WlzFreeObj(obj);
     }
     funlockfile((FILE *)recDbgWlzData);
-#ifdef __MINGW32__
+#if (defined _WIN32 || defined __MINGW32__ )
     (void )Sleep(1);
 #else
     (void )sleep(1);
