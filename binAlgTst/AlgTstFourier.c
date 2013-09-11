@@ -338,7 +338,7 @@ int             main(int argc, char **argv)
     if(timeFlg)
     {
       gettimeofday(times + 1, NULL);
-      timersub(times + 1, times + 0, times + 2);
+      ALC_TIMERSUB(times + 1, times + 0, times + 2);
       (void )fprintf(stderr,
                      "%s: elapsed time for forward transform %gus\n",
 		     *argv,
@@ -399,7 +399,7 @@ int             main(int argc, char **argv)
     if(timeFlg)
     {
       gettimeofday(times + 1, NULL);
-      timersub(times + 1, times + 0, times + 2);
+      ALC_TIMERSUB(times + 1, times + 0, times + 2);
       (void )fprintf(stderr,
                      "%s: elapsed time for inverse transform %gus\n",
 		     *argv,

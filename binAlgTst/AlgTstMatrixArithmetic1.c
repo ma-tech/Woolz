@@ -236,7 +236,7 @@ int             main(int argc, char *argv[])
     AlgMatrixWriteAscii(a[1], stdout);
     if(timer)
     {
-      timersub(times + 1, times + 0, times + 2);
+      ALC_TIMERSUB(times + 1, times + 0, times + 2);
       (void )fprintf(stderr,
 		     "%s: Elapsed time %g\n",
 		     *argv, times[2].tv_sec + (0.000001 * times[2].tv_usec));
