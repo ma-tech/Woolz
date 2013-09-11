@@ -100,7 +100,7 @@ WlzObject	*WlzEffReadObjStl(FILE *fP, WlzErrorNum *dstErr)
   while((errNum == WLZ_ERR_NONE) &&
         ((str = WlzEffReadObjStlRec(fP, cBuf, 256)) != NULL))
   {
-    if((tok = strtok_r(str, " \t", &sav)) != NULL)
+    if((tok = ALC_STRTOK_R(str, " \t", &sav)) != NULL)
     {
       if(strncmp(tok, "solid", 5) == 0)
       {
@@ -127,7 +127,7 @@ WlzObject	*WlzEffReadObjStl(FILE *fP, WlzErrorNum *dstErr)
       }
       else if(strncmp(tok, "outer", 5) == 0)
       {
-        if(((tok = strtok_r(NULL, " \t", &sav)) == NULL) ||
+        if(((tok = ALC_STRTOK_R(NULL, " \t", &sav)) == NULL) ||
 	   (strncmp(tok, "loop", 4) != 0) ||
            (inSolid == 0) || (inFacet == 0) || (inLoop != 0))
 	{
@@ -144,9 +144,9 @@ WlzObject	*WlzEffReadObjStl(FILE *fP, WlzErrorNum *dstErr)
 	char *pTok[3];
 
         if((vCnt < 3) &&
-	   ((pTok[0] = strtok_r(NULL, " \t", &sav)) != NULL) &&
-	   ((pTok[1] = strtok_r(NULL, " \t", &sav)) != NULL) &&
-	   ((pTok[2] = strtok_r(NULL, " \t", &sav)) != NULL) &&
+	   ((pTok[0] = ALC_STRTOK_R(NULL, " \t", &sav)) != NULL) &&
+	   ((pTok[1] = ALC_STRTOK_R(NULL, " \t", &sav)) != NULL) &&
+	   ((pTok[2] = ALC_STRTOK_R(NULL, " \t", &sav)) != NULL) &&
 	   (sscanf(pTok[0], "%lg", &(vBuf[vCnt].vtX)) == 1) &&
 	   (sscanf(pTok[1], "%lg", &(vBuf[vCnt].vtY)) == 1) &&
 	   (sscanf(pTok[2], "%lg", &(vBuf[vCnt].vtZ)) == 1))

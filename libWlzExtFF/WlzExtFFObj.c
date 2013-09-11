@@ -149,7 +149,7 @@ WlzObject	*WlzEffReadObjObj(FILE *fP, WlzErrorNum *dstErr)
   while((errNum == WLZ_ERR_NONE) &&
         ((str = WlzEffReadObjObjRec(fP, cBuf, 256)) != NULL))
   {
-    if((tok = strtok_r(str, " \t", &sav)) != NULL)
+    if((tok = ALC_STRTOK_R(str, " \t", &sav)) != NULL)
     {
       if(strcmp(tok, "v") == 0)
       {
@@ -157,7 +157,7 @@ WlzObject	*WlzEffReadObjObj(FILE *fP, WlzErrorNum *dstErr)
 	{
 	  errNum = WLZ_ERR_MEM_ALLOC;
 	}
-	else if(((str = strtok_r(NULL, "\n", &sav)) == NULL) ||
+	else if(((str = ALC_STRTOK_R(NULL, "\n", &sav)) == NULL) ||
 		(sscanf(str, "%lg %lg %lg",
 		        &(dP->vtX), &(dP->vtY), &(dP->vtZ)) != 3))
 	{
@@ -170,7 +170,7 @@ WlzObject	*WlzEffReadObjObj(FILE *fP, WlzErrorNum *dstErr)
 	{
 	  errNum = WLZ_ERR_MEM_ALLOC;
 	}
-	else if(((str = strtok_r(NULL, "\n", &sav)) == NULL) ||
+	else if(((str = ALC_STRTOK_R(NULL, "\n", &sav)) == NULL) ||
 		(sscanf(str, "%lg %lg %lg",
 		        &(dP->vtX), &(dP->vtY), &(dP->vtZ)) != 3))
 	{
@@ -183,7 +183,7 @@ WlzObject	*WlzEffReadObjObj(FILE *fP, WlzErrorNum *dstErr)
 	{
 	  errNum = WLZ_ERR_MEM_ALLOC;
 	}
-	else if(((str = strtok_r(NULL, "\n", &sav)) == NULL) ||
+	else if(((str = ALC_STRTOK_R(NULL, "\n", &sav)) == NULL) ||
 		(sscanf(str, "%d %d %d", iP + 0, iP + 1, iP + 2) != 3))
 	{
 	  errNum = WLZ_ERR_READ_INCOMPLETE;
