@@ -3196,9 +3196,6 @@ extern WlzDVertex2		WlzGeomUnitVector2D(
 				  WlzDVertex2 vec);
 extern WlzDVertex3		WlzGeomUnitVector3D(
 				  WlzDVertex3 vec);
-extern WlzDVertex2		WlzGeomUnitVector2D5(
-				  WlzDVertex2 pos1,
-				  WlzDVertex2 pos0);
 extern WlzDVertex3		WlzGeomUnitVector3D2(
 				  WlzDVertex3 pos1,
 				  WlzDVertex3 pos0);
