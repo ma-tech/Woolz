@@ -506,7 +506,7 @@ int main(int	argc,
 	if(timer)
 	{
 	  gettimeofday(times + 1, NULL);
-	  timersub(times + 1, times + 0, times + 2);
+	  ALC_TIMERSUB(times + 1, times + 0, times + 2);
 	  (void )fprintf(stderr,
 	                 "%s: Elapsed time = %g\n",
 			 *argv,
