@@ -915,7 +915,7 @@ struct timeval	times[3];
   }
 #ifdef WLZ_DEBUG_PROJECT3D_TIME
   gettimeofday(times + 1, NULL);
-  timersub(times + 1, times + 0, times + 2);
+  ALC_TIMERSUB(times + 1, times + 0, times + 2);
   (void )fprintf(stderr, "WlzGetProjectionFromObject: Elapsed time = %g\n",
                  times[2].tv_sec + (0.000001 * times[2].tv_usec));
 #endif /* WLZ_DEBUG_PROJECT3D_TIME */
