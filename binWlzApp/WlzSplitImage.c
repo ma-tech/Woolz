@@ -417,7 +417,11 @@ int             main(int argc, char *argv[])
 	}
 	else
 	{
+#if (defined _WIN32 || defined __MINGW32__ )
+	  if(mkdir(pathBuf) != 0)
+#else
 	  if(mkdir(pathBuf, S_IRWXU) != 0)
+#endif
 	  {
 	    errNum = WLZ_ERR_WRITE_EOF;
 	  }
