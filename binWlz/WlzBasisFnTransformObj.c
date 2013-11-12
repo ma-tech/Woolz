@@ -61,11 +61,11 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
 <table width="500" border="0">
   <tr> 
     <td><b>-B</b></td>
-    <td>Block mesh generation method (default).</td>
+    <td>Block mesh generation method.</td>
   </tr>
   <tr> 
     <td><b>-C</b></td>
-    <td>Use conforming mesh.</td>
+    <td>Use conforming mesh (default).</td>
   </tr>
   <tr> 
     <td><b>-D</b></td>
@@ -920,7 +920,7 @@ int             main(int argc, char **argv)
     "\n"
     "Options:\n"
     "  -b  Basis function transform object.\n"
-    "  -B  Block mesh generation method (default).\n"
+    "  -B  Block mesh generation method.\n"
     "  -C  Use conforming mesh.\n"
     "  -D  Debug flags:\n"
     "        1  Output the mesh as postscript to standard error output.\n"
@@ -928,7 +928,7 @@ int             main(int argc, char **argv)
     "           output.\n"
     "      These debug flags are only intended for use when debuging and\n"
     "      they may be combined by an or operation (eg 11 = 1 | 2 | 8).\n"
-    "  -G  Gradient mesh generation method.\n"
+    "  -G  Gradient mesh generation method (default).\n"
     "  -L  Use linear interpolation instead of nearest neighbour.\n"
     "  -m  Minimum mesh node separation distance (default 10.0)\n"
     "  -M  Maximum mesh node separation distance (default 100.0)\n"
