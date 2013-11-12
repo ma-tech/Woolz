@@ -57,8 +57,9 @@ into 3D using the view transform.
 \par Synopsis
 \verbatim
 WlzDrawDomainObj [-2] [-a<pitch,yaw,roll>] [-f <fx,fy,fz>]
-                 [-d <dist> [-b <view bib file>]
+                 [-d <dist>] [-b <view bib file>]
                  [-m <mode>] [-u<ux,uy,uz>]
+		 [-e] [-E <vx,vy,vz>]
                  [-g <ox,oy,oz>] [-h] [-o<output object>]
 		 [-r <ref object>] [-s <cmd str>] [<cmd str file>>]
 \endverbatim
@@ -93,6 +94,15 @@ WlzDrawDomainObj [-2] [-a<pitch,yaw,roll>] [-f <fx,fy,fz>]
   <tr>
     <td><b>-u</b></td>
     <td>Up vector, default 0.0,0.0,1.0.</td>
+  </tr>
+  <tr>
+    <td><b>-e</b></td>
+    <td>Use object voxel size, default is voxel size 1.0,1.0,1.0.</td>
+  </tr>
+  <tr>
+    <td><b>-E</b></td>
+    <td>Use supplied voxel size rather than the object voxel size,
+        default 1.0,1.0,1.0.</td>
   </tr>
   <tr>
     <td><b>-g</b></td>
@@ -209,6 +219,13 @@ static  WlzErrorNum 		WlzDrawDomObjReadView(
 				  WlzThreeDViewStruct *view,
 				  char **errMsg);
 
+typedef enum _WlzDDOVxSzSrc
+{
+  WLZDDO_VSS_UNIT = 0,	/* Unit voxel size (1.0,1.0,1.0) */
+  WLZDDO_VSS_GVN,	/* Use given voxel size from command line. */
+  WLZDDO_VSS_OBJ	/* Use object voxel size. */
+} WlzDDOVxSzSrc;
+
 int             main(int argc, char **argv)
 {
   int		tI,
@@ -217,6 +234,7 @@ int             main(int argc, char **argv)
 		keep2D = 0,
 		ok = 1,
 		usage = 0;
+  WlzDDOVxSzSrc voxSzSrc = WLZDDO_VSS_UNIT;
   WlzDVertex2	org;
   WlzThreeDViewStruct *view = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -228,8 +246,9 @@ int             main(int argc, char **argv)
 		*refFileStr = NULL,
   		*outFileStr,
         	*inFileStr;
+  double	voxSz[3];
   const char	*errMsg;
-  static char	optList[] = "a:b:d:f:g:m:o:r:s:u:2h",
+  static char	optList[] = "a:b:d:E:f:g:m:o:r:s:u:2eh",
 		outFileStrDef[] = "-",
   		inFileStrDef[] = "-";
 
@@ -238,6 +257,7 @@ int             main(int argc, char **argv)
   org.vtX = org.vtY = 0.0;
   inFileStr = inFileStrDef;
   outFileStr = outFileStrDef;
+  voxSz[0] = voxSz[1] = voxSz[2] = 1.0;
   if((view = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) == NULL)
   {
     ok = 0;
@@ -267,6 +287,16 @@ int             main(int argc, char **argv)
 	                                  &(view->phi),
 					  &(view->theta),
 					  &(view->zeta)) < 1;
+	  break;
+	case 'e':
+	  voxSzSrc = WLZDDO_VSS_OBJ;
+	  break;
+	case 'E':
+	  voxSzSrc = WLZDDO_VSS_GVN;
+	  usage = WlzDrawDomObjScanTriple(optarg,
+	                                  &(voxSz[0]),
+					  &(voxSz[1]),
+					  &(voxSz[2])) < 1;
 	  break;
 	case 'f':
 	  usage = WlzDrawDomObjScanTriple(optarg,
@@ -375,6 +405,27 @@ int             main(int argc, char **argv)
     }
     ok = usage == 0;
   }
+  if(ok)
+  {
+    switch(voxSzSrc)
+    {
+      case WLZDDO_VSS_UNIT:
+	view->voxelRescaleFlg = 0;
+	view->voxelSize[0] = 1.0f;
+	view->voxelSize[1] = 1.0f;
+	view->voxelSize[2] = 1.0f;
+	break;
+       case WLZDDO_VSS_GVN:
+	view->voxelRescaleFlg = 1;
+	 view->voxelSize[0] = (float )WLZ_CLAMP(voxSz[0], FLT_MIN, FLT_MAX);
+	 view->voxelSize[1] = (float )WLZ_CLAMP(voxSz[1], FLT_MIN, FLT_MAX);
+	 view->voxelSize[2] = (float )WLZ_CLAMP(voxSz[2], FLT_MIN, FLT_MAX);
+	 break;
+      case WLZDDO_VSS_OBJ:
+	/* Handled below. */
+        break;
+    }
+  }
   if(ok && refObj)
   {
     WlzObject	*sObj = NULL;
@@ -390,10 +441,21 @@ int             main(int argc, char **argv)
       v->zeta = view->zeta;
       v->dist = view->dist;
       v->scale = view->scale;
+      if(voxSzSrc == WLZDDO_VSS_OBJ)
+      {
+	view->voxelRescaleFlg = 1;
+	if((refObj->type == WLZ_3D_DOMAINOBJ) &&
+	   (refObj->domain.core != NULL) &&
+	   (refObj->domain.core->type == WLZ_PLANEDOMAIN_DOMAIN))
+	{
+	  view->voxelSize[0] = refObj->domain.p->voxel_size[0];
+	  view->voxelSize[1] = refObj->domain.p->voxel_size[1];
+	  view->voxelSize[2] = refObj->domain.p->voxel_size[2];
+	}
+      }
       v->voxelSize[0] = view->voxelSize[0];
       v->voxelSize[1] = view->voxelSize[1];
       v->voxelSize[2] = view->voxelSize[2];
-      v->voxelRescaleFlg = view->voxelRescaleFlg;
       v->interp = view->interp;
       v->view_mode = view->view_mode;
       v->up = view->up;
@@ -479,9 +541,11 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%s%s%sExample: %s%s",
     *argv,
-    " [-2] [-a<pitch,yaw,roll>] [-f <fx,fy,fz>]\n"
+    " [-2] [-a<pitch,yaw,roll>]\n"
+    "                 [-f <fx,fy,fz>]\n"
     "                 [-d <dist> [-b <view bib file>]\n"
     "                 [-m <mode>] [-u<ux,uy,uz>]\n"
+    "                 [-e] [-E<vx,vy,vz>]\n"
     "                 [-g <ox,oy,oz>] [-h] [-o<output>]\n"
     "                 [-r <ref object>]\n"
     "                 [-s <cmd str>] [<cmd str file>>]\n"
@@ -498,6 +562,9 @@ int             main(int argc, char **argv)
     "  -m  Viewing mode, one of: up-is-up, statue or absolute, default\n"
     "      is up-is-up.\n"
     "  -u  Up vector, default 0.0,0.0,1.0.\n"
+    "  -e  Use object voxel size, default is voxel size 1.0,1.0,1.0.\n"
+    "  -E  Use supplied voxel size rather than the object voxel size,\n"
+    "      default 1.0,1.0,1.0.\n"
     "  -g  Origin of the drawing with respect to the 2D Woolz object\n"
     "      cut using the view transform, default 0.0,0.0.\n"
     "  -r  Reference object. If given this is must be a 3D spatial domain\n"
