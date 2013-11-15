@@ -42,8 +42,9 @@ static char _AlgMatrixSV_c[] = "University of Edinburgh $Id$";
 #include <Alg.h>
 #include <float.h>
 
-static double	AlgMatrixSVPythag(double, double);
+#define ALG_FAST_CODE
 
+static double	AlgMatrixSVPythag(double, double);
 
 /*!
 * \return	Error code.
@@ -192,6 +193,7 @@ AlgError	AlgMatrixSVDecomp(AlgMatrix aMat, double *wVec, AlgMatrix vMat)
   		*tDVec = NULL;
   double	**tDPP0;
   const int	maxIts = 100;  /* Maximum iterations to find singular value. */
+  const double	aScale = 0.01;  /* Used with aNorm to test for small values. */
   AlgError	errCode = ALG_ERR_NONE;
 
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
@@ -468,12 +470,12 @@ AlgError	AlgMatrixSVDecomp(AlgMatrix aMat, double *wVec, AlgMatrix vMat)
 	for(idL = idK; idL >= 0; --idL)
 	{
 	  nNM = idL - 1;
-	  if(fabs((tDVec[idL]) + aNorm) == aNorm)
+	  if(fabs((tDVec[idL] * aScale) + aNorm) == aNorm)
 	  {
 	    flag = 0;
 	    break;
 	  }
-	  if((fabs(wVec[nNM]) + aNorm) == aNorm)
+	  if((fabs(wVec[nNM] * aScale) + aNorm) == aNorm)
 	  {
 	    break;
 	  }
@@ -485,7 +487,8 @@ AlgError	AlgMatrixSVDecomp(AlgMatrix aMat, double *wVec, AlgMatrix vMat)
 	  for(idI = idL; idI <= idK; ++idI)
 	  {
 	    f = s * tDVec[idI];
-	    if(fabs(f) + aNorm != aNorm)
+
+	    if(fabs(f * aScale) + aNorm != aNorm)
 	    {
 	      g = wVec[idI];
 	      h = AlgMatrixSVPythag(f, g);
@@ -657,10 +660,13 @@ AlgError	AlgMatrixSVBackSub(AlgMatrix uMat, double *wVec, AlgMatrix vMat,
   }
   else
   {
-    int	   nM,
-    	   nN;
-    double **uAry,
-    	   **vAry;
+#ifndef ALG_FAST_CODE
+    int	   	idI;
+#endif
+    int 	nM,
+    	   	nN;
+    double 	**uAry,
+    	   	**vAry;
 
     nM = uMat.rect->nR;
     nN = uMat.rect->nC;
@@ -671,14 +677,20 @@ AlgError	AlgMatrixSVBackSub(AlgMatrix uMat, double *wVec, AlgMatrix vMat,
       s = 0.0;
       if(fabs(wVec[idJ]) > DBL_EPSILON)
       {
+#ifdef ALG_FAST_CODE
 	cnt0 = nM;
 	tDPP0 = uAry;
 	tDP0 = bVec;
-	while(cnt0-- > 0)	/* for(idI = 0; idI < nM; ++idI) */
+	while(cnt0-- > 0)
 	{
-	  s += *(*tDPP0++ + idJ) * *tDP0++; /* s += uMat[idI][idJ] *
-	  					    bVec[idI]; */
+	  s += *(*tDPP0++ + idJ) * *tDP0++;
 	}
+#else
+	for(idI = 0; idI < nM; ++idI)
+	{
+	  s += uAry[idI][idJ] * bVec[idI];
+        }
+#endif
 	s /= wVec[idJ];
       }
       tDVec[idJ] = s;
@@ -686,13 +698,20 @@ AlgError	AlgMatrixSVBackSub(AlgMatrix uMat, double *wVec, AlgMatrix vMat,
     for(idJ = 0; idJ < nN; ++idJ) 
     {
       s = 0.0;
+#ifdef ALG_FAST_CODE
       cnt0 = nN;
       tDP0 = *(vAry + idJ);
       tDP1 = tDVec;
-      while(cnt0-- > 0)		/* for(idI = 0; idI < nN; ++idI) */
+      while(cnt0-- > 0)
       {
-        s += *tDP0++ * *tDP1++; /* s += vMat[idJ][idI] * tDVec[idI]; */
+        s += *tDP0++ * *tDP1++;
       }
+#else
+      for(idI = 0; idI < nN; ++idI)
+      {
+	s += vAry[idJ][idI] * tDVec[idI];
+      }
+#endif
       bVec[idJ] = s;
     }
     AlcFree(tDVec);
