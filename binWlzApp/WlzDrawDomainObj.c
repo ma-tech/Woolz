@@ -453,6 +453,7 @@ int             main(int argc, char **argv)
 	  view->voxelSize[2] = refObj->domain.p->voxel_size[2];
 	}
       }
+      v->voxelRescaleFlg = view->voxelRescaleFlg;
       v->voxelSize[0] = view->voxelSize[0];
       v->voxelSize[1] = view->voxelSize[1];
       v->voxelSize[2] = view->voxelSize[2];
