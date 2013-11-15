@@ -1,4 +1,4 @@
-# Doxyfile 1.4.1
+# Doxyfile 1.4.2
 
 # This file describes the settings to be used by the documentation system
 # doxygen (www.doxygen.org) for a project
@@ -23,7 +23,7 @@ PROJECT_NAME           = "Woolz Image Processing"
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-PROJECT_NUMBER         = "Version 1.4.0"
+PROJECT_NUMBER         = "Version 1.4.2"
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) 
 # base path where the generated documentation will be put. 
