@@ -221,8 +221,13 @@ is then written to tied.wlz.
 #define	IN_RECORD_MAX   (1024)
 
 static void			WlzMeshOutputPS(
-				  WlzMeshTransform *meshTr);
+				  int dbg,
+				  WlzMeshTransform *meshTr,
+				  int n,
+				  WlzDVertex2 *sV,
+				  WlzDVertex2 *dV);
 static void			WlzCMeshOutputPS(
+				  int dbg,
 				  WlzObject *mObj,
 				  WlzObject *sObj,
 				  WlzObject *dilObj,
@@ -844,18 +849,15 @@ int             main(int argc, char **argv)
 	  }
 	}
       }
-      if(errNum == WLZ_ERR_NONE)
+      if(dbgFlg)
       {
-	if(dbgFlg & 1)
+	if(cMesh)
 	{
-	  if(cMesh)
-	  {
-	    WlzCMeshOutputPS(meshTr.obj, inObj, dilObj, outObj);
-	  }
-	  else
-	  {
-	    WlzMeshOutputPS(meshTr.mesh);
-	  }
+	  WlzCMeshOutputPS(dbgFlg, meshTr.obj, inObj, dilObj, outObj);
+	}
+	else
+	{
+	  WlzMeshOutputPS(dbgFlg, meshTr.mesh, nTiePP, vxA0.d2, vxA1.d2);
 	}
       }
       if(errNum != WLZ_ERR_NONE)
@@ -1224,26 +1226,29 @@ static WlzErrorNum WlzBFTOGetVertices3D(int *dstNVx,
 * \return	void
 * \brief	Outputs the mesh and displaced mesh of the given mesh
 *		transform as Postscript to the standard error output.
+* \param	dbg			Debug flag.
 * \param	mesh			Given mesh transform.
 */
-static void	WlzMeshOutputPS(WlzMeshTransform *meshTr)
+static void	WlzMeshOutputPS(int dbg, WlzMeshTransform *meshTr,
+				int n, WlzDVertex2 *sV, WlzDVertex2 *dV)
 {
   int		elmCount,
-  		nodCount;
+  		nodCount,
+		scaleSet = 0;
   double	scale;
   WlzMeshNode	*nod;
   WlzMeshElem	*elm;
   WlzDVertex2	tVx,
   		offset;
   WlzDBox2	bBox;
-  WlzDVertex2	elmVx[3];
+  WlzDVertex2	vx[3];
 
   (void )fprintf(stderr, "%%!\n"
   			 "1 setlinecap\n"
 			 "1 setlinejoin\n"
 			 "0.01 setlinewidth\n");
   if(meshTr && (meshTr->type == WLZ_TRANSFORM_2D_MESH) &&
-    (meshTr->nNodes > 0) && (meshTr->nElem > 0))
+    (meshTr->nNodes > 0) && (meshTr->nElem > 0) && ((dbg & 1) != 0))
   {
     /* Compute the bounding box of the mesh transform. */
     nod = meshTr->nodes;
@@ -1293,6 +1298,7 @@ static void	WlzMeshOutputPS(WlzMeshTransform *meshTr)
        ((tVx.vtY = fabs(bBox.yMax - bBox.yMin)) > 1.0))
     {
       /* Compute scale and offset for an A4 page. */
+      scaleSet = 1;
       if((4.0 * tVx.vtX) > (3.0 * tVx.vtY))
       {
         scale = 500.0 / (bBox.xMax - bBox.xMin);
@@ -1312,9 +1318,9 @@ static void	WlzMeshOutputPS(WlzMeshTransform *meshTr)
 	while(--nodCount >= 0)
 	{
 	  nod = meshTr->nodes + elm->nodes[nodCount];
-	  elmVx[nodCount] = nod->position;
-	  elmVx[nodCount].vtX = (elmVx[nodCount].vtX * scale) - offset.vtX;
-	  elmVx[nodCount].vtY = (elmVx[nodCount].vtY * -scale) - offset.vtY;
+	  vx[nodCount] = nod->position;
+	  vx[nodCount].vtX = (vx[nodCount].vtX * scale) - offset.vtX;
+	  vx[nodCount].vtY = (vx[nodCount].vtY * -scale) - offset.vtY;
 	}
 	(void )fprintf(stderr,
 		       "%g %g moveto "
@@ -1322,10 +1328,10 @@ static void	WlzMeshOutputPS(WlzMeshTransform *meshTr)
 		       "%g %g lineto "
 		       "%g %g lineto "
 		       "stroke\n",
-		       elmVx[0].vtX, elmVx[0].vtY,
-		       elmVx[1].vtX, elmVx[1].vtY,
-		       elmVx[2].vtX, elmVx[2].vtY,
-		       elmVx[0].vtX, elmVx[0].vtY);
+		       vx[0].vtX, vx[0].vtY,
+		       vx[1].vtX, vx[1].vtY,
+		       vx[2].vtX, vx[2].vtY,
+		       vx[0].vtX, vx[0].vtY);
 	++elm;
       }
       (void )fprintf(stderr, "0 0 255 setrgbcolor\n");
@@ -1337,10 +1343,10 @@ static void	WlzMeshOutputPS(WlzMeshTransform *meshTr)
 	while(--nodCount >= 0)
 	{
 	  nod = meshTr->nodes + elm->nodes[nodCount];
-	  elmVx[nodCount].vtX = nod->position.vtX + nod->displacement.vtX;
-	  elmVx[nodCount].vtY = nod->position.vtY + nod->displacement.vtY;
-	  elmVx[nodCount].vtX = (elmVx[nodCount].vtX * scale) - offset.vtX;
-	  elmVx[nodCount].vtY = (elmVx[nodCount].vtY * -scale) - offset.vtY;
+	  vx[nodCount].vtX = nod->position.vtX + nod->displacement.vtX;
+	  vx[nodCount].vtY = nod->position.vtY + nod->displacement.vtY;
+	  vx[nodCount].vtX = (vx[nodCount].vtX *  scale) - offset.vtX;
+	  vx[nodCount].vtY = (vx[nodCount].vtY * -scale) - offset.vtY;
 	}
 	(void )fprintf(stderr,
 		       "%g %g moveto "
@@ -1348,27 +1354,104 @@ static void	WlzMeshOutputPS(WlzMeshTransform *meshTr)
 		       "%g %g lineto "
 		       "%g %g lineto "
 		       "stroke\n",
-		       elmVx[0].vtX, elmVx[0].vtY,
-		       elmVx[1].vtX, elmVx[1].vtY,
-		       elmVx[2].vtX, elmVx[2].vtY,
-		       elmVx[0].vtX, elmVx[0].vtY);
+		       vx[0].vtX, vx[0].vtY,
+		       vx[1].vtX, vx[1].vtY,
+		       vx[2].vtX, vx[2].vtY,
+		       vx[0].vtX, vx[0].vtY);
 	++elm;
       }
-      (void )fprintf(stderr, "showpage\n");
     }
   }
+  if((n > 0) && (sV != NULL) && (dV != NULL))
+  {
+    int		i;
+    double	rad;
+
+    if(scaleSet == 0)
+    {
+      for(i = 1; i < n; ++i)
+      {
+	vx[0].vtX = (sV[i].vtX *  scale) - offset.vtX;
+	vx[0].vtY = (sV[i].vtY * -scale) - offset.vtY;
+	vx[1].vtX = (dV[i].vtX *  scale) - offset.vtX;
+	vx[1].vtY = (dV[i].vtY * -scale) - offset.vtY;
+	if(i == 0)
+	{
+	  bBox.xMin = bBox.xMax = WLZ_MAX(vx[0].vtX, vx[1].vtX);
+	  bBox.yMin = bBox.yMax = WLZ_MAX(vx[0].vtY, vx[1].vtX);
+	}
+	else
+	{
+	  tVx.vtX = WLZ_MIN(vx[0].vtX, vx[1].vtX);
+	  tVx.vtY = WLZ_MIN(vx[0].vtY, vx[1].vtY);
+	  if(bBox.xMin > tVx.vtX)
+	  {
+	    bBox.xMin = tVx.vtX;
+	  }
+	  if(bBox.xMin > tVx.vtY)
+	  {
+	    bBox.yMin = tVx.vtY;
+	  }
+	  tVx.vtX = WLZ_MAX(vx[0].vtX, vx[1].vtX);
+	  tVx.vtY = WLZ_MAX(vx[0].vtY, vx[1].vtY);
+	  if(bBox.xMax < tVx.vtX)
+	  {
+	    bBox.xMax = tVx.vtX;
+	  }
+	  if(bBox.xMax < tVx.vtY)
+	  {
+	    bBox.yMax = tVx.vtY;
+	  }
+	}
+      }
+      tVx.vtX = fabs(bBox.xMax - bBox.xMin);
+      tVx.vtY = fabs(bBox.yMax - bBox.yMin);
+      if((4.0 * tVx.vtX) > (3.0 * tVx.vtY))
+      {
+        scale = 500.0 / (bBox.xMax - bBox.xMin);
+      }
+      else
+      {
+        scale = 700.0 / (bBox.yMax - bBox.yMin);
+      }
+      offset.vtX = (bBox.xMin * scale) - 50;
+      offset.vtY = (bBox.yMin * -scale) - 750;
+    }
+    rad = 2.0 * scale;
+    (void )fprintf(stderr, "0 255 0 setrgbcolor\n");
+    for(i = 0; i < n; ++i)
+    {
+      vx[0].vtX = (sV[i].vtX *  scale) - offset.vtX;
+      vx[0].vtY = (sV[i].vtY * -scale) - offset.vtY;
+      vx[1].vtX = (dV[i].vtX *  scale) - offset.vtX;
+      vx[1].vtY = (dV[i].vtY * -scale) - offset.vtY;
+      /* Draw filled circle at source vertex. */
+      (void )fprintf(stderr,
+                     "%g %g %g 0 360 arc closepath fill\n",
+                     vx[0].vtX, vx[0].vtY, rad);
+      /* Draw line to destination vertex. */
+      (void )fprintf(stderr,
+                     "%g %g moveto "
+		     "%g %g lineto "
+		     "stroke\n",
+		     vx[0].vtX, vx[0].vtY,
+		     vx[1].vtX, vx[1].vtY);
+    }
+  }
+  (void )fprintf(stderr, "showpage\n");
 }
 
 /*!
 * \return	void
 * \brief	Outputs the mesh and displaced mesh of the given mesh
 *		transform as Postscript to the standard error output.
+* \param	dbg			Debug flag,
 * \param	mObj			Given mesh transform object.
 * \param	sObj			Source object.
 * \param	dilObj			Dilated object.
 * \param	outObj			Transformed object.
 */
-static void	WlzCMeshOutputPS(WlzObject *mObj,
+static void	WlzCMeshOutputPS(int dbg, WlzObject *mObj,
 				 WlzObject *sObj, WlzObject *dilObj,
 				 WlzObject *outObj)
 {
