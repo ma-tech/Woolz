@@ -53,7 +53,7 @@ WlzDomainAdjacencyMatrix - calculate adjacency profiles for a domain
  with respect to a domain set.
 \par Synopsis
 \verbatim
-WlzDomainAdjacencyMatrix [-a min,max,step] [-f <domain file>] [-h] [-v] <test domain file>
+WlzDomainAdjacencyMatrix [-a min,max,step] [-f <domain file>] [-n] [-t] [-T][-h] [-v] <test domain file>
 
 \endverbatim
 \par Options
@@ -65,6 +65,18 @@ WlzDomainAdjacencyMatrix [-a min,max,step] [-f <domain file>] [-h] [-v] <test do
   <tr>
     <td><b>-f \<file\></b></td>
     <td>input the name of a file with the target domain set</td>
+  </tr>
+  <tr>
+    <td><b>-n</b></td>
+    <td>normalise values by target volume</td>
+  </tr>
+  <tr>
+    <td><b>-t</b></td>
+    <td>Output progress ticks</td>
+  </tr>
+  <tr>
+    <td><b>-T</b></td>
+    <td>Output tab-separated values (TSV) default is CSV</td>
   </tr>
   <tr>
     <td><b>-h</b></td>
@@ -114,7 +126,7 @@ static void usage(
 {
   fprintf(stderr,
 	  "Usage:\n"
-	  "%s [-a min,max,step] [-f <domain file>] [-h] [-v]  <test domain file>\n"
+	  "%s [-a min,max,step] [-f <domain file>] [-n <norm data file>] [-t] [-T] [-h] [-v]  <test domain file>\n"
 	  "\tRead in domains from the input file or from stdin, calculate the \n"
 	  "\tadjacency profile with repect to the test domain and output as a \n"
 	  "\tmatrix of values. The first row is the adjacency distances used to\n"
@@ -122,7 +134,11 @@ static void usage(
 	  "Woolz Version: %s\n"
 	  "Arguments:\n"
 	  "\t-a#,#,#    min and max values of the adjacency distance and step (default -10,100,1)\n"
-	  "\t-f<file>   input the name of a file containing the target domain set.\n"
+	  "\t-f <file>  input the name of a file containing the target domain set.\n"
+	  "\t-d <file>  calculate derivative and output to file given\n"
+	  "\t-n <file>  normalise by target volume (so max val = 1.0) and output to file given\n"
+	  "\t-t         output progress ticks\n"
+	  "\t-T         output TSV, default CSV\n"
 	  "\t-h         print this message\n"
 	  "\t-v         verbose operation\n"
 	  "\n",
@@ -174,10 +190,13 @@ int main(
   char  **argv)
 {
   FILE		*infileDomains, *infile, *outfile;
-  char 		optList[] = "a:f:thv";
+  FILE		*normOutfile, *derivOutfile;
+  char 		optList[] = "a:d:f:n:tThv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		verboseFlg=0, tickFlg=0;
+  int		normaliseFlg=0, derivFlg=0, TSVFlg=0;
+  char		separatorChar=',';
   WlzObject	**domains;
   int		numDomains;
   WlzObject	*obj, *obj1, *testDomain;
@@ -186,7 +205,8 @@ int main(
   WlzObject	**structElements, **refDomains;
   int		i, j, radius;
   int		rMin=-10, rMax=100, rStep=1;
-  int		adjVal;
+  int       	adjVal;
+  double	normalisedAdjVal;
 
   /* read the argument list and check for an input file */
   infile  = stdin;
@@ -216,6 +236,15 @@ int main(
       }
       break;
 
+    case 'd':
+      derivFlg = 1;
+      if((derivOutfile = fopen(optarg, "r")) == NULL){
+	fprintf(stderr, "%s: can't open output file for derivative values %s\n", argv[0], optarg);
+	usage(argv[0]);
+	return 1;
+      }
+      break;
+
     case 'f':
       if((infileDomains = fopen(optarg, "r")) == NULL){
 	fprintf(stderr, "%s: can't open domains file %s\n", argv[0], optarg);
@@ -224,8 +253,22 @@ int main(
       }
       break; 
 
+    case 'n':
+      normaliseFlg = 1;
+      if((normOutfile = fopen(optarg, "w")) == NULL){
+	fprintf(stderr, "%s: can't open output file for normalised values %s\n", argv[0], optarg);
+	usage(argv[0]);
+	return 1;
+      }
+      break;
+
     case 't':
       tickFlg = 1;
+      break;
+
+    case 'T':
+      TSVFlg = 1;
+      separatorChar = '\t';
       break;
 
     case 'v':
@@ -314,7 +357,14 @@ int main(
     if( (radius + rStep) > rMax ){
       fprintf(outfile, "%d\n", radius);
     } else {
-      fprintf(outfile, "%d, ", radius);
+      fprintf(outfile, "%d%c", radius, separatorChar);
+    }
+    if( normaliseFlg ){
+      if( (radius + rStep) > rMax ){
+	fprintf(normOutfile, "%d\n", radius);
+      } else {
+	fprintf(normOutfile, "%d%c", radius, separatorChar);
+      }
     }
 
     /* create the structuring element for the erosion/dilation and dilate the reference domain */
@@ -378,16 +428,29 @@ int main(
 	  adjVal = WlzSize(obj1, &errNum);
 	  errNum = WlzFreeObj(obj1);
 	}
+	if( normaliseFlg ){
+	  normalisedAdjVal = ((double) adjVal) / ((double) WlzSize(domains[j], &errNum));
+	}
       }	
 
       if( verboseFlg ){
 	fprintf(stderr, "%s: radius=%d, domainIndx=%d, adjVal=%d\n", argv[0], radius, j, adjVal);
+	if( normaliseFlg ){
+	  fprintf(stderr, "%s: radius=%d, domainIndx=%d, normalised adjVal=%.6f\n", argv[0], radius, j, normalisedAdjVal);
+	}
       }
 
       if ( (radius + rStep) > rMax ){
 	fprintf(outfile, "%d\n", adjVal);
       } else {
-	fprintf(outfile, "%d, ", adjVal);
+	fprintf(outfile, "%d%c", adjVal, separatorChar);
+      }
+      if( normaliseFlg ){
+	if ( (radius + rStep) > rMax ){
+	  fprintf(normOutfile, "%.6f\n", normalisedAdjVal);
+	} else {
+	  fprintf(normOutfile, "%.6f%c", normalisedAdjVal, separatorChar);
+	}
       }
       if( tickFlg ){
 	fprintf(stderr, ".");

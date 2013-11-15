@@ -195,6 +195,7 @@ int             main(int argc, char **argv)
 		outputLUTObj = 0,
 		outputLUTAscii = 0,
 		noLUTTransform = 0,
+                setLUTTransform = 0,
 		ok = 1,
 		usage = 0;
   double	p = 1.0,
@@ -235,6 +236,7 @@ int             main(int argc, char **argv)
         inplace = 1;
 	break;
       case 'f':
+	setLUTTransform = 1;
         switch(*optarg)
 	{
 	  case 'g': /* FALLTHROUGH */
@@ -302,24 +304,29 @@ int             main(int argc, char **argv)
         outFileStr = optarg;
 	break;
       case 'l':
+	setLUTTransform = 1;
 	if(sscanf(optarg, "%d", &iIL) != 1)
 	{
 	  usage = 1;
 	}
 	break;
       case 'u':
+	setLUTTransform = 1;
 	if(sscanf(optarg, "%d", &iIU) != 1)
 	{
 	  usage = 1;
 	}
 	break;
       case 'L':
+	setLUTTransform = 1;
 	usage = WlzLGTOParsePixel(optarg, &gOL);
 	break;
       case 'U':
+	setLUTTransform = 1;
 	usage = WlzLGTOParsePixel(optarg, &gOU);
 	break;
       case 'p':
+	setLUTTransform = 1;
 	if(sscanf(optarg, "%lg", &p) != 1)
 	{
 	  usage = 1;
@@ -327,6 +334,7 @@ int             main(int argc, char **argv)
 	}
         break;
       case 'q':
+	setLUTTransform = 1;
 	if(sscanf(optarg, "%lg", &q) != 1)
 	{
 	  usage = 1;
@@ -440,13 +448,16 @@ int             main(int argc, char **argv)
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      if(lutObj)
+      if( lutObj )
       {
-	errNum = WlzLUTGreyTransformSet(lutObj, gTrType,
-					lGType, iIL, iIU, gOL.v, gOU.v,
-					p, q);
+	if( setLUTTransform )
+	{
+	  errNum = WlzLUTGreyTransformSet(lutObj, gTrType,
+					  lGType, iIL, iIU, gOL.v, gOU.v,
+					  p, q);
+	}
       }
-      else
+      else 
       {
 	lutObj = WlzLUTGreyTransformNew(gTrType, lGType,
 					iIL, iIU, gOL.v, gOU.v,

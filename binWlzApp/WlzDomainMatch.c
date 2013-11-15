@@ -52,7 +52,7 @@ WlzDomainMatch - calculate a match values between to domains or domain
  sets according to type.
 \par Synopsis
 \verbatim
-WlzDomainMatch -d <delta> -t <type> -m <matrix-file> -h -v 
+WlzDomainMatch -d <delta> -t <type> -m <matrix-file> -s <scale> -h -v 
 
 \endverbatim
 \par Options
@@ -190,6 +190,7 @@ static void usage(
 	  "\t             = 5 - Comparative match between two targets given by\n"
 	  "\t               the ratio of type 4 matchs to each domain. For this\n"
 	  "\t               option a 3rd object is required in the input stream.\n"
+	  "\t-s #       scale factor to multiply the data values - useful for heatmap display.\n"
 	  "\t-h         print this message\n"
 	  "\t-v         verbose operation\n",
 	  str,
@@ -363,7 +364,7 @@ int main(
   char  **argv)
 {
   FILE		*inFile;
-  char 		optList[] = "d:m:t:hv";
+  char 		optList[] = "d:m:s:t:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		verboseFlg=0;
@@ -373,6 +374,7 @@ int main(
   double	s1, s2, s3, s4;
   double	delta=0.01;
   double	**mixing=NULL, **contrib=NULL;
+  double	scaleFactor = 1.0;
   int		k, l;
   int		numCatRows=-1, numCatCols=-1;
 
@@ -423,6 +425,10 @@ int main(
 	return 1;
       }
       break; 
+
+    case 's':
+      scaleFactor = (double) atof(optarg);
+      break;
 
     case 't':
       type = atoi(optarg);
@@ -665,7 +671,7 @@ int main(
   }
 
   /* print value */
-  fprintf(stdout, "%f\n", matchVal);
+  fprintf(stdout, "%f\n", scaleFactor * matchVal);
   return 0;
 }
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */

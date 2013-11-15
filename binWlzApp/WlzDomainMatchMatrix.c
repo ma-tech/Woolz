@@ -52,7 +52,7 @@ WlzDomainMatchMatrix - calculate match values between to domain
  sets according to type.
 \par Synopsis
 \verbatim
-WlzDomainMatchMatrix -d <delta> -t <type> -m <matrix-file> -h -v <rows> <cols>
+WlzDomainMatchMatrix -d <delta> -t <type> -m <matrix-file> -s <scale>-h -v <rows> <cols>
 
 \endverbatim
 \par Options
@@ -65,6 +65,10 @@ WlzDomainMatchMatrix -d <delta> -t <type> -m <matrix-file> -h -v <rows> <cols>
     <td><b>-m \<file\></b></td>
     <td>input the name of a file containing the mixing
  and contribution matrices - csv format.</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>data scale factor, useful for heatmap views. </td>
   </tr>
   <tr>
     <td><b>-t</b></td>
@@ -101,6 +105,10 @@ WlzDomainMatchMatrix -d <delta> -t <type> -m <matrix-file> -h -v <rows> <cols>
   <tr>
     <td><b> </b></td>
     <td>= 8 - Area(intersection)</td>
+  </tr>
+  <tr>
+    <td><b> </b></td>
+    <td>= 9 - as type(3) if size(d1) < size(d2) else 0</td>
   </tr>
   <tr>
     <td><b>-h</b></td>
@@ -178,7 +186,7 @@ static void usage(
 {
   fprintf(stderr,
 	  "Usage: "
-	  "%s -d <delta> -t <type> -m <matrix-file> -h\n"
+	  "%s -d <delta> -t <type> -m <matrix-file> -s <scale>-h\n"
 	  "                            -v <rows> <cols>\n"
 	  "\tRead in domains from stdin and calculate the match value\n"
 	  "\tmatrix according to type, writing to stdout. The row domains\n"
@@ -189,6 +197,7 @@ static void usage(
 	  "\t-d#        delta value (default 0.01), must be < 1\n"
 	  "\t-m<file>   input the name of a file containing the mixing\n"
 	  "\t           and contrib matrices - csv format\n"
+	  "\t-s#        scale value for data - useful for heatmap view\n"
 	  "\t-t#        type parameter to determine match function default 1\n"
 	  "\t             = 1 - Area(intersection)/Area(union)\n"
 	  "\t             = 2 - if Area(d1) > Area(d2) as type=1 else inverse\n"
@@ -201,6 +210,7 @@ static void usage(
 	  "\t             = 7 - Distance between the bounding box centres of the\n"
 	  "\t               domains\n"
 	  "\t             = 8 - Area/volume of intersection.\n"
+	  "\t             = 9 - type=3 if Area(d1) < Area(d2) else 0\n"
 	  "\t-h         print this message\n"
 	  "\t-v         verbose operation\n",
 	  str,
@@ -374,7 +384,7 @@ int main(
   char  **argv)
 {
   FILE		*inFile;
-  char 		optList[] = "d:m:t:hv";
+  char 		optList[] = "d:m:s:t:hv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		verboseFlg=0;
@@ -387,6 +397,7 @@ int main(
   double	s1, s2, s3, s4;
   double	delta=0.01;
   double	**mixing=NULL, **contrib=NULL;
+  double	dataScaleFactor = 1.0;
   int		i, j, k, l;
   int		numCatRows=-1, numCatCols=-1;
   WlzDBox3	box1, box2;
@@ -438,6 +449,10 @@ int main(
 	return 1;
       }
       break; 
+
+    case 's':
+      dataScaleFactor = atof(optarg);
+      break;
 
     case 't':
       type = atoi(optarg);
@@ -732,6 +747,25 @@ int main(
 	matchVal = s1;
 	break;
 
+      case 9:
+	if((obj = WlzIntersect2(obj1, obj2, &errNum)) != NULL){
+	  s1 = WlzSize(obj, &errNum);
+	  WlzFreeObj(obj);
+	}
+	else {
+	  s1 = 0;
+	}
+	s2 = WlzSize(obj1, &errNum);
+	s3 = WlzSize(obj2, &errNum);
+	matchVal = 0.0;
+	if( s2 > 0 ){
+	  matchVal = s1 / s2;
+	}
+	if( s2 > s3 ){
+	  matchVal = 0.0;
+	}
+	break;
+
       default:
 	fprintf(stderr, "%s: invalid match type\n", argv[0]);
 	usage(argv[0]);
@@ -739,7 +773,7 @@ int main(
       }
 
       /* print value */
-      fprintf(stdout, "%f", matchVal);
+      fprintf(stdout, "%f", matchVal * dataScaleFactor);
       if( (numCols - j) > 1 ){
 	fprintf(stdout, "\t");
       }
