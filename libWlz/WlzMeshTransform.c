@@ -2458,27 +2458,6 @@ static WlzErrorNum WlzMeshTransformVtxAryI(WlzMeshTransform *mesh,
   walk = 0;
   while((vxCount > 0) && (errNum == WLZ_ERR_NONE))
   {
-    /* Find neighbour which is in the direction of the vertex,
-       if none then the vertex is contained within this element. */
-    neighbourMask = WLZ_MESH_ELEM_FLAGS_NONE;
-    if((pArea2[0] = WlzGeomTriangleSnArea2(elmVx[1], elmVx[2],
-					   vxP)) < -(WLZ_MESH_TOLERANCE_SQ))
-    {
-      neighbourId = 0;
-      neighbourMask = WLZ_MESH_ELEM_FLAGS_NBR_0;
-    }
-    else if((pArea2[1] = WlzGeomTriangleSnArea2(elmVx[2], elmVx[0],
-					       vxP)) < -(WLZ_MESH_TOLERANCE_SQ))
-    {
-      neighbourId = 1;
-      neighbourMask = WLZ_MESH_ELEM_FLAGS_NBR_1;
-    }
-    else if((pArea2[2] = elmArea2 - pArea2[0] -
-    			 pArea2[1]) < -(WLZ_MESH_TOLERANCE_SQ))
-    {
-      neighbourId = 2;
-      neighbourMask = WLZ_MESH_ELEM_FLAGS_NBR_2;
-    }
     /* The variable walk records the number of
        elements walked, if this is more than twice the total number
        of elements in the mesh we're stuck and there's something
@@ -2487,63 +2466,87 @@ static WlzErrorNum WlzMeshTransformVtxAryI(WlzMeshTransform *mesh,
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
-    else if(neighbourMask == WLZ_MESH_ELEM_FLAGS_NONE)
-    {
-      /* Compute new affine transform for interpolation from the source
-         to the displaced element if required. */
-      if(trValid == 0)
-      {
-	vxD = nod[0]->displacement;
-        (dspVx + 0)->vtX = vxD.vtX + (elmVx + 0)->vtX;
-        (dspVx + 0)->vtY = vxD.vtY + (elmVx + 0)->vtY;
-	vxD = nod[1]->displacement;
-        (dspVx + 1)->vtX = vxD.vtX + (elmVx + 1)->vtX;
-        (dspVx + 1)->vtY = vxD.vtY + (elmVx + 1)->vtY;
-	vxD = nod[2]->displacement;
-        (dspVx + 2)->vtX = vxD.vtX + (elmVx + 2)->vtX;
-        (dspVx + 2)->vtY = vxD.vtY + (elmVx + 2)->vtY;
-	(void )WlzGeomTriangleAffineSolve(xTr, yTr, elmArea2, elmVx, dspVx,
-					  WLZ_MESH_TOLERANCE_SQ);
-        trValid = 1;
-      }
-      /* Vertex is in this element interpolate new displaced vertex using
-      the affine transform. */
-      vxD.vtX = (xTr[0] * vxP.vtX) + (xTr[1] * vxP.vtY) + xTr[2];
-      vxD.vtY = (yTr[0] * vxP.vtX) + (yTr[1] * vxP.vtY) + yTr[2];
-      vxAry->vtX = WLZ_NINT(vxD.vtX);
-      vxAry->vtY = WLZ_NINT(vxD.vtY);
-      if(--vxCount > 0)
-      {
-        ++vxAry;
-	walk = 0;
-	vxP.vtX = vxAry->vtX;
-	vxP.vtY = vxAry->vtY;
-      }
-    }
     else
     {
-      /* Vertex is NOT in this element so walk towards the element
-	 which does contain it.  */
-      if(elm->flags & neighbourMask)
+      /* Find neighbour which is in the direction of the vertex,
+	 if none then the vertex is contained within this element. */
+      neighbourMask = WLZ_MESH_ELEM_FLAGS_NONE;
+      if((pArea2[0] = WlzGeomTriangleSnArea2(elmVx[1], elmVx[2],
+					     vxP)) < -(WLZ_MESH_TOLERANCE_SQ))
       {
-	trValid = 0;
-	elmIdx = elm->neighbours[neighbourId];
-	elm = mesh->elements + elmIdx;
-	nod[0] = mesh->nodes + elm->nodes[0];
-	nod[1] = mesh->nodes + elm->nodes[1];
-	nod[2] = mesh->nodes + elm->nodes[2];
-	elmVx[0] = nod[0]->position;
-	elmVx[1] = nod[1]->position;
-	elmVx[2] = nod[2]->position;
-	if((elmArea2 = WlzGeomTriangleSnArea2(elmVx[0], elmVx[1],
-					    elmVx[2])) < WLZ_MESH_TOLERANCE_SQ)
+	neighbourId = 0;
+	neighbourMask = WLZ_MESH_ELEM_FLAGS_NBR_0;
+      }
+      else if((pArea2[1] = WlzGeomTriangleSnArea2(elmVx[2], elmVx[0],
+					     vxP)) < -(WLZ_MESH_TOLERANCE_SQ))
+      {
+	neighbourId = 1;
+	neighbourMask = WLZ_MESH_ELEM_FLAGS_NBR_1;
+      }
+      else if((pArea2[2] = elmArea2 - pArea2[0] -
+			   pArea2[1]) < -(WLZ_MESH_TOLERANCE_SQ))
+      {
+	neighbourId = 2;
+	neighbourMask = WLZ_MESH_ELEM_FLAGS_NBR_2;
+      }
+      if(neighbourMask == WLZ_MESH_ELEM_FLAGS_NONE)
+      {
+	/* Compute new affine transform for interpolation from the source
+	   to the displaced element if required. */
+	if(trValid == 0)
 	{
-	  errNum = WLZ_ERR_DOMAIN_DATA;
+	  vxD = nod[0]->displacement;
+	  (dspVx + 0)->vtX = vxD.vtX + (elmVx + 0)->vtX;
+	  (dspVx + 0)->vtY = vxD.vtY + (elmVx + 0)->vtY;
+	  vxD = nod[1]->displacement;
+	  (dspVx + 1)->vtX = vxD.vtX + (elmVx + 1)->vtX;
+	  (dspVx + 1)->vtY = vxD.vtY + (elmVx + 1)->vtY;
+	  vxD = nod[2]->displacement;
+	  (dspVx + 2)->vtX = vxD.vtX + (elmVx + 2)->vtX;
+	  (dspVx + 2)->vtY = vxD.vtY + (elmVx + 2)->vtY;
+	  (void )WlzGeomTriangleAffineSolve(xTr, yTr, elmArea2, elmVx, dspVx,
+					    WLZ_MESH_TOLERANCE_SQ);
+	  trValid = 1;
+	}
+	/* Vertex is in this element interpolate new displaced vertex using
+	the affine transform. */
+	vxD.vtX = (xTr[0] * vxP.vtX) + (xTr[1] * vxP.vtY) + xTr[2];
+	vxD.vtY = (yTr[0] * vxP.vtX) + (yTr[1] * vxP.vtY) + yTr[2];
+	vxAry->vtX = WLZ_NINT(vxD.vtX);
+	vxAry->vtY = WLZ_NINT(vxD.vtY);
+	if(--vxCount > 0)
+	{
+	  ++vxAry;
+	  walk = 0;
+	  vxP.vtX = vxAry->vtX;
+	  vxP.vtY = vxAry->vtY;
 	}
       }
       else
       {
-	errNum = WLZ_ERR_DOMAIN_DATA;
+	/* Vertex is NOT in this element so walk towards the element
+	   which does contain it.  */
+	if(elm->flags & neighbourMask)
+	{
+	  trValid = 0;
+	  elmIdx = elm->neighbours[neighbourId];
+	  elm = mesh->elements + elmIdx;
+	  nod[0] = mesh->nodes + elm->nodes[0];
+	  nod[1] = mesh->nodes + elm->nodes[1];
+	  nod[2] = mesh->nodes + elm->nodes[2];
+	  elmVx[0] = nod[0]->position;
+	  elmVx[1] = nod[1]->position;
+	  elmVx[2] = nod[2]->position;
+	  if((elmArea2 = WlzGeomTriangleSnArea2(elmVx[0], elmVx[1],
+					    elmVx[2])) < WLZ_MESH_TOLERANCE_SQ)
+	  {
+	    errNum = WLZ_ERR_DOMAIN_DATA;
+	  }
+	}
+	else
+	{
+	  errNum = WLZ_ERR_DOMAIN_DATA;
+	}
       }
     }
   }
