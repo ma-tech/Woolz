@@ -534,10 +534,10 @@ WlzObject *WlzGreyShift(
 	  case WLZ_GREY_INT:
 	    for(i=0; i<iwsp.colrmn; i++, gptr.inp++){
 	      if( delta > 0.0 ){
-		idelta = (int) (delta + ((double) (random()&0xffff))/0xffff);
+		idelta = (int) (delta + ((double) (rand()&0xffff))/0xffff);
 	      }
 	      else if( delta < 0.0 ){
-		idelta = (int) (delta - ((double) (random()&0xffff))/0xffff);
+		idelta = (int) (delta - ((double) (rand()&0xffff))/0xffff);
 	      }
 	      else {
 		idelta = 0;
@@ -549,10 +549,10 @@ WlzObject *WlzGreyShift(
 	  case WLZ_GREY_SHORT:
 	    for(i=0; i<iwsp.colrmn; i++, gptr.shp++){
 	      if( delta > 0.0 ){
-		idelta = (int) (delta + ((double) (random()&0xffff))/0xffff);
+		idelta = (int) (delta + ((double) (rand()&0xffff))/0xffff);
 	      }
 	      else if( delta < 0.0 ){
-		idelta = (int) (delta - ((double) (random()&0xffff))/0xffff);
+		idelta = (int) (delta - ((double) (rand()&0xffff))/0xffff);
 	      }
 	      else {
 		idelta = 0;
@@ -564,10 +564,10 @@ WlzObject *WlzGreyShift(
 	  case WLZ_GREY_UBYTE:
 	    for(i=0; i<iwsp.colrmn; i++, gptr.ubp++){
 	      if( delta > 0.0 ){
-		idelta = (int) (delta + ((double) (random()&0xffff))/0xffff);
+		idelta = (int) (delta + ((double) (rand()&0xffff))/0xffff);
 	      }
 	      else if( delta < 0.0 ){
-		idelta = (int) (delta - ((double) (random()&0xffff))/0xffff);
+		idelta = (int) (delta - ((double) (rand()&0xffff))/0xffff);
 	      }
 	      else {
 		idelta = 0;
@@ -674,7 +674,7 @@ WlzObject *WlzGreyScale(
 	  case WLZ_GREY_INT:
 	    for(i=0; i<iwsp.colrmn; i++, gptr.inp++){
 	      idelta = (int) (scale * (*gptr.inp)
-			      + ((double) (random()&0xffff))/0xffff);
+			      + ((double) (rand()&0xffff))/0xffff);
 	      *gptr.inp = idelta;
 	    }
 	    break;
@@ -682,7 +682,7 @@ WlzObject *WlzGreyScale(
 	  case WLZ_GREY_SHORT:
 	    for(i=0; i<iwsp.colrmn; i++, gptr.shp++){
 	      idelta = (int) (scale * (*gptr.shp)
-			      + ((double) (random()&0xffff))/0xffff);
+			      + ((double) (rand()&0xffff))/0xffff);
 	      *gptr.shp = idelta;
 	    }
 	    break;
@@ -690,7 +690,7 @@ WlzObject *WlzGreyScale(
 	  case WLZ_GREY_UBYTE:
 	    for(i=0; i<iwsp.colrmn; i++, gptr.ubp++){
 	      idelta = (int) (scale * (*gptr.ubp)
-			      + ((double) (random()&0xffff))/0xffff);
+			      + ((double) (rand()&0xffff))/0xffff);
 	      *gptr.ubp = WLZ_CLAMP(idelta, 0, 255);
 	    }
 	    break;

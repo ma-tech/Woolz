@@ -298,6 +298,17 @@ extern "C" {
               	 (U).vtY = fabs((V).vtY), \
               	 (U).vtZ = fabs((V).vtZ))
 
+/* WLZ_VTX_2_NINT: Nearest integer position. */
+#define WLZ_VTX_2_NINT(U,P) \
+        	((U).vtX = WLZ_NINT((P).vtX), \
+		 (U).vtY = WLZ_NINT((P).vtY))
+
+/* WLZ_VTX_3_NINT: Nearest integer position. */
+#define WLZ_VTX_3_NINT(U,P) \
+        	((U).vtX = WLZ_NINT((P).vtX), \
+		 (U).vtY = WLZ_NINT((P).vtY) \
+		 (U).vtZ = WLZ_NINT((P).vtZ))
+
 /************************************************************************
 * CMesh node access
 ************************************************************************/

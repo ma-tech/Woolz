@@ -306,20 +306,22 @@ WlzErrorNum	WlzEffWriteObjIPL(FILE *fP, WlzObject *obj)
 */
 static WlzErrorNum WlzEffHeadReadIPL(WlzEffIPLHeader *header, FILE *fP)
 {
+  WlzGreyP	p;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  unsigned char	ubBuf[16];
-
+  double	dBuf[4];
+  
+  p.dbp = dBuf;
   /* version, format and datatype */
-  if( fread(&(ubBuf[0]), sizeof(char), 6, fP) != 6 ){
+  if( fread(p.v, sizeof(char), 6, fP) != 6 ){
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
   else {
     /* should test this version */
-    strncpy(&(header->version[0]), (const char *) &(ubBuf[0]), 4);
-    if( (header->format = ubBuf[4]) != 0 ){
+    strncpy(&(header->version[0]), (const char *)(p.ubp), 4);
+    if( (header->format = p.ubp[4]) != 0 ){
       errNum = WLZ_ERR_PARAM_TYPE;
     }
-    switch( (int) ubBuf[5] ){
+    switch(p.ubp[5]){
     case 0:
       header->dType = WLZEFF_IPL_TYPE_UBYTE;
       break;
@@ -349,85 +351,85 @@ static WlzErrorNum WlzEffHeadReadIPL(WlzEffIPLHeader *header, FILE *fP)
 
   /* height and width */
   if( errNum == WLZ_ERR_NONE ){
-    if( fread(&(ubBuf[0]), sizeof(char), 4, fP) != 4 ){
+    if( fread(p.v, sizeof(char), 4, fP) != 4 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-    header->nWidth = *((int *) &(ubBuf[0]));
+    header->nWidth = *(p.inp);
   }
   if( errNum == WLZ_ERR_NONE ){
-    if( fread(&(ubBuf[0]), sizeof(char), 4, fP) != 4 ){
+    if( fread(p.v, sizeof(char), 4, fP) != 4 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-    header->nHeight = *((int *) &(ubBuf[0]));
+    header->nHeight = *(p.inp);
   }
 
   /* various id's and modes */
   if( errNum == WLZ_ERR_NONE ){
-    if( fread(&(ubBuf[0]), sizeof(char), 6, fP) != 6 ){
+    if( fread(p.v, sizeof(char), 6, fP) != 6 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-    header->fileClutID = ubBuf[0];
-    header->overlayInFile = ubBuf[1];
-    header->viewMode = ubBuf[4];
+    header->fileClutID    = p.ubp[0];
+    header->overlayInFile = p.ubp[1];
+    header->viewMode      = p.ubp[4];
   }
 
   /* number of sections */
   if( errNum == WLZ_ERR_NONE ){
-    if( fread(&(ubBuf[0]), sizeof(char), 2, fP) != 2 ){
+    if( fread(p.v, sizeof(char), 2, fP) != 2 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-    header->nFrames = *((short *) &(ubBuf[0]));
+    header->nFrames = *(p.shp);
   }
 
   /* delta? plus reserved space */
   if( errNum == WLZ_ERR_NONE ){
-    if( fread(&(ubBuf[0]), sizeof(char), 8, fP) != 8 ){
+    if( fread(p.v, sizeof(char), 8, fP) != 8 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-    header->delta = *((double *) &(ubBuf[0]));
+    header->delta = *(p.dbp);
   }
   if( errNum == WLZ_ERR_NONE ){
-    if( fread(&(ubBuf[0]), sizeof(char), 4, fP) != 4 ){
+    if( fread(p.v, sizeof(char), 4, fP) != 4 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
   }
 
   /* units string */
   if( errNum == WLZ_ERR_NONE ){
-    if( fread(&(ubBuf[0]), sizeof(char), 10, fP) != 10 ){
+    if( fread(p.v, sizeof(char), 10, fP) != 10 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-    strncpy(&(header->units[0]), (const char *) &(ubBuf[0]), 10);
+    strncpy(&(header->units[0]), (const char *) p.v, 10);
   }
 
   /* normalisation data */
   if( errNum == WLZ_ERR_NONE ){
-    if( fread(&(ubBuf[0]), sizeof(char), 4, fP) != 4 ){
+    if( fread(p.v, sizeof(char), 4, fP) != 4 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-    header->normType = ubBuf[1];
-    header->normSource = ubBuf[2];
-    header->numRegNarks = ubBuf[3];
+    header->normType    = p.ubp[1];
+    header->normSource  = p.ubp[2];
+    header->numRegNarks = p.ubp[3];
   }
   if( errNum == WLZ_ERR_NONE ){
-    if( fread(&(ubBuf[0]), sizeof(char), 8, fP) != 8 ){
+    if( fread(p.v, sizeof(char), 8, fP) != 8 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-    header->normMin = *((double *) &(ubBuf[0]));
+    header->normMin = *(p.dbp);
   }
   if( errNum == WLZ_ERR_NONE ){
-    if( fread(&(ubBuf[0]), sizeof(char), 4, fP) != 4 ){
+    if( fread(p.v, sizeof(char), 4, fP) != 4 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
   }
   if( errNum == WLZ_ERR_NONE ){
-    if( fread(&(ubBuf[0]), sizeof(char), 8, fP) != 8 ){
+    if( fread(p.v, sizeof(char), 8, fP) != 8 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
-    header->normMax = *((double *) &(ubBuf[0]));
+    header->normMax = *(p.dbp);
   }
   if( errNum == WLZ_ERR_NONE ){
-    if( fread(&(ubBuf[0]), sizeof(char), 4, fP) != 4 ){
+    if( fread(p.v, sizeof(char), 4, fP) != 4 ){
       errNum = WLZ_ERR_READ_INCOMPLETE;
     }
   }

@@ -192,7 +192,7 @@ int		main(int argc, char *argv[])
     if(timer)
     {
       gettimeofday(times + 1, NULL); 
-      timersub(times + 1, times + 0, times + 2);
+      ALC_TIMERSUB(times + 1, times + 0, times + 2);
       (void )fprintf(stderr,
                      "%s: Elapsed time for WlzMakeTiledValuesFromObj() %gs\n",
                      *argv,
@@ -251,7 +251,7 @@ int		main(int argc, char *argv[])
       if(timer)
       {
 	gettimeofday(times + 1, NULL); 
-	timersub(times + 1, times + 0, times + 2);
+	ALC_TIMERSUB(times + 1, times + 0, times + 2);
 	(void )fprintf(stderr,
 		     "%s: Elapsed time for WlzGetSubSectionFromObject() %gs\n",
 		     *argv,

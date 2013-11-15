@@ -2419,9 +2419,11 @@ static WlzErrorNum WlzMeshTransformVtxAryI(WlzMeshTransform *mesh,
 					   WlzIVertex2 *vxAry,
 					   int vxCount)
 {
-  int		elmIdx,
+  int		walk,
+  		elmIdx,
   		neighbourId,
-  		trValid;
+  		trValid,
+		maxWalk;
   unsigned int	neighbourMask;
   double	elmArea2;
   WlzMeshElem	*elm;
@@ -2441,6 +2443,7 @@ static WlzErrorNum WlzMeshTransformVtxAryI(WlzMeshTransform *mesh,
   elm = mesh->elements;
   vxP.vtX = vxAry->vtX;
   vxP.vtY = vxAry->vtY;
+  maxWalk = mesh->nElem * 2;
   nod[0] = mesh->nodes + elm->nodes[0];
   nod[1] = mesh->nodes + elm->nodes[1];
   nod[2] = mesh->nodes + elm->nodes[2];
@@ -2452,10 +2455,11 @@ static WlzErrorNum WlzMeshTransformVtxAryI(WlzMeshTransform *mesh,
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
   }
+  walk = 0;
   while((vxCount > 0) && (errNum == WLZ_ERR_NONE))
   {
     /* Find neighbour which is in the direction of the vertex,
-       if none then the vertex is contained within this element */
+       if none then the vertex is contained within this element. */
     neighbourMask = WLZ_MESH_ELEM_FLAGS_NONE;
     if((pArea2[0] = WlzGeomTriangleSnArea2(elmVx[1], elmVx[2],
 					   vxP)) < -(WLZ_MESH_TOLERANCE_SQ))
@@ -2475,7 +2479,15 @@ static WlzErrorNum WlzMeshTransformVtxAryI(WlzMeshTransform *mesh,
       neighbourId = 2;
       neighbourMask = WLZ_MESH_ELEM_FLAGS_NBR_2;
     }
-    if(neighbourMask == WLZ_MESH_ELEM_FLAGS_NONE)
+    /* The variable walk records the number of
+       elements walked, if this is more than twice the total number
+       of elements in the mesh we're stuck and there's something
+       wrong with the mesh. */
+    if(++walk > maxWalk)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+    else if(neighbourMask == WLZ_MESH_ELEM_FLAGS_NONE)
     {
       /* Compute new affine transform for interpolation from the source
          to the displaced element if required. */
@@ -2503,6 +2515,7 @@ static WlzErrorNum WlzMeshTransformVtxAryI(WlzMeshTransform *mesh,
       if(--vxCount > 0)
       {
         ++vxAry;
+	walk = 0;
 	vxP.vtX = vxAry->vtX;
 	vxP.vtY = vxAry->vtY;
       }
@@ -2510,7 +2523,7 @@ static WlzErrorNum WlzMeshTransformVtxAryI(WlzMeshTransform *mesh,
     else
     {
       /* Vertex is NOT in this element so walk towards the element
-	 which does contain it. */
+	 which does contain it.  */
       if(elm->flags & neighbourMask)
       {
 	trValid = 0;

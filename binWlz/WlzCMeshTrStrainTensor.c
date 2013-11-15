@@ -129,12 +129,11 @@ int		main(int argc, char *argv[])
 		dither = 0,
 		invert = 0,
   		ok = 1,
-  		usage = 0,
-		sample = 0;
+  		usage = 0;
   FILE		*fP = NULL;
   char		*inFileStr = NULL,
   		*outFileStr = NULL;
-  WlzGreyType	outType = WLZ_CMESH_3D;
+  WlzObjectType	outType = WLZ_CMESH_3D;
   WlzDVertex3   sampleDist;
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
@@ -164,7 +163,6 @@ int		main(int argc, char *argv[])
         outType = WLZ_POINTS;
         break;
       case 's':
-        sample = 1;
         outType = WLZ_POINTS;
         if(sscanf(optarg,
                   "%lg,%lg,%lg",

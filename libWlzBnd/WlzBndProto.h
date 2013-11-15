@@ -133,21 +133,43 @@ extern WlzBasisFnTransform 	*WlzBndBasisFnTrFromCPts3(
 /************************************************************************
 * WlzBndFunction.c
 ************************************************************************/
+extern void			WlzGetVersion(
+				  char **dstStr);
+extern WlzDVertex3		WlzGetVoxelSize(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
 extern WlzErrorNum 		WlzSetVoxelSize(
 				  WlzObject *obj,
 				  double x,
 				  double y,
 				  double z);
-extern WlzObjectType 		WlzGetObjectType(
+extern int			WlzObjectIsNull(
 				  WlzObject *obj);
+extern int			WlzObjectDomainIsNull(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+extern int			WlzObjectValuesIsNull(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+extern WlzObjectType 		WlzGetObjectType(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+extern WlzObjectType		WlzGetObjectDomainType(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+extern WlzObjectType		WlzGetObjectValuesType(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
 extern WlzErrorNum 		WlzExplode(
 				  int *dstExpObjCount,
 				  WlzObject ***dstExpObjVecP,
 				  WlzObject *srcObj);
 extern WlzObject 		*WlzGetContourObj(
-				  WlzObject *inObj);
+				  WlzObject *inObj,
+				  WlzErrorNum *dstErr);
 extern const char 		*WlzGetPropName(
-				  WlzObject *obj);
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
 extern int 			WlzDestroyObj(
 				  WlzObject *obj);
 

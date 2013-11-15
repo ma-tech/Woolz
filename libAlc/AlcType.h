@@ -47,6 +47,30 @@ extern "C" {
 #endif
 #endif /* WLZ_EXT_BIND */
 
+/************************************************************************
+* Portability macros.                                                   *
+************************************************************************/
+#ifdef HAVE_STRTOK_R
+#define ALC_STRTOK_R(S,D,P)     strtok_r((S),(D),(P))
+#else
+#define ALC_STRTOK_R(S,D,P)     strtok((S),(D))
+#endif
+#ifdef timersub
+#define ALC_TIMERSUB(A,B,R)	timersub((A),(B),(R))
+#else
+#define ALC_TIMERSUB(A,B,R) \
+{ \
+  (R)->tv_sec = (A)->tv_sec - (B)->tv_sec; \
+  (R)->tv_usec = (A)->tv_usec - (B)->tv_usec; \
+  if((R)->tv_usec < 0) \
+  {  \
+    (R)->tv_sec  -= 1; \
+    (R)->tv_usec += 1000000; \
+  } \
+}
+#endif
+
+
 /*!
 * \enum 	_AlcErrno
 * \ingroup	AlcError

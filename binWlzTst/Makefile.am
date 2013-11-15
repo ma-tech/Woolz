@@ -46,6 +46,7 @@ LDADD 			= -L$(top_srcdir)/libWlz/.libs -lWlz \
 			  -lm
 
 bin_PROGRAMS		= \
+			  WlzTstBuildObj \
 			  WlzTstCMeshCellStats \
 			  WlzTstCMeshDist \
 			  WlzTstCMeshGen \
@@ -67,6 +68,10 @@ bin_PROGRAMS		= \
 			  WlzTstVxInSimplex \
 			  WlzTstGeomVtxOnLineSegment
 
+
+WlzTstBuildObj_SOURCES			= WlzTstBuildObj.c
+WlzTstBuildObj_LDADD			= $(LDADD)
+WlzTstBuildObj_LDFLAGS			= $(AM_LFLAGS)
 
 WlzTstCMeshCellStats_SOURCES		= WlzTstCMeshCellStats.c
 WlzTstCMeshCellStats_LDADD		= $(LDADD)

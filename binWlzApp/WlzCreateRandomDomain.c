@@ -326,7 +326,7 @@ int main(
 
     /* now randomise */
     for(i=0; i < numPixels * 10; i++){
-      ran = random();
+      ran = rand();
       dran = ((double) (ran&0xffffff)) / 0xffffff;
       j = dran * numPixels;
       index = indices[j];
@@ -422,9 +422,9 @@ int main(
       long	xRan, yRan, zRan;
       double	xp, yp, zp;
       int		x = 0, y = 0, z = 0;
-      xRan = random();
-      yRan = random();
-      zRan = random();
+      xRan = rand();
+      yRan = rand();
+      zRan = rand();
       xp = ((double) (xRan&0xffffff))/0xffffff;
       yp = ((double) (yRan&0xffffff))/0xffffff;
       zp = ((double) (zRan&0xffffff))/0xffffff;

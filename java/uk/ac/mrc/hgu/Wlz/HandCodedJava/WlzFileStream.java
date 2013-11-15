@@ -70,6 +70,10 @@ public class WlzFileStream extends WlzPointer
   public void	close()
   throws IOException
   {
-    JWlzClose(value);
+    if(value >= 0)
+    {
+      JWlzClose(value);
+      value = -1;
+    }
   }
 }

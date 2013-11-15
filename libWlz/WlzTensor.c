@@ -78,9 +78,9 @@ static void			WlzCMeshElmSetDGTensor3D(
 		u_{i,j} =
 		\left [
 		\begin{array}{ccc}
-		  \pd{u_0][x_0} & \pd{u_0][x_1} & \pd{u_0][x_2} \\
-		  \pd{u_1][x_0} & \pd{u_1][x_1} & \pd{u_1][x_2} \\
-		  \pd{u_2][x_0} & \pd{u_2][x_1} & \pd{u_2][x_2}
+		  \pd{u_0}{x_0} & \pd{u_0}{x_1} & \pd{u_0}{x_2} \\
+		  \pd{u_1}{x_0} & \pd{u_1}{x_1} & \pd{u_1}{x_2} \\
+		  \pd{u_2}{x_0} & \pd{u_2}{x_1} & \pd{u_2}{x_2}
 		\end{array}
 		\right]
 		}
@@ -219,7 +219,7 @@ WlzObject	*WlzCMeshDGTensorAtPts(WlzObject *cObj, int invert,
 * 		displacement gradient tensor and the derives the strain
 * 		tensor \f$e_{ij}\f$ from this using:
 		\f[
-		e_ij = \frac{1}{2} (u_{ij + u_{ji})
+		e_{ij} = \frac{1}{2} (u_{ij} + u_{ji})
 		\f]
 * \param	cObj			Given conforming mesh object.
 * \param	invert			Invert if non-zero, by default the

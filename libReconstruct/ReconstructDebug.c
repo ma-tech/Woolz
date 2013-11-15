@@ -44,10 +44,10 @@ static char _ReconstructDebug_c[] = "University of Edinburgh $Id$";
 #include <unistd.h>
 
 
-#ifdef DARWIN
-#define flockfile(file)
-#define funlockfile(file)
-#endif /* DARWIN */
+#if (defined DARWIN || defined _WIN32 || defined __MINGW32__ )
+#define flockfile(F)
+#define funlockfile(F)
+#endif
 
 RecDbgMask	recDbgMask = REC_DBG_NONE,
 		recDbgWlzMask = REC_DBG_NONE;
@@ -110,7 +110,11 @@ RecError	RecDbgWlzWrite(WlzObject *obj, int freeFlg)
       WlzFreeObj(obj);
     }
     funlockfile((FILE *)recDbgWlzData);
+#if (defined _WIN32 || defined __MINGW32__ )
+    (void )Sleep(1);
+#else
     (void )sleep(1);
+#endif
   }
   return(errFlag);
 }

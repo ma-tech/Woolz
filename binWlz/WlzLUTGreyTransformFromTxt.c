@@ -135,7 +135,7 @@ int             main(int argc, char **argv)
   LUTEntry	LUTEntries[256];
   int		LUTEntryCount;
   int		entryIdx, index;
-  int		val, indexGap, indexDist;
+  int		val = 0, indexGap, indexDist;
   WlzObject	*outObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   FILE		*fP = NULL;
@@ -299,10 +299,12 @@ int             main(int argc, char **argv)
     " [-f] [-o<output object>] [-h]\n" 
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
-    "Reads the LUT values from a text file or from standard input. Assumes value-pairs (index, value)\n"
-    "and in this version a LUT will be created with 0 <= index <= 255. If the \"-f\" flag is used then\n"
-    " values wil be interpolated from 0-255 using the values that are set. Values below the minimum\n"
-    "index value and above the maximum index value are set to the min and max values respectively.\n");
+    "Reads the LUT values from a text file or from standard input. Assumes\n"
+    "value-pairs (index, value) and in this version a LUT will be created\n"
+    "with 0 <= index <= 255. If the \"-f\" flag is used then values wil be\n"
+    "interpolated from 0-255 using the values that are set. Values below\n"
+    "the minimum index value and above the maximum index value are set to\n"
+    "the min and max values respectively.\n");
   }
   return(!ok);
 }

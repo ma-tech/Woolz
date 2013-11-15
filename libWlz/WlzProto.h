@@ -125,13 +125,20 @@ extern WlzObject 		*Wlz2DContains(
 * Wlz3DProjection.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
-extern WlzObject 		*WlzGetProjectionFromObject(
+extern WlzObject		*WlzProjectObjToPlane(
+				  WlzObject *obj,
+				  WlzThreeDViewStruct *vStr,
+				  WlzProjectIntMode intMod,
+				  WlzUByte denDom,
+				  WlzUByte *denVal,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzGetProjectionFromObject(
 				  WlzObject *obj,
 				  WlzThreeDViewStruct *viewStr,
 				  Wlz3DProjectionIntFn intFunc,
-				  void	*intFuncData,
+				  void *intFuncData,
 				  WlzErrorNum *dstErr);
-#endif
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * Wlz3DSection.c							*
@@ -713,6 +720,13 @@ extern WlzErrorNum		WlzToDArray2D(
 				  WlzIVertex2 origin,
 				  WlzIVertex2 size,
 				  int noiseFlag);
+extern WlzErrorNum		WlzToRArray2D(
+				  WlzIVertex2 *dstSizeArrayDat,
+				  unsigned int ***dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex2 origin,
+				  WlzIVertex2 size,
+				  int noiseFlag);
 extern WlzErrorNum		WlzToBArray3D(
 				  WlzIVertex3 *dstSizeArrayDat,
 				  unsigned char ****dstArrayDat,
@@ -751,6 +765,13 @@ extern WlzErrorNum		WlzToFArray3D(
 extern WlzErrorNum		WlzToDArray3D(
 				  WlzIVertex3 *dstSizeArrayDat,
 				  double ****dstArrayDat,
+				  WlzObject *srcObj,
+				  WlzIVertex3 origin,
+				  WlzIVertex3 size,
+				  int noiseFlag);
+extern WlzErrorNum		WlzToRArray3D(
+				  WlzIVertex3 *dstSizeArrayDat,
+				  unsigned int ****dstArrayDat,
 				  WlzObject *srcObj,
 				  WlzIVertex3 origin,
 				  WlzIVertex3 size,
@@ -1304,6 +1325,71 @@ extern WlzObject		*WlzBoundaryToObj(
 				  WlzObject *boundary,
 				  WlzPolyFillMode fillMode,
 				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzBuildObj.c
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzObject		*WlzBuildObj3(
+				  WlzObject *cObj,
+				  WlzIVertex3 og,
+				  WlzIVertex2 sz,
+				  WlzGreyType gType,
+				  int bufSz,
+				  WlzGreyP bufP,
+				  WlzErrorNum *dstErr);
+#endif
+extern WlzObject       		*WlzBuildObj3U(
+				  WlzObject *cObj,
+                                  WlzIVertex3 og,
+ 				  WlzIVertex2 sz,
+                                  int sizeArrayBuf,
+				  WlzUByte *arrayBuf,
+                                  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzBuildObj3S(
+				  WlzObject *cObj,
+                                  WlzIVertex3 og,
+ 				  WlzIVertex2 sz,
+                                  int sizeArrayBuf,
+				  short *arrayBuf,
+                                  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzBuildObj3I(
+				  WlzObject *cObj,
+                                  WlzIVertex3 og,
+ 				  WlzIVertex2 sz,
+                                  int sizeArrayBuf,
+				  int *arrayBuf,
+                                  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzBuildObj3F(
+				  WlzObject *cObj,
+                                  WlzIVertex3 og,
+ 				  WlzIVertex2 sz,
+                                  int sizeArrayBuf,
+				  float *arrayBuf,
+                                  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzBuildObj3D(
+				  WlzObject *cObj,
+                                  WlzIVertex3 og,
+ 				  WlzIVertex2 sz,
+                                  int sizeArrayBuf,
+				  double *arrayBuf,
+                                  WlzErrorNum *dstErr);
+extern WlzObject       		*WlzBuildObj3R(
+				  WlzObject *cObj,
+                                  WlzIVertex3 og,
+ 				  WlzIVertex2 sz,
+                                  int sizeArrayBuf,
+				  WlzUInt *arrayBuf,
+                                  WlzErrorNum *dstErr);
+extern WlzObject		*WlzBuildObj3B(
+				  WlzObject *cObj,
+				  WlzIVertex3 og,
+				  WlzIVertex2 sz,
+				  WlzGreyType gType,
+				  int sizeArrayBuf,
+				  char *arrayBuf,
+				  WlzErrorNum *dstErr);
+
 
 /************************************************************************
  * WlzCannyDeriche.c							*
@@ -3110,9 +3196,6 @@ extern WlzDVertex2		WlzGeomUnitVector2D(
 				  WlzDVertex2 vec);
 extern WlzDVertex3		WlzGeomUnitVector3D(
 				  WlzDVertex3 vec);
-extern WlzDVertex2		WlzGeomUnitVector2D5(
-				  WlzDVertex2 pos1,
-				  WlzDVertex2 pos0);
 extern WlzDVertex3		WlzGeomUnitVector3D2(
 				  WlzDVertex3 pos1,
 				  WlzDVertex3 pos0);
@@ -4293,8 +4376,10 @@ extern WlzObject		*WlzMakeRect(
 				  WlzPropertyList *plist,
 				  WlzObject *assoc_obj,
 				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 extern WlzObject		*WlzMakeEmpty(
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern WlzBoundList		*WlzMakeBoundList(
 				  WlzObjectType type,
 				  int wrap,
@@ -5311,6 +5396,15 @@ extern WlzAffineTransform	*WlzRegICPTreeAndVertices(
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
+* WlzRegConCalc.c
+************************************************************************/
+extern WlzRegConRCC8		WlzRegConCalcRCC8(
+				  WlzObject *obj0,
+				  WlzObject *obj1,
+				  double *dstNrmVol,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzRsvFilter.c
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
@@ -6005,12 +6099,14 @@ extern WlzObjectType 		WlzGreyTableTypeToTableType(
 				  WlzErrorNum *dstErr);
 extern WlzObjectType		WlzGreyTableIsTiled(
 				  WlzObjectType gTabType);
+#endif /* WLZ_EXT_BIND */
 extern WlzGreyType		WlzGreyTypeFromObj(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
 extern WlzDVertex3		WlzVozelSz(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern void			*WlzIndexedValueGet(
 				  WlzIndexedValues *ixv,
 				  int idx);

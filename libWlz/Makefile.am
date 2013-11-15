@@ -68,6 +68,7 @@ libWlz_la_SOURCES 	= \
 			  WlzBoundaryUtils.c \
 			  WlzBoundingBox.c \
 			  WlzBoundToObj.c \
+			  WlzBuildObj.c \
 			  WlzCannyDeriche.c \
 			  WlzCbThreshold.c \
 			  WlzCCor.c \
@@ -189,6 +190,7 @@ libWlz_la_SOURCES 	= \
 			  WlzReadObj.c \
 			  WlzRegCCor.c \
 			  WlzRegICP.c \
+			  WlzRegConCalc.c \
 			  WlzRGBAConvert.c \
 			  WlzRGBAGreyStats.c \
 			  WlzRGBAImageArithmetic.c \

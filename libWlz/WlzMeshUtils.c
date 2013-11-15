@@ -1139,7 +1139,7 @@ int		WlzMeshElemFindVx(WlzMeshTransform *mesh, WlzDVertex2 gvnVx,
 				  WlzErrorNum *dstErr)
 {
   int		elmId,
-		elmIdWlk,
+		elmIdWlk = -1,        /* Mainly to avoid compiler warnings. */
 		extFlg = 0,
 		fndFlg = 0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;

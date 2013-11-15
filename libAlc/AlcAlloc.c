@@ -45,6 +45,7 @@ static char _AlcAlloc_c[] = "University of Edinburgh $Id$";
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <Alc.h>
 
 /*!
@@ -71,7 +72,7 @@ void		*AlcCalloc(size_t elCount, size_t elSz)
 * \return	Allocated storage or NULL on error.
 * \ingroup	AlcAlloc
 * \brief	Allocates space for the given number of bytes with each
-*		each element set an undefined value.
+*		each element left an undefined value.
 * \param	byteCount 	 	Number of bytes.
 */
 void		*AlcMalloc(size_t byteCount)

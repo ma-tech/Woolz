@@ -146,8 +146,9 @@ WlzObject 	*WlzProj3DToSection(WlzObject *gvnObj,
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  prjObj = WlzGetProjectionFromObject(isnObj, prjView1, NULL, NULL,
-	  				      &errNum);
+	  prjObj = WlzProjectObjToPlane(isnObj, prjView1,
+	  				WLZ_PROJECT_INT_MODE_NONE, 0, NULL,
+					&errNum);
 	}
         (void )WlzFree3DViewStruct(prjView1);
 	if(errNum == WLZ_ERR_NONE)

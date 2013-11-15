@@ -1305,7 +1305,7 @@ static double WlzTstDistCTimerStop(int doit, struct timeval *t, double rep)
   if(doit)
   {
     gettimeofday(t + 1, NULL);
-    timersub(t + 1, t + 0, t + 2);
+    ALC_TIMERSUB(t + 1, t + 0, t + 2);
     s = t[2].tv_sec + (0.000001 * t[2].tv_usec);
     if(rep > 0)
     {

@@ -247,7 +247,7 @@ int		main(int argc, char *argv[])
       double s = 0.0;
 
       gettimeofday(&(times[1]), NULL);
-      timersub(&(times[1]), &(times[0]), &(times[2]));
+      ALC_TIMERSUB(&(times[1]), &(times[0]), &(times[2]));
       s = times[2].tv_sec + (0.000001 * times[2].tv_usec);
       (void )
       printf("Total elapsed time = %gs\n", s);
