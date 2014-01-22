@@ -54,7 +54,7 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
 		       [-b<basis fn transform>] [-Y<order of polynomial>]
 		       [-D<flags>] [-P<param>]
 		       [-d] [-g] [-h] [-q] [-Q] [-s] [-t] [-y]
-		       [-B] [-C] [-G] [-L] [-N] [-R] [-S] [-T]
+		       [-B] [-C] [-E] [-G] [-L] [-N] [-R] [-S] [-T]
 		       [<in object>]
 \endverbatim
 \par Options
@@ -83,6 +83,10 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
     </table>
     </tr>
     </td>
+  </tr>
+  <tr> 
+    <td><b>-E</b></td>
+    <td>Output evaluation times to stderr.</td>
   </tr>
   <tr> 
     <td><b>-G</b></td>
@@ -211,6 +215,7 @@ is then written to tied.wlz.
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -281,6 +286,7 @@ int             main(int argc, char **argv)
 		outMeshTrFlag = 0,
 		restrictToBasisFn = 0,
 		snapToMesh = 0,
+		timer = 0,
 		ok = 1,
 		usage = 0;
   double	basisFnParam = 0.001,
@@ -305,9 +311,10 @@ int             main(int argc, char **argv)
 		*tarMeshFileStr = NULL,
 		*tiePtFileStr = NULL,
   		*outObjFileStr;
+  struct timeval times[6];
   const int	delOut = 1;
   const char    *errMsg;
-  static char	optList[] = "b:m:o:p:t:D:M:P:Y:cdghqsyBCGLNQRSTU",
+  static char	optList[] = "b:m:o:p:t:D:M:P:Y:cdghqsyBCEGLNQRSTU",
   		inObjFileStrDef[] = "-",
 		outObjFileStrDef[] = "-";
 
@@ -318,6 +325,7 @@ int             main(int argc, char **argv)
   meshTr.core = NULL;
   outObjFileStr = outObjFileStrDef;
   inObjFileStr = inObjFileStrDef;
+  (void )memset(times, 0, 6 * sizeof(struct timeval));
   while((usage == 0) && ((option = getopt(argc, argv, optList)) != -1))
   {
     switch(option)
@@ -339,6 +347,9 @@ int             main(int argc, char **argv)
 	{
 	  usage = 1;
 	}
+	break;
+      case 'E':
+        timer = 1;
 	break;
       case 'c':
         basisFnType = WLZ_FN_BASIS_2DCONF_POLY;
@@ -673,6 +684,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
+    gettimeofday(times + 0, NULL);
     if(restrictToBasisFn)
     {
       if(cMesh)
@@ -755,6 +767,7 @@ int             main(int argc, char **argv)
 				meshGenMth, meshMinDist, meshMaxDist,
 				&errNum);
     }
+    gettimeofday(times + 1, NULL);
   }
   if(ok)
   {
@@ -834,6 +847,7 @@ int             main(int argc, char **argv)
 	}
 	else
 	{
+          gettimeofday(times + 2, NULL);
 	  if(noTrObj == 0)
 	  {
 	    if(cMesh)
@@ -847,6 +861,7 @@ int             main(int argc, char **argv)
 					   &errNum);
 	    }
 	  }
+          gettimeofday(times + 3, NULL);
 	}
       }
       if(dbgFlg)
@@ -905,6 +920,17 @@ int             main(int argc, char **argv)
   (void )WlzFreeObj(inObj);
   (void )WlzFreeObj(outObj);
   (void )WlzFreeObj(dilObj);
+  if(timer)
+  {
+    ALC_TIMERSUB(times + 1, times + 0, times + 4);
+    ALC_TIMERSUB(times + 3, times + 2, times + 5);
+    (void )fprintf(stderr,
+    "%s: Elapsed times to compute mesh displacements and warp\n"
+    "the object were: %g and %g seconds\n",
+    *argv,
+    times[4].tv_sec + (0.000001 * times[4].tv_usec),
+    times[5].tv_sec + (0.000001 * times[5].tv_usec));
+  }
   if(usage != 0)
   {
     (void )fprintf(stderr,
@@ -915,7 +941,7 @@ int             main(int argc, char **argv)
     "                  [-b<basis fn transform>] [-Y<order of polynomial>]\n"
     "                  [-D<flags>] [-P<param>]\n"
     "                  [-d] [-g] [-h] [-q] [-s] [-t] [-y]\n"
-    "                  [-B] [-C] [-G] [-L] [-N] [-Q] [-R] [-S] [-T]\n"
+    "                  [-B] [-C] [-E] [-G] [-L] [-N] [-Q] [-R] [-S] [-T]\n"
     "                  [<in object>]\n"
     "Version: ",
     WlzVersion(),
@@ -930,6 +956,7 @@ int             main(int argc, char **argv)
     "           output.\n"
     "      These debug flags are only intended for use when debuging and\n"
     "      they may be combined by an or operation (eg 11 = 1 | 2 | 8).\n"
+    "  -E  Output evaluation times to stderr.\n"
     "  -G  Gradient mesh generation method (default).\n"
     "  -L  Use linear interpolation instead of nearest neighbour.\n"
     "  -m  Minimum mesh node separation distance (default 10.0)\n"
