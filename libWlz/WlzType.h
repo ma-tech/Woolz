@@ -618,35 +618,28 @@ typedef enum _WlzDistanceType
 } WlzDistanceType;
 
 /*!
-* \enum 	_WlzRegConRCC8
+* \enum 	_WlzRegConRCC
 * \ingroup	WlzType
-* \brief	The dicrete Region Connected Calculus 8 (RCC8) clasification
-* 		of a pair of spatial regions.
-* 		Typedef: ::WlzRegConRCC8
-* 		\verbatim
-                RCC8           X = ---------,  Y = _________
-                DC(X,Y)        ---------       _________
-                EC(X,Y)        ---------_________
-                EQ(X,Y)        =========
-                PO(X,Y)        ------===______
-                TPP(X,Y)       ____=====
-                NTPP(X,Y)      __=====__
-                TPPI(X,Y)      -----====
-                NTPPI(X,Y)     --=====--
-                \endverbatim
+* \brief	A Discrete Region Connected Calculus (RCC) clasification
+* 		of a pair of spatial regions. See WlzRegConCalcRCC() for
+* 		an explaination.
 */
-typedef enum _WlzRegConRCC8
+typedef enum _WlzRegConRCC
 {
-  WLZ_REGCON_RCC8_DC	= 0, 	/*!< Diconnected. */
-  WLZ_REGCON_RCC8_EC,		/*!< External Connected. */
-  WLZ_REGCON_RCC8_EQ,		/*!< Equal. */
-  WLZ_REGCON_RCC8_PO,		/*!< Partial Overlap. */
-  WLZ_REGCON_RCC8_TPP,		/*!< Tangential Proper Part. */
-  WLZ_REGCON_RCC8_NTPP,		/*!< Non-Tangential Proper Part. */
-  WLZ_REGCON_RCC8_TPPI,		/*!< Tangential Proper Part Inverse. */
-  WLZ_REGCON_RCC8_NTPPI		/*!< Non-Tangential Proper Part
-  				     Inverse. */
-} WlzRegConRCC8;
+  WLZ_REGCON_RCC_DC	= 0, 	/*!< Diconnected. */
+  WLZ_REGCON_RCC_EC,		/*!< External Connected. */
+  WLZ_REGCON_RCC_EQ,		/*!< Equal. */
+  WLZ_REGCON_RCC_PO,		/*!< Partial Overlap. */
+  WLZ_REGCON_RCC_TPP,		/*!< Tangential Proper Part. */
+  WLZ_REGCON_RCC_NTPP,		/*!< Non-Tangential Proper Part. */
+  WLZ_REGCON_RCC_TPPI,		/*!< Tangential Proper Part inverse. */
+  WLZ_REGCON_RCC_NTPPI,		/*!< Non-Tangential Proper Part
+  				     inverse. */
+  WLZ_REGCON_RCC_SUR,		/*!< Surrounds. */
+  WLZ_REGCON_RCC_SURI,		/*!< Surrounds inverse. */
+  WLZ_REGCON_RCC_ENC,		/*!< Encloses. */
+  WLZ_REGCON_RCC_ENCI,		/*!< Encloses inverse. */
+} WlzRegConRCC;
 
 /*!
 * \enum		_WlzSpecialStructElmType

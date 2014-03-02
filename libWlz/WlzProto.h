@@ -5398,7 +5398,7 @@ extern WlzAffineTransform	*WlzRegICPTreeAndVertices(
 /************************************************************************
 * WlzRegConCalc.c
 ************************************************************************/
-extern WlzRegConRCC8		WlzRegConCalcRCC8(
+extern WlzRegConRCC		WlzRegConCalcRCC(
 				  WlzObject *obj0,
 				  WlzObject *obj1,
 				  double *dstNrmVol,

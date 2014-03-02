@@ -41,31 +41,63 @@ static char _WlzRegConCalc_c[] = "University of Edinburgh $Id$";
 #include <Wlz.h>
 
 /*!
-* \return	RCC8 classification of the given objects.
+* \return	RCC classification of the given objects, ie object 0 is a
+*               returned classification of object 1.
 * \ingroup	WlzBinaryOps
 * \brief	The given pair of spatial domain objects are classified
-*		using the RCC8.
+*		using a RCC.
 *		For an explanation of RCC8 classifications
-*		see the type definition ::WlzRegConRCC8 and the paper:
+*		see the type definition ::WlzRegConRCC and the paper:
 *		D.A. Randell, etal,
 *		"Discrete Mereotopology for Spatial Reasoning in
 *		Automated Histological Image Analysis", PAMI 35(3) 2013.
+*		The RCC8 has been extended to include encloses and
+*		surrounds.
 * 		The classification is performed using simple combinations
-* 		of the Woolz union, intersection and difference
-* 		morphological operators:
+* 		of the Woolz union, intersection, difference, dilation
+* 		and convex hull operators on an ordered pair of
+* 		spatial domains(\f$\Omega_0\f$ and \f$\Omega_1\f$):
 *               \f{eqnarray*}{
-                  C_0 &=& O_0   \cap O_1 \\
-                  C_1 &=& O_0^+ \cap O_1 \\
-                  C_2 &=& (O_0   \cup O_1)   \oplus o_0 \\
-                  C_3 &=& (O_0   \cup O_1)   \oplus o_1 \\
-                  C_4 &=& (O_0^+ \cup O_1)   \oplus o_0 \\
-                  C_5 &=& (O_0   \cup O_1^+) \oplus o_1
+                  C_0 &\leftarrow&
+		    \Omega_0   \cap \Omega_1
+		    \neq \emptyset \\
+                  C_1 &\leftarrow&
+		    \Omega_0^+ \cap \Omega_1
+		    \neq \emptyset \\
+                  C_2 &\leftarrow&
+		    (\Omega_0   \cup \Omega_1)   \oplus \Omega_0
+		    \neq \emptyset \\
+                  C_3 &\leftarrow&
+		    (\Omega_0   \cup \Omega_1)   \oplus \Omega_1 
+		    \neq \emptyset \\
+                  C_4 &\leftarrow&
+		    (\Omega_0^+ \cup \Omega_1)   \oplus \Omega_0 
+		    \neq \emptyset \\
+                  C_5 &\leftarrow&
+		    (\Omega_0   \cup \Omega_1^+) \oplus \Omega_1 
+		    \neq \emptyset \\
+                  C_6 &\leftarrow&
+		    ((\Omega_0   \cap \Omega_1^+) \neq \emptyset) \bullet
+		    (\Omega_1^+ \cap \Omega_0 = \Omega_1^+ \oplus \Omega_1) \\
+                  C_7 &\leftarrow&
+		    ((\Omega_1   \cap \Omega_0^+) \neq \emptyset) \bullet
+		    (\Omega_0^+ \cap \Omega_1 = \Omega_0^+ \oplus \Omega_0) \\
+		  C_8 &\leftarrow&
+		    2|\Omega_0^v \cap \Omega_1| \ge |\Omega_1| \\
+		  C_9 &\leftarrow&
+		    2|\Omega_1^v \cap \Omega_0| \ge |\Omega_0|
   		\f}
 *		where
-*		  \f$O^+\f$ indicates the dilation of \f$O\f$.
+*		  are the \f$\cup\f$, \f$\cap\f$, \f$\oplus\f$, \f$\bullet\f$
+*		  are the set union, intersection, difference and
+*		  logical and operators;
+*		  \f$\Omega^+\f$ indicates the dilation of \f$\Omega\f$,
+*		  \f$\Omega^v\f$ the convex hull of \f$\Omega\f$ and
+*		  \f$|\Omega|\f$ the cardinality (area or volume) of
+*		  \f$\Omega\f$.
 * 		<table width="500" border="0">
 		<caption>
-		  Basic Morphological Operations for RCC8 Spatial
+		  Basic Morphological Operations for the RCC Spatial
 		  Relationships
 		</caption>
                 <tr>
@@ -76,105 +108,202 @@ static char _WlzRegConCalc_c[] = "University of Edinburgh $Id$";
                   <td>\f$C_3\f$</td>
                   <td>\f$C_4\f$</td>
                   <td>\f$C_5\f$</td>
+                  <td>\f$C_6\f$</td>
+                  <td>\f$C_7\f$</td>
+                  <td>\f$C_8\f$</td>
+                  <td>\f$C_9\f$</td>
 		  <td>Normalised Volume</td>
                 </tr>
 		<tr>
-		  <td>\f$DC(O_0,O_1)\f$</td>
+		  <td>\f$DC(\Omega_0,\Omega_1)\f$</td>
 		  <td>0</td>
 		  <td>0</td>
 		  <td>-</td>
 		  <td>-</td>
 		  <td>-</td>
 		  <td>-</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
 		  <td>0.0</td>
 		</tr>
 		<tr>
-		  <td>\f$EC(O_0,O_1)\f$</td>
+		  <td>\f$EC(\Omega_0,\Omega_1)\f$</td>
 		  <td>0</td>
 		  <td>1</td>
 		  <td>-</td>
 		  <td>-</td>
 		  <td>-</td>
 		  <td>-</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
 		  <td>0.0</td>
 		</tr>
 		<tr>
-		  <td>\f$EQ(O_0,O_1)\f$</td>
+		  <td>\f$EQ(\Omega_0,\Omega_1)\f$</td>
 		  <td>1</td>
 		  <td>-</td>
 		  <td>0</td>
 		  <td>0</td>
 		  <td>-</td>
 		  <td>-</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
 		  <td>1.0</td>
 		</tr>
 		<tr>
-		  <td>\f$PO(O_0,O_1)\f$</td>
+		  <td>\f$PO(\Omega_0,\Omega_1)\f$</td>
 		  <td>1</td>
 		  <td>-</td>
 		  <td>1</td>
 		  <td>1</td>
 		  <td>-</td>
 		  <td>-</td>
-		  <td>\f$V(O_0 \cap O_1)/V(O_0 \cup O_1)\f$</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>\f$|\Omega_0 \cap \Omega_1|/
+		         |\Omega_0 \cup \Omega_1|\f$</td>
 		</tr>
 		<tr>
-		  <td>\f$TPP(O_0,O_1)\f$</td>
+		  <td>\f$TPP(\Omega_0,\Omega_1)\f$</td>
 		  <td>1</td>
 		  <td>-</td>
 		  <td>1</td>
 		  <td>0</td>
 		  <td>-</td>
 		  <td>1</td>
-		  <td>\f$V(O_0)/V(O_0 \cup O_1)\f$</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>\f$|\Omega_0|/ |\Omega_0 \cup \Omega_1|\f$</td>
 		</tr>
 		<tr>
-		  <td>\f$NTPP(O_0,O_1)\f$</td>
+		  <td>\f$NTPP(\Omega_0,\Omega_1)\f$</td>
 		  <td>1</td>
 		  <td>-</td>
 		  <td>1</td>
 		  <td>0</td>
 		  <td>-</td>
 		  <td>0</td>
-		  <td>\f$V(O_0)/V(O_0 \cup O_1)\f$</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>\f$|\Omega_0|/|\Omega_0 \cup \Omega_1|\f$</td>
 		</tr>
 		<tr>
-		  <td>\f$TPPI(O_0,O_1)\f$</td>
+		  <td>\f$TPPI(\Omega_0,\Omega_1)\f$</td>
 		  <td>1</td>
 		  <td>-</td>
 		  <td>0</td>
 		  <td>1</td>
 		  <td>1</td>
 		  <td>-</td>
-		  <td>\f$V(O_1)/V(O_0 \cup O_1)\f$</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>\f$|\Omega_1|/|\Omega_0 \cup \Omega_1|\f$</td>
 		</tr>
 		<tr>
-		  <td>\f$NTPPI(O_0,O_1)\f$</td>
+		  <td>\f$NTPPI(\Omega_0,\Omega_1)\f$</td>
 		  <td>1</td>
 		  <td>-</td>
 		  <td>0</td>
 		  <td>1</td>
 		  <td>0</td>
 		  <td>-</td>
-		  <td>\f$V(O_1)/V(O_0 \cup O_1)\f$</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>\f$|\Omega_1|/|\Omega_0 \cup \Omega_1|\f$</td>
+		</tr>
+		<tr>
+		  <td>\f$SUR(\Omega_0,\Omega_1)\f$</td>
+		  <td>0</td>
+		  <td>1</td>
+		  <td>0</td>
+		  <td>1</td>
+		  <td>0</td>
+		  <td>1</td>
+		  <td>1</td>
+		  <td>0</td>
+		  <td>1</td>
+		  <td>-</td>
+		  <td>\f$|\Omega_0 \cap \Omega_1^+| /
+		         |\Omega_0 \cup \Omega_1\f$</td>
+		</tr>
+		<tr>
+		  <td>\f$SURI(\Omega_0,\Omega_1)\f$</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>\f$|\Omega_0^+ \cap \Omega_1| /
+		         |\Omega_0   \cup \Omega_1\f$</td>
+		</tr>
+		<tr>
+		  <td>\f$ENC(\Omega_0,\Omega_1)\f$</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>\f$|\Omega_0^v \cap \Omega_1  | / |\Omega_1|\f$</td>
+		</tr>
+		<tr>
+		  <td>\f$ENCI(\Omega_0,\Omega_1)\f$</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>.</td>
+		  <td>\f$|\Omega_0   \cap \Omega_1^v| / |\Omega_0|\f$</td>
 		</tr>
 		</table>
+		Where 0, 1 and - indicate false, true and not evaluated.
 * \param	obj0			First given spatial domain object.
 * \param	obj1			Second given spatial domain object.
 * \param	dstNrmVol		Destination pointer for the normalized
 * 					volume (see above), may be NULL.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzRegConRCC8 	WlzRegConCalcRCC8(WlzObject *obj0, WlzObject *obj1,
-				  double *dstNrmVol, WlzErrorNum *dstErr)
+WlzRegConRCC 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1,
+				 double *dstNrmVol, WlzErrorNum *dstErr)
 {
+  int		n = 1;
   double	vol = 0.0;
   WlzObject	*objI = NULL,
   		*objD = NULL,
   		*objU = NULL,
 		*objU0 = NULL,
 		*objU1 = NULL;
-  WlzRegConRCC8 con = WLZ_REGCON_RCC8_DC;
+  WlzRegConRCC con = WLZ_REGCON_RCC_DC;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if((obj0 == NULL) || (obj1 == NULL))
@@ -187,7 +316,7 @@ WlzRegConRCC8 	WlzRegConCalcRCC8(WlzObject *obj0, WlzObject *obj1,
   }
   else if((obj0->type == WLZ_EMPTY_OBJ) || (obj1->type == WLZ_EMPTY_OBJ))
   {
-    con = WLZ_REGCON_RCC8_DC;
+    con = WLZ_REGCON_RCC_DC;
   }
   else if(obj0->type != obj1->type)
   {
@@ -206,7 +335,7 @@ WlzRegConRCC8 	WlzRegConCalcRCC8(WlzObject *obj0, WlzObject *obj1,
 	{
 	  if(!WlzIsEmpty(objD, NULL))
 	  {
-	    con = WLZ_REGCON_RCC8_EC;
+	    con = WLZ_REGCON_RCC_EC;
 	  }
 	}
       }
@@ -255,7 +384,7 @@ WlzRegConRCC8 	WlzRegConCalcRCC8(WlzObject *obj0, WlzObject *obj1,
 	    switch(msk)
 	    {
 	      case 0:
-		con = WLZ_REGCON_RCC8_EQ;
+		con = WLZ_REGCON_RCC_EQ;
 		vol = 1.0;
 		break;
 	      case 1:
@@ -275,11 +404,11 @@ WlzRegConRCC8 	WlzRegConCalcRCC8(WlzObject *obj0, WlzObject *obj1,
 		{
 		  if(WlzIsEmpty(objU0, NULL))
 		  {
-		    con = WLZ_REGCON_RCC8_NTPP;
+		    con = WLZ_REGCON_RCC_NTPP;
 		  }
 		  else
 		  {
-		    con = WLZ_REGCON_RCC8_TPP;
+		    con = WLZ_REGCON_RCC_TPP;
 		  }
 		}
 		break;
@@ -300,16 +429,16 @@ WlzRegConRCC8 	WlzRegConCalcRCC8(WlzObject *obj0, WlzObject *obj1,
 		{
 		  if(WlzIsEmpty(objU1, NULL))
 		  {
-		    con = WLZ_REGCON_RCC8_NTPP;
+		    con = WLZ_REGCON_RCC_NTPP;
 		  }
 		  else
 		  {
-		    con = WLZ_REGCON_RCC8_TPP;
+		    con = WLZ_REGCON_RCC_TPP;
 		  }
 		}
 		break;
 	      case 3:
-		con = WLZ_REGCON_RCC8_PO;
+		con = WLZ_REGCON_RCC_PO;
 		break;
 	      default:
 		break;
