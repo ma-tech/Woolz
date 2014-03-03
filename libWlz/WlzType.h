@@ -621,14 +621,17 @@ typedef enum _WlzDistanceType
 * \enum 	_WlzRegConRCC
 * \ingroup	WlzType
 * \brief	A Discrete Region Connected Calculus (RCC) clasification
-* 		of a pair of spatial regions. See WlzRegConCalcRCC() for
-* 		an explaination.
+* 		of an ordered pair of spatial regions. The classifications
+* 		are bit masks to allow for multiple classifications.
+* 		See also WlzRegConCalcRCC().
 */
 typedef enum _WlzRegConRCC
 {
-  WLZ_REGCON_RCC_EMPTY	= 0, 		/*!< Empty. */
+  WLZ_REGCON_RCC_EMPTY	= 0, 		/*!< Empty:
+  					     One or both of the domains is
+					     empty. */
   WLZ_REGCON_RCC_DC	= 1, 		/*!< Disconnected. */
-  WLZ_REGCON_RCC_EC	= (1<<1),	/*!< External Connected. */
+  WLZ_REGCON_RCC_EC	= (1<<1),	/*!< Edge Connected. */
   WLZ_REGCON_RCC_EQ	= (1<<2),	/*!< Equal. */
   WLZ_REGCON_RCC_PO	= (1<<3),	/*!< Partial Overlap. */
   WLZ_REGCON_RCC_TPP	= (1<<4),	/*!< Tangential Proper Part. */
@@ -636,10 +639,22 @@ typedef enum _WlzRegConRCC
   WLZ_REGCON_RCC_TPPI	= (1<<6),	/*!< Tangential Proper Part inverse. */
   WLZ_REGCON_RCC_NTPPI	= (1<<7),	/*!< Non-Tangential Proper Part
   				     	     inverse. */
-  WLZ_REGCON_RCC_SUR	= (1<<8),	/*!< Surrounds. */
-  WLZ_REGCON_RCC_SURI	= (1<<9),	/*!< Surrounds inverse. */
-  WLZ_REGCON_RCC_ENC	= (1<<10),	/*!< Encloses. */
-  WLZ_REGCON_RCC_ENCI	= (1<<11),	/*!< Encloses inverse. */
+  WLZ_REGCON_RCC_SUR	= (1<<8),	/*!< Surrounds:
+  					     The first domain is surrounded by
+					     and edge connected to the
+					     second domain. */
+  WLZ_REGCON_RCC_SURI	= (1<<9),	/*!< Surrounds inverse:
+  					     The second domain is surrounded by
+					     and edge connected to the first
+					     domain.. */
+  WLZ_REGCON_RCC_ENC	= (1<<10),	/*!< Encloses:
+  					     The majority of the first domain
+					     is within the convex hull of the
+					     second domain. */
+  WLZ_REGCON_RCC_ENCI	= (1<<11),	/*!< Encloses inverse:
+  					     The majority of the second domain
+					     is within the convex hull of the
+					     first domain. */
 } WlzRegConRCC;
 
 /*!
