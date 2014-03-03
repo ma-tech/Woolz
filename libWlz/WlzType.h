@@ -626,19 +626,20 @@ typedef enum _WlzDistanceType
 */
 typedef enum _WlzRegConRCC
 {
-  WLZ_REGCON_RCC_DC	= 0, 	/*!< Diconnected. */
-  WLZ_REGCON_RCC_EC,		/*!< External Connected. */
-  WLZ_REGCON_RCC_EQ,		/*!< Equal. */
-  WLZ_REGCON_RCC_PO,		/*!< Partial Overlap. */
-  WLZ_REGCON_RCC_TPP,		/*!< Tangential Proper Part. */
-  WLZ_REGCON_RCC_NTPP,		/*!< Non-Tangential Proper Part. */
-  WLZ_REGCON_RCC_TPPI,		/*!< Tangential Proper Part inverse. */
-  WLZ_REGCON_RCC_NTPPI,		/*!< Non-Tangential Proper Part
-  				     inverse. */
-  WLZ_REGCON_RCC_SUR,		/*!< Surrounds. */
-  WLZ_REGCON_RCC_SURI,		/*!< Surrounds inverse. */
-  WLZ_REGCON_RCC_ENC,		/*!< Encloses. */
-  WLZ_REGCON_RCC_ENCI,		/*!< Encloses inverse. */
+  WLZ_REGCON_RCC_EMPTY	= 0, 		/*!< Empty. */
+  WLZ_REGCON_RCC_DC	= 1, 		/*!< Disconnected. */
+  WLZ_REGCON_RCC_EC	= (1<<1),	/*!< External Connected. */
+  WLZ_REGCON_RCC_EQ	= (1<<2),	/*!< Equal. */
+  WLZ_REGCON_RCC_PO	= (1<<3),	/*!< Partial Overlap. */
+  WLZ_REGCON_RCC_TPP	= (1<<4),	/*!< Tangential Proper Part. */
+  WLZ_REGCON_RCC_NTPP	= (1<<5),	/*!< Non-Tangential Proper Part. */
+  WLZ_REGCON_RCC_TPPI	= (1<<6),	/*!< Tangential Proper Part inverse. */
+  WLZ_REGCON_RCC_NTPPI	= (1<<7),	/*!< Non-Tangential Proper Part
+  				     	     inverse. */
+  WLZ_REGCON_RCC_SUR	= (1<<8),	/*!< Surrounds. */
+  WLZ_REGCON_RCC_SURI	= (1<<9),	/*!< Surrounds inverse. */
+  WLZ_REGCON_RCC_ENC	= (1<<10),	/*!< Encloses. */
+  WLZ_REGCON_RCC_ENCI	= (1<<11),	/*!< Encloses inverse. */
 } WlzRegConRCC;
 
 /*!

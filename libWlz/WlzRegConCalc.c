@@ -65,228 +65,167 @@ static char _WlzRegConCalc_c[] = "University of Edinburgh $Id$";
 		    \Omega_0^+ \cap \Omega_1
 		    \neq \emptyset \\
                   C_2 &\leftarrow&
-		    (\Omega_0   \cup \Omega_1)   \oplus \Omega_0
+		    (\Omega_0 \oplus \Omega_1)
 		    \neq \emptyset \\
                   C_3 &\leftarrow&
-		    (\Omega_0   \cup \Omega_1)   \oplus \Omega_1 
+		    (\Omega_0   \cup \Omega_1)   \oplus \Omega_0 
 		    \neq \emptyset \\
                   C_4 &\leftarrow&
-		    (\Omega_0^+ \cup \Omega_1)   \oplus \Omega_0 
+		    (\Omega_0   \cup \Omega_1)   \oplus \Omega_1 
 		    \neq \emptyset \\
                   C_5 &\leftarrow&
-		    (\Omega_0   \cup \Omega_1^+) \oplus \Omega_1 
+		    (\Omega_0^+ \cup \Omega_1)   \oplus \Omega_1 
 		    \neq \emptyset \\
                   C_6 &\leftarrow&
-		    ((\Omega_0   \cap \Omega_1^+) \neq \emptyset) \bullet
-		    (\Omega_1^+ \cap \Omega_0 = \Omega_1^+ \oplus \Omega_1) \\
-                  C_7 &\leftarrow&
-		    ((\Omega_1   \cap \Omega_0^+) \neq \emptyset) \bullet
-		    (\Omega_0^+ \cap \Omega_1 = \Omega_0^+ \oplus \Omega_0) \\
+		    (\Omega_0   \cup \Omega_1^+) \oplus \Omega_0 
+		    \neq \emptyset \\
+		  C_7 &\leftarrow&
+		    2|\Omega_0^v \cap \Omega_1|   \ge |\Omega_1| \\
 		  C_8 &\leftarrow&
-		    2|\Omega_0^v \cap \Omega_1| \ge |\Omega_1| \\
-		  C_9 &\leftarrow&
-		    2|\Omega_1^v \cap \Omega_0| \ge |\Omega_0|
+		    2|\Omega_0   \cap \Omega_1^v| \ge |\Omega_0|
   		\f}
 *		where
-*		  are the \f$\cup\f$, \f$\cap\f$, \f$\oplus\f$, \f$\bullet\f$
-*		  are the set union, intersection, difference and
-*		  logical and operators;
+*		  are the \f$\cup\f$, \f$\cap\f$ and \f$\oplus\f$
+*		  are the set union (logical or), intersection (logical and)
+*		  and difference (logical exclusive or) operators;
 *		  \f$\Omega^+\f$ indicates the dilation of \f$\Omega\f$,
 *		  \f$\Omega^v\f$ the convex hull of \f$\Omega\f$ and
 *		  \f$|\Omega|\f$ the cardinality (area or volume) of
 *		  \f$\Omega\f$.
+* 		The decision tree for the classification excluding
+* 		enclosure is:
+* 		\f[
+C_0?
+\left\{
+\begin{array}{ll}
+0 & C_1?
+    \left\{
+    \begin{array}{ll}
+    0 & DC \\
+      & \\
+      & \\
+    1 & C_4?
+	\left\{
+	\begin{array}{ll}
+	0 & SUR \\
+	  & \\
+	  & \\
+	1 & C_3?
+	    \left\{
+	    \begin{array}{ll}
+	    0 & SURI \\
+	      & \\
+	    1 & EC
+	    \end{array}
+	    \right. \\
+	\end{array}
+	\right. \\
+    \end{array}
+    \right. \\
+  & \\
+1 & C_2?
+    \left\{
+    \begin{array}{ll}
+    0 & EQ \\
+      & \\
+      & \\
+    1 & C_4?
+	\left\{
+	\begin{array}{ll}
+	0 & C_5?
+	    \left\{
+	    \begin{array}{ll}
+	    0 & NTPP \\
+	      & \\
+	    1 & TPP
+	    \end{array}
+	    \right. \\
+	  & \\
+	  & \\
+	1 & C_3?
+	    \left\{
+	    \begin{array}{ll}
+	    0 & C_6?
+		\left\{
+		\begin{array}{ll}
+		0 & NTPPI \\
+		 & \\
+		1 & TPPI
+		\end{array}
+		\right. \\
+	      & \\
+	    1 & PO
+	    \end{array}
+	    \right. \\
+	\end{array}
+	\right. \\
+    \end{array}
+    \right. \\
+\end{array}
+\right.
+		\f]
+*		Following this classification, enclosure may be added
+*		using \f$C_7\f$ and \f$C_8\f$ to test for enclosure
+*		and it's inverse respectively.
+*		The normalised volumes are computed for each classification
+*		as below:
 * 		<table width="500" border="0">
 		<caption>
-		  Basic Morphological Operations for the RCC Spatial
+		  Basic Morphological Operations for RCC8 Spatial
 		  Relationships
 		</caption>
                 <tr>
-                  <td>RCC8</td>
-                  <td>\f$C_0\f$</td>
-                  <td>\f$C_1\f$</td>
-                  <td>\f$C_2\f$</td>
-                  <td>\f$C_3\f$</td>
-                  <td>\f$C_4\f$</td>
-                  <td>\f$C_5\f$</td>
-                  <td>\f$C_6\f$</td>
-                  <td>\f$C_7\f$</td>
-                  <td>\f$C_8\f$</td>
-                  <td>\f$C_9\f$</td>
+                  <td>RCC</td>
 		  <td>Normalised Volume</td>
                 </tr>
 		<tr>
+		  <td>\f$EMPTY(\Omega_0,\Omega_1)\f$</td>
+		  <td>0.0</td>
+		</tr>
+		<tr>
 		  <td>\f$DC(\Omega_0,\Omega_1)\f$</td>
-		  <td>0</td>
-		  <td>0</td>
-		  <td>-</td>
-		  <td>-</td>
-		  <td>-</td>
-		  <td>-</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
 		  <td>0.0</td>
 		</tr>
 		<tr>
 		  <td>\f$EC(\Omega_0,\Omega_1)\f$</td>
-		  <td>0</td>
-		  <td>1</td>
-		  <td>-</td>
-		  <td>-</td>
-		  <td>-</td>
-		  <td>-</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
 		  <td>0.0</td>
 		</tr>
 		<tr>
 		  <td>\f$EQ(\Omega_0,\Omega_1)\f$</td>
-		  <td>1</td>
-		  <td>-</td>
-		  <td>0</td>
-		  <td>0</td>
-		  <td>-</td>
-		  <td>-</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
 		  <td>1.0</td>
 		</tr>
 		<tr>
 		  <td>\f$PO(\Omega_0,\Omega_1)\f$</td>
-		  <td>1</td>
-		  <td>-</td>
-		  <td>1</td>
-		  <td>1</td>
-		  <td>-</td>
-		  <td>-</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
 		  <td>\f$|\Omega_0 \cap \Omega_1|/
 		         |\Omega_0 \cup \Omega_1|\f$</td>
 		</tr>
 		<tr>
 		  <td>\f$TPP(\Omega_0,\Omega_1)\f$</td>
-		  <td>1</td>
-		  <td>-</td>
-		  <td>1</td>
-		  <td>0</td>
-		  <td>-</td>
-		  <td>1</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>\f$|\Omega_0|/ |\Omega_0 \cup \Omega_1|\f$</td>
+		  <td>\f$|\Omega_0|/|\Omega_0 \cup \Omega_1|\f$</td>
 		</tr>
 		<tr>
 		  <td>\f$NTPP(\Omega_0,\Omega_1)\f$</td>
-		  <td>1</td>
-		  <td>-</td>
-		  <td>1</td>
-		  <td>0</td>
-		  <td>-</td>
-		  <td>0</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
 		  <td>\f$|\Omega_0|/|\Omega_0 \cup \Omega_1|\f$</td>
 		</tr>
 		<tr>
 		  <td>\f$TPPI(\Omega_0,\Omega_1)\f$</td>
-		  <td>1</td>
-		  <td>-</td>
-		  <td>0</td>
-		  <td>1</td>
-		  <td>1</td>
-		  <td>-</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
 		  <td>\f$|\Omega_1|/|\Omega_0 \cup \Omega_1|\f$</td>
 		</tr>
 		<tr>
 		  <td>\f$NTPPI(\Omega_0,\Omega_1)\f$</td>
-		  <td>1</td>
-		  <td>-</td>
-		  <td>0</td>
-		  <td>1</td>
-		  <td>0</td>
-		  <td>-</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
 		  <td>\f$|\Omega_1|/|\Omega_0 \cup \Omega_1|\f$</td>
 		</tr>
 		<tr>
-		  <td>\f$SUR(\Omega_0,\Omega_1)\f$</td>
-		  <td>0</td>
-		  <td>1</td>
-		  <td>0</td>
-		  <td>1</td>
-		  <td>0</td>
-		  <td>1</td>
-		  <td>1</td>
-		  <td>0</td>
-		  <td>1</td>
-		  <td>-</td>
-		  <td>\f$|\Omega_0 \cap \Omega_1^+| /
-		         |\Omega_0 \cup \Omega_1\f$</td>
-		</tr>
-		<tr>
-		  <td>\f$SURI(\Omega_0,\Omega_1)\f$</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>\f$|\Omega_0^+ \cap \Omega_1| /
-		         |\Omega_0   \cup \Omega_1\f$</td>
-		</tr>
-		<tr>
 		  <td>\f$ENC(\Omega_0,\Omega_1)\f$</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>\f$|\Omega_0^v \cap \Omega_1  | / |\Omega_1|\f$</td>
+		  <td>\f$|\Omega_1|/|\Omega_0 \cup \Omega_1^v|\f$</td>
 		</tr>
 		<tr>
 		  <td>\f$ENCI(\Omega_0,\Omega_1)\f$</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>.</td>
-		  <td>\f$|\Omega_0   \cap \Omega_1^v| / |\Omega_0|\f$</td>
+		  <td>\f$|\Omega_1|/|\Omega_0^v \cup \Omega_1|\f$</td>
 		</tr>
 		</table>
-		Where 0, 1 and - indicate false, true and not evaluated.
+		When computing the normalised volumes enclosure has the
+		higher priority.
 * \param	obj0			First given spatial domain object.
 * \param	obj1			Second given spatial domain object.
 * \param	dstNrmVol		Destination pointer for the normalized
@@ -303,20 +242,18 @@ WlzRegConRCC 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1,
   		*objU = NULL,
 		*objU0 = NULL,
 		*objU1 = NULL;
-  WlzRegConRCC con = WLZ_REGCON_RCC_DC;
+  WlzRegConRCC con = WLZ_REGCON_RCC_EMPTY;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((obj0 == NULL) || (obj1 == NULL))
+  if((obj0 == NULL) || (obj1 == NULL) ||
+     (WlzIsEmpty(obj0, NULL) != 0) ||
+     (WlzIsEmpty(obj1, NULL) != 0))
   {
-    errNum = WLZ_ERR_OBJECT_NULL;
+    con = WLZ_REGCON_RCC_EMPTY;
   }
   else if((obj0->domain.core == NULL) || (obj1->domain.core == NULL))
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
-  }
-  else if((obj0->type == WLZ_EMPTY_OBJ) || (obj1->type == WLZ_EMPTY_OBJ))
-  {
-    con = WLZ_REGCON_RCC_DC;
   }
   else if(obj0->type != obj1->type)
   {
