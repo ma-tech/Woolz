@@ -63,6 +63,7 @@ bin_PROGRAMS		= \
 			  WlzCentralityObj \
 			  WlzCentreOfMass \
 			  WlzChangeEMAPProperty \
+			  WlzClassifyRCC \
 			  WlzClipObjToBox \
 			  WlzClosestVertices \
 			  WlzCMeshDeleteUnusedNodes \
@@ -199,7 +200,8 @@ bin_PROGRAMS		= \
 			  WlzUnion \
 			  WlzVerifyObj \
 			  WlzVolume \
-			  WlzWindow
+			  WlzWindow \
+			  WlzXORObj
 
 #			  WlzAutoTrackUpDown
 
@@ -278,6 +280,10 @@ WlzCentreOfMass_LDFLAGS			= $(AM_LFLAGS)
 WlzChangeEMAPProperty_SOURCES		= WlzChangeEMAPProperty.c
 WlzChangeEMAPProperty_LDADD		= $(LDADD)
 WlzChangeEMAPProperty_LDFLAGS		= $(AM_LFLAGS)
+
+WlzClassifyRCC_SOURCES			= WlzClassifyRCC.c
+WlzClassifyRCC_LDADD			= $(LDADD)
+WlzClassifyRCC_LDFLAGS			= $(AM_LFLAGS)
 
 WlzClipObjToBox_SOURCES			= WlzClipObjToBox.c
 WlzClipObjToBox_LDADD			= $(LDADD)
@@ -826,4 +832,8 @@ WlzVolume_LDFLAGS			= $(AM_LFLAGS)
 WlzWindow_SOURCES			= WlzWindow.c
 WlzWindow_LDADD				= $(LDADD)
 WlzWindow_LDFLAGS			= $(AM_LFLAGS)
+
+WlzXORObj_SOURCES			= WlzXORObj.c
+WlzXORObj_LDADD				= $(LDADD)
+WlzXORObj_LDFLAGS			= $(AM_LFLAGS)
 
