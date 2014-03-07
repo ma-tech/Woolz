@@ -2190,6 +2190,9 @@ extern WlzObject		*WlzObjToConvexHull(
 extern WlzObject 		*WlzObjToConvexPolygon(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzObjToConvexHullSpDomObj(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzConvexHullClarkson.c                                               *
@@ -5398,9 +5401,10 @@ extern WlzAffineTransform	*WlzRegICPTreeAndVertices(
 /************************************************************************
 * WlzRegConCalc.c
 ************************************************************************/
-extern WlzRegConRCC		WlzRegConCalcRCC(
+extern WlzRCCClass		WlzRegConCalcRCC(
 				  WlzObject *obj0,
 				  WlzObject *obj1,
+				  int noEnc,
 				  double *dstNrmVol,
 				  WlzErrorNum *dstErr);
 
@@ -5800,6 +5804,12 @@ extern const char		*WlzStringFromValueAttachType(
 extern WlzValueAttach 		WlzStringToValuesAttachType(
 				  const char *aStr,
                                   WlzErrorNum *dstErr);
+extern const char		*WlzStringFromRCC(
+				  WlzRCCClass cls,
+				  WlzErrorNum *dstErr);
+extern WlzRCCClass		WlzStringToRCCClass(
+				  const char *cStr,
+				  WlzErrorNum *dstErr);
 extern const char		*WlzStringFromMarkerType(
 				  WlzMarkerType mtype,
 				  WlzErrorNum *dstErr);
@@ -6758,6 +6768,13 @@ extern WlzObject		*WlzGreyValueMixing_s(
 				  double xmiddle,
 				  WlzErrorNum *dstErr);
 
+/************************************************************************
+* WlzXOR.c						         	*
+************************************************************************/
+extern WlzObject		*WlzXORDom(
+				  WlzObject *o0,
+				  WlzObject *o1,
+				  WlzErrorNum *dstErr);
 #endif /* !WLZ_EXT_BIND */
 
 #ifndef WLZ_EXT_BIND
