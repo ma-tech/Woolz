@@ -1528,6 +1528,111 @@ WlzThreeDViewMode WlzStringToThreeDViewMode(const char *vStr,
 /*!
 * \return	Pointer to read only string or NULL on error.
 * \ingroup      WlzStrings
+* \brief	Finds a string for the given region connected calculus
+* 		class.
+* \param	cls			Given RCC class.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+const char	*WlzStringFromRCC(WlzRCCClass cls, WlzErrorNum *dstErr)
+{
+  const char	*str = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  switch(cls)
+  {
+    case WLZ_RCC_EMPTY:
+      str = "WLZ_RCC_EMPTY";
+      break;
+    case WLZ_RCC_DC:
+      str = "WLZ_RCC_DC";
+      break;
+    case WLZ_RCC_EC:
+      str = "WLZ_RCC_EC";
+      break;
+    case WLZ_RCC_EQ:
+      str = "WLZ_RCC_EQ";
+      break;
+    case WLZ_RCC_PO:
+      str = "WLZ_RCC_PO";
+      break;
+    case WLZ_RCC_TPP:
+      str = "WLZ_RCC_TPP";
+      break;
+    case WLZ_RCC_NTPP:
+      str = "WLZ_RCC_NTPP";
+      break;
+    case WLZ_RCC_TPPI:
+      str = "WLZ_RCC_TPPI";
+      break;
+    case WLZ_RCC_NTPPI:
+      str = "WLZ_RCC_NTPPI";
+      break;
+    case WLZ_RCC_SUR:
+      str = "WLZ_RCC_SUR";
+      break;
+    case WLZ_RCC_SURI:
+      str = "WLZ_RCC_SURI";
+      break;
+    case WLZ_RCC_ENC:
+      str = "WLZ_RCC_ENC";
+      break;
+    case WLZ_RCC_ENCI:
+      str = "WLZ_RCC_ENCI";
+      break;
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(str);
+}
+
+/*!
+* \return       Region connected calculus class.
+* \brief        Gets a RCC class type from a string.
+* \param        cStr               Given marker string.
+* \param        dstErr                  Destination error pointer, may be NULL.
+*/
+WlzRCCClass	WlzStringToRCCClass(const char *cStr,
+				    WlzErrorNum *dstErr)
+{
+  int		tI0;
+  WlzRCCClass	cls = WLZ_RCC_EMPTY;
+  WlzErrorNum	errNum = WLZ_ERR_PARAM_TYPE;
+
+  if(WlzStringMatchValue(&tI0, cStr,         
+			 "WLZ_RCC_EMPTY", WLZ_RCC_EMPTY,
+			 "WLZ_RCC_DC", WLZ_RCC_DC,
+			 "WLZ_RCC_EC", WLZ_RCC_EC,
+			 "WLZ_RCC_EQ", WLZ_RCC_EQ,
+			 "WLZ_RCC_PO", WLZ_RCC_PO,
+			 "WLZ_RCC_TPP", WLZ_RCC_TPP,
+			 "WLZ_RCC_NTPP", WLZ_RCC_NTPP,
+			 "WLZ_RCC_TPPI", WLZ_RCC_TPPI,
+			 "WLZ_RCC_NTPPI", WLZ_RCC_NTPPI,
+			 "WLZ_RCC_SUR", WLZ_RCC_SUR,
+			 "WLZ_RCC_SURI", WLZ_RCC_SURI,
+			 "WLZ_RCC_ENC", WLZ_RCC_ENC,
+			 "WLZ_RCC_ENCI", WLZ_RCC_ENCI,
+			 NULL))
+  {
+    cls = tI0;
+    errNum = WLZ_ERR_NONE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(cls);
+}
+
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
 * \brief	Finds a string for the given values attachment type.
 * \param	iType			Given values attachment type.
 * \param	dstErr			Destination error pointer, may
