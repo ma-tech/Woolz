@@ -235,7 +235,8 @@ libWlz_la_SOURCES 	= \
 			  WlzVerticies.c \
 			  WlzVolume.c \
 			  WlzWindow.c \
-			  WlzWriteObj.c
+			  WlzWriteObj.c \
+			  WlzXOR.c
 
 include_HEADERS 	= \
 			  Wlz.h \
