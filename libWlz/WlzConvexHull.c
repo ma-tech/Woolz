@@ -54,6 +54,29 @@ static WlzConvHullValues *WlzMakeConvexHullValues3d(WlzObject *cvh,
 static WlzObject *WlzObjToConvexPolygon3d(WlzObject	*obj,
 					  WlzErrorNum	*dstErr);
 
+/*!
+* \return	Spatial domain object which is the convex hull of the
+* 		given object.
+* \ingroup	WlzConvexHull
+* \brief	Computes a spatial domain object which is the convex hull
+* 		of the given object.
+* \todo		Not yet written, gives error WLZ_ERR_UNIMPLEMENTED.
+* \param	obj			Given object.
+* \param	dstErr		Destination error pointer, may be NULL.
+*/
+WlzObject	*WlzObjToConvexHullSpDomObj(WlzObject *obj,
+					    WlzErrorNum *dstErr)
+{
+  WlzObject	*cObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
+
+  /* TODO */
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(cObj);
+}
 
 /*!
 * \return	Convex hull object, NULL on error.
