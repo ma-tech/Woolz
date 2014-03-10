@@ -75,7 +75,7 @@ WlzInitGreyScan(WlzObject	*obj,	/* raster and tranpl of 0 provided */
 * \param    iwsp	Interval scanning workspace.
 * \param    gwsp	Value table scanning workspace.
 * \param    raster	Direction for the raster scan.
-* \param    tranpl	Flag to llow overwriting of grey-values.
+* \param    tranpl	Flag to allow overwriting of grey-values.
 * \par      Source:
 *                WlzGreyScan.c
 */
@@ -86,10 +86,10 @@ WlzInitGreyRasterScan(WlzObject 	*obj,
 		      WlzRasterDir 	raster,
 		      int 		tranpl)
 {
-  WlzErrorNum	wlzerrno;
+  WlzErrorNum	errNUm;
 
-  if( (wlzerrno = WlzInitRasterScan(obj,iwsp,raster)) != WLZ_ERR_NONE ){
-    return( wlzerrno );
+  if( (errNUm = WlzInitRasterScan(obj,iwsp,raster)) != WLZ_ERR_NONE ){
+    return( errNUm );
   }
   return( WlzInitGreyWSpace(obj,iwsp,gwsp,tranpl) );
 }
@@ -114,15 +114,15 @@ WlzInitGreyWSpace(WlzObject 		*obj,
 		  int 			tranpl)
 {
   WlzValues 	vdmn;
-  WlzErrorNum	wlzerrno = WLZ_ERR_NONE;
+  WlzErrorNum	errNUm = WLZ_ERR_NONE;
 
   if(obj == NULL)
   {
-    wlzerrno = WLZ_ERR_OBJECT_NULL;
+    errNUm = WLZ_ERR_OBJECT_NULL;
   }
   else if((iwsp == NULL) || (gwsp == NULL))
   {
-    wlzerrno = WLZ_ERR_PARAM_NULL;
+    errNUm = WLZ_ERR_PARAM_NULL;
   }
   else
   {
@@ -130,13 +130,13 @@ WlzInitGreyWSpace(WlzObject 		*obj,
     /* Set up gwsp */
     gwsp->gtable = obj->values;
     vdmn = gwsp->gtable;
-    gwsp->pixeltype = WlzGreyTableTypeToGreyType(vdmn.v->type, &wlzerrno);
+    gwsp->pixeltype = WlzGreyTableTypeToGreyType(vdmn.v->type, &errNUm);
   }
-  if(wlzerrno == WLZ_ERR_NONE)
+  if(errNUm == WLZ_ERR_NONE)
   {
-    gwsp->gdomaintype = WlzGreyTableTypeToTableType(vdmn.v->type, &wlzerrno);
+    gwsp->gdomaintype = WlzGreyTableTypeToTableType(vdmn.v->type, &errNUm);
   }
-  if(wlzerrno == WLZ_ERR_NONE)
+  if(errNUm == WLZ_ERR_NONE)
   {
     switch (gwsp->gdomaintype) {
 
@@ -158,14 +158,14 @@ WlzInitGreyWSpace(WlzObject 		*obj,
 	break;
 
       default:
-	wlzerrno = WLZ_ERR_VALUES_TYPE;
+	errNUm = WLZ_ERR_VALUES_TYPE;
 	break;
 
     }
     gwsp->intptr = iwsp;
     gwsp->tranpl = tranpl;
   }
-  return( wlzerrno );
+  return( errNUm );
 }
 
 
@@ -190,22 +190,22 @@ WlzErrorNum
 WlzNextGreyInterval(WlzIntervalWSpace *iwsp)
 {
   WlzGreyWSpace *gwsp = iwsp->gryptr;
-  WlzErrorNum	wlzerrno = WLZ_ERR_NONE;
+  WlzErrorNum	errNUm = WLZ_ERR_NONE;
 
   if(gwsp->tranpl && (gwsp->gvio == 0) &&
       (iwsp->linpos != (iwsp->linbot - iwsp->lineraster)))
   {
-    wlzerrno = WlzGreyInterval(iwsp);
+    errNUm = WlzGreyInterval(iwsp);
   }
-  if(wlzerrno == WLZ_ERR_NONE)
+  if(errNUm == WLZ_ERR_NONE)
   {
-    wlzerrno = WlzNextInterval(iwsp);
+    errNUm = WlzNextInterval(iwsp);
   }
-  if((wlzerrno == WLZ_ERR_NONE) && (!gwsp->tranpl || (gwsp->gvio == 1)))
+  if((errNUm == WLZ_ERR_NONE) && (!gwsp->tranpl || (gwsp->gvio == 1)))
   {
-    wlzerrno = WlzGreyInterval(iwsp);
+    errNUm = WlzGreyInterval(iwsp);
   }
-  return(wlzerrno);
+  return(errNUm);
 }
 
 
