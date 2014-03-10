@@ -1,6 +1,9 @@
 *.o
 *.lo
 *.so
+*.wlz
+*.tif
+*.jpg
 Makefile
 Makefile.in
 tags
