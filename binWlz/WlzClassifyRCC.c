@@ -42,85 +42,7 @@ static char _WlzClassifyRCC_c[] = "University of Edinburgh $Id$";
 * \ref wlzclassifyrcc   "WlzClassifyRCC"
 */
 
-/*!
-\ingroup BinWlz
-\defgroup wlzimagearithmetic WlzImageArithmetic
-\par Name
-WlzImageArithmetic - binary image arithmetic on a pair of domain objects.
-\par Synopsis
-\verbatim
-WlzImageArithmetic [-o<out file>] [-a] [-d] [-l] [-g] [-i] [-m] [-s]
-                   [-n] [-N] [-h] [-O#] [<in object 0>] [<in object 1>]
-\endverbatim
-\par Options
-<table width="500" border="0">
-  <tr> 
-    <td><b>-h</b></td>
-    <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
-    <td><b>-o</b></td>
-    <td>Output file name.</td>
-  </tr>
-  <tr> 
-    <td><b>-a</b></td>
-    <td>Add the object's grey values.</td>
-  </tr>
-  <tr> 
-    <td><b>-d</b></td>
-    <td>Divide the grey values of the 1st object by those of the 2nd.</td>
-  </tr>
-  <tr> 
-    <td><b>-g</b></td>
-    <td>Vector magnitude of horizontal and vertical component objects.</td>
-  </tr>
-  <tr>
-    <td><b>-i</b></td>
-    <td>Dither values when setting range.</td>
-  </tr>
-  <tr>
-    <td><b>-l</b></td>
-    <td>Compute the modulus of the grey values of the 1st object wrt
-        those of the 2nd.</td>
-  </tr>
-  <tr>
-    <td><b>-m</b></td>
-    <td>Multiply the object's grey values.</td>
-  </tr>
-  <tr>
-    <td><b>-s</b></td>
-    <td>Subtract the grey values of the 2nd object from those of the 1st.</td>
-  </tr>
-  <tr>
-    <td><b>-n</b></td>
-    <td>Normalises the output object to the range of the input objects.</td>
-  </tr>
-  <tr>
-    <td><b>-N</b></td>
-    <td>Normalises the output objects to the range [0-255].</td>
-  </tr>
-  <tr>
-    <td><b>-O</b></td>
-    <td>Overwrite option (only useful for debugging).</td>
-  </tr>
-</table>
-\par Description
-Computes an arithmetic binary (two objects) operation on two domain
-objects. The default operator is add.
-The input objects are read from stdin and values are written to stdout
-unless the filenames are given.
-\par Examples
-\verbatim
-cat obj1.wlz | WlzImageArithmetic -o obj3.wlz -a  obj2.wlz
-\endverbatim
-A new object obj3.wlz is formed by adding the grey values of obj1 and
-obj2.wlz.
-\par File
-\ref WlzImageArithmetic.c "WlzImageArithmetic.c"
-\par See Also
-\ref BinWlz "WlzIntro(1)"
-\ref WlzImageArithmetic "WlzImageArithmetic(3)"
-*/
+/* HACK TODO DOXYGEN usage */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
@@ -319,8 +241,9 @@ int             main(int argc, char **argv)
 	    "  WLZ_RCC_EQ    - EQual.\n"
 	    "  WLZ_RCC_PO    - Partial Overlap.\n"
 	    "  WLZ_RCC_TPP   - Tangential Proper Part.\n"
+	    "  WLZ_RCC_TPPI  - Tangential Proper Part Inverse.\n"
 	    "  WLZ_RCC_NTPP  - Non-Tangential Proper Part.\n"
-	    "  WLZ_RCC_TPPI  - Non-Tangential Proper Part Inverse.\n"
+	    "  WLZ_RCC_NTPPI - Non-Tangential Proper Part Inverse.\n"
 	    "  WLZ_RCC_SUR   - SURrounds.\n"
 	    "  WLZ_RCC_SURI  - SURrounds Inverse.\n"
 	    "  WLZ_RCC_ENC   - ENCloses.\n"
