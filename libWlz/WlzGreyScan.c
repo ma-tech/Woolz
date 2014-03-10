@@ -5,7 +5,7 @@ static char _WlzGreyScan_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzGreyScan.c
-* \author       Richard Baldock
+* \author       Richard Baldock, Bill Hill
 * \date         September 2003
 * \version      $Id$
 * \par
@@ -43,41 +43,65 @@ static char _WlzGreyScan_c[] = "University of Edinburgh $Id$";
 #include <limits.h>
 #include <Wlz.h>
 
-/* function:     WlzInitGreyScan    */
 /*! 
+* \return       Woolz error code.
 * \ingroup      WlzValuesUtils
 * \brief        Initialise interval and grey scanning of standard object
- in standard direction.
+*		in standard direction.
 *
-* \return       Woolz error.
-* \param    obj	Object to be scanned.
-* \param    iwsp	Interval scanning workspace.
-* \param    gwsp	Value table scanning workspace.
-* \par      Source:
-*                WlzGreyScan.c
+* \param    	obj			Object to be scanned.
+* \param    	iwsp			Interval scanning workspace.
+* \param    	gwsp			Grey value table scanning workspace.
 */
 WlzErrorNum 
 WlzInitGreyScan(WlzObject	*obj,	/* raster and tranpl of 0 provided */
 		WlzIntervalWSpace	*iwsp,
 		WlzGreyWSpace	*gwsp)
 {
-  return( WlzInitGreyRasterScan(obj, iwsp, gwsp, WLZ_RASTERDIR_ILIC, 0) );
+  return(WlzInitGreyRasterScan(obj, iwsp, gwsp, WLZ_RASTERDIR_ILIC, 0));
 }
 
-/* function:     WlzInitGreyRasterScan    */
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValuesUtils
+* \brief	This must be called when a grey workspace is no longer
+* 		required as it frees resources of the workspace.
+* \param	gwsp			Grey value table scanning workspace.
+*/
+WlzErrorNum
+WlzEndGreyScan(WlzGreyWSpace *gwsp)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gwsp == NULL)
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(gwsp->gtable.core == NULL)
+  {
+    rrNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    if(WlzGreyTableIsTiled(gwsp->gtable.core->type))
+    {
+      AlcFree(gwsp->gline->values.v);
+    }
+  }
+  return(errNum);
+}
+
 /*! 
+* \return       Woolz error code.
 * \ingroup      WlzValuesUtils
 * \brief        As WlzInitGreyScan(), but with choice of raster direction
- and transplanting
-*
-* \return       Woolz error.
-* \param    obj	Input object to be scanned.
-* \param    iwsp	Interval scanning workspace.
-* \param    gwsp	Value table scanning workspace.
-* \param    raster	Direction for the raster scan.
-* \param    tranpl	Flag to allow overwriting of grey-values.
-* \par      Source:
-*                WlzGreyScan.c
+* 		and transplanting,
+* \param    	obj			Input object to be scanned.
+* \param    	iwsp			Interval scanning workspace.
+* \param    	gwsp			Grey value table scanning workspace.
+* \param    	raster			Direction for the raster scan.
+* \param    	tranpl			Flag to allow overwriting of
+* 					grey-values.
 */
 WlzErrorNum 
 WlzInitGreyRasterScan(WlzObject 	*obj,
@@ -86,26 +110,23 @@ WlzInitGreyRasterScan(WlzObject 	*obj,
 		      WlzRasterDir 	raster,
 		      int 		tranpl)
 {
-  WlzErrorNum	errNUm;
+  WlzErrorNum	errNum;
 
-  if( (errNUm = WlzInitRasterScan(obj,iwsp,raster)) != WLZ_ERR_NONE ){
-    return( errNUm );
+  if((errNum = WlzInitRasterScan(obj,iwsp,raster)) != WLZ_ERR_NONE)
+  {
+    return(errNum);
   }
-  return( WlzInitGreyWSpace(obj,iwsp,gwsp,tranpl) );
+  return(WlzInitGreyWSpace(obj,iwsp,gwsp,tranpl));
 }
 
-/* function:     WlzInitGreyWSpace    */
 /*! 
+* \return       Woolz error code.
 * \ingroup      WlzValuesUtils
-* \brief        attach grey workspace to interval scanning workspace  
-*
-* \return       Woolz error.
-* \param    obj	Object to be scanned.
-* \param    iwsp	Interval scanning workspace.
-* \param    gwsp	Value table scanning workspace.
-* \param    tranpl	Flag to enable value transplanting.
-* \par      Source:
-*                WlzGreyScan.c
+* \brief        Attach grey workspace to interval scanning workspace.
+* \param    	obj			Object to be scanned.
+* \param    	iwsp			Interval scanning workspace.
+* \param    	gwsp			Value table scanning workspace.
+* \param    	tranpl			Flag to enable value transplanting.
 */
 WlzErrorNum 
 WlzInitGreyWSpace(WlzObject 		*obj,
@@ -114,102 +135,100 @@ WlzInitGreyWSpace(WlzObject 		*obj,
 		  int 			tranpl)
 {
   WlzValues 	vdmn;
-  WlzErrorNum	errNUm = WLZ_ERR_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(obj == NULL)
   {
-    errNUm = WLZ_ERR_OBJECT_NULL;
+    errNum = WLZ_ERR_OBJECT_NULL;
   }
   else if((iwsp == NULL) || (gwsp == NULL))
   {
-    errNUm = WLZ_ERR_PARAM_NULL;
+    errNum = WLZ_ERR_PARAM_NULL;
   }
   else
   {
     iwsp->gryptr = gwsp;
     /* Set up gwsp */
-    gwsp->gtable = obj->values;
+    (void )memset(gwsp, 0, sizeof(WlzGreyWSpace));
     vdmn = gwsp->gtable;
-    gwsp->pixeltype = WlzGreyTableTypeToGreyType(vdmn.v->type, &errNUm);
+    gwsp->gtable = obj->values;
+    gwsp->pixeltype = WlzGreyTableTypeToGreyType(vdmn.v->type, &errNum);
   }
-  if(errNUm == WLZ_ERR_NONE)
+  if(errNum == WLZ_ERR_NONE)
   {
-    gwsp->gdomaintype = WlzGreyTableTypeToTableType(vdmn.v->type, &errNUm);
+    gwsp->gdomaintype = WlzGreyTableTypeToTableType(vdmn.v->type, &errNum);
   }
-  if(errNUm == WLZ_ERR_NONE)
+  if(errNum == WLZ_ERR_NONE)
   {
-    switch (gwsp->gdomaintype) {
+    switch (gwsp->gdomaintype)
+    {
 
       case WLZ_GREY_TAB_RAGR:
-	/* synchronise grey table line pointer to interval domain
-	   - pointer when incremented points to first line */
+	/* Synchronise grey table line pointer to interval domain
+	   - pointer when incremented points to first line. */
 	gwsp->gline = vdmn.v->vtblines + iwsp->linpos - vdmn.v->line1;
 	break;
 
       case WLZ_GREY_TAB_RECT:
-	/* rectangular grey table does not have valueline pointers */
+	/* Rectangular grey table does not have valueline pointers. */
 	break;
 
       case WLZ_GREY_TAB_INTL:
-	/* synchronise grey table line pointer to interval domain
-	   - pointer when incremented points to first line */
-	gwsp->gline = (WlzValueLine *) (vdmn.i->vil + iwsp->linpos
-	    - vdmn.i->line1);
+	/* Synchronise grey table line pointer to interval domain
+	   - pointer when incremented points to first line. */
+	gwsp->gline = (WlzValueLine *) (vdmn.i->vil + iwsp->linpos -
+	                                vdmn.i->line1);
 	break;
-
+      case WLZ_GREY_TAB_TILED:
+	/* Create a buffer large enough to hold any single line of values. */
+	errNum = WLZ_ERR_VALUES_TYPE; /* HACK TODO */
+        break;
       default:
-	errNUm = WLZ_ERR_VALUES_TYPE;
+	errNum = WLZ_ERR_VALUES_TYPE;
 	break;
 
     }
     gwsp->intptr = iwsp;
     gwsp->tranpl = tranpl;
   }
-  return( errNUm );
+  return(errNum);
 }
 
-
-
-/* function:     WlzNextGreyInterval    */
 /*! 
 * \ingroup      WlzValuesUtils
 * \brief        Obtain next interval and its grey table.
 *
+* 		Note - cryptic documentation:
+*	 	If tranpl and gvio=0 and scan already started (check line
+*	 	number) then the previous grey interval must be collected,
+*	 	if tranpl and gvio=1 then must output this interval (unless
+*	 	scan finished).
 * \return       Woolz error.
-* \param    iwsp	Interval scanning workspace - mut be initialised.
-* \par      Source:
-*                WlzGreyScan.c
-*
-* Note - cryptic documentation:
- If tranpl
- and gvio=0 and scan already started (check line number) then the
- previous grey interval must be collected,  if tranpl and gvio=1 then
- must output this interval (unless scan finished).
+* \param    	iwsp			Interval scanning workspace - this
+* 					must be initialised.
 */
 WlzErrorNum 
 WlzNextGreyInterval(WlzIntervalWSpace *iwsp)
 {
   WlzGreyWSpace *gwsp = iwsp->gryptr;
-  WlzErrorNum	errNUm = WLZ_ERR_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(gwsp->tranpl && (gwsp->gvio == 0) &&
       (iwsp->linpos != (iwsp->linbot - iwsp->lineraster)))
   {
-    errNUm = WlzGreyInterval(iwsp);
+    errNum = WlzGreyInterval(iwsp);
   }
-  if(errNUm == WLZ_ERR_NONE)
+  if(errNum == WLZ_ERR_NONE)
   {
-    errNUm = WlzNextInterval(iwsp);
+    errNum = WlzNextInterval(iwsp);
   }
-  if((errNUm == WLZ_ERR_NONE) && (!gwsp->tranpl || (gwsp->gvio == 1)))
+  if((errNum == WLZ_ERR_NONE) && (!gwsp->tranpl || (gwsp->gvio == 1)))
   {
-    errNUm = WlzGreyInterval(iwsp);
+    errNum = WlzGreyInterval(iwsp);
   }
-  return(errNUm);
+  return(errNum);
 }
 
-
-/* function:     WlzGreyInterval    */
 /*! 
 * \ingroup      WlzValuesUtils
 * \brief        Handle grey table for an interval. This must follow a
