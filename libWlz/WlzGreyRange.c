@@ -87,155 +87,161 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
   if( obj->values.core == NULL ){
     return( WLZ_ERR_VALUES_NULL );
   }
+  if( WlzGreyTableIsTiled(obj->values.core->type) ){
+    return( WLZ_ERR_VALUES_TYPE );
+  }
     
   init_flag = 0;
   switch( obj->type ){
 
   case WLZ_2D_DOMAINOBJ:
-    WlzInitGreyScan(obj, &iwsp, &gwsp);
-    lmin.type = gwsp.pixeltype;
-    lmax.type = gwsp.pixeltype;
-    while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
-      g = gwsp.u_grintptr;
-      switch( gwsp.pixeltype ){
+    errNum = WlzInitGreyScan(obj, &iwsp, &gwsp);
+    if(errNum == WLZ_ERR_NONE) {
+      lmin.type = gwsp.pixeltype;
+      lmax.type = gwsp.pixeltype;
+      while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
+	g = gwsp.u_grintptr;
+	switch( gwsp.pixeltype ){
 
-      case WLZ_GREY_INT:
-	for(i=0; i<iwsp.colrmn; i++){
-	  v.inv = *g.inp++;
-	  if( !init_flag ){
-	    lmin.v.inv = v.inv;
-	    lmax.v.inv = v.inv;
-	    init_flag = 1;
+	case WLZ_GREY_INT:
+	  for(i=0; i<iwsp.colrmn; i++){
+	    v.inv = *g.inp++;
+	    if( !init_flag ){
+	      lmin.v.inv = v.inv;
+	      lmax.v.inv = v.inv;
+	      init_flag = 1;
+	    }
+	    else if( v.inv > lmax.v.inv ){
+	      lmax.v.inv = v.inv;
+	    }
+	    else if( v.inv < lmin.v.inv ){
+	      lmin.v.inv = v.inv;
+	    }
 	  }
-	  else if( v.inv > lmax.v.inv ){
-	    lmax.v.inv = v.inv;
+	  break;
+
+	case WLZ_GREY_SHORT:
+	  for(i=0; i<iwsp.colrmn; i++){
+	    v.shv = *g.shp++;
+	    if( !init_flag ){
+	      lmin.v.shv = v.shv;
+	      lmax.v.shv = v.shv;
+	      init_flag = 1;
+	    }
+	    else if( v.shv > lmax.v.shv ){
+	      lmax.v.shv = v.shv;
+	    }
+	    else if( v.shv < lmin.v.shv ){
+	      lmin.v.shv = v.shv;
+	    }
 	  }
-	  else if( v.inv < lmin.v.inv ){
-	    lmin.v.inv = v.inv;
+	  break;
+
+	case WLZ_GREY_UBYTE:
+	  for(i=0; i<iwsp.colrmn; i++){
+	    v.ubv = *g.ubp++;
+	    if( !init_flag ){
+	      lmin.v.ubv = v.ubv;
+	      lmax.v.ubv = v.ubv;
+	      init_flag = 1;
+	    }
+	    else if( v.ubv > lmax.v.ubv ){
+	      lmax.v.ubv = v.ubv;
+	    }
+	    else if( v.ubv < lmin.v.ubv ){
+	      lmin.v.ubv = v.ubv;
+	    }
 	  }
+	  break;
+
+	case WLZ_GREY_FLOAT:
+	  for(i=0; i<iwsp.colrmn; i++){
+	    v.flv = *g.flp++;
+	    if( !init_flag ){
+	      lmin.v.flv = v.flv;
+	      lmax.v.flv = v.flv;
+	      init_flag = 1;
+	    }
+	    else if( v.flv > lmax.v.flv ){
+	      lmax.v.flv = v.flv;
+	    }
+	    else if( v.flv < lmin.v.flv ){
+	      lmin.v.flv = v.flv;
+	    }
+	  }
+	  break;
+
+	case WLZ_GREY_DOUBLE:
+	  for(i=0; i<iwsp.colrmn; i++){
+	    v.dbv = *g.dbp++;
+	    if( !init_flag ){
+	      lmin.v.dbv = v.dbv;
+	      lmax.v.dbv = v.dbv;
+	      init_flag = 1;
+	    }
+	    else if( v.dbv > lmax.v.dbv ){
+	      lmax.v.dbv = v.dbv;
+	    }
+	    else if( v.dbv < lmin.v.dbv ){
+	      lmin.v.dbv = v.dbv;
+	    }
+	  }
+	  break;
+
+	case WLZ_GREY_RGBA:
+	  for(i=0; i<iwsp.colrmn; i++){
+	    v.rgbv = *g.rgbp++;
+	    if( !init_flag ){
+	      lmin.v.rgbv = v.rgbv;
+	      lmax.v.rgbv = v.rgbv;
+	      init_flag = 1;
+	    }
+	    else {
+	      /* red */
+	      if( (v.rgbv&0xff) > (lmax.v.rgbv&0xff) ){
+		lmax.v.rgbv = (lmax.v.rgbv&0xffffff00) + (v.rgbv&0xff);
+	      }
+	      else if( (v.rgbv&0xff) < (lmin.v.rgbv&0xff) ){
+		lmin.v.rgbv = (lmin.v.rgbv&0xffffff00) + (v.rgbv&0xff);
+	      }
+
+	      /* green */
+	      if( (v.rgbv&0xff00) > (lmax.v.rgbv&0xff00) ){
+		lmax.v.rgbv = (lmax.v.rgbv&0xffff00ff) + (v.rgbv&0xff00);
+	      }
+	      else if( (v.rgbv&0xff00) < (lmin.v.rgbv&0xff00) ){
+		lmin.v.rgbv = (lmin.v.rgbv&0xffff00ff) + (v.rgbv&0xff00);
+	      }
+
+	      /* blue */
+	      if( (v.rgbv&0xff0000) > (lmax.v.rgbv&0xff0000) ){
+		lmax.v.rgbv = (lmax.v.rgbv&0xff00ffff) + (v.rgbv&0xff0000);
+	      }
+	      else if( (v.rgbv&0xff0000) < (lmin.v.rgbv&0xff0000) ){
+		lmin.v.rgbv = (lmin.v.rgbv&0xff00ffff) + (v.rgbv&0xff0000);
+	      }
+
+	      /* alpha */
+	      if( (v.rgbv&0xff000000) > (lmax.v.rgbv&0xff000000) ){
+		lmax.v.rgbv = (lmax.v.rgbv&0xffffff00) + (v.rgbv&0xff000000);
+	      }
+	      else if( (v.rgbv&0xff000000) < (lmin.v.rgbv&0xff000000) ){
+		lmin.v.rgbv = (lmin.v.rgbv&0x00ffffff) + (v.rgbv&0xff000000);
+	      }
+	    }
+	  }
+	  break;
+
+	default:
+	  return( WLZ_ERR_GREY_TYPE );
+
 	}
-	break;
-
-      case WLZ_GREY_SHORT:
-	for(i=0; i<iwsp.colrmn; i++){
-	  v.shv = *g.shp++;
-	  if( !init_flag ){
-	    lmin.v.shv = v.shv;
-	    lmax.v.shv = v.shv;
-	    init_flag = 1;
-	  }
-	  else if( v.shv > lmax.v.shv ){
-	    lmax.v.shv = v.shv;
-	  }
-	  else if( v.shv < lmin.v.shv ){
-	    lmin.v.shv = v.shv;
-	  }
-	}
-	break;
-
-      case WLZ_GREY_UBYTE:
-	for(i=0; i<iwsp.colrmn; i++){
-	  v.ubv = *g.ubp++;
-	  if( !init_flag ){
-	    lmin.v.ubv = v.ubv;
-	    lmax.v.ubv = v.ubv;
-	    init_flag = 1;
-	  }
-	  else if( v.ubv > lmax.v.ubv ){
-	    lmax.v.ubv = v.ubv;
-	  }
-	  else if( v.ubv < lmin.v.ubv ){
-	    lmin.v.ubv = v.ubv;
-	  }
-	}
-	break;
-
-      case WLZ_GREY_FLOAT:
-	for(i=0; i<iwsp.colrmn; i++){
-	  v.flv = *g.flp++;
-	  if( !init_flag ){
-	    lmin.v.flv = v.flv;
-	    lmax.v.flv = v.flv;
-	    init_flag = 1;
-	  }
-	  else if( v.flv > lmax.v.flv ){
-	    lmax.v.flv = v.flv;
-	  }
-	  else if( v.flv < lmin.v.flv ){
-	    lmin.v.flv = v.flv;
-	  }
-	}
-	break;
-
-      case WLZ_GREY_DOUBLE:
-	for(i=0; i<iwsp.colrmn; i++){
-	  v.dbv = *g.dbp++;
-	  if( !init_flag ){
-	    lmin.v.dbv = v.dbv;
-	    lmax.v.dbv = v.dbv;
-	    init_flag = 1;
-	  }
-	  else if( v.dbv > lmax.v.dbv ){
-	    lmax.v.dbv = v.dbv;
-	  }
-	  else if( v.dbv < lmin.v.dbv ){
-	    lmin.v.dbv = v.dbv;
-	  }
-	}
-	break;
-
-      case WLZ_GREY_RGBA:
-	for(i=0; i<iwsp.colrmn; i++){
-	  v.rgbv = *g.rgbp++;
-	  if( !init_flag ){
-	    lmin.v.rgbv = v.rgbv;
-	    lmax.v.rgbv = v.rgbv;
-	    init_flag = 1;
-	  }
-	  else {
-	    /* red */
-	    if( (v.rgbv&0xff) > (lmax.v.rgbv&0xff) ){
-	      lmax.v.rgbv = (lmax.v.rgbv&0xffffff00) + (v.rgbv&0xff);
-	    }
-	    else if( (v.rgbv&0xff) < (lmin.v.rgbv&0xff) ){
-	      lmin.v.rgbv = (lmin.v.rgbv&0xffffff00) + (v.rgbv&0xff);
-	    }
-
-	    /* green */
-	    if( (v.rgbv&0xff00) > (lmax.v.rgbv&0xff00) ){
-	      lmax.v.rgbv = (lmax.v.rgbv&0xffff00ff) + (v.rgbv&0xff00);
-	    }
-	    else if( (v.rgbv&0xff00) < (lmin.v.rgbv&0xff00) ){
-	      lmin.v.rgbv = (lmin.v.rgbv&0xffff00ff) + (v.rgbv&0xff00);
-	    }
-
-	    /* blue */
-	    if( (v.rgbv&0xff0000) > (lmax.v.rgbv&0xff0000) ){
-	      lmax.v.rgbv = (lmax.v.rgbv&0xff00ffff) + (v.rgbv&0xff0000);
-	    }
-	    else if( (v.rgbv&0xff0000) < (lmin.v.rgbv&0xff0000) ){
-	      lmin.v.rgbv = (lmin.v.rgbv&0xff00ffff) + (v.rgbv&0xff0000);
-	    }
-
-	    /* alpha */
-	    if( (v.rgbv&0xff000000) > (lmax.v.rgbv&0xff000000) ){
-	      lmax.v.rgbv = (lmax.v.rgbv&0xffffff00) + (v.rgbv&0xff000000);
-	    }
-	    else if( (v.rgbv&0xff000000) < (lmin.v.rgbv&0xff000000) ){
-	      lmin.v.rgbv = (lmin.v.rgbv&0x00ffffff) + (v.rgbv&0xff000000);
-	    }
-	  }
-	}
-	break;
-
-      default:
-	return( WLZ_ERR_GREY_TYPE );
-
       }
-    }
-    if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
-    {
-      errNum = WLZ_ERR_NONE;
+      (void )WlzEndGreyScan(&gwsp);
+      if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
+      {
+	errNum = WLZ_ERR_NONE;
+      }
     }
     *min = lmin;
     *max = lmax;

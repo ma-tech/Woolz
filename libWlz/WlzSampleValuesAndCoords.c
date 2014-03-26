@@ -169,7 +169,7 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
   		vBuf,
 		vAry;
 
-  WlzIntervalWSpace iWsp;
+  WlzIntervalWSpace iWsp = {0};
   WlzGreyWSpace gWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -587,6 +587,10 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
     if(errNum == WLZ_ERR_EOO)
     {
       errNum = WLZ_ERR_NONE;
+    }
+    if(iWsp.gryptr == &gWsp)
+    {
+      (void )WlzEndGreyScan(&gWsp);
     }
   }
   if(errNum == WLZ_ERR_NONE)

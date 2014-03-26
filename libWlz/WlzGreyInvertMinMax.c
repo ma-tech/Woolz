@@ -100,6 +100,9 @@ WlzErrorNum WlzGreyInvertMinMax(
     if(obj->values.core == NULL){ 
       return WLZ_ERR_VALUES_NULL;
     }
+    if(WlzGreyTableIsTiled(obj->values.core->type)){ 
+      return WLZ_ERR_VALUES_TYPE;
+    }
     break;
 
   case WLZ_3D_DOMAINOBJ:
@@ -108,6 +111,9 @@ WlzErrorNum WlzGreyInvertMinMax(
     }
     if(obj->values.core == NULL){ 
       return WLZ_ERR_VALUES_NULL;
+    }
+    if(WlzGreyTableIsTiled(obj->values.core->type)){ 
+      return WLZ_ERR_VALUES_TYPE;
     }
     return WlzGreyInvertMinMax3d(obj, min, max);
 

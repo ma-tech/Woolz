@@ -3236,6 +3236,7 @@ WlzErrorNum	WlzToArray1D(WlzGreyP gP, WlzGreyType gType,
 				     gWSp.pixeltype, lst - fst + 1);
 	    }
 	  }
+	  (void )WlzEndGreyScan(&gWSp);
 	  if(errNum == WLZ_ERR_EOO)
 	  {
 	    errNum = WLZ_ERR_NONE;

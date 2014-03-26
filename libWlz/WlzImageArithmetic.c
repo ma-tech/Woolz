@@ -1145,6 +1145,11 @@ WlzObject	*WlzImageArithmetic(WlzObject *obj0, WlzObject *obj1,
 	{
 	  errNum = WLZ_ERR_VALUES_NULL;
 	}
+	else if(WlzGreyTableIsTiled(obj0->values.core->type) ||
+	        WlzGreyTableIsTiled(obj1->values.core->type))
+	{
+	  errNum = WLZ_ERR_VALUES_TYPE;
+	}
 	else
 	{
 	  obj2 = WlzAssignObject(WlzIntersect2(obj0, obj1, &errNum), NULL);

@@ -95,8 +95,8 @@ WlzObject	*WlzShadeCorrect(WlzObject *srcObj, WlzObject *shdObj,
 *               The shade corrected image P with values \f$p_i\f$ is
 *		created by applying a correction factor to each image
 *		value of the given image O with values \f$o_i\f$.
-\f$s_i\f$ and \f$d_i\f$ are the bright and dark-field shade image values
-respectively.
+*		\f$s_i\f$ and \f$d_i\f$ are the bright and dark-field
+*		shade image values respectively.
 * \param	srcObj			Given object to be shade corrected.
 * \param	shdObj			Given bright field object.
 * \param	shdDFObj		Given dark field object (may be NULL).
@@ -133,6 +133,11 @@ WlzObject	*WlzShadeCorrectBFDF(
   else if((srcObj->values.core == NULL) || (shdObj->values.core == NULL))
   {
     errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(WlzGreyTableIsTiled(srcObj->values.core->type) ||
+          WlzGreyTableIsTiled(shdObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   else
   {

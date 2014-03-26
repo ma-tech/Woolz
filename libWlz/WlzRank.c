@@ -110,6 +110,14 @@ WlzErrorNum	WlzRankFilter(WlzObject *gObj, int fSz, double rank)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
+  else if(gObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(WlzGreyTableIsTiled(gObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
   else if(fSz < 0)
   {
     errNum = WLZ_ERR_PARAM_DATA;
@@ -331,6 +339,7 @@ static WlzErrorNum WlzRankFilterDomObj2D(WlzObject *gObj, int fSz,
         WlzValueSetUByte(iBuf[bufLn], 0, iBufWidth);
       }
     }
+    WlzEndGreyScan(&gWSp);
   }
   AlcFree(rBuf);
   Alc2Free((void **)iBuf);

@@ -98,6 +98,10 @@ WlzErrorNum	WlzGreyIncValuesInDomain(WlzObject *gObj, WlzObject *dObj)
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
+  else if(WlzGreyTableIsTiled(gObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
   else
   {
     switch(gObj->type)
@@ -197,7 +201,7 @@ static WlzErrorNum WlzGreyIncValuesInDomain3D(WlzObject *gObj, WlzObject *dObj)
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzArithmetic
-* \brief	Increments all valus of the firstobjct which are within
+* \brief	Increments all values of the firstobject which are within
 * 		the domain of the second object. The domain of the first
 * 		object must cover that of the second.
 *		Because this is a static object it is assumed that the
@@ -234,54 +238,58 @@ WlzErrorNum 	WlzGreyIncValues2D(WlzObject *obj)
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   errNum = WlzInitGreyScan(obj, &iWSp, &gWSp);
-  while((errNum == WLZ_ERR_NONE) &&
-        ((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE))
+  if(errNum == WLZ_ERR_NONE)
   {
-    int	     i,
-    	     len;
-    WlzGreyP gP;
-    
-    gP = gWSp.u_grintptr;
-    len = iWSp.rgtpos - iWSp.lftpos + 1;
-    switch(gWSp.pixeltype)
+    while((errNum == WLZ_ERR_NONE) &&
+	  ((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE))
     {
-      case WLZ_GREY_INT:
-        for(i = 0; i < len; ++i)
-	{
-	  *(gP.inp)++ += 1;
-	}
-	break;
-      case WLZ_GREY_SHORT:
-        for(i = 0; i < len; ++i)
-	{
-	  *(gP.shp)++ += 1;
-	}
-	break;
-      case WLZ_GREY_UBYTE:
-        for(i = 0; i < len; ++i)
-	{
-	  *(gP.ubp)++ += 1;
-	}
-	break;
-      case WLZ_GREY_FLOAT:
-        for(i = 0; i < len; ++i)
-	{
-	  *(gP.flp)++ += 1.0f;
-	}
-	break;
-      case WLZ_GREY_DOUBLE:
-        for(i = 0; i < len; ++i)
-	{
-	  *(gP.dbp)++ += 1.0;
-	}
-	break;
-      default:
-        break;
+      int	     i,
+	       len;
+      WlzGreyP gP;
+      
+      gP = gWSp.u_grintptr;
+      len = iWSp.rgtpos - iWSp.lftpos + 1;
+      switch(gWSp.pixeltype)
+      {
+	case WLZ_GREY_INT:
+	  for(i = 0; i < len; ++i)
+	  {
+	    *(gP.inp)++ += 1;
+	  }
+	  break;
+	case WLZ_GREY_SHORT:
+	  for(i = 0; i < len; ++i)
+	  {
+	    *(gP.shp)++ += 1;
+	  }
+	  break;
+	case WLZ_GREY_UBYTE:
+	  for(i = 0; i < len; ++i)
+	  {
+	    *(gP.ubp)++ += 1;
+	  }
+	  break;
+	case WLZ_GREY_FLOAT:
+	  for(i = 0; i < len; ++i)
+	  {
+	    *(gP.flp)++ += 1.0f;
+	  }
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  for(i = 0; i < len; ++i)
+	  {
+	    *(gP.dbp)++ += 1.0;
+	  }
+	  break;
+	default:
+	  break;
+      }
     }
-  }
-  if(errNum == WLZ_ERR_EOO)
-  {
-    errNum = WLZ_ERR_NONE;
+    (void )WlzEndGreyScan(&gWSp);
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
   }
   return(errNum);
 }
@@ -857,8 +865,8 @@ static WlzErrorNum WlzScalarMulAddSet2D(WlzObject *rObj, WlzObject *iObj,
   int		bufLen;
   WlzGreyWSpace iGWSp,
   		rGWSp;
-  WlzIntervalWSpace iIWSp,
-  		    rIWSp;
+  WlzIntervalWSpace iIWSp = {0},
+  		    rIWSp = {0};
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   bufLen = iObj->domain.i->lastkl - iObj->domain.i->kol1 + 1;
@@ -982,6 +990,14 @@ static WlzErrorNum WlzScalarMulAddSet2D(WlzObject *rObj, WlzObject *iObj,
 	}
       }
       AlcFree(buf);
+    }
+    if(iIWSp.gryptr == &iGWSp)
+    {
+      (void )WlzEndGreyScan(&iGWSp);
+    }
+    if(rIWSp.gryptr == &rGWSp)
+    {
+      (void )WlzEndGreyScan(&rGWSp);
     }
   }
   return(errNum);

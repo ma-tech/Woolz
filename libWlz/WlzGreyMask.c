@@ -93,6 +93,9 @@ WlzObject *WlzGreyMask(
       if( obj->values.core == NULL ){
 	errNum = WLZ_ERR_VALUES_NULL;
       }
+      else if( WlzGreyTableIsTiled(obj->values.core->type) ){
+	errNum = WLZ_ERR_VALUES_TYPE;
+      }
       break;
 
     case WLZ_3D_DOMAINOBJ:
@@ -238,6 +241,9 @@ static WlzObject *WlzGreyMask3d(
      domain needs checking */
   if( obj->domain.p == NULL ){
     errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(obj->values.core && WlzGreyTableIsTiled(obj->values.core->type)) {
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   else {
     switch( obj->domain.p->type ){

@@ -130,7 +130,7 @@ static void usage(char *proc_str)
       "\twriting the new object to standard output\n"
       "Version: %s\n"
       "Options:\n"
-      "\t  -H        Threshold high, keep pixels above threshold value "
+      "\t  -H        Threshold high, keep pixels at or above threshold value "
       "(default).\n"
       "\t  -L        Threshold low, keep pixels below threshold value.\n"
       "\t  -E        Threshold equal, keep pixels equal to threshold value.\n"

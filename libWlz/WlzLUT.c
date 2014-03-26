@@ -47,6 +47,7 @@ static WlzErrorNum 		WlzLUTTransformObj2D(
 				  WlzObject *rObj,
 				  WlzObject *gObj,
 				  WlzObject *tObj,
+				  int pln,
 				  int dither);
 static WlzErrorNum 		WlzLUTTransformObj3D(
 				  WlzObject *rObj,
@@ -841,7 +842,7 @@ WlzObject	*WlzLUTTransformObj(WlzObject *gObj, WlzObject *tObj,
   {
     if(gObj->type == WLZ_2D_DOMAINOBJ)
     {
-      errNum = WlzLUTTransformObj2D(rObj, gObj, tObj, dither);
+      errNum = WlzLUTTransformObj2D(rObj, gObj, tObj, 0, dither);
     }
     else
     {
@@ -874,10 +875,12 @@ WlzObject	*WlzLUTTransformObj(WlzObject *gObj, WlzObject *tObj,
 * \param	gObj			Given 2D domain object with values to
 * 					be transformed.
 * \param	tObj			LUT object.
+* \param	pln			Plane value, only used with 3D value
+* 					tables.
 * \param	dither			Flag, dither if non-zero.
 */
 static WlzErrorNum WlzLUTTransformObj2D(WlzObject *rObj, WlzObject *gObj,
-					WlzObject *tObj, int dither)
+					WlzObject *tObj, int pln, int dither)
 {
   WlzGreyWSpace gGWSp,
   	        rGWSp;
@@ -888,17 +891,24 @@ static WlzErrorNum WlzLUTTransformObj2D(WlzObject *rObj, WlzObject *gObj,
   errNum = WlzInitGreyScan(gObj, &gIWSp, &gGWSp);
   if(errNum == WLZ_ERR_NONE)
   {
+    gIWSp.plnpos = pln;
     errNum = WlzInitGreyScan(rObj, &rIWSp, &rGWSp);
-  }
-  while((errNum == WLZ_ERR_NONE) &&
-	((errNum = WlzNextGreyInterval(&gIWSp)) == WLZ_ERR_NONE) &&
-	((errNum = WlzNextGreyInterval(&rIWSp)) == WLZ_ERR_NONE))
-  {
-    errNum = WlzLUTTransformGreyValues(tObj,
-                                       rGWSp.u_grintptr, rGWSp.pixeltype,
-                                       gGWSp.u_grintptr, gGWSp.pixeltype,
-				       gIWSp.rgtpos - gIWSp.lftpos + 1,
-				       dither);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      rIWSp.plnpos = pln;
+      while((errNum == WLZ_ERR_NONE) &&
+	    ((errNum = WlzNextGreyInterval(&gIWSp)) == WLZ_ERR_NONE) &&
+	    ((errNum = WlzNextGreyInterval(&rIWSp)) == WLZ_ERR_NONE))
+      {
+	errNum = WlzLUTTransformGreyValues(tObj,
+					   rGWSp.u_grintptr, rGWSp.pixeltype,
+					   gGWSp.u_grintptr, gGWSp.pixeltype,
+					   gIWSp.rgtpos - gIWSp.lftpos + 1,
+					   dither);
+      }
+      (void )WlzEndGreyScan(&rGWSp);
+    }
+    (void )WlzEndGreyScan(&gGWSp);
   }
   if(errNum == WLZ_ERR_EOO)
   {
@@ -923,17 +933,21 @@ static WlzErrorNum WlzLUTTransformObj2D(WlzObject *rObj, WlzObject *gObj,
 static WlzErrorNum WlzLUTTransformObj3D(WlzObject *rObj, WlzObject *gObj,
 				        WlzObject *tObj, int dither)
 {
-  int		pln;
+  int		pln,
+  		gTiled;
   WlzPlaneDomain *gDom,
   		 *rDom;
-  WlzVoxelValues *gVal,
-  		 *rVal;
+  WlzValues      gVal,
+  		 rVal;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
   gDom = gObj->domain.p;
   rDom = rObj->domain.p;
-  gVal = gObj->values.vox;
-  rVal = rObj->values.vox;
+  gVal = gObj->values;
+  rVal = rObj->values; 			/* Know that rObj doesn't have tiled
+  				           values since it was created in
+					   the calling function. */
+  gTiled = WlzGreyTableIsTiled(gVal.core->type);
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -947,20 +961,25 @@ static WlzErrorNum WlzLUTTransformObj3D(WlzObject *rObj, WlzObject *gObj,
       		*rVal2;
       WlzErrorNum errNum2 = WLZ_ERR_NONE;
 
-      if(((gDom2 = gDom->domains + pln - gDom->plane1) != NULL) &&
-         ((rDom2 = rDom->domains + pln - rDom->plane1) != NULL) &&
-         ((gVal2 = gVal->values  + pln - gDom->plane1) != NULL) &&
-         ((rVal2 = rVal->values  + pln - rDom->plane1) != NULL))
+      gDom2 = gDom->domains + pln - gDom->plane1;
+      rDom2 = rDom->domains + pln - rDom->plane1;
+      if(gTiled == 0)
+      {
+        gVal2 = gVal.vox->values  + pln - gDom->plane1;
+      }
+      rVal2 = rVal.vox->values  + pln - rDom->plane1;
+      if(gDom2 && rDom2 && (gTiled || gVal2) && rVal2)
       {
         WlzObject *gObj2 = NULL,
 		  *rObj2 = NULL;
 
-        if(((gObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *gDom2, *gVal2, NULL, NULL,
+        if(((gObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *gDom2,
+	                         (gTiled)? gVal: *gVal2, NULL, NULL,
 	                         &errNum2)) != NULL) &&
            ((rObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *rDom2, *rVal2, NULL, NULL,
 	                         &errNum2)) != NULL))
         {
-          errNum2 = WlzLUTTransformObj2D(rObj2, gObj2, tObj, dither);
+          errNum2 = WlzLUTTransformObj2D(rObj2, gObj2, tObj, pln, dither);
         }
         (void )WlzFreeObj(gObj2);
         (void )WlzFreeObj(rObj2);

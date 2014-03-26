@@ -153,16 +153,25 @@ WlzObject	*WlzSeqPar(WlzObject *srcObj,
   if(srcObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
-    if(dstErr)
-    {
-      *dstErr = errNum;
-    }
-    return(NULL);
   }
-  if((srcObj->type != WLZ_2D_DOMAINOBJ) || (srcObj->values.core == NULL) ||
-     (srcObj->domain.core == NULL))
+  else if(srcObj->type != WLZ_2D_DOMAINOBJ)
   {
     errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(srcObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(srcObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(WlzGreyTableIsTiled(srcObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
     if(dstErr)
     {
       *dstErr = errNum;
@@ -251,13 +260,15 @@ WlzObject	*WlzSeqPar(WlzObject *srcObj,
    * dstIWsp is the workspace for processing the intervals and replacing
    * the transformed values into the grey table
    */
-  srcGWsp.gvio = 1;		  /* output (since we are specifying tranpl) */
-  dstGWsp.gvio = 0;						    /* input */
   errNum = WlzInitGreyRasterScan(srcObj, &srcIWsp, &srcGWsp, rasterDir, 1);
   if(errNum == WLZ_ERR_NONE)
   {
     errNum = WlzInitGreyRasterScan(dstObj, &dstIWsp, &dstGWsp, rasterDir, 1);
   }
+  /* These need to be set after the call to WlzInitGreyRasterScan() since
+   * this function sets all fields of the grey workspace pointer. */
+  srcGWsp.gvio = 1;		  /* output (since we are specifying tranpl) */
+  dstGWsp.gvio = 0;						    /* input */
   if(errNum != WLZ_ERR_NONE)
   {
     if(dstErr)

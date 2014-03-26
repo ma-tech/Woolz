@@ -118,6 +118,9 @@ WlzObject *WlzConvertPix(
   if( (errNum == WLZ_ERR_NONE) && (obj->values.core == NULL) ){
     errNum = WLZ_ERR_VALUES_NULL;
   }
+  if( (errNum == WLZ_ERR_NONE) && WlzGreyTableIsTiled(obj->values.core->type)){
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
   if( errNum == WLZ_ERR_NONE ){
     oldpixtype = WlzGreyTableTypeToGreyType(obj->values.core->type, NULL);
   }
@@ -210,6 +213,10 @@ static WlzObject *WlzConvertPix3d(
     
   if( (errNum == WLZ_ERR_NONE) && (obj->values.core == NULL) ){
     errNum = WLZ_ERR_VALUES_NULL;
+  }
+    
+  if((errNum == WLZ_ERR_NONE) && WlzGreyTableIsTiled(obj->values.core->type)){
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
     
   if( (errNum == WLZ_ERR_NONE) && 

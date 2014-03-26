@@ -138,6 +138,10 @@ WlzObject 	*WlzConvolveObj(WlzObject *inObj, WlzConvolution *conv,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
+  else if(WlzGreyTableIsTiled(inObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
   else if(conv->type != WLZ_CONVOLVE_INT)
   {
     errNum = WLZ_ERR_GREY_DATA;

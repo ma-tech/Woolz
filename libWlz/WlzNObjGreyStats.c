@@ -167,6 +167,11 @@ WlzErrorNum	WlzNObjGreyStats(WlzObject *gObj,
         errNum = WLZ_ERR_VALUES_NULL;
 	break;
       }
+      else if(WlzGreyTableIsTiled(obj->values.core->type))
+      {
+        errNum = WLZ_ERR_VALUES_TYPE;
+	break;
+      }
     }
   }
   if((errNum == WLZ_ERR_NONE) &&
@@ -459,11 +464,11 @@ static WlzErrorNum WlzNObjGreyStats2D(int first, int nObj, WlzObject **aObj,
 				      WlzObject *sumObj, WlzObject *sSqObj)
 {
   int		idN;
-  WlzIntervalWSpace iIWSp,
-  		minIWSp,
-  		maxIWSp,
-		sumIWSp,
-		sSqIWSp;
+  WlzIntervalWSpace iIWSp = {0},
+  		minIWSp = {0},
+  		maxIWSp = {0},
+		sumIWSp = {0},
+		sSqIWSp = {0};
   WlzGreyWSpace	iGWSp,
   		minGWSp,
   		maxGWSp,
@@ -519,6 +524,26 @@ static WlzErrorNum WlzNObjGreyStats2D(int first, int nObj, WlzObject **aObj,
 				     sumObj, &sumIWSp, &sumGWSp,
 				     sSqObj, &sSqIWSp, &sSqGWSp);
         first = 0;
+      }
+      if(iIWSp.gryptr == &iGWSp)
+      {
+        (void )WlzEndGreyScan(&iGWSp);
+      }
+      if(minIWSp.gryptr == &minGWSp)
+      {
+        (void )WlzEndGreyScan(&minGWSp);
+      }
+      if(maxIWSp.gryptr == &maxGWSp)
+      {
+        (void )WlzEndGreyScan(&maxGWSp);
+      }
+      if(sumIWSp.gryptr == &sumGWSp)
+      {
+        (void )WlzEndGreyScan(&sumGWSp);
+      }
+      if(sSqIWSp.gryptr == &sSqGWSp)
+      {
+        (void )WlzEndGreyScan(&sSqGWSp);
       }
     }
     (void )WlzFreeObj(iObj);

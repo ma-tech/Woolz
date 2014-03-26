@@ -90,7 +90,7 @@ double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
 		ixy = 0.0,
 		pAngle = 0.0;
   WlzIVertex2	delta;
-  WlzIntervalWSpace iWsp;
+  WlzIntervalWSpace iWsp = {0};
   WlzGreyWSpace	gWsp;
   WlzGreyP	gPix;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -238,6 +238,10 @@ double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
 	    errNum = WLZ_ERR_GREY_TYPE;
 	    break;
 	}
+      }
+      if(iWsp.gryptr == &gWsp)
+      {
+        (void )WlzEndGreyScan(&gWsp);
       }
       if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
       {

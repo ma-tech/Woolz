@@ -218,6 +218,10 @@ WlzPixelV WlzGetBackground(
 	bgd = obj->values.i->bckgrnd;
 	break;
 
+      case WLZ_GREY_TAB_TILED:
+        bgd = obj->values.t->bckgrnd;
+	break;
+
       default:
 	errNum = WLZ_ERR_VALUES_TYPE;
 	break;

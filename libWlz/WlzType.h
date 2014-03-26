@@ -2749,6 +2749,36 @@ typedef struct _WlzValueLine
 } WlzValueLine;
 
 /*!
+* \struct	_WlzTiledValueBuffer
+* \ingroup	WlzType
+* \brief	Position of and data for locating and buffering any interval
+* 		of values in either 2 or 3D tiled value table.
+*/
+typedef struct _WlzTiledValueBuffer
+{
+  int		pl;			/*!< Plane of interval (relative to 
+  					     tiled value table. */
+  int		ln;			/*!< Line of interval (relative to 
+  					     tiled value table. */
+  int		kl[2];			/*!< Left most then right most column
+  					     of interval (relative to tiled
+					     value table. */
+  size_t	lo;			/*!< Partial line offset within a
+  					     tile. */
+  size_t	li;			/*!< Partial line index to a tile. */
+  int		valid;			/*!< Non-zero if the line buffer has
+  					     valid values. */
+  int		mode;			/*!< Valid access modes for the
+  					     tiled values. */
+  WlzGreyType	gtype;			/*!< Grey type buffer allocaed for. */
+  WlzGreyP	lnbuf;			/*!< Buffer large enough to hold any
+  					     single line of values padded to
+					     an integral number of tile widths.
+					     The values are all relative to the
+					     value table origin. */
+} WlzTiledValueBuffer;
+
+/*!
 * \struct	_WlzRagRValues
 * \ingroup	WlzType
 * \brief	The ragged rectangle values table.
@@ -2943,6 +2973,21 @@ typedef struct _WlzIndexedValues
 * 		The tile data may be memory mapped instead of read into
 * 		memory in which case the file descriptor will have a
 * 		non-negative value. This can be used to close the file.
+*
+* 		A memory mapped tiled values object can only have it's
+* 		grey values changed if the file was opened for writing
+* 		attempting to change the grey values of an object only
+* 		opened for read will lead to a memory fault. The read/write
+* 		status is respected by the interval scanning access function
+* 		WlzNextGreyInterval(), but code which uses random access
+* 		via WlzGreyValueGet() or sequential access via WlzIterate()
+* 		should check this. Attempting to write to the memory mapped
+* 		values of an object only opened for reading will give a
+* 		segmentation fault. A tiled values object can be written
+* 		to only if the file descriptor is invalid (< 0) or if
+* 		the file was opened in write or append mode. The function
+* 		WlzTiledValuesMode() may also be used to determine the
+* 		appropriate access mode(s) for the values table.
 */
 typedef struct _WlzTiledValues
 {
@@ -4624,6 +4669,8 @@ typedef struct _WlzIntervalWSpace
   int nwlpos;	  			/*!< Non-zero if new line, counts
   					     line increment since the last
   		     			     interval. */
+  int plnpos;                           /*!< Plane position, for 3D domains
+  					     and value tables. */
   struct _WlzGreyWSpace *gryptr;	/*!< Pointer to grey value table
   					     workspace. */
 } WlzIntervalWSpace;
@@ -4659,6 +4706,7 @@ typedef struct _WlzGreyWSpace
   WlzValues gtable;			/*!< Grey value table. */
   WlzValueLine *gline;	       		/*!< Pointer to current grey table
   					     line pointer. */
+  WlzTiledValueBuffer *tvb;		/*!< Tiled values buffer. */
   WlzIntervalWSpace *intptr;	      	/*!< Pointer to interval table
   					     workspace. */
   WlzGreyP u_grintptr;	    		/*!< Pointer to interval grey table.
@@ -4747,6 +4795,21 @@ typedef struct _WlzGreyValueWSpace
 					     Value is 0 if there are no
 					     background values. */
 } WlzGreyValueWSpace;
+
+/************************************************************************
+* File I/O flags
+************************************************************************/
+/*!
+* \enum		_WlzIOFlags
+* \ingroup	WlzIO
+* \brief	Flags for Woolz file I/O.
+*/
+typedef enum _WlzIOFlags
+{
+  WLZ_IOFLAGS_NONE	= (0),		/*!< No flags set. */
+  WLZ_IOFLAGS_READ	= (1),		/*!< Read flag bit. */
+  WLZ_IOFLAGS_WRITE	= (1<<1)	/*!< Write flag bit. */
+} WlzIOFlags;
 
 /************************************************************************
 * Transform callback functions

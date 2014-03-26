@@ -111,7 +111,8 @@ WlzCompoundArray  *WlzCompDispIncGrey(WlzObject *obj0, WlzObject *obj1,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if(obj0->values.core->type != obj1->values.core->type)
+  else if((obj0->values.core->type != obj1->values.core->type) ||
+          WlzGreyTableIsTiled(obj0->values.core->type))
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }

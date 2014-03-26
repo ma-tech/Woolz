@@ -3468,6 +3468,8 @@ extern WlzErrorNum 		WlzInitGreyScan(
 				  WlzObject *obj,
 				  WlzIntervalWSpace *iwsp,
 				  WlzGreyWSpace *gwsp);
+extern WlzErrorNum 		WlzEndGreyScan(
+				  WlzGreyWSpace *gwsp);
 extern WlzErrorNum 		WlzInitGreyRasterScan(
 				  WlzObject *obj,
 				  WlzIntervalWSpace *iwsp,
@@ -6051,6 +6053,20 @@ extern WlzObject		*WlzMakeTiledValuesFromObj(
 				  WlzGreyType gType,
 				  WlzPixelV bgdV,
 				  WlzErrorNum *dstErr);
+extern WlzTiledValueBuffer	*WlzMakeTiledValueBuffer(
+				  WlzTiledValues *tVal,
+				  WlzErrorNum *dstErr);
+extern int			WlzTiledValuesMode(
+				  WlzTiledValues *tv,
+				  WlzErrorNum *dstErr);
+extern void			WlzFreeTiledValueBuffer(
+				  WlzTiledValueBuffer *tBuf);
+extern void			WlzTiledValueBufferFlush(
+				  WlzTiledValueBuffer *tvb,
+				  WlzTiledValues *tv);
+extern void			WlzTiledValueBufferFill(
+				  WlzTiledValueBuffer *tvb,
+				  WlzTiledValues *tv);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -6503,6 +6519,10 @@ extern void			WlzIndexedValueBufWeight(
 				  double *wgt,
 				  int nIdx,
 				  int *idx);
+extern WlzGreyP			WlzValueSetGreyP(
+				  WlzGreyP base,
+				  WlzGreyType gType,
+				  size_t off);
 extern WlzErrorNum 		WlzValueConvertPixel(
 				  WlzPixelV *dstPix,
 				  WlzPixelV srcPix,

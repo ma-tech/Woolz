@@ -50,6 +50,7 @@ static WlzObject 		*WlzCutObjToValBgBox2D(
 				  WlzIBox2 cutBox,
 				  WlzGreyType dGreyType,
 				  void *gValP,
+				  int pln,
 				  int bgNoise,
 				  double bgMu,
 				  double bgSigma,
@@ -130,7 +131,7 @@ WlzObject 	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
   WlzPixelV	forcedBgPix;
 
   forcedBgPix.type = WLZ_GREY_ERROR;
-  return(WlzCutObjToValBgBox2D(sObj, cutBox, dGreyType, gValP,
+  return(WlzCutObjToValBgBox2D(sObj, cutBox, dGreyType, gValP, 0,
                                bgNoise, bgMu, bgSigma, 0, forcedBgPix,
 			       dstErrNum));
 }
@@ -150,6 +151,8 @@ WlzObject 	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 * \param	dGreyType		Required grey type for the value table.
 * \param	gValP			If non-NULL allocated space for grey
 * 					values.
+* \param	pln			Position of plane, only used for 3D
+* 					value tables.
 * \param	bgNoise			If zero background value is used
 * 					otherwise if non zero the background
 *					is set using gaussian noise.
@@ -162,7 +165,7 @@ WlzObject 	*WlzCutObjToValBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 * 					may be NULL if not required.
 */
 static WlzObject *WlzCutObjToValBgBox2D(WlzObject *sObj, WlzIBox2 cutBox,
-				  WlzGreyType dGreyType, void *gValP,
+				  WlzGreyType dGreyType, void *gValP, int pln,
 				  int bgNoise, double bgMu, double bgSigma,
 				  int forceBg, WlzPixelV forcedBgPix,
 				  WlzErrorNum *dstErrNum)
@@ -344,6 +347,10 @@ static WlzObject *WlzCutObjToValBgBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 	      }
 	      else /* (sHasDom !== 0) && sHasVal !== 0) */
 	      {
+		if(gWSp.tvb)
+		{
+		  iWSp.plnpos = pln;
+		}
 	        while((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)
 		{
 		  int	dLn;
@@ -391,6 +398,7 @@ static WlzObject *WlzCutObjToValBgBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 		    dLastOff = dOff + rgt;
 		  }
 		}
+		(void )WlzEndGreyScan(&gWSp);
 		if(errNum == WLZ_ERR_EOO)
 		{
 		  errNum = WLZ_ERR_NONE;
@@ -513,24 +521,16 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 				  int bgNoise, double bgMu, double bgSigma,
 				  WlzErrorNum *dstErrNum)
 {
-  int		dPlIdx,
-  		sPlIdx,
-		sPlPos,
-  		plCnt,
+  int		sIsTiled = 0,
 		sHasVal = 0;
   size_t	sz2D,
   		sz3D,
 		tSz;
-  WlzObject	*sObj2D = NULL,
-		*dObj2D = NULL,
-		*dObj = NULL;
-  WlzDomain	dom2D,
-  		dDom,
+  WlzObject	*dObj = NULL;
+  WlzDomain	dDom,
   		sDom;
-  WlzValues	val2D,
-  		dVal;
-  WlzGreyP	dValP,
-  		dVal2DP;
+  WlzValues	dVal;
+  WlzGreyP	dValP;
   WlzPixelV	dBgPix,
   		sBgPix;
   WlzIBox2	cutBox2D;
@@ -586,6 +586,7 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 	  else
 	  {
 	    sHasVal = 1;
+	    sIsTiled = WlzGreyTableIsTiled(sObj->values.core->type);
 	    sBgPix = WlzGetBackground(sObj, &errNum);
 	  }
 	}
@@ -634,80 +635,82 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
+	      int 	dPlIdx,
+	      		plCnt;
+
 	      dPlIdx = 0;
-	      sPlIdx = cutBox.zMin - sDom.p->plane1;
-	      sPlPos = cutBox.zMin;
 	      plCnt = cutBox.zMax - cutBox.zMin + 1;
-	      dVal2DP.v = dValP.v;
-	      while((errNum == WLZ_ERR_NONE) && (plCnt-- > 0))
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+	      for(dPlIdx = 0; dPlIdx < plCnt; ++dPlIdx)
 	      {
-		sObj2D = NULL;
-		if((sPlPos < sDom.p->plane1) ||
-		   (sPlPos > sDom.p->lastpl) ||
-		   ((sObj->domain.p->domains + sPlIdx)->core == NULL))
+		if(errNum == WLZ_ERR_NONE)
 		{
+		  int	sPlIdx,
+			sPlPos;
+  	          WlzGreyP dVal2DP;
+       		  WlzDomain dom2D;
+  		  WlzValues val2D;
+		  WlzObject *sObj2D = NULL,
+			    *dObj2D = NULL;
+		  WlzErrorNum errNum2 = WLZ_ERR_NONE;
+
 		  dom2D.core = NULL;
 		  val2D.core = NULL;
-		}
-		else
-		{
-		  dom2D.core = (sObj->domain.p->domains +
-		                sPlIdx)->core;
-		  val2D.core = (sHasVal == 0)?
-		               NULL:
-			       (sObj->values.vox->values + sPlIdx)->core;
-		}
-		if(errNum == WLZ_ERR_NONE)
-		{
-		  sObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom2D, val2D,
-		                       NULL, NULL, &errNum);
-		}
-		if(errNum == WLZ_ERR_NONE)
-		{
-		  dObj2D = WlzCutObjToValBgBox2D(sObj2D, cutBox2D,
-						 dGreyType, dVal2DP.v,
-						 bgNoise, bgMu, bgSigma,
-						 1, sBgPix,
-					         &errNum);
-		}
-		(void )WlzFreeObj(sObj2D);
-		if(errNum == WLZ_ERR_NONE)
-		{
-		  *(dDom.p->domains + dPlIdx) =
-		    WlzAssignDomain(dObj2D->domain, NULL);
-		  *(dVal.vox->values + dPlIdx) =
-		    WlzAssignValues(dObj2D->values, NULL);
-		  (void )WlzFreeObj(dObj2D);
-		  ++sPlPos;
-		  ++sPlIdx;
-		  ++dPlIdx;
-		  switch(dGreyType)
+	          sPlPos = cutBox.zMin + dPlIdx;
+		  sPlIdx = cutBox.zMin - sDom.p->plane1 + dPlIdx;
+		  dVal2DP = WlzValueSetGreyP(dValP, dGreyType, dPlIdx * sz2D);
+		  if((sPlPos >= sDom.p->plane1) &&
+		     (sPlPos <= sDom.p->lastpl) &&
+		     ((sObj->domain.p->domains + sPlIdx)->core != NULL))
 		  {
-		    case WLZ_GREY_LONG:
-		      dVal2DP.lnp += sz2D;
-		      break;
-		    case WLZ_GREY_INT:
-		      dVal2DP.inp += sz2D;
-		      break;
-		    case WLZ_GREY_SHORT:
-		      dVal2DP.shp += sz2D;
-		      break;
-		    case WLZ_GREY_UBYTE:
-		      dVal2DP.ubp += sz2D;
-		      break;
-		    case WLZ_GREY_FLOAT:
-		      dVal2DP.flp += sz2D;
-		      break;
-		    case WLZ_GREY_DOUBLE:
-		      dVal2DP.dbp += sz2D;
-		      break;
-		    case WLZ_GREY_RGBA:
-		      dVal2DP.rgbp += sz2D;
-		      break;
-		    default:
-		      errNum = WLZ_ERR_GREY_TYPE;
-		      break;
+		    dom2D.core = (sObj->domain.p->domains + sPlIdx)->core;
+		    if(sHasVal)
+		    {
+		      if(sIsTiled)
+		      {
+			val2D.t = sObj->values.t;
+		      }
+		      else
+		      {
+		        val2D.core = (sObj->values.vox->values + sPlIdx)->core;
+		      }
+		    }
 		  }
+		  if(errNum2 == WLZ_ERR_NONE)
+		  {
+		    sObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom2D, val2D,
+					 NULL, NULL, &errNum2);
+		  }
+		  if(errNum2 == WLZ_ERR_NONE)
+		  {
+		    dObj2D = WlzCutObjToValBgBox2D(sObj2D, cutBox2D,
+		    				   dGreyType, dVal2DP.v,
+						   sPlIdx,
+						   bgNoise, bgMu, bgSigma,
+						   1, sBgPix, &errNum2);
+		  }
+		  if(errNum2 == WLZ_ERR_NONE)
+		  {
+		    *(dDom.p->domains + dPlIdx) =
+		      WlzAssignDomain(dObj2D->domain, NULL);
+		    *(dVal.vox->values + dPlIdx) =
+		      WlzAssignValues(dObj2D->values, NULL);
+		  }
+		  (void )WlzFreeObj(sObj2D);
+		  (void )WlzFreeObj(dObj2D);
+#ifdef _OPENMP
+#pragma omp critical
+		  {
+#endif
+		    if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
+		    {
+		      errNum = errNum2;
+		    }
+#ifdef _OPENMP
+		  }
+#endif
 		}
 	      }
 	    }

@@ -118,8 +118,10 @@ WlzObject *WlzCbThreshold(
     nll = idom->line1;
     nk1 = idom->lastkl;
     nkl = idom->kol1;
-    (void) WlzInitGreyScan(obj, &iwsp, &gwsp);
     callData.pix.type = gwsp.pixeltype;
+    (void) WlzInitGreyScan(obj, &iwsp, &gwsp);
+  }
+  if( errNum == WLZ_ERR_NONE ){
     nints = 0;
     while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
       callData.pos.vtY = iwsp.linpos;
@@ -180,6 +182,7 @@ WlzObject *WlzCbThreshold(
       }
     }
     nkl--;	/* since we have looked at points beyond interval ends */
+    (void )WlzEndGreyScan(&gwsp);
     if( errNum == WLZ_ERR_EOO ){
       errNum = WLZ_ERR_NONE;
     }
@@ -317,11 +320,14 @@ static WlzObject *WlzCbThreshold3d(
      can only be accessed via WlzThreshold. The domain and valuetable
      must be checked however */
   obj1 = NULL;
-  if( obj->domain.p == NULL ){
+  if( obj->domain.core == NULL ){
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if( obj->values.vox == NULL ){
+  else if( obj->values.core == NULL ){
     errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if( WlzGreyTableIsTiled(obj->values.core->type) ){
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
 
   /* check types */

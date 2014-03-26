@@ -1052,6 +1052,11 @@ WlzErrorNum WlzScalarBinaryOp(
 	errNum = WLZ_ERR_VALUES_NULL;
 	break;
       }
+      if(WlzGreyTableIsTiled(o1->values.core->type) ||
+         WlzGreyTableIsTiled(o3->values.core->type)) {
+	errNum = WLZ_ERR_VALUES_TYPE;
+	break;
+      }
       break;
       
     case WLZ_3D_DOMAINOBJ:
@@ -1065,6 +1070,11 @@ WlzErrorNum WlzScalarBinaryOp(
       }
       if( (o1->values.core == NULL) || (o3->values.core == NULL) ){
 	errNum = WLZ_ERR_VALUES_NULL;
+	break;
+      }
+      if(WlzGreyTableIsTiled(o1->values.core->type) ||
+         WlzGreyTableIsTiled(o3->values.core->type)) {
+	errNum = WLZ_ERR_VALUES_TYPE;
 	break;
       }
       errNum = WlzScalarBinaryOp3d(o1, pval, o3, op);

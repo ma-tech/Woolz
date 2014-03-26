@@ -65,11 +65,15 @@ static WlzPlaneDomain 		*WlzReadPlaneDomain(
 				  WlzErrorNum *);
 static WlzErrorNum		WlzReadGreyValues(
 				  FILE *fp,
+				  WlzObjectType type,
 				  WlzObject *obj);
 static WlzErrorNum		WlzReadRectVtb(
 				  FILE *fp,
 				  WlzObject *obj,
 				  WlzObjectType type);
+static WlzErrorNum 		WlzReadDomObjValues2D(
+				  FILE *fP,
+				  WlzObject *obj);
 static WlzErrorNum 		WlzReadDomObjValues3D(
 				  FILE *fP,
 				  WlzObject *obj);
@@ -441,7 +445,7 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 	   ((obj = WlzMakeMain(type, domain, values, NULL, NULL,
 			       &errNum)) != NULL))
 	{
-	  if((errNum = WlzReadGreyValues(fp, obj)) == WLZ_ERR_NONE)
+	  if((errNum = WlzReadDomObjValues2D(fp, obj)) == WLZ_ERR_NONE)
 	  {
 	    obj->plist = WlzAssignPropertyList(WlzReadPropertyList(fp, NULL),
 					       NULL);
@@ -1450,12 +1454,13 @@ static WlzPlaneDomain *WlzReadPlaneDomain(FILE *fp,
 * \ingroup	WlzIO
 * \brief	Reads a Woolz grey-value table from the given file.
 * \param	fp			Input file.
+* \param	type			Type encoding grey and table type.
 * \param	obj			Object defining the domain of the
 *					grey values.
 */
-static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
+static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObjectType type,
+				     WlzObject *obj)
 {
-  WlzObjectType		type;
   WlzGreyType		gtype;
   WlzIntervalWSpace 	iwsp;
   WlzValues		values;
@@ -1466,8 +1471,6 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObject *obj)
   WlzGreyP		v, g;
   size_t		table_size;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
-
-  type = (WlzObjectType) getc(fp);
 
   if( type == (WlzObjectType )EOF )
   {
@@ -2033,6 +2036,51 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzIO
+* \brief	Reads a Woolz 2D value table for a 2D domain object.
+* 		This function reads the grey value table type and then
+* 		calls the appropriate function to complete the read.
+* \param	fP			Input file.
+* \param	obj			Object defining the domain of the
+*					grey values. The domain is known to
+*					be non NULL.
+*/
+static WlzErrorNum WlzReadDomObjValues2D(FILE *fP, WlzObject *obj)
+{
+  WlzObjectType	type;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  type = (WlzObjectType )getc(fP);
+  if(type == (WlzObjectType )EOF)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if(type == WLZ_NULL)
+  {
+    obj->values.core = NULL;
+  }
+  else
+  {
+    switch(type)
+    {
+      case WLZ_VALUETABLE_TILED_INT:    /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_SHORT:  /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_UBYTE:  /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_FLOAT:  /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_DOUBLE: /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_RGBA:
+	errNum = WlzReadTiledValues(fP, obj, 2, type, 1);
+	break;
+      default:
+        errNum = WlzReadGreyValues(fP, type, obj);
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
 * \brief	Reads a Woolz 3D value table for a 3D domain object.
 * 		This function reads the grey value table type and then
 * 		calls the appropriate function to complete the read.
@@ -2137,8 +2185,12 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
     tVal->numTiles = getword(fP);
     tVal->nIdx[0] = getword(fP);
     tVal->nIdx[1] = getword(fP);
-    tVal->nIdx[2] = getword(fP);
-    nIdx = tVal->nIdx[0] * tVal->nIdx[1]  * tVal->nIdx[2];
+    nIdx = tVal->nIdx[0] * tVal->nIdx[1];
+    if(tVal->dim > 2)
+    {
+      tVal->nIdx[2] = getword(fP);
+      nIdx *= tVal->nIdx[2];
+    }
     if((tVal->indices = (unsigned int *)
                         AlcMalloc(nIdx * sizeof(unsigned int))) == NULL)
     {
@@ -2346,7 +2398,10 @@ static WlzErrorNum WlzReadVoxelValues(FILE *fp, WlzObject *obj)
     (*values).core = NULL;
     if((tmpobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *values,
 			     NULL, NULL, &errNum)) != NULL){
-      if( (errNum = WlzReadGreyValues(fp, tmpobj)) == WLZ_ERR_NONE ){
+      WlzObjectType gtt;
+
+      gtt = (WlzObjectType )getc(fp);
+      if( (errNum = WlzReadGreyValues(fp, gtt, tmpobj)) == WLZ_ERR_NONE ){
 	*values = WlzAssignValues(tmpobj->values, NULL);
 	/* reset voxel-table background */
 	if( (*values).core != NULL ){

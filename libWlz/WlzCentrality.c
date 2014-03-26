@@ -247,39 +247,43 @@ static double	WlzCentrality2D(WlzObject *fObj, WlzObject *bObj,
     else
     {
       errNum = WlzInitGreyScan(fObj, &iWsp, &gWsp);
-      while((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE)
+      if(errNum == WLZ_ERR_NONE)
       {
-	gPix = gWsp.u_grintptr;
-	pos.vtY = iWsp.linpos;
-	for(pos.vtX = iWsp.lftpos; pos.vtX <= iWsp.rgtpos; ++pos.vtX)
+	while((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE)
 	{
-	  switch(gWsp.pixeltype)
+	  gPix = gWsp.u_grintptr;
+	  pos.vtY = iWsp.linpos;
+	  for(pos.vtX = iWsp.lftpos; pos.vtX <= iWsp.rgtpos; ++pos.vtX)
 	  {
-	    case WLZ_GREY_INT:
-	      WlzCentralityUpdate2D(&fNum, &fDnm, cmV, nRay, pTbl,
-	                            *(gPix.inp)++, pos);
-	      break;
-	    case WLZ_GREY_SHORT:
-	      WlzCentralityUpdate2D(&fNum, &fDnm, cmV, nRay, pTbl,
-	                            *(gPix.shp)++, pos);
-	      break;
-	    case WLZ_GREY_UBYTE:
-	      WlzCentralityUpdate2D(&fNum, &fDnm, cmV, nRay, pTbl,
-	                            *(gPix.ubp)++, pos);
-	      break;
-	    case WLZ_GREY_FLOAT:
-	      WlzCentralityUpdate2D(&fNum, &fDnm, cmV, nRay, pTbl,
-	                            *(gPix.flp)++, pos);
-	      break;
-	    case WLZ_GREY_DOUBLE:
-	      WlzCentralityUpdate2D(&fNum, &fDnm, cmV, nRay, pTbl,
-	                            *(gPix.dbp)++, pos);
-	      break;
-	    default:
-	      errNum = WLZ_ERR_GREY_TYPE;
-	      break;
+	    switch(gWsp.pixeltype)
+	    {
+	      case WLZ_GREY_INT:
+		WlzCentralityUpdate2D(&fNum, &fDnm, cmV, nRay, pTbl,
+				      *(gPix.inp)++, pos);
+		break;
+	      case WLZ_GREY_SHORT:
+		WlzCentralityUpdate2D(&fNum, &fDnm, cmV, nRay, pTbl,
+				      *(gPix.shp)++, pos);
+		break;
+	      case WLZ_GREY_UBYTE:
+		WlzCentralityUpdate2D(&fNum, &fDnm, cmV, nRay, pTbl,
+				      *(gPix.ubp)++, pos);
+		break;
+	      case WLZ_GREY_FLOAT:
+		WlzCentralityUpdate2D(&fNum, &fDnm, cmV, nRay, pTbl,
+				      *(gPix.flp)++, pos);
+		break;
+	      case WLZ_GREY_DOUBLE:
+		WlzCentralityUpdate2D(&fNum, &fDnm, cmV, nRay, pTbl,
+				      *(gPix.dbp)++, pos);
+		break;
+	      default:
+		errNum = WLZ_ERR_GREY_TYPE;
+		break;
+	    }
 	  }
 	}
+        (void )WlzEndGreyScan(&gWsp);
       }
     }
     if(errNum == WLZ_ERR_EOO)

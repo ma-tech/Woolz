@@ -83,7 +83,8 @@ WlzObject *WlzGreyModGradient(
 
 	default:
 	  if( obj->values.core ){
-	    if( obj->values.core->type == WLZ_EMPTY_VALUES ){
+	    if( (obj->values.core->type == WLZ_EMPTY_VALUES) ||
+	        WlzGreyTableIsTiled(obj->values.core->type) ){
 	      errNum = WLZ_ERR_VALUES_TYPE;
 	    }
 	  }

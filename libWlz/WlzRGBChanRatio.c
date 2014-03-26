@@ -116,6 +116,10 @@ WlzObject 	*WlzRGBChanRatio(WlzObject *rgbObj,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
+  else if(WlzGreyTableIsTiled(rgbObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
   else
   {
     errNum = WlzRGBAChanValid(num);

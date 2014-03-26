@@ -64,6 +64,10 @@ WlzErrorNum 	WlzInitRasterScan(WlzObject *obj, WlzIntervalWSpace *iwsp,
   {
     errNum = WLZ_ERR_OBJECT_NULL;
   }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
   else if(iwsp == NULL)
   {
     errNum = WLZ_ERR_PARAM_NULL;

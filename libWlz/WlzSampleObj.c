@@ -260,6 +260,10 @@ static WlzObject *WlzSampleObj2D(WlzObject *srcObj, WlzIVertex2 samFac,
   {
     dstObj = WlzSampleObjIDom(srcObj, samFac, &errNum);
   }
+  else if(WlzGreyTableIsTiled(srcObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
   else
   {
     greyType = WlzGreyTableTypeToGreyType(srcObj->values.core->type,
@@ -401,6 +405,10 @@ static WlzObject *WlzSampleObj3D(WlzObject *srcObj, WlzIVertex3 samFac,
   if(srcObj->values.core == NULL)
   {
     dstObj = WlzSampleObjPoint3D(srcObj, samFac, &errNum);
+  }
+  else if(WlzGreyTableIsTiled(srcObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   else
   {
@@ -616,6 +624,10 @@ WlzObject 	*WlzSampleObjPoint3D(WlzObject *srcObj, WlzIVertex3 samFac,
   if(srcDom.core->type != WLZ_PLANEDOMAIN_DOMAIN)
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if(srcVal.core && (srcVal.core->type != WLZ_VOXELVALUETABLE_GREY))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   else
   {
@@ -848,110 +860,116 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
     dstItv1 = dstItv0;
     dstLinePos = totItvCount = itvCount = 0;
     errNum = WlzInitGreyScan(srcObj, &srcIWsp, &srcGWsp);
-    while((errNum == WLZ_ERR_NONE) &&
-          ((errNum = WlzNextGreyInterval(&srcIWsp)) == WLZ_ERR_NONE))
+    if(errNum == WLZ_ERR_NONE)
     {
-      if((srcIWsp.linpos % samFac.vtY) == 0)
+      while((errNum == WLZ_ERR_NONE) &&
+	    ((errNum = WlzNextGreyInterval(&srcIWsp)) == WLZ_ERR_NONE))
       {
-	dstInvLeftPos = srcIWsp.lftpos / samFac.vtX;
-	dstInvRgtPos = srcIWsp.rgtpos / samFac.vtX;
-	dstInvWidth = (srcIWsp.rgtpos / samFac.vtX) -
-	              (srcIWsp.lftpos / samFac.vtX) + 1;
-	if(dstInvWidth > 0)
+	if((srcIWsp.linpos % samFac.vtY) == 0)
 	{
-	  dstLinePos = srcIWsp.linpos / samFac.vtY;
-	  dstOffset = ((dstLinePos - dstBox.yMin) * dstWidth) +
-	  	      dstInvLeftPos - dstBox.xMin;
-	  srcOffset = srcIWsp.lftpos % samFac.vtX;
-	  dstItv1->ileft = dstInvLeftPos - dstBox.xMin;
-	  dstItv1->iright = dstInvRgtPos - dstBox.xMin;
-	  ++dstItv1;
-	  totItvCount += ++itvCount;
-	  if(totItvCount >= maxItvCount)
+	  dstInvLeftPos = srcIWsp.lftpos / samFac.vtX;
+	  dstInvRgtPos = srcIWsp.rgtpos / samFac.vtX;
+	  dstInvWidth = (srcIWsp.rgtpos / samFac.vtX) -
+			(srcIWsp.lftpos / samFac.vtX) + 1;
+	  if(dstInvWidth > 0)
 	  {
-	    errNum = WlzSampleObjMoreIntervals(dstDom,
-	    				       &delItvCount, itvCount,
-					       &dstItv0, &dstItv1);
-	    totItvCount = itvCount;
-	    maxItvCount = delItvCount;
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    switch(greyType)
+	    dstLinePos = srcIWsp.linpos / samFac.vtY;
+	    dstOffset = ((dstLinePos - dstBox.yMin) * dstWidth) +
+			dstInvLeftPos - dstBox.xMin;
+	    srcOffset = srcIWsp.lftpos % samFac.vtX;
+	    dstItv1->ileft = dstInvLeftPos - dstBox.xMin;
+	    dstItv1->iright = dstInvRgtPos - dstBox.xMin;
+	    ++dstItv1;
+	    totItvCount += ++itvCount;
+	    if(totItvCount >= maxItvCount)
 	    {
-	      case WLZ_GREY_INT:
-		srcPix.inp = srcGWsp.u_grintptr.inp + srcOffset;
-		dstPix.inp = (int *)dstGreyValues + dstOffset;
-		tI0 = dstInvWidth;
-		while(tI0-- > 0)
-		{
-		  *(dstPix.inp)++ = *(srcPix.inp);
-		  srcPix.inp += samFac.vtX;
-		}
-		break;
-	      case WLZ_GREY_SHORT:
-		srcPix.shp = srcGWsp.u_grintptr.shp + srcOffset;
-		dstPix.shp = (short *)dstGreyValues + dstOffset;
-		tI0 = dstInvWidth;
-		while(tI0-- > 0)
-		{
-		  *(dstPix.shp)++ = *(srcPix.shp);
-		  srcPix.shp += samFac.vtX;
-		}
-		break;
-	      case WLZ_GREY_UBYTE:
-		srcPix.ubp = srcGWsp.u_grintptr.ubp + srcOffset;
-		dstPix.ubp = (WlzUByte *)dstGreyValues + dstOffset;
-		tI0 = dstInvWidth;
-		while(tI0-- > 0)
-		{
-		  *(dstPix.ubp)++ = *(srcPix.ubp);
-		  srcPix.ubp += samFac.vtX;
-		}
-		break;
-	      case WLZ_GREY_FLOAT:
-		srcPix.flp = srcGWsp.u_grintptr.flp + srcOffset;
-		dstPix.flp = (float *)dstGreyValues + dstOffset;
-		tI0 = dstInvWidth;
-		while(tI0-- > 0)
-		{
-		  *(dstPix.flp)++ = *(srcPix.flp);
-		  srcPix.flp += samFac.vtX;
-		}
-		break;
-	      case WLZ_GREY_DOUBLE:
-		srcPix.dbp = srcGWsp.u_grintptr.dbp + srcOffset;
-		dstPix.dbp = (double *)dstGreyValues + dstOffset;
-		tI0 = dstInvWidth;
-		while(tI0-- > 0)
-		{
-		  *(dstPix.dbp)++ = *(srcPix.dbp);
-		  srcPix.dbp += samFac.vtX;
-		}
-		break;
-	      case WLZ_GREY_RGBA:
-		srcPix.rgbp = srcGWsp.u_grintptr.rgbp + srcOffset;
-		dstPix.rgbp = (WlzUInt *)dstGreyValues + dstOffset;
-		tI0 = dstInvWidth;
-		while(tI0-- > 0)
-		{
-		  *(dstPix.rgbp)++ = *(srcPix.rgbp);
-		  srcPix.rgbp += samFac.vtX;
-		}
-		break;
-	      default:
-	        errNum = WLZ_ERR_GREY_TYPE;
-		break;
+	      errNum = WlzSampleObjMoreIntervals(dstDom,
+						 &delItvCount, itvCount,
+						 &dstItv0, &dstItv1);
+	      totItvCount = itvCount;
+	      maxItvCount = delItvCount;
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      switch(greyType)
+	      {
+		case WLZ_GREY_INT:
+		  srcPix.inp = srcGWsp.u_grintptr.inp + srcOffset;
+		  dstPix.inp = (int *)dstGreyValues + dstOffset;
+		  tI0 = dstInvWidth;
+		  while(tI0-- > 0)
+		  {
+		    *(dstPix.inp)++ = *(srcPix.inp);
+		    srcPix.inp += samFac.vtX;
+		  }
+		  break;
+		case WLZ_GREY_SHORT:
+		  srcPix.shp = srcGWsp.u_grintptr.shp + srcOffset;
+		  dstPix.shp = (short *)dstGreyValues + dstOffset;
+		  tI0 = dstInvWidth;
+		  while(tI0-- > 0)
+		  {
+		    *(dstPix.shp)++ = *(srcPix.shp);
+		    srcPix.shp += samFac.vtX;
+		  }
+		  break;
+		case WLZ_GREY_UBYTE:
+		  srcPix.ubp = srcGWsp.u_grintptr.ubp + srcOffset;
+		  dstPix.ubp = (WlzUByte *)dstGreyValues + dstOffset;
+		  tI0 = dstInvWidth;
+		  while(tI0-- > 0)
+		  {
+		    *(dstPix.ubp)++ = *(srcPix.ubp);
+		    srcPix.ubp += samFac.vtX;
+		  }
+		  break;
+		case WLZ_GREY_FLOAT:
+		  srcPix.flp = srcGWsp.u_grintptr.flp + srcOffset;
+		  dstPix.flp = (float *)dstGreyValues + dstOffset;
+		  tI0 = dstInvWidth;
+		  while(tI0-- > 0)
+		  {
+		    *(dstPix.flp)++ = *(srcPix.flp);
+		    srcPix.flp += samFac.vtX;
+		  }
+		  break;
+		case WLZ_GREY_DOUBLE:
+		  srcPix.dbp = srcGWsp.u_grintptr.dbp + srcOffset;
+		  dstPix.dbp = (double *)dstGreyValues + dstOffset;
+		  tI0 = dstInvWidth;
+		  while(tI0-- > 0)
+		  {
+		    *(dstPix.dbp)++ = *(srcPix.dbp);
+		    srcPix.dbp += samFac.vtX;
+		  }
+		  break;
+		case WLZ_GREY_RGBA:
+		  srcPix.rgbp = srcGWsp.u_grintptr.rgbp + srcOffset;
+		  dstPix.rgbp = (WlzUInt *)dstGreyValues + dstOffset;
+		  tI0 = dstInvWidth;
+		  while(tI0-- > 0)
+		  {
+		    *(dstPix.rgbp)++ = *(srcPix.rgbp);
+		    srcPix.rgbp += samFac.vtX;
+		  }
+		  break;
+		default:
+		  errNum = WLZ_ERR_GREY_TYPE;
+		  break;
+	      }
 	    }
 	  }
-	}
-	if((errNum == WLZ_ERR_NONE) && (itvCount > 0) && (srcIWsp.intrmn == 0))
-	{
-	  WlzMakeInterval(dstLinePos, dstDom.i, itvCount, dstItv0);
-	  dstItv0 = dstItv1;
-	  itvCount = 0;
+	  if((errNum == WLZ_ERR_NONE) &&
+	     (itvCount > 0) && (srcIWsp.intrmn == 0))
+	  {
+	    WlzMakeInterval(dstLinePos, dstDom.i, itvCount, dstItv0);
+	    dstItv0 = dstItv1;
+	    itvCount = 0;
+	  }
+	  (void )WlzEndGreyScan(&srcGWsp);
 	}
       }
+      (void )WlzEndGreyScan(&srcGWsp);
     }
     if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
     {
@@ -1033,8 +1051,8 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
   WlzValues	dstValues;
   WlzGreyP	tGP0;
   WlzPixelV	backgroundPix;
-  WlzIntervalWSpace bufIWsp,
-		srcIWsp;
+  WlzIntervalWSpace bufIWsp = {0},
+		srcIWsp = {0};
   WlzGreyWSpace	bufGWsp,
 		srcGWsp;
   AlcErrno	alcErr = ALC_ER_NONE;
@@ -1306,12 +1324,27 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 	}
       }
     }
-    (void )WlzStandardIntervalDomain(dstDom.i);
-    dstObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dstDom, dstValues, NULL, NULL,
-    			 &errNum);
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzStandardIntervalDomain(dstDom.i);
+      dstObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dstDom, dstValues, NULL, NULL,
+			   &errNum);
+    }
     if(dstObj)
     {
       (void )WlzSetBackground(dstObj, WlzGetBackground(srcObj, NULL));
+    }
+    if(srcIWsp.gryptr == &srcGWsp)
+    {
+      (void )WlzEndGreyScan(&srcGWsp);
+    }
+    if(bufIWsp.gryptr == &bufGWsp)
+    {
+      (void )WlzEndGreyScan(&bufGWsp);
     }
   }
   if(bufData) 					      /* Free up buffer data */
@@ -1400,8 +1433,8 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
   WlzValues	dstValues;
   WlzGreyP	tGP0;
   WlzPixelV	backgroundPix;
-  WlzIntervalWSpace bufIWsp,
-		srcIWsp;
+  WlzIntervalWSpace bufIWsp = {0},
+		srcIWsp = {0};
   WlzGreyWSpace	bufGWsp,
 		srcGWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1654,12 +1687,27 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 	}
       }
     }
-    (void )WlzStandardIntervalDomain(dstDom.i);
-    dstObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dstDom, dstValues, NULL, NULL,
-    			 &errNum);
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzStandardIntervalDomain(dstDom.i);
+      dstObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dstDom, dstValues, NULL, NULL,
+			   &errNum);
+    }
     if(dstObj)
     {
       (void )WlzSetBackground(dstObj, WlzGetBackground(srcObj, NULL));
+    }
+    if(srcIWsp.gryptr == &srcGWsp)
+    {
+      (void )WlzEndGreyScan(&srcGWsp);
+    }
+    if(bufIWsp.gryptr == &bufGWsp)
+    {
+      (void )WlzEndGreyScan(&bufGWsp);
     }
   }
   if(bufData) 					      /* Free up buffer data */
@@ -1748,8 +1796,8 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
   WlzValues	dstValues;
   WlzGreyP	tGP0;
   WlzPixelV	backgroundPix;
-  WlzIntervalWSpace bufIWsp,
-		srcIWsp;
+  WlzIntervalWSpace bufIWsp = {0},
+		srcIWsp = {0};
   WlzGreyWSpace	bufGWsp,
 		srcGWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -2094,12 +2142,27 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 	}
       }
     }
-    (void )WlzStandardIntervalDomain(dstDom.i);
-    dstObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dstDom, dstValues, NULL, NULL,
-    			 &errNum);
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzStandardIntervalDomain(dstDom.i);
+      dstObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dstDom, dstValues, NULL, NULL,
+			   &errNum);
+    }
     if(dstObj)
     {
       (void )WlzSetBackground(dstObj, WlzGetBackground(srcObj, NULL));
+    }
+    if(srcIWsp.gryptr == &srcGWsp)
+    {
+      (void )WlzEndGreyScan(&srcGWsp);
+    }
+    if(bufIWsp.gryptr == &bufGWsp)
+    {
+      (void )WlzEndGreyScan(&bufGWsp);
     }
   }
   if(bufData) 					      /* Free up buffer data */
@@ -2194,8 +2257,8 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
   WlzValues	dstValues;
   WlzGreyP	tGP0;
   WlzPixelV	backgroundPix;
-  WlzIntervalWSpace bufIWsp,
-		srcIWsp;
+  WlzIntervalWSpace bufIWsp = {0},
+		srcIWsp = {0};
   WlzGreyWSpace	bufGWsp,
 		srcGWsp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -2528,12 +2591,27 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 	}
       }
     }
-    (void )WlzStandardIntervalDomain(dstDom.i);
-    dstObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dstDom, dstValues, NULL, NULL,
-    			 &errNum);
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzStandardIntervalDomain(dstDom.i);
+      dstObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dstDom, dstValues, NULL, NULL,
+			   &errNum);
+    }
     if(dstObj)
     {
       (void )WlzSetBackground(dstObj, WlzGetBackground(srcObj, NULL));
+    }
+    if(srcIWsp.gryptr == &srcGWsp)
+    {
+      (void )WlzEndGreyScan(&srcGWsp);
+    }
+    if(bufIWsp.gryptr == &bufGWsp)
+    {
+      (void )WlzEndGreyScan(&bufGWsp);
     }
   }
   if(bufData) 					      /* Free up buffer data */

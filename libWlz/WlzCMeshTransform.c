@@ -2013,6 +2013,7 @@ static WlzObject *WlzCMeshToDomObjValues2D(WlzObject *dObj, WlzObject *mObj,
 	  break;
       }
     }
+    (void )WlzEndGreyScan(&gWsp);
     if(errNum == WLZ_ERR_EOO)
     {
       errNum = WLZ_ERR_NONE;
@@ -3719,219 +3720,89 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
   if(errNum == WLZ_ERR_NONE)
   {
     gVWSp = WlzGreyValueMakeWSp(srcObj, &errNum);
-  }
-  while((errNum == WLZ_ERR_NONE) &&
-	(WlzNextGreyInterval(&iWSp) == 0))
-  {
-    dGP = gWSp.u_grintptr;
-    itvWidth = iWSp.rgtpos - iWSp.lftpos + 1;
-    switch(gType)
+    while((errNum == WLZ_ERR_NONE) &&
+	  (WlzNextGreyInterval(&iWSp) == 0))
     {
-      case WLZ_GREY_INT:   /* FALLTHROUGH */
-      case WLZ_GREY_SHORT: /* FALLTHROUGH */
-      case WLZ_GREY_UBYTE:
-	WlzValueSetInt(olpBuf.inp, 0, itvWidth);
-        break;
-      case WLZ_GREY_FLOAT: /* FALLTHROUGH */
-      case WLZ_GREY_DOUBLE:
-	WlzValueSetDouble(olpBuf.dbp, 0.0, itvWidth);
-        break;
-      case WLZ_GREY_RGBA:
-	WlzValueSetInt(olpBuf.inp, 0, itvWidth);
-	WlzValueSetInt(olpBuf.inp + bufWidth, 0, itvWidth);
-	WlzValueSetInt(olpBuf.inp + (2 * bufWidth), 0, itvWidth);
-	WlzValueSetInt(olpBuf.inp + (3 * bufWidth), 0, itvWidth);
-        break;
-      default:
-        errNum = WLZ_ERR_GREY_TYPE;
-	break;
-    }
-    WlzValueSetInt(olpCnt, 0, itvWidth);
-    /* Update the mesh interval pointer so that it points to the first
-     * mesh interval on the which intersects the current grey interval. */
-    while((mItv0->line < iWSp.linpos) && (mItvIdx0 < mSWSp->nItvs))
-    {
-      ++mItvIdx0;
-      ++mItv0;
-    }
-    while((mItv0->line <= iWSp.linpos) &&
-	  (mItv0->rgtI < iWSp.lftpos) &&
-	  (mItvIdx0 < mSWSp->nItvs))
-    {
-      ++mItvIdx0;
-      ++mItv0;
-    }
-    if((mItv0->line == iWSp.linpos) &&
-       (iWSp.lftpos <= mItv0->rgtI) &&
-       (iWSp.rgtpos >= mItv0->lftI))
-    {
-      /* Mesh interval mItv0 intersects the current grey interval find
-       * the last mesh interval mItv1 which also intersects the current grey
-       * interval. */
-      mItv1 = mItv0;
-      mItvIdx1 = mItvIdx0;
-      while((mItv1->line == iWSp.linpos) &&
-	    (mItv1->lftI <= iWSp.rgtpos) &&
-	    (mItvIdx1 < mSWSp->nItvs))
+      dGP = gWSp.u_grintptr;
+      itvWidth = iWSp.rgtpos - iWSp.lftpos + 1;
+      switch(gType)
       {
-	++mItvIdx1;
-	++mItv1;
+	case WLZ_GREY_INT:   /* FALLTHROUGH */
+	case WLZ_GREY_SHORT: /* FALLTHROUGH */
+	case WLZ_GREY_UBYTE:
+	  WlzValueSetInt(olpBuf.inp, 0, itvWidth);
+	  break;
+	case WLZ_GREY_FLOAT: /* FALLTHROUGH */
+	case WLZ_GREY_DOUBLE:
+	  WlzValueSetDouble(olpBuf.dbp, 0.0, itvWidth);
+	  break;
+	case WLZ_GREY_RGBA:
+	  WlzValueSetInt(olpBuf.inp, 0, itvWidth);
+	  WlzValueSetInt(olpBuf.inp + bufWidth, 0, itvWidth);
+	  WlzValueSetInt(olpBuf.inp + (2 * bufWidth), 0, itvWidth);
+	  WlzValueSetInt(olpBuf.inp + (3 * bufWidth), 0, itvWidth);
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
       }
-      mItv2 = mItv1 - 1;
-      mItv1 = mItv0;
-      /* For each mesh interval which intersects the current grey interval. */
-      while(mItv1 <= mItv2)
+      WlzValueSetInt(olpCnt, 0, itvWidth);
+      /* Update the mesh interval pointer so that it points to the first
+       * mesh interval on the which intersects the current grey interval. */
+      while((mItv0->line < iWSp.linpos) && (mItvIdx0 < mSWSp->nItvs))
       {
-	/* Update mesh scanning. */
-	sElm = mSWSp->dElm + mItv1->elmIdx;
-	WlzCMeshUpdateScanElm2D(mSWSp->mTr, sElm, 0);
-	trXX = sElm->trX[0];
-	trXYC = (sElm->trX[1] * iWSp.linpos) + sElm->trX[2];
-	trYX = sElm->trY[0];
-	trYYC = (sElm->trY[1] * iWSp.linpos) + sElm->trY[2];
-        /* Find length of intersection and set the grey pointer. */
-	iLft = ALG_MAX(mItv1->lftI, iWSp.lftpos);
-	iRgt = ALG_MIN(mItv1->rgtI, iWSp.rgtpos);
-	idX = iLft;
-	switch(interp)
+	++mItvIdx0;
+	++mItv0;
+      }
+      while((mItv0->line <= iWSp.linpos) &&
+	    (mItv0->rgtI < iWSp.lftpos) &&
+	    (mItvIdx0 < mSWSp->nItvs))
+      {
+	++mItvIdx0;
+	++mItv0;
+      }
+      if((mItv0->line == iWSp.linpos) &&
+	 (iWSp.lftpos <= mItv0->rgtI) &&
+	 (iWSp.rgtpos >= mItv0->lftI))
+      {
+	/* Mesh interval mItv0 intersects the current grey interval find
+	 * the last mesh interval mItv1 which also intersects the current grey
+	 * interval. */
+	mItv1 = mItv0;
+	mItvIdx1 = mItvIdx0;
+	while((mItv1->line == iWSp.linpos) &&
+	      (mItv1->lftI <= iWSp.rgtpos) &&
+	      (mItvIdx1 < mSWSp->nItvs))
 	{
-	  case WLZ_INTERPOLATION_NEAREST:
-	    switch(gWSp.pixeltype)
-	    {
-	      case WLZ_GREY_INT:
-		while(idX <= iRgt)
-		{
-		  sPosD.vtX = (trXX * idX) + trXYC;
-		  sPosD.vtY = (trYX * idX) + trYYC;
-		  WlzGreyValueGet(gVWSp, 0,
-		  		  WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
-		  if(gVWSp->bkdFlag == 0)
+	  ++mItvIdx1;
+	  ++mItv1;
+	}
+	mItv2 = mItv1 - 1;
+	mItv1 = mItv0;
+	/* For each mesh interval which intersects the current grey interval. */
+	while(mItv1 <= mItv2)
+	{
+	  /* Update mesh scanning. */
+	  sElm = mSWSp->dElm + mItv1->elmIdx;
+	  WlzCMeshUpdateScanElm2D(mSWSp->mTr, sElm, 0);
+	  trXX = sElm->trX[0];
+	  trXYC = (sElm->trX[1] * iWSp.linpos) + sElm->trX[2];
+	  trYX = sElm->trY[0];
+	  trYYC = (sElm->trY[1] * iWSp.linpos) + sElm->trY[2];
+	  /* Find length of intersection and set the grey pointer. */
+	  iLft = ALG_MAX(mItv1->lftI, iWSp.lftpos);
+	  iRgt = ALG_MIN(mItv1->rgtI, iWSp.rgtpos);
+	  idX = iLft;
+	  switch(interp)
+	  {
+	    case WLZ_INTERPOLATION_NEAREST:
+	      switch(gWSp.pixeltype)
+	      {
+		case WLZ_GREY_INT:
+		  while(idX <= iRgt)
 		  {
-	            idP = idX - iWSp.lftpos;
-		    ++*(olpCnt + idP);
-		    *(olpBuf.inp + idP) += gVWSp->gVal[0].inv;
-		  }
-		  ++idX;
-		}
-		break;
-	      case WLZ_GREY_SHORT:
-		while(idX <= iRgt)
-		{
-		  sPosD.vtX = (trXX * idX) + trXYC;
-		  sPosD.vtY = (trYX * idX) + trYYC;
-		  WlzGreyValueGet(gVWSp, 0,
-		  		  WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
-		  if(gVWSp->bkdFlag == 0)
-		  {
-		    idP = idX - iWSp.lftpos;
-		    ++*(olpCnt + idP);
-		    *(olpBuf.inp + idP) += gVWSp->gVal[0].shv;
-		  }
-		  ++idX;
-		}
-		break;
-	      case WLZ_GREY_UBYTE:
-		while(idX <= iRgt)
-		{
-		  sPosD.vtX = (trXX * idX) + trXYC;
-		  sPosD.vtY = (trYX * idX) + trYYC;
-		  WlzGreyValueGet(gVWSp, 0,
-		  		  WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
-		  if(gVWSp->bkdFlag == 0)
-		  {
-		    idP = idX - iWSp.lftpos;
-		    ++*(olpCnt + idP);
-		    *(olpBuf.inp + idP) += gVWSp->gVal[0].ubv;
-		  }
-		  ++idX;
-		}
-		break;
-	      case WLZ_GREY_FLOAT:
-		while(idX <= iRgt)
-		{
-		  sPosD.vtX = (trXX * idX) + trXYC;
-		  sPosD.vtY = (trYX * idX) + trYYC;
-		  WlzGreyValueGet(gVWSp, 0,
-		  		  WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
-		  if(gVWSp->bkdFlag == 0)
-		  {
-		    idP = idX - iWSp.lftpos;
-		    ++*(olpCnt + idP);
-		    *(olpBuf.dbp + idP) += gVWSp->gVal[0].flv;
-		  }
-		  ++idX;
-		}
-		break;
-	      case WLZ_GREY_DOUBLE:
-		while(idX <= iRgt)
-		{
-		  sPosD.vtX = (trXX * idX) + trXYC;
-		  sPosD.vtY = (trYX * idX) + trYYC;
-		  WlzGreyValueGet(gVWSp, 0,
-		  		  WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
-		  if(gVWSp->bkdFlag == 0)
-		  {
-		    idP = idX - iWSp.lftpos;
-		    ++*(olpCnt + idP);
-		    *(olpBuf.dbp + idP) += gVWSp->gVal[0].dbv;
-		  }
-		  ++idX;
-		}
-		break;
-	      case WLZ_GREY_RGBA:
-		while(idX <= iRgt)
-		{
-		  sPosD.vtX = (trXX * idX) + trXYC;
-		  sPosD.vtY = (trYX * idX) + trYYC;
-		  WlzGreyValueGet(gVWSp, 0,
-		  		  WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
-		  if(gVWSp->bkdFlag == 0)
-		  {
-		    idP = idX - iWSp.lftpos;
-		    ++*(olpCnt + idP);
-		    *(olpBuf.inp + idP) += WLZ_RGBA_RED_GET(
-					   gVWSp->gVal[0].rgbv);
-		    *(olpBuf.inp + bufWidth + idP) += WLZ_RGBA_GREEN_GET(
-						  gVWSp->gVal[0].rgbv);
-		    *(olpBuf.inp + (2 * bufWidth) + idP) += WLZ_RGBA_BLUE_GET(
-						  gVWSp->gVal[0].rgbv);
-		    *(olpBuf.inp + (3 * bufWidth) + idP) += WLZ_RGBA_ALPHA_GET(
-						  gVWSp->gVal[0].rgbv);
-		  }
-		  ++idX;
-		}
-		break;
-	      default:
-	        errNum = WLZ_ERR_GREY_TYPE;
-		break;
-	    }
-	    break;
-	  case WLZ_INTERPOLATION_LINEAR:
-	    switch(gWSp.pixeltype)
-	    {
-	      case WLZ_GREY_INT:
-		while(idX <= iRgt)
-		{
-		  sPosD.vtX = (trXX * idX) + trXYC;
-		  sPosD.vtY = (trYX * idX) + trYYC;
-		  WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
-		  if(gVWSp->bkdFlag == 0)
-		  {
-		    tD0 = sPosD.vtX - floor(sPosD.vtX);
-		    tD1 = sPosD.vtY - floor(sPosD.vtY);
-		    tD2 = 1.0 - tD0;
-		    tD3 = 1.0 - tD1;
-		    tD0 = ((gVWSp->gVal[0]).inv * tD2 * tD3) +
-			  ((gVWSp->gVal[1]).inv * tD0 * tD3) +
-			  ((gVWSp->gVal[2]).inv * tD2 * tD1) +
-			  ((gVWSp->gVal[3]).inv * tD0 * tD1);
-		    tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
-		    idP = idX - iWSp.lftpos;
-		    ++*(olpCnt + idP);
-		    *(olpBuf.inp + idP) += WLZ_NINT(tD0);
-		  }
-		  else
-		  {
+		    sPosD.vtX = (trXX * idX) + trXYC;
+		    sPosD.vtY = (trYX * idX) + trYYC;
 		    WlzGreyValueGet(gVWSp, 0,
 				    WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
 		    if(gVWSp->bkdFlag == 0)
@@ -3940,33 +3811,14 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 		      ++*(olpCnt + idP);
 		      *(olpBuf.inp + idP) += gVWSp->gVal[0].inv;
 		    }
+		    ++idX;
 		  }
-		  ++idX;
-		}
-		break;
-	      case WLZ_GREY_SHORT:
-		while(idX <= iRgt)
-		{
-		  sPosD.vtX = (trXX * idX) + trXYC;
-		  sPosD.vtY = (trYX * idX) + trYYC;
-		  WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
-		  if(gVWSp->bkdFlag == 0)
+		  break;
+		case WLZ_GREY_SHORT:
+		  while(idX <= iRgt)
 		  {
-		    tD0 = sPosD.vtX - floor(sPosD.vtX);
-		    tD1 = sPosD.vtY - floor(sPosD.vtY);
-		    tD2 = 1.0 - tD0;
-		    tD3 = 1.0 - tD1;
-		    tD0 = ((gVWSp->gVal[0]).shv * tD2 * tD3) +
-			  ((gVWSp->gVal[1]).shv * tD0 * tD3) +
-			  ((gVWSp->gVal[2]).shv * tD2 * tD1) +
-			  ((gVWSp->gVal[3]).shv * tD0 * tD1);
-		    tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
-		    idP = idX - iWSp.lftpos;
-		    ++*(olpCnt + idP);
-		    *(olpBuf.inp + idP) += WLZ_NINT(tD0);
-		  }
-		  else
-		  {
+		    sPosD.vtX = (trXX * idX) + trXYC;
+		    sPosD.vtY = (trYX * idX) + trYYC;
 		    WlzGreyValueGet(gVWSp, 0,
 				    WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
 		    if(gVWSp->bkdFlag == 0)
@@ -3975,33 +3827,14 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 		      ++*(olpCnt + idP);
 		      *(olpBuf.inp + idP) += gVWSp->gVal[0].shv;
 		    }
+		    ++idX;
 		  }
-		  ++idX;
-		}
-		break;
-	      case WLZ_GREY_UBYTE:
-		while(idX <= iRgt)
-		{
-		  sPosD.vtX = (trXX * idX) + trXYC;
-		  sPosD.vtY = (trYX * idX) + trYYC;
-		  WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
-		  if(gVWSp->bkdFlag == 0)
+		  break;
+		case WLZ_GREY_UBYTE:
+		  while(idX <= iRgt)
 		  {
-		    tD0 = sPosD.vtX - floor(sPosD.vtX);
-		    tD1 = sPosD.vtY - floor(sPosD.vtY);
-		    tD2 = 1.0 - tD0;
-		    tD3 = 1.0 - tD1;
-		    tD0 = ((gVWSp->gVal[0]).ubv * tD2 * tD3) +
-			  ((gVWSp->gVal[1]).ubv * tD0 * tD3) +
-			  ((gVWSp->gVal[2]).ubv * tD2 * tD1) +
-			  ((gVWSp->gVal[3]).ubv * tD0 * tD1);
-		    tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
-		    idP = idX - iWSp.lftpos;
-		    ++*(olpCnt + idP);
-		    *(olpBuf.inp + idP) += WLZ_NINT(tD0);
-		  }
-		  else
-		  {
+		    sPosD.vtX = (trXX * idX) + trXYC;
+		    sPosD.vtY = (trYX * idX) + trYYC;
 		    WlzGreyValueGet(gVWSp, 0,
 				    WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
 		    if(gVWSp->bkdFlag == 0)
@@ -4010,33 +3843,14 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 		      ++*(olpCnt + idP);
 		      *(olpBuf.inp + idP) += gVWSp->gVal[0].ubv;
 		    }
+		    ++idX;
 		  }
-		  ++idX;
-		}
-		break;
-	      case WLZ_GREY_FLOAT:
-		while(idX <= iRgt)
-		{
-		  sPosD.vtX = (trXX * idX) + trXYC;
-		  sPosD.vtY = (trYX * idX) + trYYC;
-		  WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
-		  if(gVWSp->bkdFlag == 0)
+		  break;
+		case WLZ_GREY_FLOAT:
+		  while(idX <= iRgt)
 		  {
-		    tD0 = sPosD.vtX - floor(sPosD.vtX);
-		    tD1 = sPosD.vtY - floor(sPosD.vtY);
-		    tD2 = 1.0 - tD0;
-		    tD3 = 1.0 - tD1;
-		    tD0 = ((gVWSp->gVal[0]).flv * tD2 * tD3) +
-			  ((gVWSp->gVal[1]).flv * tD0 * tD3) +
-			  ((gVWSp->gVal[2]).flv * tD2 * tD1) +
-			  ((gVWSp->gVal[3]).flv * tD0 * tD1);
-		    tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
-		    idP = idX - iWSp.lftpos;
-		    ++*(olpCnt + idP);
-		    *(olpBuf.dbp + idP) += WLZ_NINT(tD0);
-		  }
-		  else
-		  {
+		    sPosD.vtX = (trXX * idX) + trXYC;
+		    sPosD.vtY = (trYX * idX) + trYYC;
 		    WlzGreyValueGet(gVWSp, 0,
 				    WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
 		    if(gVWSp->bkdFlag == 0)
@@ -4045,33 +3859,14 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 		      ++*(olpCnt + idP);
 		      *(olpBuf.dbp + idP) += gVWSp->gVal[0].flv;
 		    }
+		    ++idX;
 		  }
-		  ++idX;
-		}
-		break;
-	      case WLZ_GREY_DOUBLE:
-		while(idX <= iRgt)
-		{
-		  sPosD.vtX = (trXX * idX) + trXYC;
-		  sPosD.vtY = (trYX * idX) + trYYC;
-		  WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
-		  if(gVWSp->bkdFlag == 0)
+		  break;
+		case WLZ_GREY_DOUBLE:
+		  while(idX <= iRgt)
 		  {
-		    tD0 = sPosD.vtX - floor(sPosD.vtX);
-		    tD1 = sPosD.vtY - floor(sPosD.vtY);
-		    tD2 = 1.0 - tD0;
-		    tD3 = 1.0 - tD1;
-		    tD0 = ((gVWSp->gVal[0]).dbv * tD2 * tD3) +
-			  ((gVWSp->gVal[1]).dbv * tD0 * tD3) +
-			  ((gVWSp->gVal[2]).dbv * tD2 * tD1) +
-			  ((gVWSp->gVal[3]).dbv * tD0 * tD1);
-		    tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
-		    idP = idX - iWSp.lftpos;
-		    ++*(olpCnt + idP);
-		    *(olpBuf.dbp + idP) += WLZ_NINT(tD0);
-		  }
-		  else
-		  {
+		    sPosD.vtX = (trXX * idX) + trXYC;
+		    sPosD.vtY = (trYX * idX) + trYYC;
 		    WlzGreyValueGet(gVWSp, 0,
 				    WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
 		    if(gVWSp->bkdFlag == 0)
@@ -4080,107 +3875,314 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 		      ++*(olpCnt + idP);
 		      *(olpBuf.dbp + idP) += gVWSp->gVal[0].dbv;
 		    }
+		    ++idX;
 		  }
-		  ++idX;
-		}
-		break;
-	      case WLZ_GREY_RGBA:
-		while(idX <= iRgt)
-		{
-		  idP = idX - iWSp.lftpos;
-		  sPosD.vtX = (trXX * idX) + trXYC;
-		  sPosD.vtY = (trYX * idX) + trYYC;
-		  WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
-		  if(gVWSp->bkdFlag == 0)
+		  break;
+		case WLZ_GREY_RGBA:
+		  while(idX <= iRgt)
 		  {
-		    tD0 = sPosD.vtX - floor(sPosD.vtX);
-		    tD1 = sPosD.vtY - floor(sPosD.vtY);
-		    tD2 = 1.0 - tD0;
-		    tD3 = 1.0 - tD1;
-		    tD4 = (WLZ_RGBA_RED_GET((gVWSp->gVal[0]).rgbv) *
-			   tD2 * tD3) +
-			  (WLZ_RGBA_RED_GET((gVWSp->gVal[1]).rgbv) *
-			   tD0 * tD3) +
-			  (WLZ_RGBA_RED_GET((gVWSp->gVal[2]).rgbv) *
-			   tD2 * tD1) +
-			  (WLZ_RGBA_RED_GET((gVWSp->gVal[3]).rgbv) *
-			   tD0 * tD1);
-		    tD4 = WLZ_CLAMP(tD4, 0.0, 255.0);
-		    ++*(olpCnt + idP);
-		    *(olpBuf.inp + idP) += WLZ_NINT(tD4);
-		    tD4 = (WLZ_RGBA_GREEN_GET((gVWSp->gVal[0]).rgbv) *
-			   tD2 * tD3) +
-			  (WLZ_RGBA_GREEN_GET((gVWSp->gVal[1]).rgbv) *
-			   tD0 * tD3) +
-			  (WLZ_RGBA_GREEN_GET((gVWSp->gVal[2]).rgbv) *
-			   tD2 * tD1) +
-			  (WLZ_RGBA_GREEN_GET((gVWSp->gVal[3]).rgbv) *
-			   tD0 * tD1);
-		    tD4 = WLZ_CLAMP(tD4, 0.0, 255.0);
-		    *(olpBuf.inp + bufWidth + idP) += WLZ_NINT(tD4);
-		    tD4 = (WLZ_RGBA_BLUE_GET((gVWSp->gVal[0]).rgbv) *
-			   tD2 * tD3) +
-			  (WLZ_RGBA_BLUE_GET((gVWSp->gVal[1]).rgbv) *
-			   tD0 * tD3) +
-			  (WLZ_RGBA_BLUE_GET((gVWSp->gVal[2]).rgbv) *
-			   tD2 * tD1) +
-			  (WLZ_RGBA_BLUE_GET((gVWSp->gVal[3]).rgbv) *
-			   tD0 * tD1);
-		    tD4 = WLZ_CLAMP(tD4, 0.0, 255.0);
-		    *(olpBuf.inp + (2 * bufWidth) + idP) += WLZ_NINT(tD4);
-		    tD4 = (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[0]).rgbv) *
-			   tD2 * tD3) +
-			  (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[1]).rgbv) *
-			   tD0 * tD3) +
-			  (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[2]).rgbv) *
-			   tD2 * tD1) +
-			  (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[3]).rgbv) *
-			   tD0 * tD1);
-		    tD4 = WLZ_CLAMP(tD4, 0.0, 255.0);
-		    *(olpBuf.inp + (3 * bufWidth) + idP) += WLZ_NINT(tD4);
-		  }
-		  else
-		  {
+		    sPosD.vtX = (trXX * idX) + trXYC;
+		    sPosD.vtY = (trYX * idX) + trYYC;
 		    WlzGreyValueGet(gVWSp, 0,
 				    WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
 		    if(gVWSp->bkdFlag == 0)
 		    {
 		      idP = idX - iWSp.lftpos;
 		      ++*(olpCnt + idP);
-		      *(olpBuf.inp + idP) +=
-		      		WLZ_RGBA_RED_GET(gVWSp->gVal[0].rgbv);
-		      *(olpBuf.inp + bufWidth + idP) +=
-		      		WLZ_RGBA_GREEN_GET(gVWSp->gVal[0].rgbv);
-		      *(olpBuf.inp + (2 * bufWidth) + idP) +=
-		      		WLZ_RGBA_BLUE_GET(gVWSp->gVal[0].rgbv);
-		      *(olpBuf.inp + (3 * bufWidth) + idP) +=
-		      		WLZ_RGBA_ALPHA_GET(gVWSp->gVal[0].rgbv);
+		      *(olpBuf.inp + idP) += WLZ_RGBA_RED_GET(
+					     gVWSp->gVal[0].rgbv);
+		      *(olpBuf.inp + bufWidth + idP) += WLZ_RGBA_GREEN_GET(
+						    gVWSp->gVal[0].rgbv);
+		      *(olpBuf.inp + (2 * bufWidth) + idP) += WLZ_RGBA_BLUE_GET(
+						    gVWSp->gVal[0].rgbv);
+		      *(olpBuf.inp + (3 * bufWidth) + idP) += WLZ_RGBA_ALPHA_GET(
+						    gVWSp->gVal[0].rgbv);
 		    }
+		    ++idX;
 		  }
-		  ++idX;
-		}
-		break;
-	      default:
-	        errNum = WLZ_ERR_GREY_TYPE;
-		break;
-	    }
-	    break;
-	  case WLZ_INTERPOLATION_CLASSIFY_1:     /* FALLTHROUGH */
-	    errNum = WLZ_ERR_UNIMPLEMENTED;
-	    break;
-	  default:
-	    errNum = WLZ_ERR_INTERPOLATION_TYPE;
-	    break;
+		  break;
+		default:
+		  errNum = WLZ_ERR_GREY_TYPE;
+		  break;
+	      }
+	      break;
+	    case WLZ_INTERPOLATION_LINEAR:
+	      switch(gWSp.pixeltype)
+	      {
+		case WLZ_GREY_INT:
+		  while(idX <= iRgt)
+		  {
+		    sPosD.vtX = (trXX * idX) + trXYC;
+		    sPosD.vtY = (trYX * idX) + trYYC;
+		    WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
+		    if(gVWSp->bkdFlag == 0)
+		    {
+		      tD0 = sPosD.vtX - floor(sPosD.vtX);
+		      tD1 = sPosD.vtY - floor(sPosD.vtY);
+		      tD2 = 1.0 - tD0;
+		      tD3 = 1.0 - tD1;
+		      tD0 = ((gVWSp->gVal[0]).inv * tD2 * tD3) +
+			    ((gVWSp->gVal[1]).inv * tD0 * tD3) +
+			    ((gVWSp->gVal[2]).inv * tD2 * tD1) +
+			    ((gVWSp->gVal[3]).inv * tD0 * tD1);
+		      tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
+		      idP = idX - iWSp.lftpos;
+		      ++*(olpCnt + idP);
+		      *(olpBuf.inp + idP) += WLZ_NINT(tD0);
+		    }
+		    else
+		    {
+		      WlzGreyValueGet(gVWSp, 0,
+				      WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
+		      if(gVWSp->bkdFlag == 0)
+		      {
+			idP = idX - iWSp.lftpos;
+			++*(olpCnt + idP);
+			*(olpBuf.inp + idP) += gVWSp->gVal[0].inv;
+		      }
+		    }
+		    ++idX;
+		  }
+		  break;
+		case WLZ_GREY_SHORT:
+		  while(idX <= iRgt)
+		  {
+		    sPosD.vtX = (trXX * idX) + trXYC;
+		    sPosD.vtY = (trYX * idX) + trYYC;
+		    WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
+		    if(gVWSp->bkdFlag == 0)
+		    {
+		      tD0 = sPosD.vtX - floor(sPosD.vtX);
+		      tD1 = sPosD.vtY - floor(sPosD.vtY);
+		      tD2 = 1.0 - tD0;
+		      tD3 = 1.0 - tD1;
+		      tD0 = ((gVWSp->gVal[0]).shv * tD2 * tD3) +
+			    ((gVWSp->gVal[1]).shv * tD0 * tD3) +
+			    ((gVWSp->gVal[2]).shv * tD2 * tD1) +
+			    ((gVWSp->gVal[3]).shv * tD0 * tD1);
+		      tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
+		      idP = idX - iWSp.lftpos;
+		      ++*(olpCnt + idP);
+		      *(olpBuf.inp + idP) += WLZ_NINT(tD0);
+		    }
+		    else
+		    {
+		      WlzGreyValueGet(gVWSp, 0,
+				      WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
+		      if(gVWSp->bkdFlag == 0)
+		      {
+			idP = idX - iWSp.lftpos;
+			++*(olpCnt + idP);
+			*(olpBuf.inp + idP) += gVWSp->gVal[0].shv;
+		      }
+		    }
+		    ++idX;
+		  }
+		  break;
+		case WLZ_GREY_UBYTE:
+		  while(idX <= iRgt)
+		  {
+		    sPosD.vtX = (trXX * idX) + trXYC;
+		    sPosD.vtY = (trYX * idX) + trYYC;
+		    WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
+		    if(gVWSp->bkdFlag == 0)
+		    {
+		      tD0 = sPosD.vtX - floor(sPosD.vtX);
+		      tD1 = sPosD.vtY - floor(sPosD.vtY);
+		      tD2 = 1.0 - tD0;
+		      tD3 = 1.0 - tD1;
+		      tD0 = ((gVWSp->gVal[0]).ubv * tD2 * tD3) +
+			    ((gVWSp->gVal[1]).ubv * tD0 * tD3) +
+			    ((gVWSp->gVal[2]).ubv * tD2 * tD1) +
+			    ((gVWSp->gVal[3]).ubv * tD0 * tD1);
+		      tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
+		      idP = idX - iWSp.lftpos;
+		      ++*(olpCnt + idP);
+		      *(olpBuf.inp + idP) += WLZ_NINT(tD0);
+		    }
+		    else
+		    {
+		      WlzGreyValueGet(gVWSp, 0,
+				      WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
+		      if(gVWSp->bkdFlag == 0)
+		      {
+			idP = idX - iWSp.lftpos;
+			++*(olpCnt + idP);
+			*(olpBuf.inp + idP) += gVWSp->gVal[0].ubv;
+		      }
+		    }
+		    ++idX;
+		  }
+		  break;
+		case WLZ_GREY_FLOAT:
+		  while(idX <= iRgt)
+		  {
+		    sPosD.vtX = (trXX * idX) + trXYC;
+		    sPosD.vtY = (trYX * idX) + trYYC;
+		    WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
+		    if(gVWSp->bkdFlag == 0)
+		    {
+		      tD0 = sPosD.vtX - floor(sPosD.vtX);
+		      tD1 = sPosD.vtY - floor(sPosD.vtY);
+		      tD2 = 1.0 - tD0;
+		      tD3 = 1.0 - tD1;
+		      tD0 = ((gVWSp->gVal[0]).flv * tD2 * tD3) +
+			    ((gVWSp->gVal[1]).flv * tD0 * tD3) +
+			    ((gVWSp->gVal[2]).flv * tD2 * tD1) +
+			    ((gVWSp->gVal[3]).flv * tD0 * tD1);
+		      tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
+		      idP = idX - iWSp.lftpos;
+		      ++*(olpCnt + idP);
+		      *(olpBuf.dbp + idP) += WLZ_NINT(tD0);
+		    }
+		    else
+		    {
+		      WlzGreyValueGet(gVWSp, 0,
+				      WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
+		      if(gVWSp->bkdFlag == 0)
+		      {
+			idP = idX - iWSp.lftpos;
+			++*(olpCnt + idP);
+			*(olpBuf.dbp + idP) += gVWSp->gVal[0].flv;
+		      }
+		    }
+		    ++idX;
+		  }
+		  break;
+		case WLZ_GREY_DOUBLE:
+		  while(idX <= iRgt)
+		  {
+		    sPosD.vtX = (trXX * idX) + trXYC;
+		    sPosD.vtY = (trYX * idX) + trYYC;
+		    WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
+		    if(gVWSp->bkdFlag == 0)
+		    {
+		      tD0 = sPosD.vtX - floor(sPosD.vtX);
+		      tD1 = sPosD.vtY - floor(sPosD.vtY);
+		      tD2 = 1.0 - tD0;
+		      tD3 = 1.0 - tD1;
+		      tD0 = ((gVWSp->gVal[0]).dbv * tD2 * tD3) +
+			    ((gVWSp->gVal[1]).dbv * tD0 * tD3) +
+			    ((gVWSp->gVal[2]).dbv * tD2 * tD1) +
+			    ((gVWSp->gVal[3]).dbv * tD0 * tD1);
+		      tD0 = WLZ_CLAMP(tD0, 0.0, 255.0);
+		      idP = idX - iWSp.lftpos;
+		      ++*(olpCnt + idP);
+		      *(olpBuf.dbp + idP) += WLZ_NINT(tD0);
+		    }
+		    else
+		    {
+		      WlzGreyValueGet(gVWSp, 0,
+				      WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
+		      if(gVWSp->bkdFlag == 0)
+		      {
+			idP = idX - iWSp.lftpos;
+			++*(olpCnt + idP);
+			*(olpBuf.dbp + idP) += gVWSp->gVal[0].dbv;
+		      }
+		    }
+		    ++idX;
+		  }
+		  break;
+		case WLZ_GREY_RGBA:
+		  while(idX <= iRgt)
+		  {
+		    idP = idX - iWSp.lftpos;
+		    sPosD.vtX = (trXX * idX) + trXYC;
+		    sPosD.vtY = (trYX * idX) + trYYC;
+		    WlzGreyValueGetCon(gVWSp, 0, sPosD.vtY, sPosD.vtX);
+		    if(gVWSp->bkdFlag == 0)
+		    {
+		      tD0 = sPosD.vtX - floor(sPosD.vtX);
+		      tD1 = sPosD.vtY - floor(sPosD.vtY);
+		      tD2 = 1.0 - tD0;
+		      tD3 = 1.0 - tD1;
+		      tD4 = (WLZ_RGBA_RED_GET((gVWSp->gVal[0]).rgbv) *
+			     tD2 * tD3) +
+			    (WLZ_RGBA_RED_GET((gVWSp->gVal[1]).rgbv) *
+			     tD0 * tD3) +
+			    (WLZ_RGBA_RED_GET((gVWSp->gVal[2]).rgbv) *
+			     tD2 * tD1) +
+			    (WLZ_RGBA_RED_GET((gVWSp->gVal[3]).rgbv) *
+			     tD0 * tD1);
+		      tD4 = WLZ_CLAMP(tD4, 0.0, 255.0);
+		      ++*(olpCnt + idP);
+		      *(olpBuf.inp + idP) += WLZ_NINT(tD4);
+		      tD4 = (WLZ_RGBA_GREEN_GET((gVWSp->gVal[0]).rgbv) *
+			     tD2 * tD3) +
+			    (WLZ_RGBA_GREEN_GET((gVWSp->gVal[1]).rgbv) *
+			     tD0 * tD3) +
+			    (WLZ_RGBA_GREEN_GET((gVWSp->gVal[2]).rgbv) *
+			     tD2 * tD1) +
+			    (WLZ_RGBA_GREEN_GET((gVWSp->gVal[3]).rgbv) *
+			     tD0 * tD1);
+		      tD4 = WLZ_CLAMP(tD4, 0.0, 255.0);
+		      *(olpBuf.inp + bufWidth + idP) += WLZ_NINT(tD4);
+		      tD4 = (WLZ_RGBA_BLUE_GET((gVWSp->gVal[0]).rgbv) *
+			     tD2 * tD3) +
+			    (WLZ_RGBA_BLUE_GET((gVWSp->gVal[1]).rgbv) *
+			     tD0 * tD3) +
+			    (WLZ_RGBA_BLUE_GET((gVWSp->gVal[2]).rgbv) *
+			     tD2 * tD1) +
+			    (WLZ_RGBA_BLUE_GET((gVWSp->gVal[3]).rgbv) *
+			     tD0 * tD1);
+		      tD4 = WLZ_CLAMP(tD4, 0.0, 255.0);
+		      *(olpBuf.inp + (2 * bufWidth) + idP) += WLZ_NINT(tD4);
+		      tD4 = (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[0]).rgbv) *
+			     tD2 * tD3) +
+			    (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[1]).rgbv) *
+			     tD0 * tD3) +
+			    (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[2]).rgbv) *
+			     tD2 * tD1) +
+			    (WLZ_RGBA_ALPHA_GET((gVWSp->gVal[3]).rgbv) *
+			     tD0 * tD1);
+		      tD4 = WLZ_CLAMP(tD4, 0.0, 255.0);
+		      *(olpBuf.inp + (3 * bufWidth) + idP) += WLZ_NINT(tD4);
+		    }
+		    else
+		    {
+		      WlzGreyValueGet(gVWSp, 0,
+				      WLZ_NINT(sPosD.vtY), WLZ_NINT(sPosD.vtX));
+		      if(gVWSp->bkdFlag == 0)
+		      {
+			idP = idX - iWSp.lftpos;
+			++*(olpCnt + idP);
+			*(olpBuf.inp + idP) +=
+				  WLZ_RGBA_RED_GET(gVWSp->gVal[0].rgbv);
+			*(olpBuf.inp + bufWidth + idP) +=
+				  WLZ_RGBA_GREEN_GET(gVWSp->gVal[0].rgbv);
+			*(olpBuf.inp + (2 * bufWidth) + idP) +=
+				  WLZ_RGBA_BLUE_GET(gVWSp->gVal[0].rgbv);
+			*(olpBuf.inp + (3 * bufWidth) + idP) +=
+				  WLZ_RGBA_ALPHA_GET(gVWSp->gVal[0].rgbv);
+		      }
+		    }
+		    ++idX;
+		  }
+		  break;
+		default:
+		  errNum = WLZ_ERR_GREY_TYPE;
+		  break;
+	      }
+	      break;
+	    case WLZ_INTERPOLATION_CLASSIFY_1:     /* FALLTHROUGH */
+	      errNum = WLZ_ERR_UNIMPLEMENTED;
+	      break;
+	    default:
+	      errNum = WLZ_ERR_INTERPOLATION_TYPE;
+	      break;
+	  }
+	  ++mItv1;
 	}
-	++mItv1;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	errNum = WlzCMeshScanFlushOlpBuf(dGP, olpBuf, olpCnt, bufWidth, bgdV,
+					 iWSp.lftpos, iWSp.rgtpos,
+					 interp, gType);
       }
     }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      errNum = WlzCMeshScanFlushOlpBuf(dGP, olpBuf, olpCnt, bufWidth, bgdV,
-      			               iWSp.lftpos, iWSp.rgtpos,
-				       interp, gType);
-    }
+    (void )WlzEndGreyScan(&gWSp);
   }
   if(errNum == WLZ_ERR_EOO)
   {
@@ -5599,6 +5601,10 @@ WlzObject 	*WlzCMeshTransformObj(WlzObject *srcObj,
 	{
 	  dstObj = WlzCMeshTransformObjPDomain3D(srcObj, mObj, &errNum);
 	}
+	else if(WlzGreyTableIsTiled(srcObj->values.core->type))
+	{
+	  errNum = WLZ_ERR_VALUES_TYPE;
+	}
 	else
 	{
 	  dstObj = WlzCMeshTransformObjV3D(srcObj, mObj, interp, &errNum);
@@ -6349,29 +6355,33 @@ static WlzErrorNum WlzCMeshVerifyWSp3D(WlzObject *srcObj,
 	{
 	  errNum = WlzInitGreyScan(obj2, &iWSp, &gWSp);
 	}
-	while((errNum == WLZ_ERR_NONE) &&
-	      ((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE))
+	if(errNum == WLZ_ERR_NONE)
 	{
-	  cnt = iWSp.rgtpos - iWSp.lftpos + 1;
-	  inp = gWSp.u_grintptr.inp;
-	  sPos.vtY = iWSp.linpos;
-	  for(idI = 0; idI < cnt; ++idI)
+	  while((errNum == WLZ_ERR_NONE) &&
+		((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE))
 	  {
-	    idN = 0;
-	    if(*inp == 0)
+	    cnt = iWSp.rgtpos - iWSp.lftpos + 1;
+	    inp = gWSp.u_grintptr.inp;
+	    sPos.vtY = iWSp.linpos;
+	    for(idI = 0; idI < cnt; ++idI)
 	    {
-	      /* Found voxel not covered by the scan intervals. */
-	      sPos.vtX = iWSp.lftpos + idI;
-	      /* Find element C mesh which encloses the voxel. */
-	      idN = WlzCMeshElmEnclosingPos3D(mSWSp->mTr->mesh.m3, -1,
-	      				      sPos.vtX, sPos.vtY, sPos.vtZ,
-					      0, NULL);
-	      /* Output message. */
-	      (void )fprintf(stderr, "WlzCMeshVerifyWSp3D() %d %d %d n %d\n",
-	                     sPos.vtX, sPos.vtY, sPos.vtZ, idN - 1);
+	      idN = 0;
+	      if(*inp == 0)
+	      {
+		/* Found voxel not covered by the scan intervals. */
+		sPos.vtX = iWSp.lftpos + idI;
+		/* Find element C mesh which encloses the voxel. */
+		idN = WlzCMeshElmEnclosingPos3D(mSWSp->mTr->mesh.m3, -1,
+						sPos.vtX, sPos.vtY, sPos.vtZ,
+						0, NULL);
+		/* Output message. */
+		(void )fprintf(stderr, "WlzCMeshVerifyWSp3D() %d %d %d n %d\n",
+			       sPos.vtX, sPos.vtY, sPos.vtZ, idN - 1);
+	      }
+	      ++inp;
 	    }
-	    ++inp;
 	  }
+	  (void )WlzEndGreyScan(&gWSp);
 	}
 	(void )WlzFreeObj(obj2);
 	if(errNum == WLZ_ERR_EOO)

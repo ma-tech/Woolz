@@ -100,9 +100,17 @@ WlzObject	*WlzIntRescaleObj(WlzObject *gObj, int scale, int expand,
 	}
 	else
 	{
-	  rObj = (gObj->type == WLZ_2D_DOMAINOBJ)?
-	         WlzIntRescaleObj2D(gObj, scale, expand, &errNum):
-	         WlzIntRescaleObj3D(gObj, scale, expand, &errNum);
+	  if(gObj->values.core &&
+	     WlzGreyTableIsTiled(gObj->values.core->type))
+	  {
+	    errNum = WLZ_ERR_VALUES_TYPE;
+	  }
+	  else
+	  {
+	    rObj = (gObj->type == WLZ_2D_DOMAINOBJ)?
+		   WlzIntRescaleObj2D(gObj, scale, expand, &errNum):
+		   WlzIntRescaleObj3D(gObj, scale, expand, &errNum);
+	  }
 	}
 	break;
       case WLZ_TRANS_OBJ: /* FALLTHROUGH */
@@ -274,51 +282,56 @@ static WlzObject *WlzIntRescaleObj2D(
       rtnObj->values = WlzAssignValues(values, NULL);
       
       /* fill in the grey-values */
-      WlzInitGreyScan(rtnObj, &iwsp, &gwsp);
-      gVWSp = WlzGreyValueMakeWSp(obj, &errNum);
-      gtype = WlzGreyTableTypeToGreyType(obj->values.v->type, NULL);
-      while((errNum == WLZ_ERR_NONE) &&
-            (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE)
-      {
-	int k;
-	int lp = expand ? iwsp.linpos/scale : iwsp.linpos*scale;
-
-	for( k=0; k <= (iwsp.rgtpos - iwsp.lftpos); k++ )
+      errNum = WlzInitGreyScan(rtnObj, &iwsp, &gwsp);
+      if(errNum == WLZ_ERR_NONE) {
+	gVWSp = WlzGreyValueMakeWSp(obj, &errNum);
+	if(errNum == WLZ_ERR_NONE) {
+	  gtype = WlzGreyTableTypeToGreyType(obj->values.v->type, NULL);
+	}
+	while((errNum == WLZ_ERR_NONE) &&
+	      (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE)
 	{
-	  int	kp = expand ? (k+iwsp.lftpos)/scale : (k+iwsp.lftpos)*scale;
+	  int k;
+	  int lp = expand ? iwsp.linpos/scale : iwsp.linpos*scale;
 
-	  WlzGreyValueGet(gVWSp, 0, (double) lp, (double) kp);
-
-	  switch(gtype)
+	  for( k=0; k <= (iwsp.rgtpos - iwsp.lftpos); k++ )
 	  {
-	  case WLZ_GREY_INT: 
-	    gwsp.u_grintptr.inp[k] = (*(gVWSp->gVal)).inv;
-	    break;
-	  case WLZ_GREY_SHORT:
-	    gwsp.u_grintptr.shp[k] = (*(gVWSp->gVal)).shv;
-	    break;
-	  case WLZ_GREY_UBYTE:
-	    gwsp.u_grintptr.ubp[k] = (*(gVWSp->gVal)).ubv;
-	    break;
-	  case WLZ_GREY_FLOAT:
-	    gwsp.u_grintptr.flp[k] = (*(gVWSp->gVal)).flv;
-	    break;
-	  case WLZ_GREY_DOUBLE:
-	    gwsp.u_grintptr.dbp[k] = (*(gVWSp->gVal)).dbv;
-	    break;
-	  case WLZ_GREY_RGBA:
-	    gwsp.u_grintptr.rgbp[k] = (*(gVWSp->gVal)).rgbv;
-	    break;
-	  default:
-	    errNum = WLZ_ERR_GREY_TYPE;
-	    break;
+	    int	kp = expand ? (k+iwsp.lftpos)/scale : (k+iwsp.lftpos)*scale;
+
+	    WlzGreyValueGet(gVWSp, 0, (double) lp, (double) kp);
+
+	    switch(gtype)
+	    {
+	    case WLZ_GREY_INT: 
+	      gwsp.u_grintptr.inp[k] = (*(gVWSp->gVal)).inv;
+	      break;
+	    case WLZ_GREY_SHORT:
+	      gwsp.u_grintptr.shp[k] = (*(gVWSp->gVal)).shv;
+	      break;
+	    case WLZ_GREY_UBYTE:
+	      gwsp.u_grintptr.ubp[k] = (*(gVWSp->gVal)).ubv;
+	      break;
+	    case WLZ_GREY_FLOAT:
+	      gwsp.u_grintptr.flp[k] = (*(gVWSp->gVal)).flv;
+	      break;
+	    case WLZ_GREY_DOUBLE:
+	      gwsp.u_grintptr.dbp[k] = (*(gVWSp->gVal)).dbv;
+	      break;
+	    case WLZ_GREY_RGBA:
+	      gwsp.u_grintptr.rgbp[k] = (*(gVWSp->gVal)).rgbv;
+	      break;
+	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
+	      break;
+	    }
 	  }
 	}
+	if( errNum == WLZ_ERR_EOO ){
+	  errNum = WLZ_ERR_NONE;
+	}
+	WlzGreyValueFreeWSp(gVWSp);
+	WlzEndGreyScan(&gwsp);
       }
-      if( errNum == WLZ_ERR_EOO ){
-	errNum = WLZ_ERR_NONE;
-      }
-      WlzGreyValueFreeWSp(gVWSp);
     }
   }
 
@@ -383,9 +396,16 @@ WlzObject	*WlzIntRescaleObj3D(WlzObject *gObj, int scale, int expand,
   {
     if(gVal.core && (gVal.core->type != WLZ_EMPTY_OBJ))
     {
-      nVal.vox = WlzMakeVoxelValueTb(gVal.vox->type, nBox.zMin, nBox.zMax,
-				     WlzGetBackground(gObj, NULL),
-				     NULL, &errNum);
+      if(WlzGreyTableIsTiled(gVal.core->type))
+      {
+        errNum = WLZ_ERR_VALUES_TYPE;
+      }
+      else
+      {
+	nVal.vox = WlzMakeVoxelValueTb(gVal.vox->type, nBox.zMin, nBox.zMax,
+				WlzGetBackground(gObj, NULL),
+				NULL, &errNum);
+      }
     }
   }
   if(errNum == WLZ_ERR_NONE)

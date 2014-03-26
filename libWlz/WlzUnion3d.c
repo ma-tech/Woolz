@@ -76,11 +76,18 @@ WlzObject *WlzUnion3d(int	n,
     /* we do need to check the planedomain types however - this
        used to strip out the wrong types, now it will return an error */
   for (i=0; i<n ; i++ ){
-    if ( objs[i]->domain.p->type != WLZ_PLANEDOMAIN_DOMAIN ){
-      errNum = WLZ_ERR_DOMAIN_TYPE;
-      break;
+    if(objs[i]){
+      if(objs[i]->domain.core->type != WLZ_PLANEDOMAIN_DOMAIN){
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+      }
+      if(uvt && (objs[i]->values.core->type != WLZ_VOXELVALUETABLE_GREY)){
+        errNum = WLZ_ERR_VALUES_TYPE;
+	break;
+      }
     }
   }
+
   newobj = NULL;
 
   if( (errNum == WLZ_ERR_NONE) && (n == 1) ){

@@ -96,6 +96,10 @@ WlzObject *WlzSepTrans(
 	errNum = WLZ_ERR_VALUES_NULL;
 	break;
       }
+      if(WlzGreyTableIsTiled(obj->values.core->type)){
+	errNum = WLZ_ERR_VALUES_TYPE;
+	break;
+      }
       break;
 
     default:

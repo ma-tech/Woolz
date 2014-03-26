@@ -90,8 +90,12 @@ WlzObject *WlzGreyTransfer(
     case WLZ_2D_DOMAINOBJ:
       if( obj->values.core == NULL ){
 	errNum = WLZ_ERR_VALUES_NULL;
+      } else if(WlzGreyTableIsTiled(obj->values.core->type)) {
+        errNum = WLZ_ERR_VALUES_TYPE;
       }
-      rtnObj = WlzCopyObject(obj, &errNum);
+      else {
+        rtnObj = WlzCopyObject(obj, &errNum);
+      }
       break;
 
     case WLZ_3D_DOMAINOBJ:
@@ -237,6 +241,8 @@ static WlzObject *WlzGreyTransfer3d(
       /* check there is a valuetable */
       if( obj->values.core == NULL ){
 	errNum = WLZ_ERR_VALUES_NULL;
+      } else if(WlzGreyTableIsTiled(obj->values.core->type)) {
+        errNum = WLZ_ERR_VALUES_TYPE;
       }
       break;
 

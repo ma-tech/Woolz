@@ -110,6 +110,10 @@ WlzObject	*WlzCompoundArrayToScalar(WlzCompoundArray *cpd,
       {
 	errNum = WLZ_ERR_VALUES_NULL;
       }
+      else if(WlzGreyTableIsTiled(cpd->o[idN]->values.core->type))
+      {
+        errNum = WLZ_ERR_VALUES_TYPE;
+      }
       else if(idN > 0)
       {
         if(cpd->o[idN]->type != cpd->o[idN - 1]->type)

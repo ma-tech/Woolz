@@ -266,6 +266,8 @@ WlzObject *WlzGetProjectionFromObject(
   /* scan image setting values */
   if( errNum == WLZ_ERR_NONE ){
     errNum = WlzInitGreyScan(rtnObj, &iwsp, &gwsp);
+  }
+  if( errNum == WLZ_ERR_NONE ){
     while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
       yp = iwsp.linpos - WLZ_NINT(viewStr1->minvals.vtY);
       for(k=iwsp.lftpos; k <= iwsp.rgtpos; k++){
@@ -344,6 +346,7 @@ WlzObject *WlzGetProjectionFromObject(
 	}
       }
     }
+    (void )WlzEndGreyScan(&gwsp);
     if(errNum == WLZ_ERR_EOO)	   /* Reset error from end of intervals */ 
     {
       errNum = WLZ_ERR_NONE;
@@ -770,6 +773,7 @@ struct timeval	times[3];
 		break;
 	    }
 	  }
+	  (void )WlzEndGreyScan(&gWSp);
 	  if(errNum2 == WLZ_ERR_EOO)
 	  {
 	    errNum2 = WLZ_ERR_NONE;

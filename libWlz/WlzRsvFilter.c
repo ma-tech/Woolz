@@ -259,6 +259,10 @@ WlzObject	*WlzRsvFilterObj(WlzObject *srcObj, WlzRsvFilter *ftr,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
+  else if(WlzGreyTableIsTiled(srcObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
   else
   {
     switch(srcObj->type)

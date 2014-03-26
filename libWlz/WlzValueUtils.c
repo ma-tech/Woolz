@@ -285,6 +285,43 @@ void		WlzValueSetGrey(WlzGreyP vec, size_t vecOff, WlzGreyV value,
 }
 
 /*!
+* \return	New grey pointer.
+* \ingroup	WlzValuesUtils
+* \brief	Sets a grey pointer using the given base grey pointer and
+* 		an offset.
+* \param	base			Base grey pointer.
+* \param	gType			Grey type.
+* \param	off			Offset.
+*/
+WlzGreyP	WlzValueSetGreyP(WlzGreyP base, WlzGreyType gType, size_t off)
+{
+  switch(gType)
+  {
+    case WLZ_GREY_INT:
+      base.inp += off;
+      break;
+    case WLZ_GREY_SHORT:
+      base.shp += off;
+      break;
+    case WLZ_GREY_UBYTE:
+      base.ubp += off;
+      break;
+    case WLZ_GREY_FLOAT:
+      base.flp += off;
+      break;
+    case WLZ_GREY_DOUBLE:
+      base.dbp += off;
+      break;
+    case WLZ_GREY_RGBA:
+      base.rgbp += off;
+      break;
+    default:
+      break;
+  }
+  return(base);
+}
+
+/*!
 * \return	void
 * \ingroup	WlzValuesUtils
 * \brief	Clamps a vector of int values to the limits of short.

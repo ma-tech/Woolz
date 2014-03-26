@@ -153,6 +153,14 @@ WlzObject 	*WlzFilterNObjValues(WlzObject *rObj,
       {
 	errNum = WLZ_ERR_DOMAIN_NULL;
       }
+      else if(objs[idO]->values.core == NULL)
+      {
+        errNum = WLZ_ERR_VALUES_NULL;
+      }
+      else if(WlzGreyTableIsTiled(objs[idO]->values.core->type))
+      {
+        errNum = WLZ_ERR_VALUES_TYPE;
+      }
       else
       {
 	if(idO == 0)
@@ -299,6 +307,7 @@ static WlzObject *WlzFilterNObjValues2DCb(WlzObject *rObj, WlzGreyType gType,
         ++pos.vtX;
       }
     }
+    (void )WlzEndGreyScan(&gWSp);
     if(errNum == WLZ_ERR_EOO)
     {
       errNum = WLZ_ERR_NONE;
@@ -411,6 +420,7 @@ static WlzObject *WlzFilterNObjValues3DCb(WlzObject *rObj, WlzGreyType gType,
 	      ++pos.vtX;
 	    }
 	  }
+          (void )WlzEndGreyScan(&gWSp);
 	  if(errNum == WLZ_ERR_EOO)
 	  {
 	    errNum = WLZ_ERR_NONE;

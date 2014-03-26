@@ -194,7 +194,7 @@ int             main(int argc, char **argv)
        (*inObjFileStr == '\0') ||
        ((fP = (strcmp(inObjFileStr, "-")?
 	      fopen(inObjFileStr, "r"): stdin)) == NULL) ||
-       ((inObj= WlzReadObj(fP, &errNum)) == NULL))
+       ((inObj = WlzReadObj(fP, &errNum)) == NULL))
     {
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
@@ -231,6 +231,7 @@ int             main(int argc, char **argv)
 		     *argv, errMsg);
     }
   }
+  (void )WlzFreeObj(inObj);
   if(ok)
   {
     if(((fP = (strcmp(outFileStr, "-")?

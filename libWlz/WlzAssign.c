@@ -68,6 +68,9 @@ WlzObject	*WlzAssignObject(WlzObject *obj, WlzErrorNum *dstErr)
     else
     {
       rtnObj = obj;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
       obj->linkcount++;
     }
   }
@@ -106,6 +109,9 @@ WlzDomain 	WlzAssignDomain(WlzDomain domain, WlzErrorNum *dstErr)
     else
     {
       rtnDomain = domain;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
       domain.core->linkcount++;
     }
   }
@@ -144,6 +150,9 @@ WlzValues 	WlzAssignValues(WlzValues values, WlzErrorNum	*dstErr)
     else
     {
       rtnValues = values;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
       values.core->linkcount++;
     }
   }
@@ -183,6 +192,9 @@ WlzProperty WlzAssignProperty(WlzProperty property, WlzErrorNum *dstErr)
     else
     {
       rtnProp = property;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
       property.core->linkcount++;
     }
   }
@@ -221,6 +233,9 @@ WlzPropertyList *WlzAssignPropertyList(WlzPropertyList *pList,
     else
     {
       rtnPList = pList;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
       pList->linkcount++;
     }
   }
@@ -261,6 +276,9 @@ WlzAffineTransform *WlzAssignAffineTransform(
     else
     {
       rtnTrans = trans;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
       ++(trans->linkcount);
     }
   }
@@ -299,6 +317,9 @@ WlzTransform 	WlzAssignTransform(WlzTransform t, WlzErrorNum *dstErr)
     }
     else
     {
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
       ++(t.core->linkcount);
       tR = t;
     }
@@ -334,6 +355,9 @@ WlzThreeDViewStruct *WlzAssign3DViewStruct(
     else
     {
       rtnViewStr = viewStr;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
       ++(viewStr->linkcount);
     }
   }
@@ -372,6 +396,9 @@ WlzBoundList 	*WlzAssignBoundList(WlzBoundList *blist, WlzErrorNum *dstErr)
     else
     {
       rtnBlist = blist;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
       ++(blist->linkcount);
     }
   }
@@ -412,6 +439,9 @@ WlzPolygonDomain *WlzAssignPolygonDomain(
     else
     {
       rtnPoly = poly;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
       ++(poly->linkcount);
     }
   }
@@ -450,6 +480,9 @@ WlzGMModel 	*WlzAssignGMModel(WlzGMModel *model, WlzErrorNum *dstErr)
     else
     {
       rtnModel = model;
+#ifdef _OPENMP
+#pragma omp atomic
+#endif
       ++(model->linkcount);
     }
   }
@@ -482,11 +515,18 @@ int		WlzUnlink(int *linkcount, WlzErrorNum *dstErr)
     else
     {
       errNum = WLZ_ERR_NONE;
-      if(--*linkcount <= 0)
+#ifdef _OPENMP
+#pragma omp critical
       {
-	*linkcount = -1;
-	canFree = 1;
+#endif
+	if(--*linkcount <= 0)
+	{
+	  *linkcount = -1;
+	  canFree = 1;
+	}
+#ifdef _OPENMP
       }
+#endif
     }
   }
   if(dstErr)

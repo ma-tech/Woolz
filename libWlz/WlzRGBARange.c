@@ -77,6 +77,9 @@ WlzErrorNum WlzRGBAModulusRange(
   else if( obj->values.core == NULL){
     errNum = WLZ_ERR_VALUES_NULL;
   }
+  else if(WlzGreyTableIsTiled(obj->values.core->type)){
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
   else if( (min == NULL) || (max == NULL) ){
     errNum = WLZ_ERR_PARAM_NULL;
   }

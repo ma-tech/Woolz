@@ -525,6 +525,13 @@ WlzValues	 WlzShiftValues(WlzObjectType inObjType, WlzValues inVal,
 		}
 	      }
 	      break;
+	    case WLZ_GREY_TAB_TILED:
+	      inVal.t->kol1 += xShift;
+	      inVal.t->lastkl += xShift;
+	      inVal.t->line1 += yShift;
+	      inVal.t->lastln += yShift;
+	      outVal = inVal;
+	      break;
 	    default:
       	      errNum = WLZ_ERR_OBJECT_TYPE;
 	      break;

@@ -380,7 +380,15 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
 	errNum = WlzWriteIntervalDomain(fP, obj->domain.i);
 	if(errNum == WLZ_ERR_NONE)
         {
-	  errNum = WlzWriteValueTable(fP, obj);
+	  if((obj->values.core == NULL) ||
+	     (WlzGreyTableIsTiled(obj->values.core->type) == 0))
+	  {
+	    errNum = WlzWriteValueTable(fP, obj);
+	  }
+	  else
+	  {
+	    errNum = WlzWriteTiledValueTable(fP, obj, 1);
+	  }
 	}
 	if(errNum == WLZ_ERR_NONE)
         {
@@ -1450,6 +1458,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fP, WlzObject *obj)
 		    break;
 		}
 	      }
+	      (void )WlzEndGreyScan(&gwsp);
 	      if(errNum == WLZ_ERR_EOO)
 	      {
 	        errNum = WLZ_ERR_NONE;
@@ -1507,6 +1516,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fP, WlzObject *obj)
 		    break;
 		}
 	      }
+	      (void )WlzEndGreyScan(&gwsp);
 	      if(errNum == WLZ_ERR_EOO)
 	      {
 	        errNum = WLZ_ERR_NONE;
@@ -1537,6 +1547,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fP, WlzObject *obj)
 		errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	      }
 	    }
+	    (void )WlzEndGreyScan(&gwsp);
 	    if(errNum == WLZ_ERR_EOO)
 	    {
 	      errNum = WLZ_ERR_NONE;
@@ -1569,6 +1580,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fP, WlzObject *obj)
 		}
 	      }
 	    }
+	    (void )WlzEndGreyScan(&gwsp);
 	    if(errNum == WLZ_ERR_EOO)
 	    {
 	      errNum = WLZ_ERR_NONE;
@@ -1601,6 +1613,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fP, WlzObject *obj)
 		}
 	      }
 	    }
+	    (void )WlzEndGreyScan(&gwsp);
 	    if(errNum == WLZ_ERR_EOO)
 	    {
 	      errNum = WLZ_ERR_NONE;
@@ -1633,6 +1646,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fP, WlzObject *obj)
 		}
 	      }
 	    }
+	    (void )WlzEndGreyScan(&gwsp);
 	    if(errNum == WLZ_ERR_EOO)
 	    {
 	      errNum = WLZ_ERR_NONE;

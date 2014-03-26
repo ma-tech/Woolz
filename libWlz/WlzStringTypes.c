@@ -549,6 +549,9 @@ const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
 		case WLZ_GREY_TAB_INTL:
 		  oValTypeStr = "WLZ_GREY_TAB_INTL";
 		  break;
+		case WLZ_GREY_TAB_TILED:
+		  oValTypeStr = "WLZ_GREY_TAB_TILED";
+		  break;
 		default:
 		  errNum = WLZ_ERR_VALUES_TYPE;
 		  break;

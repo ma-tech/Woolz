@@ -451,6 +451,7 @@ static WlzDVertex2 WlzCentreOfMassDom2D(WlzObject *srcObj, int binObjFlag,
 	  errNum = WLZ_ERR_NONE;
 	}
       }
+      (void )WlzEndGreyScan(&gWsp);
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -536,6 +537,11 @@ static WlzDVertex3 WlzCentreOfMassDom3D(WlzObject *srcObj, int binObjFlag,
   else if((srcDomains = srcDom.p->domains) == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else if((binObjFlag == 0) && (srcObj->values.core != NULL) &&
+          WlzGreyTableIsTiled(srcObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VOXELVALUES_TYPE;
   }
   else
   {

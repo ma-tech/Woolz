@@ -141,6 +141,10 @@ void		WlzIterateWSpFree(WlzIterateWSpace *itWSp)
 {
   if(itWSp)
   {
+    if(itWSp->iWSp && itWSp->gWSp)
+    {
+      WlzEndGreyScan(itWSp->gWSp);
+    }
     AlcFree(itWSp->iWSp);
     AlcFree(itWSp->gWSp);
     (void )WlzFreeObj(itWSp->obj2D);

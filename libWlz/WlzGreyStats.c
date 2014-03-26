@@ -97,6 +97,9 @@ size_t		WlzGreySize(WlzGreyType gType)
 *               2D domain object with grey values.
 * \param	srcObj			2D domain object from which to
 *                                       calculate the statistics.
+* \param	pln			Plane coordinate, may be zero if
+* 					the values are 2D and not a 3D
+* 					tiled object.
 * \param	dstGType		Pointer for grey type.
 * \param	dstMin			Pointer for minimum value.
 * \param	dstMax			Pointer for maximum value.
@@ -106,7 +109,7 @@ size_t		WlzGreySize(WlzGreyType gType)
 * \param	dstErr			Destination pointer for error, may
 *					be NULL.
 */
-static int	WlzGreyStats2D(WlzObject *srcObj,
+static int	WlzGreyStats2D(WlzObject *srcObj, int pln,
 			       WlzGreyType *dstGType,
 			       double *dstMin, double *dstMax,
 			       double *dstSum, double *dstSumSq,
@@ -128,6 +131,10 @@ static int	WlzGreyStats2D(WlzObject *srcObj,
     
   if((errNum = WlzInitGreyScan(srcObj, &iWSp, &gWSp)) == WLZ_ERR_NONE)
   {
+    if(gWSp.tvb)
+    {
+      iWSp.plnpos = pln;
+    }
     while((WlzNextGreyInterval(&iWSp) == 0) && (errNum == WLZ_ERR_NONE))
     {
       gPix = gWSp.u_grintptr;
@@ -181,6 +188,7 @@ static int	WlzGreyStats2D(WlzObject *srcObj,
         ++area;
       }
     }
+    (void )WlzEndGreyScan(&gWSp);
     if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
     {
       errNum = WLZ_ERR_NONE;
@@ -232,7 +240,8 @@ int		WlzGreyStats(WlzObject *srcObj,
 {
   int		area = 0,
 		pIdx,
-		pCnt;
+		pCnt,
+		tiled = 0;
   double	min,
 		max,
   		mean = -1.0,
@@ -241,7 +250,7 @@ int		WlzGreyStats(WlzObject *srcObj,
 		sumSq = 0.0;
   WlzGreyType	gType;
   WlzDomain	*dom;
-  WlzValues	*val;
+  WlzValues	*val = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
     
   WLZ_DBG((WLZ_DBG_LVL_FN|WLZ_DBG_LVL_1),
@@ -267,7 +276,7 @@ int		WlzGreyStats(WlzObject *srcObj,
     switch(srcObj->type)
     {
       case WLZ_2D_DOMAINOBJ:
-        area = WlzGreyStats2D(srcObj, &gType, &min, &max,
+        area = WlzGreyStats2D(srcObj, 0, &gType, &min, &max,
 			      &sum, &sumSq, &errNum);
         break;
       case WLZ_3D_DOMAINOBJ:
@@ -279,9 +288,19 @@ int		WlzGreyStats(WlzObject *srcObj,
 	{
 	  errNum = WLZ_ERR_DOMAIN_DATA;
 	}
-	else if(((val = srcObj->values.vox->values) == NULL))
+	else
 	{
-	  errNum = WLZ_ERR_VALUES_DATA;
+	  if(WlzGreyTableIsTiled(srcObj->values.core->type))
+	  {
+	    tiled = 1;
+	  }
+	  else
+	  {
+	    if(((val = srcObj->values.vox->values) == NULL))
+	    {
+	      errNum = WLZ_ERR_VALUES_DATA;
+	    }
+	  }
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
@@ -289,29 +308,37 @@ int		WlzGreyStats(WlzObject *srcObj,
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-	  for(pIdx =  0; pIdx < pCnt; ++pIdx)
+	  for(pIdx = 0; pIdx < pCnt; ++pIdx)
 	  {
-	    if((errNum == WLZ_ERR_NONE) &&
-	       (dom[pIdx].core != NULL) &&
-	       (val[pIdx].core != NULL))
+	    if((errNum == WLZ_ERR_NONE) && (dom[pIdx].core != NULL))
 	    {
-	      int	area2D = 0;
+	      int	pln = 0,
+	      		area2D = 0;
 	      double	min2D,
 			max2D,
 			sum2D,
 			sumSq2D;
-	      WlzObject	*srcObj2D = NULL;
+	      WlzObject	*obj2D = NULL;
 	      WlzErrorNum errNum2D = WLZ_ERR_NONE;
 
-	      srcObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom[pIdx], val[pIdx],
-				     NULL, NULL, &errNum2D);
+	      if(tiled)
+	      {
+	        pln = srcObj->domain.p->plane1 + pIdx;
+		obj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom[pIdx],
+				    srcObj->values, NULL, NULL, &errNum2D);
+	      }
+	      else
+	      {
+	        obj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom[pIdx], val[pIdx],
+				    NULL, NULL, &errNum2D);
+	      }
 	      if(errNum2D == WLZ_ERR_NONE)
 	      {
-		area2D = WlzGreyStats2D(srcObj2D, &gType,
+		area2D = WlzGreyStats2D(obj2D, pln, &gType,
 					&min2D, &max2D, &sum2D, &sumSq2D,
 					&errNum2D);
 	      }
-	      WlzFreeObj(srcObj2D);
+	      WlzFreeObj(obj2D);
 #ifdef _OPENMP
 #pragma omp critical
 	      {

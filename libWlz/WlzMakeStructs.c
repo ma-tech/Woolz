@@ -1894,6 +1894,12 @@ WlzObject *WlzNewGrey(WlzObject *iobj,
     backgrnd = WlzGetBackground( iobj, &errNum );
   }
 
+  /* check that the values aren't tiled. */
+  if((errNum == WLZ_ERR_NONE) && iobj->values.core &&
+     WlzGreyTableIsTiled(iobj->values.core->type)){
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+
   if( errNum == WLZ_ERR_NONE ){
     switch( iobj->domain.core->type ){
 
@@ -1986,22 +1992,18 @@ WlzObject *WlzNewGrey(WlzObject *iobj,
   return(jobj);
 }
 
-/* function:     WlzNewValueTb    */
 /*! 
+* \return       Pointer to new ragged-rectangle value table structure.
 * \ingroup      WlzAllocation
 * \brief        Create a value table of required type with the same size
-and shape as the domain of obj. This must be of type WLZ_2D_DOMAINOBJ.
-*
-* \return       Pointer to new ragged-rectangle value table structure.
-* \param    obj	Object which defines the shape of the new value table.
-* \param    type	Value table type.
-* \param    backgrnd	Background pixel value.
-* \param    dstErr	Error return, values: WLZ_ERR_NONE,
- WLZ_ERR_OBJECT_TYPE, WLZ_ERR_MEM_ALLOC and errors from
- WlzMakeIntervalValues(), WlzGreyTableTypeToTableType(), WlzLineArea(),
- WlzMakeValueTb(), WlzInitRasterScan() and WlzMakeValueLine().
-* \par      Source:
-*                WlzMakeStructs.c
+*		and shape as the domain of obj. This must be of type
+*		WLZ_2D_DOMAINOBJ.
+* \param    obj				Given object in which the domain
+* 					defines minimum coverage of the
+* 					new value table.
+* \param    type			Value table type.
+* \param    backgrnd			Background pixel value.
+* \param    dstErr			Destination error pointer, may be NULL.
 */
 WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 			     WlzObjectType	type,

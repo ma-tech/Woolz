@@ -68,7 +68,7 @@ extern WlzObject *WlzRGBAModGradient(
 {
   WlzObject	*rtnObj=NULL;
   WlzCompoundArray	*cobj1=NULL, *cobj2=NULL;
-  WlzIntervalWSpace	iwsp[7];
+  WlzIntervalWSpace	iwsp[7] = {{0}};
   WlzGreyWSpace		gwsp[7];
   int		i, j;
   double	g1, g2;
@@ -200,6 +200,11 @@ extern WlzObject *WlzRGBAModGradient(
       default:
 	errNum = WLZ_ERR_GREY_TYPE;
 	break;
+      }
+    }
+    for(i = 0; i < 7; ++i) {
+      if(iwsp[i].gryptr == &gwsp[i]) {
+        WlzEndGreyScan(&gwsp[i]);
       }
     }
 

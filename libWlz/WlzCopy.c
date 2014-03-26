@@ -445,8 +445,12 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
     switch(inObjType)
     {
       case WLZ_2D_DOMAINOBJ:
-	if((tObj0 = WlzMakeMain(inObjType, inDom, inVal,
-				 NULL, NULL, &errNum)) != NULL)
+        if(WlzGreyTableIsTiled(inVal.core->type))
+	{
+	  errNum = WLZ_ERR_VALUES_TYPE;
+        }
+	else if((tObj0 = WlzMakeMain(inObjType, inDom, inVal,
+				     NULL, NULL, &errNum)) != NULL)
         {
 	  tObj0 = WlzAssignObject(tObj0, NULL);
 	  if((tObj1 = WlzNewGrey(tObj0, &errNum)) != NULL)
@@ -465,7 +469,8 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
 	}
 	break;
       case WLZ_3D_DOMAINOBJ:
-	if(inVal.vox->type != WLZ_VOXELVALUETABLE_GREY)
+	if((inVal.core->type != WLZ_VOXELVALUETABLE_GREY) ||
+	   WlzGreyTableIsTiled(inVal.core->type))
 	{
 	  errNum = WLZ_ERR_VALUES_TYPE;
 	}

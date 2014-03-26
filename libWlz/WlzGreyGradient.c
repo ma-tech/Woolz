@@ -550,6 +550,10 @@ static WlzObject *WlzGreyGradient2D(WlzObject **dstGrdY, WlzObject **dstGrdX,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
+  else if(WlzGreyTableIsTiled(srcObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
   if(errNum == WLZ_ERR_NONE)
   {
     grdX = WlzRsvFilterObj(srcObj, flt, WLZ_RSVFILTER_ACTION_X, &errNum);
@@ -626,6 +630,10 @@ static WlzObject *WlzGreyGradient3D(WlzObject **dstGrdZ, WlzObject **dstGrdY,
   else if(srcObj->values.core == NULL)
   {
     errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(WlzGreyTableIsTiled(srcObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   if(errNum == WLZ_ERR_NONE)
   {

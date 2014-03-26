@@ -46,6 +46,7 @@ static char _WlzTiledValues_c[] = "University of Edinburgh $Id$";
 #ifdef HAVE_MMAP
 #define WLZ_USE_MMAP
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/mman.h>
 #endif
 
@@ -243,6 +244,521 @@ WlzErrorNum	WlzMakeTiledValuesTiles(WlzTiledValues *tVal)
     }
   }
   return(errNum);
+}
+
+/*!
+* \return	Flags specifying how the value table may be used.
+* \ingroup	WlzValuesUtils
+* \brief	Determines how the tiled values of a tiles value table
+* 		may be used. If memory mapping is in use then the mode
+* 		in which the file (containing the memory mapped values)
+* 		was opened determines the modes in which the tiled values
+* 		can be accessed. Inappropriate access (eg attempting to
+* 		change a grey value in a memory mapped tiled values
+* 		table that was opened for read only) will generate a
+* 		memory fault. The returned value is a bit mask in which
+* 		WLZ_IOFLAGS_READ will be set iff grey values can be read
+* 		and WLZ_IOFLAGS_WRITE will be set iff the grey values can
+* 		be written to (ie modified).
+* \param	tv			The given tiled values.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int		WlzTiledValuesMode(WlzTiledValues *tv, WlzErrorNum *dstErr)
+{
+  int		flags = WLZ_IOFLAGS_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(tv == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(WlzGreyTableIsTiled(tv->type) != WLZ_GREY_TAB_TILED)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else
+  {
+#ifdef WLZ_USE_MMAP
+    if((tv->fd < 0) && (tv->tiles.v != NULL))
+    {
+      flags = WLZ_IOFLAGS_READ | WLZ_IOFLAGS_WRITE;
+    }
+    else
+    {
+      int	mod;
+
+      mod = fcntl(tv->fd, F_GETFL);
+      if(mod < 0)
+      {
+	errNum = WLZ_ERR_FILE_OPEN;
+      }
+      else if((mod & O_ACCMODE) == O_RDONLY)
+      {
+        flags = WLZ_IOFLAGS_READ;
+      }
+      else if((mod & O_ACCMODE) == O_WRONLY)
+      {
+        flags = WLZ_IOFLAGS_WRITE;
+      }
+      else if((mod & O_ACCMODE) == O_RDWR)
+      {
+        flags = WLZ_IOFLAGS_READ | WLZ_IOFLAGS_WRITE;
+      }
+    }
+#else
+    flags = WLZ_IOFLAGS_READ | WLZ_IOFLAGS_WRITE;
+#endif
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(flags);
+}
+
+
+/*!
+* \return	New tiled values buffer.
+* \ingroup	WlzAllocation
+* \brief	Makes a new tiled values buffer for the given tiled values
+* 		table.
+* \param	tVal			Given tiled values.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzTiledValueBuffer *WlzMakeTiledValueBuffer(WlzTiledValues *tVal,
+				WlzErrorNum *dstErr)
+{
+  int		mode = WLZ_IOFLAGS_NONE,
+  		lnWidth = 0;
+  size_t	gSz = 0;
+  WlzGreyType	gType = WLZ_GREY_ERROR;
+  WlzTiledValueBuffer *tBuf = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(tVal == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(WlzGreyTableIsTiled(tVal->type) != WLZ_GREY_TAB_TILED)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else if((lnWidth = tVal->lastkl - tVal->kol1 + 1) < 1)
+  {
+    errNum = WLZ_ERR_VALUES_DATA;
+  }
+  else
+  {
+    mode = WlzTiledValuesMode(tVal, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(((gType = WlzGreyTableTypeToGreyType(tVal->type,
+						 NULL)) == WLZ_GREY_ERROR) ||
+	    ((gSz = WlzGreySize(gType)) <= 0))
+    {
+      errNum = WLZ_ERR_GREY_TYPE;
+    }
+    else if(((tBuf = (WlzTiledValueBuffer *)
+		     AlcCalloc(1, sizeof(WlzTiledValueBuffer))) == NULL) ||
+	    ((tBuf->lnbuf.v = AlcMalloc(gSz * lnWidth)) == NULL))
+    {
+      AlcFree(tBuf);
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      tBuf->gtype = gType;
+      tBuf->mode = mode;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tBuf);
+}
+
+/*!
+* \ingroup	WlzAllocation
+* \brief	Frees the given tiled values buffer including it's line
+* 		buffer.
+* \param	tBuf			Given tiled values, may be NULL.
+*/
+void		WlzFreeTiledValueBuffer(WlzTiledValueBuffer *tBuf)
+{
+  if(tBuf)
+  {
+    AlcFree(tBuf->lnbuf.v);
+    AlcFree(tBuf);                                              
+  }
+}
+
+/*!
+* \ingroup	WlzValuesUtils
+* \brief	Flushes the values in the tiled values buffer to the tiled
+* 		values table.
+* \param	tvb			Given tiled values buffer.
+* \param	tv			Given tiled values table.
+*/
+void		WlzTiledValueBufferFlush(WlzTiledValueBuffer *tvb,
+				WlzTiledValues *tv)
+{
+  if(tvb->valid && ((tvb->mode & WLZ_IOFLAGS_WRITE) != 0))
+  {
+    int		kol,
+  		ti,
+  		to;
+
+    kol = tvb->kl[0];
+    while(kol <= tvb->kl[1])
+    {
+      int	i,
+      		io,
+		itc,
+		rmn;
+      size_t	ii;
+
+      ti = kol / tv->tileWidth;
+      to = kol % tv->tileWidth;
+      io = tvb->lo + to;
+      ii = *(tv->indices + tvb->li + ti);
+      if(ii > 0)
+      {
+	rmn = tvb->kl[1] - kol + 1;
+	itc = tv->tileWidth - to;
+	if(itc > rmn)
+	{
+	  itc = rmn;
+	}
+	switch(tvb->gtype)
+	{
+	  case WLZ_GREY_LONG:
+	    {
+	      WlzLong *bp,
+		      *tp;
+
+	      tp = tv->tiles.lnp + (ii * tv->tileSz) + io;
+	      bp = tvb->lnbuf.lnp + kol;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*tp++ = *bp++;
+	      }
+	    }
+	    break;
+	  case WLZ_GREY_INT:
+	    {
+	      int	 *bp,
+		   *tp;
+
+	      tp = tv->tiles.inp + (ii * tv->tileSz) + io;
+	      bp = tvb->lnbuf.inp + kol;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*tp++ = *bp++;
+	      }
+	    }
+	    break;
+	  case WLZ_GREY_SHORT:
+	    {
+	      short *bp,
+		    *tp;
+
+	      tp = tv->tiles.shp + (ii * tv->tileSz) + io;
+	      bp = tvb->lnbuf.shp + kol;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*tp++ = *bp++;
+	      }
+	    }
+	    break;
+	  case WLZ_GREY_UBYTE:
+	    {
+	      WlzUByte *bp,
+		       *tp;
+
+	      tp = tv->tiles.ubp + (ii * tv->tileSz) + io;
+	      bp = tvb->lnbuf.ubp + kol;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*tp++ = *bp++;
+	      }
+	    }
+	    break;
+	  case WLZ_GREY_FLOAT:
+	    {
+	      float *bp,
+		    *tp;
+
+	      tp = tv->tiles.flp + (ii * tv->tileSz) + io;
+	      bp = tvb->lnbuf.flp + kol;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*tp++ = *bp++;
+	      }
+	    }
+	    break;
+	  case WLZ_GREY_DOUBLE:
+	    {
+	      double *bp,
+		     *tp;
+
+	      tp = tv->tiles.dbp + (ii * tv->tileSz) + io;
+	      bp = tvb->lnbuf.dbp + kol;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*tp++ = *bp++;
+	      }
+	    }
+	    break;
+	  case WLZ_GREY_RGBA:
+	    {
+	      WlzUInt *bp,
+		      *tp;
+
+	      tp = tv->tiles.rgbp + (ii * tv->tileSz) + io;
+	      bp = tvb->lnbuf.rgbp + kol;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*tp++ = *bp++;
+	      }
+	    }
+	    break;
+	  default:
+	    break;
+	}
+      }
+      kol += itc;
+    }
+  }
+}
+
+/*!
+* \ingroup	WlzValuesUtils
+* \brief	Fills the tiled values buffer using values from the tiled
+* 		values table.
+* \param	tvb			Given tiled values buffer.
+* \param	tv			Given tiled values table.
+*/
+void		WlzTiledValueBufferFill(WlzTiledValueBuffer *tvb,
+				WlzTiledValues *tv)
+{
+  int		kol;
+  int		ti[3],
+  		to[3];
+
+  kol = tvb->kl[0];
+  ti[1] = tvb->ln / tv->tileWidth;
+  to[1] = tvb->ln % tv->tileWidth;
+  if(tv->dim == 2)
+  {
+    tvb->li = ti[1] * tv->nIdx[0];
+    tvb->lo = to[1] * tv->tileWidth;
+  }
+  else /* tv->dim == 3 */
+  {
+    ti[2] = tvb->pl / tv->tileWidth;
+    to[2] = tvb->pl % tv->tileWidth;
+    tvb->li = (ti[2] * tv->nIdx[1] + ti[1]) * tv->nIdx[0];
+    tvb->lo = ((to[2] * tv->tileWidth) + to[1]) * tv->tileWidth;
+  }
+  if((tvb->mode & WLZ_IOFLAGS_READ) != 0)
+  {
+    while(kol <= tvb->kl[1])
+    {
+      int	i,
+		ii,
+      		io,
+		itc,
+		rmn;
+
+      ti[0] = kol / tv->tileWidth;
+      to[0] = kol % tv->tileWidth;
+      rmn = tvb->kl[1] - kol + 1;
+      itc = tv->tileWidth - to[0];
+      if(itc > rmn)
+      {
+	itc = rmn;
+      }
+      io = tvb->lo + to[0];
+      ii = *(tv->indices + tvb->li + ti[0]);
+      switch(tvb->gtype)
+      {
+	case WLZ_GREY_LONG:
+	  {
+	    WlzLong *bp;
+
+	    bp = tvb->lnbuf.lnp + kol;
+	    if(ii < 0)
+	    {
+	      for(i = 0; i < itc; ++i)
+	      {
+	        *bp++ = tv->bckgrnd.v.lnv;
+	      }
+	    }
+	    else
+	    {
+	      WlzLong *tp;
+
+	      tp = tv->tiles.lnp + (ii * tv->tileSz) + io;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*bp++ = *tp++;
+	      }
+	    }
+	  }
+	  break;
+	case WLZ_GREY_INT:
+	  {
+	    int *bp;
+
+	    bp = tvb->lnbuf.inp + kol;
+	    if(ii < 0)
+	    {
+	      for(i = 0; i < itc; ++i)
+	      {
+	        *bp++ = tv->bckgrnd.v.inv;
+	      }
+	    }
+	    else
+	    {
+	      int *tp;
+
+	      tp = tv->tiles.inp + (ii * tv->tileSz) + io;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*bp++ = *tp++;
+	      }
+	    }
+	  }
+	  break;
+	case WLZ_GREY_SHORT:
+	  {
+	    short *bp;
+
+	    bp = tvb->lnbuf.shp + kol;
+	    if(ii < 0)
+	    {
+	      for(i = 0; i < itc; ++i)
+	      {
+	        *bp++ = tv->bckgrnd.v.shv;
+	      }
+	    }
+	    else
+	    {
+	      short *tp;
+
+	      tp = tv->tiles.shp + (ii * tv->tileSz) + io;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*bp++ = *tp++;
+	      }
+	    }
+	  }
+	  break;
+	case WLZ_GREY_UBYTE:
+	  {
+	    WlzUByte *bp;
+
+	    bp = tvb->lnbuf.ubp + kol;
+	    if(ii < 0)
+	    {
+	      for(i = 0; i < itc; ++i)
+	      {
+	        *bp++ = tv->bckgrnd.v.ubv;
+	      }
+	    }
+	    else
+	    {
+	      WlzUByte *tp;
+
+	      tp = tv->tiles.ubp + (ii * tv->tileSz) + io;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*bp++ = *tp++;
+	      }
+	    }
+	  }
+	  break;
+	case WLZ_GREY_FLOAT:
+	  {
+	    float *bp;
+
+	    bp = tvb->lnbuf.flp + kol;
+	    if(ii < 0)
+	    {
+	      for(i = 0; i < itc; ++i)
+	      {
+	        *bp++ = tv->bckgrnd.v.flv;
+	      }
+	    }
+	    else
+	    {
+	      float *tp;
+
+	      tp = tv->tiles.flp + (ii * tv->tileSz) + io;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*bp++ = *tp++;
+	      }
+	    }
+	  }
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  {
+	    double *bp;
+
+	    bp = tvb->lnbuf.dbp + kol;
+	    if(ii < 0)
+	    {
+	      for(i = 0; i < itc; ++i)
+	      {
+	        *bp++ = tv->bckgrnd.v.dbv;
+	      }
+	    }
+	    else
+	    {
+	      double *tp;
+
+	      tp = tv->tiles.dbp + (ii * tv->tileSz) + io;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*bp++ = *tp++;
+	      }
+	    }
+	  }
+	  break;
+	case WLZ_GREY_RGBA:
+	  {
+	    WlzUInt *bp;
+
+	    bp = tvb->lnbuf.rgbp + kol;
+	    if(ii < 0)
+	    {
+	      for(i = 0; i < itc; ++i)
+	      {
+	        *bp++ = tv->bckgrnd.v.rgbv;
+	      }
+	    }
+	    else
+	    {
+	      WlzUInt *tp;
+
+	      tp = tv->tiles.rgbp + (ii * tv->tileSz) + io;
+	      for(i = 0; i < itc; ++i)
+	      {
+		*bp++ = *tp++;
+	      }
+	    }
+	  }
+	  break;
+	default:
+	  break;
+      }
+      kol += itc;
+    }
+  }
+  tvb->valid = 1;
 }
 
 /*!

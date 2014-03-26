@@ -104,8 +104,11 @@ WlzErrorNum WlzGreySetRange(
       if( obj->domain.i == NULL ){
 	return WLZ_ERR_DOMAIN_NULL;
       }
-      if( obj->values.v == NULL ){
+      if( obj->values.core == NULL ){
 	return WLZ_ERR_VALUES_NULL;
+      }
+      if( WlzGreyTableIsTiled(obj->values.core->type) ){
+	return WLZ_ERR_VALUES_TYPE;
       }
       break;
 
@@ -229,17 +232,23 @@ WlzErrorNum WlzGreySetRange(
       }
 
       /* set values - can assume rgba grey-type */
-      WlzInitGreyScan(obj, &iwsp, &gwsp);
-      while( WlzNextGreyInterval(&iwsp) == WLZ_ERR_NONE ){
+      errNum = WlzInitGreyScan(obj, &iwsp, &gwsp);
+      if(errNum == WLZ_ERR_NONE) {
+	while( WlzNextGreyInterval(&iwsp) == WLZ_ERR_NONE ){
 
-	gptr = gwsp.u_grintptr;
-	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
-	  red = rgbaLut[0][WLZ_RGBA_RED_GET(*gptr.rgbp)];
-	  green = rgbaLut[0][WLZ_RGBA_GREEN_GET(*gptr.rgbp)];
-	  blue = rgbaLut[0][WLZ_RGBA_BLUE_GET(*gptr.rgbp)];
-	  alpha = rgbaLut[0][WLZ_RGBA_ALPHA_GET(*gptr.rgbp)];
-	  WLZ_RGBA_RGBA_SET(*gptr.rgbp, red, green, blue, alpha);
+	  gptr = gwsp.u_grintptr;
+	  for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
+	    red = rgbaLut[0][WLZ_RGBA_RED_GET(*gptr.rgbp)];
+	    green = rgbaLut[0][WLZ_RGBA_GREEN_GET(*gptr.rgbp)];
+	    blue = rgbaLut[0][WLZ_RGBA_BLUE_GET(*gptr.rgbp)];
+	    alpha = rgbaLut[0][WLZ_RGBA_ALPHA_GET(*gptr.rgbp)];
+	    WLZ_RGBA_RGBA_SET(*gptr.rgbp, red, green, blue, alpha);
+	  }
 	}
+	(void )WlzEndGreyScan(&gwsp);
+	if(errNum == WLZ_ERR_EOO){
+	  errNum = WLZ_ERR_NONE;
+      }
       }
     }
     else {
@@ -250,120 +259,123 @@ WlzErrorNum WlzGreySetRange(
       if( fabs(max.v.dbv - min.v.dbv) < DBL_EPSILON ){
 	return WLZ_ERR_FLOAT_DATA;
       }
-      WlzInitGreyScan(obj, &iwsp, &gwsp);
-      factor = (Max.v.dbv - Min.v.dbv) / (max.v.dbv - min.v.dbv);
-      if(dither)
-      {
-	if(fabs(factor) < 1.0 + DBL_EPSILON)
+      errNum = WlzInitGreyScan(obj, &iwsp, &gwsp);
+      if(errNum == WLZ_ERR_NONE) {
+	factor = (Max.v.dbv - Min.v.dbv) / (max.v.dbv - min.v.dbv);
+	if(dither)
 	{
-	  dither = 0;
+	  if(fabs(factor) < 1.0 + DBL_EPSILON)
+	  {
+	    dither = 0;
+	  }
+	  else
+	  {
+	    sigma = fabs(2.0 / factor);
+	    AlgRandSeed(101);
+	    switch(gwsp.pixeltype) {
+	      case WLZ_GREY_INT:
+		gMin = ALG_MAX(Min.v.dbv, INT_MIN);
+		gMax = ALG_MIN(Max.v.dbv, INT_MAX);
+		break;
+	      case WLZ_GREY_SHORT:
+		gMin = ALG_MAX(Min.v.dbv, SHRT_MIN);
+		gMax = ALG_MIN(Max.v.dbv, SHRT_MAX);
+		break;
+	      case WLZ_GREY_UBYTE:
+		gMin = ALG_MAX(Min.v.dbv, 0);
+		gMax = ALG_MIN(Max.v.dbv, 255);
+		break;
+	      case WLZ_GREY_FLOAT:
+		gMin = ALG_MAX(Min.v.dbv, FLT_MIN);
+		gMax = ALG_MIN(Max.v.dbv, FLT_MAX);
+		break;
+	      case WLZ_GREY_DOUBLE:
+		gMin = Min.v.dbv;
+		gMax = Max.v.dbv;
+		break;
+	      default:
+		break;
+	    }
+	  }
 	}
-	else
-	{
-	  sigma = fabs(2.0 / factor);
-	  AlgRandSeed(101);
-	  switch(gwsp.pixeltype) {
+	while((errNum == WLZ_ERR_NONE) &&
+	      ((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE)){
+	  gptr = gwsp.u_grintptr;
+	  switch (gwsp.pixeltype) {
 	    case WLZ_GREY_INT:
-	      gMin = ALG_MAX(Min.v.dbv, INT_MIN);
-	      gMax = ALG_MIN(Max.v.dbv, INT_MAX);
+	      for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
+		if(dither){
+		  val = factor * (*gptr.inp +
+				  AlgRandZigNormal(0.0, sigma) -
+				  min.v.dbv) + Min.v.dbv;
+		  val = WLZ_CLAMP(val, gMin, gMax);
+		} else {
+		  val = factor * (*gptr.inp - min.v.dbv) + Min.v.dbv;
+		}
+		*gptr.inp = WLZ_NINT(val);
+	      }
 	      break;
 	    case WLZ_GREY_SHORT:
-	      gMin = ALG_MAX(Min.v.dbv, SHRT_MIN);
-	      gMax = ALG_MIN(Max.v.dbv, SHRT_MAX);
+	      for (i=0; i<iwsp.colrmn; i++, gptr.shp++){
+		if(dither){
+		  val = factor * (*gptr.shp +
+				  AlgRandZigNormal(0.0, sigma) -
+				  min.v.dbv) + Min.v.dbv;
+		  val = WLZ_CLAMP(val, gMin, gMax);
+		} else {
+		  val = factor * (*gptr.shp - min.v.dbv) + Min.v.dbv;
+		}
+		*gptr.shp = (short )WLZ_NINT(val);
+	      }
 	      break;
 	    case WLZ_GREY_UBYTE:
-	      gMin = ALG_MAX(Min.v.dbv, 0);
-	      gMax = ALG_MIN(Max.v.dbv, 255);
+	      for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
+		if(dither){
+		  val = factor * (*gptr.ubp +
+				  AlgRandZigNormal(0.0, sigma) -
+				  min.v.dbv) + Min.v.dbv;
+		  val = WLZ_CLAMP(val, gMin, gMax);
+		} else {
+		  val = factor * (*gptr.ubp - min.v.dbv) + Min.v.dbv;
+		}
+		*gptr.ubp = (WlzUByte )WLZ_NINT(val);
+	      }
 	      break;
 	    case WLZ_GREY_FLOAT:
-	      gMin = ALG_MAX(Min.v.dbv, FLT_MIN);
-	      gMax = ALG_MIN(Max.v.dbv, FLT_MAX);
+	      for (i=0; i<iwsp.colrmn; i++, gptr.flp++){
+		if(dither){
+		  val = factor * (*gptr.flp +
+				  AlgRandZigNormal(0.0, sigma) -
+				  min.v.dbv) + Min.v.dbv;
+		  val = WLZ_CLAMP(val, gMin, gMax);
+		} else {
+		  val = factor * (*gptr.flp - min.v.dbv) + Min.v.dbv;
+		}
+		*gptr.flp = (float )val;
+	      }
 	      break;
 	    case WLZ_GREY_DOUBLE:
-	      gMin = Min.v.dbv;
-	      gMax = Max.v.dbv;
+	      for (i=0; i<iwsp.colrmn; i++, gptr.dbp++){
+		if(dither){
+		  val = factor * (*gptr.dbp +
+				  AlgRandZigNormal(0.0, sigma) -
+				  min.v.dbv) + Min.v.dbv;
+		  val = WLZ_CLAMP(val, gMin, gMax);
+		} else {
+		  val = factor * (*gptr.dbp - min.v.dbv) + Min.v.dbv;
+		}
+		*gptr.dbp = val;
+	      }
 	      break;
 	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
 	      break;
 	  }
 	}
-      }
-      while((errNum == WLZ_ERR_NONE) &&
-            ((errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE)){
-	gptr = gwsp.u_grintptr;
-	switch (gwsp.pixeltype) {
-	  case WLZ_GREY_INT:
-	    for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
-	      if(dither){
-		val = factor * (*gptr.inp +
-				AlgRandZigNormal(0.0, sigma) -
-				min.v.dbv) + Min.v.dbv;
-		val = WLZ_CLAMP(val, gMin, gMax);
-	      } else {
-		val = factor * (*gptr.inp - min.v.dbv) + Min.v.dbv;
-	      }
-	      *gptr.inp = WLZ_NINT(val);
-	    }
-	    break;
-	  case WLZ_GREY_SHORT:
-	    for (i=0; i<iwsp.colrmn; i++, gptr.shp++){
-	      if(dither){
-		val = factor * (*gptr.shp +
-				AlgRandZigNormal(0.0, sigma) -
-				min.v.dbv) + Min.v.dbv;
-		val = WLZ_CLAMP(val, gMin, gMax);
-	      } else {
-		val = factor * (*gptr.shp - min.v.dbv) + Min.v.dbv;
-	      }
-	      *gptr.shp = (short )WLZ_NINT(val);
-	    }
-	    break;
-	  case WLZ_GREY_UBYTE:
-	    for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
-	      if(dither){
-		val = factor * (*gptr.ubp +
-				AlgRandZigNormal(0.0, sigma) -
-				min.v.dbv) + Min.v.dbv;
-		val = WLZ_CLAMP(val, gMin, gMax);
-	      } else {
-		val = factor * (*gptr.ubp - min.v.dbv) + Min.v.dbv;
-	      }
-	      *gptr.ubp = (WlzUByte )WLZ_NINT(val);
-	    }
-	    break;
-	  case WLZ_GREY_FLOAT:
-	    for (i=0; i<iwsp.colrmn; i++, gptr.flp++){
-	      if(dither){
-		val = factor * (*gptr.flp +
-				AlgRandZigNormal(0.0, sigma) -
-				min.v.dbv) + Min.v.dbv;
-		val = WLZ_CLAMP(val, gMin, gMax);
-	      } else {
-		val = factor * (*gptr.flp - min.v.dbv) + Min.v.dbv;
-	      }
-	      *gptr.flp = (float )val;
-	    }
-	    break;
-	  case WLZ_GREY_DOUBLE:
-	    for (i=0; i<iwsp.colrmn; i++, gptr.dbp++){
-	      if(dither){
-		val = factor * (*gptr.dbp +
-				AlgRandZigNormal(0.0, sigma) -
-				min.v.dbv) + Min.v.dbv;
-		val = WLZ_CLAMP(val, gMin, gMax);
-	      } else {
-		val = factor * (*gptr.dbp - min.v.dbv) + Min.v.dbv;
-	      }
-	      *gptr.dbp = val;
-	    }
-	    break;
-	  default:
-	    errNum = WLZ_ERR_GREY_TYPE;
-	    break;
+	(void )WlzEndGreyScan(&gwsp);
+	if(errNum == WLZ_ERR_EOO){
+	  errNum = WLZ_ERR_NONE;
 	}
-      }
-      if(errNum == WLZ_ERR_EOO){
-        errNum = WLZ_ERR_NONE;
       }
     }
   }

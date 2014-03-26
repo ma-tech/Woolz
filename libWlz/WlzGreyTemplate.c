@@ -80,7 +80,7 @@ WlzObject *WlzGreyTemplate(
   WlzIntervalWSpace	iwsp1, iwsp2;
   WlzGreyWSpace		gwsp1, gwsp2;
   int			size;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* check obj */
   if( obj == NULL ){
@@ -92,8 +92,14 @@ WlzObject *WlzGreyTemplate(
       if( obj->values.core == NULL ){
 	errNum = WLZ_ERR_VALUES_NULL;
       }
-      bckgrnd = WlzGetBackground(obj, &errNum);
-      gtype = WlzGreyTableTypeToGreyType(obj->values.core->type, NULL);
+      else if( WlzGreyTableIsTiled(obj->values.core->type) ){
+	errNum = WLZ_ERR_VALUES_TYPE;
+      } else {
+        bckgrnd = WlzGetBackground(obj, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE) {
+        gtype = WlzGreyTableTypeToGreyType(obj->values.core->type, NULL);
+      }
       break;
 
     case WLZ_3D_DOMAINOBJ:
@@ -249,6 +255,8 @@ static WlzObject *WlzGreyTemplate3d(
       /* check there is a valuetable */
       if( obj->values.core == NULL ){
 	errNum = WLZ_ERR_VALUES_NULL;
+      } else if( WlzGreyTableIsTiled(obj->values.core->type) ){
+	errNum = WLZ_ERR_VALUES_TYPE;
       }
       break;
 

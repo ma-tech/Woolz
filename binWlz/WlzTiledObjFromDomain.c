@@ -310,6 +310,7 @@ int		main(int argc, char *argv[])
     {
       switch(inObj->type)
       {
+        case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
         case WLZ_3D_DOMAINOBJ:
 	  break;
 	default:

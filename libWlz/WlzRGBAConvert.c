@@ -99,6 +99,9 @@ WlzCompoundArray *WlzRGBAToCompound(
       else if ( obj->values.core == NULL ){
 	errNum = WLZ_ERR_VALUES_NULL;
       }
+      else if (WlzGreyTableIsTiled(obj->values.core->type)) {
+	errNum = WLZ_ERR_VALUES_TYPE;
+      }
       else if( WlzGreyTypeFromObj(obj, &errNum) != WLZ_GREY_RGBA ){
 	errNum = WLZ_ERR_VALUES_TYPE;
       }
@@ -459,7 +462,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
   if( errNum == WLZ_ERR_NONE)
   {
     WlzGreyValueWSpace	*gValWSpc[4];
-    WlzIntervalWSpace	iwsp;
+    WlzIntervalWSpace	iwsp = {0};
     WlzGreyWSpace	gwsp;
     WlzGreyV		gval;
 
@@ -511,6 +514,10 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
     {
       errNum = WLZ_ERR_NONE;
     }
+    if(iwsp.gryptr == &gwsp)
+    {
+      (void )WlzEndGreyScan(&gwsp);
+    }
     for(i=0; i < numObjs; i++)
     {
       WlzGreyValueFreeWSp(gValWSpc[i]);
@@ -536,6 +543,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
 static WlzObject *WlzCompoundToRGBA3D(WlzCompoundArray *cObj,
   				WlzRGBAColorSpace cSpc, WlzErrorNum *dstErr)
 {
+  int		i;
   WlzIBox3 	bBox;
   WlzDomain	dom;
   WlzValues	val;
@@ -548,7 +556,26 @@ static WlzObject *WlzCompoundToRGBA3D(WlzCompoundArray *cObj,
   val.core = NULL;
   bgd.v.rgbv = 0;
   bgd.type = WLZ_GREY_RGBA;
-  bBox = WlzBoundingBox3I((WlzObject *)cObj, &errNum);
+  /* Check there are no tiled value tables as these aren't supported for
+   * 3D yet. */
+  for(i = 0; i < cObj->n; ++i)
+  {
+    WlzObject *obj;
+
+    obj = cObj->o[i];
+    if(obj && obj->values.core)
+    {
+      if(WlzGreyTableIsTiled(obj->values.core->type))
+      {
+	errNum = WLZ_ERR_VALUES_TYPE;
+        break;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bBox = WlzBoundingBox3I((WlzObject *)cObj, &errNum);
+  }
   if(errNum == WLZ_ERR_NONE)
   {
     dom.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN, bBox.zMin, bBox.zMax,
@@ -894,8 +921,10 @@ WlzObject *WlzIndexToRGBA(
   WlzObject		*rtnObj=NULL;
   WlzGreyType		oldpixtype;
   WlzGreyP		go, gn;
-  WlzIntervalWSpace	oldiwsp, newiwsp;
-  WlzGreyWSpace		oldgwsp, newgwsp;
+  WlzIntervalWSpace	oldiwsp = {0},
+  			newiwsp = {0};
+  WlzGreyWSpace		oldgwsp,
+  			newgwsp;
   WlzObjectType		newvtbltype;
   WlzPixelV		bg;
   WlzValues		values;
@@ -1047,6 +1076,14 @@ WlzObject *WlzIndexToRGBA(
       gn.rgbp++;
     }
   } /* while */
+  if(oldiwsp.gryptr == &oldgwsp)
+  {
+    (void )WlzEndGreyScan(&oldgwsp);
+  }
+  if(newiwsp.gryptr == &newgwsp)
+  {
+    (void )WlzEndGreyScan(&newgwsp);
+  }
   if(errNum == WLZ_ERR_EOO)	        /* Reset error from end of intervals */ 
   {
     errNum = WLZ_ERR_NONE;
@@ -1304,18 +1341,24 @@ WlzObject *WlzRGBAToChannel(
     WlzGreyWSpace	gwsp0, gwsp1;
     int			j, k;
 
-    errNum = WlzInitGreyScan(obj, &iwsp0, &gwsp0);
-    errNum = WlzInitGreyScan(rtnObj, &iwsp1, &gwsp1);
-    pixVal.type = WLZ_GREY_RGBA;
-    while((errNum == WLZ_ERR_NONE) &&
-	  ((errNum = WlzNextGreyInterval(&iwsp0)) == WLZ_ERR_NONE)){
-      errNum = WlzNextGreyInterval(&iwsp1);
-      for(j=0, k=iwsp0.lftpos; k <= iwsp0.rgtpos; j++, k++,
-	    gwsp0.u_grintptr.rgbp++){
-	pixVal.v.rgbv = (*(gwsp0.u_grintptr.rgbp));
-	*(gwsp1.u_grintptr.ubp++) = (WlzUByte )
-	  WlzRGBAPixelValue(pixVal, chan, &errNum);
+    if((errNum = WlzInitGreyScan(obj, &iwsp0, &gwsp0)) == WLZ_ERR_NONE)
+    {
+      if((errNum = WlzInitGreyScan(rtnObj, &iwsp1, &gwsp1)) == WLZ_ERR_NONE)
+      {
+	pixVal.type = WLZ_GREY_RGBA;
+	while((errNum == WLZ_ERR_NONE) &&
+	    ((errNum = WlzNextGreyInterval(&iwsp0)) == WLZ_ERR_NONE)){
+	  errNum = WlzNextGreyInterval(&iwsp1);
+	  for(j=0, k=iwsp0.lftpos; k <= iwsp0.rgtpos; j++, k++,
+	      gwsp0.u_grintptr.rgbp++){
+	    pixVal.v.rgbv = (*(gwsp0.u_grintptr.rgbp));
+	    *(gwsp1.u_grintptr.ubp++) = (WlzUByte )
+	      WlzRGBAPixelValue(pixVal, chan, &errNum);
+	  }
+	}
+	(void )WlzEndGreyScan(&gwsp1);
       }
+      (void )WlzEndGreyScan(&gwsp0);
     }
     if( errNum == WLZ_ERR_EOO ){
       errNum = WLZ_ERR_NONE;
@@ -1335,7 +1378,7 @@ static WlzObject *WlzRGBAToChannel3D(
   WlzErrorNum	*dstErr)
 {
   WlzObject	*rtnObj=NULL;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzErrorNum	errNum=WLZ_ERR_UNIMPLEMENTED;
 
   if( dstErr ){
     *dstErr = errNum;

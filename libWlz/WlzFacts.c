@@ -835,6 +835,9 @@ static WlzErrorNum WlzObjFactsValueTab(WlzObjFactsData *fData,
 	case WLZ_GREY_TAB_INTL:
           errNum = WlzObjFactsBackground(fData, val.i->bckgrnd);
 	  break;
+	case WLZ_GREY_TAB_TILED:
+          errNum = WlzObjFactsBackground(fData, val.t->bckgrnd);
+	  break;
         default:
 	  errNum = WLZ_ERR_VALUES_TYPE;
 	  break;
@@ -873,6 +876,9 @@ static WlzErrorNum WlzObjFactsValueTab(WlzObjFactsData *fData,
 	    			       val.i->kol1,
 				       val.i->kol1 + val.i->width - 1);
 	  }
+	  break;
+	case WLZ_GREY_TAB_TILED:
+	  errNum = WlzObjFactsTiledTab(fData, obj, obj->values);
 	  break;
         default:
 	  errNum = WLZ_ERR_VALUES_TYPE;

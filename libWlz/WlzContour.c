@@ -1110,6 +1110,14 @@ static WlzContour *WlzContourIsoObj3D(WlzObject *srcObj, double isoVal,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
+  else if(WlzGreyTableIsTiled(srcObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else if(srcObj->values.vox->values == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Create contour. */
@@ -1729,7 +1737,11 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   zBuf[0] = zBuf[1] = zBuf[2] = NULL;
   if(srcObj->values.core == NULL)
   {
-    errNum = WLZ_ERR_DOMAIN_NULL;
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(WlzGreyTableIsTiled(srcObj->values.core->type))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   else if((srcDom = srcObj->domain).core == NULL)
   {

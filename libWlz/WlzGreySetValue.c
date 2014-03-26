@@ -5,7 +5,7 @@ static char _WlzGreySetValue_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzGreySetValue.c
-* \author       Richard Baldock
+* \author       Richard Baldock, Bill Hill
 * \date         September 2003
 * \version      $Id$
 * \par
@@ -43,17 +43,12 @@ static char _WlzGreySetValue_c[] = "University of Edinburgh $Id$";
 #include <Wlz.h>
 
 
-/* function:     WlzGreySetValue    */
 /*! 
+* \return       Woolz error code.
 * \ingroup      WlzValuesUtils
-* \brief        Set the grey value of every pixel/voxel tp
- <tt>val</tt>.
-*
-* \return       Woolz error.
-* \param    obj	Input object.
-* \param    val	New grey value.
-* \par      Source:
-*                WlzGreySetValue.c
+* \brief        Set the grey value of every pixel/voxel to the given value.
+* \param    	obj				Input object.
+* \param    	val				New grey value.
 */
 WlzErrorNum WlzGreySetValue(
   WlzObject	*obj,
@@ -79,8 +74,11 @@ WlzErrorNum WlzGreySetValue(
       if( obj->domain.i == NULL ){
 	errNum = WLZ_ERR_DOMAIN_NULL;
       }
-      else if( obj->values.v == NULL ){
+      else if( obj->values.core == NULL ){
 	errNum = WLZ_ERR_VALUES_NULL;
+      }
+      else if( WlzGreyTableIsTiled(obj->values.core->type) ){
+	errNum = WLZ_ERR_VALUES_TYPE;
       }
       break;
 
@@ -92,10 +90,10 @@ WlzErrorNum WlzGreySetValue(
       else if( obj->domain.p->type != WLZ_PLANEDOMAIN_DOMAIN ){
 	errNum = WLZ_ERR_DOMAIN_TYPE;
       }
-      else if( obj->values.vox == NULL ){
+      else if( obj->values.core == NULL ){
 	errNum = WLZ_ERR_VALUES_NULL;
       }
-      else if( obj->values.vox->type != WLZ_VOXELVALUETABLE_GREY ){
+      else if( obj->values.core->type != WLZ_VOXELVALUETABLE_GREY ){
 	errNum = WLZ_ERR_VALUES_TYPE;
       }
       else {
@@ -162,6 +160,8 @@ WlzErrorNum WlzGreySetValue(
 
   if( errNum == WLZ_ERR_NONE ){
     errNum = WlzInitGreyScan(obj, &iwsp, &gwsp);
+  }
+  if( errNum == WLZ_ERR_NONE ){
     WlzValueConvertPixel(&tmpVal, val, gwsp.pixeltype);
     while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
 
@@ -203,6 +203,7 @@ WlzErrorNum WlzGreySetValue(
 	break;
       }
     }
+    (void )WlzEndGreyScan(&gwsp);
     if( errNum == WLZ_ERR_EOO ){
       errNum = WLZ_ERR_NONE;
     }

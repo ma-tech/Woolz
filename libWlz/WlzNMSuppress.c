@@ -445,10 +445,10 @@ static WlzObject *WlzNMSuppress2D(WlzObject *grdM,
   WlzValues	tmpVal;
   WlzDomain	dstDom,
   		grdDom;
-  WlzIntervalWSpace tmpIWSp,
-  		grdMIWSp,
-  		grdYIWSp,
-		grdXIWSp;
+  WlzIntervalWSpace tmpIWSp = {0},
+  		grdMIWSp = {0},
+  		grdYIWSp = {0},
+		grdXIWSp = {0};
   WlzGreyWSpace tmpGWSp,
   		grdMGWSp,
   		grdYGWSp,
@@ -715,6 +715,22 @@ static WlzObject *WlzNMSuppress2D(WlzObject *grdM,
       {
         errNum = WLZ_ERR_NONE;
       }
+    }
+    if(tmpIWSp.gryptr == &tmpGWSp)
+    {
+      (void )WlzEndGreyScan(&tmpGWSp);
+    }
+    if(grdMIWSp.gryptr == &grdMGWSp)
+    {
+      (void )WlzEndGreyScan(&grdMGWSp);
+    }
+    if(grdYIWSp.gryptr == &grdYGWSp)
+    {
+      (void )WlzEndGreyScan(&grdYGWSp);
+    }
+    if(grdXIWSp.gryptr == &grdXGWSp)
+    {
+      (void )WlzEndGreyScan(&grdXGWSp);
     }
   }
   if(errNum == WLZ_ERR_NONE)

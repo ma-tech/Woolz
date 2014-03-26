@@ -332,93 +332,97 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, double scale,
     ixv = crvObj->values.x;
     mesh = fltObj->domain.cm2;
     errNum = WlzInitGreyScan(outObj, &iWsp, &gWsp);
-    while((errNum == WLZ_ERR_NONE) &&
-          ((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE))
+    if(errNum == WLZ_ERR_NONE)
     {
-      int    idE,
-      	     idK,
-	     idN;
-      double d = 0;
-      double *c,
-      	     *dst;
-      WlzDVertex2 dPos;
-      WlzDVertex3 del;
-
-      idE = -1;
-      dst = gWsp.u_grintptr.dbp;
-      dPos.vtY = iWsp.linpos * iScale;
-      idK = iWsp.lftpos;
-      while((errNum == WLZ_ERR_NONE) && (idK <= iWsp.rgtpos))
+      while((errNum == WLZ_ERR_NONE) &&
+	    ((errNum = WlzNextGreyInterval(&iWsp)) == WLZ_ERR_NONE))
       {
-	dPos.vtX = idK * iScale;
-	if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE, dPos.vtX, dPos.vtY,
-					    0, &idN)) >= 0)
-        {
-	  int		idC;
-	  WlzCMeshElm2D *elm;
-	  double	crv[3],
-	  		dst[3];
-	  WlzCMeshNod2D *nod[3];
+	int    idE,
+	       idK,
+	       idN;
+	double d = 0;
+	double *c,
+	       *dst;
+	WlzDVertex2 dPos;
+	WlzDVertex3 del;
 
-	  elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
-	  nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
-	  nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
-	  nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
-	  for(idC = 0; idC < 3; ++idC)
-	  {
-	    c = (double *)WlzIndexedValueGet(ixv, nod[idC]->idx);
-	    crv[idC] = (meanCrv != 0)? 0.5 * (c[0] + c[1]): c[0] * c[1];
-	  }
-	  switch(interp)
-	  {
-	    case WLZ_INTERPOLATION_NEAREST:
-              WLZ_VTX_2_SUB(del, nod[0]->pos, dPos);
-	      dst[0] = WLZ_VTX_2_SQRLEN(del);
-              WLZ_VTX_2_SUB(del, nod[1]->pos, dPos);
-	      dst[1] = WLZ_VTX_2_SQRLEN(del);
-              WLZ_VTX_2_SUB(del, nod[2]->pos, dPos);
-	      dst[2] = WLZ_VTX_2_SQRLEN(del);
-	      if(dst[0] < dst[1])
-	      {
-		d = (dst[0] < dst[2])? crv[0]: crv[2];
-	      }
-	      else
-	      {
-		d = (dst[1] < dst[2])? crv[1]: crv[2];
-	      }
-	      break;
-	    case WLZ_INTERPOLATION_LINEAR:
-	      d = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
-	                                  nod[2]->pos, crv[0], crv[1], crv[2],
-					  dPos);
-	      break;
-	    case WLZ_INTERPOLATION_ORDER_2:
-	      d = WlzCMeshElmRingInterpolateNodCrvValue(elm, ixv, nod,
-	                                meanCrv, dPos, &errNum);
-	      break;
-	    default:
-	      break;
-	  }
-	}
-	else
+	idE = -1;
+	dst = gWsp.u_grintptr.dbp;
+	dPos.vtY = iWsp.linpos * iScale;
+	idK = iWsp.lftpos;
+	while((errNum == WLZ_ERR_NONE) && (idK <= iWsp.rgtpos))
 	{
-	  c = (double *)WlzIndexedValueGet(ixv, idN);
-	  if(c == NULL)
+	  dPos.vtX = idK * iScale;
+	  if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE, dPos.vtX, dPos.vtY,
+					      0, &idN)) >= 0)
 	  {
-	    d = 0.0;
+	    int		idC;
+	    WlzCMeshElm2D *elm;
+	    double	crv[3],
+			  dst[3];
+	    WlzCMeshNod2D *nod[3];
+
+	    elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
+	    nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(elm);
+	    nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(elm);
+	    nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(elm);
+	    for(idC = 0; idC < 3; ++idC)
+	    {
+	      c = (double *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	      crv[idC] = (meanCrv != 0)? 0.5 * (c[0] + c[1]): c[0] * c[1];
+	    }
+	    switch(interp)
+	    {
+	      case WLZ_INTERPOLATION_NEAREST:
+		WLZ_VTX_2_SUB(del, nod[0]->pos, dPos);
+		dst[0] = WLZ_VTX_2_SQRLEN(del);
+		WLZ_VTX_2_SUB(del, nod[1]->pos, dPos);
+		dst[1] = WLZ_VTX_2_SQRLEN(del);
+		WLZ_VTX_2_SUB(del, nod[2]->pos, dPos);
+		dst[2] = WLZ_VTX_2_SQRLEN(del);
+		if(dst[0] < dst[1])
+		{
+		  d = (dst[0] < dst[2])? crv[0]: crv[2];
+		}
+		else
+		{
+		  d = (dst[1] < dst[2])? crv[1]: crv[2];
+		}
+		break;
+	      case WLZ_INTERPOLATION_LINEAR:
+		d = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
+					    nod[2]->pos, crv[0], crv[1], crv[2],
+					    dPos);
+		break;
+	      case WLZ_INTERPOLATION_ORDER_2:
+		d = WlzCMeshElmRingInterpolateNodCrvValue(elm, ixv, nod,
+					  meanCrv, dPos, &errNum);
+		break;
+	      default:
+		break;
+	    }
 	  }
 	  else
 	  {
-	    d = (meanCrv != 0)? 0.5 * (c[0] + c[1]): c[0] * c[1];
+	    c = (double *)WlzIndexedValueGet(ixv, idN);
+	    if(c == NULL)
+	    {
+	      d = 0.0;
+	    }
+	    else
+	    {
+	      d = (meanCrv != 0)? 0.5 * (c[0] + c[1]): c[0] * c[1];
+	    }
 	  }
+	  *dst++ = d;
+	  ++idK;
 	}
-	*dst++ = d;
-        ++idK;
       }
-    }
-    if(errNum == WLZ_ERR_EOO)
-    {
-      errNum = WLZ_ERR_NONE;
+      (void )WlzEndGreyScan(&gWsp);
+      if(errNum == WLZ_ERR_EOO)
+      {
+	errNum = WLZ_ERR_NONE;
+      }
     }
   }
   (void )WlzFreeObj(crvObj);

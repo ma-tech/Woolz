@@ -480,14 +480,8 @@ int             main(int argc, char **argv)
       fclose(fP);
     }
   }
-  if(inObj)
-  {
-    WlzFreeObj(inObj);
-  }
-  if(outObj)
-  {
-    WlzFreeObj(outObj);
-  }
+  (void )WlzFreeObj(inObj);
+  (void )WlzFreeObj(outObj);
   if(usage)
   {
     (void )fprintf(stderr,

@@ -179,6 +179,26 @@ WlzObject *WlzIntersectN(
     }
   }
 
+  /* This function doesn't support objects with tiled values if the
+   * uvt flag is set. */
+  if((errNum == WLZ_ERR_NONE) && uvt)
+  {
+    for(i = 0; i < n; ++i)
+    {
+      if(objs[i] && objs[i]->values.core &&
+         WlzGreyTableIsTiled(objs[i]->values.core->type))
+      {
+        errNum = WLZ_ERR_VALUES_TYPE;
+	break;
+      }
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      *dstErr = errNum;
+      return NULL;
+    }
+  }
+
   /*
    * Find the line and column bounds of the intersection.
    */

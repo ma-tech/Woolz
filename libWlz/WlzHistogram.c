@@ -54,9 +54,12 @@ static char _WlzHistogram_c[] = "University of Edinburgh $Id$";
 *               doesn't need to be checked.
 * \param	greyType		Destination pointer for grey
 *                                       type.
+* \param	isTiled			Destination pointer set to non-zero
+* 					if the object has tiled values.
 * \param	srcObj			Given source object.
 */
 static WlzErrorNum WlzHistogramCheckDomainAndValues(WlzGreyType *greyType,
+						    int *isTiled,
 						    WlzObject *srcObj)
 {
   int		planeCount;
@@ -75,6 +78,7 @@ static WlzErrorNum WlzHistogramCheckDomainAndValues(WlzGreyType *greyType,
   }
   else
   {
+    *isTiled = 0;
     switch(srcObj->type)
     {
       case WLZ_EMPTY_OBJ:
@@ -82,35 +86,44 @@ static WlzErrorNum WlzHistogramCheckDomainAndValues(WlzGreyType *greyType,
       case WLZ_TRANS_OBJ:
         break;
       case WLZ_2D_DOMAINOBJ:
+	*isTiled = WlzGreyTableIsTiled(srcObj->values.core->type);
 	*greyType = WlzGreyTableTypeToGreyType(srcObj->values.core->type,
 					       &errNum);
 	break;
       case WLZ_3D_DOMAINOBJ:
-	planeCount = srcObj->domain.p->lastpl - srcObj->domain.p->plane1 + 1;
-	planeValues = srcObj->values.vox->values;
-	while((planeCount-- > 0) && (errNum == WLZ_ERR_NONE))
+	*isTiled = WlzGreyTableIsTiled(srcObj->values.core->type);
+	if(*isTiled)
 	{
-	  if(((*planeValues).core) &&
-	     ((*planeValues).core->type != WLZ_EMPTY_OBJ))
+          *greyType = WlzGreyTypeFromObj(srcObj, &errNum);
+	}
+	else
+	{
+	  planeCount = srcObj->domain.p->lastpl - srcObj->domain.p->plane1 + 1;
+	  planeValues = srcObj->values.vox->values;
+	  while((planeCount-- > 0) && (errNum == WLZ_ERR_NONE))
 	  {
-	    prvGreyType0 = WlzGreyTableTypeToGreyType(
-	    					    (*planeValues).core->type,
-						    &errNum);
-	    if((prvGreyType1 != WLZ_GREY_ERROR) &&
-	       (prvGreyType0 != prvGreyType1) &&
-	       (errNum == WLZ_ERR_NONE))
+	    if(((*planeValues).core) &&
+	       ((*planeValues).core->type != WLZ_EMPTY_OBJ))
 	    {
-	      errNum = WLZ_ERR_VALUES_DATA;
+	      prvGreyType0 = WlzGreyTableTypeToGreyType(
+						    (*planeValues).core->type,
+						    &errNum);
+	      if((prvGreyType1 != WLZ_GREY_ERROR) &&
+		 (prvGreyType0 != prvGreyType1) &&
+		 (errNum == WLZ_ERR_NONE))
+	      {
+		errNum = WLZ_ERR_VALUES_DATA;
+	      }
+	      prvGreyType1 = prvGreyType0;
 	    }
-	    prvGreyType1 = prvGreyType0;
+	    ++planeValues;
 	  }
-	  ++planeValues;
+	  if(prvGreyType1 == WLZ_GREY_ERROR)
+	  {
+	    errNum = WLZ_ERR_VALUES_TYPE;
+	  }
+	  *greyType = prvGreyType1;
 	}
-	if(prvGreyType1 == WLZ_GREY_ERROR)
-	{
-	  errNum = WLZ_ERR_VALUES_TYPE;
-	}
-	*greyType = prvGreyType1;
 	break;
       default:
 	errNum = WLZ_ERR_OBJECT_TYPE;
@@ -193,9 +206,10 @@ static void	WlzHistogramAddIntBins(WlzHistogramDomain *dstHistDom,
 *               check the parameters.
 * \param	histDom			Histogram domain.
 * \param	srcObj			Source 2D domain object.
+* \param	pln			Plane for 3D value tables.
 */
 static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
-					 WlzObject *srcObj)
+					 WlzObject *srcObj, int pln)
 {
   int		idx,
   		ivCount,
@@ -208,14 +222,15 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   WLZ_DBG((WLZ_DBG_LVL_2),
-	  ("WlzHistogramCompute2D FE %p %p\n",
-	   histDom, srcObj));
+	  ("WlzHistogramCompute2D FE %p %p %d\n",
+	   histDom, srcObj, pln));
   originI = (int )floor(histDom->origin + DBL_EPSILON);
   unityBinSize = (histDom->binSize >= (1.0 - DBL_EPSILON)) &&
                  (histDom->binSize <= (1.0 + DBL_EPSILON));
   histBin = histDom->binValues.inp;
   if((errNum = WlzInitGreyScan(srcObj, &iWSp, &gWSp)) == WLZ_ERR_NONE)
   {
+    iWSp.plnpos = pln;
     while((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)
     {
       ivCount = iWSp.rgtpos - iWSp.lftpos + 1;
@@ -335,6 +350,7 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
 	  break;
       }
     }
+    (void )WlzEndGreyScan(&gWSp);
     if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
     {
       errNum = WLZ_ERR_NONE;
@@ -604,7 +620,8 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 {
   int		planeCount,
   		planeIdx,
-  		nBins0;
+  		nBins0,
+		isTiled = 0;
   double	binOrigin0,
   		binSize0;
   WlzGreyType	greyType;
@@ -644,7 +661,7 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 	}
         break;
       case WLZ_2D_DOMAINOBJ:
-	if((errNum = WlzHistogramCheckDomainAndValues(&greyType,
+	if((errNum = WlzHistogramCheckDomainAndValues(&greyType, &isTiled,
 						      srcObj)) == WLZ_ERR_NONE)
 	{
 	  switch(greyType)
@@ -701,7 +718,7 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 	    histDom->nBins = nBins0;
 	    histDom->origin = binOrigin0;
 	    histDom->binSize = binSize0;
-	    errNum = WlzHistogramCompute2D(histDom, srcObj);
+	    errNum = WlzHistogramCompute2D(histDom, srcObj, 0);
 	  }
 	}
 	if((errNum == WLZ_ERR_NONE) && (greyType == WLZ_GREY_UBYTE) &&
@@ -714,7 +731,7 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 	}
         break;
       case WLZ_TRANS_OBJ:
-	if((errNum = WlzHistogramCheckDomainAndValues(&greyType,
+	if((errNum = WlzHistogramCheckDomainAndValues(&greyType, &isTiled,
 						      srcObj)) == WLZ_ERR_NONE)
 	{
 	  histObj = WlzHistogramObj(srcObj->values.obj, nBins,
@@ -722,7 +739,7 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 	}
 	break;
       case WLZ_3D_DOMAINOBJ:
-	if((errNum = WlzHistogramCheckDomainAndValues(&greyType,
+	if((errNum = WlzHistogramCheckDomainAndValues(&greyType, &isTiled,
 						      srcObj)) == WLZ_ERR_NONE)
 	{
 	  switch(greyType)
@@ -797,20 +814,26 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 	    else
 	    {
 	      planeIdx = 0;
-	      WlzValueSetInt(histDom->binValues.inp, 0,
-	      		     histDom->maxBins);
+	      WlzValueSetInt(histDom->binValues.inp, 0, histDom->maxBins);
 	      while((errNum == WLZ_ERR_NONE) && (planeCount-- > 0))
 	      {
 		srcObj2D->domain = *(srcObj->domain.p->domains + planeIdx);
-		srcObj2D->values = *(srcObj->values.vox->values + planeIdx);
+		if(isTiled)
+		{
+		  srcObj2D->values = srcObj->values;
+		}
+		else
+		{
+		  srcObj2D->values = *(srcObj->values.vox->values + planeIdx);
+		}
 		if(srcObj2D->domain.core && srcObj2D->values.core &&
 		   (srcObj2D->domain.core->type != WLZ_EMPTY_OBJ) &&
 		   (srcObj2D->values.core->type != WLZ_EMPTY_OBJ))
 		{
 		  WlzValueSetInt(histDom2D->binValues.inp, 0,
 				 histDom2D->maxBins);
-		  if((errNum = WlzHistogramCompute2D(histDom2D,
-						    srcObj2D)) == WLZ_ERR_NONE)
+		  if((errNum = WlzHistogramCompute2D(histDom2D, srcObj2D,
+		                                    planeIdx)) == WLZ_ERR_NONE)
 		  {
 		    WlzHistogramAddIntBins(histDom, histDom2D);
 		  }
@@ -1522,7 +1545,8 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 		ivCount,
 		originI,
   		planeIdx,
-		planeCount;
+		planeCount,
+		isTiled = 0;
   double	originD;
   int		*mapping;
   WlzGreyType	greyType;
@@ -1538,7 +1562,7 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
   WLZ_DBG((WLZ_DBG_LVL_1),
 	  ("WlzHistogramMapValues FE %p %p %d\n",
 	   srcObj, mapHistObj, dither));
-  if(((errNum = WlzHistogramCheckDomainAndValues(&greyType,
+  if(((errNum = WlzHistogramCheckDomainAndValues(&greyType, &isTiled,
 						 srcObj)) == WLZ_ERR_NONE) &&
      ((errNum = WlzHistogramCheckHistObj(mapHistObj)) == WLZ_ERR_NONE))
   {
@@ -1549,6 +1573,10 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
     {
       errNum = WLZ_ERR_DOMAIN_DATA;
     }
+  }
+  if((errNum = WLZ_ERR_NONE) && isTiled)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1752,6 +1780,7 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 	        break;
 	    }
 	  }
+          (void )WlzEndGreyScan(&gWSp);
 	  if(errNum == WLZ_ERR_EOO)	/* Reset error from end of intervals */
 	  {
 	    errNum = WLZ_ERR_NONE;
@@ -2621,7 +2650,8 @@ WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
   int		tI0,
   		planeIdx,
   		planeCount,
-		matchFlag = 0;
+		matchFlag = 0,
+		isTiled = 0;
   double 	dist;
   WlzGreyType	greyType;
   WlzObject	*targetHistCum = NULL,
@@ -2637,13 +2667,17 @@ WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
 	  ("WlzHistogramMatchObj FE %p %p %d %g %g %d\n",
 	   srcObj, targetHist,
 	   independentPlanes, minDist, maxDist, dither));
-  if(((errNum = WlzHistogramCheckDomainAndValues(&greyType,
+  if(((errNum = WlzHistogramCheckDomainAndValues(&greyType, &isTiled,
 						srcObj)) == WLZ_ERR_NONE) &&
      ((errNum = WlzHistogramCheckHistObj(targetHist)) == WLZ_ERR_NONE) &&
      ((histDom = targetHist->domain.hist)->nBins > 0))
   {
-    if((srcObj->type == WLZ_2D_DOMAINOBJ) ||
-       (srcObj->type == WLZ_3D_DOMAINOBJ))
+    if((errNum = WLZ_ERR_NONE) && isTiled)
+    {
+      errNum = WLZ_ERR_VALUES_TYPE;
+    }
+    else if((srcObj->type == WLZ_2D_DOMAINOBJ) ||
+            (srcObj->type == WLZ_3D_DOMAINOBJ))
     {
       tI0 = (int )ceil((histDom->binSize * histDom->nBins) + histDom->origin);
       if(tI0 < 256)
@@ -2874,7 +2908,8 @@ WlzErrorNum	WlzHistogramMatchObj(WlzObject *srcObj, WlzObject *targetHist,
 WlzErrorNum	WlzHistogramEqualiseObj(WlzObject *srcObj, int smoothing,
 					int dither)
 {
-  int		count;
+  int		count,
+  		isTiled = 0;
   int		*map;
   double	mass,
   		normFac;
@@ -2886,8 +2921,15 @@ WlzErrorNum	WlzHistogramEqualiseObj(WlzObject *srcObj, int smoothing,
   WLZ_DBG((WLZ_DBG_LVL_1),
 	  ("WlzHistogramEqualiseObj FE %p %d %d\n",
 	   srcObj, smoothing, dither));
-  if((errNum = WlzHistogramCheckDomainAndValues(&greyType,
+  if((errNum = WlzHistogramCheckDomainAndValues(&greyType, &isTiled,
 						srcObj)) == WLZ_ERR_NONE)
+  {
+    if(isTiled)
+    {
+      errNum = WLZ_ERR_VALUES_TYPE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
   {
     switch(srcObj->type)
     {

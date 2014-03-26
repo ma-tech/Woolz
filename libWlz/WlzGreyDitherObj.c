@@ -83,6 +83,9 @@ WlzObject *WlzGreyDitherObj(
       if( o->values.core == NULL ){
 	errNum = WLZ_ERR_VALUES_NULL;
       }
+      else if( WlzGreyTableIsTiled(o->values.core->type) ){
+	errNum = WLZ_ERR_VALUES_TYPE;
+      }
       break;
 
     case WLZ_3D_DOMAINOBJ:

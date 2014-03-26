@@ -83,8 +83,11 @@ WlzErrorNum WlzGaussNoise(
       if( obj->domain.i == NULL ){
 	errNum = WLZ_ERR_DOMAIN_NULL;
       }
-      else if( obj->values.v == NULL ){
+      else if( obj->values.core == NULL ){
 	errNum = WLZ_ERR_VALUES_NULL;
+      }
+      else if(WlzGreyTableIsTiled(obj->values.core->type)) {
+        errNum = WLZ_ERR_VALUES_TYPE;
       }
       break;
 
@@ -137,73 +140,76 @@ WlzErrorNum WlzGaussNoise(
 
   if( errNum == WLZ_ERR_NONE ){
     errNum = WlzInitGreyScan(obj, &iwsp, &gwsp);
-    WlzValueConvertPixel(&tmpVal, val, WLZ_GREY_DOUBLE);
-    sigma = tmpVal.v.dbv;
+    if(errNum == WLZ_ERR_NONE) {
+      WlzValueConvertPixel(&tmpVal, val, WLZ_GREY_DOUBLE);
+      sigma = tmpVal.v.dbv;
 
-    /* set the seed */
-    AlgRandSeed((long )obj);
+      /* set the seed */
+      AlgRandSeed((long )obj);
 
-    while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
+      while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
 
-      gptr = gwsp.u_grintptr;
-      switch (gwsp.pixeltype) {
+	gptr = gwsp.u_grintptr;
+	switch (gwsp.pixeltype) {
 
-      case WLZ_GREY_INT:
-	for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
-	  mu = (double) *gptr.inp;
-	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
-	  *gptr.inp = (int )WLZ_CLAMP(tmpVal.v.dbv, INT_MIN, INT_MAX);
+	case WLZ_GREY_INT:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
+	    mu = (double) *gptr.inp;
+	    tmpVal.v.dbv = AlgRandNormal(mu, sigma);
+	    *gptr.inp = (int )WLZ_CLAMP(tmpVal.v.dbv, INT_MIN, INT_MAX);
+	  }
+	  break;
+
+	case WLZ_GREY_SHORT:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.shp++){
+	    mu = (double) *gptr.shp;
+	    tmpVal.v.dbv = AlgRandNormal(mu, sigma);
+	    *gptr.shp = (short )WLZ_CLAMP(tmpVal.v.dbv, SHRT_MIN, SHRT_MAX);
+	  }
+	  break;
+
+	case WLZ_GREY_UBYTE:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
+	    mu = (double) *gptr.ubp;
+	    tmpVal.v.dbv = AlgRandNormal(mu, sigma);
+	    *gptr.ubp = (WlzUByte )WLZ_CLAMP(tmpVal.v.dbv, 0, 255);
+	  }
+	  break;
+
+	case WLZ_GREY_FLOAT:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.flp++){
+	    mu = (double) *gptr.flp;
+	    tmpVal.v.dbv = AlgRandNormal(mu, sigma);
+	    *gptr.flp = (float )WLZ_CLAMP(tmpVal.v.dbv, FLT_MIN, FLT_MAX);
+	  }
+	  break;
+
+	case WLZ_GREY_DOUBLE:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
+	    mu = (double) *gptr.inp;
+	    tmpVal.v.dbv = AlgRandNormal(mu, sigma);
+	    *gptr.inp = (int )(tmpVal.v.dbv);
+	  }
+	  break;
+
+	case WLZ_GREY_RGBA:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
+	    mu = (double) *gptr.inp;
+	    tmpVal.v.dbv = AlgRandNormal(mu, sigma);
+	    *gptr.rgbp = (WlzUInt )WLZ_CLAMP(tmpVal.v.dbv, 0, 0xffffff);
+	    *gptr.rgbp |= 0xff000000;
+	  }
+	  break;
+
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
 	}
-	break;
-
-      case WLZ_GREY_SHORT:
-	for (i=0; i<iwsp.colrmn; i++, gptr.shp++){
-	  mu = (double) *gptr.shp;
-	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
-	  *gptr.shp = (short )WLZ_CLAMP(tmpVal.v.dbv, SHRT_MIN, SHRT_MAX);
-	}
-	break;
-
-      case WLZ_GREY_UBYTE:
-	for (i=0; i<iwsp.colrmn; i++, gptr.ubp++){
-	  mu = (double) *gptr.ubp;
-	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
-	  *gptr.ubp = (WlzUByte )WLZ_CLAMP(tmpVal.v.dbv, 0, 255);
-	}
-	break;
-
-      case WLZ_GREY_FLOAT:
-	for (i=0; i<iwsp.colrmn; i++, gptr.flp++){
-	  mu = (double) *gptr.flp;
-	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
-	  *gptr.flp = (float )WLZ_CLAMP(tmpVal.v.dbv, FLT_MIN, FLT_MAX);
-	}
-	break;
-
-      case WLZ_GREY_DOUBLE:
-	for (i=0; i<iwsp.colrmn; i++, gptr.inp++){
-	  mu = (double) *gptr.inp;
-	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
-	  *gptr.inp = (int )(tmpVal.v.dbv);
-	}
-	break;
-
-      case WLZ_GREY_RGBA:
-	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
-	  mu = (double) *gptr.inp;
-	  tmpVal.v.dbv = AlgRandNormal(mu, sigma);
-	  *gptr.rgbp = (WlzUInt )WLZ_CLAMP(tmpVal.v.dbv, 0, 0xffffff);
-	  *gptr.rgbp |= 0xff000000;
-	}
-	break;
-
-      default:
-	errNum = WLZ_ERR_GREY_TYPE;
-	break;
       }
-    }
-    if( errNum == WLZ_ERR_EOO ){
-      errNum = WLZ_ERR_NONE;
+      (void )WlzEndGreyScan(&gwsp);
+      if( errNum == WLZ_ERR_EOO ){
+	errNum = WLZ_ERR_NONE;
+      }
     }
   }
 

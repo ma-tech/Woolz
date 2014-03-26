@@ -58,23 +58,26 @@ WlzErrorNum WlzGreySetRangeLut(
   WlzValues 		*values;
   WlzDomain		*domains;
   int			i, nplanes;
-  WlzErrorNum		wlzErrno=WLZ_ERR_NONE;
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
   int			minV;
 
   /* check object */
   if( obj == NULL ){
-    wlzErrno = WLZ_ERR_OBJECT_NULL;
+    errNum = WLZ_ERR_OBJECT_NULL;
   }
 
-  if( wlzErrno == WLZ_ERR_NONE ){
+  if( errNum == WLZ_ERR_NONE ){
     switch( obj->type ){
 
     case WLZ_2D_DOMAINOBJ:
       if( obj->domain.i == NULL ){
 	return WLZ_ERR_DOMAIN_NULL;
       }
-      if( obj->values.v == NULL ){
+      if( obj->values.core == NULL ){
 	return WLZ_ERR_VALUES_NULL;
+      }
+      if( WlzGreyTableIsTiled(obj->values.core->type) ) {
+        return WLZ_ERR_VALUES_TYPE;
       }
       break;
 
@@ -105,95 +108,98 @@ WlzErrorNum WlzGreySetRangeLut(
 
 	tempobj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
 			      *domains, *values, NULL, NULL,
-			      &wlzErrno);
-	if((tempobj == NULL) && (wlzErrno == WLZ_ERR_NONE) ){
-	  wlzErrno = WLZ_ERR_UNSPECIFIED;
+			      &errNum);
+	if((tempobj == NULL) && (errNum == WLZ_ERR_NONE) ){
+	  errNum = WLZ_ERR_UNSPECIFIED;
 	  break;
 	}
 
-	wlzErrno = WlzGreySetRangeLut(tempobj, min, max, lut);
+	errNum = WlzGreySetRangeLut(tempobj, min, max, lut);
 	WlzFreeObj( tempobj );
-	if( wlzErrno != WLZ_ERR_NONE ){
+	if( errNum != WLZ_ERR_NONE ){
 	  break;
 	}
       }
       
-      return wlzErrno;
+      return errNum;
 
     case WLZ_TRANS_OBJ:
       return WlzGreySetRangeLut(obj->values.obj, min, max, lut);
 
     case WLZ_EMPTY_OBJ:
-      return wlzErrno;
+      return errNum;
 
     default:
-      wlzErrno = WLZ_ERR_OBJECT_TYPE;
+      errNum = WLZ_ERR_OBJECT_TYPE;
       break;
     }
   }
 
-  if( wlzErrno == WLZ_ERR_NONE ){
+  if( errNum == WLZ_ERR_NONE ){
     WlzValueConvertPixel(&min, min, WLZ_GREY_INT);
     WlzValueConvertPixel(&max, max, WLZ_GREY_INT);
     minV = min.v.inv;
 
-    WlzInitGreyScan(obj, &iwsp, &gwsp);
-    while( WlzNextGreyInterval(&iwsp) == WLZ_ERR_NONE ){
+    errNum = WlzInitGreyScan(obj, &iwsp, &gwsp);
+    if(errNum == WLZ_ERR_NONE) {
+      while( WlzNextGreyInterval(&iwsp) == WLZ_ERR_NONE ){
 
-      gptr = gwsp.u_grintptr;
-      switch (gwsp.pixeltype) {
+	gptr = gwsp.u_grintptr;
+	switch (gwsp.pixeltype) {
 
-      case WLZ_GREY_INT:
-	for (i=0; i<iwsp.colrmn; i++, gptr.inp++)
-	  *gptr.inp = lut.p.ubp[*gptr.inp - minV];
-	break;
+	case WLZ_GREY_INT:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.inp++)
+	    *gptr.inp = lut.p.ubp[*gptr.inp - minV];
+	  break;
 
-      case WLZ_GREY_SHORT:
-	for (i=0; i<iwsp.colrmn; i++, gptr.shp++)
-	  *gptr.shp = lut.p.ubp[*gptr.shp - minV];
-	break;
+	case WLZ_GREY_SHORT:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.shp++)
+	    *gptr.shp = lut.p.ubp[*gptr.shp - minV];
+	  break;
 
-      case WLZ_GREY_UBYTE:
-	for (i=0; i<iwsp.colrmn; i++, gptr.ubp++)
-	  *gptr.ubp = lut.p.ubp[*gptr.ubp - minV];
-	break;
+	case WLZ_GREY_UBYTE:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.ubp++)
+	    *gptr.ubp = lut.p.ubp[*gptr.ubp - minV];
+	  break;
 
-      case WLZ_GREY_FLOAT:
-	for (i=0; i<iwsp.colrmn; i++, gptr.flp++)
-	  *gptr.flp = lut.p.ubp[(int) *gptr.flp - minV];
-	break;
+	case WLZ_GREY_FLOAT:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.flp++)
+	    *gptr.flp = lut.p.ubp[(int) *gptr.flp - minV];
+	  break;
 
-      case WLZ_GREY_DOUBLE:
-	for (i=0; i<iwsp.colrmn; i++, gptr.dbp++)
-	  *gptr.dbp = lut.p.ubp[(int) *gptr.dbp - minV];
-	break;
+	case WLZ_GREY_DOUBLE:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.dbp++)
+	    *gptr.dbp = lut.p.ubp[(int) *gptr.dbp - minV];
+	  break;
 
-      case WLZ_GREY_RGBA:
-	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
-	  WlzUInt red, green, blue, alpha;
-	  red = WLZ_RGBA_RED_GET(*gptr.rgbp);
-	  green = WLZ_RGBA_GREEN_GET(*gptr.rgbp);
-	  blue = WLZ_RGBA_BLUE_GET(*gptr.rgbp);
-	  alpha = WLZ_RGBA_ALPHA_GET(*gptr.rgbp);
-	  red = lut.p.ubp[red - minV];
-	  green = lut.p.ubp[green - minV];
-	  blue = lut.p.ubp[blue - minV];
-	  WLZ_RGBA_RED_SET(*gptr.rgbp, red);
-	  WLZ_RGBA_GREEN_SET(*gptr.rgbp, green);
-	  WLZ_RGBA_BLUE_SET(*gptr.rgbp, blue);
-	  WLZ_RGBA_ALPHA_SET(*gptr.rgbp, alpha);
+	case WLZ_GREY_RGBA:
+	  for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++){
+	    WlzUInt red, green, blue, alpha;
+	    red = WLZ_RGBA_RED_GET(*gptr.rgbp);
+	    green = WLZ_RGBA_GREEN_GET(*gptr.rgbp);
+	    blue = WLZ_RGBA_BLUE_GET(*gptr.rgbp);
+	    alpha = WLZ_RGBA_ALPHA_GET(*gptr.rgbp);
+	    red = lut.p.ubp[red - minV];
+	    green = lut.p.ubp[green - minV];
+	    blue = lut.p.ubp[blue - minV];
+	    WLZ_RGBA_RED_SET(*gptr.rgbp, red);
+	    WLZ_RGBA_GREEN_SET(*gptr.rgbp, green);
+	    WLZ_RGBA_BLUE_SET(*gptr.rgbp, blue);
+	    WLZ_RGBA_ALPHA_SET(*gptr.rgbp, alpha);
+	  }
+	  break;
+
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
 	}
-	break;
-
-      default:
-	wlzErrno = WLZ_ERR_GREY_TYPE;
-	break;
       }
+      (void )WlzEndGreyScan(&gwsp);
     }
   }
 
-  if( wlzErrno == WLZ_ERR_EOO ){
-    wlzErrno = WLZ_ERR_NONE;
+  if( errNum == WLZ_ERR_EOO ){
+    errNum = WLZ_ERR_NONE;
   }
-  return wlzErrno;
+  return errNum;
 }

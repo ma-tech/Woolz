@@ -198,7 +198,16 @@ WlzObject *WlzTransposeObj(
 
   /* now attach a grey-table */
   if((errNum == WLZ_ERR_NONE) && obj->values.core ){
-    if((values.v = WlzNewValueTb(nobj, obj->values.v->type,
+    WlzObjectType tt;
+    WlzGreyType	gt;
+
+    gt = WlzGreyTableTypeToGreyType(obj->values.core->type, NULL);
+    tt = WlzGreyTableTypeToTableType(obj->values.core->type, NULL);
+    if(tt == WLZ_GREY_TAB_TILED)
+    {
+      tt = WLZ_GREY_TAB_RAGR;
+    }
+    if((values.v = WlzNewValueTb(nobj, WlzGreyTableType(tt, gt, NULL),
 				 WlzGetBackground(obj,
 				                  NULL), &errNum)) != NULL){
       nobj->values = WlzAssignValues(values, NULL);
@@ -236,6 +245,7 @@ WlzObject *WlzTransposeObj(
 	    }
 	  }
 	}
+	(void )WlzEndGreyScan(&gwsp);
       }
       if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
       {
@@ -477,17 +487,20 @@ static WlzObject *WlzTransposeRectObj(
       }
       else {
 	/* fill in values */
-	WlzInitGreyScan(obj, &iwsp, &gwsp);
 	width *= size;
-	while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
-	  int	off1, off2;
-	  off1 = (iwsp.linpos - iwsp.linbot) * size;
-	  off2 = 0;
-	  for(i=iwsp.lftpos; i<=iwsp.rgtpos; i++, off1 += width,
-		off2 += size){
-	    (void) memcpy((void *) (newvals.ubp+off1),
-			  (const void *) (gwsp.u_grintptr.ubp+off2), size);
+	errNum = WlzInitGreyScan(obj, &iwsp, &gwsp);
+	if(errNum == WLZ_ERR_NONE){
+	  while( (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE ){
+	    int	off1, off2;
+	    off1 = (iwsp.linpos - iwsp.linbot) * size;
+	    off2 = 0;
+	    for(i=iwsp.lftpos; i<=iwsp.rgtpos; i++, off1 += width,
+		  off2 += size){
+	      (void) memcpy((void *) (newvals.ubp+off1),
+			    (const void *) (gwsp.u_grintptr.ubp+off2), size);
+	    }
 	  }
+	  (void )WlzEndGreyScan(&gwsp);
 	}
 	if(errNum == WLZ_ERR_EOO)	/* Reset error from end of intervals */
 	{
@@ -538,6 +551,9 @@ static WlzObject *WlzTranspose3DObj(
   /* only check for the plane domain - other chacks are done */
   if( obj->domain.core == NULL ){
     errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(obj->values.core && WlzGreyTableIsTiled(obj->values.core->type)) {
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   else {
     if((domain.p = WlzMakePlaneDomain(obj->domain.p->type,
