@@ -307,7 +307,7 @@ static WlzObject *WlzFilterNObjValues2DCb(WlzObject *rObj, WlzGreyType gType,
         ++pos.vtX;
       }
     }
-    (void )WlzEndGreyScan(&gWSp);
+    (void )WlzEndGreyScan(&iWSp, &gWSp);
     if(errNum == WLZ_ERR_EOO)
     {
       errNum = WLZ_ERR_NONE;
@@ -420,7 +420,7 @@ static WlzObject *WlzFilterNObjValues3DCb(WlzObject *rObj, WlzGreyType gType,
 	      ++pos.vtX;
 	    }
 	  }
-          (void )WlzEndGreyScan(&gWSp);
+          (void )WlzEndGreyScan(&iWSp, &gWSp);
 	  if(errNum == WLZ_ERR_EOO)
 	  {
 	    errNum = WLZ_ERR_NONE;

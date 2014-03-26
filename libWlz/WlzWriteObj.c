@@ -1458,7 +1458,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fP, WlzObject *obj)
 		    break;
 		}
 	      }
-	      (void )WlzEndGreyScan(&gwsp);
+	      (void )WlzEndGreyScan(&iwsp, &gwsp);
 	      if(errNum == WLZ_ERR_EOO)
 	      {
 	        errNum = WLZ_ERR_NONE;
@@ -1516,7 +1516,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fP, WlzObject *obj)
 		    break;
 		}
 	      }
-	      (void )WlzEndGreyScan(&gwsp);
+	      (void )WlzEndGreyScan(&iwsp, &gwsp);
 	      if(errNum == WLZ_ERR_EOO)
 	      {
 	        errNum = WLZ_ERR_NONE;
@@ -1547,7 +1547,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fP, WlzObject *obj)
 		errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	      }
 	    }
-	    (void )WlzEndGreyScan(&gwsp);
+	    (void )WlzEndGreyScan(&iwsp, &gwsp);
 	    if(errNum == WLZ_ERR_EOO)
 	    {
 	      errNum = WLZ_ERR_NONE;
@@ -1580,7 +1580,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fP, WlzObject *obj)
 		}
 	      }
 	    }
-	    (void )WlzEndGreyScan(&gwsp);
+	    (void )WlzEndGreyScan(&iwsp, &gwsp);
 	    if(errNum == WLZ_ERR_EOO)
 	    {
 	      errNum = WLZ_ERR_NONE;
@@ -1613,7 +1613,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fP, WlzObject *obj)
 		}
 	      }
 	    }
-	    (void )WlzEndGreyScan(&gwsp);
+	    (void )WlzEndGreyScan(&iwsp, &gwsp);
 	    if(errNum == WLZ_ERR_EOO)
 	    {
 	      errNum = WLZ_ERR_NONE;
@@ -1646,7 +1646,7 @@ static WlzErrorNum WlzWriteValueTable(FILE *fP, WlzObject *obj)
 		}
 	      }
 	    }
-	    (void )WlzEndGreyScan(&gwsp);
+	    (void )WlzEndGreyScan(&iwsp, &gwsp);
 	    if(errNum == WLZ_ERR_EOO)
 	    {
 	      errNum = WLZ_ERR_NONE;

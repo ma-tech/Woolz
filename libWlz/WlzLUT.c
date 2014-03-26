@@ -906,9 +906,9 @@ static WlzErrorNum WlzLUTTransformObj2D(WlzObject *rObj, WlzObject *gObj,
 					   gIWSp.rgtpos - gIWSp.lftpos + 1,
 					   dither);
       }
-      (void )WlzEndGreyScan(&rGWSp);
+      (void )WlzEndGreyScan(&rIWSp, &rGWSp);
     }
-    (void )WlzEndGreyScan(&gGWSp);
+    (void )WlzEndGreyScan(&gIWSp, &gGWSp);
   }
   if(errNum == WLZ_ERR_EOO)
   {

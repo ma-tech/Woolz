@@ -330,7 +330,7 @@ static WlzObject *WlzIntRescaleObj2D(
 	  errNum = WLZ_ERR_NONE;
 	}
 	WlzGreyValueFreeWSp(gVWSp);
-	WlzEndGreyScan(&gwsp);
+	(void )WlzEndGreyScan(&iwsp, &gwsp);
       }
     }
   }

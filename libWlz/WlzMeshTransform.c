@@ -1412,7 +1412,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
 	  }
 	}
       }
-      (void )WlzEndGreyScan(&gWSp);
+      (void )WlzEndGreyScan(&iWSp, &gWSp);
       if(errNum == WLZ_ERR_EOO)         /* Reset error from end of intervals */
       {
 	errNum = WLZ_ERR_NONE;

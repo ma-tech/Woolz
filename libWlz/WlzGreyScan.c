@@ -66,15 +66,16 @@ WlzInitGreyScan(WlzObject	*obj,	/* raster and tranpl of 0 provided */
 * \return	Woolz error code.
 * \ingroup	WlzValuesUtils
 * \brief	This must be called when a grey workspace is no longer
-* 		required as it frees resources of the workspace.
+* 		required as it frees resources of the workspace. 
+* \param	iwsp			Interval scanning workspace.
 * \param	gwsp			Grey value table scanning workspace.
 */
 WlzErrorNum
-WlzEndGreyScan(WlzGreyWSpace *gwsp)
+WlzEndGreyScan(WlzIntervalWSpace *iwsp, WlzGreyWSpace *gwsp)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(gwsp == NULL)
+  if((iwsp == NULL) || (gwsp == NULL))
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
@@ -82,7 +83,7 @@ WlzEndGreyScan(WlzGreyWSpace *gwsp)
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else
+  else if(iwsp->gryptr == gwsp)
   {
     WlzTiledValues *tv;
     WlzTiledValueBuffer *tvb;

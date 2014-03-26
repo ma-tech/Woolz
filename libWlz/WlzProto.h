@@ -3469,6 +3469,7 @@ extern WlzErrorNum 		WlzInitGreyScan(
 				  WlzIntervalWSpace *iwsp,
 				  WlzGreyWSpace *gwsp);
 extern WlzErrorNum 		WlzEndGreyScan(
+				  WlzIntervalWSpace *iwsp,
 				  WlzGreyWSpace *gwsp);
 extern WlzErrorNum 		WlzInitGreyRasterScan(
 				  WlzObject *obj,

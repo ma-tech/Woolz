@@ -718,19 +718,19 @@ static WlzObject *WlzNMSuppress2D(WlzObject *grdM,
     }
     if(tmpIWSp.gryptr == &tmpGWSp)
     {
-      (void )WlzEndGreyScan(&tmpGWSp);
+      (void )WlzEndGreyScan(&tmpIWSp, &tmpGWSp);
     }
     if(grdMIWSp.gryptr == &grdMGWSp)
     {
-      (void )WlzEndGreyScan(&grdMGWSp);
+      (void )WlzEndGreyScan(&grdMIWSp, &grdMGWSp);
     }
     if(grdYIWSp.gryptr == &grdYGWSp)
     {
-      (void )WlzEndGreyScan(&grdYGWSp);
+      (void )WlzEndGreyScan(&grdYIWSp, &grdYGWSp);
     }
     if(grdXIWSp.gryptr == &grdXGWSp)
     {
-      (void )WlzEndGreyScan(&grdXGWSp);
+      (void )WlzEndGreyScan(&grdXIWSp, &grdXGWSp);
     }
   }
   if(errNum == WLZ_ERR_NONE)

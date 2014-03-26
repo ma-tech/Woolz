@@ -285,7 +285,7 @@ WlzErrorNum 	WlzGreyIncValues2D(WlzObject *obj)
 	  break;
       }
     }
-    (void )WlzEndGreyScan(&gWSp);
+    (void )WlzEndGreyScan(&iWSp, &gWSp);
     if(errNum == WLZ_ERR_EOO)
     {
       errNum = WLZ_ERR_NONE;
@@ -991,14 +991,8 @@ static WlzErrorNum WlzScalarMulAddSet2D(WlzObject *rObj, WlzObject *iObj,
       }
       AlcFree(buf);
     }
-    if(iIWSp.gryptr == &iGWSp)
-    {
-      (void )WlzEndGreyScan(&iGWSp);
-    }
-    if(rIWSp.gryptr == &rGWSp)
-    {
-      (void )WlzEndGreyScan(&rGWSp);
-    }
+    (void )WlzEndGreyScan(&iIWSp, &iGWSp);
+    (void )WlzEndGreyScan(&rIWSp, &rGWSp);
   }
   return(errNum);
 }

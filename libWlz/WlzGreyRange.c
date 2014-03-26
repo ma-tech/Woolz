@@ -237,7 +237,7 @@ WlzErrorNum WlzGreyRange(WlzObject	*obj,
 
 	}
       }
-      (void )WlzEndGreyScan(&gwsp);
+      (void )WlzEndGreyScan(&iwsp, &gwsp);
       if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
       {
 	errNum = WLZ_ERR_NONE;

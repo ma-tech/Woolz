@@ -966,10 +966,9 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
 	    dstItv0 = dstItv1;
 	    itvCount = 0;
 	  }
-	  (void )WlzEndGreyScan(&srcGWsp);
 	}
       }
-      (void )WlzEndGreyScan(&srcGWsp);
+      (void )WlzEndGreyScan(&srcIWsp, &srcGWsp);
     }
     if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
     {
@@ -1338,14 +1337,8 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
     {
       (void )WlzSetBackground(dstObj, WlzGetBackground(srcObj, NULL));
     }
-    if(srcIWsp.gryptr == &srcGWsp)
-    {
-      (void )WlzEndGreyScan(&srcGWsp);
-    }
-    if(bufIWsp.gryptr == &bufGWsp)
-    {
-      (void )WlzEndGreyScan(&bufGWsp);
-    }
+    (void )WlzEndGreyScan(&srcIWsp, &srcGWsp);
+    (void )WlzEndGreyScan(&bufIWsp, &bufGWsp);
   }
   if(bufData) 					      /* Free up buffer data */
   {
@@ -1701,14 +1694,8 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
     {
       (void )WlzSetBackground(dstObj, WlzGetBackground(srcObj, NULL));
     }
-    if(srcIWsp.gryptr == &srcGWsp)
-    {
-      (void )WlzEndGreyScan(&srcGWsp);
-    }
-    if(bufIWsp.gryptr == &bufGWsp)
-    {
-      (void )WlzEndGreyScan(&bufGWsp);
-    }
+    (void )WlzEndGreyScan(&srcIWsp, &srcGWsp);
+    (void )WlzEndGreyScan(&bufIWsp, &bufGWsp);
   }
   if(bufData) 					      /* Free up buffer data */
   {
@@ -2156,14 +2143,8 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
     {
       (void )WlzSetBackground(dstObj, WlzGetBackground(srcObj, NULL));
     }
-    if(srcIWsp.gryptr == &srcGWsp)
-    {
-      (void )WlzEndGreyScan(&srcGWsp);
-    }
-    if(bufIWsp.gryptr == &bufGWsp)
-    {
-      (void )WlzEndGreyScan(&bufGWsp);
-    }
+    (void )WlzEndGreyScan(&srcIWsp, &srcGWsp);
+    (void )WlzEndGreyScan(&bufIWsp, &bufGWsp);
   }
   if(bufData) 					      /* Free up buffer data */
   {
@@ -2605,14 +2586,8 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
     {
       (void )WlzSetBackground(dstObj, WlzGetBackground(srcObj, NULL));
     }
-    if(srcIWsp.gryptr == &srcGWsp)
-    {
-      (void )WlzEndGreyScan(&srcGWsp);
-    }
-    if(bufIWsp.gryptr == &bufGWsp)
-    {
-      (void )WlzEndGreyScan(&bufGWsp);
-    }
+    (void )WlzEndGreyScan(&srcIWsp, &srcGWsp);
+    (void )WlzEndGreyScan(&bufIWsp, &bufGWsp);
   }
   if(bufData) 					      /* Free up buffer data */
   {

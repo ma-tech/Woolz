@@ -346,7 +346,7 @@ WlzObject *WlzGetProjectionFromObject(
 	}
       }
     }
-    (void )WlzEndGreyScan(&gwsp);
+    (void )WlzEndGreyScan(&iwsp, &gwsp);
     if(errNum == WLZ_ERR_EOO)	   /* Reset error from end of intervals */ 
     {
       errNum = WLZ_ERR_NONE;
@@ -773,7 +773,7 @@ struct timeval	times[3];
 		break;
 	    }
 	  }
-	  (void )WlzEndGreyScan(&gWSp);
+	  (void )WlzEndGreyScan(&iWSp, &gWSp);
 	  if(errNum2 == WLZ_ERR_EOO)
 	  {
 	    errNum2 = WLZ_ERR_NONE;

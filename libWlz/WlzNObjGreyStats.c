@@ -525,26 +525,11 @@ static WlzErrorNum WlzNObjGreyStats2D(int first, int nObj, WlzObject **aObj,
 				     sSqObj, &sSqIWSp, &sSqGWSp);
         first = 0;
       }
-      if(iIWSp.gryptr == &iGWSp)
-      {
-        (void )WlzEndGreyScan(&iGWSp);
-      }
-      if(minIWSp.gryptr == &minGWSp)
-      {
-        (void )WlzEndGreyScan(&minGWSp);
-      }
-      if(maxIWSp.gryptr == &maxGWSp)
-      {
-        (void )WlzEndGreyScan(&maxGWSp);
-      }
-      if(sumIWSp.gryptr == &sumGWSp)
-      {
-        (void )WlzEndGreyScan(&sumGWSp);
-      }
-      if(sSqIWSp.gryptr == &sSqGWSp)
-      {
-        (void )WlzEndGreyScan(&sSqGWSp);
-      }
+      (void )WlzEndGreyScan(&iIWSp,   &iGWSp);
+      (void )WlzEndGreyScan(&minIWSp, &minGWSp);
+      (void )WlzEndGreyScan(&maxIWSp, &maxGWSp);
+      (void )WlzEndGreyScan(&sumIWSp, &sumGWSp);
+      (void )WlzEndGreyScan(&sSqIWSp, &sSqGWSp);
     }
     (void )WlzFreeObj(iObj);
     if(errNum != WLZ_ERR_NONE)

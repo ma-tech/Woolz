@@ -245,10 +245,10 @@ WlzErrorNum WlzGreySetRange(
 	    WLZ_RGBA_RGBA_SET(*gptr.rgbp, red, green, blue, alpha);
 	  }
 	}
-	(void )WlzEndGreyScan(&gwsp);
+	(void )WlzEndGreyScan(&iwsp, &gwsp);
 	if(errNum == WLZ_ERR_EOO){
 	  errNum = WLZ_ERR_NONE;
-      }
+	}
       }
     }
     else {
@@ -372,7 +372,7 @@ WlzErrorNum WlzGreySetRange(
 	      break;
 	  }
 	}
-	(void )WlzEndGreyScan(&gwsp);
+	(void )WlzEndGreyScan(&iwsp, &gwsp);
 	if(errNum == WLZ_ERR_EOO){
 	  errNum = WLZ_ERR_NONE;
 	}

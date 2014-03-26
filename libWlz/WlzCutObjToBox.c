@@ -398,7 +398,7 @@ static WlzObject *WlzCutObjToValBgBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 		    dLastOff = dOff + rgt;
 		  }
 		}
-		(void )WlzEndGreyScan(&gWSp);
+		(void )WlzEndGreyScan(&iWSp, &gWSp);
 		if(errNum == WLZ_ERR_EOO)
 		{
 		  errNum = WLZ_ERR_NONE;

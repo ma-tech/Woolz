@@ -350,7 +350,7 @@ static WlzErrorNum WlzHistogramCompute2D(WlzHistogramDomain *histDom,
 	  break;
       }
     }
-    (void )WlzEndGreyScan(&gWSp);
+    (void )WlzEndGreyScan(&iWSp, &gWSp);
     if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
     {
       errNum = WLZ_ERR_NONE;
@@ -1780,7 +1780,7 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
 	        break;
 	    }
 	  }
-          (void )WlzEndGreyScan(&gWSp);
+          (void )WlzEndGreyScan(&iWSp, &gWSp);
 	  if(errNum == WLZ_ERR_EOO)	/* Reset error from end of intervals */
 	  {
 	    errNum = WLZ_ERR_NONE;

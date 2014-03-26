@@ -1358,7 +1358,7 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 	  break;
 	}
       }
-      (void )WlzEndGreyScan(&gWSp);
+      (void )WlzEndGreyScan(&iWSp, &gWSp);
     }
     if(errNum == WLZ_ERR_EOO)	        /* Reset error from end of intervals */ 
     {
@@ -1757,7 +1757,7 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		break;
 	    }
 	  }
-          (void )WlzEndGreyScan(&gWSp);
+          (void )WlzEndGreyScan(&iWSp, &gWSp);
 	}
 	if(errNum == WLZ_ERR_EOO)
 	{

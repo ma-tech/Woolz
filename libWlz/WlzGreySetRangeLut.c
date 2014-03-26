@@ -194,7 +194,7 @@ WlzErrorNum WlzGreySetRangeLut(
 	  break;
 	}
       }
-      (void )WlzEndGreyScan(&gwsp);
+      (void )WlzEndGreyScan(&iwsp, &gwsp);
     }
   }
 

@@ -182,7 +182,7 @@ WlzObject *WlzCbThreshold(
       }
     }
     nkl--;	/* since we have looked at points beyond interval ends */
-    (void )WlzEndGreyScan(&gwsp);
+    (void )WlzEndGreyScan(&iwsp, &gwsp);
     if( errNum == WLZ_ERR_EOO ){
       errNum = WLZ_ERR_NONE;
     }

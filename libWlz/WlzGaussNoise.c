@@ -206,7 +206,7 @@ WlzErrorNum WlzGaussNoise(
 	  break;
 	}
       }
-      (void )WlzEndGreyScan(&gwsp);
+      (void )WlzEndGreyScan(&iwsp, &gwsp);
       if( errNum == WLZ_ERR_EOO ){
 	errNum = WLZ_ERR_NONE;
       }

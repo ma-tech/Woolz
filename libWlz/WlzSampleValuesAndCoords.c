@@ -588,10 +588,7 @@ static WlzErrorNum WlzSampleValuesAndCoords2D(WlzObject *obj,
     {
       errNum = WLZ_ERR_NONE;
     }
-    if(iWsp.gryptr == &gWsp)
-    {
-      (void )WlzEndGreyScan(&gWsp);
-    }
+    (void )WlzEndGreyScan(&iWsp, &gWsp);
   }
   if(errNum == WLZ_ERR_NONE)
   {

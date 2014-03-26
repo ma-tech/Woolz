@@ -418,7 +418,7 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, double scale,
 	  ++idK;
 	}
       }
-      (void )WlzEndGreyScan(&gWsp);
+      (void )WlzEndGreyScan(&iWsp, &gWsp);
       if(errNum == WLZ_ERR_EOO)
       {
 	errNum = WLZ_ERR_NONE;

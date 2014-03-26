@@ -697,7 +697,7 @@ static WlzObject *WlzThreshold2D(WlzObject	*obj,
 	}
       }
       nkl--;	/* since we have looked at points beyond interval ends */
-      (void )WlzEndGreyScan(&gwsp);
+      (void )WlzEndGreyScan(&iwsp, &gwsp);
       if(errNum == WLZ_ERR_EOO)
       {
 	errNum = WLZ_ERR_NONE;
@@ -868,7 +868,7 @@ static WlzObject *WlzThreshold2D(WlzObject	*obj,
 	    nints = 0;
 	  }
 	}
-        (void )WlzEndGreyScan(&gwsp);
+        (void )WlzEndGreyScan(&iwsp, &gwsp);
 	if(errNum == WLZ_ERR_EOO)
 	{
 	  errNum = WLZ_ERR_NONE;

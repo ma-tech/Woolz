@@ -2013,7 +2013,7 @@ static WlzObject *WlzCMeshToDomObjValues2D(WlzObject *dObj, WlzObject *mObj,
 	  break;
       }
     }
-    (void )WlzEndGreyScan(&gWsp);
+    (void )WlzEndGreyScan(&iWsp, &gWsp);
     if(errNum == WLZ_ERR_EOO)
     {
       errNum = WLZ_ERR_NONE;
@@ -4182,7 +4182,7 @@ static WlzErrorNum WlzCMeshTransformValues2D(WlzObject *dstObj,
 					 interp, gType);
       }
     }
-    (void )WlzEndGreyScan(&gWSp);
+    (void )WlzEndGreyScan(&iWSp, &gWSp);
   }
   if(errNum == WLZ_ERR_EOO)
   {
@@ -6381,7 +6381,7 @@ static WlzErrorNum WlzCMeshVerifyWSp3D(WlzObject *srcObj,
 	      ++inp;
 	    }
 	  }
-	  (void )WlzEndGreyScan(&gWSp);
+	  (void )WlzEndGreyScan(&iWSp, &gWSp);
 	}
 	(void )WlzFreeObj(obj2);
 	if(errNum == WLZ_ERR_EOO)

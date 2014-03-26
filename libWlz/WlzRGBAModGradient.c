@@ -203,9 +203,7 @@ extern WlzObject *WlzRGBAModGradient(
       }
     }
     for(i = 0; i < 7; ++i) {
-      if(iwsp[i].gryptr == &gwsp[i]) {
-        WlzEndGreyScan(&gwsp[i]);
-      }
+      WlzEndGreyScan(&iwsp[i], &gwsp[i]);
     }
 
     /* check for normal return */

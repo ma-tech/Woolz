@@ -514,10 +514,7 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
     {
       errNum = WLZ_ERR_NONE;
     }
-    if(iwsp.gryptr == &gwsp)
-    {
-      (void )WlzEndGreyScan(&gwsp);
-    }
+    (void )WlzEndGreyScan(&iwsp, &gwsp);
     for(i=0; i < numObjs; i++)
     {
       WlzGreyValueFreeWSp(gValWSpc[i]);
@@ -1076,14 +1073,8 @@ WlzObject *WlzIndexToRGBA(
       gn.rgbp++;
     }
   } /* while */
-  if(oldiwsp.gryptr == &oldgwsp)
-  {
-    (void )WlzEndGreyScan(&oldgwsp);
-  }
-  if(newiwsp.gryptr == &newgwsp)
-  {
-    (void )WlzEndGreyScan(&newgwsp);
-  }
+  (void )WlzEndGreyScan(&oldiwsp, &oldgwsp);
+  (void )WlzEndGreyScan(&newiwsp, &newgwsp);
   if(errNum == WLZ_ERR_EOO)	        /* Reset error from end of intervals */ 
   {
     errNum = WLZ_ERR_NONE;
@@ -1356,9 +1347,9 @@ WlzObject *WlzRGBAToChannel(
 	      WlzRGBAPixelValue(pixVal, chan, &errNum);
 	  }
 	}
-	(void )WlzEndGreyScan(&gwsp1);
+	(void )WlzEndGreyScan(&iwsp1, &gwsp1);
       }
-      (void )WlzEndGreyScan(&gwsp0);
+      (void )WlzEndGreyScan(&iwsp0, &gwsp0);
     }
     if( errNum == WLZ_ERR_EOO ){
       errNum = WLZ_ERR_NONE;

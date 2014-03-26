@@ -391,7 +391,7 @@ static WlzErrorNum WlzGreySetHilbertRankValues2D(WlzObject *obj,
 	iV += 2;
       }
     }
-    (void )WlzEndGreyScan(&gWsp);
+    (void )WlzEndGreyScan(&iWsp, &gWsp);
     if(errNum == WLZ_ERR_EOO)
     {
       errNum = WLZ_ERR_NONE;
@@ -557,7 +557,7 @@ static WlzErrorNum WlzGreySetHilbertRankValues3D(WlzObject *obj,
 	  }
 	}
         (void )WlzFreeObj(obj2);
-        (void )WlzEndGreyScan(&gWsp);
+        (void )WlzEndGreyScan(&iWsp, &gWsp);
 	if(errNum == WLZ_ERR_EOO)
 	{
 	  errNum = WLZ_ERR_NONE;

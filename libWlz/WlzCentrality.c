@@ -283,7 +283,7 @@ static double	WlzCentrality2D(WlzObject *fObj, WlzObject *bObj,
 	    }
 	  }
 	}
-        (void )WlzEndGreyScan(&gWsp);
+        (void )WlzEndGreyScan(&iWsp, &gWsp);
       }
     }
     if(errNum == WLZ_ERR_EOO)

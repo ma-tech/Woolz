@@ -339,7 +339,7 @@ static WlzErrorNum WlzRankFilterDomObj2D(WlzObject *gObj, int fSz,
         WlzValueSetUByte(iBuf[bufLn], 0, iBufWidth);
       }
     }
-    WlzEndGreyScan(&gWSp);
+    WlzEndGreyScan(&iWSp, &gWSp);
   }
   AlcFree(rBuf);
   Alc2Free((void **)iBuf);

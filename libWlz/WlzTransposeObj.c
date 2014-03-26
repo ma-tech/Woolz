@@ -212,7 +212,7 @@ WlzObject *WlzTransposeObj(
 				                  NULL), &errNum)) != NULL){
       nobj->values = WlzAssignValues(values, NULL);
 
-  /* transfer values */
+      /* transfer values */
       errNum = WlzInitGreyScan(nobj, &iwsp, &gwsp);
       if(errNum == WLZ_ERR_NONE){
 	gVWSp = WlzGreyValueMakeWSp(obj, &errNum);
@@ -245,7 +245,7 @@ WlzObject *WlzTransposeObj(
 	    }
 	  }
 	}
-	(void )WlzEndGreyScan(&gwsp);
+	(void )WlzEndGreyScan(&iwsp, &gwsp);
       }
       if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
       {
@@ -500,7 +500,7 @@ static WlzObject *WlzTransposeRectObj(
 			    (const void *) (gwsp.u_grintptr.ubp+off2), size);
 	    }
 	  }
-	  (void )WlzEndGreyScan(&gwsp);
+	  (void )WlzEndGreyScan(&iwsp, &gwsp);
 	}
 	if(errNum == WLZ_ERR_EOO)	/* Reset error from end of intervals */
 	{

@@ -451,7 +451,7 @@ static WlzDVertex2 WlzCentreOfMassDom2D(WlzObject *srcObj, int binObjFlag,
 	  errNum = WLZ_ERR_NONE;
 	}
       }
-      (void )WlzEndGreyScan(&gWsp);
+      (void )WlzEndGreyScan(&iWsp, &gWsp);
     }
   }
   if(errNum == WLZ_ERR_NONE)

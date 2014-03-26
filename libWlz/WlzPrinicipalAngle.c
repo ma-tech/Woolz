@@ -239,10 +239,7 @@ double		WlzPrincipalAngle(WlzObject *srcObj, WlzDVertex2 cMass,
 	    break;
 	}
       }
-      if(iWsp.gryptr == &gWsp)
-      {
-        (void )WlzEndGreyScan(&gWsp);
-      }
+      (void )WlzEndGreyScan(&iWsp, &gWsp);
       if(errNum == WLZ_ERR_EOO)		/* Reset error from end of intervals */
       {
         errNum = WLZ_ERR_NONE;
