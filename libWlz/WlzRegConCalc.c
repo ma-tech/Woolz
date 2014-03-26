@@ -296,7 +296,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
   WlzLong	u01 = 0; 		/* |\Omega_0 \cup \Omega_1| */
   WlzLong	u[2] = {0},		/* |\Omega_i|, i \in 0 \cdots 1 */
   		v[2] = {0};		/* |c_9|, |c_{10}| */
-  WlzObject	*c[8] = {NULL},		/* c_i, i \in 0 \cdots 8 */
+  WlzObject	*c[9] = {NULL},		/* c_i, i \in 0 \cdots 8 */
 		*o[2] = {NULL},		/* \Omega_i, i \in 0 \cdots 1 */
 		*t[WLZ_RCCTOIDX_CNT] = {NULL}; /* Temporary object as
 					in the enum WlzRCCTOIdx. */
@@ -322,10 +322,12 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
   {
     errNum = WLZ_ERR_OBJECT_TYPE;
   }
-  else if(((o[0] = WlzMakeMain(obj0->type, obj0->domain, nullValues,
-  			       NULL, NULL, &errNum)) != NULL) &&
-          ((o[1] = WlzMakeMain(obj1->type, obj1->domain, nullValues,
-	  		       NULL, NULL, &errNum)) != NULL))
+  else if(((o[0] = WlzAssignObject(
+                   WlzMakeMain(obj0->type, obj0->domain, nullValues,
+  			       NULL, NULL, &errNum), NULL)) != NULL) &&
+          ((o[1] = WlzAssignObject(
+		   WlzMakeMain(obj1->type, obj1->domain, nullValues,
+	  		       NULL, NULL, &errNum), NULL)) != NULL))
   {
     errNum = WlzRCCMakeC(c, o, t, 0);
   }
@@ -585,7 +587,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
   {
     (void )WlzFreeObj(t[i]);
   }
-  for(i = 0; i <= 8; ++i)
+  for(i = 0; i <= 9; ++i)
   {
     (void )WlzFreeObj(c[i]);
   }
@@ -616,7 +618,7 @@ static WlzErrorNum  WlzRCCMakeC(WlzObject **c, WlzObject **o, WlzObject **t,
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((i >= 0) && (i <= 8) && (c[i] == NULL))
+  if((i >= 0) && (i <= 9) && (c[i] == NULL))
   {
     switch(i)
     {
@@ -762,6 +764,7 @@ static WlzErrorNum WlzRCCMakeT(WlzObject **t, WlzObject **o, WlzRCCTOIdx i)
         break;
       case WLZ_RCCTOIDX_O0VO1I:                   /* o_0^v \cap o_1   */
       case WLZ_RCCTOIDX_O0O1VI: /* FALLTHROUGH */ /* o_0   \cap o_1^v */
+#ifdef HACK_USE_CHULL
 	{
 	  int		i0,
 	  		i1;
@@ -776,6 +779,7 @@ static WlzErrorNum WlzRCCMakeT(WlzObject **t, WlzObject **o, WlzRCCTOIdx i)
 	  }
 	  (void )WlzFreeObj(t);
 	}
+#endif
         break;
       default:
         break;

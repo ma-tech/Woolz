@@ -81,13 +81,13 @@ WlzObject	*WlzXORDom(WlzObject *o0, WlzObject *o1, WlzErrorNum *dstErr)
 #pragma omp section
       {
 #endif
-	d0 = WlzDiffDomain(o0, o1, &errNum0);
+	d0 = WlzAssignObject(WlzDiffDomain(o0, o1, &errNum0), NULL);
 #ifdef _OPENMP
       }
 #pragma omp section
       {
 #endif
-	d1 = WlzDiffDomain(o1, o0, &errNum1);
+	d1 = WlzAssignObject(WlzDiffDomain(o1, o0, &errNum1), NULL);
 #ifdef _OPENMP
       }
     }
