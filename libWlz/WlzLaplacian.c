@@ -51,7 +51,10 @@ static char _WlzLaplacian_c[] = "University of Edinburgh $Id$";
 * \param	kSize			Kernel size, must be 3, 5 or 7.
 * \param	newObjFlag		If zero the convolution is done
 *                                       in place, else a new object is
-*                                       created.
+*                                       created. However, if the given object
+*                                       has RGBA values then a new object
+*                                       will always be created irrespective
+*                                       of this flags value.
 * \param	modFlag			Take the absolute value of the
 *                                       convolution if non zero (this
 *                                       is always the case for a WlzUByte
@@ -63,7 +66,8 @@ WlzObject	*WlzLaplacian(WlzObject *srcObj, int kSize,
 			      int newObjFlag, int modFlag,
 			      WlzErrorNum *dstErr)
 {
-  WlzObject	*dstObj = NULL;
+  WlzObject	*dstObj = NULL,
+  		*tmpObj = NULL;
   WlzGreyType	gType;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const int	lMask3I[] = 		     /* 3 by 3 with central weight 1 */
@@ -141,6 +145,7 @@ WlzObject	*WlzLaplacian(WlzObject *srcObj, int kSize,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    tmpObj = srcObj;
     lConv.linkcount = 0;
     lConv.xsize = kSize;
     lConv.ysize = kSize;
@@ -150,6 +155,10 @@ WlzObject	*WlzLaplacian(WlzObject *srcObj, int kSize,
     lConv.modflag = gType == WLZ_GREY_UBYTE? 1: modFlag;
     switch(gType)
     {
+      case WLZ_GREY_RGBA: /* FALLTHROUGH */
+	newObjFlag = 1;
+        tmpObj = WlzAssignObject(
+		 WlzConvertPix(srcObj, WLZ_GREY_SHORT, &errNum), NULL);
       case WLZ_GREY_INT:
       case WLZ_GREY_SHORT:
       case WLZ_GREY_UBYTE:
@@ -195,7 +204,6 @@ WlzObject	*WlzLaplacian(WlzObject *srcObj, int kSize,
 	    break;
 	}
 	break;
-      case WLZ_GREY_RGBA: /* RGBA to be done RAB */
       default:
 	errNum = WLZ_ERR_GREY_DATA;
         break;
@@ -203,7 +211,11 @@ WlzObject	*WlzLaplacian(WlzObject *srcObj, int kSize,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    dstObj = WlzConvolveObj(srcObj, &lConv, newObjFlag, &errNum);
+    dstObj = WlzConvolveObj(tmpObj, &lConv, newObjFlag, &errNum);
+  }
+  if(tmpObj && (tmpObj != srcObj))
+  {
+    (void )WlzFreeObj(tmpObj);
   }
   if(dstErr)
   {

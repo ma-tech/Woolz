@@ -58,6 +58,7 @@ WlzObject	*WlzSobel(WlzObject *srcObj, int hFlag, int vFlag,
 			  WlzErrorNum *dstErr)
 {
   WlzObject	*dstObj = NULL,
+		*tmpObj = NULL,
   		*objH = NULL,
 		*objV = NULL;
   WlzGreyType	gType;
@@ -125,13 +126,19 @@ WlzObject	*WlzSobel(WlzObject *srcObj, int hFlag, int vFlag,
       case WLZ_GREY_INT:
       case WLZ_GREY_SHORT:
       case WLZ_GREY_UBYTE:
+	tmpObj = srcObj;
         sConv.type = WLZ_CONVOLVE_INT;
         break;
       case WLZ_GREY_FLOAT:
       case WLZ_GREY_DOUBLE:
+	tmpObj = srcObj;
         sConv.type = WLZ_CONVOLVE_FLOAT;
 	break;
-      case WLZ_GREY_RGBA: /* RGBA to be done RAB */
+      case WLZ_GREY_RGBA:
+        tmpObj = WlzAssignObject(
+		 WlzConvertPix(srcObj, WLZ_GREY_SHORT, &errNum), NULL);
+        sConv.type = WLZ_CONVOLVE_INT;
+	break;
       default:
 	errNum = WLZ_ERR_GREY_DATA;
         break;
@@ -144,14 +151,16 @@ WlzObject	*WlzSobel(WlzObject *srcObj, int hFlag, int vFlag,
       sConv.cv = (sConv.type == WLZ_CONVOLVE_INT)?
       		 (int *)(&(sMaskHI[0])):
       		 (int *)(&(sMaskHD[0]));
-      objH = WlzConvolveObj(srcObj, &sConv, 1, &errNum);
+      objH = WlzAssignObject(
+             WlzConvolveObj(tmpObj, &sConv, 1, &errNum), NULL);
     }
     if((errNum == WLZ_ERR_NONE) && vFlag)
     {
       sConv.cv = (sConv.type == WLZ_CONVOLVE_INT)?
       		 (int *)(&(sMaskVI[0])):
       		 (int *)(&(sMaskVD[0]));
-      objV = WlzConvolveObj(srcObj, &sConv, 1, &errNum);
+      objV = WlzAssignObject(
+      	     WlzConvolveObj(tmpObj, &sConv, 1, &errNum), NULL);
     }
     if(errNum == WLZ_ERR_NONE)
     {
@@ -174,12 +183,13 @@ WlzObject	*WlzSobel(WlzObject *srcObj, int hFlag, int vFlag,
 	objV = NULL;
       }
     }
-    else
-    {
-      (void )WlzFreeObj(objH);
-      (void )WlzFreeObj(objV);
-    }
   }
+  if(tmpObj && (tmpObj != srcObj))
+  {
+    (void )WlzFreeObj(tmpObj);
+  }
+  (void )WlzFreeObj(objH);
+  (void )WlzFreeObj(objV);
   if(dstErr)
   {
     *dstErr = errNum;
