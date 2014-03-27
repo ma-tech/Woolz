@@ -587,7 +587,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
   {
     (void )WlzFreeObj(t[i]);
   }
-  for(i = 0; i <= 9; ++i)
+  for(i = 0; i < 9; ++i)
   {
     (void )WlzFreeObj(c[i]);
   }
