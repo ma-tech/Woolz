@@ -223,6 +223,8 @@ int             main(int argc, char **argv)
       fclose(fP);
     }
   }
+  (void )WlzFreeObj(inObj);
+  (void )WlzFreeObj(outObj);
   if(usage)
   {
     (void )fprintf(stderr,
