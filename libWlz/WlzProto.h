@@ -2080,6 +2080,40 @@ extern WlzErrorNum		WlzCompThresholdVT(
 				  WlzThresholdType *dstTType);
 
 /************************************************************************
+* WlzConComThreshold.c
+************************************************************************/
+extern WlzObject		*WlzConComThreshold2D(
+				  WlzObject *gObj,
+				  int sizeArraySeeds,
+				  WlzIVertex2 *arraySeeds,
+				  WlzThresholdType hilo,
+				  int xtr,
+				  double rad,
+				  WlzThresholdType rHiLo,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzConComThreshold3D(
+				  WlzObject *gObj,
+				  int sizeArraySeeds,
+				  WlzIVertex3 *arraySeeds,
+				  WlzThresholdType hilo,
+				  int xtr,
+				  double rad,
+				  WlzThresholdType rHiLo,
+				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
+extern WlzObject		*WlzConComThreshold(
+				  WlzObject *gObj,
+				  int nSeeds,
+				  WlzVertexType seedType,
+				  WlzVertexP seeds,
+				  WlzThresholdType tHiLo,
+				  int xtr,
+				  double rad,
+				  WlzThresholdType rHiLo,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
 * WlzConstruct3D.c
 ************************************************************************/
 #ifndef WLZ_EXT_BIND

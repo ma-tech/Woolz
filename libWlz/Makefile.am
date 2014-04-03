@@ -85,6 +85,7 @@ libWlz_la_SOURCES 	= \
 			  WlzCompDispIncGrey.c \
 			  WlzCompoundArrayToScalar.c \
 			  WlzCompThresh.c \
+			  WlzConComThreshold.c \
 			  WlzConstruct3D.c \
 			  WlzContour.c \
 			  WlzConvertPix.c \

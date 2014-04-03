@@ -84,6 +84,7 @@ bin_PROGRAMS		= \
 			  WlzCompoundArrayToScalar \
 			  WlzCompDispIncGrey \
 			  WlzCompThresh \
+			  WlzConComThreholdObj \
 			  WlzConstruct3D \
 			  WlzContourCut \
 			  WlzContourFlipOrient \
@@ -357,6 +358,10 @@ WlzCompThresh_SOURCES			= WlzCompThresh.c
 WlzCompThresh_LDADD			= $(LDADD)
 WlzCompThresh_LDFLAGS			= $(AM_LFLAGS)
 
+WlzCompThresh_SOURCES			= WlzCompThresh.c
+WlzCompThresh_LDADD			= $(LDADD)
+WlzCompThresh_LDFLAGS			= $(AM_LFLAGS)
+
 WlzCompound_SOURCES			= WlzCompound.c
 WlzCompound_LDADD			= $(LDADD)
 WlzCompound_LDFLAGS			= $(AM_LFLAGS)
@@ -364,6 +369,10 @@ WlzCompound_LDFLAGS			= $(AM_LFLAGS)
 WlzCompoundArrayToScalar_SOURCES	= WlzCompoundArrayToScalar.c
 WlzCompoundArrayToScalar_LDADD		= $(LDADD)
 WlzCompoundArrayToScalar_LDFLAGS	= $(AM_LFLAGS)
+
+WlzConComThreholdObj_SOURCES		= WlzConComThreholdObj.c
+WlzConComThreholdObj_LDADD		= $(LDADD)
+WlzConComThreholdObj_LDFLAGS		= $(AM_LFLAGS)
 
 WlzConstruct3D_SOURCES			= WlzConstruct3D.c
 WlzConstruct3D_LDADD			= $(LDADD)
