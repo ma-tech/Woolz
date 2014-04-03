@@ -81,7 +81,8 @@ WlzObject *WlzUnion3d(int	n,
 	errNum = WLZ_ERR_DOMAIN_TYPE;
 	break;
       }
-      if(uvt && (objs[i]->values.core->type != WLZ_VOXELVALUETABLE_GREY)){
+      if(uvt && objs[i]->values.core &&
+        (objs[i]->values.core->type != WLZ_VOXELVALUETABLE_GREY)){
         errNum = WLZ_ERR_VALUES_TYPE;
 	break;
       }
