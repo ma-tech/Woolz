@@ -335,8 +335,10 @@ WlzErrorNum WlzLabel(
 	  link2 = newchain1(freechain, (unsigned long) link1);
 	  /* "object" -- first line, last line, line-of-intervals pointer */
 	  crntal->a_link  = newchain1(freechain,line) ;
-	  crntal->a_link = addlink1 (freechain, crntal->a_link, (unsigned long)line);
-	  crntal->a_link = addlink1 (freechain, crntal->a_link, (unsigned long) link2);
+	  crntal->a_link = addlink1 (freechain, crntal->a_link,
+	                             (unsigned long )line);
+	  crntal->a_link = addlink1 (freechain, crntal->a_link,
+	                             (unsigned long )link2);
 	}
 	/* move on to next interval in current line */
 	crntal++ ;
@@ -351,18 +353,21 @@ WlzErrorNum WlzLabel(
 	    alloc = alprec ;
 	    link1 = alloc->l_link ;
 	    crntal->a_link = alloc ;
-	    /* test whether this line has already been started for this object */
+	    /* test whether this line has already been started for this
+	     * object */
 	    if (link1->l_u.line != line) {
 	      /* update last line */
 	      link1->l_u.line = line;
 	      /* add a link to the line list for this line */
 	      link1 = newchain2(freechain,lftcrn,jrtcrn);
-	      alloc->l_u.u_link = addlink1 (freechain, alloc->l_u.u_link, (unsigned long) link1);
+	      alloc->l_u.u_link = addlink1 (freechain, alloc->l_u.u_link,
+	                                    (unsigned long )link1);
 	    }
 	    else {
 	      /* add interval to interval list for last line */
 	      link1 = alloc->l_u.u_link;
-	      link1->l_u.u_link = addlink2 (freechain, link1->l_u.u_link, lftcrn, jrtcrn);
+	      link1->l_u.u_link = addlink2 (freechain, link1->l_u.u_link,
+	                                    lftcrn, jrtcrn);
 	    }
 	  }
 	  else {
@@ -402,7 +407,8 @@ WlzErrorNum WlzLabel(
     if (precst <= prlast) { 
       for (precal = precst; precal <= prlast; precal++) {
 	alprec = precal->a_link ;
-	/* has the object to which this interval was allocated been dealt with */
+	/* has the object to which this interval was allocated been dealt
+	 * with */
 	if (alprec) { 
 	  /* remove any later intervals allocated to the same object */
 	  for (altemp = precal; altemp <= prlast; altemp++) {
