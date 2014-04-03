@@ -215,6 +215,8 @@ int main(int	argc,
 	  WlzFreeObj(*(objlist + i));
 	}
       }
+      (void )AlcFree(objlist);
+      objlist = NULL;
       break;
 
     default:
