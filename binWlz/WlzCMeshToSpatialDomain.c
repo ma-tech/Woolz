@@ -80,7 +80,7 @@ WlzCMeshToSpatialDomain -o out.wlz mesh.wlz
 Creates a new spatial domain object which covers the given mesh read from
 the file mesh.wlz. The new domain is written to the file out.wlz.
 \par File
-\ref WlzCMeshToSpatialDomain.c "WlzDistanceTransform.c"
+\ref WlzCMeshToSpatialDomain.c "WlzCMeshToSpatialDomain.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
 \ref WlzCMeshDistance2D "WlzCMeshDistance2D(3)"
