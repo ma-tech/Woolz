@@ -42,21 +42,20 @@ static char _WlzLabel3d_c[] = "University of Edinburgh $Id$";
 #include <stdlib.h>
 #include <Wlz.h>
 
-
-static WlzObject	***objarray;
-static int 		*narray;
-
 static WlzObject *find3Dobj(
+  int		*narray,
+  WlzObject	***objarray,
   WlzObject		*obj,
   int			p,
   WlzPlaneDomain	*pladm,
   WlzErrorNum		*dstErr);
 
 static WlzErrorNum removeObj(
+  int		*narray,
+  WlzObject	***objarray,
   WlzObject	*obj,
   int		p);
 
-/* function:     WlzLabel3d    */
 /*! 
 * \ingroup      WlzBinaryOps
 * \brief        Segment a 3D object. This is a private routine for
@@ -81,11 +80,13 @@ WlzErrorNum WlzLabel3d(
   WlzConnectType	connect)
 {
   /* local variables */
+  int 			i, nplanes;
   WlzObject		*tobj;
   WlzPlaneDomain	*planedm;
   WlzDomain		*domains;
   WlzValues		*values;
-  int 			i, nplanes;
+  WlzObject		***objarray;
+  int 			*narray;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /* only need to check the planedomain type because object pointer
@@ -123,53 +124,78 @@ WlzErrorNum WlzLabel3d(
   }
   nplanes = planedm->lastpl - planedm->plane1 + 1;
 
-  /* allocate space for working arrays */
-  if( (objarray = (WlzObject ***)
-       AlcMalloc(sizeof(WlzObject **) * nplanes)) == NULL ){
+  /* Allocate space for working arrays. */
+  if((objarray = (WlzObject ***)
+                 AlcCalloc(nplanes, sizeof(WlzObject **))) == NULL ){
     *numobj = 0;
     return WLZ_ERR_MEM_ALLOC;
   }
-  if( (narray = (int *) AlcMalloc(sizeof(int) * nplanes)) == NULL ){
-    AlcFree((void *) objarray);
+  if((narray = (int *)AlcCalloc(nplanes, sizeof(int))) == NULL ){
+    AlcFree((void *)objarray);
     *numobj = 0;
     return WLZ_ERR_MEM_ALLOC;
   }
 
-  /* find object list at each plane */
-  if( errNum == WLZ_ERR_NONE ){
-    for(i=0; (i < nplanes) && (errNum == WLZ_ERR_NONE); i++){
-      WlzDomain	domain;
-      WlzValues	value;
-
-      domain = domains[i];
-      value.core = NULL;
-      if( values ){
-	value = values[i];
-      }
-      if((domain.core != NULL) &&
-         ((tobj = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, value,
-			      NULL, NULL, &errNum)) != NULL)){
-	tobj = WlzAssignObject(tobj, NULL);
-	errNum = WlzLabel(tobj, &narray[i], &objarray[i], nobj,
-			    ignlns, connect);
-	WlzFreeObj(tobj);
-      }
-      else
+  /* Find object list at each plane. */
+  if( errNum == WLZ_ERR_NONE )
+  {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(i = 0; i < nplanes; ++i)
+    {
+      if(errNum == WLZ_ERR_NONE)
       {
-        narray[i] = 0;
+	WlzDomain	dom2;
+	WlzErrorNum	errNum2 = WLZ_ERR_NONE;
+
+	dom2 = domains[i];
+	if(dom2.core != NULL)
+	{
+	  WlzValues	val2;
+          WlzObject	*obj2;
+	 
+	  val2.core = (values)? values[i].core: NULL;
+	  obj2 = WlzAssignObject(
+	         WlzMakeMain(WLZ_2D_DOMAINOBJ, dom2, val2,
+			     NULL, NULL, &errNum2), NULL);
+	  if(obj2)
+	  {
+	    errNum2 = WlzLabel(obj2, &narray[i], &objarray[i], nobj,
+			       ignlns, connect);
+	    WlzFreeObj(obj2);
+	  }
+	}
+#ifdef _OPENMP_HACK
+#pragma omp critical
+	{
+#endif
+	  if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
+	  {
+	    errNum = errNum2;
+	  }
+#ifdef _OPENMP_HACK
+	}
+#endif
       }
     }
   }
 
-  /* find sets of objects overlapping in 3D */
-  if( errNum == WLZ_ERR_NONE ){
+  /* Find sets of objects overlapping in 3D.
+   * The following code accounts for about 95% of the execution time
+   * and should be rewritten one day. */
+  if(errNum == WLZ_ERR_NONE)
+  {
     *numobj = 0;
-    for(i=0; (i < nplanes) && (errNum == WLZ_ERR_NONE); i++){
-      while((narray[i] != 0 ) && (*numobj < nobj)){
+    for(i=0; (i < nplanes) && (errNum == WLZ_ERR_NONE); i++)
+    {
+      while((narray[i] != 0 ) && (*numobj < nobj))
+      {
 	*numobj += 1;
 	tobj = objarray[i][0];
-	errNum = removeObj(tobj, i);
-	objlist[*numobj - 1] = find3Dobj(tobj, i, planedm, &errNum);
+	errNum = removeObj(narray, objarray, tobj, i);
+	objlist[*numobj - 1] = find3Dobj(narray, objarray, tobj, i, planedm,
+	                                 &errNum);
 	WlzFreeObj(tobj);
       }
     }
@@ -182,12 +208,13 @@ WlzErrorNum WlzLabel3d(
       AlcFree((void *) objarray[i]);
     }
   }
-  AlcFree((void *) objarray);
-
-  return errNum;
+  AlcFree((void *)objarray);
+  return(errNum);
 }
 
 static WlzErrorNum removeObj(
+  int		*narray,
+  WlzObject	***objarray,
   WlzObject	*obj,
   int		p)
 {
@@ -215,6 +242,8 @@ static WlzErrorNum removeObj(
 
 
 static WlzObject *find3Dobj(
+  int			*narray,
+  WlzObject		***objarray,
   WlzObject		*obj,
   int			p,
   WlzPlaneDomain	*pladm,
@@ -261,8 +290,8 @@ static WlzObject *find3Dobj(
     for(i=0; i < narray[p-1]; i++){
       if( WlzHasIntersection(obj, objarray[p-1][i], &errNum) ){
 	tobj = objarray[p-1][i];
-	removeObj(tobj, p-1);
-	new_3D = find3Dobj(tobj, p-1, pladm, &errNum);
+	removeObj(narray, objarray, tobj, p-1);
+	new_3D = find3Dobj(narray, objarray, tobj, p-1, pladm, &errNum);
 	WlzFreeObj(tobj);
 	objn[0] = current_3D;
 	objn[1] = new_3D;
@@ -280,8 +309,8 @@ static WlzObject *find3Dobj(
     for(i=0; i < narray[p+1]; i++){
       if( WlzHasIntersection(obj, objarray[p+1][i], &errNum) ){
 	tobj = objarray[p+1][i];
-	removeObj(tobj, p+1);
-	new_3D = find3Dobj(tobj, p+1, pladm, &errNum);
+	removeObj(narray, objarray, tobj, p+1);
+	new_3D = find3Dobj(narray, objarray, tobj, p+1, pladm, &errNum);
 	WlzFreeObj(tobj);
 	objn[0] = current_3D;
 	objn[1] = new_3D;
