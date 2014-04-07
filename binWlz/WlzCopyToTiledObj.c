@@ -246,9 +246,15 @@ int		main(int argc, char *argv[])
 	      switch(inObj->type)
 	      {
 	        case WLZ_2D_DOMAINOBJ:
-		  obj1 = WlzConstruct3DObjFromObj(1, &inObj, 0,
-		  				  1.0f, 1.0f, 1.0f,
-						  &errNum);
+		  if(tlObj->type == WLZ_3D_DOMAINOBJ)
+		  {
+		    obj1 = WlzConstruct3DObjFromObj(1, &inObj, 0,
+						    1.0f, 1.0f, 1.0f,
+						    &errNum);
+		  }
+		  {
+		    obj1 = WlzAssignObject(inObj, NULL);
+		  }
 		  break;
 	        case WLZ_3D_DOMAINOBJ:
 		  obj1 = WlzAssignObject(inObj, NULL);
