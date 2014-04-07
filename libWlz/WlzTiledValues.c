@@ -804,10 +804,6 @@ static WlzObject  *WlzMakeTiledValuesObj2D(WlzObject *gObj, size_t tileSz,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(gObj->values.core == NULL)
-  {
-    errNum = WLZ_ERR_VALUES_NULL;
-  }
   else
   {
     errNum = WlzValueConvertPixel(&bgdV, bgdV, gType);
@@ -951,7 +947,7 @@ static WlzObject  *WlzMakeTiledValuesObj2D(WlzObject *gObj, size_t tileSz,
     (void )WlzFreeObj(idx);
   }
   /* Allocate tiles if the given object has values. */
-  if((errNum == WLZ_ERR_NONE) && (setTiles != 0))
+  if(errNum == WLZ_ERR_NONE)
   {
     errNum = WlzMakeTiledValuesTiles(tVal);
   }
@@ -964,7 +960,8 @@ static WlzObject  *WlzMakeTiledValuesObj2D(WlzObject *gObj, size_t tileSz,
     tObj = WlzMakeMain(gObj->type, gObj->domain, val, NULL, NULL, &errNum);
   }
   /* Copy the values to the object with the tiles values. */
-  if((errNum == WLZ_ERR_NONE) && (setTiles != 0))
+  if((errNum == WLZ_ERR_NONE) && (setTiles != 0) &&
+     (gObj->values.core != NULL))
   {
     errNum = WlzCopyObjectGreyValues(tObj, gObj);
   }
@@ -1177,7 +1174,7 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
     (void )WlzFreeObj(idx);
   }
   /* Allocate tiles if the given object has values. */
-  if((errNum == WLZ_ERR_NONE) && (setTiles != 0))
+  if(errNum == WLZ_ERR_NONE)
   {
     errNum = WlzMakeTiledValuesTiles(tVal);
   }
@@ -1190,7 +1187,8 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
     tObj = WlzMakeMain(gObj->type, gObj->domain, val, NULL, NULL, &errNum);
   }
   /* Copy the values to the object with the tiles values. */
-  if((errNum == WLZ_ERR_NONE) && (setTiles != 0))
+  if((errNum == WLZ_ERR_NONE) && (setTiles != 0) &&
+     (gObj->values.core != NULL))
   {
     errNum = WlzCopyObjectGreyValues(tObj, gObj);
   }
