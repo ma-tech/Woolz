@@ -164,6 +164,9 @@ static WlzErrorNum 		WlzObjFactsPointsDomain(
 static WlzErrorNum 		WlzObjFactsPointsValues(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj);
+static WlzErrorNum 		WlzObjFactsConvHullDomain(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj);
 
 /*!
 * \return	Woolz error code.
@@ -484,8 +487,14 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
 	  }
 	  break;
+	case WLZ_CONV_HULL:
+	  errNum = WlzObjFactsConvHullDomain(fData, obj);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
+	  break;
 	case WLZ_3D_WARP_TRANS:   /* FALLTHROUGH */
-	case WLZ_CONV_HULL:       /* FALLTHROUGH */
 	case WLZ_3D_POLYGON:      /* FALLTHROUGH */
 	case WLZ_RECTANGLE:       /* FALLTHROUGH */
 	case WLZ_CONVOLVE_INT:    /* FALLTHROUGH */
@@ -3118,3 +3127,229 @@ static WlzErrorNum WlzObjFactsPointsValues(WlzObjFactsData *fData,
   --(fData->indent);
   return(errNum);
 }
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzDebug
+* \brief	Produces a text description of a convex hull domain.
+* \param	fData			Facts data structure.
+* \param	obj			Object with a convex hull domain.
+*/
+static WlzErrorNum WlzObjFactsConvHullDomain(WlzObjFactsData *fData,
+					     WlzObject *obj)
+{
+  const char	*tStr;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+
+  ++(fData->indent);
+  tStr = WlzStringFromObjDomainType(obj, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Domain NULL.\n");
+      errNum = WLZ_ERR_NONE;
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Domain type invalid.\n");
+    }
+  }
+  else
+  {
+    errNum = WlzObjFactsAppend(fData, "Domain type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n",
+                                 obj->domain.core->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      switch(obj->domain.core->type)
+      {
+        case WLZ_CONVHULL_DOMAIN_2D:
+	  {
+	    WlzConvHullDomain2 *cvh;
+
+	    cvh = obj->domain.cvh2;
+            errNum = WlzObjFactsAppend(fData, "nVertices: %d.\n",
+	                               cvh->nVertices);
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = WlzObjFactsAppend(fData, "maxVertices: %d.\n",
+	                                 cvh->maxVertices);
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = WlzObjFactsAppend(fData, "vtxType: %s.\n",
+		           WlzStringFromVertexType(cvh->vtxType, NULL));
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      switch(cvh->vtxType)
+	      {
+	        case WLZ_VERTEX_I2:
+		  errNum = WlzObjFactsAppend(fData, "centroid: %d,%d.\n",
+			       cvh->centroid.i2.vtX, cvh->centroid.i2.vtY);
+		  break;
+	        case WLZ_VERTEX_L2:
+		  errNum = WlzObjFactsAppend(fData, "centroid: %ld,%ld.\n",
+			       cvh->centroid.l2.vtX, cvh->centroid.l2.vtY);
+		  break;
+	        case WLZ_VERTEX_F2:
+		  errNum = WlzObjFactsAppend(fData, "centroid: %g,%g.\n",
+			       cvh->centroid.f2.vtX, cvh->centroid.f2.vtY);
+		  break;
+	        case WLZ_VERTEX_D2:
+		  errNum = WlzObjFactsAppend(fData, "centroid: %lg,%lg.\n",
+			       cvh->centroid.d2.vtX, cvh->centroid.d2.vtY);
+		  break;
+		default:
+		  errNum = WlzObjFactsAppend(fData,
+		  		"centroid: Not a valid 2D vertex.\n");
+		  break;
+	      }
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = WlzObjFactsAppend(fData, "vertices: %p.\n",
+	                                 cvh->vertices.v);
+	    }
+	    if((errNum == WLZ_ERR_NONE) && (fData->verbose != 0))
+	    {
+	      int	v;
+
+	      ++(fData->indent);
+	      for(v = 0; v < cvh->nVertices; ++v)
+	      {
+	        switch(cvh->vtxType)
+		{
+		  case WLZ_VERTEX_I2:
+		    (void )WlzObjFactsAppend(fData, "%d,%d\n",
+				 cvh->vertices.i2[v].vtX,
+				 cvh->vertices.i2[v].vtY);
+		    break;
+		  case WLZ_VERTEX_D2:
+		    (void )WlzObjFactsAppend(fData, "%lg,%lg\n",
+				 cvh->vertices.d2[v].vtX,
+				 cvh->vertices.d2[v].vtY);
+		    break;
+		  default:
+		    break;
+		}
+	      }
+	      --(fData->indent);
+	    }
+	  }
+	  break;
+        case WLZ_CONVHULL_DOMAIN_3D:
+	  {
+	    WlzConvHullDomain3 *cvh;
+
+	    cvh = obj->domain.cvh3;
+            errNum = WlzObjFactsAppend(fData, "nVertices: %d.\n",
+	                               cvh->nVertices);
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = WlzObjFactsAppend(fData, "maxVertices: %d.\n",
+	                                 cvh->maxVertices);
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = WlzObjFactsAppend(fData, "nFaces: %d.\n",
+	                                 cvh->nFaces);
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = WlzObjFactsAppend(fData, "maxFaces: %d.\n",
+	                                 cvh->maxFaces);
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = WlzObjFactsAppend(fData, "vtxType: %s.\n",
+		           WlzStringFromVertexType(cvh->vtxType, NULL));
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      switch(cvh->vtxType)
+	      {
+	        case WLZ_VERTEX_I3:
+		  errNum = WlzObjFactsAppend(fData, "centroid: %d,%d,%d.\n",
+			       cvh->centroid.i3.vtX, cvh->centroid.i3.vtY,
+			       cvh->centroid.i3.vtZ);
+		  break;
+	        case WLZ_VERTEX_D3:
+		  errNum = WlzObjFactsAppend(fData, "centroid: %lg,%lg,%lg.\n",
+			       cvh->centroid.d3.vtX, cvh->centroid.d3.vtY,
+			       cvh->centroid.d3.vtZ);
+		  break;
+		default:
+		  errNum = WlzObjFactsAppend(fData,
+		  		"centroid: Not a valid 3D vertex.\n");
+		  break;
+	      }
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = WlzObjFactsAppend(fData, "vertices: %p.\n",
+	                                 cvh->vertices.v);
+	    }
+	    if((errNum == WLZ_ERR_NONE) && (fData->verbose != 0))
+	    {
+	      int	v;
+
+	      ++(fData->indent);
+	      for(v = 0; v < cvh->nVertices; ++v)
+	      {
+	        switch(cvh->vtxType)
+		{
+		  case WLZ_VERTEX_I3:
+		    (void )WlzObjFactsAppend(fData, "%d,%d,%d\n",
+				 cvh->vertices.i3[v].vtX,
+				 cvh->vertices.i3[v].vtY,
+				 cvh->vertices.i3[v].vtZ);
+		    break;
+		  case WLZ_VERTEX_D3:
+		    (void )WlzObjFactsAppend(fData, "%lg,%lg,%lg\n",
+				 cvh->vertices.d3[v].vtX,
+				 cvh->vertices.d3[v].vtY,
+				 cvh->vertices.d3[v].vtZ);
+		    break;
+		  default:
+		    break;
+		}
+	      }
+	      --(fData->indent);
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = WlzObjFactsAppend(fData, "faces: %p.\n",
+	                                 cvh->faces);
+	    }
+	    if((errNum == WLZ_ERR_NONE) && (fData->verbose != 0))
+	    {
+	      int	f;
+
+	      ++(fData->indent);
+	      for(f = 0; f < cvh->nFaces; f += 3)
+	      {
+		(void )WlzObjFactsAppend(fData, "%d,%d,%d\n",
+			     cvh->faces[f + 0],
+			     cvh->faces[f + 1],
+			     cvh->faces[f + 2]);
+	      }
+	      --(fData->indent);
+	    }
+	  }
+	  break;
+        default:
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	  break;
+      }
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
