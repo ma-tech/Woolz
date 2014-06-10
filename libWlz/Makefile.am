@@ -90,6 +90,7 @@ libWlz_la_SOURCES 	= \
 			  WlzContour.c \
 			  WlzConvertPix.c \
 			  WlzConvexHull.c \
+			  WlzConvexHull3D.c \
 			  WlzConvexHullClarkson.c \
 			  WlzConvolve.c \
 			  WlzCopy.c \
