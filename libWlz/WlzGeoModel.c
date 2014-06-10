@@ -6707,6 +6707,7 @@ void		WlzGMModelResIdxFree(WlzGMResIdxTb *resIdxTb)
     AlcFree(resIdxTb->loopT.idxLut);
     AlcFree(resIdxTb->shell.idxLut);
     AlcFree(resIdxTb->shellG.idxLut);
+    AlcFree(resIdxTb);
   }
 }
 
