@@ -202,6 +202,9 @@ static WlzPoints		*WlzReadPointsDomain(
 static WlzErrorNum		WlzReadPointsValues(
 				  FILE *fP,
 				  WlzObject *obj);
+static WlzDomain 		WlzReadConvexHull(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
 #ifdef WLZ_OLD_CMESH_TRANS_SUPPORT
 static WlzObject 		*WlzReadOldCMeshTransform(
 				  FILE *fP,
@@ -621,13 +624,19 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
 	}
 	break;
-      /* orphans and not yet implemented object types for I/O */
       case WLZ_CONV_HULL:
-      case WLZ_3D_POLYGON:
-      case WLZ_CONVOLVE_INT:
-      case WLZ_CONVOLVE_FLOAT:
-      case WLZ_TEXT:
-      case WLZ_COMPOUND_LIST_1:
+	domain = WlzReadConvexHull(fp, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+	}
+        break;
+      /* orphans and not yet implemented object types for I/O */
+      case WLZ_3D_POLYGON:      /* FALLTHROUGH */
+      case WLZ_CONVOLVE_INT:    /* FALLTHROUGH */
+      case WLZ_CONVOLVE_FLOAT:  /* FALLTHROUGH */
+      case WLZ_TEXT:		/* FALLTHROUGH */
+      case WLZ_COMPOUND_LIST_1: /* FALLTHROUGH */
       case WLZ_COMPOUND_LIST_2:
       default:
 	errNum = WLZ_ERR_OBJECT_TYPE;
@@ -5127,6 +5136,126 @@ static WlzErrorNum	WlzReadPointsValues(FILE *fP, WlzObject *obj)
     }
   }
   return(errNum);
+}
+
+/*!
+* \return	New domain which contains a 2 or 3D convex hull, or on
+* 		error NULL.
+* \ingroup	WlzIO
+* \brief	Reads either a 2 or 3D convex hull domain from the input file.
+* \param	fp			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzDomain WlzReadConvexHull(FILE *fP, WlzErrorNum *dstErr)
+{
+  WlzObjectType	type;
+  WlzDomain	dom;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  dom.core = NULL;
+  type = (WlzObjectType)getc(fP);
+  if(type == (WlzObjectType )EOF)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if(type == WLZ_NULL)
+  {
+    errNum = WLZ_ERR_EOO;
+  }
+  else if(type == WLZ_CONVHULL_DOMAIN_2D)
+  {
+    int		nVtx;
+    WlzVertexType vType;
+
+    vType = getc(fP);
+    nVtx = getword(fP);
+    if(feof(fP) != 0)
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+    else if(((vType != WLZ_VERTEX_I2) && (vType != WLZ_VERTEX_D2)) ||
+            (nVtx < 0))
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+    else
+    {
+      dom.cvh2 = WlzMakeConvexHullDomain2(nVtx, vType, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      dom.cvh2->nVertices = nVtx;
+      errNum = (vType == WLZ_VERTEX_I2)?
+               WlzReadVertex2I(fP, &(dom.cvh2->centroid.i2), 1):
+               WlzReadVertex2D(fP, &(dom.cvh2->centroid.d2), 1);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = (vType == WLZ_VERTEX_I2)?
+               WlzReadVertex2I(fP, dom.cvh2->vertices.i2, nVtx):
+               WlzReadVertex2D(fP, dom.cvh2->vertices.d2, nVtx);
+    }
+    if((errNum != WLZ_ERR_NONE) && (dom.core != NULL))
+    {
+      (void )WlzFreeConvexHullDomain2(dom.cvh2);
+      dom.core = NULL;
+    }
+  }
+  else if(type == WLZ_CONVHULL_DOMAIN_3D)
+  {
+    int		nVtx,
+    		nFce;
+    WlzVertexType vType;
+
+    vType = getc(fP);
+    nVtx = getword(fP);
+    nFce = getword(fP);
+    if(feof(fP) != 0)
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+    else if(((vType != WLZ_VERTEX_I3) && (vType != WLZ_VERTEX_D3)) ||
+            (nVtx < 0) || (nFce < 0))
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+    else
+    {
+      dom.cvh3 = WlzMakeConvexHullDomain3(nVtx, nFce, vType, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      dom.cvh3->nVertices = nVtx;
+      dom.cvh3->nFaces = nFce;
+      errNum = (vType == WLZ_VERTEX_I3)?
+               WlzReadVertex3I(fP, &(dom.cvh3->centroid.i3), 1):
+               WlzReadVertex3D(fP, &(dom.cvh3->centroid.d3), 1);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = (vType == WLZ_VERTEX_I3)?
+               WlzReadVertex3I(fP, dom.cvh3->vertices.i3, nVtx):
+               WlzReadVertex3D(fP, dom.cvh3->vertices.d3, nVtx);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzReadInt(fP, dom.cvh3->faces, nFce);
+    }
+    if((errNum != WLZ_ERR_NONE) && (dom.core != NULL))
+    {
+      (void )WlzFreeConvexHullDomain3(dom.cvh3);
+      dom.core = NULL;
+    }
+  }
+  else
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dom);
 }
 	
 #ifdef WLZ_OLD_CMESH_TRANS_SUPPORT

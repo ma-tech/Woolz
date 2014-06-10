@@ -80,9 +80,6 @@ static WlzErrorNum		WlzWritePolygon(
 static WlzErrorNum		WlzWriteBoundList(
 				  FILE *fP,
 				  WlzBoundList *blist);
-static WlzErrorNum      	WlzWriteConvexHullValues(
-				  FILE *fP,
-				  WlzConvHullValues *cnvhull);
 static WlzErrorNum		WlzWriteRect(
 				  FILE *fP,
 				  WlzIRect *rdom);
@@ -191,7 +188,15 @@ static WlzErrorNum	 	WlzWritePoints(
 static WlzErrorNum      	WlzWritePointValues(
 				  FILE *fP,
 				  WlzObject *obj);
+static WlzErrorNum 		WlzWriteConvexHull(
+				  FILE *fP,
+				  WlzDomain dom);
 
+#ifdef WLZ_OLDCODE_CONVHULL
+static WlzErrorNum      	WlzWriteConvexHullValues(
+				  FILE *fP,
+				  WlzConvHullValues *cnvhull);
+#endif /* WLZ_OLDCODE_CONVHULL */
 #ifdef WLZ_UNUSED_FUNCTIONS
 static WlzErrorNum 		WlzWriteBox2I(
 				  FILE *fP,
@@ -488,10 +493,14 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
 	errNum = WlzWritePropertyList(fP, obj->plist);
 	break;
       case WLZ_CONV_HULL:
+#ifdef WLZ_OLDCODE_CONVHULL
 	if((errNum = WlzWritePolygon(fP, obj->domain.poly)) == WLZ_ERR_NONE)
 	{
 	  errNum = WlzWriteConvexHullValues(fP, obj->values.c);
 	}
+#else
+        errNum = WlzWriteConvexHull(fP, obj->domain);
+#endif
 	break;
       case WLZ_3D_POLYGON:
 	errNum = WLZ_ERR_OBJECT_TYPE;
@@ -1843,6 +1852,7 @@ static WlzErrorNum WlzWriteBoundList(FILE *fP, WlzBoundList *blist)
   return(errNum);
 }
 
+#ifdef WLZ_OLDCODE_CONVHULL
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzIO
@@ -1896,6 +1906,7 @@ static WlzErrorNum      WlzWriteConvexHullValues(
   }
   return(errNum);
 }
+#endif /* WLZ_OLDCODE_CONVHULL */
 
 /*!
 * \return	Woolz error code.
@@ -2459,8 +2470,8 @@ static WlzErrorNum WlzWriteGMModel(FILE *fP, WlzGMModel *model)
   }
   if((errNum == WLZ_ERR_NONE) && (model->res.vertex.numElm > 0))
   {
-      /* Index the verticies. */
-      resIdxTb = WlzGMModelResIdx(model, WLZ_GMELMFLG_VERTEX, &errNum);
+    /* Index the verticies. */
+    resIdxTb = WlzGMModelResIdx(model, WLZ_GMELMFLG_VERTEX, &errNum);
     if(errNum == WLZ_ERR_NONE)
     {
       /* Output the vertex geometries. */
@@ -3860,6 +3871,98 @@ static WlzErrorNum      WlzWritePointValues(FILE *fP, WlzObject *obj)
 	  break;
       }
     }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzIO
+* \brief	Writes either a 2D or 3D convex hull to the given file.
+* \param	fP			Given file.
+* \param	dom			Domain with either 2 or 3D convex hull.
+*/
+static WlzErrorNum WlzWriteConvexHull(FILE *fP, WlzDomain dom)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(dom.core == NULL)
+  {
+    if(putc(0,fP) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_EOF;
+    }
+  }
+  else if(dom.core->type == WLZ_CONVHULL_DOMAIN_2D)
+  {
+    WlzConvHullDomain2 *cvh;
+
+    cvh = dom.cvh2;
+    if((cvh->vtxType != WLZ_VERTEX_I2) && (cvh->vtxType != WLZ_VERTEX_D2))
+    {
+      errNum = WLZ_ERR_PARAM_TYPE;
+    }
+    else
+    {
+      if((putc((unsigned int )cvh->type, fP) == EOF) ||
+	 (putc((unsigned int )cvh->vtxType, fP) == EOF) ||
+	 !putword(cvh->nVertices, fP))
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+      else
+      {
+        errNum = (cvh->vtxType == WLZ_VERTEX_I2)?
+	         WlzWriteVertex2I(fP, &(cvh->centroid.i2), 1):
+		 WlzWriteVertex2D(fP, &(cvh->centroid.d2), 1);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = (cvh->vtxType == WLZ_VERTEX_I2)?
+	         WlzWriteVertex2I(fP, cvh->vertices.i2, cvh->nVertices):
+		 WlzWriteVertex2D(fP, cvh->vertices.d2, cvh->nVertices);
+      }
+    }
+  }
+  else if(dom.core->type == WLZ_CONVHULL_DOMAIN_3D)
+  {
+    WlzConvHullDomain3 *cvh;
+
+    cvh = dom.cvh3;
+    if((cvh->vtxType != WLZ_VERTEX_I3) && (cvh->vtxType != WLZ_VERTEX_D3))
+    {
+      errNum = WLZ_ERR_PARAM_TYPE;
+    }
+    else
+    {
+      if((putc((unsigned int )cvh->type, fP) == EOF) ||
+	 (putc((unsigned int )cvh->vtxType, fP) == EOF) ||
+	 !putword(cvh->nVertices, fP) ||
+	 !putword(cvh->nFaces, fP))
+      {
+	errNum = WLZ_ERR_WRITE_INCOMPLETE;
+      }
+      else
+      {
+        errNum = (cvh->vtxType == WLZ_VERTEX_I3)?
+	         WlzWriteVertex3I(fP, &(cvh->centroid.i3), 1):
+		 WlzWriteVertex3D(fP, &(cvh->centroid.d3), 1);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = (cvh->vtxType == WLZ_VERTEX_I3)?
+	         WlzWriteVertex3I(fP, cvh->vertices.i3, cvh->nVertices):
+		 WlzWriteVertex3D(fP, cvh->vertices.d3, cvh->nVertices);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzWriteInt(fP, cvh->faces, 3 * cvh->nFaces);
+      }
+    }
+  }
+  else
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
   }
   return(errNum);
 }
