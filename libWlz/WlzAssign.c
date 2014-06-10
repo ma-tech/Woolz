@@ -508,26 +508,26 @@ int		WlzUnlink(int *linkcount, WlzErrorNum *dstErr)
 
   if(linkcount)
   {
-    if(*linkcount < 0)
-    {
-      errNum = WLZ_ERR_LINKCOUNT_DATA;
-    }
-    else
-    {
-      errNum = WLZ_ERR_NONE;
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzLinkcount)
+    {
+#endif
+      if(*linkcount < 0)
       {
-#endif
-	if(--*linkcount <= 0)
-	{
-	  *linkcount = -1;
-	  canFree = 1;
-	}
-#ifdef _OPENMP
+	errNum = WLZ_ERR_LINKCOUNT_DATA;
       }
-#endif
+      else
+      {
+	errNum = WLZ_ERR_NONE;
+	  if(--*linkcount <= 0)
+	  {
+	    *linkcount = -1;
+	    canFree = 1;
+	  }
+      }
+#ifdef _OPENMP
     }
+#endif
   }
   if(dstErr)
   {
