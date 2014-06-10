@@ -370,6 +370,20 @@ const char	*WlzStringFromObjDomainType(WlzObject *obj,
 	    break;
 	}
         break;
+      case WLZ_CONV_HULL:
+        switch(obj->domain.core->type)
+	{
+	  case WLZ_CONVHULL_DOMAIN_2D:
+	    oDomTypeStr = "WLZ_CONVHULL_DOMAIN_2D";
+	    break;
+	  case WLZ_CONVHULL_DOMAIN_3D:
+	    oDomTypeStr = "WLZ_CONVHULL_DOMAIN_3D";
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+        break;
       case WLZ_CONTOUR:
         oDomTypeStr = "WLZ_CONTOUR";
 	break;
@@ -1318,6 +1332,94 @@ WlzGreyType	WlzStringToGreyType(const char *gStr,
 /*!
 * \return	Pointer to read only string or NULL on error.
 * \ingroup      WlzStrings
+* \brief	Finds a string for the given vertex type.
+* \param	vType			Given vertex type.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+const char	*WlzStringFromVertexType(WlzVertexType vType,
+				       WlzErrorNum *dstErr)
+{
+  const char	*vStr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(vType)
+  {
+    case WLZ_VERTEX_I2:
+      vStr = "WLZ_VERTEX_I2";
+      break;
+    case WLZ_VERTEX_F2:
+      vStr = "WLZ_VERTEX_F2";
+      break;
+    case WLZ_VERTEX_D2:
+      vStr = "WLZ_VERTEX_D2";
+      break;
+    case WLZ_VERTEX_I3:
+      vStr = "WLZ_VERTEX_I3";
+      break;
+    case WLZ_VERTEX_F3:
+      vStr = "WLZ_VERTEX_F3";
+      break;
+    case WLZ_VERTEX_D3:
+      vStr = "WLZ_VERTEX_D3";
+      break;
+    case WLZ_VERTEX_L2:
+      vStr = "WLZ_VERTEX_L2";
+      break;
+    case WLZ_VERTEX_L3:
+      vStr = "WLZ_VERTEX_L3";
+      break;
+    default:
+      errNum = WLZ_ERR_PARAM_TYPE;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vStr);
+}
+
+/*!
+* \return	Woolz vertex type or WLZ_VERTEX_ERROR on error.
+* \ingroup      WlzStrings
+* \brief	Finds an enumerated type for the given vertex type
+*               string.
+* \param	vStr			Given vertex type string.
+* \param	dstErr			Destination error pointer, may
+*                                       be null.
+*/
+WlzVertexType	WlzStringToVertexType(const char *vStr,
+				      WlzErrorNum *dstErr)
+{
+  int		tI0;
+  WlzGreyType	vType = WLZ_VERTEX_ERROR;
+  WlzErrorNum	errNum = WLZ_ERR_PARAM_TYPE;
+
+  if(WlzStringMatchValue(&tI0, vStr,
+  		         "WLZ_VERTEX_I2", WLZ_VERTEX_I2,
+			 "WLZ_VERTEX_F2", WLZ_VERTEX_F2,
+			 "WLZ_VERTEX_D2", WLZ_VERTEX_D2,
+			 "WLZ_VERTEX_I3", WLZ_VERTEX_I3,
+			 "WLZ_VERTEX_F3", WLZ_VERTEX_F3,
+			 "WLZ_VERTEX_D3", WLZ_VERTEX_D3,
+			 "WLZ_VERTEX_L2", WLZ_VERTEX_L2,
+			 "WLZ_VERTEX_L3", WLZ_VERTEX_L3,
+			 NULL))
+  {
+    vType = (WlzVertexType )tI0;
+    errNum = WLZ_ERR_NONE;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vType);
+}
+
+/*!
+* \return	Pointer to read only string or NULL on error.
+* \ingroup      WlzStrings
 * \brief	Finds a string for the given interpolation type.
 * \param	iType			Given interpolation type.
 * \param	dstErr			Destination error pointer, may
@@ -1974,6 +2076,10 @@ const char	*WlzStringFromErrorNum(WlzErrorNum wlzErr,
     errStr = "WLZ_ERR_IMAGE_TYPE";
     msgStr = "Attempt to read an image type not-supported in Woolz";
     break;
+  case WLZ_ERR_DEGENERATE:
+    errStr = "WLZ_ERR_DEGENERATE";
+    msgStr = "Degenerate data, eg all vertices equal.";
+    break;
   default:	/* FALLTHROUGH */
   case WLZ_ERR_UNSPECIFIED:
     errStr = "WLZ_ERR_UNSPECIFIED";
@@ -2063,6 +2169,7 @@ WlzErrorNum	WlzStringToErrorNum(const char *errStr)
 	      "WLZ_ERR_FILE_OPEN", WLZ_ERR_FILE_OPEN,
 	      "WLZ_ERR_FILE_FORMAT", WLZ_ERR_FILE_FORMAT,
 	      "WLZ_ERR_IMAGE_TYPE", WLZ_ERR_IMAGE_TYPE,
+	      "WLZ_ERR_DEGENERATE", WLZ_ERR_DEGENERATE,
 	      "WLZ_ERR_UNSPECIFIED", WLZ_ERR_UNSPECIFIED,
 	      NULL))
   {
