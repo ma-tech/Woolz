@@ -593,6 +593,31 @@ int		 WlzGeomVxInTetrahedron(WlzDVertex3 v0, WlzDVertex3 v1,
 * \param	vx1			Second vertex of triangle.
 * \param	vx2			Third vertex of triangle.
 */
+WlzLong		WlzGeomTriangleSnArea2I(WlzIVertex2 vx0, WlzIVertex2 vx1,
+				        WlzIVertex2 vx2)
+{
+  WlzLong	area2;
+
+  area2 = (vx0.vtX * vx1.vtY) - (vx0.vtY * vx1.vtX) +
+          (vx0.vtY * vx2.vtX) - (vx0.vtX * vx2.vtY) +
+          (vx1.vtX * vx2.vtY) - (vx2.vtX * vx1.vtY);
+  return(area2);
+}
+
+/*!
+* \return	Twice the signed area of the given triangle.
+* \ingroup	WlzGeometry
+* \brief	Computes twice the signed area of the given triangle.
+*
+*		Computes twice the signed area of the given triangle.
+*		The determinant is NOT computed with:
+*		\f[(x_0 - x_1)(y_1 - y_2) - (y_0 - y_1)(x_1 - x_2)\f]
+*		instead the factorized form is used because it is more robust
+*		numericaly.
+* \param	vx0			First vertex of triangle.
+* \param	vx1			Second vertex of triangle.
+* \param	vx2			Third vertex of triangle.
+*/
 double		WlzGeomTriangleSnArea2(WlzDVertex2 vx0, WlzDVertex2 vx1,
 				       WlzDVertex2 vx2)
 {
@@ -636,7 +661,7 @@ double		WlzGeomTriangleSnArea2(WlzDVertex2 vx0, WlzDVertex2 vx1,
 * \param	vx3			Forth vertex of tetrahedron.
 */
 double		WlzGeomTetraSnVolume6(WlzDVertex3 vx0, WlzDVertex3 vx1,
-				       WlzDVertex3 vx2, WlzDVertex3 vx3)
+				      WlzDVertex3 vx2, WlzDVertex3 vx3)
 {
   double	vol6;
 
@@ -650,6 +675,148 @@ double		WlzGeomTetraSnVolume6(WlzDVertex3 vx0, WlzDVertex3 vx1,
 	 vx1.vtY * (vx2.vtX * vx3.vtZ - vx3.vtX * vx2.vtZ) -
 	 vx1.vtZ * (vx2.vtX * vx3.vtY - vx3.vtX * vx2.vtY);
   return(vol6);
+}
+
+/*!
+* \return	Non zero if the volume of tetrahedron is zero.
+* \ingroup	WlzGeometry
+* \brief	Checks whether the volume of the tetrahedron with
+* 		the given interger vertices has zero volume.
+* \param	v0			First vertex of tetrahedron.
+* \param	v1			Second vertex of tetrahedron.
+* \param	v2			Third vertex of tetrahedron.
+* \param	v3			Forth vertex of tetrahedron.
+*/
+int		WlzGeomTetVolZeroI(WlzIVertex3 v0, WlzIVertex3 v1,
+				   WlzIVertex3 v2, WlzIVertex3 v3)
+{
+  int		z = 1;
+  WlzLong	a0,
+		a1,
+		a2,
+		a3;
+
+  if((a0 = WlzGeomTriangleArea2Sq3I(v0, v1, v2)) > 0)
+  {
+    if((a1 = WlzGeomTriangleArea2Sq3I(v1, v2, v3)) > 0)
+    {
+      if((a2 = WlzGeomTriangleArea2Sq3I(v2, v3, v0)) > 0)
+      {
+	if((a3 = WlzGeomTriangleArea2Sq3I(v3, v0, v1)) > 0)
+	{
+	  WlzLVertex3 w;
+
+	  /* May be planar in which case:
+	   * now with u_i = v_i - v_0, i \in [1-3]
+	   * u_2 \cdot (u_1 \times u_3) = 0
+	   */
+	  WLZ_VTX_3_SUB(v1, v1, v0);
+	  WLZ_VTX_3_SUB(v2, v2, v0);
+	  WLZ_VTX_3_SUB(v3, v3, v0);
+	  WLZ_VTX_3_CROSS(w, v1, v3);
+	  /* Possible loss of precision. */
+	  a0 = WLZ_VTX_3_DOT(v2,w);
+	  if(a0 != 0)
+	  {
+	    z = 0;
+	  }
+	}
+      }
+    }
+  }
+  return(z);
+}
+
+/*!
+* \return	Non zero if the volume of tetrahedron is zero.
+* \ingroup	WlzGeometry
+* \brief	Checks whether the volume of the tetrahedron with
+* 		the given double vertices has zero volume.
+* \param	v0			First vertex of tetrahedron.
+* \param	v1			Second vertex of tetrahedron.
+* \param	v2			Third vertex of tetrahedron.
+* \param	v3			Forth vertex of tetrahedron.
+*/
+int		WlzGeomTetVolZeroD(WlzDVertex3 v0, WlzDVertex3 v1,
+				   WlzDVertex3 v2, WlzDVertex3 v3)
+{
+  int		z = 1;
+  double	a0,
+		a1,
+		a2,
+		a3;
+  const double	eps = 1.0e-06;
+
+  if((a0 = WlzGeomTriangleArea2Sq3(v0, v1, v2)) > eps)
+  {
+    if((a1 = WlzGeomTriangleArea2Sq3(v1, v2, v3)) > eps)
+    {
+      if((a2 = WlzGeomTriangleArea2Sq3(v2, v3, v0)) > eps)
+      {
+	if((a3 = WlzGeomTriangleArea2Sq3(v3, v0, v1)) > eps)
+	{
+	  WlzLVertex3 w;
+
+	  /* May be planar in which case:
+	   * now with u_i = v_i - v_0, i \in [1-3]
+	   * u_2 \cdot (u_1 \times u_3) = 0
+	   */
+	  WLZ_VTX_3_SUB(v1, v1, v0);
+	  WLZ_VTX_3_SUB(v2, v2, v0);
+	  WLZ_VTX_3_SUB(v3, v3, v0);
+	  WLZ_VTX_3_CROSS(w, v1, v3);
+	  /* Possible loss of precision. */
+	  a0 = WLZ_VTX_3_DOT(v2,w);
+	  if(fabs(a0) > eps)
+	  {
+	    z = 0;
+	  }
+	}
+      }
+    }
+  }
+  return(z);
+}
+
+/*!
+* \return	Twice the square of the area of the given triangle.
+* \ingroup	WlzGeometry
+* \brief	Computes twice the square of the area of the given
+*		3D triangle.
+*
+*		A nieve approach is used in which the area \f$A\f$ is
+*		computed using:
+*		\f[
+		2 A^2 = \left|\left| \: \left|
+			\begin{array}{ccc}
+			\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+			a_x & a_y & a_z \\
+			b_x & b_y & b_z
+			\end{array}
+		        \right| \: \right|\right|^2
+		\f]
+*		Where \f$\mathbf{a} = \mathbf{v_0} - \mathbf{v_1}\f$ and
+*		\f$\mathbf{b} = \mathbf{v_2} - \mathbf{v_1}\f$.
+* \param	vx0			First vertex of triangle
+* 					\f$\mathbf{v_0}\f$.
+* \param	vx1			Second vertex of triangle
+*					\f$\mathbf{v_1}\f$.
+* \param	vx2			Third vertex of triangle
+*					\f$\mathbf{v_2}\f$.
+*/
+WlzLong		WlzGeomTriangleArea2Sq3I(WlzIVertex3 vx0, WlzIVertex3 vx1,
+				         WlzIVertex3 vx2)
+{
+  WlzIVertex3	a,
+  		b;
+  WlzLVertex3	t;
+  WlzLong	area3;
+
+  WLZ_VTX_3_SUB(a, vx1, vx0);
+  WLZ_VTX_3_SUB(b, vx2, vx0);
+  WLZ_VTX_3_CROSS(t, a, b);
+  area3 = WLZ_VTX_3_SQRLEN(t);
+  return(area3);
 }
 
 /*!
