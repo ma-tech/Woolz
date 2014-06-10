@@ -230,14 +230,14 @@ extern "C" {
 
 /* WLZ_VTX_2_DOT: Dot (scalar) product of two Wlz[DFI]Vertex2's */
 #define WLZ_VTX_2_DOT(V,W) \
-		((V).vtX * ((W).vtX) + \
-		((V).vtY *  (W).vtY))
+		(((V).vtX * (W).vtX) + \
+		 ((V).vtY * (W).vtY))
 
 /* WLZ_VTX_3_DOT: Dot (scalar) product of two Wlz[DFI]Vertex3s */
 #define WLZ_VTX_3_DOT(V,W) \
-		((V).vtX * ((W).vtX) + \
-		((V).vtY *  (W).vtY) + \
-		((V).vtZ *  (W).vtZ))
+		(((V).vtX * (W).vtX) + \
+		 ((V).vtY * (W).vtY) + \
+		 ((V).vtZ * (W).vtZ))
 
 /* WLZ_VTX_3_CROSS: Cross (vector) product of two Wlz[DFI]Vertex3s */
 #define WLZ_VTX_3_CROSS(U,V,W) \
