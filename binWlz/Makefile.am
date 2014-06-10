@@ -94,6 +94,7 @@ bin_PROGRAMS		= \
 			  WlzContourSpxStats \
 			  WlzContourSzSelect \
 			  WlzConvertPix \
+			  WlzConvexHull \
 			  WlzConvexPoly \
 			  WlzCopyObj \
 			  WlzCopyToTiledObj \
@@ -409,6 +410,10 @@ WlzContourSpxStats_LDFLAGS		= $(AM_LFLAGS)
 WlzConvertPix_SOURCES			= WlzConvertPix.c
 WlzConvertPix_LDADD			= $(LDADD)
 WlzConvertPix_LDFLAGS			= $(AM_LFLAGS)
+
+WlzConvexHull_SOURCES			= WlzConvexHull.c
+WlzConvexHull_LDADD			= $(LDADD)
+WlzConvexHull_LDFLAGS			= $(AM_LFLAGS)
 
 WlzConvexPoly_SOURCES			= WlzConvexPoly.c
 WlzConvexPoly_LDADD			= $(LDADD)
