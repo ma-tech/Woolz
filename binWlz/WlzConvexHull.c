@@ -291,29 +291,29 @@ int             main(int argc, char **argv)
   (void )WlzFreeObj(outObj);
   if(usage)
   {
-      (void )fprintf(stderr,
-      "Usage: %s%s%s%sExample: %s%s",
-      *argv,
-      " [-o<output object>] [-h] [-o] [-t <type>] [-u] [<input object>]\n"
-      "Version: ",
-      WlzVersion(),
-      "\n"
-      "Options:\n"
-      "  -h  Prints this usage information.\n"
-      "  -o  Output object file name.\n"
-      "  -t  Output object type given as a single character:\n"
-      "        t - contour.\n"
-      "        v - convex hull (default)\n"
-      "        x - (pixel/voxel) spatial domain\n"
-      "  -u  Use unit voxel size.\n"
-      "Computes the convex hull of the given input object.\n"
-      "The input object is read from stdin and output data are written\n"
-      "to stdout unless filenames are given.\n",
-      *argv,
-      " -o out.wlz -t t in.wlz\n"
-      "The input Woolz object is read from in.wlz, and the contour\n"
-      "model corresponding to the convex hull of the input object is\n"
-      "written to the file out.wlz.\n");
+    (void )fprintf(stderr,
+    "Usage: %s%s%s%sExample: %s%s",
+    *argv,
+    " [-o<output object>] [-h] [-o] [-t <type>] [-u] [<input object>]\n"
+    "Version: ",
+    WlzVersion(),
+    "\n"
+    "Options:\n"
+    "  -h  Prints this usage information.\n"
+    "  -o  Output object file name.\n"
+    "  -t  Output object type given as a single character:\n"
+    "        t - contour.\n"
+    "        v - convex hull (default)\n"
+    "        x - (pixel/voxel) spatial domain\n"
+    "  -u  Use unit voxel size.\n"
+    "Computes the convex hull of the given input object.\n"
+    "The input object is read from stdin and output data are written\n"
+    "to stdout unless filenames are given.\n",
+    *argv,
+    " -o out.wlz -t t in.wlz\n"
+    "The input Woolz object is read from in.wlz, and the contour\n"
+    "model corresponding to the convex hull of the input object is\n"
+    "written to the file out.wlz.\n");
   }
   return(!ok);
 }
