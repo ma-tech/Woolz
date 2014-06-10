@@ -2218,24 +2218,67 @@ extern WlzPolygonDomain 	*WlzConvertPolyType(
 /************************************************************************
 * WlzConvexHull.c							*
 ************************************************************************/
+extern WlzConvHullDomain2	*WlzMakeConvexHullDomain2(
+				  int maxVtx,
+				  WlzVertexType vtxType,
+				  WlzErrorNum *dstErr);
+extern WlzConvHullDomain3	*WlzMakeConvexHullDomain3(
+				  int maxVtx,
+				  int maxFce,
+				  WlzVertexType vtxType,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzFreeConvexHullDomain2(
+				  WlzConvHullDomain2 *cvh);
+extern WlzErrorNum		WlzFreeConvexHullDomain3(
+				  WlzConvHullDomain3 *cvh);
+extern WlzConvHullDomain2	*WlzConvexHullCopy2(
+				  WlzConvHullDomain2 *cvh,
+				  WlzVertexType vType,
+				  WlzErrorNum *dstErr);
+extern WlzConvHullDomain3	*WlzConvexHullCopy3(
+				  WlzConvHullDomain3 *cvh,
+				  WlzVertexType vType,
+				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzObjToConvexHull(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
 extern WlzObject 		*WlzObjToConvexPolygon(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
-extern WlzObject		*WlzObjToConvexHullSpDomObj(
-				  WlzObject *obj,
+extern WlzObject		*WlzConvexHullToObj(
+				  WlzObject *cObj,
+				  WlzObjectType rType,
 				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzConvexHull3D.c							*
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzConvHullDomain3	*WlzConvexHullFromVtx3(
+				  WlzVertexType pType,
+				  int nPnt,
+				  WlzVertexP pnt,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzConvexHullClarkson.c                                               *
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
+extern int			WlzConvHullClarkson2I(
+				  WlzIVertex2 *vtx,
+				  int n,
+				  int **dstIdx,
+				  WlzErrorNum *dstErr);
 extern int			WlzConvHullClarkson2D(
 				  WlzDVertex2 *vtx,
 				  int n,
 				  int **dstIdx,
+				  WlzErrorNum *dstErr);
+extern WlzConvHullDomain2	*WlzConvexHullFromVtx2(
+				  WlzVertexType pType,
+				  int nPnt,
+				  WlzVertexP pnt,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
@@ -3106,6 +3149,10 @@ extern int 			WlzGeomInTriangleCircumcircle(
 				  WlzDVertex2 vx1,
 			          WlzDVertex2 vx2,
 				  WlzDVertex2 gVx);
+extern WlzLong			WlzGeomTriangleSnArea2I(
+				  WlzIVertex2 vx0,
+				  WlzIVertex2 vx1,
+				  WlzIVertex2 vx2);
 extern double			WlzGeomTriangleSnArea2(
 				  WlzDVertex2 vx0,
 				  WlzDVertex2 vx1,
@@ -3153,6 +3200,20 @@ extern WlzDVertex3		WlzGeomTriangleNormal(
 				  WlzDVertex3 v0,
 				  WlzDVertex3 v1,
 				  WlzDVertex3 v2);
+extern WlzLong			WlzGeomTriangleArea2Sq3I(
+				  WlzIVertex3 vx0,
+				  WlzIVertex3 vx1,
+				  WlzIVertex3 vx2);
+extern int			WlzGeomTetVolZeroI(
+				  WlzIVertex3 vx0,
+				  WlzIVertex3 vx1,
+                                  WlzIVertex3 vx2,
+				  WlzIVertex3 vx3);
+extern int			WlzGeomTetVolZeroD(
+				  WlzDVertex3 vx0,
+				  WlzDVertex3 vx1,
+                                  WlzDVertex3 vx2,
+				  WlzDVertex3 vx3);
 extern int			WlzGeomTriangleAABBIntersect2D(
 				  WlzDVertex2 t0,
 				  WlzDVertex2 t1,
@@ -5829,6 +5890,12 @@ extern const char		*WlzStringFromGMModelType(
 extern WlzGreyType 		WlzStringToGreyType(
 				  const char *gStr,
 				 WlzErrorNum *dstErr);
+extern const char		*WlzStringFromVertexType(
+				  WlzVertexType vType,
+				  WlzErrorNum *dstErr);
+extern WlzVertexType   		WlzStringToVertexType(
+				  const char *vStr,
+				  WlzErrorNum *dstErr);
 extern const char      		*WlzStringFromInterpolationType(
 				  WlzInterpolationType iType,
                                   WlzErrorNum *dstErr);
@@ -6657,6 +6724,32 @@ extern AlcKDTTree      		*WlzVerticesBuildTree(
 				  WlzVertexP vtx,
 				  int *shfBuf,
 				  WlzErrorNum *dstErr);
+extern int			WlzVertexQSortFnI2(
+				  void *p0,
+				  void *p1);
+extern int			WlzVertexQSortFnI3(
+				  void *p0,
+				  void *p1);
+extern int			WlzVertexHeapSortIdxFnI2(
+				  void *data,
+				  int *idx,
+				  int id0,
+				  int id1);
+extern int			WlzVertexHeapSortIdxFnD2(
+				  void *data,
+				  int *idx,
+				  int id0,
+				  int id1);
+extern int			WlzVertexHeapSortIdxFnI3(
+				  void *data,
+				  int *idx,
+				  int id0,
+				  int id1);
+extern int			WlzVertexHeapSortIdxFnD3(
+				  void *data,
+				  int *idx,
+				  int id0,
+				  int id1);
 #endif /* WLZ_EXT_BIND */
 
 
