@@ -3274,6 +3274,7 @@ typedef struct _WlzConvHullValues
 
 /*!
 * \struct       _WlzConvHullDomain2
+* \ingroup	WlzConvexHull
 * \brief        A 2D convex hull with counter clockwise ordered vertices
 *               and segments implicitly defined by the polygon of the
 *               ordered vertices.
@@ -3297,6 +3298,7 @@ typedef struct _WlzConvHullDomain2
 
 /*!
 * \struct       _WlzConvHullDomain3
+* \ingroup	WlzConvexHull
 * \brief        A 3D convex hull with coordinate vertices and faces defined
 *               by vertex index triples.
 *               Typedef: ::WlzConvHullDomain3
