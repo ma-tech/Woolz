@@ -159,6 +159,8 @@ typedef enum _WlzErrorNum
   WLZ_ERR_FILE_OPEN,		/*!< Error opening a file */
   WLZ_ERR_FILE_FORMAT,		/*!< Format error in input stream or file */
   WLZ_ERR_IMAGE_TYPE,		/*!< Invalid image type for Woolz */
+  WLZ_ERR_DEGENERATE,		/*!< Degenerate case, eg planar not volume
+                                     or all vertices equal. */
   /* Keep WLZ_ERR_COUNT the last enumerator! */
   WLZ_ERR_COUNT			/*!< Not an error but the number of errors! */
 } WlzErrorNum;
