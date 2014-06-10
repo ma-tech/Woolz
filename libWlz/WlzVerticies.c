@@ -951,6 +951,232 @@ WlzVertexP 	WlzDVerticesFromCMesh(WlzCMeshP mesh,
 }
 
 /*!
+* \return       Signed sort value.
+* \ingroup      WlzFeatures
+* \brief        Function for qsort() to sort WlzIVertex2 vertices
+*               so that they have increasing Y then X.
+* \param        p0			First vertex pointer.
+* \param        p1			Second vertex pointer.
+*/
+int                      	WlzVertexQSortFnI2(
+                                  void *p0,
+                                  void *p1)
+{
+  int           cmp = 0;
+  WlzIVertex2   *v0,
+                *v1;
+
+  v0 = (WlzIVertex2 *)p0;
+  v1 = (WlzIVertex2 *)p1;
+  if((cmp = v0->vtY - v1->vtY) == 0)
+  {
+    cmp = v0->vtX - v1->vtX;
+  }
+  return(cmp);
+}
+
+/*!
+* \return       Signed sort value.
+* \ingroup      WlzFeatures
+* \brief        Function for qsort() to sort WlzIVertex3 vertices
+*               so that they have increasing z then Y then X.
+* \param        p0			First vertex pointer.
+* \param        p1			Second vertex pointer.
+*/
+int                      	WlzVertexQSortFnI3(
+                                  void *p0,
+                                  void *p1)
+{
+  int           cmp = 0;
+  WlzIVertex3   *v0,
+                *v1;
+
+  v0 = (WlzIVertex3 *)p0;
+  v1 = (WlzIVertex3 *)p1;
+  if((cmp = v0->vtZ - v1->vtZ) == 0)
+  {
+    if((cmp = v0->vtY - v1->vtY) == 0)
+    {
+      cmp = v0->vtX - v1->vtX;
+    }
+  }
+  return(cmp);
+}
+
+/*!
+* \return       Signed sort value.
+* \ingroup      WlzFeatures
+* \brief        Function for AlgHeapSortIdx() to sort WlzIVertex2 vertices
+*               so that they have increasing Y then X.
+* \param        data                    Vertex array.
+* \param        idx                     Vertex index array.
+* \param        id0                     First index.
+* \param        id1                     Second index.
+*/
+int                      	WlzVertexHeapSortIdxFnI2(
+                                  void *data,
+                                  int *idx,
+                                  int id0,
+                                  int id1)
+{
+  int           cmp = 0;
+  WlzIVertex2   *v,
+                *v0,
+                *v1;
+
+  v = (WlzIVertex2 *)data;
+  v0 = v + idx[id0];
+  v1 = v + idx[id1];
+  if((cmp = v0->vtY - v1->vtY) == 0)
+  {
+    cmp = v0->vtX - v1->vtX;
+  }
+  return(cmp);
+}
+
+/*!
+* \return       Signed sort value.
+* \ingroup      WlzFeatures
+* \brief        Function for AlgHeapSortIdx() to sort WlzIVertex3 vertices
+*               so that they have increasing Z then Y then X.
+* \param        data                    Vertex array.
+* \param        idx                     Vertex index array.
+* \param        id0                     First index.
+* \param        id1                     Second index.
+*/
+int                      	WlzVertexHeapSortIdxFnI3(
+                                  void *data,
+                                  int *idx,
+                                  int id0,
+                                  int id1)
+{
+  int           cmp = 0;
+  WlzIVertex3   *v,
+                *v0,
+                *v1;
+
+  v = (WlzIVertex3 *)data;
+  v0 = v + idx[id0];
+  v1 = v + idx[id1];
+  if((cmp = v0->vtZ - v1->vtZ) == 0)
+  {
+    if((cmp = v0->vtY - v1->vtY) == 0)
+    {
+      cmp = v0->vtX - v1->vtX;
+    }
+  }
+  return(cmp);
+}
+
+/*!
+* \return       Signed sort value.
+* \ingroup      WlzFeatures
+* \brief        Function for AlgHeapSortIdx() to sort WlzDVertex2 vertices
+*               so that they have increasing Z then Y then X.
+* \param        data                    Vertex array.
+* \param        idx                     Vertex index array.
+* \param        id0                     First index.
+* \param        id1                     Second index.
+*/
+int                      	WlzVertexHeapSortIdxFnD2(
+                                  void *data,
+                                  int *idx,
+                                  int id0,
+                                  int id1)
+{
+  int           cmp = 0;
+  double	d;
+  WlzDVertex2   *v,
+                *v0,
+                *v1;
+
+  v = (WlzDVertex3 *)data;
+  v0 = v + idx[id0];
+  v1 = v + idx[id1];
+  if((d = v0->vtY - v1->vtY) > 0.0)
+  {
+    cmp = 1;
+  }
+  else if(d < 0.0)
+  {
+    cmp = -1;
+  }
+  else
+  {
+    d = v0->vtX - v1->vtX;
+    if(d > 0.0)
+    {
+      cmp = 1;
+    }
+    else if (d < 0.0)
+    {
+      cmp -1;
+    }
+  }
+  return(cmp);
+}
+
+/*!
+* \return       Signed sort value.
+* \ingroup      WlzFeatures
+* \brief        Function for AlgHeapSortIdx() to sort WlzDVertex3 vertices
+*               so that they have increasing Z then Y then X.
+* \param        data                    Vertex array.
+* \param        idx                     Vertex index array.
+* \param        id0                     First index.
+* \param        id1                     Second index.
+*/
+int                      	WlzVertexHeapSortIdxFnD3(
+                                  void *data,
+                                  int *idx,
+                                  int id0,
+                                  int id1)
+{
+  int           cmp = 0;
+  double	d;
+  WlzDVertex3   *v,
+                *v0,
+                *v1;
+
+  v = (WlzDVertex3 *)data;
+  v0 = v + idx[id0];
+  v1 = v + idx[id1];
+  d = v0->vtZ - v1->vtZ;
+  if(( d = v0->vtZ - v1->vtZ) > 0.0)
+  {
+    cmp = 1;
+  }
+  else if(d < 0.0)
+  {
+    cmp = -1;
+  }
+  else
+  {
+    if((d = v0->vtY - v1->vtY) > 0.0)
+    {
+      cmp = 1;
+    }
+    else if(d < 0.0)
+    {
+      cmp = -1;
+    }
+    else
+    {
+      d = v0->vtX - v1->vtX;
+      if(d > 0.0)
+      {
+	cmp = 1;
+      }
+      else if (d < 0.0)
+      {
+	cmp -1;
+      }
+    }
+  }
+  return(cmp);
+}
+
+/*!
 * \return	Allocated vertices.
 * \ingroup	WlzFeatures
 * \brief	Allocates a buffer which it fills with the vertices
