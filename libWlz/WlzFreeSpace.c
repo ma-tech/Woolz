@@ -164,10 +164,19 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
     case WLZ_CONV_HULL:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
       	      ("WlzFreeObj %p WLZ_CONV_HULL %p %p\n",
-	       obj, obj->domain.poly, obj->values.c));
-      if( WlzFreePolyDmn(obj->domain.poly) ||
-	  WlzFreeConvHull(obj->values.c) ){
-	errNum = WLZ_ERR_MEM_FREE;
+	       obj, obj->domain.core, obj->values.core));
+      if(obj->domain.core) {
+        switch(obj->domain.core->type) {
+	  case WLZ_CONVHULL_DOMAIN_2D:
+	    errNum = WlzFreeConvexHullDomain2(obj->domain.cvh2);
+	    break;
+	  case WLZ_CONVHULL_DOMAIN_3D:
+	    errNum = WlzFreeConvexHullDomain3(obj->domain.cvh2);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
       }
       break;
 
