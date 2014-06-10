@@ -2589,8 +2589,6 @@ extern WlzErrorNum		WlzFreePolyDmn(
 				  WlzPolygonDomain *poly);
 extern WlzErrorNum		WlzFreeBoundList(
 				  WlzBoundList *blist);
-extern WlzErrorNum		WlzFreeConvHull(
-				  WlzConvHullValues *convh);
 extern WlzErrorNum		WlzFreeHistogramDomain(
 				  WlzHistogramDomain *hist);
 /*extern WlzErrorNum		WlzFreeWarpTrans(

@@ -626,32 +626,6 @@ WlzErrorNum WlzFreeVoxelValueTb(WlzVoxelValues *voxtab)
   return( errNum );
 }
 
-/* function:     WlzFreeConvHull    */
-/*! 
-* \ingroup      WlzAllocation
-* \brief        Free convex hull values.
-*
-* \return       Error number, values: WLZ_ERR_NONE and from WlzUnlink().
-* \param    c	Pointer to convex hull values to be  freed.
-* \par      Source:
-*                WlzFreeSpace.c
-*/
-WlzErrorNum WlzFreeConvHull(WlzConvHullValues *c)
-{
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
-
-  /* check the object pointer and linkcount */
-  if (c == NULL){
-    return( WLZ_ERR_NONE );
-  }
-
-  if( WlzUnlink(&(c->linkcount), &errNum) ){
-    AlcFree((void *) c);
-  }
-
-  return errNum;
-}
-
 /* function:     WlzFreePolyDmn    */
 /*! 
 * \ingroup      WlzAllocation

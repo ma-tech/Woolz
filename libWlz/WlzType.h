@@ -3211,67 +3211,6 @@ typedef struct _WlzBoundList
   					    this boundary. */
 } WlzBoundList;
 
-
-/************************************************************************
-* Chord and convex hull parameters.				
-************************************************************************/
-/*!
-* \struct	_WlzChord
-* \ingroup	WlzConvexHull
-* \brief	A cord described by the equation:
-*		\f[
-		  c = a x - b y
-		\f]
-*		Typedef: ::WlzChord.
-*/
-typedef struct _WlzChord 
-{
-  int sig;			     	/*!< Non-zero if judged to be
-  					     significant. */
-  int acon;			 	/*!< Chord equation paramter,
-  					     \f$a\f$. */
-  int bcon;			    	/*!< Chord equation paramter,
-  					     \f$b\f$. */
-  int ccon;				/*!< Chord equation paramter,
-  					     \f$c\f$. */
-  double cl;				/*!< Eight \f$\times\f$ chord
-  					     length. */
-  int bl;			   	/*!< Line number of bay bottom or
-  					     bulge top. */
-  int bk;	                 	/*!, Column number of bay bottom or
-  					     bulge top. */
-  int barea;				/*!< Eight \f$\times\f$ bay or
-  					     bulge area. */
-  int bd;				/*!< Eight \f$\times\f$ bay maximum
-  					     depth or bulge max height. */
-} WlzChord;
-
-/*!
-* \struct	_WlzConvHullValues
-* \ingroup	WlzConvexHull
-* \brief	A 2D convex hull used in legacy code. This (2D only)
-*		convex hull is a polygon domain with values which are
-*		a set of chords with pre-calculated parameters for use
-*		by other functions.
-* 		Typedef: ::WlzConvHullValues.
-*/
-typedef struct _WlzConvHullValues
-{
-  WlzObjectType type;			/*!< From WlzCoreValues. */
-  int           linkcount;		/*!< From WlzCoreValues. */
-  void		*freeptr;		/*!< From WlzCoreValues. */
-  WlzValues original_table; 	        /*!< If non-NULL, valuetable which
-  					     owns the raw values we are
-					     using. */
-  int           nchords;		/*!< Number of chords. */
-  int           nsigchords;		/*!< Number of significant chords. */
-  int           mdlin;		  	/*!< Mid-line of enclosed
-  					     originating object. */
-  int           mdkol;			/*!< Mid-column of enclosed
-  					     originating object. */
-  WlzChord      *ch;
-} WlzConvHullValues;
-
 /*!
 * \struct       _WlzConvHullDomain2
 * \ingroup	WlzConvexHull

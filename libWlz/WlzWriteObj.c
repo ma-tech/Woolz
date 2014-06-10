@@ -192,11 +192,6 @@ static WlzErrorNum 		WlzWriteConvexHull(
 				  FILE *fP,
 				  WlzDomain dom);
 
-#ifdef WLZ_OLDCODE_CONVHULL
-static WlzErrorNum      	WlzWriteConvexHullValues(
-				  FILE *fP,
-				  WlzConvHullValues *cnvhull);
-#endif /* WLZ_OLDCODE_CONVHULL */
 #ifdef WLZ_UNUSED_FUNCTIONS
 static WlzErrorNum 		WlzWriteBox2I(
 				  FILE *fP,
@@ -1851,62 +1846,6 @@ static WlzErrorNum WlzWriteBoundList(FILE *fP, WlzBoundList *blist)
   }
   return(errNum);
 }
-
-#ifdef WLZ_OLDCODE_CONVHULL
-/*!
-* \return	Woolz error code.
-* \ingroup	WlzIO
-* \brief	Writes a convex hull to the given file.
-* \param	fP			Given file.
-* \param	cnvhull			Convex hull.
-*/
-static WlzErrorNum      WlzWriteConvexHullValues(
-  FILE *fP,
-  WlzConvHullValues *cnvhull)
-{
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzChord	*ch;
-  int		i;
-
-  if(cnvhull == NULL)
-  {
-    if(putc(0,fP) == EOF)
-    {
-      errNum = WLZ_ERR_WRITE_EOF;
-    }
-  }
-  else
-  {
-    if((putc((unsigned int)cnvhull->type, fP) == EOF))
-    {
-      errNum = WLZ_ERR_WRITE_INCOMPLETE;
-    }
-    else if(putword(cnvhull->nchords, fP) &&
-	    putword(cnvhull->nsigchords, fP) &&
-	    putword(cnvhull->mdlin, fP) &&
-	    putword(cnvhull->mdkol, fP)){
-      for(i=0, ch = cnvhull->ch; i < cnvhull->nchords; i++, ch++){
-	if(!putword(ch->sig, fP) ||
-	   !putword(ch->acon, fP) ||
-	   !putword(ch->bcon, fP) ||
-	   !putword(ch->ccon, fP) ||
-	   !putdouble(ch->cl, fP) ||
-	   !putword(ch->bl, fP) ||
-	   !putword(ch->bk, fP) ||
-	   !putword(ch->barea, fP) ||
-	   !putword(ch->bd, fP)){
-	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	  break;
-	}
-      }
-    }
-    else {
-      errNum = WLZ_ERR_WRITE_INCOMPLETE;
-    }
-  }
-  return(errNum);
-}
-#endif /* WLZ_OLDCODE_CONVHULL */
 
 /*!
 * \return	Woolz error code.
