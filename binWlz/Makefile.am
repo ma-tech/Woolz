@@ -160,6 +160,7 @@ bin_PROGRAMS		= \
 			  WlzMarkersToDomain \
 			  WlzMatchICPObj \
 			  WlzMeshTransformObj \
+			  WlzMinWidthRectAngle \
 			  WlzNObjsGreyStats \
 			  WlzObjToBoundary \
 			  WlzPolarSample \
@@ -674,6 +675,10 @@ WlzMatchICPObj_LDFLAGS			= $(AM_LFLAGS)
 WlzMeshTransformObj_SOURCES		= WlzMeshTransformObj.c
 WlzMeshTransformObj_LDADD		= $(LDADD)
 WlzMeshTransformObj_LDFLAGS		= $(AM_LFLAGS)
+
+WlzMinWidthRectAngle_SOURCES		= WlzMinWidthRectAngle.c
+WlzMinWidthRectAngle_LDADD		= $(LDADD)
+WlzMinWidthRectAngle_LDFLAGS		= $(AM_LFLAGS)
 
 WlzNObjsGreyStats_SOURCES		= WlzNObjsGreyStats.c
 WlzNObjsGreyStats_LDADD			= $(LDADD)
