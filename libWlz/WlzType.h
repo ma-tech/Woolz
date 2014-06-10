@@ -326,6 +326,8 @@ typedef enum _WlzObjectType
   * Convex hull types.						
   **********************************************************************/
   WLZ_CONVHULL_VALUES		= 1,	/*!< Convex hull values. */
+  WLZ_CONVHULL_DOMAIN_2D	= 2,	/*!< 2D convex hull domain. */
+  WLZ_CONVHULL_DOMAIN_3D	= 3,	/*!< 3D convex hull domain. */
   /**********************************************************************
   * Histogram domain types. WLZ_HISTOGRAMDOMAIN_OLD_INT and	
   * WLZ_HISTOGRAMDOMAIN_OLD_FLOAT exist only to allow old files to be
@@ -987,6 +989,8 @@ typedef enum _WlzScalarFeatureType
 */
 typedef enum _WlzVertexType
 {
+  WLZ_VERTEX_ERROR	= 0,		/*!< Used to indicate not a vertex
+  					     type. */
   WLZ_VERTEX_I2		= 1,		/*!< 2D integer vertex. */
   WLZ_VERTEX_F2,			/*!< 2D single precision floating
   					     point vertex. */
@@ -995,9 +999,23 @@ typedef enum _WlzVertexType
   WLZ_VERTEX_I3,			/*!< 3D integer vertex. */
   WLZ_VERTEX_F3,			/*!< 3D single precision floating
   					     point vertex. */
-  WLZ_VERTEX_D3				/*!< 3D double precision floating
+  WLZ_VERTEX_D3,			/*!< 3D double precision floating
   					     point vertex. */
+  WLZ_VERTEX_L2,			/*!< 2D long integer vertex. */
+  WLZ_VERTEX_L3				/*!< 3D long integer vertex. */
 } WlzVertexType;
+
+/*!
+* \struct	_WlzLVertex2
+* \ingroup	WlzType
+* \brief	2D long integer vertex.
+* 		Typedef: ::WlzIVertex2.
+*/
+typedef struct _WlzLVertex2
+{
+  WlzLong   	vtY;
+  WlzLong   	vtX;
+} WlzLVertex2;
 
 /*!
 * \struct	_WlzIVertex2
@@ -1035,6 +1053,19 @@ typedef struct _WlzDVertex2
   double 	vtX;
 } WlzDVertex2;
 
+
+/*!
+* \struct	_WlzLVertex3
+* \ingroup	WlzType
+* \brief	3D long integer vertex.
+* 		Typedef: ::WlzLVertex3.
+*/
+typedef struct _WlzLVertex3
+{
+  WlzLong	vtX;
+  WlzLong	vtY;
+  WlzLong	vtZ;
+} WlzLVertex3;
 
 /*!
 * \struct	_WlzIVertex3
@@ -1085,9 +1116,11 @@ typedef union _WlzVertexP
 {
   void		*v;
   WlzIVertex2	*i2;
+  WlzLVertex2	*l2;
   WlzFVertex2	*f2;
   WlzDVertex2	*d2;
   WlzIVertex3	*i3;
+  WlzLVertex3	*l3;
   WlzFVertex3	*f3;
   WlzDVertex3	*d3;
 } WlzVertexP;
@@ -1101,9 +1134,11 @@ typedef union _WlzVertexP
 typedef union _WlzVertex
 {
   WlzIVertex2	i2;
+  WlzLVertex2	l2;
   WlzFVertex2	f2;
   WlzDVertex2	d2;
   WlzIVertex3	i3;
+  WlzLVertex3	l3;
   WlzFVertex3	f3;
   WlzDVertex3	d3;
 } WlzVertex;
@@ -2310,6 +2345,8 @@ typedef union _WlzDomain
   struct _WlzCMesh3D	     *cm3;
   struct _WlzPoints	     *pts;
   struct _WlzLUTDomain       *lut;
+  struct _WlzConvHullDomain2 *cvh2;
+  struct _WlzConvHullDomain3 *cvh3;
   struct _WlzThreeDViewStruct *vs3d;
 } WlzDomain;
 
@@ -3212,7 +3249,10 @@ typedef struct _WlzChord
 /*!
 * \struct	_WlzConvHullValues
 * \ingroup	WlzConvexHull
-* \brief	A 2D convex hull.
+* \brief	A 2D convex hull used in legacy code. This (2D only)
+*		convex hull is a polygon domain with values which are
+*		a set of chords with pre-calculated parameters for use
+*		by other functions.
 * 		Typedef: ::WlzConvHullValues.
 */
 typedef struct _WlzConvHullValues
@@ -3231,6 +3271,57 @@ typedef struct _WlzConvHullValues
   					     originating object. */
   WlzChord      *ch;
 } WlzConvHullValues;
+
+/*!
+* \struct       _WlzConvHullDomain2
+* \brief        A 2D convex hull with counter clockwise ordered vertices
+*               and segments implicitly defined by the polygon of the
+*               ordered vertices.
+*               Typedef: ::WlzConvHullDomain3
+*/
+typedef struct _WlzConvHullDomain2
+{
+  WlzObjectType         type;           /*!< From WlzCoreDomain
+					     (WLZ_CONVHULL_DOMAIN_2D). */
+  int                   linkcount;      /*!< From WlzCoreDomain. */
+  void                  *freeptr;       /*!< From WlzCoreDomain. */
+  int                   nVertices;      /*!< Number of vertices. */
+  int                   maxVertices;    /*!< The maximum number of vertices
+                                             for which space has been
+                                             allocated. */
+  WlzVertexType         vtxType;        /*!< Vertex type, either WLZ_VERTEX_I2
+                                             or WLZ_VERTEX_D2. */
+  WlzVertex             centroid;       /*!< Centroid of the convex hull. */
+  WlzVertexP            vertices;       /*!< Array of vertices. */
+} WlzConvHullDomain2;
+
+/*!
+* \struct       _WlzConvHullDomain3
+* \brief        A 3D convex hull with coordinate vertices and faces defined
+*               by vertex index triples.
+*               Typedef: ::WlzConvHullDomain3
+*/
+typedef struct _WlzConvHullDomain3
+{
+  WlzObjectType         type;           /*!< From WlzCoreDomain
+					     (WLZ_CONVHULL_DOMAIN_3D). */
+  int                   linkcount;      /*!< From WlzCoreDomain. */
+  void                  *freeptr;       /*!< From WlzCoreDomain. */
+  int                   nVertices;      /*!< Number of vertices. */
+  int                   maxVertices;    /*!< The maximum number of vertices
+                                             for which space has been
+                                             allocated. */
+  int                   nFaces;         /*!< Number of faces. */
+  int                   maxFaces;       /*!< The maximum number of faces
+                                             for which space has been
+                                             allocated. */
+  WlzVertexType         vtxType;        /*!< Vertex type, either WLZ_VERTEX_I3
+                                             or WLZ_VERTEX_D3. */
+  WlzVertex             centroid;       /*!< Centroid of the convex hull. */
+  WlzVertexP            vertices;       /*!< Array of vertices. */
+  int                   *faces;         /*!< Array of face vertex indices,
+                                             3 vertex indices per face. */
+} WlzConvHullDomain3;
 
 /************************************************************************
 * Histograms.						
