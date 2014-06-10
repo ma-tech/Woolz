@@ -57,11 +57,21 @@ extern "C" {
 #define	WLZ_ABS(X)	(((X)>0)?(X):(-(X)))
 #define	WLZ_NINT(X)	((int)(((X)<0)?((X)-(0.5)):((X)+(0.5))))
 #define	WLZ_SIGN(X)	(((X)<0)?-1:((X)>0)?1:0)
+/*!
+* \def		WLZ_SWAP(T,A,B)
+* \brief	Swaps the values of the variables A and B using the
+* 		temporary variable T.
+*/
+#define WLZ_SWAP(T,A,B)	{(T)=(A);(A)=(B);(B)=(T);}
 
 /************************************************************************
 * Pixel value clamping. Used in WlzGreyScan() and WlzConvertPix().	*
 ************************************************************************/
-#define WLZ_CLAMP(v, min, max) (v<min ? min : v>max ? max : v)
+/*!
+* \def		WLZ_CLAMP(V,N,X)
+* \brief	Clamps the value of V such that V >= N and V <= X.
+*/
+#define WLZ_CLAMP(V,N,X) (((V)<(N))?(N):((V)>(X))?(X):(V))
 
 /************************************************************************
 * Math constants.							*
