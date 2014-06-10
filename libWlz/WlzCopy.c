@@ -112,6 +112,7 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
       case WLZ_2D_POLYGON:     /* FALLTHROUGH */
       case WLZ_BOUNDLIST:      /* FALLTHROUGH */
       case WLZ_CONTOUR:        /* FALLTHROUGH */
+      case WLZ_CONV_HULL:      /* FALLTHROUGH */
       case WLZ_LUT:
 	dom = WlzCopyDomain(inObj->type, inObj->domain, &errNum);
 	if(inObj->values.core)
@@ -179,7 +180,6 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
       case WLZ_EMPTY_OBJ:
         outObj = WlzMakeEmpty(&errNum);
 	break;
-      case WLZ_CONV_HULL:       /* FALLTHROUGH */
       case WLZ_3D_WARP_TRANS:   /* FALLTHROUGH */
       case WLZ_3D_POLYGON:      /* FALLTHROUGH */
       case WLZ_RECTANGLE:       /* FALLTHROUGH */
@@ -382,19 +382,35 @@ WlzDomain	 WlzCopyDomain(WlzObjectType inObjType, WlzDomain inDom,
 	outDom.lut = WlzMakeLUTDomain(inDom.lut->bin1, inDom.lut->lastbin,
 	                              &errNum);
         break;
-      case WLZ_3D_WARP_TRANS:
       case WLZ_CONV_HULL:
-      case WLZ_3D_POLYGON:
-      case WLZ_RECTANGLE:
-      case WLZ_CONVOLVE_INT:
-      case WLZ_CONVOLVE_FLOAT:
-      case WLZ_WARP_TRANS:
-      case WLZ_FMATCHOBJ:
-      case WLZ_TEXT:
-      case WLZ_COMPOUND_ARR_1:
-      case WLZ_COMPOUND_ARR_2:
-      case WLZ_COMPOUND_LIST_1:
+	switch(inDom.core->type)
+	{
+	  case WLZ_CONVHULL_DOMAIN_2D:
+	    outDom.cvh2 = WlzConvexHullCopy2(inDom.cvh2, inDom.cvh2->vtxType,
+	    				     &errNum);
+	    break;
+	  case WLZ_CONVHULL_DOMAIN_3D:
+	    outDom.cvh3 = WlzConvexHullCopy3(inDom.cvh3, inDom.cvh3->vtxType,
+	    				     &errNum);
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+        break;
+      case WLZ_3D_WARP_TRANS:   /* FALLTHROUGH */
+      case WLZ_3D_POLYGON:      /* FALLTHROUGH */
+      case WLZ_RECTANGLE:       /* FALLTHROUGH */
+      case WLZ_CONVOLVE_INT:    /* FALLTHROUGH */
+      case WLZ_CONVOLVE_FLOAT:  /* FALLTHROUGH */
+      case WLZ_WARP_TRANS:      /* FALLTHROUGH */
+      case WLZ_FMATCHOBJ:       /* FALLTHROUGH */
+      case WLZ_TEXT:            /* FALLTHROUGH */
+      case WLZ_COMPOUND_ARR_1:  /* FALLTHROUGH */
+      case WLZ_COMPOUND_ARR_2:  /* FALLTHROUGH */
+      case WLZ_COMPOUND_LIST_1: /* FALLTHROUGH */
       case WLZ_COMPOUND_LIST_2:
+	errNum = WLZ_ERR_UNIMPLEMENTED;
         break;
       case WLZ_PROPERTY_OBJ: /* FALLTHROUGH */
       case WLZ_EMPTY_OBJ:
