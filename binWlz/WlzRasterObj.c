@@ -166,7 +166,7 @@ int             main(int argc, char *argv[])
     {
       fclose(fP);
     }
-
+    fP = NULL;
   }
   if(ok)
   {
@@ -174,8 +174,9 @@ int             main(int argc, char *argv[])
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
-      (void )fprintf(stderr, "%s Failed to scan convert object.\n",
-      	     	     argv[0]);
+      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
+      (void )fprintf(stderr, "%s Failed to scan convert object (%s).\n",
+      	     	     argv[0], errMsgStr);
     }
   }
   if(inObj)
@@ -184,8 +185,8 @@ int             main(int argc, char *argv[])
   }
   if(ok)
   {
-  if((fP = (strcmp(outObjFileStr, "-")?
-	   fopen(outObjFileStr, "w"): stdout)) == NULL)
+    if((fP = (strcmp(outObjFileStr, "-")?
+	     fopen(outObjFileStr, "w"): stdout)) == NULL)
     {
       ok = 0;
       (void )fprintf(stderr, "%s Failed to open output file %s.\n",
