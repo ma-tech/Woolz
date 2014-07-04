@@ -2249,6 +2249,12 @@ extern WlzObject		*WlzConvexHullToObj(
 				  WlzObject *cObj,
 				  WlzObjectType rType,
 				  WlzErrorNum *dstErr);
+extern WlzIVertex2		WlzConvexHullVtxD2ToI2(
+				  WlzDVertex2 d,
+				  WlzDVertex2 c);
+extern WlzIVertex3		WlzConvexHullVtxD3ToI3(
+				  WlzDVertex3 d,
+				  WlzDVertex3 c);
 
 /************************************************************************
 * WlzConvexHull3D.c							*
