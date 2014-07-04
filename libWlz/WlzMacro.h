@@ -316,7 +316,7 @@ extern "C" {
 /* WLZ_VTX_3_NINT: Nearest integer position. */
 #define WLZ_VTX_3_NINT(U,P) \
         	((U).vtX = WLZ_NINT((P).vtX), \
-		 (U).vtY = WLZ_NINT((P).vtY) \
+		 (U).vtY = WLZ_NINT((P).vtY), \
 		 (U).vtZ = WLZ_NINT((P).vtZ))
 
 /************************************************************************
