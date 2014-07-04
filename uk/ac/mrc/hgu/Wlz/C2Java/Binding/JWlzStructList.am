@@ -1,7 +1,9 @@
 JWlzStructList		= \
+			WlzLVertex2.java \
 			WlzIVertex2.java \
 			WlzFVertex2.java \
 			WlzDVertex2.java \
+			WlzLVertex3.java \
 			WlzIVertex3.java \
 			WlzFVertex3.java \
 			WlzDVertex3.java \
@@ -77,6 +79,7 @@ JWlzStructList		= \
 			WlzPartialItv3D.java \
 			WlzCoreValues.java \
 			WlzValueLine.java \
+			WlzTiledValueBuffer.java \
 			WlzRagRValues.java \
 			WlzRectValues.java \
 			WlzValueIntervalLine.java \
@@ -90,8 +93,8 @@ JWlzStructList		= \
 			WlzPolygonDomain.java \
 			WlzPolygonDomain3.java \
 			WlzBoundList.java \
-			WlzChord.java \
-			WlzConvHullValues.java \
+			WlzConvHullDomain2.java \
+			WlzConvHullDomain3.java \
 			WlzHistogramDomain.java \
 			WlzIRect.java \
 			WlzFRect.java \
