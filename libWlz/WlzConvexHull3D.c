@@ -1363,8 +1363,7 @@ static WlzConvHullDomain3	*WlzConvexHullFromWSp3(
       WLZ_VTX_3_SCALE(cen, cen, (1.0 / nVtx));
       if(wSp->vtxType == WLZ_VERTEX_I3)
       {
-	WLZ_VTX_3_SET(cvh->centroid.i3,
-	              ALG_NINT(cen.vtX), ALG_NINT(cen.vtY), ALG_NINT(cen.vtZ));
+	WLZ_VTX_3_NINT(cvh->centroid.i3, cen);
       }
       else /* wSp->vtxType == WLZ_VERTEX_D3 */
       {
@@ -1785,6 +1784,362 @@ static WlzErrorNum		WlzConvHullBuildTet(
 * \return	New 3D convex hull domain.
 * \ingroup	WlzConvexHull
 * \brief	Creates a new 3D convex hull domain which encloses the
+* 		given known degenerate (all vertices on a single plane,
+* 		all on a single line or all coincident).
+* \param	pType			Type of vertex given, must be either
+* 					WLZ_VERTEX_I3 or WLZ_VERTEX_D3.
+* \param	nPnt			Number of given vertices.
+* \param	pnt			The given vertices.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzConvHullDomain3	*WlzConvexHullDegenerate3(
+				  WlzVertexType pType,
+				  int nPnt,
+				  WlzVertexP pnt,
+				  WlzErrorNum *dstErr)
+{
+  int		i;
+  double	t,
+		l,
+  		l0,
+  	        l1,
+		l2;
+  WlzDVertex3	c,
+		u,
+  		v0,
+		v1,
+		v2;
+  WlzConvHullDomain3 *cvh = NULL;
+  const double	eps = 1.0e-06;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+				  
+  /* Find centroid of vertices \f$c\f$. */
+  WLZ_VTX_3_ZERO(c);
+  for(i = 0; i < nPnt; ++i)
+  {
+    if(pType == WLZ_VERTEX_I3)
+    {
+      c.vtX += pnt.i3[i].vtX;
+      c.vtY += pnt.i3[i].vtY;
+      c.vtZ += pnt.i3[i].vtZ;
+    }
+    else
+    {
+      WLZ_VTX_3_ADD(c, c, pnt.d3[i]);
+    }
+  }
+  WLZ_VTX_3_SCALE(c, c, (1.0 / nPnt));
+  /* Find vertices closest and furthest from \f$c\f$ the centroid,
+   * \f$v_0\f$ and \f$v_1\f$. */
+  for(i = 0; i < nPnt; ++i)
+  {
+    WlzDVertex3 d,
+    		v;
+
+    if(pType == WLZ_VERTEX_I3)
+    {
+      WLZ_VTX_3_SET(v, pnt.i3[i].vtX, pnt.i3[i].vtY, pnt.i3[i].vtZ);
+    }
+    else
+    {
+      v = pnt.d3[i];
+    }
+    WLZ_VTX_3_SUB(d, c, v);
+    l = WLZ_VTX_3_SQRLEN(d);
+    if(i == 0)
+    {
+      l0 = l1 = l;
+      v0 = v1 = v;
+    }
+    else if(l < l0)
+    {
+      l0 = l;
+      v0 = v;
+    }
+    else if(l > l1)
+    {
+      l1 = l;
+      v1 = v;
+    }
+  }
+  /* If length \f$|v_0 - v_1 | < \epsilon\f$ then have all vertices
+   * coincident. */
+  WLZ_VTX_3_SUB(u, v0, v1);
+  l = WLZ_VTX_3_SQRLEN(u);
+  if(l < eps)
+  {
+    /* Set degenerate convex hull with a single vertex and a single
+     * degenerate face. */
+    cvh = WlzMakeConvexHullDomain3(1, 1, pType, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      cvh->nVertices = 1;
+      cvh->nFaces = 1;
+      if(pType == WLZ_VERTEX_I3)
+      { 
+        cvh->vertices.i3[0] = pnt.i3[0];
+      }
+      else
+      {
+        cvh->vertices.d3[0] = pnt.d3[0];
+      }
+      cvh->faces[0] = cvh->faces[1] = cvh->faces[2] = 0;
+    }
+  }
+  else
+  {
+    double	uu;
+
+    /* Now set \f$v_0\f$ to be the vertex furthest from \f$v_1\f$. */
+    l0 = 0.0;
+    v0 = v1;
+    for(i = 0; i < nPnt; ++i)
+    {
+      double	l;
+      WlzDVertex3 d,
+		  v;
+
+      if(pType == WLZ_VERTEX_I3)
+      {
+	WLZ_VTX_3_SET(v, pnt.i3[i].vtX, pnt.i3[i].vtY, pnt.i3[i].vtZ);
+      }
+      else
+      {
+	v = pnt.d3[i];
+      }
+      WLZ_VTX_3_SUB(d, v1, v);
+      l = WLZ_VTX_3_SQRLEN(d);
+      if(l > l0)
+      {
+	l0 = l;
+	v0 = v;
+      }
+    }
+    /* Find vertex \f$v_2\f$ furthest from the line segment \f$v_0\f$,
+     * \f$v_1\f$.
+     * To do this consider the line segment to be parameterised
+     * \f$n(t) = v_0 + t u\f$,
+     * where \f$u = v_1 - v_0\f$ and \f$t \in \mathbb{R}\f$.
+     * At the closest point on the line segment to \f$v_2\f$ we have
+     * \f$t = (u . (v_2 - v_0))/(u . u)\f$
+     * then the distance of \f$v_2\f$ from the line segment is
+     * 
+     * \f[
+       l = \left{
+	   \begin{array}{ll}
+	   |v_2 - v_0|         & t < 0 \\
+	   |v_2 - (v_0 + t u)| & 0 < t < 1 \\
+	   |v_2 - v_1|         & t > 1
+	   \end{array}
+	   \right.
+       \f]
+     */ 
+    for(i = 0; i < nPnt; ++i)
+    {
+      l2 = 0;
+      WLZ_VTX_3_SUB(u, v1, v0);
+      uu = WLZ_VTX_3_SQRLEN(u);
+      for(i = 0; i < nPnt; ++i)
+      {
+	double      l;
+	WlzDVertex3 d,
+		    v;
+
+	if(pType == WLZ_VERTEX_I3)
+	{
+	  WLZ_VTX_3_SET(v, pnt.i3[i].vtX, pnt.i3[i].vtY, pnt.i3[i].vtZ);
+	}
+	else
+	{
+	  v = pnt.d3[i];
+	}
+	WLZ_VTX_3_SUB(d, v, v0);
+	t = WLZ_VTX_3_SQRLEN(d);
+	if((t > -eps) && (t < (uu + eps)))
+	{
+	  t = t / uu;
+	  WLZ_VTX_3_SCALE_ADD(d, u, t, v0);
+	  WLZ_VTX_3_SUB(d, v, d);
+	  l = WLZ_VTX_3_SQRLEN(d);
+	  if(l > l2)
+	  {
+	    l2 = l;
+	    v2 = v;
+	  }
+	}
+      }
+      /* If length \f$v_2\f$ to line segment \f$v_0\f$, \f$v_1\f$ is less than
+       * \f$\epsilon\f$ have all vertices on the line segment \f$v_0\f$,
+       * \f$v_1\f$. */
+      if(l2 < eps)
+      {
+	/* Set degenerate convex hull with two vertices and a single degenerate
+	 * face. */
+	cvh = WlzMakeConvexHullDomain3(2, 1, pType, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  cvh->nVertices = 1;
+	  cvh->nFaces = 1;
+	  if(pType == WLZ_VERTEX_I3)
+	  { 
+	    WLZ_VTX_3_NINT(cvh->vertices.i3[0], v0);
+	    WLZ_VTX_3_NINT(cvh->vertices.i3[1], v1);
+	  }
+	  else
+	  {
+	    cvh->vertices.d3[0] = v0;
+	    cvh->vertices.d3[1] = v1;
+	  }
+	  cvh->faces[0] = 0,
+	  cvh->faces[1] = 1;
+	  cvh->faces[2] = 0;
+	}
+      }
+      else
+      {
+        WlzVertexP pnt2;
+
+	if((pnt2.v = AlcMalloc(nPnt * sizeof(WlzDVertex2))) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  WlzDVertex3 b0,
+		      b1,
+		      t0,
+		      t1;
+	  WlzConvHullDomain2 *cvh2 = NULL;
+
+	  /* The convex hull is planar.
+	   * Create a new set of unit basis vectors for the plane, \f$b_0\f$
+	   * and \f$b_1\f$
+	   * \f[
+	     b_0 = (v_1 - v_0) / |v_1 - v_0|
+	     b_1 = ((v_1 - v_0) \times ((v_1 - v_0) \times (v_2 - v_0))) /
+		   |(v_1 - v_0) \times ((v_1 - v_0) \times (v_2 - v_0))|
+	     \f]
+	   */
+	  WLZ_VTX_3_SUB(b0, v1, v0);
+	  l = WLZ_VTX_3_LENGTH(b0);
+	  WLZ_VTX_3_SCALE(b0, b0, (1.0/l));
+	  WLZ_VTX_3_SUB(t0, v2, v0);
+	  WLZ_VTX_3_CROSS(t1, b0, t0);
+	  WLZ_VTX_3_CROSS(b1, b0, t1);
+	  l = WLZ_VTX_3_LENGTH(b1);
+	  WLZ_VTX_3_SCALE(b1, b1, (1.0/l));
+	  /* Map the 3D vertices to 2D by taking scalar products with \f$b_0\f$
+	   * and \f$b_1\f$, ie for \f$p \in \mathbb{R}^3\f$ and
+	   * \f$q \in \mathbb{R}^2\f$ then
+	   * \f$q = (b_0 . (p - v_0), b_1 . (p - v_0))\f$,
+	   * where
+	   * \f$q = (q0, q1)\f$. */
+	  for(i = 0; i < nPnt; ++i)
+	  {
+	    WlzDVertex3 v;
+
+	    if(pType == WLZ_VERTEX_I3)
+	    {
+	      WLZ_VTX_3_SET(v, pnt.i3[i].vtX, pnt.i3[i].vtY, pnt.i3[i].vtZ);
+	    }
+	    else
+	    {
+	      v = pnt.d3[i];
+	    }
+	    WLZ_VTX_3_SUB(v, v, v0);
+	    pnt2.d2[i].vtX = WLZ_VTX_3_DOT(b0, v);
+	    pnt2.d2[i].vtY = WLZ_VTX_3_DOT(b1, v);
+	  }
+	  /* Compute convex hull in 2D. */
+	  cvh2 = WlzConvexHullFromVtx2(WLZ_VERTEX_D2, nPnt, pnt2, &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    /* Create a 3D convex hull with the given vertex type, the same
+	     * number of vertices and faces as the number of vertices in 2D.
+	     * Make faces from the 2D vertices and implied edges by using the
+	     * centroid as the first vertex and all faces then using it,
+	     * cf spokes on a wheel. */
+	    cvh = WlzMakeConvexHullDomain3(cvh2->nVertices + 1,
+	                                   cvh2->nVertices,
+					   pType, &errNum);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    WlzDVertex2 *p2;
+	    WlzDVertex3 c;
+
+	    cvh->nVertices = cvh2->nVertices + 1;
+	    cvh->nFaces = cvh2->nVertices;
+	    /* Now map the vertices of the 2D convex hull back into the 3D
+	     * space using
+	     * \f$p = b0 q0 + b1 q1\f$.
+	     */ 
+	    if(pType == WLZ_VERTEX_I3)
+	    {
+	      WlzIVertex3 *p3;
+
+	      WLZ_VTX_3_SCALE(t0, b0, cvh2->centroid.d2.vtX);
+	      WLZ_VTX_3_SCALE(t1, b1, cvh2->centroid.d2.vtY);
+	      WLZ_VTX_3_ADD3(c, t0, t1, v0);
+	      WLZ_VTX_3_NINT(cvh->centroid.i3, c);
+	      cvh->vertices.i3[0] = cvh->centroid.i3;
+	      for(i = 0; i < cvh2->nVertices; ++i)
+	      {
+		p2 = cvh2->vertices.d2 + i;
+		p3 = cvh->vertices.i3 + i + 1;
+
+		WLZ_VTX_3_SCALE(t0, b0, p2->vtX);
+		WLZ_VTX_3_SCALE(t1, b1, p2->vtY);
+		WLZ_VTX_3_ADD3(t0, t0, t1, v0);
+		*p3 = WlzConvexHullVtxD3ToI3(t0, c);
+	      }
+	    }
+	    else
+	    {
+	      WlzDVertex3 *p3;
+
+	      WLZ_VTX_3_SCALE(t0, b0, cvh2->centroid.d2.vtX);
+	      WLZ_VTX_3_SCALE(t1, b1, cvh2->centroid.d2.vtY);
+	      WLZ_VTX_3_ADD3(c, t0, t1, v0);
+	      cvh->centroid.d3 = c;
+	      cvh->vertices.d3[0] = c;
+	      for(i = 0; i < cvh2->nVertices; ++i)
+	      {
+		p2 = cvh2->vertices.d2 + i;
+		p3 = cvh->vertices.d3 + i + 1;
+		WLZ_VTX_3_SCALE(t0, b0, p2->vtX);
+		WLZ_VTX_3_SCALE(t1, b1, p2->vtY);
+		WLZ_VTX_3_ADD3(*p3, t0, t1, v0);
+	      }
+	    }
+	    /* Now set the faces. */
+	    for(i = 0; i < cvh2->nVertices; ++i)
+	    {
+	      int *f;
+
+	      f = cvh->faces + (i * 3);
+	      f[0] = 0;
+	      f[1] = i + 1;
+	      f[2] = ((i + 1) % cvh2->nVertices) + 1;
+	    }
+	  }
+	  (void )WlzFreeConvexHullDomain2(cvh2);
+	  AlcFree(pnt2.v);
+        }
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(cvh);
+}
+
+/*!
+* \return	New 3D convex hull domain.
+* \ingroup	WlzConvexHull
+* \brief	Creates a new 3D convex hull domain which encloses the
 * 		given vertices using a randomized incremental algorithm
 * 		based on Clarkson and Shor's algorithm:
 * 		Kenneth L. Clarkson and PeterW. Shor. "Applications of Random
@@ -1806,6 +2161,10 @@ static WlzErrorNum		WlzConvHullBuildTet(
 * 		is O(n log n). On a 3GHz Intel i7 the computation time
 * 		is a ~10ms for 10^4 vertices randomly distributed over
 * 		a cube but ~1s for 10^5 vertices.
+* 		When given a degenerate set of vertices (all on a single plane,
+* 		all on a single line or all coincident) this function will
+* 		still compute a 3D convex hull domain but will set the error
+* 		code to WLZ_ERR_DEGENERATE to indicate this.
 * \param	pType			Type of vertex given, must be either
 * 					WLZ_VERTEX_I3 or WLZ_VERTEX_D3.
 * \param	nPnt			Number of given vertices.
@@ -1932,10 +2291,7 @@ WlzConvHullDomain3		*WlzConvexHullFromVtx3(
   if(errNum == WLZ_ERR_NONE)
   {
     errNum = WlzConvHullInitTet(nPnt, wSp);
-    if(errNum == WLZ_ERR_DEGENERATE)
-    {
-    }
-    else
+    if(errNum != WLZ_ERR_DEGENERATE)
     {
       /* Build the initial faces, check for vertices inside the initial
        * tetrahedron, adding vertices to the vertex list if they're not
@@ -2074,6 +2430,15 @@ WlzConvHullDomain3		*WlzConvexHullFromVtx3(
   }
   /* Free the workspace. */
   WlzConvHullFreeWSp3(wSp);
+  /* If the vertices were degenerate try mapping to a plane. */
+  if(errNum == WLZ_ERR_DEGENERATE)
+  {
+    cvh = WlzConvexHullDegenerate3(pType, nPnt, pnt, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WLZ_ERR_DEGENERATE;
+    }
+  }
   if(dstErr)
   {
     *dstErr = errNum;
