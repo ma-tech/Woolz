@@ -89,16 +89,16 @@ static int			WlzConvHullClarksonCmpDH(
 * \brief        Creates a new 2D convex hull domain which encloses the
 *               given vertices using Clarkson's algorithm, see
 		WlzConvHullClarkson2I() and WlzConvHullClarkson2D().
+		In degenerate cases (less than 3 vertices or all vertices on
+		a single line) a convex hull domain will still be computed
+		but the returned error code will be WLZ_ERR_DEGENERATE.
 * \param        pType                   Type of vertex given, must be either
 *                                       WLZ_VERTEX_I3 or WLZ_VERTEX_D3.
 * \param        nPnt                    Number of given vertices.
 * \param        pnt                     The given vertices.
 * \param        dstErr                  Destination error pointer, may be NULL.
-*                                       If the volume of the tetrahedron
-*                                       with maximum/minimum z coordinate
-*                                       and minimum x and y coordiantes is
-*                                       zero the erro code will be
-*                                       WLZ_ERR_DEGENERATE.
+*                                       If the error code WLZ_ERR_DEGENERATE
+*                                       may be returned, see above.
 */
 WlzConvHullDomain2              *WlzConvexHullFromVtx2(
                                   WlzVertexType pType,
@@ -110,14 +110,70 @@ WlzConvHullDomain2              *WlzConvexHullFromVtx2(
   int		*idx = NULL;
   WlzConvHullDomain2 *cvh = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
+  const double	eps = 1.0e-06;
 
-  if(nPnt < 3)
+  if(nPnt < 1)
   {
     errNum = WLZ_ERR_PARAM_DATA;
   }
   else if(pnt.v == NULL)
   {
     errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if(nPnt < 3)
+  {
+    if(nPnt == 2)
+    {
+      if(pType == WLZ_VERTEX_I2)
+      {
+        if((pnt.i2[0].vtX == pnt.i2[1].vtX) &&
+	   (pnt.i2[0].vtY == pnt.i2[1].vtY))
+        {
+	  nPnt = 1;
+	}
+      }
+      else
+      {
+        if(WLZ_VTX_2_EQUAL(pnt.i2[0], pnt.i2[1], eps))
+	{
+	  nPnt = 1;
+	}
+      }
+    }
+    cvh = WlzMakeConvexHullDomain2(nPnt, pType, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int	i;
+
+      cvh->nVertices = nPnt;
+      if(pType == WLZ_VERTEX_I2)
+      {
+	WlzIVertex2 c;
+
+	WLZ_VTX_2_ZERO(c);
+	for(i = 0; i < nPnt; ++i)
+	{
+	  cvh->vertices.i2[i] = pnt.i2[i];
+	  WLZ_VTX_2_ADD(c, c, pnt.i2[i]);
+	}
+	cvh->centroid.i2.vtX = c.vtX / 2;
+	cvh->centroid.i2.vtY = c.vtY / 2;
+      }
+      else
+      {
+        WlzDVertex2 c;
+
+	WLZ_VTX_2_ZERO(c);
+	for(i = 0; i < nPnt; ++i)
+	{
+	  cvh->vertices.d2[i] = pnt.d2[i];
+	  WLZ_VTX_2_ADD(c, c, pnt.d2[i]);
+	}
+	cvh->centroid.i2.vtX = c.vtX * 0.5;
+	cvh->centroid.i2.vtY = c.vtY * 0.5;
+      }
+      errNum = WLZ_ERR_DEGENERATE;
+    }
   }
   else
   {
@@ -133,46 +189,50 @@ WlzConvHullDomain2              *WlzConvexHullFromVtx2(
 	errNum = WLZ_ERR_PARAM_TYPE;
 	break;
     }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    cvh = WlzMakeConvexHullDomain2(nC, pType, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    int		i;
-    WlzDVertex2 c;
-
-    WLZ_VTX_2_ZERO(c);
-    if(pType == WLZ_VERTEX_I2)
+    if(errNum == WLZ_ERR_NONE)
     {
-      for(i = 0; i < nC; ++i)
-      {
-	WlzIVertex2 p;
-
-	p = pnt.i2[idx[i]];
-	WLZ_VTX_2_ADD(c, c, p);
-	cvh->vertices.i2[i] = p;
-      }
-      WLZ_VTX_2_SCALE(c, c, (1.0 / nC));
-      WLZ_VTX_2_NINT(cvh->centroid.i2, c);
+      cvh = WlzMakeConvexHullDomain2(nC, pType, &errNum);
     }
-    else /* pType == WLZ_VERTEX_D2 */
+    if(errNum == WLZ_ERR_NONE)
     {
-      for(i = 0; i < nC; ++i)
-      {
-	WlzDVertex2 p;
+      int		i;
+      WlzDVertex2 c;
 
-	p = pnt.d2[idx[i]];
-	WLZ_VTX_2_ADD(c, c, p);
-	cvh->vertices.d2[i] = p;
+      WLZ_VTX_2_ZERO(c);
+      if(pType == WLZ_VERTEX_I2)
+      {
+	for(i = 0; i < nC; ++i)
+	{
+	  WlzIVertex2 p;
+
+	  p = pnt.i2[idx[i]];
+	  WLZ_VTX_2_ADD(c, c, p);
+	  cvh->vertices.i2[i] = p;
+	}
+	WLZ_VTX_2_SCALE(c, c, (1.0 / nC));
+	WLZ_VTX_2_NINT(cvh->centroid.i2, c);
       }
-      WLZ_VTX_2_SCALE(c, c, (1.0 / nC));
-      cvh->centroid.d2 = c;
+      else /* pType == WLZ_VERTEX_D2 */
+      {
+	for(i = 0; i < nC; ++i)
+	{
+	  WlzDVertex2 p;
+
+	  p = pnt.d2[idx[i]];
+	  WLZ_VTX_2_ADD(c, c, p);
+	  cvh->vertices.d2[i] = p;
+	}
+	WLZ_VTX_2_SCALE(c, c, (1.0 / nC));
+	cvh->centroid.d2 = c;
+      }
+      cvh->nVertices = nC;
+      if(nC < 3)
+      {
+        errNum = WLZ_ERR_DEGENERATE;
+      }
     }
-    cvh->nVertices = nC;
   }
-  if(errNum != WLZ_ERR_NONE)
+  if((errNum != WLZ_ERR_NONE) && (errNum != WLZ_ERR_DEGENERATE))
   {
     (void )WlzFreeConvexHullDomain2(cvh);
   }
