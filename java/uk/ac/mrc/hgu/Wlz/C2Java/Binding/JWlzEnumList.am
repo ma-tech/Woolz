@@ -12,7 +12,7 @@ JWlzEnumList		= \
 			WlzMeshError.java \
 			WlzConnectType.java \
 			WlzDistanceType.java \
-			WlzRegConRCC8.java \
+			WlzRCCClass.java \
 			WlzSpecialStructElmType.java \
 			WlzBinaryOperatorType.java \
 			WlzCompThreshType.java \
@@ -44,6 +44,7 @@ JWlzEnumList		= \
 			WlzCMeshElmFlags.java \
 			WlzCMeshNodFlags.java \
 			WlzFnType.java \
+			WlzIOFlags.java \
 			WlzElementType.java \
 			WlzMatchType.java \
 			Wlz3DViewStructInitMask.java \
