@@ -66,9 +66,6 @@ static WlzObject 		*WlzObjToConvexPolygon3d(
 static WlzErrorNum		WlzConvexHullPlaneSweep(
 				  WlzPlaneDomain *pDom,
 				  WlzConvHullDomain3 *cvh);
-static WlzIVertex2		WlzConvexHullVtxD2ToI2(
-				  WlzDVertex2 d,
-				  WlzDVertex2 c);
 static int			WlzConvexHullVtxDZToIZ(
 				  double d,
 				  double c);
@@ -508,6 +505,8 @@ WlzObject			*WlzConvexHullToObj(
 * \return	Convex hull object, NULL on error.
 * \ingroup	WlzConvexHull
 * \brief	Computes the convex hull of the given object.
+* 		If a degenerate convex hull is returned then the returned
+* 		error will be WLZ_ERR_DEGENERATE.
 * \param	gObj			Given object.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
@@ -558,7 +557,7 @@ WlzObject 			*WlzObjToConvexHull(
 
 	  pDom = gObj->domain.p;
 	  /* Allocate an array for planar convex hulls. */
-	  if((nPln = pDom->lastpl - pDom->plane1) < 1)
+	  if((nPln = pDom->lastpl - pDom->plane1 + 1) <= 0)
 	  {
 	    errNum = WLZ_ERR_DOMAIN_DATA;
 	  }
@@ -596,7 +595,8 @@ WlzObject 			*WlzObjToConvexHull(
 		  {
 		    allObj[p] = WlzObjToConvexHull(obj2D, &errNum2);
 		  }
-		  if(errNum2 != WLZ_ERR_NONE)
+		  if((errNum2 != WLZ_ERR_NONE) &&
+		     (errNum2 != WLZ_ERR_DEGENERATE))
 		  {
 #ifdef _OPENMP
 #pragma omp critical
@@ -661,12 +661,6 @@ WlzObject 			*WlzObjToConvexHull(
 	      }
 	    }
 	  }
-	  /* Compute the 3D convex hull of all the planar convex hulls. */
-	  if(errNum == WLZ_ERR_NONE)           
-	  {
-	    vType = WLZ_VERTEX_I3;
-	    dom.cvh3 = WlzConvexHullFromVtx3(vType, nVtx, vtx, &errNum);
-	  }
 	  /* Free all planar convex hulls. */
 	  if(allObj)
 	  {
@@ -677,6 +671,12 @@ WlzObject 			*WlzObjToConvexHull(
 	      (void )WlzFreeObj(allObj[p]);
 	    }
 	    AlcFree(allObj);
+	  }
+	  /* Compute the 3D convex hull of all the planar convex hulls. */
+	  if(errNum == WLZ_ERR_NONE)           
+	  {
+	    vType = WLZ_VERTEX_I3;
+	    dom.cvh3 = WlzConvexHullFromVtx3(vType, nVtx, vtx, &errNum);
 	  }
 	}
         break;
@@ -835,11 +835,20 @@ WlzObject 			*WlzObjToConvexHull(
   AlcFree(vtx.v);
   if(cObj == NULL) 
   {
-    if(errNum == WLZ_ERR_NONE)
+    if((dom.core != NULL) &&
+       ((errNum == WLZ_ERR_NONE) || (errNum == WLZ_ERR_DEGENERATE)))
     {
+      WlzErrorNum saveErrNum;
+
+      saveErrNum = errNum;
       cObj = WlzMakeMain(WLZ_CONV_HULL, dom, nullVal, NULL, NULL, &errNum);
+      if((errNum == WLZ_ERR_NONE) && (saveErrNum == WLZ_ERR_DEGENERATE))
+      {
+        errNum = WLZ_ERR_DEGENERATE;
+      }
     }
-    if((errNum != WLZ_ERR_NONE) && (dom.core != NULL))
+    if((errNum != WLZ_ERR_NONE) && (errNum != WLZ_ERR_DEGENERATE) &&
+       (dom.core != NULL))
     {
       switch(dom.core->type)
       {
@@ -1347,7 +1356,7 @@ static WlzObject		*WlzConvexHullToPixDomObj(
 * \param	d			Given convex hull double vertex.
 * \param	c			Centroid of the convex hull.
 */
-static WlzIVertex2		WlzConvexHullVtxD2ToI2(
+WlzIVertex2			WlzConvexHullVtxD2ToI2(
 				  WlzDVertex2 d,
 				  WlzDVertex2 c)
 {
@@ -1355,6 +1364,27 @@ static WlzIVertex2		WlzConvexHullVtxD2ToI2(
 
   i.vtX = (int)((d.vtX < c.vtX)? floor(d.vtX): ceil(d.vtX));
   i.vtY = (int)((d.vtY < c.vtY)? floor(d.vtY): ceil(d.vtY));
+  return(i);
+}
+
+/*!
+* \return	Integral vertex.
+* \ingroup	WlzConvexHull
+* \brief	Convert the given double vertex to an integer vertex
+* 		such that it will enclose the given convex hull double
+* 		vertex.
+* \param	d			Given convex hull double vertex.
+* \param	c			Centroid of the convex hull.
+*/
+WlzIVertex3			WlzConvexHullVtxD3ToI3(
+				  WlzDVertex3 d,
+				  WlzDVertex3 c)
+{
+  WlzIVertex3 i;
+
+  i.vtX = (int)((d.vtX < c.vtX)? floor(d.vtX): ceil(d.vtX));
+  i.vtY = (int)((d.vtY < c.vtY)? floor(d.vtY): ceil(d.vtY));
+  i.vtZ = (int)((d.vtZ < c.vtZ)? floor(d.vtZ): ceil(d.vtZ));
   return(i);
 }
 
