@@ -74,6 +74,9 @@ WlzConvexHull [-o<output object>] [-h] [-t<output object type>] [-u]
 </table>
 \par Description
 Computes the convex hull of the given input object.
+Degenerate convex hulls (on a single plane for 3D or on a
+single line for 2D are only allowed when creating pixel/voxel
+spatial domain objects.
 The input object is read from stdin and output data are written
 to stdout unless filenames are given.
 \par Examples
@@ -226,6 +229,11 @@ int             main(int argc, char **argv)
   {
     outObj = WlzAssignObject(
     	     WlzObjToConvexHull(inObj, &errNum), NULL);
+    if((outObj != NULL) &&
+       (errNum == WLZ_ERR_DEGENERATE) && (outObjType == WLZ_2D_DOMAINOBJ))
+    {
+      errNum = WLZ_ERR_NONE;
+    }
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -307,6 +315,9 @@ int             main(int argc, char **argv)
     "        x - (pixel/voxel) spatial domain\n"
     "  -u  Use unit voxel size.\n"
     "Computes the convex hull of the given input object.\n"
+    "Degenerate convex hulls (on a single plane for 3D or on a\n"
+    "single line for 2D are only allowed when creating pixel/voxel\n"
+    "spatial domain objects.\n"
     "The input object is read from stdin and output data are written\n"
     "to stdout unless filenames are given.\n",
     *argv,
