@@ -448,7 +448,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
         v[i] = WlzVolume(t[(i == 0)?
 	                 WLZ_RCCTOIDX_O0VO1I: WLZ_RCCTOIDX_O0O1VI],
 			 &errNum);
-	if((errNum == WLZ_ERR_NONE) && (v[i] < 1))
+	if((errNum == WLZ_ERR_NONE) && (v[i] < 0))
 	{
 	  errNum = WLZ_ERR_DOMAIN_DATA;
 	}
@@ -460,11 +460,11 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      if((2 * v[0]) >= u[0])
+      if((2 * v[0]) >= u[1])
       {
         cls |= WLZ_RCC_ENC;
       }
-      if((2 * v[1]) >= u[1])
+      if((2 * v[1]) >= u[0])
       {
         cls |= WLZ_RCC_ENCI;
       }
@@ -764,22 +764,26 @@ static WlzErrorNum WlzRCCMakeT(WlzObject **t, WlzObject **o, WlzRCCTOIdx i)
         break;
       case WLZ_RCCTOIDX_O0VO1I:                   /* o_0^v \cap o_1   */
       case WLZ_RCCTOIDX_O0O1VI: /* FALLTHROUGH */ /* o_0   \cap o_1^v */
-#ifdef HACK_USE_CHULL
 	{
-	  int		i0,
-	  		i1;
-	  WlzObject	*x;
+	  int		i0;
+	  WlzObject	*c = NULL,
+	  		*x = NULL;
 
 	  i0 = (i == WLZ_RCCTOIDX_O0VO1I)? 0: 1;
-	  x = WlzObjToConvexHullSpDomObj(o[i0], &errNum);
+	  c = WlzObjToConvexHull(o[i0], &errNum);
+	  if((errNum == WLZ_ERR_NONE) || (errNum == WLZ_ERR_DEGENERATE))
+	  {
+	    x = WlzAssignObject(
+	        WlzConvexHullToObj(c, o[i0]->type, &errNum), NULL);
+	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    t[i] = WlzAssignObject(
-	           WlzIntersect2(t, o[!i0], &errNum), NULL);
+	           WlzIntersect2(o[!i0], x, &errNum), NULL);
 	  }
-	  (void )WlzFreeObj(t);
+	  (void )WlzFreeObj(c);
+	  (void )WlzFreeObj(x);
 	}
-#endif
         break;
       default:
         break;
