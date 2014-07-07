@@ -2962,7 +2962,6 @@ WlzObject *WlzFromBArray1D(
 * \param	gDat			The 1D array of data.
 * \param	noCopy			If non-zero then the data are not
 * 					copied but are used in place.
-*					TODO this is yet to be written.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject	*WlzFromArray1D(WlzObjectType oType,
