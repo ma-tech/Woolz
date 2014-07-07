@@ -2079,7 +2079,6 @@ void		WlzLBTClassifyNodeFace3D(WlzLBTDomain3D *lDom,
 				     WlzLBTNodeClass2D *dstCls,
 				     int *dstRot)
 {
-  /* TODO Check this function! */
   int		idE,
 		idO,
 		idNN,
