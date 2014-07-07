@@ -166,7 +166,7 @@ WlzErrorNum WlzLabel3d(
 	    WlzFreeObj(obj2);
 	  }
 	}
-#ifdef _OPENMP_HACK
+#ifdef _OPENMP
 #pragma omp critical
 	{
 #endif
@@ -174,7 +174,7 @@ WlzErrorNum WlzLabel3d(
 	  {
 	    errNum = errNum2;
 	  }
-#ifdef _OPENMP_HACK
+#ifdef _OPENMP
 	}
 #endif
       }
