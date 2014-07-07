@@ -90,15 +90,59 @@ static void 		vertcompress	(WlzIVertex2 **vtx,
 					 int *nv);
 static int 		wraparound	(WlzPolygonDomain *pdom,
 					 int wrap);
+static WlzObject 			*WlzObjToBoundaryPrv(
+					  WlzObject *obj,
+					  int wrap,
+					  WlzErrorNum *dstErr);
 
-/* function:     WlzObjToBoundary    */
+/*!
+* \return	New boundary object, NULL on error.
+* \ingroup	WlzBoundary
+* \brief	Computes a recursive boundary structure for the given
+* 		input object, with the specified number of vertices
+* 		repeated in each boundary polygon to ensure wrap-around.
+* 		All boundary polygon arcs lie in one of the 8 directions
+* 		vertical, horizontal, diagonal.
+* 		This function is a wrapper for WlzObjToBoundaryPrv()
+* 		which is not re-entrant and has been coded with multiple
+* 		returns which makes it possible to wrap in place.
+* \param	obj			Given input object.
+* \param	wrap			Number of overlapping vertices within
+* 					each polygon.
+* \param	dstErr			Destination error pointer, mat be NULL.
+*/
+WlzObject 			*WlzObjToBoundary(
+  				  WlzObject *obj,
+  				  int wrap,
+  				  WlzErrorNum *dstErr)
+{
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+#ifdef _OPENMP
+#pragma omp critical(WlzObjToBoundary)
+  {
+#endif
+    rObj = WlzObjToBoundaryPrv(obj, wrap, &errNum);
+#ifdef _OPENMP
+  }
+#endif
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
 /*! 
 * \ingroup      WlzBoundary
 * \brief        Compute the recursive boundary structure of input
  object "obj",with "wrap" points repeated in each boundary polygon
- to ensurewrap-around (usual value for drawing purposes : 1).
+ to ensure wrap-around (usual value for drawing purposes : 1).
  All boundary polygon arcs lie in one of the 8 directions vertical,
  horizontal, diagonal.
+ This function is *not* re-entrant, use with care. If you're using
+ OPENMP then use the wrapper WlzObjToBoundary().
 *
 * \return       Boundary object, NULL on error.
 * \param    obj	Input domain object.
@@ -107,7 +151,7 @@ static int 		wraparound	(WlzPolygonDomain *pdom,
 * \par      Source:
 *                WlzObjToBoundary.c
 */
-WlzObject *WlzObjToBoundary(
+static WlzObject *WlzObjToBoundaryPrv(
   WlzObject	*obj,
   int		wrap,
   WlzErrorNum	*dstErr)
@@ -128,7 +172,7 @@ WlzObject *WlzObjToBoundary(
   int			p;
   WlzObjectType		objType;
   WlzObject		*obj1, *obj2;
-  char			*procStr="WlzObjToBoundary";
+  const char		* const procStr="WlzObjToBoundary";
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   /*
