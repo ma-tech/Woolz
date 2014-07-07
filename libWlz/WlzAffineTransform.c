@@ -38,6 +38,10 @@ static char _WlzAffineTransform_c[] = "University of Edinburgh $Id$";
 * \brief	Functions for computing affine transforms and applying
 * 		them to objects.
 * \ingroup	WlzTransform
+* \todo		Shear not yet implemented for 3D when setting an affine
+* 		transform from primatives.
+* \todo		Getting the primatives from a 3D affine transform has not
+* 		been implemented.
 */
 
 #include <stdlib.h>
@@ -2058,7 +2062,7 @@ static WlzErrorNum WlzAffineTransformPrimSet3(WlzAffineTransform *tr,
   if((fabs(prim.alpha) > DBL_EPSILON) || (fabs(prim.psi) > DBL_EPSILON) ||
      (fabs(prim.xsi) > DBL_EPSILON))
   {
-   /* TODO: Shear not yet implemented for 3D! So if a shear is specified
+   /* Shear not yet implemented for 3D! So if a shear is specified
     * return an error. */
     errNum = WLZ_ERR_TRANSFORM_TYPE;
   }
@@ -2397,7 +2401,7 @@ WlzErrorNum	WlzAffineTransformPrimGet(WlzAffineTransform *tr,
         WlzAffineTransformPrimGet2(tr, prim);
 	break;
       case 3:
-	/* TODO don't know how to get the primitives from a 3D affine
+	/* Don't know how to get the primitives from a 3D affine
 	 * transform. */
         errNum = WLZ_ERR_TRANSFORM_TYPE;
         break;
