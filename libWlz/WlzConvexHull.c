@@ -529,19 +529,22 @@ WlzObject 			*WlzObjToConvexHull(
   {
     errNum = WLZ_ERR_OBJECT_NULL;
   }
-  else if(gObj->domain.core == NULL)
-  {
-    errNum = WLZ_ERR_DOMAIN_NULL;
-  }
   else
   {
     switch(gObj->type)
     {
       case WLZ_2D_DOMAINOBJ:
 	{
-	  WlzObject *bObj;
+	  WlzObject *bObj = NULL;
 
-	  bObj = WlzObjToBoundary(gObj, 0, &errNum);
+	  if(gObj->domain.core == NULL)
+	  {
+	    errNum = WLZ_ERR_DOMAIN_NULL;
+	  }
+	  else
+	  {
+	    bObj = WlzObjToBoundary(gObj, 0, &errNum);
+	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    cObj = WlzObjToConvexHull(bObj, &errNum);
@@ -555,13 +558,20 @@ WlzObject 			*WlzObjToConvexHull(
 	  WlzPlaneDomain *pDom;
 	  WlzObject	**allObj = NULL;
 
-	  pDom = gObj->domain.p;
-	  /* Allocate an array for planar convex hulls. */
-	  if((nPln = pDom->lastpl - pDom->plane1 + 1) <= 0)
+	  if(gObj->domain.core == NULL)
 	  {
-	    errNum = WLZ_ERR_DOMAIN_DATA;
+	    errNum = WLZ_ERR_DOMAIN_NULL;
 	  }
 	  else
+	  {
+	    pDom = gObj->domain.p;
+	    /* Allocate an array for planar convex hulls. */
+	    if((nPln = pDom->lastpl - pDom->plane1 + 1) <= 0)
+	    {
+	      errNum = WLZ_ERR_DOMAIN_DATA;
+	    }
+	  }
+	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    if((allObj = (WlzObject **)
 	                 AlcCalloc(nPln, sizeof(WlzObject *))) == NULL)
@@ -681,6 +691,11 @@ WlzObject 			*WlzObjToConvexHull(
 	}
         break;
       case WLZ_2D_POLYGON:
+	if(gObj->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else
         {
 	  nVtx = gObj->domain.poly->nvertices;
 	  switch(gObj->domain.poly->type)
@@ -706,6 +721,11 @@ WlzObject 			*WlzObjToConvexHull(
       case WLZ_BOUNDLIST:
 	/* Here we only collect those vertices which are at the top level of
 	 * the boundary list, ie next but not up/down traversal. */
+	if(gObj->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else
 	{
 	  WlzBoundList *b0,
 	  	       *b1,
@@ -789,6 +809,11 @@ WlzObject 			*WlzObjToConvexHull(
 	}
         break;
       case WLZ_CONTOUR:
+	if(gObj->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else
 	{
 	  vtx = WlzVerticesFromObj(gObj, NULL, &nVtx, &vType, &errNum);
 	  if(errNum == WLZ_ERR_NONE)
@@ -811,7 +836,14 @@ WlzObject 			*WlzObjToConvexHull(
 	}
         break;
       case WLZ_CMESH_2D:
-	vtx = WlzVerticesFromObj(gObj, NULL, &nVtx, &vType, &errNum);
+	if(gObj->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else
+	{
+	  vtx = WlzVerticesFromObj(gObj, NULL, &nVtx, &vType, &errNum);
+	}
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  dom.cvh2 = WlzConvexHullFromVtx2(vType, nVtx, vtx, &errNum);
@@ -819,7 +851,14 @@ WlzObject 			*WlzObjToConvexHull(
         break;
       case WLZ_CMESH_2D5: /* FALLTHROUGH */
       case WLZ_CMESH_3D:
-	vtx = WlzVerticesFromObj(gObj, NULL, &nVtx, &vType, &errNum);
+	if(gObj->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else
+	{
+	  vtx = WlzVerticesFromObj(gObj, NULL, &nVtx, &vType, &errNum);
+	}
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  dom.cvh3 = WlzConvexHullFromVtx3(vType, nVtx, vtx, &errNum);
