@@ -37,6 +37,8 @@ static char _WlzBasisFnTransform_c[] = "University of Edinburgh $Id$";
 * Boston, MA  02110-1301, USA.
 * \brief	Functions for computing and applying basis function
 * 		transforms.
+* \todo		The mesh generation is fairly poor. This could be revisited
+* 		but for most off line use external applications can be used.
 * \ingroup	WlzTransform
 */
 
@@ -1457,7 +1459,6 @@ WlzObject	*WlzBasisFnTransformObj(WlzObject *srcObj,
 	break;
       case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
       case WLZ_3D_DOMAINOBJ:
-	/* TODO: need better mesh generation */
 	mesh = WlzMeshFromObj(srcObj, WLZ_MESH_GENMETHOD_BLOCK, 100.0, 100.0,
 	                      &errNum);
 	if(errNum == WLZ_ERR_NONE)
