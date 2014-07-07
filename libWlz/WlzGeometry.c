@@ -4335,7 +4335,6 @@ int		WlzGeomLineLineSegmentIntersect3D(WlzDVertex3 r0,
   		v;
   const double  tol = ALG_DBL_TOLLERANCE;
 
-  /* TODO Test this function. */
   WLZ_VTX_3_SUB(p, p1, p0);
   lSq = WLZ_VTX_3_SQRLEN(p);
   if(lSq < tol)
