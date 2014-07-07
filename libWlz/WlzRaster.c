@@ -38,6 +38,7 @@ static char _WlzRaster_c[] = "University of Edinburgh $Id$";
 * \brief	Functions to rasterize geometric Woolz objects into 2D
 * 		or 3D domain objects.
 * \ingroup	WlzRaster
+* \todo		Function WlzRasterGM2D() has yet to be implemented.
 */
 
 #include <Wlz.h>
@@ -299,7 +300,6 @@ static WlzObject *WlzRasterGM2D(WlzGMModel *model,
   WlzObject	*dObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
 
-  /* TODO */
   if(dstErr)
   {
     *dstErr = errNum;
