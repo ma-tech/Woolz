@@ -40,6 +40,7 @@ static char _WlzNMSuppress_c[] = "University of Edinburgh $Id$";
 * 		algorithm. The domain is the non-maximally suppressed
 * 		domain and the values are the encoded gradient direction.
 * \ingroup	WlzFeatures
+* \todo		WlzNMSuppress3D() has yet to be implemented.
 */
 
 #include <stdio.h>
@@ -803,9 +804,8 @@ static WlzObject *WlzNMSuppress3D(WlzObject *grdM, WlzObject *grdZ,
 				  WlzPixelV minThrV, WlzErrorNum *dstErr)
 {
   WlzObject	*dstObj = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
 
-  errNum = WLZ_ERR_OBJECT_TYPE; /* TODO implement this function */
   if(dstErr)
   {
     *dstErr = errNum;
