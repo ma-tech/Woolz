@@ -594,7 +594,10 @@ static void 	WlzCMeshDGToStrainTensor3D(WlzObject *tObj)
   tIxv = tObj->values.x;
   elmVec = mesh->res.elm.vec;
   maxElm = mesh->res.elm.maxEnt;
-  for(idE = 0; idE < maxElm; ++idE) /* TODO use OpenMP */
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for(idE = 0; idE < maxElm; ++idE)
   {
     WlzCMeshElm3D *elm;
 
@@ -630,7 +633,10 @@ static void 	WlzPtsDGToStrainTensor3D(WlzObject *tObj)
   pd = tObj->domain.pts;
   pv = tObj->values.pts;
   nPts = pd->nPoints;
-  for(idx = 0; idx < nPts; ++idx) /* TODO use OpenMP */
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+  for(idx = 0; idx < nPts; ++idx)
   {
     double	*ten;
 
