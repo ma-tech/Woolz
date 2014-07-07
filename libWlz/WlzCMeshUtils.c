@@ -2199,6 +2199,7 @@ WlzErrorNum 	WlzCMeshVerify2D(WlzCMesh2D *mesh, WlzCMeshElm2D **dstElm,
 *		debugging mesh connectivities - it is not intended for
 *		routine use. With an invalid mesh this checking function
 *		may provoke NULL pointer access or segmentation faults.
+* \todo		This function has yet to be implemented.
 * \param	mesh			Given mesh.
 * \param	dstElm			Destination mesh element pointer
 *					for last mesh element, may be NULL.
@@ -2214,7 +2215,7 @@ WlzErrorNum 	WlzCMeshVerify2D5(WlzCMesh2D5 *mesh, WlzCMeshElm2D5 **dstElm,
 				  int allErr, FILE *fP)
 {
   WlzCMeshElm2D5 *elm = NULL;
-  WlzErrorNum	errNum1 = WLZ_ERR_NONE;
+  WlzErrorNum	errNum1 = WLZ_ERR_UNIMPLEMENTED;
 
   if(mesh == NULL)
   {
@@ -2224,7 +2225,6 @@ WlzErrorNum 	WlzCMeshVerify2D5(WlzCMesh2D5 *mesh, WlzCMeshElm2D5 **dstElm,
   {
     errNum1 = WLZ_ERR_DOMAIN_TYPE;
   }
-  /* TODO Write check code here based on 2D. */
   if(dstElm)
   {
     *dstElm = elm;
@@ -3980,7 +3980,6 @@ WlzErrorNum     WlzCMeshFixNegativeElms2D(WlzCMesh2D *mesh)
   WlzCMeshNod2D	*nod[3];
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  /* TODO Check this function. */
   if(mesh == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
@@ -4065,7 +4064,6 @@ WlzErrorNum     WlzCMeshFixNegativeElms3D(WlzCMesh3D *mesh)
   WlzCMeshNod3D	*nod[4];
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  /* TODO Check this function. */
   if(mesh == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
