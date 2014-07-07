@@ -3491,6 +3491,7 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
 *		The given values of \f$\lambda\f$ and \f$\tau\f$ are
 *		constrained by \f$\lambda > 0, \tau > 0\f$ and
 *		\f$\lambda \tau < 0.5\f$.
+* \todo		WlzBasisFnMOS3DFromCPts() has yet to be implemented.
 * \param	nPts			Number of control point pairs.
 * \param	dPts			Destination control points.
 * \param	sPts			Source control points.
@@ -3512,7 +3513,6 @@ WlzBasisFn *WlzBasisFnMOS3DFromCPts(int nPts,
   WlzBasisFn	*basisFn = NULL;
   WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
 
-  /* TODO */
   if(dstErr)
   {
     *dstErr = errNum;
