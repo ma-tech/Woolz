@@ -620,44 +620,74 @@ typedef enum _WlzDistanceType
 } WlzDistanceType;
 
 /*!
+* \enum 	_WlzRCCClassIdx
+* \ingroup	WlzType
+* \brief	Discrete Region Connected Calculus (RCC) clasification
+* 		indices. The classifications indices are for bits set
+* 		in a classification bitmask.
+* 		See also WlzRCCClass() and WlzRegConCalcRCC().
+*		Typedef: ::WlzRCCClassIdx.
+*/
+typedef enum _WlzRCCClassIdx
+{
+  WLZ_RCCIDX_DC		= (0),		/*!< Edge Connected. */
+  WLZ_RCCIDX_EC		= (1),		/*!< Edge Connected. */
+  WLZ_RCCIDX_EQ		= (2),		/*!< Equal. */
+  WLZ_RCCIDX_PO		= (3),		/*!< Partial Overlap. */
+  WLZ_RCCIDX_TPP	= (4),		/*!< Tangential Proper Part. */
+  WLZ_RCCIDX_NTPP	= (5),		/*!< Non-Tangential Proper Part. */
+  WLZ_RCCIDX_TPPI	= (6),		/*!< Tangential Proper Part inverse. */
+  WLZ_RCCIDX_NTPPI	= (7),		/*!< Non-Tangential Proper Part
+  				     	     inverse. */
+  WLZ_RCCIDX_SUR	= (8),		/*!< Surrounds. */
+  WLZ_RCCIDX_SURI	= (9),		/*!< Surrounds inverse. */
+  WLZ_RCCIDX_ENC	= (10),		/*!< Encloses. */
+  WLZ_RCCIDX_ENCI	= (11),		/*!< Encloses inverse. */
+  WLZ_RCCIDX_CNT	= (12)		/*!< Not a classification index, but
+                                             the number of classification
+					     indices, keep last. */
+} WlzRCCClassIdx;
+
+/*!
 * \enum 	_WlzRCCClass
 * \ingroup	WlzType
 * \brief	A Discrete Region Connected Calculus (RCC) clasification
 * 		of an ordered pair of spatial regions. The classifications
 * 		are bit masks to allow for multiple classifications.
 * 		See also WlzRegConCalcRCC().
+*		Typedef: ::WlzRCCClass.
 */
 typedef enum _WlzRCCClass
 {
   WLZ_RCC_EMPTY	= 0, 			/*!< Empty:
   					     One or both of the domains is
 					     empty. */
-  WLZ_RCC_DC	= 1,	 		/*!< Disconnected. */
-  WLZ_RCC_EC	= (1<<1),		/*!< Edge Connected. */
-  WLZ_RCC_EQ	= (1<<2),		/*!< Equal. */
-  WLZ_RCC_PO	= (1<<3),		/*!< Partial Overlap. */
-  WLZ_RCC_TPP	= (1<<4),		/*!< Tangential Proper Part. */
-  WLZ_RCC_NTPP	= (1<<5),		/*!< Non-Tangential Proper Part. */
-  WLZ_RCC_TPPI	= (1<<6),		/*!< Tangential Proper Part inverse. */
-  WLZ_RCC_NTPPI	= (1<<7),		/*!< Non-Tangential Proper Part
+  WLZ_RCC_DC	= (1<<WLZ_RCCIDX_DC),	/*!< Disconnected. */
+  WLZ_RCC_EC	= (1<<WLZ_RCCIDX_EC),	/*!< Edge Connected. */
+  WLZ_RCC_EQ	= (1<<WLZ_RCCIDX_EQ),	/*!< Equal. */
+  WLZ_RCC_PO	= (1<<WLZ_RCCIDX_PO),	/*!< Partial Overlap. */
+  WLZ_RCC_TPP	= (1<<WLZ_RCCIDX_TPP),	/*!< Tangential Proper Part. */
+  WLZ_RCC_NTPP	= (1<<WLZ_RCCIDX_NTPP),	/*!< Non-Tangential Proper Part. */
+  WLZ_RCC_TPPI	= (1<<WLZ_RCCIDX_TPPI),	/*!< Tangential Proper Part inverse. */
+  WLZ_RCC_NTPPI	= (1<<WLZ_RCCIDX_NTPPI),	/*!< Non-Tangential Proper Part
   				     	     inverse. */
-  WLZ_RCC_SUR	= (1<<8),		/*!< Surrounds:
+  WLZ_RCC_SUR	= (1<<WLZ_RCCIDX_SUR),	/*!< Surrounds:
   					     The first domain is surrounded by
 					     and edge connected to the
 					     second domain. */
-  WLZ_RCC_SURI	= (1<<9),		/*!< Surrounds inverse:
+  WLZ_RCC_SURI	= (1<<WLZ_RCCIDX_SURI),	/*!< Surrounds inverse:
   					     The second domain is surrounded by
 					     and edge connected to the first
 					     domain.. */
-  WLZ_RCC_ENC	= (1<<10),		/*!< Encloses:
+  WLZ_RCC_ENC	= (1<<WLZ_RCCIDX_ENC),	/*!< Encloses:
   					     The majority of the first domain
 					     is within the convex hull of the
 					     second domain. */
-  WLZ_RCC_ENCI	= (1<<11),		/*!< Encloses inverse:
+  WLZ_RCC_ENCI	= (1<<WLZ_RCCIDX_ENCI),	/*!< Encloses inverse:
   					     The majority of the second domain
 					     is within the convex hull of the
 					     first domain. */
-  WLZ_RCC_MSK    = ((1<<12)-1)   /*!< Not a clasification but a bit
+  WLZ_RCC_MSK    = ((1<<WLZ_RCCIDX_CNT)-1) /*!< Not a clasification but a bit
   					     mask for all the possible
 					     classifications. */
 } WlzRCCClass;
