@@ -42,7 +42,51 @@ static char _WlzClassifyRCC_c[] = "University of Edinburgh $Id$";
 * \ref wlzclassifyrcc   "WlzClassifyRCC"
 */
 
-/* HACK TODO DOXYGEN usage */
+/*!
+\ingroup BinWlz
+\defgroup wlzclassifyrcc   WlzClassifyRCC
+\par Name
+WlzClassifyRCC - Classifies the given domain objects using the region
+calculus defined in Woolz.
+\par Synopsis
+\verbatim
+WlzClassifyRCC [-o<output file>] [-e] [-h] [<in object 0>] [<in object 1>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-e</b></td>
+    <td>Don't include enclosure classifications.</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object file</td>
+  </tr>
+  <tr>
+    <td><b>-h</b></td>
+    <td>Help, prints message.</td>
+  </tr>
+</table>
+\par Description
+Classifies the given domain objects using the region
+calculus defined in Woolz.
+\par Examples
+The domain of the Woolz object read from the file somites.wlz
+ is classified with respect to
+the domain of the Woolz object read from the file embryonic.wlz.
+The classification that somites is a tangential proper part of
+and enclosed by embryonic is written to the standard output.
+\verbatim
+WlzClassifyRCC embryonic.wlz somites.wlz
+WLZ_RCC_TPPI|WLZ_RCC_ENC        0
+\endverbatim
+
+\par File
+\ref WlzClassifyRCC.c "WlzClassifyRCC.c"
+\par See Also
+\ref WlzRCCClass "WlzRCCClass(3)"
+\ref WlzRegConCalcRCC "WlzRegConCalcRCC(3)"
+*/
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
@@ -64,7 +108,7 @@ int             main(int argc, char **argv)
 		noEnc = 0,
 		ok = 1,
 		usage = 0;
-  double	nrmVol = 0.0;
+  double	*nrmVol = NULL;
   WlzRCCClass 	cls = WLZ_RCC_EMPTY;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   FILE		*fP = NULL;
@@ -147,7 +191,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    cls = WlzRegConCalcRCC(iObj[0], iObj[1], noEnc, &nrmVol, &errNum);
+    cls = WlzRegConCalcRCC(iObj[0], iObj[1], noEnc, NULL, &nrmVol, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -163,12 +207,14 @@ int             main(int argc, char **argv)
     if(((fP = (strcmp(outFileStr, "-")?  fopen(outFileStr, "w"):
 	      				 stdout)) != NULL))
     {
-      int	first = 1;
+      int	i,
+      		first = 1;
       unsigned int m;
 
       errNum = WLZ_ERR_NONE;
-      for(m = 1; m <= WLZ_RCC_MSK; m <<= 1)
+      for(i = 0; i <= WLZ_RCCIDX_CNT; ++i)
       {
+	m = 1<<i;
         if(m & cls)
 	{
 	  const char *str;
@@ -192,7 +238,7 @@ int             main(int argc, char **argv)
 	  }
 	}
       }
-      if(first)
+      if((errNum == WLZ_ERR_NONE) && first)
       {
         if(fprintf(fP, "WLZ_RCC_EMPTY") < 0)
 	{
@@ -201,9 +247,46 @@ int             main(int argc, char **argv)
       }
       if(errNum == WLZ_ERR_NONE)
       {
-        if(fprintf(fP, "\t%g\n", nrmVol) < 0)
+        first = 1;
+	for(i = 0; i <= WLZ_RCCIDX_CNT; ++i)
 	{
-	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  m = 1<<i;
+	  if(m & cls)
+	  {
+	    if(first)
+	    {
+	      first = 0;
+	      if(fprintf(fP, "\t%g", nrmVol[i]) < 0)
+	      {
+		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	      }
+	    }
+	    else
+	    {
+	      if(fprintf(fP, "|%g", nrmVol[i]) < 0)
+	      {
+	        errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	      }
+	    }
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	  }
+	}
+	if((errNum == WLZ_ERR_NONE) && first)
+	{
+	  if(fprintf(fP, "0.0") < 0)
+	  {
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  if(fprintf(fP, "\n") < 0)
+	  {
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  }
 	}
       }
     }
@@ -220,6 +303,7 @@ int             main(int argc, char **argv)
       (void )fclose(fP);
     }
   }
+  AlcFree(nrmVol);
   WlzFreeObj(iObj[0]);
   WlzFreeObj(iObj[1]);
   if(usage)
