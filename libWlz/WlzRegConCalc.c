@@ -269,11 +269,11 @@ C_0
 		</tr>
 		<tr>
 		  <td>\f$ENC(\Omega_0,\Omega_1)\f$</td>
-		  <td>\f$|\Omega_0|/|\Omega_0 \cup \Omega_1^v|\f$</td>
+		  <td>\f$|\Omega_0 \cup \Omega_1^v|/|\Omega_0|\f$</td>
 		</tr>
 		<tr>
 		  <td>\f$ENCI(\Omega_0,\Omega_1)\f$</td>
-		  <td>\f$|\Omega_1|/|\Omega_0^v \cup \Omega_1|\f$</td>
+		  <td>\f$|\Omega_0^v \cup \Omega_1|/|\Omega_1|\f$</td>
 		</tr>
 		</table>
 *		Many of the objects that are computed during the classification
@@ -284,15 +284,22 @@ C_0
 * \param	obj0			First given spatial domain object.
 * \param	obj1			Second given spatial domain object.
 * \param	noEnc			Don't include enclosure if non-zero.
-* \param	dstNrmVol		Destination pointer for the normalized
-* 					volume (see above), may be NULL.
+* \param	dstNrmVolCnt		Destination pointer for the number
+* 					of elements returned in the array of
+* 					normalized volumes (see above), may
+* 					be NULL. Ignored if dstNrmVolAry is
+* 					NULL.
+* \param	dstNrmVolAry		Destination pointer for an array of
+* 					normalized volumes (see above), may
+* 					be NULL. If an array is returned it
+* 					should be freed using AlcFree().
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
-				 double *dstNrmVol, WlzErrorNum *dstErr)
+				 int *dstNrmVolCnt, double **dstNrmVolAry,
+				 WlzErrorNum *dstErr)
 {
   int 		i;
-  double	nrmVol = 0.0;		/* Normalized volume */
   WlzLong	u01 = 0; 		/* |\Omega_0 \cup \Omega_1| */
   WlzLong	u[2] = {0},		/* |\Omega_i|, i \in 0 \cdots 1 */
   		v[2] = {0};		/* |c_9|, |c_{10}| */
@@ -300,6 +307,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 		*o[2] = {NULL},		/* \Omega_i, i \in 0 \cdots 1 */
 		*t[WLZ_RCCTOIDX_CNT] = {NULL}; /* Temporary object as
 					in the enum WlzRCCTOIdx. */
+  double	nrmVol[WLZ_RCCIDX_CNT] = {0.0}; /* Normalized volumes. */
   WlzValues	nullValues;
   WlzRCCClass	cls = WLZ_RCC_EMPTY; /* Classification mask. */
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -472,17 +480,19 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
   }
   /* Compute the maximum normalized volume for the classification(s) in the
    * classification mask. */
-  if((errNum == WLZ_ERR_NONE) && (dstNrmVol != NULL))
+  if((errNum == WLZ_ERR_NONE) && (dstNrmVolAry != NULL))
   {
-    unsigned int m;
+    int 	i,
+    		m;
 
-    for(m = 1; m <= WLZ_RCC_MSK; m <<= 1)
+    for(i = 0; i < WLZ_RCCIDX_CNT; ++i)
     {
+      m = 1<<i;
       if(m & cls)
       {
 	double	nV = 0.0;
 
-        switch(cls)
+        switch(m)
 	{
 	  case WLZ_RCC_EQ:
 	    nV = 1.0;
@@ -562,25 +572,30 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	    }
 	    break;
 	  case WLZ_RCC_ENC:
-	    /* |\Omega_0|/|\Omega_0 \cup \Omega_1^v| =
-	     * u_0 / v_1 */
-	    nV = (double )(u[0]) / (double )(v[1]);
+	    /* |\Omega_0 \cup \Omega_1^v|/|\Omega_0| =
+	     * v_0 / u_1 */
+	    if(u[1] >= 0)
+	    {
+	      nV = (double )(v[0]) / (double )(u[1]);
+	    }
 	    break;
 	  case WLZ_RCC_ENCI:
-	    /* |\Omega_1|/|\Omega_0^v \cup \Omega_1| =
-	     * u_1 / v_0 */
-	    nV = (double )(u[1]) / (double )(v[0]);
+	    /* |\Omega_0^v \cup \Omega_1|/|\Omega_1| =
+	     * v_1 / u_0 */
+	    if(v[1] >= 0)
+	    {
+	      nV = (double )(v[1]) / (double )(u[0]);
+	    }
 	    break;
 	  default:
 	    break;
 	}
-        if((errNum == WLZ_ERR_NONE) && (nV > nrmVol))
+        if(errNum == WLZ_ERR_NONE)
 	{
-	  nrmVol = nV;
+	  nrmVol[i] = nV;
 	}
       }
     }
-    *dstNrmVol = nrmVol;
   }
   /* Free objects. */
   for(i = 0; i < WLZ_RCCTOIDX_CNT; ++i)
@@ -594,6 +609,22 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
   for(i = 0; i < 2; ++i)
   {
     (void )WlzFreeObj(o[i]);
+  }
+  if((errNum == WLZ_ERR_NONE) && (dstNrmVolAry != NULL))
+  {
+    if((*dstNrmVolAry = (double *)
+                        AlcMalloc(sizeof(double) * WLZ_RCCIDX_CNT)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      (void )memcpy(*dstNrmVolAry, nrmVol, sizeof(double) * WLZ_RCCIDX_CNT);
+      if(dstNrmVolCnt)
+      {
+        *dstNrmVolCnt = WLZ_RCCIDX_CNT;
+      }
+    }
   }
   if(dstErr)
   {
