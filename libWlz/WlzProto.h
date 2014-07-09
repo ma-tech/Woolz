@@ -5503,6 +5503,7 @@ extern WlzAffineTransform	*WlzRegICPTreeAndVertices(
 /************************************************************************
 * WlzRegConCalc.c
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern WlzRCCClass		WlzRegConCalcRCC(
 				  WlzObject *obj0,
 				  WlzObject *obj1,
@@ -5510,6 +5511,7 @@ extern WlzRCCClass		WlzRegConCalcRCC(
 				  int *dstSizeArrayNrmVol,
 				  double **dstArrayNrmVol,
 				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzRsvFilter.c
