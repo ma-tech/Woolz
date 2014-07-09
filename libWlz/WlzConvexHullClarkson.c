@@ -407,6 +407,10 @@ int		WlzConvHullClarkson2D(WlzDVertex2 *vtx, int n, int **dstIdx,
   {
     u = 0;
   }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
   return(u);
 }
 

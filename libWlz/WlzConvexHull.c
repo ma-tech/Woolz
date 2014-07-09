@@ -1863,7 +1863,7 @@ static WlzErrorNum		WlzConvexHullPlaneSweep(
 	cvh2 = WlzConvexHullFromVtx2(WLZ_VERTEX_D2, nIsn, isnP, &errNum);
       }
       /* Create interval domain from the planar convex hull. */
-      if(errNum == WLZ_ERR_NONE)
+      if((errNum == WLZ_ERR_NONE) || (errNum == WLZ_ERR_DEGENERATE))
       {
         WlzObject *cObj2 = NULL;
         
