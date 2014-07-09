@@ -620,10 +620,10 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 {
   int		planeCount,
   		planeIdx,
-  		nBins0,
+  		nBins0 = 0,
 		isTiled = 0;
-  double	binOrigin0,
-  		binSize0;
+  double	binOrigin0 = 0.0,
+  		binSize0 = 1.0;
   WlzGreyType	greyType;
   WlzHistogramDomain *histDom,
   		*histDom2D;
@@ -1550,7 +1550,7 @@ WlzErrorNum	WlzHistogramMapValues(WlzObject *srcObj,
   double	originD;
   int		*mapping;
   WlzGreyType	greyType;
-  WlzHistogramDomain *mapHistDom;
+  WlzHistogramDomain *mapHistDom = NULL;
   WlzGreyP	objPix;
   WlzObject	*srcObj2D = NULL;
   WlzDomain	dummyDom;
