@@ -1107,7 +1107,7 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
 		lyyy;
   double	gTmp[4];
   WlzIVertex2	posI;
-  WlzGreyType	newGreyType;
+  WlzGreyType	newGreyType = WLZ_GREY_ERROR;
   WlzPixelV	bkdV;
   WlzValues	newValues;
   WlzGreyValueWSpace *gVWSp = NULL;
