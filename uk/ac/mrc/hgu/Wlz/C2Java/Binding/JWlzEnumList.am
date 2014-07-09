@@ -12,6 +12,7 @@ JWlzEnumList		= \
 			WlzMeshError.java \
 			WlzConnectType.java \
 			WlzDistanceType.java \
+			WlzRCCClassIdx.java \
 			WlzRCCClass.java \
 			WlzSpecialStructElmType.java \
 			WlzBinaryOperatorType.java \
