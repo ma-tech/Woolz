@@ -398,7 +398,7 @@ WlzConvHullDomain3		*WlzConvexHullCopy3(
       WlzValueCopyIVertexToDVertex3(rCVH->vertices.d3, gCVH->vertices.i3,
       				    gCVH->nVertices);
     }
-    (void )memcpy(rCVH->faces, gCVH->faces, sizeof(int) * gCVH->nFaces);
+    (void )memcpy(rCVH->faces, gCVH->faces, 3 * sizeof(int) * gCVH->nFaces);
   }
   if(dstErr)
   {
