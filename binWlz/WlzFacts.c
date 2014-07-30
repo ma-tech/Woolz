@@ -165,7 +165,7 @@ int		main(int argc, char** argv)
 
   /* trap the WLZ_ERR_READ_EOF since this is a legal way of indicating
      the end of objects in a file */
-  if(errNum == WLZ_ERR_READ_EOF){
+  if((errNum == WLZ_ERR_READ_EOF) || (errNum = WLZ_ERR_EOO)){
     errNum = WLZ_ERR_NONE;
   }
   return errNum;
