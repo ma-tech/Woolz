@@ -5239,7 +5239,7 @@ static WlzDomain WlzReadConvexHull(FILE *fP, WlzErrorNum *dstErr)
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      errNum = WlzReadInt(fP, dom.cvh3->faces, nFce);
+      errNum = WlzReadInt(fP, dom.cvh3->faces, nFce * 3);
     }
     if((errNum != WLZ_ERR_NONE) && (dom.core != NULL))
     {
