@@ -692,10 +692,9 @@ static void			WlzConHullAddConvexVtx(
 * \return	Non-zero if the vertex is behind the face, ie the vertex
 * 		lies on the face or on the convex hull side of the face.
 * \ingroup	WlzConvexHull
-* \brief	Determines whether the vertex is behind the face and if
-* 		so the length of a vector from the vertex to the face.
+* \brief	Determines whether the vertex is behind the face.
 * 		If a vertex is behind all faces of a convex hull then it
-* 		is within (or on) te convex hull.
+* 		is within (or possibly on) te convex hull.
 * 		This function can consume most of the CPU cycles when
 * 		computing a convex hull.
 * \param	wSp			Convex hull workspace.
@@ -730,7 +729,7 @@ static int 			WlzConvHullFceBehind(
     WLZ_VTX_3_SUB(u, v1, v0);
   }
   p = WLZ_VTX_3_DOT(fce->nrm, u);
-  b = (p > -(WLZ_CONVHULL_EPS));
+  b = (p < WLZ_CONVHULL_EPS);
   return(b);
 }
 
@@ -1220,24 +1219,27 @@ static WlzErrorNum		WlzConvHullBuildHorizon(
         break;
       }
       /* Find next edge and put it in after the current one. */
-      edgN = edgC + 1;
-      for(j = i + 1; j < wSp->nHorizon; ++j)
+      if(i < (wSp->nHorizon - 1))
       {
-	int	vT;
-	WlzConvHullHorEdg *edgT;
-
-        edgT = wSp->horizon + j;
-	vT = edgT->fce->vtx[edgT->edg];
-	if(vC == vT)
+	edgN = edgC + 1;
+	for(j = i + 1; j < wSp->nHorizon; ++j)
 	{
-	  WlzConvHullHorEdg t;
+	  int	vT;
+	  WlzConvHullHorEdg *edgT;
 
-	  ++cnt;
-          /* Found next edge swap it into position in the buffer. */
-	  t = *edgN;
-	  *edgN = *edgT;
-	  *edgT = t;
-	  break;
+	  edgT = wSp->horizon + j;
+	  vT = edgT->fce->vtx[edgT->edg];
+	  if(vC == vT)
+	  {
+	    WlzConvHullHorEdg t;
+
+	    ++cnt;
+	    /* Found next edge swap it into position in the buffer. */
+	    t = *edgN;
+	    *edgN = *edgT;
+	    *edgT = t;
+	    break;
+	  }
 	}
       }
     }
