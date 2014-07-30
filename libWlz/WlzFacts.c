@@ -3332,12 +3332,15 @@ static WlzErrorNum WlzObjFactsConvHullDomain(WlzObjFactsData *fData,
 	      int	f;
 
 	      ++(fData->indent);
-	      for(f = 0; f < cvh->nFaces; f += 3)
+	      for(f = 0; f < cvh->nFaces; ++f)
 	      {
+		int 	f3;
+
+		f3 = f * 3;
 		(void )WlzObjFactsAppend(fData, "%d,%d,%d\n",
-			     cvh->faces[f + 0],
-			     cvh->faces[f + 1],
-			     cvh->faces[f + 2]);
+			     cvh->faces[f3 + 0],
+			     cvh->faces[f3 + 1],
+			     cvh->faces[f3 + 2]);
 	      }
 	      --(fData->indent);
 	    }
