@@ -43,6 +43,7 @@ static char _WlzConvexHull3D_c[] = "University of Edinburgh $Id$";
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <Wlz.h>
 
 
@@ -1491,8 +1492,9 @@ static WlzErrorNum		WlzConvHullChkAll(
 * 		zero WLZ_ERR_DEGENERATE will be returned.
 * \ingroup	WlzConvexHull
 * \brief	Sets the vertex permutation indices so that the first
-* 		four are those of a tetrahedron with z_max, z_min,
-* 		y_min and x_min. The remainder are randomised.
+* 		four are those of a tetrahedron with z_max, z_min
+* 		then the vertex giving the max area triangle followed
+* 		by the vertex giving the max volume tetrahedron.
 * \param	nPnt			Number of given vertex positions.
 * \param	wSp			Given workspace.
 * \param	dstZVol			Destination pointer used to set
@@ -1505,6 +1507,10 @@ static WlzErrorNum		WlzConvHullInitTet(
   int		i,
 	      	m,
 	        n;
+  double	a,
+  		aMax;
+  WlzDVertex3	u0,
+  		pos;
   int	      	tetIdx[4], /* Buffer of 4 indices to zMax, zMin, yMin, xMin. */
 		oldIdx[4],
 		addIdx[4],
@@ -1514,6 +1520,7 @@ static WlzErrorNum		WlzConvHullInitTet(
   const double	eps = WLZ_CONVHULL_EPS;
 
   tetIdx[0] = tetIdx[1] = tetIdx[2] = tetIdx[3] = 0;
+  /* Find vertices with max (tetPos[0]) and min (tetPos[1]) z */
   if(wSp->vtxType == WLZ_VERTEX_I3)
   {
     WlzIVertex3 v;
@@ -1528,8 +1535,6 @@ static WlzErrorNum		WlzConvHullInitTet(
   tetPos[1] = tetPos[2] = tetPos[3] = tetPos[0];
   for(i = 1; i < nPnt; ++i)
   {
-    WlzDVertex3 pos;
-
     if(wSp->vtxType == WLZ_VERTEX_I3)
     {
       WlzIVertex3 v;
@@ -1541,129 +1546,170 @@ static WlzErrorNum		WlzConvHullInitTet(
     {
       pos = wSp->vtxPos.d3[wSp->vtxPrm[i]];
     }
-    if((pos.vtZ > tetPos[0].vtZ) ||
-       ((fabs(pos.vtZ - tetPos[0].vtZ) < eps) &&
-        ((pos.vtY > tetPos[0].vtZ) ||
-         ((fabs(pos.vtY - tetPos[0].vtY) < eps) &&
-	  (pos.vtX > tetPos[0].vtX)))))
+    if(pos.vtZ > tetPos[0].vtZ)
     {
       tetIdx[0] = i;
       tetPos[0] = pos;
     }
-    if((pos.vtZ < tetPos[1].vtZ) ||
-       ((fabs(pos.vtZ - tetPos[1].vtZ) < eps) &&
-        ((pos.vtY > tetPos[1].vtY) ||
-	 ((fabs(pos.vtY - tetPos[1].vtY) < eps) &&
-	  (pos.vtX > tetPos[1].vtX)))))
+    else if(pos.vtZ < tetPos[1].vtZ)
     {
       tetIdx[1] = i;
       tetPos[1] = pos;
     }
   }
-  for(i = 0; i < nPnt; ++i)
-  {
-    WlzDVertex3 pos;
-
-    if(wSp->vtxType == WLZ_VERTEX_I3)
-    {
-      WlzIVertex3 v;
-
-      v = wSp->vtxPos.i3[wSp->vtxPrm[i]];
-      WLZ_VTX_3_SET(pos, v.vtX, v.vtY, v.vtZ);
-    }
-    else
-    {
-      pos = wSp->vtxPos.d3[wSp->vtxPrm[i]];
-    }
-    if((i != tetIdx[0]) && (i != tetIdx[1]))
-    {
-      if((pos.vtY < tetPos[2].vtY) ||
-	 ((fabs(pos.vtY - tetPos[2].vtY) < eps) &&
-	  (pos.vtX > tetPos[2].vtX)))
-      {
-	tetIdx[2] = i;
-	tetPos[2] = pos;
-      }
-      if((pos.vtX < tetPos[3].vtX) ||
-	 ((fabs(pos.vtX - tetPos[3].vtX) < eps) &&
-	  (pos.vtY > tetPos[3].vtY)))
-      {
-	tetIdx[3] = i;
-	tetPos[3] = pos;
-      }
-    }
-  }
-  /* Make the first four vertex indices of the permutation buffer the
-   * indices to zMax, zMin, yMin, xMin. */
-  for(i = 0; i < 4; ++i)
-  {
-    oldIdx[i] = wSp->vtxPrm[i];
-  }
-  for(i = 0; i < 4; ++i)
-  {
-    int	t;
-
-    t = tetIdx[i];
-    if(t < 4)
-    {
-      wSp->vtxPrm[i] = oldIdx[t];
-    }
-    else
-    {
-      wSp->vtxPrm[i] = wSp->vtxPrm[t];
-    }
-  }
-  m = n = 0;
-  for(i = 0; i < 4; ++i)
-  {
-    int	t;
-
-    t = wSp->vtxPrm[i];
-    if((t != oldIdx[0]) && (t != oldIdx[1]) &&
-       (t != oldIdx[2]) && (t != oldIdx[3]))
-    {
-      addIdx[n++] = t;
-    }
-    t = oldIdx[i];
-    if((t != wSp->vtxPrm[0]) && (t != wSp->vtxPrm[1]) &&
-       (t != wSp->vtxPrm[2]) && (t != wSp->vtxPrm[3]))
-    {
-      delIdx[m++] = t;
-    }
-  }
-  for(i = 4; (n > 0) && (i < nPnt); ++i)
-  {
-    int	j,
-	      t;
-
-    t = wSp->vtxPrm[i];
-    for(j = n - 1; j >= 0; --j)
-    {
-      if(t == addIdx[j])
-      {
-	wSp->vtxPrm[i] = delIdx[--m];
-	break;
-      }
-    }
-    n = m;
-  }
-  /* Randomise the indices above the first four. */
-  n = nPnt - 4;
-  srand(0);
-  for(i = 0; i < n; ++i)
-  {
-    int		r,
-	      	t;
-
-    r = (rand() % n) + 4;
-    t = wSp->vtxPrm[r];
-    wSp->vtxPrm[r] = wSp->vtxPrm[i + 4];
-    wSp->vtxPrm[i + 4] = t;
-  }
-  /* Check for zero volume. */
-  if(WlzGeomTetVolZeroD(tetPos[0], tetPos[1], tetPos[2], tetPos[3]))
+  WLZ_VTX_3_SUB(u0, tetPos[1], tetPos[0]);
+  a = WLZ_VTX_3_SQRLEN(u0);
+  if(a < eps)
   {
     errNum = WLZ_ERR_DEGENERATE;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Find vertex creates max area triangle with this line segment. */
+    aMax = 0.0;
+    for(i = 0; i < nPnt; ++i)
+    {
+      if((i != tetIdx[0]) && (i != tetIdx[1]))
+      {
+	WlzDVertex3 u1,
+		    u2;
+
+	if(wSp->vtxType == WLZ_VERTEX_I3)
+	{
+	  WlzIVertex3 v;
+
+	  v = wSp->vtxPos.i3[wSp->vtxPrm[i]];
+	  WLZ_VTX_3_SET(pos, v.vtX, v.vtY, v.vtZ);
+	}
+	else
+	{
+	  pos = wSp->vtxPos.d3[wSp->vtxPrm[i]];
+	}
+	WLZ_VTX_3_SUB(u1, pos, tetPos[0]);
+	WLZ_VTX_3_CROSS(u2, u0, u1);
+	a = WLZ_VTX_3_SQRLEN(u2);
+	if(a > aMax)
+	{
+	  tetIdx[2] = i;
+	  tetPos[2] = pos;
+	  aMax = a;
+	}
+      }
+    }
+    if(aMax < eps)
+    {
+      errNum = WLZ_ERR_DEGENERATE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Find vertex creates max volume tetrahedron with this triangle. */
+    aMax = 0.0;
+    for(i = 0; i < nPnt; ++i)
+    {
+      if((i != tetIdx[0]) && (i != tetIdx[1]) && (i != tetIdx[2]))
+      {
+	if(wSp->vtxType == WLZ_VERTEX_I3)
+	{
+	  WlzIVertex3 v;
+
+	  v = wSp->vtxPos.i3[wSp->vtxPrm[i]];
+	  WLZ_VTX_3_SET(pos, v.vtX, v.vtY, v.vtZ);
+	}
+	else
+	{
+	  pos = wSp->vtxPos.d3[wSp->vtxPrm[i]];
+	}
+	a = WlzGeomTetraSnVolume6(tetPos[0], tetPos[1], tetPos[2], pos);
+	a *= a;
+        if(a > aMax)	
+	{
+	  tetIdx[3] = i;
+	  tetPos[3] = pos;
+	  aMax = a;
+	}
+      }
+    }
+    if(aMax < eps)
+    {
+      errNum = WLZ_ERR_DEGENERATE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    a = WlzGeomTetraSnVolume6(tetPos[0], tetPos[1], tetPos[2], tetPos[3]);
+    if(a < 0)
+    {
+      m = tetIdx[3]; tetIdx[3] = tetIdx[2]; tetIdx[2] = m;
+      pos = tetPos[3]; tetPos[3] = tetPos[2]; tetPos[2] = pos;
+    }
+    /* Make the first four vertex indices of the permutation buffer the
+     * indices of the tetrahedron. */
+    for(i = 0; i < 4; ++i)
+    {
+      oldIdx[i] = wSp->vtxPrm[i];
+    }
+    for(i = 0; i < 4; ++i)
+    {
+      int	t;
+
+      t = tetIdx[i];
+      if(t < 4)
+      {
+	wSp->vtxPrm[i] = oldIdx[t];
+      }
+      else
+      {
+	wSp->vtxPrm[i] = wSp->vtxPrm[t];
+      }
+    }
+    m = n = 0;
+    for(i = 0; i < 4; ++i)
+    {
+      int	t;
+
+      t = wSp->vtxPrm[i];
+      if((t != oldIdx[0]) && (t != oldIdx[1]) &&
+	 (t != oldIdx[2]) && (t != oldIdx[3]))
+      {
+	addIdx[n++] = t;
+      }
+      t = oldIdx[i];
+      if((t != wSp->vtxPrm[0]) && (t != wSp->vtxPrm[1]) &&
+	 (t != wSp->vtxPrm[2]) && (t != wSp->vtxPrm[3]))
+      {
+	delIdx[m++] = t;
+      }
+    }
+    for(i = 4; (n > 0) && (i < nPnt); ++i)
+    {
+      int	j,
+		t;
+
+      t = wSp->vtxPrm[i];
+      for(j = n - 1; j >= 0; --j)
+      {
+	if(t == addIdx[j])
+	{
+	  wSp->vtxPrm[i] = delIdx[--m];
+	  break;
+	}
+      }
+      n = m;
+    }
+    /* Randomise the indices above the first four of the tetrahderon. */
+    n = nPnt - 4;
+    srand(0);
+    for(i = 0; i < n; ++i)
+    {
+      int		r,
+		  t;
+
+      r = (rand() % n) + 4;
+      t = wSp->vtxPrm[r];
+      wSp->vtxPrm[r] = wSp->vtxPrm[i + 4];
+      wSp->vtxPrm[i + 4] = t;
+    }
   }
   return(errNum);
 }
@@ -2305,11 +2351,18 @@ WlzConvHullDomain3		*WlzConvexHullFromVtx3(
       }
       if(errNum == WLZ_ERR_NONE)
       {
+#ifdef WLZ_CONVHULL_DEBUG_ITR
+	int	itr = 0,
+		maxItr = INT_MAX;
+#endif /* WLZ_CONVHULL_DEBUG_ITR */
 	WlzConvHullVtx *vtx;
 
 	/* For each vertex in the pending vertex queue add it to the convex
 	 * hull. */ 
 	while((errNum == WLZ_ERR_NONE) &&
+#ifdef WLZ_CONVHULL_DEBUG_ITR
+	      (itr++ < maxItr) &&
+#endif /* WLZ_CONVHULL_DEBUG_ITR */
 	      ((vtx = WlzConHullPopPendingVtx(wSp)) != NULL))
 	{
 	  /* Are thre conflicts?. */
