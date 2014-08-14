@@ -59,7 +59,7 @@ JAVAFLAGS		= -classpath $(CLASSPATH)
 
 JAVACLS			= $(JAVASRCS:.java=.class)
 
-%.class:		%.java
+.java.class:
 			$(JAVAC) $(JAVAFLAGS) $<
 
 all:			$(JAVACLS)
