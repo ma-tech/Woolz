@@ -360,10 +360,6 @@ WlzCompThresh_SOURCES			= WlzCompThresh.c
 WlzCompThresh_LDADD			= $(LDADD)
 WlzCompThresh_LDFLAGS			= $(AM_LFLAGS)
 
-WlzCompThresh_SOURCES			= WlzCompThresh.c
-WlzCompThresh_LDADD			= $(LDADD)
-WlzCompThresh_LDFLAGS			= $(AM_LFLAGS)
-
 WlzCompound_SOURCES			= WlzCompound.c
 WlzCompound_LDADD			= $(LDADD)
 WlzCompound_LDFLAGS			= $(AM_LFLAGS)
