@@ -1578,7 +1578,7 @@ WlzErrorNum	WlzLBTBalanceDomain3D(WlzLBTDomain3D *lDom,
 	  /* Check for any neighbours with node size > twice that of
 	   * the node. */
 	  idM = 0;
-	  while((errNum == WLZ_ERR_NONE) && (idM < 8))
+	  while((errNum == WLZ_ERR_NONE) && (idM < 6))
 	  {
 	    idP = WlzLBTMaxLogSzEdgeDirNbrIdx3D(lDom, iGVWSp, idNN[idN],
 						dirTab[idM], &sz2);
