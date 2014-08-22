@@ -38,6 +38,7 @@ static char _WlzRegConCalc_c[] = "University of Edinburgh $Id$";
 * \brief	Computes region connected calculus spatial classifications.
 * \ingroup	WlzBinaryOps
 */
+#include <string.h>
 #include <Wlz.h>
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -124,9 +125,9 @@ static WlzErrorNum 		WlzRCCMakeT(
 		    \Omega_0 
 		    \neq \emptyset \\
 		  C_9    &\leftarrow&
-		    2|\Omega_0^v \cap \Omega_1|   \ge |\Omega_1| \\
+		    2|\Omega_0 \cap \Omega_1^v|   \ge |\Omega_0| \\
 		  C_{10} &\leftarrow&
-		    2|\Omega_0   \cap \Omega_1^v| \ge |\Omega_0|
+		    2|\Omega_0^v   \cap \Omega_1| \ge |\Omega_1|
   		\f}
 *		where
 *		  are the \f$\cup\f$, \f$\cap\f$ and \f$\oplus\f$
@@ -269,11 +270,11 @@ C_0
 		</tr>
 		<tr>
 		  <td>\f$ENC(\Omega_0,\Omega_1)\f$</td>
-		  <td>\f$|\Omega_0 \cup \Omega_1^v|/|\Omega_0|\f$</td>
+		  <td>\f$|\Omega_0 \cap \Omega_1^v|/|\Omega_0|\f$</td>
 		</tr>
 		<tr>
 		  <td>\f$ENCI(\Omega_0,\Omega_1)\f$</td>
-		  <td>\f$|\Omega_0^v \cup \Omega_1|/|\Omega_1|\f$</td>
+		  <td>\f$|\Omega_0^v \cap \Omega_1|/|\Omega_1|\f$</td>
 		</tr>
 		</table>
 *		Many of the objects that are computed during the classification
@@ -300,7 +301,8 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 				 WlzErrorNum *dstErr)
 {
   int 		i;
-  WlzLong	u01 = 0; 		/* |\Omega_0 \cup \Omega_1| */
+  WlzLong	i01 = 0, 		/* |\Omega_0 \cap \Omega_1| */
+  		u01 = 0; 		/* |\Omega_0 \cup \Omega_1| */
   WlzLong	u[2] = {0},		/* |\Omega_i|, i \in 0 \cdots 1 */
   		v[2] = {0};		/* |c_9|, |c_{10}| */
   WlzObject	*c[9] = {NULL},		/* c_i, i \in 0 \cdots 8 */
@@ -446,7 +448,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
     for(i = 0; i <= 1; ++i)
     {
       errNum = WlzRCCMakeT(t, o,
-                           (i == 0)? WLZ_RCCTOIDX_O0VO1I: WLZ_RCCTOIDX_O0O1VI);
+                           (i == 0)? WLZ_RCCTOIDX_O0O1VI: WLZ_RCCTOIDX_O0VO1I);
       if(errNum == WLZ_ERR_NONE)
       {
         u[i] = WlzVolume(o[i], &errNum);
@@ -454,7 +456,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
       if(errNum == WLZ_ERR_NONE)
       {
         v[i] = WlzVolume(t[(i == 0)?
-	                 WLZ_RCCTOIDX_O0VO1I: WLZ_RCCTOIDX_O0O1VI],
+	                 WLZ_RCCTOIDX_O0O1VI: WLZ_RCCTOIDX_O0VO1I],
 			 &errNum);
 	if((errNum == WLZ_ERR_NONE) && (v[i] < 0))
 	{
@@ -468,11 +470,11 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      if((2 * v[0]) >= u[1])
+      if((2 * v[0]) >= u[0])
       {
         cls |= WLZ_RCC_ENC;
       }
-      if((2 * v[1]) >= u[0])
+      if((2 * v[1]) >= u[1])
       {
         cls |= WLZ_RCC_ENCI;
       }
@@ -500,12 +502,12 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	  case WLZ_RCC_PO:
 	    /* |\Omega_0 \cap \Omega_1| / |\Omega_0 \cup \Omega_1|  =
 	     * u_0 / u_01 */
-	    if(u[0] <= 0)
+	    if(i01 <= 0)
 	    {
-	      errNum = WlzRCCMakeC(c, o, t, 0);
+	      errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1I);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-	        u[0] = WlzVolume(c[0], &errNum);
+	        i01 = WlzVolume(t[WLZ_RCCTOIDX_O0O1I], &errNum);
 	      }
 	    }
 	    if((errNum == WLZ_ERR_NONE) && (u01 <= 0))
@@ -518,7 +520,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      nV = (double )(u[0]) / (double )u01;
+	      nV = (double )(i01) / (double )u01;
             }
 	    break;
 	  case WLZ_RCC_SUR: /* FALLTHROUGH */
@@ -573,18 +575,18 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	    break;
 	  case WLZ_RCC_ENC:
 	    /* |\Omega_0 \cup \Omega_1^v|/|\Omega_0| =
-	     * v_0 / u_1 */
+	     * v_0 / u_0 */
 	    if(u[1] >= 0)
 	    {
-	      nV = (double )(v[0]) / (double )(u[1]);
+	      nV = (double )(v[0]) / (double )(u[0]);
 	    }
 	    break;
 	  case WLZ_RCC_ENCI:
 	    /* |\Omega_0^v \cup \Omega_1|/|\Omega_1| =
-	     * v_1 / u_0 */
+	     * v_1 / u_1 */
 	    if(v[1] >= 0)
 	    {
-	      nV = (double )(v[1]) / (double )(u[0]);
+	      nV = (double )(v[1]) / (double )(u[1]);
 	    }
 	    break;
 	  default:

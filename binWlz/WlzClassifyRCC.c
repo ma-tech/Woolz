@@ -72,13 +72,13 @@ Classifies the given domain objects using the region
 calculus defined in Woolz.
 \par Examples
 The domain of the Woolz object read from the file somites.wlz
- is classified with respect to
-the domain of the Woolz object read from the file embryonic.wlz.
-The classification that somites is a tangential proper part of
+is classified with respect to the domain of the Woolz object read
+from the file embryonic.wlz.
+The classification is that somites is a tangential proper part of
 and enclosed by embryonic is written to the standard output.
 \verbatim
-WlzClassifyRCC embryonic.wlz somites.wlz
-WLZ_RCC_TPPI|WLZ_RCC_ENC        0
+WlzClassifyRCC somites.wlz embryonic.wlz
+WLZ_RCC_TPP|WLZ_RCC_ENC        0.044108|1.000000
 \endverbatim
 
 \par File
@@ -333,9 +333,15 @@ int             main(int argc, char **argv)
 	    "  WLZ_RCC_ENC   - ENCloses.\n"
 	    "  WLZ_RCC_ENCI  - ENCloses Inverse.\n"
 	    "See WlzRegConCalcRCC(3) for more information.\n"
-	    "Example:\n%s obj0.wlz obj1.wlz\n"
-	    "Classifies the object read from obj0.wlz with respect to the\n"
-	    "object read from obj1.wlz\n",
+	    "Example:\n%s somites.wlz embryonic.wlz\n"
+	    "giving output\n"
+	    "WLZ_RCC_TPP|WLZ_RCC_ENC        0.044108|1.000000\n"
+	    "which should be interpreted as the classification that the\n"
+	    "domain somites is a tangential proper part of the domain\n"
+	    "embryonic and the domain somites is enclosed by the domain\n"
+	    "embryonic. In this case the scores are the intersection of the\n"
+	    "two domains divided by their union, followed by the proportion\n"
+	    "of somites which is within the convex hull of embryonic.\n",
 	    *argv,
 	    WlzVersion(),
 	    *argv);
