@@ -33,7 +33,7 @@
 # \brief        Process this file with autoconf to produce a configure script.
 ##
 
-m4_define([WOOLZ_VERSION], [1.4.3])
+m4_define([WOOLZ_VERSION], [1.5.0])
 
 AC_INIT(Woolz, WOOLZ_VERSION, ma-tech@hgu.mrc.ac.uk)
 AC_CANONICAL_TARGET
