@@ -639,6 +639,29 @@ extern unsigned int    		AlcStrSFHash(
 				  const char *sStr);
 
 /************************************************************************
+* AlcUFTree.c
+************************************************************************/
+extern AlcUFTree 		*AlcUFTreeNew(
+                                  int maxNod,
+                                  int nNod);
+extern int			AlcUFTreeFind(
+                                  AlcUFTree *uft,
+                                  int p);
+extern int			AlcUFTreeConnected(
+                                  AlcUFTree *uft,
+                                  int p,
+                                  int q);
+extern void			AlcUFTreeFree(
+                                  AlcUFTree *uft);
+extern void			AlcUFTreeInit(
+                                  AlcUFTree *uft,
+                                  int n);
+extern void			AlcUFTreeUnion(
+                                  AlcUFTree *uft,
+                                  int p,
+                                  int q);
+
+/************************************************************************
 * AlcVector.c
 ************************************************************************/
 extern AlcVector		*AlcVectorNew(

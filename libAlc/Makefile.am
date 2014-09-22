@@ -46,6 +46,7 @@ libAlc_la_SOURCES 	= \
 			  AlcKDTree.c \
 			  AlcLRUCache.c \
 			  AlcString.c \
+			  AlcUFTree.c \
 			  AlcVector.c
 
 include_HEADERS 	= \

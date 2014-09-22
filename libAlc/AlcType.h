@@ -473,6 +473,26 @@ typedef struct _AlcHeap
   void                  *entries;       /*!< Allocated heap entries. */
 } AlcHeap;
 
+/*!
+* \struct	_AlcUFTree
+* \ingroup	AlcUFTree
+* \brief 	A general purpose union tree based on Robert Sedgewick's
+* 		Weighted Quick Union Find.
+*/
+typedef struct _AlcUFTree
+{
+  int           *pr;                    /*!< The parent node of each node in
+  					     the tree. */
+  int           *sz;                    /*!< The number of nodes in the subtree
+  					     of the nodes (including the node
+					     itself). */
+  int           nCmp;                   /*!< Number of components in the
+  					     tree. */
+  int           nNod;                   /*!< Number of nodes. */
+  int           maxNod;                 /*!< Maximum number of nodes space
+                                             allocated for. */
+} AlcUFTree;
+
 #ifndef WLZ_EXT_BIND
 #ifdef __cplusplus
 }					       /* Close scope of 'extern "C" */
