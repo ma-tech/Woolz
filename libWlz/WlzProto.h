@@ -2477,6 +2477,13 @@ extern WlzObject 		*WlzDomainFill(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzDomainFill3D.c							*
+************************************************************************/
+extern WlzObject 		*WlzDomainFill3D(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzDomainUtils.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
@@ -4176,6 +4183,15 @@ extern WlzErrorNum 		WlzLabel(
 				  int maxNumObjs,
 				  int ignlns,
 				  WlzConnectType connect);
+/************************************************************************
+* WlzLabel3D.c
+************************************************************************/
+extern WlzObject		*WlzLabel3D(
+				  WlzObject *obj,
+				  int maxObj,
+				  int ignLn,
+				  WlzConnectType con,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzLaplacian.c							*

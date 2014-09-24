@@ -122,13 +122,6 @@ static WlzLLink 		*newchain2(
 				  WlzLLink *chainbase,
 				  int entry1,
 				  int entry2);
-extern WlzErrorNum		WlzLabel3d(
-				  WlzObject *obj,
-				  int *numobj,
-				  WlzObject **objlist,
-				  int nobj,
-				  int ignlns,
-				  WlzConnectType connect);
 
 /*!
 * \return	Woolz error code.
@@ -241,9 +234,30 @@ WlzErrorNum 			WlzLabel(
       if(obj->domain.core == NULL)
       {
 	*mm = 0;
-	return(WLZ_ERR_DOMAIN_NULL);
+	errNum = WLZ_ERR_DOMAIN_NULL;
       }
-      return(WlzLabel3d(obj, mm, objlist, maxNumObjs, ignlns, connect));
+      else
+      {
+	WlzObject *lObj;
+
+        lObj = WlzLabel3D(obj, maxNumObjs, ignlns, connect, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  int	i,
+	  	nObj;
+	  WlzObject **objs;
+
+	  nObj = ((WlzCompoundArray *)lObj)->n;
+	  objs = ((WlzCompoundArray *)lObj)->o;
+	  *mm = nObj;
+	  for(i = 0; i < nObj; ++i)
+	  {
+	    objlist[i] = WlzAssignObject(objs[i], NULL);
+	  }
+	  WlzFreeObj((WlzObject *)lObj);
+	}
+      }
+      return(errNum);
     case WLZ_EMPTY_OBJ:
       *mm = 0;
       return(WLZ_ERR_NONE);

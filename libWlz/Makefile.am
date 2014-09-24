@@ -102,6 +102,7 @@ libWlz_la_SOURCES 	= \
 			  WlzDistMetric.c \
 			  WlzDistTransform.c \
 			  WlzDomainFill.c \
+			  WlzDomainFill3D.c \
 			  WlzDomainUtils.c \
 			  WlzDrawDomain.c \
 			  WlzEmpty.c \
@@ -157,7 +158,7 @@ libWlz_la_SOURCES 	= \
 			  WlzIntRescaleObj.c \
 			  WlzIterate.c \
 			  WlzKrig.c \
-			  WlzLabel3d.c \
+			  WlzLabel3D.c \
 			  WlzLabel.c \
 			  WlzLaplacian.c \
 			  WlzLBTDomain.c \
