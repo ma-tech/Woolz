@@ -474,7 +474,7 @@ WlzObject			*WlzLabel3D(
 	WlzErrorNum    errNum2 = WLZ_ERR_NONE;
 	WlzValues	nVal;
 
-	nVal.core == NULL;
+	nVal.core = NULL;
 	nPDom = objs->o[i]->domain.p;
 	nPDom->voxel_size[0] = gPDom->voxel_size[0];
 	nPDom->voxel_size[1] = gPDom->voxel_size[1];

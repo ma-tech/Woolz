@@ -113,37 +113,7 @@ WlzObject *WlzDomainFill(
     case WLZ_3D_DOMAINOBJ:
       switch( obj->domain.core->type ){
       case WLZ_PLANEDOMAIN_DOMAIN:
-	pdom = obj->domain.p;
-	if( !(rtnpdom = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
-					   pdom->plane1, pdom->lastpl,
-					   pdom->line1, pdom->lastln,
-					   pdom->kol1, pdom->lastkl,
-					   &errNum)) ){
-	  break;
-	}
-	rtnpdom->voxel_size[0] = pdom->voxel_size[0];
-	rtnpdom->voxel_size[1] = pdom->voxel_size[1];
-	rtnpdom->voxel_size[2] = pdom->voxel_size[2];
-	values.core = NULL;
-	for(p=pdom->plane1; p <= pdom->lastpl; p++){
-	  if((domain.i = (pdom->domains)[p - pdom->plane1].i) != NULL){
-	    obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values,
-			       NULL, NULL, NULL);
-	    if((obj2 = WlzDomainFill(obj1, &errNum)) != NULL){
-	      rtnpdom->domains[p - pdom->plane1] =
-		WlzAssignDomain(obj2->domain, NULL);
-	      WlzFreeObj(obj2);
-	    }
-	    WlzFreeObj(obj1);
-	  }
-	  else {
-	    rtnpdom->domains[p - pdom->plane1].core = NULL;
-	  }
-	}
-	domain.p = rtnpdom;
-	return WlzMakeMain(WLZ_3D_DOMAINOBJ, domain, values,
-			   NULL, NULL, dstErr);
-
+        return WlzDomainFill3D(obj, dstErr);
       case WLZ_EMPTY_DOMAIN:
 	return WlzMakeEmpty(dstErr);
 

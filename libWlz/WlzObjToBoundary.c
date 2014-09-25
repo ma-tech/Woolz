@@ -90,10 +90,6 @@ static void 		vertcompress	(WlzIVertex2 **vtx,
 					 int *nv);
 static int 		wraparound	(WlzPolygonDomain *pdom,
 					 int wrap);
-static WlzObject 			*WlzObjToBoundaryPrv(
-					  WlzObject *obj,
-					  int wrap,
-					  WlzErrorNum *dstErr);
 
 /*!
 * \return	New boundary object, NULL on error.
@@ -103,55 +99,12 @@ static WlzObject 			*WlzObjToBoundaryPrv(
 * 		repeated in each boundary polygon to ensure wrap-around.
 * 		All boundary polygon arcs lie in one of the 8 directions
 * 		vertical, horizontal, diagonal.
-* 		This function is a wrapper for WlzObjToBoundaryPrv()
-* 		which is not re-entrant and has been coded with multiple
-* 		returns which makes it possible to wrap in place.
 * \param	obj			Given input object.
 * \param	wrap			Number of overlapping vertices within
 * 					each polygon.
 * \param	dstErr			Destination error pointer, mat be NULL.
 */
-WlzObject 			*WlzObjToBoundary(
-  				  WlzObject *obj,
-  				  int wrap,
-  				  WlzErrorNum *dstErr)
-{
-  WlzObject	*rObj = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-#ifdef _OPENMP
-#pragma omp critical(WlzObjToBoundary)
-  {
-#endif
-    rObj = WlzObjToBoundaryPrv(obj, wrap, &errNum);
-#ifdef _OPENMP
-  }
-#endif
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(rObj);
-}
-
-/*! 
-* \ingroup      WlzBoundary
-* \brief        Compute the recursive boundary structure of input
- object "obj",with "wrap" points repeated in each boundary polygon
- to ensure wrap-around (usual value for drawing purposes : 1).
- All boundary polygon arcs lie in one of the 8 directions vertical,
- horizontal, diagonal.
- This function is *not* re-entrant, use with care. If you're using
- OPENMP then use the wrapper WlzObjToBoundary().
-*
-* \return       Boundary object, NULL on error.
-* \param    obj	Input domain object.
-* \param    wrap	Number ov overlapping vertices within each polygon.
-* \param    dstErr	Error return.
-* \par      Source:
-*                WlzObjToBoundary.c
-*/
-static WlzObject *WlzObjToBoundaryPrv(
+WlzObject *WlzObjToBoundary(
   WlzObject	*obj,
   int		wrap,
   WlzErrorNum	*dstErr)
@@ -160,8 +113,7 @@ static WlzObject *WlzObjToBoundaryPrv(
   int 			icount, nv;
   WlzBoundInterval 	*bi, *bitop;
   WlzBoundInterval 	*ci, *ci_ov, *ci_next;
-  static WlzBoundList 	uhole = {WLZ_BOUNDLIST_HOLE,0,NULL,
-				 NULL,NULL,NULL,1,NULL};
+  WlzBoundList		uhole; 			      /* The universal hole. */
   WlzBoundList 		*bnd;
   WlzBoundPoint 	cur_pt;
   WlzObject 		*bobj=NULL;
@@ -175,6 +127,14 @@ static WlzObject *WlzObjToBoundaryPrv(
   const char		* const procStr="WlzObjToBoundary";
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
+  uhole.type = WLZ_BOUNDLIST_HOLE;
+  uhole.linkcount = 0;
+  uhole.freeptr = NULL;
+  uhole.up = NULL;
+  uhole.next = NULL;
+  uhole.down = NULL;
+  uhole.wrap = 1;
+  uhole.poly = NULL;
   /*
    * Initial checks.
    */
