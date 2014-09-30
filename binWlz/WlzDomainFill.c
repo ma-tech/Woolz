@@ -57,6 +57,10 @@ WlzDomainFill [-h] [<input file>]
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
   </tr>
+  <tr> 
+    <td><b>-T</b></td>
+    <td>Report elapsed time.</td>
+  </tr>
 </table>
 \par Description
 Fills any holes in the domain of the object.
@@ -78,6 +82,7 @@ in which the domain has no holes.
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include <Wlz.h>
 
 /* externals required by getopt  - not in ANSI C standard */
@@ -98,7 +103,8 @@ static void usage(char *proc_str)
 	  "\twritten to standard output."
 	  "Version: %s\n"
 	  "Options:\n"
-	  "\t  -h        help - prints this usage message\n",
+	  "\t  -h        help - prints this usage message\n"
+	  "\t  -T        Report elapsed time.\n",
 	  proc_str,
 	  WlzVersion());
   return;
@@ -108,10 +114,13 @@ int main(int	argc,
 	 char	**argv)
 {
 
-  WlzObject	*obj, *tmpObj;
+  WlzObject	*obj = NULL,
+  		*tmpObj = NULL;
   FILE		*inFile;
-  char 		optList[] = "h";
-  int		option;
+  char 		optList[] = "hT";
+  int		option,
+  		timeFlg = 0;
+  struct timeval times[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
     
@@ -120,6 +129,9 @@ int main(int	argc,
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
+    case 'T':
+      timeFlg = 1;
+      break;
     case 'h':
     default:
       usage(argv[0]);
@@ -144,7 +156,19 @@ int main(int	argc,
     {
     case WLZ_2D_DOMAINOBJ:
     case WLZ_3D_DOMAINOBJ:
-      if((tmpObj = WlzDomainFill(obj, &errNum)) != NULL){
+      if(timeFlg) {
+        gettimeofday(times + 0, NULL);
+      }
+      tmpObj = WlzAssignObject(WlzDomainFill(obj, &errNum), NULL);
+      if(timeFlg) {
+        gettimeofday(times + 1, NULL);
+	ALC_TIMERSUB(times + 1, times + 0, times + 2);
+	(void )fprintf(stderr,
+		       "%s: Elapsed time for WlzDomainFill()  %gus\n",
+		       *argv,
+		       (1000000.0 * times[2].tv_sec) + times[2].tv_usec);
+      }
+      if(tmpObj) {
 	if((errNum = WlzWriteObj(stdout, tmpObj)) != WLZ_ERR_NONE) {
 	  (void )WlzStringFromErrorNum(errNum, &errMsg);
 	  (void )fprintf(stderr,
