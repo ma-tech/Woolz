@@ -2467,6 +2467,7 @@ extern WlzObject 		*WlzDistanceTransform(
 				  WlzObject *refObj,
 				  WlzDistanceType dFn,
 				  double dParam,
+				  double dMax,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************

@@ -100,10 +100,14 @@ static WlzObject 		*WlzDistSample(
 * 					WLZ_APX_EUCLIDEAN_DISTANCE requires a
 * 					parameter. In this case the parameter
 * 					is the approximation scale.
+* \param	dMax			Maximum distance before itteration
+* 					stops, <= 0 implies an infinite maximum
+* 					distance.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
 				   WlzDistanceType dFn, double dParam,
+				   double dMax,
 				   WlzErrorNum *dstErr)
 {
   int 		idP,
@@ -131,6 +135,7 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
   WlzValues 	difVal,
   		dstVal,
 		nullVal;
+  const double	dEps = 1.0e-6;
   /* By defining WLZ_DIST_TRANSFORM_ENV these normalization parameters
    * are read from the environment. This is useful for optimization. */
 #ifndef WLZ_DIST_TRANSFORM_ENV
@@ -435,7 +440,8 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
     {
       difObj = WlzDiffDomain(curItrObj, sRefObj, &errNum);
     }
-    if((difObj == NULL) || WlzIsEmpty(difObj, &errNum))
+    if(((dMax > dEps) && (dMax < dstV.v.dbv)) ||
+       (difObj == NULL) || WlzIsEmpty(difObj, &errNum))
     {
       notDone = 0;
     }

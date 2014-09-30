@@ -49,7 +49,8 @@ static char _WlzDistanceTransform_c[] = "University of Edinburgh $Id$";
 WlzDistanceTransform - computes distance transform objects.
 \par Synopsis
 \verbatim
-WlzDistanceTransform [-b] [-d#] [-f#] [-p#] [-o#] [-h] [<Reference input file>]
+WlzDistanceTransform [-b] [-d#] [-D#] [-f#] [-p#] [-o#] [-h]
+                     [<Reference input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -80,12 +81,17 @@ WlzDistanceTransform [-b] [-d#] [-f#] [-p#] [-o#] [-h] [<Reference input file>]
     </td>
   </tr>
   <tr> 
+    <td><b>-D</b></td>
+    <td>Maximum distance before iteration stops (default 0 implies
+        an infinite maximum distance).</td>
+  </tr>
+  <tr> 
     <td><b>-f</b></td>
     <td>The foreground object file.</td>
   </tr>
   <tr> 
     <td><b>-p</b></td>
-    <td>Distance function parameter, which is curently only used for
+    <td>Distance function parameter, which is currently only used for
         approximate Euclidean distance transforms. The value should
 	be \f$geq\f$ 1, with larger values giving greater accuracy
 	at the cost of increased time. Default value - 10.0.</td>
@@ -132,7 +138,8 @@ int		main(int argc, char *argv[])
   char		*forFileStr,
   		*refFileStr,
 		*outFileStr;
-  double	dParam = 10.0;
+  double	dMax = 0.0,
+  		dParam = 10.0;
   FILE		*fP = NULL;
   WlzObject	*tObj0,
   		*tObj1,
@@ -142,7 +149,7 @@ int		main(int argc, char *argv[])
   WlzDistanceType dFn;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "bhd:f:p:o:";
+  static char	optList[] = "bhd:f:p:o:D:";
   const char    fileStrDef[] = "-";
   const WlzConnectType defDFn = WLZ_OCTAGONAL_DISTANCE;
 
@@ -196,6 +203,12 @@ int		main(int argc, char *argv[])
 	      usage = 1;
 	      break;
 	  }
+	}
+	break;
+      case 'D':
+	if(sscanf(optarg, "%lg", &dMax) != 1)
+	{
+	  usage = 1;
 	}
 	break;
       case 'f':
@@ -300,7 +313,8 @@ int		main(int argc, char *argv[])
   if(ok)
   {
     dstObj = WlzAssignObject(
-    	     WlzDistanceTransform(forObj, refObj, dFn, dParam, &errNum), NULL);
+    	     WlzDistanceTransform(forObj, refObj, dFn, dParam, dMax,
+	     			  &errNum), NULL);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -340,7 +354,8 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-b] [-d#] [-f#] [-p#] [-o#] [-h] [<Reference input file>]\n"
+    "Usage: %s [-b] [-d#] [-D#] [-f#] [-p#] [-o#] [-h]\n"
+    "                            [<Reference input file>]\n"
     "Computes a distance transform object which has the domain of the\n"
     "foreground object and values which are the distance from the reference\n"
     "object.\n"
@@ -356,8 +371,10 @@ int		main(int argc, char *argv[])
     "              6: 6-connected (3D)\n"
     "             18: 18-connected (3D)\n"
     "             26: 26-connected (3D)\n"
+    "  -D  Maximum distance before iteration stops (default 0 implies\n"
+    "      an infinite maximum distance).\n" 
     "  -f  The foreground object file.\n" 
-    "  -p  Distance function parameter, which is curently only used for\n"
+    "  -p  Distance function parameter, which is currently only used for\n"
     "      approximate Euclidean distance transforms. The value should\n"
     "      be >= 1, with larger values giving greater accuracy at the\n"
     "      cost of increased time. Default value - 10.0.\n"
