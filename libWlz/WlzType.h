@@ -636,14 +636,17 @@ typedef enum _WlzRCCClassIdx
   WLZ_RCCIDX_PO		= (3),		/*!< Partial Overlap. */
   WLZ_RCCIDX_TPP	= (4),		/*!< Tangential Proper Part. */
   WLZ_RCCIDX_NTPP	= (5),		/*!< Non-Tangential Proper Part. */
-  WLZ_RCCIDX_TPPI	= (6),		/*!< Tangential Proper Part inverse. */
+  WLZ_RCCIDX_TPPI	= (6),		/*!< Tangential Proper Part Inverse. */
   WLZ_RCCIDX_NTPPI	= (7),		/*!< Non-Tangential Proper Part
-  				     	     inverse. */
-  WLZ_RCCIDX_SUR	= (8),		/*!< Surrounds. */
-  WLZ_RCCIDX_SURI	= (9),		/*!< Surrounds inverse. */
-  WLZ_RCCIDX_ENC	= (10),		/*!< Encloses. */
-  WLZ_RCCIDX_ENCI	= (11),		/*!< Encloses inverse. */
-  WLZ_RCCIDX_CNT	= (12)		/*!< Not a classification index, but
+  				     	     Inverse. */
+  WLZ_RCCIDX_TSUR	= (8),		/*!< Tangential SURrounds. */
+  WLZ_RCCIDX_TSURI	= (9),		/*!< Tangential SURrounds Inverse. */
+  WLZ_RCCIDX_NTSUR	= (10),		/*!< Non-Tangential SURrounds. */
+  WLZ_RCCIDX_NTSURI	= (11),		/*!< Non-Tangential SURrounds
+                                             Inverse. */
+  WLZ_RCCIDX_ENC	= (12),		/*!< ENCloses. */
+  WLZ_RCCIDX_ENCI	= (13),		/*!< ENCloses Inverse. */
+  WLZ_RCCIDX_CNT	= (14)		/*!< Not a classification index, but
                                              the number of classification
 					     indices, keep last. */
 } WlzRCCClassIdx;
@@ -669,16 +672,25 @@ typedef enum _WlzRCCClass
   WLZ_RCC_TPP	= (1<<WLZ_RCCIDX_TPP),	/*!< Tangential Proper Part. */
   WLZ_RCC_NTPP	= (1<<WLZ_RCCIDX_NTPP),	/*!< Non-Tangential Proper Part. */
   WLZ_RCC_TPPI	= (1<<WLZ_RCCIDX_TPPI),	/*!< Tangential Proper Part inverse. */
-  WLZ_RCC_NTPPI	= (1<<WLZ_RCCIDX_NTPPI),	/*!< Non-Tangential Proper Part
+  WLZ_RCC_NTPPI	= (1<<WLZ_RCCIDX_NTPPI), /*!< Non-Tangential Proper Part
   				     	     inverse. */
-  WLZ_RCC_SUR	= (1<<WLZ_RCCIDX_SUR),	/*!< Surrounds:
+  WLZ_RCC_TSUR	= (1<<WLZ_RCCIDX_TSUR),	/*!< Tangential Surrounds:
   					     The first domain is surrounded by
 					     and edge connected to the
 					     second domain. */
-  WLZ_RCC_SURI	= (1<<WLZ_RCCIDX_SURI),	/*!< Surrounds inverse:
+  WLZ_RCC_TSURI	= (1<<WLZ_RCCIDX_TSURI), /*!< Tangential Surrounds inverse:
   					     The second domain is surrounded by
 					     and edge connected to the first
-					     domain.. */
+					     domain. */
+  WLZ_RCC_NTSUR	= (1<<WLZ_RCCIDX_NTSUR), /*!< Non-Tangential Surrounds:
+  					     The first domain is surrounded by
+					     but not edge connected to the
+					     second domain. */
+  WLZ_RCC_NTSURI = (1<<WLZ_RCCIDX_NTSURI), /*!< Non-Tangential Surrounds
+        				     inverse:
+  					     The second domain is surrounded by
+					     but not edge connected to the
+					     first domain. */
   WLZ_RCC_ENC	= (1<<WLZ_RCCIDX_ENC),	/*!< Encloses:
   					     The majority of the first domain
 					     is within the convex hull of the
@@ -3788,20 +3800,20 @@ typedef struct _WlzCMeshElm2D5
 *		<table>
 *		  <caption>
 *		  Indexing of faces, edge uses and nodes in 3D elements.
-*		  <\caption>
-*                 <tr><td>Face</td> <td>Edge Use</td> <td>Node/td></tr>
-*                 <tr><td>0</td>    <td>0</td>        <td>0/td></tr>
-*                 <tr><td>0</td>    <td>1</td>        <td>1/td></tr>
-*                 <tr><td>0</td>    <td>2</td>        <td>2/td></tr>
-*                 <tr><td>1</td>    <td>0</td>        <td>0/td></tr>
-*                 <tr><td>1</td>    <td>1</td>        <td>3/td></tr>
-*                 <tr><td>1</td>    <td>2</td>        <td>1/td></tr>
-*                 <tr><td>2</td>    <td>0</td>        <td>0/td></tr>
-*                 <tr><td>2</td>    <td>1</td>        <td>2/td></tr>
-*                 <tr><td>2</td>    <td>2</td>        <td>3/td></tr>
-*                 <tr><td>3</td>    <td>0</td>        <td>1/td></tr>
-*                 <tr><td>3</td>    <td>1</td>        <td>1/td></tr>
-*                 <tr><td>3</td>    <td>2</td>        <td>3/td></tr>
+*		  </caption>
+*                 <tr><td>Face</td> <td>Edge Use</td> <td>Node</td></tr>
+*                 <tr><td>0</td>    <td>0</td>        <td>0</td></tr>
+*                 <tr><td>0</td>    <td>1</td>        <td>1</td></tr>
+*                 <tr><td>0</td>    <td>2</td>        <td>2</td></tr>
+*                 <tr><td>1</td>    <td>0</td>        <td>0</td></tr>
+*                 <tr><td>1</td>    <td>1</td>        <td>3</td></tr>
+*                 <tr><td>1</td>    <td>2</td>        <td>1</td></tr>
+*                 <tr><td>2</td>    <td>0</td>        <td>0</td></tr>
+*                 <tr><td>2</td>    <td>1</td>        <td>2</td></tr>
+*                 <tr><td>2</td>    <td>2</td>        <td>3</td></tr>
+*                 <tr><td>3</td>    <td>0</td>        <td>1</td></tr>
+*                 <tr><td>3</td>    <td>1</td>        <td>1</td></tr>
+*                 <tr><td>3</td>    <td>2</td>        <td>3</td></tr>
 *		</table>
 
 *		The face opposite a node, or node opposite a face
@@ -4782,7 +4794,7 @@ typedef struct _WlzGreyWSpace
 * \struct	_WlzIterateWSpace
 * \ingroup	WlzAccess
 * \brief	A workspace structure for interval objects which allows
-* 		iteration through an object's pixels/voxels..
+* 		iteration through an object's pixels/voxels.
 *		Typedef: ::WlzIterateWSpace.
 */
 typedef struct _WlzIterateWSpace
