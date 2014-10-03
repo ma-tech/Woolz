@@ -1493,7 +1493,7 @@ WlzInterpolationType WlzStringToInterpolationType(const char *iStr,
 * \return	Pointer to read only string or NULL on error.
 * \ingroup      WlzStrings
 * \brief	Finds a string for the given values attachment type.
-* \param	iType			Given values attachment type.
+* \param	at			Given values attachment type.
 * \param	dstErr			Destination error pointer, may
 *                                       be null.
 */
@@ -1673,11 +1673,17 @@ const char	*WlzStringFromRCC(WlzRCCClass cls, WlzErrorNum *dstErr)
     case WLZ_RCC_NTPPI:
       str = "WLZ_RCC_NTPPI";
       break;
-    case WLZ_RCC_SUR:
-      str = "WLZ_RCC_SUR";
+    case WLZ_RCC_TSUR:
+      str = "WLZ_RCC_TSUR";
       break;
-    case WLZ_RCC_SURI:
-      str = "WLZ_RCC_SURI";
+    case WLZ_RCC_TSURI:
+      str = "WLZ_RCC_TSURI";
+      break;
+    case WLZ_RCC_NTSUR:
+      str = "WLZ_RCC_NTSUR";
+      break;
+    case WLZ_RCC_NTSURI:
+      str = "WLZ_RCC_NTSURI";
       break;
     case WLZ_RCC_ENC:
       str = "WLZ_RCC_ENC";
@@ -1719,8 +1725,10 @@ WlzRCCClass	WlzStringToRCCClass(const char *cStr,
 			 "WLZ_RCC_NTPP", WLZ_RCC_NTPP,
 			 "WLZ_RCC_TPPI", WLZ_RCC_TPPI,
 			 "WLZ_RCC_NTPPI", WLZ_RCC_NTPPI,
-			 "WLZ_RCC_SUR", WLZ_RCC_SUR,
-			 "WLZ_RCC_SURI", WLZ_RCC_SURI,
+			 "WLZ_RCC_TSUR", WLZ_RCC_TSUR,
+			 "WLZ_RCC_TSURI", WLZ_RCC_TSURI,
+			 "WLZ_RCC_NTSUR", WLZ_RCC_NTSUR,
+			 "WLZ_RCC_NTSURI", WLZ_RCC_NTSURI,
 			 "WLZ_RCC_ENC", WLZ_RCC_ENC,
 			 "WLZ_RCC_ENCI", WLZ_RCC_ENCI,
 			 NULL))
@@ -1739,7 +1747,7 @@ WlzRCCClass	WlzStringToRCCClass(const char *cStr,
 * \return	Pointer to read only string or NULL on error.
 * \ingroup      WlzStrings
 * \brief	Finds a string for the given values attachment type.
-* \param	iType			Given values attachment type.
+* \param	mType			Given values attachment type.
 * \param	dstErr			Destination error pointer, may
 *                                       be null.
 */
