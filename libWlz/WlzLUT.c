@@ -65,8 +65,6 @@ static WlzErrorNum 		WlzLUTTransformObj3D(
 * 					WLZ_GREY_INT or WLZ_GREY_RGBA.
 * \param	bin1			First bin of the look up table.
 * \param	lastbin			Last bin of the look up table.
-* \param	maxVal			Number of values to allocate (may be
-* 					zero if no look up table required).
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject	*WlzMakeLUTObject(WlzGreyType vType, int bin1, int lastbin,
@@ -319,8 +317,11 @@ WlzObject	*WlzLUTGreyTransformNew(WlzGreyTransformType gTrType,
 * 					WLZ_GREYTRANSFORMTYPE_LINEAR,
 *					WLZ_GREYTRANSFORMTYPE_GAMMA and
 *					WLZ_GREYTRANSFORMTYPE_SIGMOID.
+* \param	gType			Grey type.
 * \param	il			First integer value to set in LUT.
 * \param	iu			Last integer value to set in LUT.
+* \param	gol			First grey value.
+* \param	gou			Last grey value.
 * \param	p0			First parameter, with meaning for
 * 					transforms: unused, unused, gamma,
 					mean.

@@ -74,7 +74,7 @@ static WlzObject  		*WlzMakeTiledValuesObj3D(
 * \ingroup	WlzAllocation
 * \brief	Allocates a new tiled value table, but without allocating
 * 		any indices or tiles.
-* int		dim			Dimension.
+* \param	dim			Dimension.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzTiledValues	*WlzMakeTiledValues(int dim, WlzErrorNum *dstErr)

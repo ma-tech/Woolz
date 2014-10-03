@@ -299,8 +299,8 @@ static WlzCompoundArray *WlzRGBAToCompound3D(
 * 		with valid parameters so they aren't checked. If all members of
 * 		the compound array are empty then the returned object will be
 * 		empty too.
-* \param	cObj			Compound array object.
-* \param	cSpc 			The colour space.
+* \param	cmpnd			Compound array object.
+* \param	colSpc 			The colour space.
 * \param	dstErr			Destination error pointer may be NULL.
 */
 WlzObject	*WlzCompoundToRGBA(WlzCompoundArray *cmpnd,

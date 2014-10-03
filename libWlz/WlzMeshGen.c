@@ -1770,7 +1770,6 @@ static void	WlzCMeshRemElmFromGrid3D(WlzCMesh3D *mesh, WlzCMeshElm3D *elm)
 * \brief	Allocates a new 2D mesh node and sets it's index. 
 *		For efficiency this function does not check it's parameters.
 * \param	mesh			Mesh with resources.
-* \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzCMeshNod2D 	*WlzCMeshAllocNod2D(WlzCMesh2D *mesh)
 {
@@ -1794,7 +1793,6 @@ WlzCMeshNod2D 	*WlzCMeshAllocNod2D(WlzCMesh2D *mesh)
 * \brief	Allocates a new 2D5 mesh node and sets it's index. 
 *		For efficiency this function does not check it's parameters.
 * \param	mesh			Mesh with resources.
-* \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzCMeshNod2D5 	*WlzCMeshAllocNod2D5(WlzCMesh2D5 *mesh)
 {
@@ -1818,7 +1816,6 @@ WlzCMeshNod2D5 	*WlzCMeshAllocNod2D5(WlzCMesh2D5 *mesh)
 * \brief	Allocates a new 3D mesh node and sets it's index. 
 *		For efficiency this function does not check it's parameters.
 * \param	mesh			Mesh with resources.
-* \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzCMeshNod3D 	*WlzCMeshAllocNod3D(WlzCMesh3D *mesh)
 {
@@ -4658,7 +4655,7 @@ int		WlzCMeshMatchNNod3D(WlzCMesh3D *mesh, int nNod,
 * \param	mesh			The mesh.
 * \param	nNod			Number of node positions to match.
 * \param	nPos			Node positions.
-* \param	mNod			For indices of the matched nodes.
+* \param	mIdx			For indices of the matched nodes.
 */
 int		WlzCMeshMatchNNodIdx2D(WlzCMesh2D *mesh, int nNod,
 				       WlzDVertex2 *nPos, int *mIdx)
@@ -4689,7 +4686,7 @@ int		WlzCMeshMatchNNodIdx2D(WlzCMesh2D *mesh, int nNod,
 * \param	mesh			The mesh.
 * \param	nNod			Number of node positions to match.
 * \param	nPos			Node positions.
-* \param	mNod			For indices of the matched nodes.
+* \param	mIdx			For indices of the matched nodes.
 */
 int		WlzCMeshMatchNNodIdx2D5(WlzCMesh2D5 *mesh, int nNod,
 				        WlzDVertex3 *nPos, int *mIdx)
@@ -4720,7 +4717,7 @@ int		WlzCMeshMatchNNodIdx2D5(WlzCMesh2D5 *mesh, int nNod,
 * \param	mesh			The mesh.
 * \param	nNod			Number of node positions to match.
 * \param	nPos			Node positions.
-* \param	mNod			For indices of the matched nodes.
+* \param	mIdx			For indices of the matched nodes.
 */
 int		WlzCMeshMatchNNodIdx3D(WlzCMesh3D *mesh, int nNod,
 				       WlzDVertex3 *nPos, int *mIdx)

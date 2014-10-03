@@ -57,28 +57,20 @@ static char _WlzSnapFit_c[] = "University of Edinburgh $Id$";
 *
 *		The algorithm used is:
 *		<ol>
-*		  <li>
-*		  Get vertices from target and source object.
-*		  </li>
-* 		  <li>
-*		  Select those target vertices such that for any pair of
-*		  target vertices \f$\mathbf{v_i}\f$ and \f$\mathbf{v_j}\f$
-*		  the separation distance
-*		  \f$|\mathbf{v_i} - \mathbf{v_j}| < d_t \forall i,j\f$
-*		  </li>
-*		  <li>
-*		  For each source vertex find the closest target vertex
-*		  and add those source vertices for which
-*		  \f$|\mathbf{v_{ti}} - \mathbf{v_{si}}| \leq d_c\f$ to
-*		  a list of correspondences.
-*		  </li>
-*		  <li>
-*		  Reject all correspondences for which
-*		  \f$|\mathbf{v_i} - \mathbf{v_j}| < d_s \forall i,j\f$,
-*		  where \f$\mathbf{v_i}\f$ and \f$\mathbf{v_j}\f$ are
-*		  the corresponding source vertices, keeping those with
-*		  the minimum target-source separation by preference.
-*		  </li>
+*		  <li> Get vertices from target and source object.
+* 		  <li> Select those target vertices such that for any pair of
+*		       target vertices \f$\mathbf{v_i}\f$ and
+*		       \f$\mathbf{v_j}\f$ the separation distance
+*		       \f$|\mathbf{v_i} - \mathbf{v_j}| < d_t \forall i,j\f$
+*		  <li> For each source vertex find the closest target vertex
+*		       and add those source vertices for which
+*		       \f$|\mathbf{v_{ti}} - \mathbf{v_{si}}| \leq d_c\f$ to
+*		       a list of correspondences.
+*		  <li> Reject all correspondences for which
+*		       \f$|\mathbf{v_i} - \mathbf{v_j}| < d_s \forall i,j\f$,
+*		       where \f$\mathbf{v_i}\f$ and \f$\mathbf{v_j}\f$ are
+*		       the corresponding source vertices, keeping those with
+*		       the minimum target-source separation by preference.
 *		</ol>
 
 * \param	tObj			Target object.

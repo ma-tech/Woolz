@@ -68,8 +68,8 @@ WlzEmptyTransform *WlzMakeEmptyTransform(WlzErrorNum *dstErr)
 /*!
 * \return	New empty transform or NULL on error.
 * \ingroup	WlzTransform
-* \brief	Makes a new empty transform.
-* \param	dstErr			Destination error pointer, may be NULL.
+* \brief	Frees the given empty transform.
+* \param	tr			Given empty transform.
 */
 WlzErrorNum 	WlzFreeEmptyTransform(WlzEmptyTransform *tr)
 {

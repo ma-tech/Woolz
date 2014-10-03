@@ -847,6 +847,7 @@ WlzMakeValueLine(WlzRagRValues 	*vtb,
 * \ingroup	WlzFeatures
 * \brief        Constructs a domain from the union of marker domains with
 *               a marker domain at each of the given vertex positions.
+* \param	vType			Vertex type.
 * \param        nVtx                    Number of vertices.
 * \param        vtx                     Given vertices.
 * \param        mType                   Marker type.

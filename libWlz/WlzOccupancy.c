@@ -4,7 +4,7 @@
 static char _WlzOccupancy_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzOccupancy.c
+* \file         libWlz/WlzOccupancy.c
 * \author       Bill Hill
 * \date         November 2012
 * \version      $Id$
