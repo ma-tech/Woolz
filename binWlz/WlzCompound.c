@@ -171,8 +171,8 @@ int main(int	argc,
 
   /* read objects accumulating compatible types */
   n = 0;
-  while( ((obj = WlzAssignObject(
-                 WlzReadObj(inFile, NULL), NULL)) != NULL) && (n < nmax) ) {
+  while( ((obj = WlzAssignObject(WlzReadObj(inFile, NULL),
+  			         NULL)) != NULL) && (n < nmax) ) {
 
     if( type == -1 &&
 	(obj->type == WLZ_2D_DOMAINOBJ || obj->type == WLZ_3D_DOMAINOBJ) ){
@@ -181,8 +181,9 @@ int main(int	argc,
 
     if( obj->type == type || obj->type == WLZ_EMPTY_OBJ ){
       objlist[n++] = WlzAssignObject(obj, NULL);
+    } else {
+      WlzFreeObj( obj );
     }
-    (void )WlzFreeObj( obj );
   }
 
   if( type == WLZ_EMPTY_OBJ ){
