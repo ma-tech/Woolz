@@ -133,14 +133,14 @@ void		WlzKrigSetModelFn(WlzKrigModelFn *fn,
 * \return	Function output value.
 * \ingroup	WlzValuesUtili
 * \brief	A nugget kriging variance model.
-* 		\[
-		\left{
+* 		\f[
+		\left\{
 		\begin{array}{ll}
 		h = 0 & \gamma(h) = 0 \\
 		h > 0 & \gamma(h) = c_0
 		\end{array}
 		\right.
-		\]
+		\f]
 * \param	f			The kriging function data stucture.
 * \param	h			Function input value.
 */
@@ -156,14 +156,14 @@ double		WlzKrigModelFnNugget(WlzKrigModelFn *f, double h)
 * \return	Function output value.
 * \ingroup	WlzValuesUtils
 * \brief	A linear kriging variance model.
-* 		\[
-		\left{
+* 		\f[
+		\left\{
 		\begin{array}{ll}
-		h < a    & \gamma(h) = c_0 + \frac{(c_1 - c_0)}{a} h
+		h < a    & \gamma(h) = c_0 + \frac{(c_1 - c_0)}{a} h \\
 		h \geq a & \gamma(h) = c_1
 		\end{array}
 		\right.
-		\]
+		\f]
 * \param	f			The kriging function data stucture.
 * \param	h			Function input value.
 */
@@ -179,15 +179,15 @@ double		WlzKrigModelFnLinear(WlzKrigModelFn *f, double h)
 * \return	Function output value.
 * \ingroup	WlzValuesUtils
 * \brief	A spherical kriging variance model.
-* 		\[
-		\left{
+* 		\f[
+		\left\{
 		\begin{array}{ll}
 		0 < h \leq a & \gamma(h) = c_0 + c_1 \frac{1}{2}
 		                           (\frac{3h}{a} - \frac{h^3}{a^3}) \\
 		h > a        & \gamma(h) = c_0 + c_1
 		\end{array}
 		\right.
-		\]
+		\f]
 * \param	f			The kriging function data stucture.
 * \param	h			Function input value.
 */
@@ -212,9 +212,9 @@ double		WlzKrigModelFnSpherical(WlzKrigModelFn *f, double h)
 * \return	Function output value.
 * \ingroup	WlzValuesUtils
 * \brief	An exponential kriging variance model.
-* 		\[
+* 		\f[
 		\gamma(h) = c_0 + c_1(1 - e^{-\frac{h}{a}})
-		\]
+		\f]
 * \param	f			The kriging function data stucture.
 * \param	h			Function input value.
 */
@@ -230,9 +230,9 @@ double		WlzKrigModelFnExponential(WlzKrigModelFn *f, double h)
 * \return	Function output value.
 * \ingroup	WlzValuesUtils
 * \brief	A Gaussian kriging variance model.
-* 		\[
+* 		\f[
 		\gamma(h) = c_0 + c_1(1 - e^{-(\frac{h}{a})^2})
-		\]
+		\f]
 * \param	f			The kriging function data stucture.
 * \param	h			Function input value.
 */
@@ -250,13 +250,13 @@ double		WlzKrigModelFnGaussian(WlzKrigModelFn *f, double h)
 * \return	Function output value.
 * \ingroup	WlzValuesUtils
 * \brief	A Quadratic kriging variance model.
-* 		\[
+* 		\f[
 		\gamma(h) = c_0 + c_1
 		                  \left(
 				  \frac{    (\frac{h}{a})^2}
 				       {1 + (\frac{h}{a})^2}
 				  \right)
-		\]
+		\f]
 * \param	f			The kriging function data stucture.
 * \param	h			Function input value.
 */
@@ -571,7 +571,7 @@ WlzErrorNum	WlzKrigOWeightsSolve(AlgMatrix modelSV, double *posSV,
 * 					matrix workspace.
 * \param	dstModelSV		Destination pointer for kriging
 * 					model matrix.
-* \param	dstMaxNbrIdxBuf		Destination pointer for the
+* \param	dstMaxKrigBuf		Destination pointer for the
 * 					maximum number of neighbours the
 * 					buffers have been reallocated
 * 					for.
@@ -642,7 +642,7 @@ WlzErrorNum	WlzKrigReallocBuffers2D(WlzDVertex2 **dstNbrPosBuf,
 * 					matrix workspace.
 * \param	dstModelSV		Destination pointer for kriging
 * 					model matrix.
-* \param	dstMaxNbrIdxBuf		Destination pointer for the
+* \param	dstMaxKrigBuf		Destination pointer for the
 * 					maximum number of neighbours the
 * 					buffers have been reallocated
 * 					for.

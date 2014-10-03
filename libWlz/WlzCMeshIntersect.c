@@ -1432,8 +1432,6 @@ static int	WlzCMeshIntersectDomIsInside3D(WlzObject *sObj, WlzDVertex3 q,
 * 					displacements to a plane.
 * \param	scale			Additional scale factor from mesh
 * 					to spatial domain.
-* \param	dstNPnt			Destination pointer for the number
-* 					of points, may be NULL.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzDVertex2	WlzCMeshClosePointDom2D5(WlzObject *vObj, WlzObject *mObj,

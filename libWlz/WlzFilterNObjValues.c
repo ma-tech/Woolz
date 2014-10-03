@@ -102,7 +102,7 @@ static WlzObject 		*WlzFilterNObjValues2DCb(
 * \param	objs			Array on input objects.
 * \param	fn			Filter function to apply, with value:
 *					0 for rank, 1 for mean.
-*		rank			If applying a rank filter the required
+* \param	rank			If applying a rank filter the required
 *					rank, otherwise ignored. Rank value
 *					is 0.0 minimum, 0.5 median and
 *					1.0 maximum. Intermediate ranks may be

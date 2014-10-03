@@ -433,7 +433,7 @@ WlzObject *WlzGetProjectionFromObject(
 * \param	denDom			Density of domain voxels this value
 * 					is not used unless the integration
 * 					mode is WLZ_PROJECT_INT_MODE_DOMAIN.
-* \param	denLUT			Density look up table for object
+* \param	denVal			Density look up table for object
 * 					voxel density values which must be
 * 					an array of 256 values. This may be
 * 					NULL if the integration mode is not

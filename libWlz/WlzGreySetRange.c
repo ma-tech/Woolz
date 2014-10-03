@@ -45,30 +45,31 @@ static char _WlzGreySetRange_c[] = "University of Edinburgh $Id$";
 #include <limits.h>
 #include <Wlz.h>
 
-
-/* function:     WlzGreySetRange    */
-/*! 
-* \ingroup      WlzValuesFilters
-* \brief        Set new grey-range by simple linear interpolation. It
- assumes that the min and max values enclose the true range of
- grey-values in the object. Failure to check this could result in a
- segmentation fault.
-
-The transform function is:
-\f[g' = \frac{(gMax - gMin)}{(gmax - gmin)} (g - gmin) + gMin + \delta
-\f]
-Here \f$\delta\f$ is the dither value.
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValuesFilters
+* \brief	Set new grey-range by simple linear interpolation.
 *
-* \return       Woolz error number
-* \param    obj	Input grey-level object whose values are to be reset.
-* \param    min	Initial minimum value
-* \param    max	Initial maximum value
-* \param    Min	Final minimum value
-* \param    Max	Final maximum value
-* \param    Dither values if destination range is greater than source range
-*           and this flag is non-zero.
-* \par      Source:
-*                WlzGreySetRange.c
+* 		Set new grey-range by simple linear interpolation assuming
+* 		that the min and max values enclose the true range of
+* 		grey-values in the object. Failure to check this could result
+* 		in a segmentation fault.
+*
+* 		The transform function is:
+* 		\f[
+		g' = \frac{(gMax - gMin)}
+		          {(gmax - gmin)} (g - gmin) + gMin + \delta
+ 		\f]
+*		Here \f$\delta\f$ is the dither value.
+* \param	obj			Input grey-level object whose values
+* 					are to be reset.
+* \param	min			Initial minimum value.
+* \param	max			Initial maximum value.
+* \param	Min			Final minimum value.
+* \param	Max			Final maximum value.
+* \param	dither			Dither values if destination range is
+* 					greater than source range and this flag
+* 					is non-zero.
 */
 WlzErrorNum WlzGreySetRange(
   WlzObject	*obj,

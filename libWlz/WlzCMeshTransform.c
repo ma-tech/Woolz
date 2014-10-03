@@ -7832,7 +7832,7 @@ static WlzErrorNum WlzScaleCMeshValueNodOrElem(WlzObject *obj, double scale,
 * \brief	Computes the bounding box of the mesh in the given mesh
 * 		transform, with or without applying the displacements
 * 		according to the value of trans.
-* \param	mTr			Given mesh transform object.
+* \param	mObj			Given mesh transform object.
 * \param	trans			Displacements applied if non-zero.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
@@ -8047,7 +8047,6 @@ WlzDBox3	WlzCMeshTransformGetBBox3D(WlzObject *mObj,
 * \author	Zsolt Husz
 * \param	scale                   Scale value
 * \param	obj                     Woolz object
-* \param        dstErr                  Destination error pointer, may be NULL
 */
 WlzErrorNum WlzScaleCMeshValue(double scale, WlzObject *obj)
 {
@@ -8816,6 +8815,7 @@ WlzObject	*WlzCMeshMeshMeshProduct(WlzMeshTransform *tr0,
   		\f]
 * \param	tr0			First (convex) mesh transform.
 * \param	tr1			Second (convex) mesh transform.
+* \param	order			Order of evaluation.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject	*WlzCMeshMeshProduct(WlzObject *tr0, WlzMeshTransform *tr1,

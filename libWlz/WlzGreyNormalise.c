@@ -47,20 +47,17 @@ static char _WlzGreyNormalise_c[] = "University of Edinburgh $Id$";
 #include <stdlib.h>
 #include <Wlz.h>
 
-/* function:     WlzGreyNormalise    */
-/*! 
-* \return       Woolz error number
-* \ingroup      WlzValuesFilters
-* \brief        Normalizes the the grey values of the input object to
-*		fill the range 0-255. Colour values are independently
-*		reset which will change colour balance. Use WlzGreySetRange
-*		directly to avoid this.
-*		Note grey-values are reset in place and not copied.
-* \par          Source:
-*                 WlzGreyNormalise.c
-* \param obj	Input object.
-* \param    	Dither values if destination range is greater than source
-* 		range and this flag is non-zero.
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValuesFilters
+* \brief	Normalizes the the grey values of the input object to
+* 		fill the range 0-255.
+*
+* 		Colour values are independently reset which will change
+* 		colour balance. Use WlzGreySetRange directly to avoid this.
+* 		Note grey-values are reset in place and not copied.
+* \param	obj			Object with values to be normalised.
+* \param	dither			Dither values if non-zero.
 */
 WlzErrorNum WlzGreyNormalise(
   WlzObject	*obj,

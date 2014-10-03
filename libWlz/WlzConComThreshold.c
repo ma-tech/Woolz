@@ -214,10 +214,10 @@ WlzObject 			*WlzConComThreshold3D(
 * 					  from WlzThreshold().
 * \param	xtr			Percent extra to add to threshold value
 * 					where
-* 					\[
+* 					\f[
 					v_{thresh} = v_{seed}
 					             \frac{100 \pm xtr}{100}
- 					\]
+ 					\f]
 					with the sign being:
 					\f$-\f$ for WLZ_THRESH_HIGH and
 					\f$+\f$ for WLZ_THRESH_LOW. If the

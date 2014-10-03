@@ -3081,6 +3081,9 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
 * \param	nPts			Number of control point pairs.
 * \param	dPts			Destination control points.
 * \param	sPts			Source control points.
+* \param	prvBasisFn		Previous basis function, which if not
+* 					NULL, may be used to avoid recomputing
+* 					values (eg distance map).
 * \param        mesh                    Mesh which is used to compute
 *                                       constrained distances. If non NULL
 *                                       and the mesh type is
@@ -3091,9 +3094,6 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
 *                                       some other type then Euclidean
 *                                       distances are used.
 *                                       indexed using the node index.
-* \param	prevNVx			Previous number of control points -
-* 					the number of one dimensional arrays
-* 					in the distance map.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,

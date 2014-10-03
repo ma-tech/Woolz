@@ -319,7 +319,7 @@ int		 WlzGeomVxInTriangle2D(WlzDVertex2 p0, WlzDVertex2 p1,
 * \param	v1			Second vertex of triangle.
 * \param	v2			Third vertex of triangle.
 * \param	vQ			Given query vertex.
-* \param	vvMax			Maximum plane vertex distance.
+* \param	vPMax			Maximum plane vertex distance.
 */
 int		 WlzGeomVxInTriangle3D(WlzDVertex3 v0, WlzDVertex3 v1,
 				       WlzDVertex3 v2, WlzDVertex3 vQ,
@@ -3738,12 +3738,13 @@ int             WlzGeomVtxOnLineSegment2D(WlzDVertex2 tst,
 * 		point on the line segment.
 *
 * 		Consider a line segment from a vertex at \f$\mathbf{p_0}\f$
-* 		to another vertex at \f$\mathbf{p_1}\f$, with a third test
-* 		vertex at \f$\mathbf{p_x}\f$, the shortest path from
+* 		to another vertex at \f$\mathbf{p_1}\f$ , with a third test
+* 		vertex at \f$\mathbf{p_x}\f$ , the shortest path from
 * 		\f$\mathbf{p_x}\f$ to the line segment will be perpendicular
 * 		to the line segment. Let the position of the intersection
 * 		of this perpendicular with the line segment be at
-* 		\f$\mathbf{p}\f$, with distance \f$d\f$ from \mathbf{p_x},
+* 		\f$\mathbf{p}\f$ , with distance \f$d\f$ from
+* 		\f$\mathbf{p_x}\f$ ,
 * 		then:
 * 		\f[
 		\mathbf{p} = \mathbf{p_0} + s (\mathbf{p_1} - \mathbf{p_0},
@@ -6325,13 +6326,13 @@ double	 	WlzGeomTriangleVtxDistSq3D(WlzDVertex3 *dstPT,
 *
 * 		Distance to an edge segment is computed using a parametric
 * 		representation of the triangle edge segments of the form
-* 		\[ Q(t) = t (\vec{v_1} - \vec{v_0}) + \vec{v_0}\] then
-* 		with \[\vec{v\} = \vec{v_1} - \vec{v_0}\] and
-* 		\[\vec{u\} = \vec{v_T} - \vec{v_0}\]
-* 		\[t = \frac{\vec{u} \cdot \vec{v}}{\|\vec{v}\|^2}\]
-* 		but with \(t\) clipped to the interval [0-1].
+* 		\f$ Q(t) = t (\vec{v_1} - \vec{v_0}) + \vec{v_0} \f$ then
+* 		with \f$ \vec{v} = \vec{v_1} - \vec{v_0} \f$ and
+* 		\f$ \vec{u} = \vec{v_T} - \vec{v_0} \f$
+* 		\f$ t = \frac{\vec{u} \cdot \vec{v}}{\|\vec{v}\|^2} \f$
+* 		but with \f$ t \f$ clipped to the interval [0-1].
 * 		The closest point on the segment is then at
-* 		\[t \vec{v} + \vec{v_0}\]
+* 		\f$ t \vec{v} + \vec{v_0} \f$
 * 		this is returned if the destination pointer is non-null.
 * \param	dstU			Destination pointer for the
 * 					closest point on a triangle edge,

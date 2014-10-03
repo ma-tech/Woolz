@@ -230,7 +230,7 @@ WlzObject	*WlzCMeshCompSurfMap(WlzObject *inObj,
 *               Atlas Generation" SIGGRAPH 2002.
 * \param	mesh			Input conforming mesh which must be
 * 					of type WLZ_CMESH_2D5.
-* \param	nPN			Number of pinned nodes.
+* \param	nP			Number of pinned nodes.
 * \param	dPV			Destination coordinates of the
 * 					pinned nodes. All z components
 * 					should be equal and usualy set to

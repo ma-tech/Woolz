@@ -111,7 +111,6 @@ WlzObject	*WlzGreyNewIncValues(WlzObject *in, WlzErrorNum *dstErr)
 * 					incremented in place. If NULL then
 * 					the values will be incremented from
 * 					zero.
-* \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzErrorNum 	WlzGreySetIncValues(WlzObject *obj, int *gVal)
 {
