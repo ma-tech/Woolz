@@ -702,6 +702,16 @@ GENERATE_TREEVIEW      = YES
 
 TREEVIEW_WIDTH         = 250
 
+# Enable the USE_MATHJAX option to render $\mbox{\LaTeX}$ formulas using
+# MathJax (see http://www.mathjax.org) which uses client side Javascript for
+# the rendering instead of using prerendered bitmaps.
+USE_MATHJAX		= YES
+
+# When  MathJax is enabled you can set the default output format to be used for
+# the MathJax output. Supported types are HTML-CSS, NativeMML (i.e. MathML) and
+# SVG.
+MATHJAX_FORMAT		= HTML-CSS
+
 #---------------------------------------------------------------------------
 # configuration options related to the LaTeX output
 #---------------------------------------------------------------------------
@@ -777,6 +787,7 @@ LATEX_BATCHMODE        = NO
 # in the output.
 
 LATEX_HIDE_INDICES     = NO
+
 
 #---------------------------------------------------------------------------
 # configuration options related to the RTF output
