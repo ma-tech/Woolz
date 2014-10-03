@@ -301,6 +301,8 @@ WlzObject *WlzErosion(
     if(jp == jwp){
       AlcFree((char *) nitv);
       AlcFree((char *) jwp);
+      AlcFree(buff);
+      AlcFree(tmp);
       return WlzMakeMain(WLZ_EMPTY_OBJ, domain, values, NULL, NULL, dstErr);
     }
     i = m - 1;
@@ -316,6 +318,8 @@ WlzObject *WlzErosion(
     if(lastln < line1){
       AlcFree((char *) nitv);
       AlcFree((char *) jwp);
+      AlcFree(buff);
+      AlcFree(tmp);
       return WlzMakeMain(WLZ_EMPTY_OBJ, domain, values, NULL, NULL, dstErr);
     }
   }
