@@ -258,7 +258,7 @@ static WlzObject *WlzCutObjToValBgBox2D(WlzObject *sObj, WlzIBox2 cutBox,
 	  cutSz.vtY = cutBox.yMax - cutBox.yMin + 1;
 	  if((cutSz.vtX > 0) && (cutSz.vtY > 0))
 	  {
-	    tSz = (WlzLong )(cutSz.vtX) * cutSz.vtY * WlzGreySize(dGreyType);
+	    tSz = cutSz.vtX * cutSz.vtY * WlzGreySize(dGreyType);
 	    if(tSz == 0)
 	    {
 	      errNum = WLZ_ERR_GREY_TYPE;

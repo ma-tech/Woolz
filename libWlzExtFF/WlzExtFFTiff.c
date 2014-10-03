@@ -171,8 +171,7 @@ static unsigned char *WlzEFFTiffToWlzRowData(
   WlzErrorNum	*dstErr)
 {
   WlzGreyP	wlzData;
-  int		col;
-  off_t		offset = 0;
+  int		col, offset = 0;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   wlzData.v = NULL;
@@ -362,8 +361,7 @@ static WlzObject *WlzExtFFReadTiffDirObj(
   int		wlzDepth;
   WlzGreyType	newpixtype;
   WlzPixelV	bckgrnd;
-  int		i, row, col, tileIndx = 0;
-  WlzLong	y;
+  int		i, y, row, col, tileIndx = 0;
   float		xPosition, yPosition;
   int		colMin, rowMin;
   unsigned char	*buf=NULL;
@@ -450,8 +448,7 @@ static WlzObject *WlzExtFFReadTiffDirObj(
   /* allocate space for the woolz data */
   if(errNum == WLZ_ERR_NONE)
   {
-    if((wlzData.ubp = (WlzUByte *)AlcCalloc((WlzLong )width *
-        (WlzLong )height, wlzDepth)) == NULL)
+    if((wlzData.ubp = (WlzUByte *)AlcCalloc(width*height, wlzDepth)) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
