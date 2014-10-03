@@ -160,7 +160,7 @@ AlgError	AlgMatrixSVSolve(AlgMatrix aMat, double *bVec, double tol,
 *		See AlgMatrixSVSolve() for a usage example.
 * \param	aMat			The given matrix A, and U on
 *					return.
-* \param	wMat			The diagonal matrix of singular
+* \param	wVec			The diagonal matrix of singular
 *					values, returned as a vector.
 * \param	vMat			The matrix V (not it's
 *					transpose).
@@ -620,18 +620,16 @@ AlgError	AlgMatrixSVDecomp(AlgMatrix aMat, double *wVec, AlgMatrix vMat)
 *		AlgMatrixSVDecomp().
 *		The code for AlgMatrixSVBackSub was derived from:
 *		Numerical Recipies function svbksb().
-* \param	uMat			Given matrix U.
-* \param	nM 			Number of rows in matrix U and
-*       				number of elements in matrix B.
-* \param	nN 			Number of columns in matricies
-*					U and V, also the number of
-*					elements in matricies W and x.
+* \param	uMat			Given matrix U with nM rows and nN
+* 					columns..
 * \param	wVec			The diagonal matrix of singular
-*					values, returned as a vector.
+*					values, returned as a vector with
+*					nN elements.
 * \param	vMat			The matrix V (not it's
-*					transpose).
-* \param	bVec			Column matrix b, overwritten by
-*					column matrix x on return.
+*					transpose) with nN columns.
+* \param	bVec			Column matrix b with nM elements,
+* 					overwritten by column matrix x on
+* 					return.
 */
 AlgError	AlgMatrixSVBackSub(AlgMatrix uMat, double *wVec, AlgMatrix vMat,
 				   double *bVec)

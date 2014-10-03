@@ -60,60 +60,58 @@ static double 			AlgMatrixLSQRNorm4(
 * \return
 * \ingroup	AlgMatrix
 * \brief	This function finds a solution x to the following problems:
+*		\verbatim
+      1. Unsymmetric equations --    solve  A*x = b
+ 
+      2. Linear least squares  --    solve  A*x = b
+                                     in the least-squares sense
+ 
+      3. Damped least squares  --    solve  (   A    )*x = ( b )
+                                            ( damp*I )     ( 0 )
+                                     in the least-squares sense
+ 
+      where 'A' is a matrix with 'm' rows and 'n' columns, 'b' is an
+      'm'-vector, and 'damp' is a scalar.  (All quantities are real.)
+      The matrix 'A' is intended to be large and sparse.  
+ 
+      Notation
+      --------
+      The following quantities are used in discussing the subroutine
+      parameters:
+ 
+      'Abar'   =  (   A    ),          'bbar'  =  ( b )
+                  ( damp*I )                      ( 0 )
+ 
+      'r'      =  b  -  A*x,           'rbar'  =  bbar  -  Abar*x
+ 
+      'rnorm'  =  sqrt( norm(r)**2  +  damp**2 * norm(x)**2 )
+               =  norm( rbar )
+ 
+      'rel_prec'  =  the relative precision of floating-point arithmetic
+                     on the machine being used.  Typically 2.22e-16
+                     with 64-bit arithmetic.
+ 
+      LSQR  minimizes the function 'rnorm' with respect to 'x'.
+ 
+      References
+      ----------
+      C.C. Paige and M.A. Saunders,  LSQR: An algorithm for sparse
+           linear equations and sparse least squares,
+           ACM Transactions on Mathematical Software 8, 1 (March 1982),
+           pp. 43-71.
+      C.C. Paige and M.A. Saunders,  Algorithm 583, LSQR: Sparse
+           linear equations and least-squares problems,
+           ACM Transactions on Mathematical Software 8, 2 (June 1982),
+           pp. 195-209.
+      C.L. Lawson, R.J. Hanson, D.R. Kincaid and F.T. Krogh,
+           Basic linear algebra subprograms for Fortran usage,
+           ACM Transactions on Mathematical Software 5, 3 (Sept 1979),
+           pp. 308-323 and 324-325.
+           	\endverbatim
 *
-*     1. Unsymmetric equations --    solve  A*x = b
-*
-*     2. Linear least squares  --    solve  A*x = b
-*                                    in the least-squares sense
-*
-*     3. Damped least squares  --    solve  (   A    )*x = ( b )
-*                                           ( damp*I )     ( 0 )
-*                                    in the least-squares sense
-*
-*     where 'A' is a matrix with 'm' rows and 'n' columns, 'b' is an
-*     'm'-vector, and 'damp' is a scalar.  (All quantities are real.)
-*     The matrix 'A' is intended to be large and sparse.  
-*
-*     Notation
-*     --------
-*     The following quantities are used in discussing the subroutine
-*     parameters:
-*
-*     'Abar'   =  (   A    ),          'bbar'  =  ( b )
-*                 ( damp*I )                      ( 0 )
-*
-*     'r'      =  b  -  A*x,           'rbar'  =  bbar  -  Abar*x
-*
-*     'rnorm'  =  sqrt( norm(r)**2  +  damp**2 * norm(x)**2 )
-*              =  norm( rbar )
-*
-*     'rel_prec'  =  the relative precision of floating-point arithmetic
-*                    on the machine being used.  Typically 2.22e-16
-*                    with 64-bit arithmetic.
-*
-*     LSQR  minimizes the function 'rnorm' with respect to 'x'.
-*
-*     References
-*     ----------
-*     C.C. Paige and M.A. Saunders,  LSQR: An algorithm for sparse
-*          linear equations and sparse least squares,
-*          ACM Transactions on Mathematical Software 8, 1 (March 1982),
-*          pp. 43-71.
-*     C.C. Paige and M.A. Saunders,  Algorithm 583, LSQR: Sparse
-*          linear equations and least-squares problems,
-*          ACM Transactions on Mathematical Software 8, 2 (June 1982),
-*          pp. 195-209.
-*     C.L. Lawson, R.J. Hanson, D.R. Kincaid and F.T. Krogh,
-*          Basic linear algebra subprograms for Fortran usage,
-*          ACM Transactions on Mathematical Software 5, 3 (Sept 1979),
-*          pp. 308-323 and 324-325.
-*
-* \param	aType
 * \param	aM			Matrix A with nR rows and nC columns.
 * 					The values of A are not modified by
 * 					this function.
-* \param	nR			Number of rows in matrix A.
-* \param	nC             		Number of columns in matrix A.
 * \param	bV			Vector b with nR entries which are
 * 					modified by this function.
 * \param	xV			Vector x for with initial guess at

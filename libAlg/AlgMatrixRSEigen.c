@@ -66,7 +66,6 @@ static void			AlgMatrixRSEigenSort(
 *					which contains the eigenvectors
 *					in it's columns on return if
 *					required.
-* \param        aSz 		        Size of the array.
 * \param	vM 			Given vector for the return of the
 * 					eigenvalues.
 * \param	reqEV			Non zero if the eigenvectors are

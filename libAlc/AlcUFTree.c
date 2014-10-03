@@ -68,9 +68,9 @@ void				AlcUFTreeFree(
 * \ingroup	AlcUFTree
 * \brief	Initialises a union find tree data structure to allow reuse.
 * \param	uft			The union find tree.
-* \param	nNod			Number of nodes, which must be less
-* 					than the value of maxNod in the data
-* 					structure..
+* \param	n			Number of nodes, which must
+* 					be \f$leq\f$ the value of maxNod
+* 					in the data structure..
 */
 void				AlcUFTreeInit(
 				  AlcUFTree *uft,
@@ -124,9 +124,7 @@ AlcUFTree			*AlcUFTreeNew(
 * \ingroup	AlcUFTree
 * \brief	Finds the component containing the given node.
 * \param	uft			The union find tree.
-* \param	maxNod 			Maximum number of nodes space
-* 					allocated for.
-* \param	nNod			Number of nodes.
+* \param	p			Given node.
 */
 int				AlcUFTreeFind(
 				  AlcUFTree *uft,

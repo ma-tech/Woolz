@@ -81,7 +81,6 @@ static void			AlgMatrixCGDebug(
 *		to solve \f$\mathbf{A} \mathbf{z} = \mathbf{r}\f$ for
 *		\f$\mathbf{z}\f$ with the solution overwriting the initial
 *		contents of z.
-* \param	aType			The type of matrix \f$\mathbf{A}\f$.
 * \param	aM			Matrix \f$\mathbf{A}\f$.
 * \param	xV			Matrix \f$\mathbf{x}\f$ which
 *					should contain an initial estimate
@@ -89,8 +88,6 @@ static void			AlgMatrixCGDebug(
 * \param	bV			Matrix \f$\mathbf{b}\f$.
 * \param	wM			Matrix with dimensions [4, n],
 *					this must be a rectangular matrix.
-* \param	n			The dimension of the matrix and
-*					vectors \f$n\f$.
 * \param	pFn			Preconditioning function.
 * \param	pDat			Data to be passed to preconditioning
 * 					function.

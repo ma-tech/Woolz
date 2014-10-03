@@ -463,8 +463,8 @@ void		**AlcVectorToArray2D(AlcVector *vec, size_t nR, size_t nC,
 * \ingroup	AlcVector
 * \brief	Reads a 1D double array from the given numeric ASCI file.
 *		Each value should be on a seperate line.
-* \param	fP:			File pointer.
-* \param	fs			Field seperator chracter string. If
+* \param	fP			File pointer.
+* \param	fSep			Field seperator chracter string. If
 * 					NULL whitespace assumed.
 * \param	recMax			Maximum record length.
 * \param	dstNV			Destination pointer for the number of
@@ -535,6 +535,7 @@ AlcVector	*AlcVecReadDouble1Asci(FILE *fP, const char *fSep,
   }
   return(vec);
 }
+
 /*!
 * \return	Extensible vector containing values for a 2D array or
 * 		NULL on error.
@@ -543,8 +544,8 @@ AlcVector	*AlcVecReadDouble1Asci(FILE *fP, const char *fSep,
 * 		into an extensible vector.
 *		The number of fields per record must be the same for all
 *		records.
-* \param	fP:			File pointer.
-* \param	fs			Field seperator chracter string. If
+* \param	fP			File pointer.
+* \param	fSep			Field seperator chracter string. If
 * 					NULL whitespace assumed.
 * \param	recMax			Maximum record length.
 * \param	dstNR			Destination pointer for the number of

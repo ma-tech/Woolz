@@ -65,8 +65,6 @@ static char _AlgMatrixMath_c[] = "University of Edinburgh $Id$";
 *					\f$\mathbf{B}\f$.
 * \param        cM			Second matrix in the sum,
 *					\f$\mathbf{C}\f$.
-* \param	nR			Number of rows in matricies.
-* \param	nC			Number of columns in matricies.
 */
 void		AlgMatrixAdd(AlgMatrix aM, AlgMatrix bM, AlgMatrix cM)
 {
@@ -198,8 +196,6 @@ void		AlgMatrixAdd(AlgMatrix aM, AlgMatrix bM, AlgMatrix cM)
 					\f$\mathbf{B}\f$.
 * \param        cM			Second matrix in the subtraction,
 					\f$\mathbf{C}\f$.
-* \param	nR			Number of rows in matricies.
-* \param	nC			Number of columns in matricies.
 */
 void		AlgMatrixSub(AlgMatrix aM, AlgMatrix bM, AlgMatrix cM)
 {
@@ -333,9 +329,6 @@ void		AlgMatrixSub(AlgMatrix aM, AlgMatrix bM, AlgMatrix cM)
 *					\f$\mathbf{B}\f$
 * \param        cM			Second matrix in the product,
 *					\f$\mathbf{C}\f$
-* \param	bR			Number of rows in matrix bM.
-* \param	bC			Number of columns in matrix bM.
-* \param	cC			Number of columns in matrix cM.
 */
 void		AlgMatrixMul(AlgMatrix aM, AlgMatrix bM, AlgMatrix cM)
 {
@@ -493,8 +486,6 @@ void		AlgMatrixMul(AlgMatrix aM, AlgMatrix bM, AlgMatrix cM)
 * \note		For efficiency the given parameters are not checked.
 * \note		Matrix size is limited only by address space.
 * \param        aM 			Supplied matrix.
-* \param	nRC			Number of rows and columns in
-*					the (square) matrix aM.
 */
 double		AlgMatrixTrace(AlgMatrix aM)
 {
@@ -544,8 +535,6 @@ double		AlgMatrixTrace(AlgMatrix aM)
 *					\f$\mathbf{A}\f$.
 * \param        bM 			Matrix to transpose,
 *					\f$\mathbf{B}\f$.
-* \param	bR			Number of rows in matrix bM.
-* \param	bC			Number of columns in matrix bM.
 */
 void            AlgMatrixTranspose(AlgMatrix aM, AlgMatrix bM)
 {
@@ -635,8 +624,6 @@ void            AlgMatrixTranspose(AlgMatrix aM, AlgMatrix bM)
 * \param        aM 			Supplied matrix for result,
 *					\f$\mathbf{A}\f$.
 * \param        bM 			Matrix to copy, \f$\mathbf{B}\f$.
-* \param	nR			Number of rows in matricies.
-* \param	nC			Number of columns in matricies.
 */
 void            AlgMatrixCopy(AlgMatrix aM, AlgMatrix bM)
 {
@@ -694,8 +681,6 @@ void            AlgMatrixCopy(AlgMatrix aM, AlgMatrix bM)
 * \param        bM 			Given matrix to scale,
 *					\f$\mathbf{B}\f$.
 * \param	sv			Scalar value, \f$s\f$.
-* \param	nR			Number of rows in matrix aM.
-* \param	nC			Number of columns in matrix aM.
 */
 void		AlgMatrixScale(AlgMatrix aM, AlgMatrix bM, double sv)
 {
@@ -800,8 +785,6 @@ void		AlgMatrixScale(AlgMatrix aM, AlgMatrix bM, double sv)
 *					\f$\mathbf{B}\f$.
 * \param	cM			Matrix too add, \f$\mathbf{C}\f$.
 * \param	sv			Scalar value, \f$s\f$.
-* \param	nR			Number of rows in each matrix.
-* \param	nC			Number of columns in each matrix.
 */
 void		AlgMatrixScaleAdd(AlgMatrix aM, AlgMatrix bM, AlgMatrix cM,
 				  double sv)
@@ -928,7 +911,6 @@ void		AlgMatrixScaleAdd(AlgMatrix aM, AlgMatrix bM, AlgMatrix cM,
 * \param        aM 			Supplied matrix for result,
 *					\f$\mathbf{A}\f$.
 * \param	sv			Scalar value, \f$s\f$.
-* \param	nRC			Number of rows and columns in matrix.
 */
 void		AlgMatrixScalar(AlgMatrix aM, double sv)
 {
@@ -992,9 +974,7 @@ void		AlgMatrixScalar(AlgMatrix aM, double sv)
 		\mathbf{A} = \mathbf{0}
 		\f]
 * \note		Matrix size is limited only by address space.
-* \param        aM 			Supplied matrix for result.
-* \param	nR			Number of rows in matrix.
-* \param	nC			Number of columns in matrix.
+* \param        mat 			Supplied matrix for result.
 */
 void            AlgMatrixZero(AlgMatrix mat)
 {
@@ -1025,11 +1005,8 @@ void            AlgMatrixZero(AlgMatrix mat)
 *		by either AlcDouble2Malloc() or AlcSymDouble2Malloc().
 * \note		Matrix size is limited only by address space.
 * \param	aV			Supplied vector for result.
-* \param	bType			Type of matrix \f$mathbf{B}\f$.
 * \param	bM			Matrix \f$mathbf{B}\f$.
 * \param	cV			Vector \f$\mathbf{c}\f$.
-* \param	nR			The number of rows in \f$mathbf{B}\f$.
-* \param	nC			The number of columns in
 * 					\f$mathbf{B}\f$.
 */
 void 		AlgMatrixVectorMul(double *aV, AlgMatrix bM, double *cV)
@@ -1123,12 +1100,9 @@ void 		AlgMatrixVectorMul(double *aV, AlgMatrix bM, double *cV)
 *		by either AlcDouble2Malloc() or AlcSymDouble2Malloc().
 * \note		Matrix size is limited only by address space.
 * \param	aV			Supplied vector for result.
-* \param	bType			Type of matrix \f$mathbf{B}\f$.
 * \param	bM			Matrix \f$mathbf{B}\f$.
 * \param	cV			Vector \f$\mathbf{c}\f$.
 * \param	dV			Vector \f$\mathbf{d}\f$.
-* \param	nR			The number of rows in \f$mathbf{B}\f$.
-* \param	nC			The number of columns in
 * 					\f$mathbf{B}\f$.
 */
 void 		AlgMatrixVectorMulAdd(double *aV, AlgMatrix bM,
@@ -1236,13 +1210,9 @@ void 		AlgMatrixVectorMulAdd(double *aV, AlgMatrix bM,
 *		by either AlcDouble2Malloc() or AlcSymDouble2Malloc().
 * \note		Matrix size is limited only by address space.
 * \param	aV			Supplied vector for result.
-* \param	bType			Type of matrix \f$mathbf{B}\f$.
 * \param	bM			Matrix \f$mathbf{B}\f$.
 * \param	cV			Vector \f$\mathbf{c}\f$.
 * \param	dV			Vector \f$\mathbf{d}\f$.
-* \param	nR			The number of rows in \f$mathbf{B}\f$.
-* \param	nC			The number of columns in
-* 					\f$mathbf{B}\f$.
 * \param	s			First weighting scalar \f$s\f$.
 * \param	t			Second weighting scalar \f$t\f$.
 */
@@ -1335,11 +1305,8 @@ void 		AlgMatrixVectorMulWAdd(double *aV, AlgMatrix bM,
 *		by either AlcDouble2Malloc() or AlcSymDouble2Malloc().
 * \note		Matrix size is limited only by address space.
 * \param	aV			Supplied vector for result.
-* \param	bType			Type of matrix \f$mathbf{B}\f$.
 * \param	bM			Matrix \f$mathbf{B}\f$.
 * \param	cV			Vector \f$\mathbf{c}\f$.
-* \param	nR			The number of rows in \f$mathbf{B}\f$.
-* \param	nC			The number of columns in
 * 					\f$mathbf{B}\f$.
 */
 void 		AlgMatrixTVectorMul(double *aV, AlgMatrix bM, double *cV)
@@ -1424,12 +1391,9 @@ void 		AlgMatrixTVectorMul(double *aV, AlgMatrix bM, double *cV)
 *		by either AlcDouble2Malloc() or AlcSymDouble2Malloc().
 * \note		Matrix size is limited only by address space.
 * \param	aV			Supplied vector for result.
-* \param	bType			Type of matrix \f$mathbf{B}\f$.
 * \param	bM			Matrix \f$mathbf{B}\f$.
 * \param	cV			Vector \f$\mathbf{c}\f$.
 * \param	dV			Vector \f$\mathbf{d}\f$.
-* \param	nR			The number of rows in \f$mathbf{B}\f$.
-* \param	nC			The number of columns in
 * 					\f$mathbf{B}\f$.
 */
 void 		AlgMatrixTVectorMulAdd(double *aV, AlgMatrix bM,

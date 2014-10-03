@@ -50,14 +50,12 @@ static char _AlgMatrixGauss_c[] = "University of Edinburgh $Id$";
 * \brief	Solves the matrix equation A.x = b for x by Gaussian
 *		elimination with partial pivoting. Matrix A is the
 *		matrix of coefficients.
-* \param	abMat			The augmented matrix of size
+* \param	aMat			The augmented matrix of size
 *					aSz x (aSz + 1), whose columns
 *					0 - (aSz - 1) are the
 *					corresponding columns of A, and
 *					aSz'th column is b. Overwritten
 *					on exit.
-* \param	aSz	 		Size of matrix A: The number of
-*					unknowns.
 * \param	xMat			On exit contains the solution
 *					matrix x.
 */

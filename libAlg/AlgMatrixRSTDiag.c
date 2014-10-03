@@ -62,7 +62,6 @@ static char _AlgMatrixRSTDiag_c[] = "University of Edinburgh $Id$";
 *		See Numerical Recipies in C: The Art of Scientific
 *		Computing. Cambridge University Press, 1992.
 * \param        aMat 			Given real symmetric matrix.
-* \param        aSz 		    	Size of the array.
 * \param	dVec 			Given array for the return of the
 * 					diagonal elements.
 * \param	oVec 			Given array for the return of the
