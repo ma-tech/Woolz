@@ -45,9 +45,10 @@ static char _WlzDomainFill3D_c[] = "University of Edinburgh $Id$";
 
 #include <Wlz.h>
 
-static void			WlzDomFill3DDoBound2D(
-				  WlzBoundList **bnd,
-				  WlzDomain dom);
+static WlzBoundList		*WlzDomFill3DDoBound2D(
+				  WlzBoundList *bnd,
+				  WlzDomain dom,
+				  WlzErrorNum *dstErr);
 
 /*!
 * \return	New Woolz object without holes or NULL on error.
@@ -101,7 +102,6 @@ WlzObject 			*WlzDomainFill3D(
   if(errNum == WLZ_ERR_NONE)
   {
     WlzObject	*difObj = NULL,
-		*dilObj = NULL,
     		*erdObj = NULL;
 
     erdObj = WlzAssignObject(
@@ -111,13 +111,6 @@ WlzObject 			*WlzDomainFill3D(
       difObj = WlzAssignObject(
       	       WlzDiffDomain(gvnObj, erdObj, &errNum), NULL);
     }
-    /*
-    if(errNum == WLZ_ERR_NONE)
-    {
-      dilObj = WlzAssignObject(
-      	       WlzDilation(difObj, WLZ_26_CONNECTED, &errNum), NULL);
-    }
-    */
     if(errNum == WLZ_ERR_NONE)
     {
       WlzIBox3	clipBox;
@@ -131,13 +124,9 @@ WlzObject 			*WlzDomainFill3D(
       clipBox.yMax = gvnObj->domain.p->lastln;
       clipBox.zMax = gvnObj->domain.p->lastpl;
       shlObj = WlzAssignObject(
-	       /*
-	       WlzClipObjToBox3D(dilObj, clipBox, &errNum), NULL);
-	       */
 	       WlzClipObjToBox3D(difObj, clipBox, &errNum), NULL);
     }
     (void )WlzFreeObj(difObj);
-    /* (void )WlzFreeObj(dilObj); */
     (void )WlzFreeObj(erdObj);
   }
   /* Make sure that the bounding box of the thin shell domain fits it and
@@ -348,7 +337,7 @@ WlzObject 			*WlzDomainFill3D(
 		j,
     		nCSObj = 0;
     WlzObject	**csObj = NULL;
-    const int 	maxCSObj = 1000;
+    const int 	maxCSObj = 10000;
 
     errNum = WlzLabel(shlObj, &nCSObj, &csObj, maxCSObj, 1,
 		      WLZ_26_CONNECTED);
@@ -380,12 +369,13 @@ WlzObject 			*WlzDomainFill3D(
       WlzObject	*iObj = NULL,
       		*uObj = NULL;
 
-      uObj = WlzUnionN(nCSObj, csObj, 0, &errNum);
+      uObj = WlzAssignObject(
+      	     WlzUnionN(nCSObj, csObj, 0, &errNum), NULL);
       iObj = WlzAssignObject(
                WlzIntersect2(uObj, shlObj, &errNum),  NULL);
       (void )WlzFreeObj(uObj);
       (void )WlzFreeObj(shlObj);
-      shlObj = WlzAssignObject(iObj, NULL);
+      shlObj = iObj;
 #ifdef WLZ_DOMOMAINFILL3D_DEBUG
       {
 	FILE	*fP;
@@ -404,14 +394,16 @@ WlzObject 			*WlzDomainFill3D(
       (void )AlcFree(csObj);
     }
   }
-  /* Sweep down through the boundary lists again removing boundaries that
-   * do not intersect the new shell domain and creating a new filled
-   * object from them. */
+  /* Sweep down through the boundary lists again creating new boundary lists
+   * which do not have boundaries that do not intersect the new shell domain.
+   * Then create a new filled object from these boundary lists. */
   if(errNum == WLZ_ERR_NONE)
   {
-    int		p;
+    int		p,
+    		nPlnFil;
     WlzDomain	filDom;
 
+    nPlnFil = shlObj->domain.p->lastpl - shlObj->domain.p->plane1 + 1;
     filDom.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN, 
 		shlObj->domain.p->plane1, shlObj->domain.p->lastpl,
                 shlObj->domain.p->line1, shlObj->domain.p->lastln,
@@ -420,7 +412,7 @@ WlzObject 			*WlzDomainFill3D(
 #ifdef _OPENMP
 #pragma omp parallel for shared(bndObj,shlObj)
 #endif
-    for(p = 0; p < nPln; ++p)
+    for(p = 0; p < nPlnFil; ++p)
     {
       if(errNum == WLZ_ERR_NONE)
       {
@@ -431,11 +423,16 @@ WlzObject 			*WlzDomainFill3D(
 	{
 	  WlzDomain 	sDom2;
 	  WlzObject	*fObj2 = NULL;
+	  WlzBoundList  *newBnd = NULL;
 	  WlzErrorNum	errNum2 = WLZ_ERR_NONE;
 
 	  sDom2 = shlObj->domain.p->domains[p];
-	  WlzDomFill3DDoBound2D(&(bDom2.b), sDom2);
-	  fObj2 = WlzBoundToObj(bDom2.b, WLZ_SIMPLE_FILL, &errNum2);
+	  newBnd = WlzDomFill3DDoBound2D(bDom2.b, sDom2, &errNum2);
+	  if(newBnd != NULL)
+	  {
+	    fObj2 = WlzBoundToObj(newBnd, WLZ_SIMPLE_FILL, &errNum2);
+	    (void )WlzFreeBoundList(newBnd);
+	  }
 	  if(errNum2 == WLZ_ERR_NONE)
 	  {
 	    if(fObj2)
@@ -474,6 +471,7 @@ WlzObject 			*WlzDomainFill3D(
   (void )WlzFreeObj(bndObj);
   (void )WlzFreeObj(gvnObj);
   (void )WlzFreeObj(shlObj);
+  (void )WlzFreeObj(sedObj);
   if((errNum != WLZ_ERR_NONE) && (filObj != NULL))
   {
     (void )WlzFreeObj(filObj);
@@ -487,52 +485,84 @@ WlzObject 			*WlzDomainFill3D(
 }
 
 /*!
+* \return	Woolz error code.
 * \ingroup	WlzDomainOps
-* \brief	Remove boundaries that do not intersect the given pixel
-* 		domain by just skiping them in the boundary linked lists.
-* \param	bnd		Pointer to the given boundary list pointer.
-* \param	dom		Given pixel domain.
+* \brief	Creates a new boundary list containing only the boundaries
+* 		in the given bounary list who's polygons intersect the given
+* 		pixel domain.
+* \param	gBnd		Given boundary list pointer.
+* \param	gDom		Given pixel domain.
+* \param	dstErr		Destination error pointer, may be NULL.
 */
-static void			WlzDomFill3DDoBound2D(
-				  WlzBoundList **bnd,
-				  WlzDomain dom)
+static WlzBoundList		*WlzDomFill3DDoBound2D(
+				  WlzBoundList *gBnd,
+				  WlzDomain gDom,
+				  WlzErrorNum *dstErr)
 {
-  if(bnd && *bnd)
+  WlzBoundList	*rBnd = NULL,
+  		*pBnd = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  while(gBnd)
   {
-    do
+    int		isn = 0;
+    WlzPolygonDomain *gPly;
+
+    if((gPly = gBnd->poly) != NULL)
     {
-      int	isn = 0;
-      WlzPolygonDomain *ply;
-      WlzBoundList **dwnBnd,
-		   **nxtBnd;
+      int	i;
+      WlzIVertex2 *vtx;
 
-      dwnBnd = &((*bnd)->down);
-      nxtBnd = &((*bnd)->next);
-      if((ply = (*bnd)->poly) != NULL)
+      vtx = gPly->vtx;
+      for(i = 0; i < gPly->nvertices; ++i)
       {
-	int	i;
-	WlzIVertex2 *vtx;
-
-	vtx = ply->vtx;
-	for(i = 0; i < ply->nvertices; ++i)
+	isn = WlzInsideDomain2D(gDom.i, vtx[i].vtY,  vtx[i].vtX, NULL);
+	if(isn)
 	{
-	  isn = WlzInsideDomain2D(dom.i, vtx[i].vtY,  vtx[i].vtX, NULL);
-	  if(isn)
-	  {
-	    break;
-	  }
+	  break;
 	}
       }
-      if(isn)
+    }
+    if(isn)
+    {
+      WlzPolygonDomain *nPly;
+      WlzBoundList *nBnd = NULL;
+
+      /* Copy Boundary. */
+      nPly = WlzMakePolygonDomain(gPly->type, gPly->nvertices, gPly->vtx,
+				  gPly->maxvertices, 1, &errNum);
+      if(nPly)
       {
-	WlzDomFill3DDoBound2D(dwnBnd, dom);
-        bnd = nxtBnd;
+	nBnd = WlzMakeBoundList(gBnd->type, gBnd->wrap, nPly, &errNum);
+	if(rBnd == NULL)
+	{
+	  rBnd = nBnd;
+	}
+	if(pBnd)
+	{
+	  pBnd->next = nBnd;
+	}
+	pBnd = nBnd;
       }
-      else
+      if((nBnd == NULL) && nPly)
       {
-        *bnd = *nxtBnd;
+	(void )WlzFreePolyDmn(nPly);
+      }
+      /* Do down boundaries. */
+      if((errNum == WLZ_ERR_NONE) && (gBnd->down != NULL))
+      {
+        nBnd->down = WlzDomFill3DDoBound2D(gBnd->down, gDom, dstErr);
+	if(nBnd->down)
+	{
+	  nBnd->down->up = nBnd;
+	}
       }
     }
-    while(*bnd);
+    gBnd = gBnd->next;
   }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rBnd);
 }
