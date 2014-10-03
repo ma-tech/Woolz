@@ -72,9 +72,13 @@ WlzLUTGreyTransformFromTxt [-f] [-o<output file>] [-h] [<LUT text file>]
 </table>
 
 \par Description
-Reads the LUT values from a text file or from standard input. Assumes value-pairs (index, value)
-and in this version a LUT will be created with $0 \LE$ index $\LE 255$. If the "-f" flag is used then values wil be
-interpolated from 0-255 using the values that are set. Values below the minimum index value and above
+Reads the LUT values from a text file or from standard input.
+Assumes value-pairs (index, value)
+and in this version a LUT will be created with
+\f$0 \le \f$ index \f$\le  255\f$.
+If the "-f" flag is used then values wil be
+interpolated from 0-255 using the values that are set.
+Values below the minimum index value and above
 the maximum index  value are set to the min and max values respectively.
 
 \par Examples
@@ -87,7 +91,7 @@ the maximum index  value are set to the min and max values respectively.
 \ref WlzLUTGreyTransformNew "WlzLUTGreyTransformNew(3)"
 \ref WlzLUTMergeToRGBA "WlzLUTMergeToRGBA(3)"
 \ref WlzLUTTransformObj "WlzLUTTransformObj(1)"
-\ref ElzLUTGreyTransformMerge "WlzLUTTransformMerge(1)"
+\ref WlzLUTGreyTransformMerge "WlzLUTTransformMerge(1)"
 \ref WlzMakeEmpty "WlzMakeEmpty(1)"
 */
 

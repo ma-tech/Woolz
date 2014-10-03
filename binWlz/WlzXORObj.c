@@ -4,7 +4,7 @@
 static char _WlzXORObj_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzXORObj.c
+* \file         binWlz/WlzXORObj.c
 * \author       Bill Hill
 * \date         March 2014
 * \version      $Id$

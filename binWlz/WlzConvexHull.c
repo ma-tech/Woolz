@@ -4,7 +4,7 @@
 static char _WlzConvexHull_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzConvexHull.c
+* \file         binWlz/WlzConvexHull.c
 * \author       Bill Hill
 * \date         May 2014
 * \version      $Id$

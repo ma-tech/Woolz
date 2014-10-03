@@ -268,6 +268,7 @@ AlcLRUCItem	*AlcLRUCEntryAdd(AlcLRUCache *cache, size_t entrySz,
 * \param	entrySz			Size of cache entry for use in
 * 					limiting total cache entry size.
 * \param	entry			Given entry to be added to the cache.
+* \param	key			Key for entry.
 * \param	dstNewFlg		Destination pointer set to zero or
 * 					non-zero. Set to non-zero only if
 * 					a new item is created. May be NULL.
@@ -326,7 +327,7 @@ void		AlcLRUCEntryRemove(AlcLRUCache *cache, void *entry)
 * \brief	Removes the matching cache entry from the queue.
 * 		See AlcLRUCEntryGetWithKey() for the entry use.
 * \param	cache			The cache.
-* \param	ley			Key generated from given entry.
+* \param	key			Key generated from given entry.
 * \param	entry			Given partial cache entry to be
 * 					matched.
 */
