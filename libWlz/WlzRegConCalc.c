@@ -38,6 +38,7 @@ static char _WlzRegConCalc_c[] = "University of Edinburgh $Id$";
 * \brief	Computes region connected calculus spatial classifications.
 * \ingroup	WlzBinaryOps
 */
+
 #include <string.h>
 #include <Wlz.h>
 
@@ -51,14 +52,18 @@ static char _WlzRegConCalc_c[] = "University of Edinburgh $Id$";
 */
 typedef	enum	_WlzRCCTOIdx
 {
-  WLZ_RCCTOIDX_O0O1U	= 0,		/*!<\f$ o_0   \cup \o_1  \f$*/
-  WLZ_RCCTOIDX_O0O1I,			/*!<\f$ o_0   \cap \o_1  \f$*/
-  WLZ_RCCTOIDX_O0D,			/*!<\f$ o_0^+            \f$*/
-  WLZ_RCCTOIDX_O1D,			/*!<\f$ o_1^+            \f$*/
-  WLZ_RCCTOIDX_O0DO1U,			/*!<\f$ o_0^+ \cup o_1   \f$*/
-  WLZ_RCCTOIDX_O0O1DU,			/*!<\f$ o_0   \cup o_1^+ \f$*/
-  WLZ_RCCTOIDX_O0VO1I,                  /*!<\f$ o_0^v \cap o_1   \f$*/
-  WLZ_RCCTOIDX_O0O1VI,			/*!<\f$ o_0   \cap o_1^v \f$*/
+  WLZ_RCCTOIDX_O0O1U	= 0,		/*!<\f$ o_0     \cup \o_1        \f$*/
+  WLZ_RCCTOIDX_O0O1I,			/*!<\f$ o_0     \cap \o_1        \f$*/
+  WLZ_RCCTOIDX_O0D,			/*!<\f$ o_0^+                    \f$*/
+  WLZ_RCCTOIDX_O1D,			/*!<\f$ o_1^+                    \f$*/
+  WLZ_RCCTOIDX_O0F,			/*!<\f$ o_0^{\bullet}            \f$*/
+  WLZ_RCCTOIDX_O1F,			/*!<\f$ o_1^{\bullet}            \f$*/
+  WLZ_RCCTOIDX_O0DO1U,			/*!<\f$ o_0^+   \cup o_1         \f$*/
+  WLZ_RCCTOIDX_O0O1DU,			/*!<\f$ o_0     \cup o_1^+       \f$*/
+  WLZ_RCCTOIDX_O0CO1I,                  /*!<\f$ o_0^{\circ} \cap o_1     \f$*/
+  WLZ_RCCTOIDX_O0O1CI,			/*!<\f$ o_0     \cap o_1^{\circ} \f$*/
+  WLZ_RCCTOIDX_O0FO1U,                  /*!<\f$ o_0^{\bullet} \cup o_1   \f$*/
+  WLZ_RCCTOIDX_O0O1FU,                  /*!<\f$ o_0 \cup o_1^{\bullet}   \f$*/
   WLZ_RCCTOIDX_CNT			/*!< Not an index but their number. */
 } WlzRCCTOIdx;
 #endif
@@ -79,6 +84,7 @@ static WlzErrorNum 		WlzRCCMakeT(
 * \ingroup	WlzBinaryOps
 * \brief	The given pair of spatial domain objects are classified
 *		using a RCC.
+*
 *		For an explanation of RCC8 classifications
 *		see the type definition ::WlzRCCClass and the paper:
 *		D.A. Randell, etal,
@@ -87,54 +93,55 @@ static WlzErrorNum 		WlzRCCMakeT(
 *		The RCC8 has been extended to include encloses and
 *		surrounds.
 * 		The classification is performed using simple combinations
-* 		of the Woolz union, intersection, exclusive or, dilation
-* 		and convex hull operators on an ordered pair of
+* 		of the Woolz union, intersection, exclusive or, dilation,
+* 		fill and convex hull operators on an ordered pair of
 * 		spatial domains(\f$\Omega_0\f$ and \f$\Omega_1\f$):
 *               \f{eqnarray*}{
-                  C_0    &\leftarrow&
+                  C_0 &\leftarrow&
 		    \Omega_0   \cap \Omega_1
 		    \neq \emptyset \\
-                  C_1    &\leftarrow&
+                  C_1 &\leftarrow&
 		    \Omega_0^+ \cap \Omega_1
 		    \neq \emptyset \\
-                  C_2    &\leftarrow&
+                  C_2 &\leftarrow&
 		    (\Omega_0   \oplus \Omega_1)
 		    \neq \emptyset \\
-                  C_3    &\leftarrow&
-		    (\Omega_0   \cup \Omega_1)   \oplus
-		    (\Omega_0^+ \cup \Omega_1)
-		    \neq \emptyset \\
-                  C_4    &\leftarrow&
+                  C_3 &\leftarrow&
 		    (\Omega_0   \cup \Omega_1)   \oplus
 		    \Omega_1 
 		    \neq \emptyset \\
-                  C_5    &\leftarrow&
-		    (\Omega_0   \cup \Omega_1)   \oplus
-		    (\Omega_0   \cup \Omega_1^+) 
-		    \neq \emptyset \\
-                  C_6    &\leftarrow&
+                  C_4 &\leftarrow&
 		    (\Omega_0^+ \cup \Omega_1)   \oplus
 		    \Omega_1 
 		    \neq \emptyset \\
-                  C_7    &\leftarrow&
+                  C_5 &\leftarrow&
 		    (\Omega_0   \cup \Omega_1)   \oplus
 		    \Omega_0 
 		    \neq \emptyset \\
-                  C_8    &\leftarrow&
+                  C_6 &\leftarrow&
 		    (\Omega_0   \cup \Omega_1^+) \oplus
 		    \Omega_0 
 		    \neq \emptyset \\
-		  C_9    &\leftarrow&
-		    2|\Omega_0 \cap \Omega_1^v|   \ge |\Omega_0| \\
+		  C_7 &\leftarrow&
+		    (\Omega_0^{\bullet} \cup \Omega_1) \oplus
+		    \Omega_0^{\bullet}
+		    \neq \emptyset \\
+		  C_8 &\leftarrow&
+		    (\Omega_0 \cup \Omega_1^{\bullet}) \oplus
+		    \Omega_1^{\bullet}
+		    \neq \emptyset \\
+		  C_9 &\leftarrow&
+		    2|\Omega_0 \cap \Omega_1^{\circ}|   \ge |\Omega_0| \\
 		  C_{10} &\leftarrow&
-		    2|\Omega_0^v   \cap \Omega_1| \ge |\Omega_1|
+		    2|\Omega_0^{\circ}   \cap \Omega_1| \ge |\Omega_1|
   		\f}
 *		where
 *		  are the \f$\cup\f$, \f$\cap\f$ and \f$\oplus\f$
 *		  are the set union (logical or), intersection (logical and)
 *		  and xor (logical exclusive or) operators;
 *		  \f$\Omega^+\f$ indicates the dilation of \f$\Omega\f$,
-*		  \f$\Omega^v\f$ the convex hull of \f$\Omega\f$ and
+*		  \f$\Omega^{\circ}\f$ the convex hull of \f$\Omega\f$,
+*		  \f$\Omega^{\bullet}\f$ indicates \f$\Omega\f$ filled and
 *		  \f$|\Omega|\f$ the cardinality (area or volume) of
 *		  \f$\Omega\f$.
 * 		The decision tree for the classification excluding
@@ -146,19 +153,34 @@ C_0
 0 & C_1
     \left\{
     \begin{array}{ll}
-    0 & DC \\
-      & \\
-      & \\
-    1 & C_3
+    0 & C_7
 	\left\{
 	\begin{array}{ll}
-	0 & SUR \\
+	0 & NTSURI \\
 	  & \\
 	  & \\
-	1 & C_5
+	1 & C_8
 	    \left\{
 	    \begin{array}{ll}
-	    0 & SURI \\
+	    0 & NTSUR \\
+	      & \\
+	    1 & DC
+	    \end{array}
+	    \right. \\
+	\end{array}
+	\right. \\
+      & \\
+      & \\
+    1 & C_7
+	\left\{
+	\begin{array}{ll}
+	0 & TSURI \\
+	  & \\
+	  & \\
+	1 & C_8
+	    \left\{
+	    \begin{array}{ll}
+	    0 & TSUR \\
 	      & \\
 	    1 & EC
 	    \end{array}
@@ -168,16 +190,17 @@ C_0
     \end{array}
     \right. \\
   & \\
+  & \\
 1 & C_2
     \left\{
     \begin{array}{ll}
     0 & EQ \\
       & \\
       & \\
-    1 & C_4
+    1 & C_3
 	\left\{
 	\begin{array}{ll}
-	0 & C_6
+	0 & C_4
 	    \left\{
 	    \begin{array}{ll}
 	    0 & NTPP \\
@@ -187,10 +210,10 @@ C_0
 	    \right. \\
 	  & \\
 	  & \\
-	1 & C_7
+	1 & C_5
 	    \left\{
 	    \begin{array}{ll}
-	    0 & C_8
+	    0 & C_6
 		\left\{
 		\begin{array}{ll}
 		0 & NTPPI \\
@@ -209,9 +232,6 @@ C_0
 \end{array}
 \right.
 		\f]
-*		Following this classification, enclosure may be added
-*		using \f$C_7\f$ and \f$C_8\f$ to test for enclosure
-*		and it's inverse respectively.
 *		The normalised volumes are computed for each classification
 *		as below:
 * 		<table width="500" border="0">
@@ -261,20 +281,28 @@ C_0
 		  <td>\f$|\Omega_1|/|\Omega_0 \cup \Omega_1|\f$</td>
 		</tr>
 		<tr>
-		  <td>\f$SUR(\Omega_0,\Omega_1)\f$</td>
+		  <td>\f$TSUR(\Omega_0,\Omega_1)\f$</td>
 		  <td>\f$|\Omega_0|/|\Omega_0 \cup \Omega_1|\f$</td>
 		</tr>
 		<tr>
-		  <td>\f$SURI(\Omega_0,\Omega_1)\f$</td>
+		  <td>\f$TSURI(\Omega_0,\Omega_1)\f$</td>
+		  <td>\f$|\Omega_1|/|\Omega_0 \cup \Omega_1|\f$</td>
+		</tr>
+		<tr>
+		  <td>\f$NTSUR(\Omega_0,\Omega_1)\f$</td>
+		  <td>\f$|\Omega_0|/|\Omega_0 \cup \Omega_1|\f$</td>
+		</tr>
+		<tr>
+		  <td>\f$NTSURI(\Omega_0,\Omega_1)\f$</td>
 		  <td>\f$|\Omega_1|/|\Omega_0 \cup \Omega_1|\f$</td>
 		</tr>
 		<tr>
 		  <td>\f$ENC(\Omega_0,\Omega_1)\f$</td>
-		  <td>\f$|\Omega_0 \cap \Omega_1^v|/|\Omega_0|\f$</td>
+		  <td>\f$|\Omega_0 \cap \Omega_1^{\circ}|/|\Omega_0|\f$</td>
 		</tr>
 		<tr>
 		  <td>\f$ENCI(\Omega_0,\Omega_1)\f$</td>
-		  <td>\f$|\Omega_0^v \cap \Omega_1|/|\Omega_1|\f$</td>
+		  <td>\f$|\Omega_0^{\circ} \cap \Omega_1|/|\Omega_1|\f$</td>
 		</tr>
 		</table>
 *		Many of the objects that are computed during the classification
@@ -305,7 +333,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
   		u01 = 0; 		/* |\Omega_0 \cup \Omega_1| */
   WlzLong	u[2] = {0},		/* |\Omega_i|, i \in 0 \cdots 1 */
   		v[2] = {0};		/* |c_9|, |c_{10}| */
-  WlzObject	*c[9] = {NULL},		/* c_i, i \in 0 \cdots 8 */
+  WlzObject	*c[11] = {NULL},		/* c_i, i \in 0 \cdots 10 */
 		*o[2] = {NULL},		/* \Omega_i, i \in 0 \cdots 1 */
 		*t[WLZ_RCCTOIDX_CNT] = {NULL}; /* Temporary object as
 					in the enum WlzRCCTOIdx. */
@@ -350,25 +378,47 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
       {
 	if(WlzIsEmpty(c[1], NULL))
 	{
-	  cls = WLZ_RCC_DC;
-	}
-	else
-	{
-	  errNum = WlzRCCMakeC(c, o, t, 3);
+	  errNum = WlzRCCMakeC(c, o, t, 7);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    if(WlzIsEmpty(c[3], NULL))
+	    if(WlzIsEmpty(c[7], NULL))
 	    {
-	      cls = WLZ_RCC_SUR;
+	      cls = WLZ_RCC_NTSURI;
 	    }
 	    else
 	    {
-	      errNum = WlzRCCMakeC(c, o, t, 5);
+	      errNum = WlzRCCMakeC(c, o, t, 8);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-		if(WlzIsEmpty(c[5], NULL))
+		if(WlzIsEmpty(c[8], NULL))
 		{
-		  cls = WLZ_RCC_SURI;
+		  cls = WLZ_RCC_NTSUR;
+		}
+		else
+		{
+		  cls = WLZ_RCC_DC;
+		}
+	      }
+	    }
+	  }
+	}
+	else
+	{
+	  errNum = WlzRCCMakeC(c, o, t, 7);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    if(WlzIsEmpty(c[7], NULL))
+	    {
+	      cls = WLZ_RCC_TSURI;
+	    }
+	    else
+	    {
+	      errNum = WlzRCCMakeC(c, o, t, 8);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		if(WlzIsEmpty(c[8], NULL))
+		{
+		  cls = WLZ_RCC_TSUR;
 		}
 		else
 		{
@@ -391,15 +441,15 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	}
 	else
 	{
-	  errNum = WlzRCCMakeC(c, o, t, 4);
+	  errNum = WlzRCCMakeC(c, o, t, 3);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    if(WlzIsEmpty(c[4], NULL))
+	    if(WlzIsEmpty(c[3], NULL))
 	    {
-	      errNum = WlzRCCMakeC(c, o, t, 6);
+	      errNum = WlzRCCMakeC(c, o, t, 4);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-		if(WlzIsEmpty(c[6], NULL))
+		if(WlzIsEmpty(c[4], NULL))
 		{
 		  cls = WLZ_RCC_NTPP;
 		}
@@ -411,15 +461,15 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	    }
 	    else
 	    {
-	      errNum = WlzRCCMakeC(c, o, t, 7);
+	      errNum = WlzRCCMakeC(c, o, t, 5);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-		if(WlzIsEmpty(c[7], NULL))
+		if(WlzIsEmpty(c[5], NULL))
 		{
-		  errNum = WlzRCCMakeC(c, o, t, 8);
+		  errNum = WlzRCCMakeC(c, o, t, 6);
 		  if(errNum == WLZ_ERR_NONE)
 		  {
-		    if(WlzIsEmpty(c[8], NULL))
+		    if(WlzIsEmpty(c[6], NULL))
 		    {
 		      cls = WLZ_RCC_NTPPI;
 		    }
@@ -443,12 +493,14 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
   /* If enclosure is required check for it and add to classification mask. */
   if((errNum == WLZ_ERR_NONE) && (noEnc == 0) &&
      ((cls &
-       (WLZ_RCC_EQ | WLZ_RCC_SUR | WLZ_RCC_SURI)) == 0))
+       (WLZ_RCC_EQ |
+        WLZ_RCC_TSUR | WLZ_RCC_TSURI |
+	WLZ_RCC_NTSUR | WLZ_RCC_NTSURI)) == 0))
   {
     for(i = 0; i <= 1; ++i)
     {
       errNum = WlzRCCMakeT(t, o,
-                           (i == 0)? WLZ_RCCTOIDX_O0O1VI: WLZ_RCCTOIDX_O0VO1I);
+                           (i == 0)? WLZ_RCCTOIDX_O0O1CI: WLZ_RCCTOIDX_O0CO1I);
       if(errNum == WLZ_ERR_NONE)
       {
         u[i] = WlzVolume(o[i], &errNum);
@@ -456,7 +508,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
       if(errNum == WLZ_ERR_NONE)
       {
         v[i] = WlzVolume(t[(i == 0)?
-	                 WLZ_RCCTOIDX_O0O1VI: WLZ_RCCTOIDX_O0VO1I],
+	                 WLZ_RCCTOIDX_O0O1CI: WLZ_RCCTOIDX_O0CO1I],
 			 &errNum);
 	if((errNum == WLZ_ERR_NONE) && (v[i] < 0))
 	{
@@ -523,7 +575,8 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	      nV = (double )(i01) / (double )u01;
             }
 	    break;
-	  case WLZ_RCC_SUR: /* FALLTHROUGH */
+	  case WLZ_RCC_TSUR: /* FALLTHROUGH */
+	  case WLZ_RCC_NTSUR: /* FALLTHROUGH */
 	  case WLZ_RCC_TPP: /* FALLTHROUGH */
 	  case WLZ_RCC_NTPP:
 	    /* |\Omega_0| / |\Omega_0 \cup \Omega_1|  =
@@ -548,7 +601,8 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	      nV = (double )(u[0]) / (double )u01;
 	    }
 	    break;
-	  case WLZ_RCC_SURI: /* FALLTHROUGH */
+	  case WLZ_RCC_TSURI: /* FALLTHROUGH */
+	  case WLZ_RCC_NTSURI: /* FALLTHROUGH */
 	  case WLZ_RCC_TPPI: /* FALLTHROUGH */
 	  case WLZ_RCC_NTPPI:
 	    /* |\Omega_1| / |\Omega_0 \cup \Omega_1|  =
@@ -574,7 +628,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	    }
 	    break;
 	  case WLZ_RCC_ENC:
-	    /* |\Omega_0 \cup \Omega_1^v|/|\Omega_0| =
+	    /* |\Omega_0 \cup \Omega_1^{\circ}|/|\Omega_0| =
 	     * v_0 / u_0 */
 	    if(u[1] >= 0)
 	    {
@@ -582,7 +636,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	    }
 	    break;
 	  case WLZ_RCC_ENCI:
-	    /* |\Omega_0^v \cup \Omega_1|/|\Omega_1| =
+	    /* |\Omega_0^{\circ} \cup \Omega_1|/|\Omega_1| =
 	     * v_1 / u_1 */
 	    if(v[1] >= 0)
 	    {
@@ -604,7 +658,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
   {
     (void )WlzFreeObj(t[i]);
   }
-  for(i = 0; i < 9; ++i)
+  for(i = 0; i <= 8; ++i)
   {
     (void )WlzFreeObj(c[i]);
   }
@@ -651,91 +705,99 @@ static WlzErrorNum  WlzRCCMakeC(WlzObject **c, WlzObject **o, WlzObject **t,
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((i >= 0) && (i <= 9) && (c[i] == NULL))
+  if((i >= 0) && (i <= 8))
   {
-    switch(i)
+    if(c[i] == NULL)
     {
-      case 0: /* \Omega_0 \cap \Omega_1 */
-	errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1I);
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  c[i] = WlzAssignObject(t[WLZ_RCCTOIDX_O0O1I], NULL);
-	}
-	break;
-      case 1: /* \Omega_1^+ \cap \Omega_1 */
-	errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0D);
-	if(errNum == WLZ_ERR_NONE)
-	{
+      switch(i)
+      {
+	case 0: /* \Omega_0 \cap \Omega_1 */
+	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1I);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    c[i] = WlzAssignObject(t[WLZ_RCCTOIDX_O0O1I], NULL);
+	  }
+	  break;
+	case 1: /* \Omega_1^+ \cap \Omega_1 */
+	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0D);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    c[i] = WlzAssignObject(
+		   WlzIntersect2(t[WLZ_RCCTOIDX_O0D], o[1], &errNum), NULL);
+	  }
+	  break;
+	case 2: /* \Omega_0 \oplus \Omega_1 */
 	  c[i] = WlzAssignObject(
-	         WlzIntersect2(t[WLZ_RCCTOIDX_O0D], o[1], &errNum), NULL);
-	}
-	break;
-      case 2: /* \Omega_0 \oplus \Omega_1 */
-	c[i] = WlzAssignObject(
-	       WlzXORDom(o[0], o[1], &errNum), NULL);
-	break;
-      case 3: /* (\Omega_0^+ \cup \Omega_1) \oplus (\Omega_0 \cup \Omega_1) */
-	errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0DO1U);
-	if(errNum == WLZ_ERR_NONE)
-	{
+		 WlzXORDom(o[0], o[1], &errNum), NULL);
+	  break;
+	case 3: /* (\Omega_0 \cup \Omega_1) \oplus \Omega_1 */
 	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1U);
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  c[i] = WlzAssignObject(
-	         WlzXORDom(t[WLZ_RCCTOIDX_O0DO1U],
-		           t[WLZ_RCCTOIDX_O0O1U ], &errNum), NULL);
-	}
-	break;
-      case 4: /* (\Omega_0 \cup \Omega_1) \oplus \Omega_1 */
-	errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1U);
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  c[i] = WlzAssignObject(
-	         WlzXORDom(t[WLZ_RCCTOIDX_O0O1U],
-		           o[1], &errNum), NULL);
-	}
-	break;
-      case 5: /* (\Omega_0 \cup \Omega_1^+) \oplus (\Omega_0 \cup \Omega_1) */
-	errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1U);
-	if(errNum == WLZ_ERR_NONE)
-	{
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    c[i] = WlzAssignObject(
+		   WlzXORDom(t[WLZ_RCCTOIDX_O0O1U],
+			     o[1], &errNum), NULL);
+	  }
+	  break;
+	case 4: /* (\Omega_0^+ \cup \Omega_1) \oplus \Omega_1 */
+	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0DO1U);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    c[i] = WlzAssignObject(
+		   WlzXORDom(t[WLZ_RCCTOIDX_O0DO1U], o[1], &errNum), NULL);
+	  }
+	  break;
+	case 5: /* (\Omega_0 \cup \Omega_1) \oplus \Omega_0 */
+	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1U);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    c[i] = WlzAssignObject(
+		   WlzXORDom(o[0], t[WLZ_RCCTOIDX_O0O1U], &errNum), NULL);
+	  }
+	  break;
+	case 6: /* (\Omega_0 \cup \Omega_1^+) \oplus \Omega_0 */
 	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1DU);
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  c[i] = WlzAssignObject(
-	         WlzXORDom(t[WLZ_RCCTOIDX_O0O1U], t[WLZ_RCCTOIDX_O0O1DU],
-		           &errNum), NULL);
-	}
-	break;
-      case 6: /* (\Omega_0^+ \cup \Omega_1) \oplus \Omega_1 */
-	errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0DO1U);
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  c[i] = WlzAssignObject(
-	  	 WlzXORDom(t[WLZ_RCCTOIDX_O0DO1U], o[1], &errNum), NULL);
-	}
-	break;
-      case 7: /* (\Omega_0 \cup \Omega_1) \oplus \Omega_0 */
-	errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1U);
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  c[i] = WlzAssignObject(
-	  	 WlzXORDom(o[0], t[WLZ_RCCTOIDX_O0O1U], &errNum), NULL);
-	}
-	break;
-      case 8: /* (\Omega_0 \cup \Omega_1^+) \oplus \Omega_0 */
-	errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1DU);
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  c[i] = WlzAssignObject(
-	  	 WlzXORDom(o[0], t[WLZ_RCCTOIDX_O0O1DU], &errNum), NULL);
-	}
-	break;
-      default:
-	break;
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    c[i] = WlzAssignObject(
+		   WlzXORDom(o[0], t[WLZ_RCCTOIDX_O0O1DU], &errNum), NULL);
+	  }
+	  break;
+	case 7:/*(\Omega_0^{\bullet} \cup \Omega_1) \oplus \Omega_0^{\bullet}*/
+	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0F);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0FO1U);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    c[i] = WlzAssignObject(
+		   WlzXORDom(t[WLZ_RCCTOIDX_O0FO1U], t[WLZ_RCCTOIDX_O0F],
+			     &errNum), NULL);
+	  }
+	  break;
+	case 8:/*(\Omega_0 \cup \Omega_1^{\bullet}) \oplus \Omega_1^{\bullet}*/
+	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O1F);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1FU);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    c[i] = WlzAssignObject(
+		   WlzXORDom(t[WLZ_RCCTOIDX_O0O1FU], t[WLZ_RCCTOIDX_O1F],
+			     &errNum), NULL);
+	  }
+	  break;
+	default:
+	  errNum = WLZ_ERR_PARAM_DATA;
+	  break;
+      }
     }
+  }
+  else
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
   }
   return(errNum);
 }
@@ -753,74 +815,108 @@ static WlzErrorNum WlzRCCMakeT(WlzObject **t, WlzObject **o, WlzRCCTOIdx i)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((i >= 0) && (i < WLZ_RCCTOIDX_CNT) && (t[i] == NULL))
+  if((i >= 0) && (i < WLZ_RCCTOIDX_CNT))
   {
-    switch(i)
+    if(t[i] == NULL)
     {
-      case WLZ_RCCTOIDX_O0O1U:			/* o_0 \cup \o_1 */
-        t[i] = WlzAssignObject(
-	       WlzUnion2(o[0], o[1], &errNum), NULL);
-        break;
-      case WLZ_RCCTOIDX_O0O1I:			/* o_0 \cap \o_1 */
-	t[i] = WlzAssignObject(
-	       WlzIntersect2(o[0], o[1], &errNum), NULL);
-        break;
-      case WLZ_RCCTOIDX_O0D:			/* o_0^+ */
-      t[i] = WlzAssignObject(
-      	     WlzDilation(o[0],
-			 (o[0]->type == WLZ_2D_DOMAINOBJ)?
-			 WLZ_8_CONNECTED: WLZ_26_CONNECTED,
-			 &errNum), NULL);
-        break;
-      case WLZ_RCCTOIDX_O1D:			/* o_1^+ */
-      t[i] = WlzAssignObject(
-             WlzDilation(o[1],
-			 (o[1]->type == WLZ_2D_DOMAINOBJ)?
-			 WLZ_8_CONNECTED: WLZ_26_CONNECTED,
-			 &errNum), NULL);
-        break;
-      case WLZ_RCCTOIDX_O0DO1U:			/* o_0^+ \cup o_1 */
-	errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0D);
-	if(errNum == WLZ_ERR_NONE)
-	{
+      switch(i)
+      {
+	case WLZ_RCCTOIDX_O0O1U:			/* o_0 \cup \o_1 */
 	  t[i] = WlzAssignObject(
-	         WlzUnion2(t[WLZ_RCCTOIDX_O0D], o[1], &errNum), NULL);
-	}
-        break;
-      case WLZ_RCCTOIDX_O0O1DU:			/* o_0   \cup o_1^+ */
-	errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O1D);
-	if(errNum == WLZ_ERR_NONE)
-	{
+		 WlzUnion2(o[0], o[1], &errNum), NULL);
+	  break;
+	case WLZ_RCCTOIDX_O0O1I:			/* o_0 \cap \o_1 */
 	  t[i] = WlzAssignObject(
-	         WlzUnion2(o[0], t[WLZ_RCCTOIDX_O1D], &errNum), NULL);
-	}
-        break;
-      case WLZ_RCCTOIDX_O0VO1I:                   /* o_0^v \cap o_1   */
-      case WLZ_RCCTOIDX_O0O1VI: /* FALLTHROUGH */ /* o_0   \cap o_1^v */
-	{
-	  int		i0;
-	  WlzObject	*c = NULL,
-	  		*x = NULL;
+		 WlzIntersect2(o[0], o[1], &errNum), NULL);
+	  break;
+	case WLZ_RCCTOIDX_O0D:			/* o_0^+ */
+	  t[i] = WlzAssignObject(
+		 WlzDilation(o[0],
+			     (o[0]->type == WLZ_2D_DOMAINOBJ)?
+			     WLZ_8_CONNECTED: WLZ_26_CONNECTED,
+			     &errNum), NULL);
+	  break;
+	case WLZ_RCCTOIDX_O1D:			/* o_1^+ */
+	  t[i] = WlzAssignObject(
+		 WlzDilation(o[1],
+			     (o[1]->type == WLZ_2D_DOMAINOBJ)?
+			     WLZ_8_CONNECTED: WLZ_26_CONNECTED,
+			     &errNum), NULL);
+	  break;
 
-	  i0 = (i == WLZ_RCCTOIDX_O0VO1I)? 0: 1;
-	  c = WlzObjToConvexHull(o[i0], &errNum);
-	  if((errNum == WLZ_ERR_NONE) || (errNum == WLZ_ERR_DEGENERATE))
-	  {
-	    x = WlzAssignObject(
-	        WlzConvexHullToObj(c, o[i0]->type, &errNum), NULL);
-	  }
+	case WLZ_RCCTOIDX_O0F:			/* o_0^{\bullet} */
+	  t[i] = WlzAssignObject(
+		 WlzDomainFill(o[0], &errNum), NULL);
+	  break;
+	case WLZ_RCCTOIDX_O1F:			/* o_1^{\bullet} */
+	  t[i] = WlzAssignObject(
+		 WlzDomainFill(o[1], &errNum), NULL);
+	  break;
+
+	case WLZ_RCCTOIDX_O0DO1U:		/* o_0^+ \cup o_1 */
+	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0D);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    t[i] = WlzAssignObject(
-	           WlzIntersect2(o[!i0], x, &errNum), NULL);
+		   WlzUnion2(t[WLZ_RCCTOIDX_O0D], o[1], &errNum), NULL);
 	  }
-	  (void )WlzFreeObj(c);
-	  (void )WlzFreeObj(x);
-	}
-        break;
-      default:
-        break;
+	  break;
+	case WLZ_RCCTOIDX_O0O1DU:		/* o_0   \cup o_1^+ */
+	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O1D);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    t[i] = WlzAssignObject(
+		   WlzUnion2(o[0], t[WLZ_RCCTOIDX_O1D], &errNum), NULL);
+	  }
+	  break;
+	case WLZ_RCCTOIDX_O0CO1I:               /* o_0^{\circ} \cap o_1   */
+	case WLZ_RCCTOIDX_O0O1CI:  /* FALLTHROUGH  o_0   \cap o_1^{\circ} */
+	  {
+	    int		i0;
+	    WlzObject	*c = NULL,
+			  *x = NULL;
+
+	    i0 = (i == WLZ_RCCTOIDX_O0CO1I)? 0: 1;
+	    c = WlzObjToConvexHull(o[i0], &errNum);
+	    if((errNum == WLZ_ERR_NONE) || (errNum == WLZ_ERR_DEGENERATE))
+	    {
+	      x = WlzAssignObject(
+		  WlzConvexHullToObj(c, o[i0]->type, &errNum), NULL);
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      t[i] = WlzAssignObject(
+		     WlzIntersect2(o[!i0], x, &errNum), NULL);
+	    }
+	    (void )WlzFreeObj(c);
+	    (void )WlzFreeObj(x);
+	  }
+	  break;
+	case WLZ_RCCTOIDX_O0FO1U:		/* o_0^{\bullet} \cup o_1 */
+	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0F);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    t[i] = WlzAssignObject(
+		   WlzUnion2(t[WLZ_RCCTOIDX_O0F], o[1], &errNum), NULL);
+	  }
+	  break;
+	case WLZ_RCCTOIDX_O0O1FU:		/* o_0 \cup o_1^{\bullet} */
+	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O1F);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    t[i] = WlzAssignObject(
+		   WlzUnion2(o[0], t[WLZ_RCCTOIDX_O1F], &errNum), NULL);
+	  }
+	  break;
+	default:
+	  errNum = WLZ_ERR_PARAM_DATA;
+	  break;
+      }
     }
+  }
+  else
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
   }
   return(errNum);
 }
