@@ -57,6 +57,7 @@ static char _WlzLabel3D_c[] = "University of Edinburgh $Id$";
 * \param	ignLn		Ignore objects within a plane which have
 * 				\f$\geq\f$ the given number of lines.
 * \param	con		The connectivity to use in 3D.
+* \param	dstErr		Destination error pointer, may be NULL.
 */
 WlzObject			*WlzLabel3D(
 				  WlzObject *gObj,
@@ -181,10 +182,17 @@ WlzObject			*WlzLabel3D(
 	    WlzFreeObj(obj2);
 	    if(errNum2 == WLZ_ERR_NONE)
 	    {
-	      if((frgObj != NULL) && (nFrg > 0))
+	      if(frgObj != NULL)
 	      {
-		nFrgTbl[p] = nFrg;
-		frgTbl[p] = frgObj;
+	        if(nFrg > 0)
+		{
+		  nFrgTbl[p] = nFrg;
+		  frgTbl[p] = frgObj;
+	        }
+		else
+		{
+		  AlcFree(frgObj);
+		}
 	      }
 	    }
 	  }
@@ -535,7 +543,6 @@ WlzObject			*WlzLabel3D(
 
     for(p = 0; p < nPln; ++p)
     {
-
       AlcFree(frgTbl[p]);
     }
     AlcFree(frgTbl);
