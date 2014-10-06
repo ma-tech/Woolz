@@ -712,6 +712,14 @@ USE_MATHJAX		= YES
 # SVG.
 MATHJAX_FORMAT		= HTML-CSS
 
+
+# When MathJax is enabled you need to specify the location relative to the
+# HTML output directory using the MATHJAX_RELPATH option. The destination
+# directory should contain the MathJax.js script. For instance, if the mathjax
+# directory is located at the same level as the HTML output directory, then
+# MATHJAX_RELPATH should be ../mathjax. 
+#MATHJAX_RELPATH=../mathjax
+
 #---------------------------------------------------------------------------
 # configuration options related to the LaTeX output
 #---------------------------------------------------------------------------
