@@ -105,6 +105,7 @@ libWlz_la_SOURCES 	= \
 			  WlzDomainFill3D.c \
 			  WlzDomainUtils.c \
 			  WlzDrawDomain.c \
+			  WlzDomainNearby.c \
 			  WlzEmpty.c \
 			  WlzErosion4.c \
 			  WlzErosion.c \

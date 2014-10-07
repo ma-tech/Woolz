@@ -162,6 +162,7 @@ bin_PROGRAMS		= \
 			  WlzMeshTransformObj \
 			  WlzMinWidthRectAngle \
 			  WlzNObjsGreyStats \
+			  WlzNearbyDomain \
 			  WlzObjToBoundary \
 			  WlzPolarSample \
 			  WlzPolygonToObj \
@@ -679,6 +680,10 @@ WlzMinWidthRectAngle_LDFLAGS		= $(AM_LFLAGS)
 WlzNObjsGreyStats_SOURCES		= WlzNObjsGreyStats.c
 WlzNObjsGreyStats_LDADD			= $(LDADD)
 WlzNObjsGreyStats_LDFLAGS		= $(AM_LFLAGS)
+
+WlzNearbyDomain_SOURCES			= WlzNearbyDomain.c
+WlzNearbyDomain_LDADD			= $(LDADD)
+WlzNearbyDomain_LDFLAGS			= $(AM_LFLAGS)
 
 WlzObjToBoundary_SOURCES		= WlzObjToBoundary.c
 WlzObjToBoundary_LDADD			= $(LDADD)

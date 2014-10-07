@@ -2485,6 +2485,18 @@ extern WlzObject 		*WlzDomainFill3D(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzDomainNearby.c							*
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzObject		*WlzDomainNearby(
+				  WlzObject *refObj,
+				  int nPos, WlzVertexP pos,
+				  WlzDistanceType dFn,
+				  double dMax,
+				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
 * WlzDomainUtils.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
