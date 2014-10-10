@@ -40,7 +40,7 @@ static char _WlzPointsToMarkers_c[] = "University of Edinburgh $Id$";
 * \ingroup	BinWlz
 *
 * \par Binary
-* \ref wlzmarkerstodomain "WlzPointsToMarkers"
+* \ref wlzpointstomarkers "WlzPointsToMarkers"
 */
 
 /*!
