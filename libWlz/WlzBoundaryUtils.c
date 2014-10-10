@@ -264,9 +264,10 @@ int		WlzBoundVtxCount(WlzBoundList *bnd, WlzErrorNum *dstErr)
 * \param	polyAry			The polygon domains array.
 * \param	idx			Index incremented for each assignment.
 */
-static void	WlzBoundObjToPolyFillArray(WlzBoundList *bnd,
-					   WlzPolygonDomain **polyAry,
-					   int *idx)
+static void			WlzBoundObjToPolyFillArray(
+				  WlzBoundList *bnd,
+				  WlzPolygonDomain **polyAry,
+				  int *idx)
 {
   if(bnd)
   {
@@ -278,4 +279,37 @@ static void	WlzBoundObjToPolyFillArray(WlzBoundList *bnd,
       bnd = bnd->next;
     } while(bnd != NULL);
   }
+}
+
+/*!
+* \return	New domain object.
+* \ingroup	WlzBoundary
+* \brief	Computes a new domain object with pixels/voxels only at
+* 		the boundary of the given object.
+*
+* 		The boundary pixels/voxels are computed using erosion and
+* 		diffdom. The alternative of computing the boundary and then
+* 		filling along polygon vertices gets it wrong in places.
+* \param	gvnObj			Given object.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject			*WlzBoundaryDomain(
+				  WlzObject *gvnObj,
+				  WlzErrorNum *dstErr)
+{
+  WlzObject	*tObj = NULL,
+  		*bndObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  tObj = WlzAssignObject(WlzErosion(gvnObj, WLZ_8_CONNECTED, &errNum), NULL);
+  if(tObj)
+  {
+    bndObj = WlzDiffDomain(gvnObj, tObj, &errNum);
+  }
+  (void )WlzFreeObj(tObj);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(bndObj);
 }
