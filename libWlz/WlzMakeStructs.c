@@ -1090,7 +1090,7 @@ WlzPoints 	*WlzMakePoints(WlzObjectType type, int nVtx, WlzVertexP vtxP,
   WlzPoints	*pnt = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(maxVtx < 1)
+  if(maxVtx < 0)
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
   }
