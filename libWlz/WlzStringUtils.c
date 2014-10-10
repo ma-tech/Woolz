@@ -204,3 +204,89 @@ char		*WlzStringToLower(char *str)
   }
   return(str);
 }
+
+/*!
+* \return	The given string or NULL on error.
+* \ingroup	WlzString
+* \brief	Replaces escape sequences in the given string in place.
+* 		Hexadecimal and octal escape sequences are not allowed
+* 		and result in an error.
+* \param	str			Given string.
+*/
+char 				*WlzStringUnescape(
+				  char *str)
+{
+  if(str)
+  {
+    char 	*s,
+  		*t;
+
+    s = t = str;
+    while(s[0])
+    {
+      if((s[0] == '\\') && (s[1] != '\0'))
+      {
+        switch(s[1])
+	{
+          case 'a':  /* Alarm/Bell/Beep */
+	    *t++ = '\a';
+	    s += 2;
+	    break;
+          case 'b':  /* Backspace */
+	    if(--t < str)
+	    {
+	      t = str;
+	    }
+	    s += 2;
+	    break;
+          case 'f':  /* Formfeed */ 
+	    *t++ = '\f';
+	    s += 2;
+	    break;
+          case 'n':  /* Newline */
+	    *t++ = '\n';
+	    s += 2;
+	    break;
+          case 'r':  /* Carriage Return */
+	    *t++ = '\r';
+	    s += 2;
+	    break;
+          case 't':  /* Horizontal Tab */ 
+	    *t++ = '\t';
+	    s += 2;
+	    break;
+          case 'v':  /* Vertical Tab */
+	    *t++ = '\v';
+	    s += 2;
+	    break;
+          case '\\': /* Backslash */  
+	    *t++ = '\\';
+	    s += 2;
+	    break;
+          case '\'': /* Single quote */ 
+	    *t++ = '\'';
+	    s += 2;
+	    break;
+          case '\"': /* Double quote */ 
+	    *t++ = '\"';
+	    s += 2;
+	    break;
+          case '\?': /* Question mark */  
+	    *t++ = '\?';
+	    s += 2;
+	    break;
+	  default:
+	    *s = '\0';
+	    str = NULL;
+	    break;
+	}
+      }
+      else
+      {
+        *t++ = *s++;
+      }
+    }
+    *t = '\0';
+  }
+  return(str);
+}

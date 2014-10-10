@@ -6000,6 +6000,9 @@ extern char			*WlzStringToUpper(
 				  char *str);
 extern char			*WlzStringToLower(
 				  char *str);
+extern char                     *WlzStringUnescape(
+                                  char *str);
+
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
