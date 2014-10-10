@@ -96,21 +96,14 @@ WlzObject 			*WlzDomainFill3D(
     gvnObj = WlzMakeMain(srcObj->type, srcObj->domain, nullVal,
     		         NULL, NULL, &errNum);
   }
-  /* Erode the given object and then subtract this from the given object
-   * to create a then shell 1 voxel thick just inside the given objects's
+  /* Create a then shell 1 voxel thick just inside the given objects's
    * domain. */
   if(errNum == WLZ_ERR_NONE)
   {
-    WlzObject	*difObj = NULL,
-    		*erdObj = NULL;
+    WlzObject	*difObj = NULL;
 
-    erdObj = WlzAssignObject(
-    	   WlzErosion(gvnObj, WLZ_26_CONNECTED, &errNum), NULL);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      difObj = WlzAssignObject(
-      	       WlzDiffDomain(gvnObj, erdObj, &errNum), NULL);
-    }
+    difObj = WlzAssignObject(
+	     WlzBoundaryDomain(gvnObj, &errNum), NULL);
     if(errNum == WLZ_ERR_NONE)
     {
       WlzIBox3	clipBox;
@@ -127,7 +120,6 @@ WlzObject 			*WlzDomainFill3D(
 	       WlzClipObjToBox3D(difObj, clipBox, &errNum), NULL);
     }
     (void )WlzFreeObj(difObj);
-    (void )WlzFreeObj(erdObj);
   }
   /* Make sure that the bounding box of the thin shell domain fits it and
    * that it's first and last planes have interrvals. */
