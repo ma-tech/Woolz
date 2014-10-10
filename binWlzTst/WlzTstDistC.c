@@ -449,7 +449,7 @@ int		main(int argc, char *argv[])
 	  (void )WlzFreeObj(oC[idC]);
 	  oC[idC] = WlzAssignObject(
 		    WlzDistanceTransform(oC[WLZTST_DIST_TRUE], oSeed,
-					 dstC[idC], 0.0, &errNum), NULL);
+					 dstC[idC], 0.0, 0.0, &errNum), NULL);
 	  if(errNum != WLZ_ERR_NONE)
 	  {
 	    break;
