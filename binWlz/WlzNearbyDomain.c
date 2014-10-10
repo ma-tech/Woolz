@@ -60,13 +60,14 @@ WlzNearbyDomain [-d#] [-m#] [-p<pos>] [-o<out file>] [-h] [-T]
   <tr> 
     <td><b>-m</b></td>
     <td>Distance function:
-      <table width="500" border="0">
+      <table border="0">
       <tr> <td>1</td> <td>octagonal (2D and 3D) - default</td></tr>
       <tr> <td>4</td> <td>4-connected (2D)</td></tr>
       <tr> <td>6</td> <td>6-connected (3D)</td></tr>
       <tr> <td>8</td> <td>8-connected (2D)</td></tr>
       <tr> <td>18</td> <td>18-connected (3D)</td></tr>
       <tr> <td>26</td> <td>26-connected (3D)</td></tr>
+      </table>
     </td>
   </tr>
   <tr> 
