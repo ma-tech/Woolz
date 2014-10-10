@@ -142,7 +142,6 @@ int		main(int argc, char *argv[])
   		dParam = 10.0;
   FILE		*fP = NULL;
   WlzObject	*tObj0,
-  		*tObj1,
 		*forObj = NULL,
 		*refObj = NULL,
 		*dstObj = NULL;
@@ -292,22 +291,22 @@ int		main(int argc, char *argv[])
 		     argv[0]);
     }
   }
-  if((errNum == WLZ_ERR_NONE) && bnd)
+  if(ok && bnd)
   {
-    tObj0 = tObj1 = NULL;
-    tObj0 = WlzObjToBoundary(refObj, 1, &errNum);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      tObj1 = WlzBoundaryToObj(tObj0, WLZ_VERTEX_FILL, &errNum);
-    }
+    tObj0 = WlzBoundaryDomain(refObj, &errNum);
     if(errNum == WLZ_ERR_NONE)
     {
       (void )WlzFreeObj(refObj);
-      refObj = tObj1;
-      tObj1 = NULL;
+      refObj = tObj0;
+      tObj0 = NULL;
     }
-    (void )WlzFreeObj(tObj0);
-    (void )WlzFreeObj(tObj1);
+    else
+    {
+      ok = 0;
+      (void )fprintf(stderr,
+                     "%s: Failed to compute boundary object from file %s.\n",
+                     argv[0], refFileStr);
+    }
   }
   /* Compute the distance transform object. */
   if(ok)
