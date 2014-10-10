@@ -48,7 +48,7 @@ WlzNearbyDomain - computes the portion of a domain object which is nearby
                   given positions
 \par Synopsis
 \verbatim
-WlzNearbyDomain [-d#] [-m#] [-p<pos>] [-o<out file>] [-h]
+WlzNearbyDomain [-d#] [-m#] [-p<pos>] [-o<out file>] [-h] [-T]
                 [<Reference object file>]
 \endverbatim
 \par Options
@@ -77,6 +77,10 @@ WlzNearbyDomain [-d#] [-m#] [-p<pos>] [-o<out file>] [-h]
   <tr> 
     <td><b>-o</b></td>
     <td>Output file.</td>
+  </tr>
+  <tr>
+    <td><b>-T</b></td>
+    <td>Report elapsed time.</td>
   </tr>
   <tr> 
     <td><b>-h</b></td>
@@ -109,6 +113,7 @@ object is written to the file out.wlz.
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include <Wlz.h>
 
 extern int      getopt(int argc, char * const *argv, const char *optstring);
@@ -124,7 +129,8 @@ int		main(int argc, char *argv[])
   		option,
 		con = 0,
 		nPos = 0,
-		usage = 0;
+		usage = 0,
+		timeFlg = 0;
   char		*refFileStr,
 		*outFileStr;
   double	dMax = 0.0;
@@ -133,9 +139,10 @@ int		main(int argc, char *argv[])
 		*refObj = NULL;
   WlzVertexP	pos;
   WlzDistanceType dFn;
+  struct timeval times[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "hd:m:p:o:";
+  static char	optList[] = "hTd:m:p:o:";
   const char    fileStrDef[] = "-";
   const WlzConnectType defDFn = WLZ_OCTAGONAL_DISTANCE;
 
@@ -251,6 +258,9 @@ int		main(int argc, char *argv[])
       case 'o':
 	outFileStr = optarg;
 	break;
+      case 'T':
+        timeFlg = 1;
+	break;
       case 'h':
       default:
 	usage = 1;
@@ -324,8 +334,21 @@ int		main(int argc, char *argv[])
   /* Compute the distance transform object. */
   if(ok)
   {
+    if(timeFlg)
+    {
+      gettimeofday(times + 0, NULL);
+    }
     outObj = WlzAssignObject(
     	     WlzDomainNearby(refObj, nPos, pos, dFn, dMax, &errNum), NULL);
+    if(timeFlg)
+    {
+      gettimeofday(times + 1, NULL);
+      ALC_TIMERSUB(times + 1, times + 0, times + 2);
+      (void )fprintf(stderr,
+                     "%s: Elapsed time for WlzDomainNearby()  %gus\n",
+		     argv[0],
+		     (1000000.0 * times[2].tv_sec) + times[2].tv_usec);
+    }
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -365,10 +388,11 @@ int		main(int argc, char *argv[])
   }
   (void )WlzFreeObj(refObj);
   (void )WlzFreeObj(outObj);
+  AlcFree(pos.v);
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-d#] [-m#] [-p<pos>] [-o<output file>] [-h]\n"
+    "Usage: %s [-d#] [-m#] [-p<pos>] [-o<output file>] [-T] [-h]\n"
     "\t\t[<Reference object file>]\n"
     "Computes a nearby domain in which all pixels/voxels are near to the\n"
     "given locations within the reference domain. If the given location(s)\n"
@@ -386,6 +410,7 @@ int		main(int argc, char *argv[])
     "  -p  Locations given as x,y pairs or x,y,z triples for two and\n"
     "      three dimensions respectively.\n"
     "  -o  Output object file.\n"
+    "  -T  Report elapsed time.\n"
     "  -h  Help - prints this usage message\n"
     "By default all files are read from the standard input and written to\n"
     "the standard output.\n"
