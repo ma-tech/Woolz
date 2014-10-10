@@ -166,6 +166,7 @@ bin_PROGRAMS		= \
 			  WlzObjToBoundary \
 			  WlzPointsFromDomain \
 			  WlzPointsToMarkers \
+			  WlzPointsToText \
 			  WlzPolarSample \
 			  WlzPolygonToObj \
 			  WlzPrinicipalAngle \
@@ -698,6 +699,10 @@ WlzPointsFromDomain_LDFLAGS		= $(AM_LFLAGS)
 WlzPointsToMarkers_SOURCES		= WlzPointsToMarkers.c
 WlzPointsToMarkers_LDADD		= $(LDADD)
 WlzPointsToMarkers_LDFLAGS		= $(AM_LFLAGS)
+
+WlzPointsToText_SOURCES			= WlzPointsToText.c
+WlzPointsToText_LDADD			= $(LDADD)
+WlzPointsToText_LDFLAGS			= $(AM_LFLAGS)
 
 WlzPolarSample_SOURCES			= WlzPolarSample.c
 WlzPolarSample_LDADD			= $(LDADD)
