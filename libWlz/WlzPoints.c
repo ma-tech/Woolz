@@ -210,3 +210,333 @@ void		*WlzPointValueGet(WlzPointValues *pts, int idx)
   val = (char *)pts->values.v + (idx * pts->pSz);
   return(val);
 }
+
+/*!
+* \return	New points domain or NULL on error.
+* \ingroup	WlzFeatures
+* \brief	Finds points which are within the given opjects domain
+* 		and are seperated by at least the given minimum distance.
+* \param	gvnObj			Given spatial domain object.
+* \param	dMin			Given minimum distance (if less than
+* 					1.0 then will be set to 1.0)..
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzPoints			*WlzPointsFromDomObj(
+				  WlzObject *gvnObj,
+				  double dMin,
+				  WlzErrorNum *dstErr)
+{
+  int		dim = 0,
+		vecIdx = 0,
+  		nShfBuf = 0;
+  int		*shfBuf = NULL;
+  AlcKDTTree	*tree = NULL;
+  WlzPoints	*pts = NULL;
+  WlzObject	*curObj = NULL,
+  		*strObj = NULL;;
+  AlcVector	*vec = NULL;
+  size_t	vtxSz = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gvnObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else
+  {
+    switch(gvnObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+        dim = 2;
+	vtxSz = sizeof(WlzIVertex2);
+	break;
+      case WLZ_3D_DOMAINOBJ:
+        dim = 3;
+	vtxSz = sizeof(WlzIVertex3);
+	break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+    if(dim)
+    {
+      if(gvnObj->domain.core == NULL)
+      {
+        errNum = WLZ_ERR_DOMAIN_NULL;
+      }
+    }
+  }
+  /* Create a vector in which to collect vertices. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    vec = AlcVectorNew(1024, vtxSz, 1024, NULL);
+    if(vec == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Create a KD-tree for proximity queries. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(dMin < 1.0)
+    {
+      dMin = 1.0;
+    }
+    tree = AlcKDTTreeNew(ALC_POINTTYPE_INT, dim, 0.0, 0, NULL);
+    if(tree == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Create a structuring element with which to successively erode the given
+   * object. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		rad;
+
+    rad = (dMin < 2.0)? 1: ALG_NINT(dMin - 1.0);
+    if(dim == 2)
+    {
+      strObj = WlzAssignObject(
+      	       WlzMakeRectangleObject(rad, rad, 0.0, 0.0, &errNum), NULL);
+    }
+    else
+    {
+      strObj = WlzAssignObject(
+      	       WlzMakeCuboidObject(WLZ_3D_DOMAINOBJ, rad, rad, rad,
+				   0.0, 0.0, 0.0, &errNum), NULL);
+    }
+  }
+  /* Create a current object, initially this is just the given object's
+   * domain. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzValues	nullVal;
+
+    nullVal.core = NULL;
+    curObj = WlzAssignObject(
+    	     WlzMakeMain(gvnObj->type, gvnObj->domain, nullVal,
+	                 NULL, NULL, &errNum), NULL);
+  }
+  /* Erode the current object while adding points from the boundary until
+   * the current object has been eroded away. */
+  while((errNum == WLZ_ERR_NONE) && (curObj != NULL))
+  {
+    int		nVtx = 0;
+    WlzVertexP	vtx;
+    WlzObject	*shlObj;
+
+    vtx.v = NULL;
+    /* Get the vertices that lie on the boundry (shell) domain of the
+     * current object. */
+    shlObj = WlzAssignObject(
+             WlzBoundaryDomain(curObj, &errNum), NULL);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(dim == 2)
+      {
+        errNum = WlzVerticesFromObj2I(shlObj, &nVtx, &(vtx.i2));
+      }
+      else
+      {
+        errNum = WlzVerticesFromObj3I(shlObj, &nVtx, &(vtx.i3));
+      }
+    }
+    (void )WlzFreeObj(shlObj);
+    /* Update the shuffle buffer, used to make randomise the insertions into
+     * the KD-tree. */
+    if((errNum == WLZ_ERR_NONE) && (nShfBuf < nVtx))
+    {
+      nShfBuf = nVtx + 1024;
+      if((shfBuf = (int *)AlcRealloc(shfBuf, sizeof(int) * nShfBuf)) == NULL)
+      {
+	nShfBuf = 0;
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )AlgShuffleIdx(nVtx, shfBuf, 0);
+      if(AlcVectorExtend(vec, vecIdx + nVtx + 1) != ALC_ER_NONE)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    /* Add vertices to the KD-tree as long as their seperation distance is
+     * >= dMin. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int	i;
+
+      for(i = 0; i < nVtx; ++i)
+      {
+        int 	j;
+	double	d;
+	int	pos[3];
+	AlcKDTNode *nod;
+
+	j = shfBuf[i];
+	if(dim == 2)
+	{
+	  pos[0] = vtx.i2[j].vtX;
+	  pos[1] = vtx.i2[j].vtY;
+	}
+	else
+	{
+	  pos[0] = vtx.i3[j].vtX;
+	  pos[1] = vtx.i3[j].vtY;
+	  pos[2] = vtx.i3[j].vtZ;
+	}
+	nod = AlcKDTGetNN(tree, pos, DBL_MAX, &d, NULL);
+	if((nod == NULL) || (d > dMin))
+	{
+	  AlcErrno alcErr = ALC_ER_NONE;
+
+	  (void )AlcKDTInsert(tree, pos, NULL, &alcErr);
+	  if(alcErr == ALC_ER_NONE)
+	  {
+	    WlzVertexP p;
+
+	    p.v = AlcVectorItemGet(vec, vecIdx);
+	    if(dim == 2)                               
+	    {
+	      *(p.i2) = vtx.i2[j];
+	    }
+	    else
+	    {
+	      *(p.i3) = vtx.i3[j];
+	    }
+	    ++vecIdx;
+	  }
+	  else
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	    break;
+	  }
+	}
+      }
+    }
+    AlcFree(vtx.v);
+    /* Erode the current object. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzObject	*tObj;
+
+      tObj = WlzAssignObject(WlzStructErosion(curObj, strObj, &errNum), NULL);
+      (void )WlzFreeObj(curObj);
+      curObj = tObj;
+    }
+    /* Check for completion when the current object will have been eroded
+     * away. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(WlzIsEmpty(curObj, &errNum))
+      {
+        (void )WlzFreeObj(curObj);
+	curObj = NULL;
+      }
+    }
+  }
+  AlcFree(shfBuf);
+  (void )WlzFreeObj(curObj);
+  (void )WlzFreeObj(strObj);
+  (void )AlcKDTTreeFree(tree);
+  /* Construct the points using the vector of vertex locations. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzVertexP nullP;
+
+    nullP.v = NULL;
+    pts = WlzMakePoints((dim == 2)? WLZ_POINTS_2I: WLZ_POINTS_3I,
+                        0, nullP, vecIdx, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		i;
+    WlzVertexP 	p;
+
+    pts->nPoints = vecIdx;
+    if(dim == 2)
+    {
+      for(i = 0; i < vecIdx; ++i)
+      {
+        p.v = AlcVectorItemGet(vec, i);
+        pts->points.i2[i] = *(p.i2);
+      }
+    }
+    else
+    {
+      for(i = 0; i < vecIdx; ++i)
+      {
+        p.v = AlcVectorItemGet(vec, i);
+        pts->points.i3[i] = *(p.i3);
+      }
+    }
+  }
+  (void )AlcVectorFree(vec);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pts);
+}
+
+/*!
+* \return       New domain object without values.
+* \ingroup	WlzFeatures
+* \brief        Constructs a domain from the union of marker domains with
+*               a marker domain at each of the given point positions.
+* \param	pts			Given points.
+* \param        mType                   Marker type.
+* \param        mSz                     Marker size. This is the radius of a
+*					sphere marker. The marker size is
+*					ignored for point markers.
+* \param        dstErr                  Destination error pointer, may be NULL.
+*/
+WlzObject			*WlzPointsToMarkers(
+				  WlzPoints *pts,
+				  WlzMarkerType mType,
+				  int mSz,
+				  WlzErrorNum *dstErr)
+{
+  WlzVertexType vType = WLZ_VERTEX_ERROR;
+  WlzObject	*mObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(pts == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(pts->type)
+    {
+      case WLZ_POINTS_2I:
+        vType = WLZ_VERTEX_I2;
+	break;
+      case WLZ_POINTS_2D:
+        vType = WLZ_VERTEX_D2;
+	break;
+      case WLZ_POINTS_3I:
+        vType = WLZ_VERTEX_I3;
+	break;
+      case WLZ_POINTS_3D:
+        vType = WLZ_VERTEX_D3;
+	break;
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    mObj = WlzMakeMarkers(vType, pts->nPoints, pts->points, mType, mSz,
+    			  &errNum);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(mObj);
+}
