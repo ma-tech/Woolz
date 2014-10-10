@@ -414,24 +414,21 @@ static void	AlcKDTBoundSet(AlcKDTTree *tree, AlcKDTNode *node, int cmp)
 
   if((cmp == 0) || ((parent = node->parent) == NULL))
   {
-    idx = 0;
     if(tree->type == ALC_POINTTYPE_INT)
     {
-      do
+      for(idx = 0; idx < tree->dim; ++idx)
       {
 	*(node->boundN.kI + idx) = INT_MIN; 		   /* INT_MIN is -ve */
 	*(node->boundP.kI + idx) = INT_MAX;
       }
-      while(++idx < tree->dim);
     }
     else /* tree->type == ALC_POINTTYPE_DBL */
     {
-      do
+      for(idx = 0; idx < tree->dim; ++idx)
       {
 	*(node->boundN.kD + idx) = -DBL_MAX; 		   /* DBL_MAX is +ve */
 	*(node->boundP.kD + idx) = DBL_MAX;
       }
-      while(++idx < tree->dim);
     }
   }
   else
@@ -844,18 +841,12 @@ static AlcKDTNode *AlcKDTNodeGetNN(AlcKDTTree *tree,  AlcKDTNode *node,
 * \ingroup	AlcKDTree
 * \brief  	Computes whether the given node intersects the given
 *		hyper-sphere.
-*		There are 3 algorithms that can be used.
+*		There are 2 algorithms that can be used.
 *		* Always true test, NOT RECOMENDED for anything except
 *		  testing.
 *		* Box intersection test, checks for an intersection
 *		  between the bounding boxes of the node and the
-*		  hyper-sphere. This is is slightly faster in 2D,
-*		  but progressively slower in higher dimensions.
-*		* Hyper-sphere intersection test, checks for an
-*		  intersection between the bounding box of the node
-*		  and the hyper-sphere itself. This is faster than
-*		  the box intersection test in dimensions higher than
-*		  2, with little difference (~10%) in 2D.
+*		  hyper-sphere.
 * \param     	tree			Given tree,
 * \param	node			Given node.
 * \param	key			Given key at centre of the
@@ -864,14 +855,11 @@ static AlcKDTNode *AlcKDTNodeGetNN(AlcKDTTree *tree,  AlcKDTNode *node,
 */
 static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
 					   AlcPointP centre, double radius)
-/* #define ALC_KDT_ALWAYSTRUE_TEST */
 #ifdef ALC_KDT_ALWAYSTRUE_TEST
 {
   return(1);
 }
-#endif /* ALC_KDT_ALWAYSTRUE_TEST */
-/* #define ALC_KDT_BOXINTERSECT_TEST */
-#ifdef ALC_KDT_BOXINTERSECT_TEST
+#else
 {
   int  		idx,
 		inSphere = 1;
@@ -899,56 +887,7 @@ static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
   }
   return(inSphere);
 }
-#endif /* ALC_KDT_BOXINTERSECT_TEST */
-#define ALC_KDT_SPHEREINTERSECT_TEST
-#ifdef ALC_KDT_SPHEREINTERSECT_TEST
-{
-  int  		idx,
-		inSphere = 1;
-  double	tD0,
-		tD1,
-		radiusSq,
-		sum;
-
-  /* This code checks for the intersection with the hyper-sphere's
-   * itself and not just it's bounding box. */
-  idx = 0;
-  sum = 0.0;
-  radiusSq = radius * radius;
-  if(tree->type == ALC_POINTTYPE_INT)
-  {
-    do
-    {
-      if((tD0 = (tD1 = (double )(*(centre.kI + idx)) -
-                                 *(node->boundN.kI + idx))) < 0.0)
-      {
-	sum += tD0 * tD0;
-      }
-      else if((tD0 = tD1 - *(node->boundP.kI + idx)) > 0.0)
-      {
-	sum += tD0 * tD0;
-      }
-    } while(++idx < tree->dim);
-  }
-  else /* tree->type == ALC_POINTTYPE_DBL */
-  {
-    do
-    {
-      if((tD0 = (tD1 = *(centre.kD + idx)) -
-		*(node->boundN.kD + idx)) < tree->tol)
-      {
-	sum += tD0 * tD0;
-      }
-      else if((tD0 = tD1 - *(node->boundP.kD + idx)) > -(tree->tol))
-      {
-	sum += tD0 * tD0;
-      }
-    } while(++idx < tree->dim);
-  }
-  inSphere = sum <= radiusSq;
-  return(inSphere);
-}
-#endif /* ALC_KDT_SPHEREINTERSECT_TEST */
+#endif
 
 /*!
 * \return	<void>
@@ -963,22 +902,19 @@ static void	AlcKDTValuesSet(AlcKDTTree *tree,
 {
   int		idx;
 
-  idx = 0;
   if(tree->type == ALC_POINTTYPE_INT)
   {
-    do
+    for(idx = 0; idx < tree->dim; ++idx)
     {
       *(val0.kI + idx) = *(val1.kI  + idx);
     }
-    while(++idx < tree->dim);
   }
   else /* tree->type == ALC_POINTTYPE_DBL */
   {
-    do
+    for(idx = 0; idx < tree->dim; ++idx)
     {
       *(val0.kD + idx) = *(val1.kD + idx);
     }
-    while(++idx < tree->dim);
   }
 }
 
@@ -997,24 +933,21 @@ static double	AlcKDTKeyDistSq(AlcKDTTree *tree,
   double	tD0,
 		distSq = 0;
 
-  idx = 0;
   if(tree->type == ALC_POINTTYPE_INT)
   {
-    do
+    for(idx = 0; idx < tree->dim; ++idx)
     {
       tD0 = (double )(*(key0.kI + idx) - *(key1.kI + idx));
       distSq += tD0 * tD0;
     }
-    while(++idx < tree->dim);
   }
   else /* tree->type = ALC_POINTTYPE_DBL */
   {
-    do
+    for(idx = 0; idx < tree->dim; ++idx)
     {
       tD0 = *(key0.kD + idx) - *(key1.kD + idx);
       distSq += tD0 * tD0;
     }
-    while(++idx < tree->dim);
   }
   return(distSq);
 }
@@ -1032,93 +965,35 @@ static double	AlcKDTKeyDistSq(AlcKDTTree *tree,
 */
 static int	AlcKDTNodeValueCompare(AlcKDTTree *tree, AlcKDTNode *node,
 				       AlcPointP key)
-#ifdef OLD_CODE
 {
   int		jIdx,
 		kIdx,
 		cmp = 0;
-  double	diff;
 
-  jIdx = kIdx = 0;
   if(tree->type == ALC_POINTTYPE_INT)
   {
-    /* Check node's key doesn't match the given key. */
-    do
-    {
-      jIdx += (*(key.kI + kIdx) == *(node->key.kI + kIdx));
-    }
-    while(++kIdx < tree->dim);
-    if(jIdx < tree->dim)
-    {
-      /* Key not matched. */
-      jIdx = kIdx = node->split;
-      do
-      {
-	cmp = *(node->key.kI + jIdx) - *(key.kI + jIdx);
-	jIdx = (jIdx + 1) % tree->dim;
-      } while((cmp == 0) && (jIdx != kIdx));
-    }
-  }
-  else /* tree->type == ALC_POINTTYPE_DBL */
-  {
-    /* Check node's key doesn't match the given key. */
-    do
-    {
-      jIdx += (fabs(*(key.kD + kIdx) - *(node->key.kD + kIdx)) < tree->tol);
-    }
-    while(++kIdx < tree->dim);
-    if(jIdx < tree->dim)
-    {
-      /* Key not matched. */
-      jIdx = kIdx = node->split;
-      do
-      {
-	diff = *(node->key.kD + jIdx) - *(key.kD + jIdx);
-	if(fabs(diff) > tree->tol)
-	{
-	  cmp = (diff > 0)? +1: -1;
-	}
-	jIdx = (jIdx + 1) % tree->dim;
-      } while((cmp == 0) && (jIdx != kIdx));
-    }
-  }
-  return(cmp);
-}
-#else
-{
-  int		jIdx,
-		kIdx,
-		cmp = 0;
-  double	diff;
-
-  jIdx = kIdx = 0;
-  if(tree->type == ALC_POINTTYPE_INT)
-  {
-    /* Check node's key doesn't match the given key. */
     jIdx = kIdx = node->split;
     do
     {
       cmp = *(node->key.kI + jIdx) - *(key.kI + jIdx);
-      jIdx = (jIdx + 1) % tree->dim;
-    } while((cmp == 0) && (jIdx != kIdx));
+    } while((cmp == 0) && ((jIdx = (jIdx + 1) % tree->dim) != kIdx));
   }
   else /* tree->type == ALC_POINTTYPE_DBL */
   {
-    /* Check node's key doesn't match the given key. */
     jIdx = kIdx = node->split;
     do
     {
+      double	diff;
+
       diff = *(node->key.kD + jIdx) - *(key.kD + jIdx);
       if(fabs(diff) > tree->tol)
       {
 	cmp = (diff > 0)? +1: -1;
       }
-      jIdx = (jIdx + 1) % tree->dim;
-    } while((cmp == 0) && (jIdx != kIdx));
+    } while((cmp == 0) && ((jIdx = (jIdx + 1) % tree->dim) != kIdx));
   }
   return(cmp);
 }
-#endif
 
 #ifdef ALC_KDT_TEST
 int		main(int argc, char *argv[])
