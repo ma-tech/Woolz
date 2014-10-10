@@ -1254,6 +1254,9 @@ extern int			WlzBoundPolyCount(
 extern int			WlzBoundVtxCount(
 				  WlzBoundList *bnd,
 				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzBoundaryDomain(
+				  WlzObject *gvnObj,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzBoundingBox.c							*
@@ -5254,6 +5257,15 @@ extern WlzObject		*WlzPointsToDomObj(
 extern void			*WlzPointValueGet(
 				  WlzPointValues *pts,
 				  int idx);
+extern WlzPoints		*WlzPointsFromDomObj(
+				  WlzObject *gvnObj,
+				  double dMin,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzPointsToMarkers(
+				  WlzPoints *pts,
+				  WlzMarkerType mType,
+				  int mSz,
+				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
