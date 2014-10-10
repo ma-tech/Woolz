@@ -161,18 +161,19 @@ WlzObject			*WlzDomainNearby(
 
       switch(dim)
       {
-        case 2:
+	case 2:
 	  p.vtZ = 0;
 	  WLZ_VTX_2_NINT(p, pos.d2[i]);
 	  in = WlzInsideDomain2D(refObj->domain.i,
-	                         p.vtY, p.vtX, &errNum);
+				 p.vtY, p.vtX, &errNum);
 	  break;
 	case 3:
 	  WLZ_VTX_3_NINT(p, pos.d3[i]);
 	  in = WlzInsideDomain3D(refObj->domain.p,
-	                         p.vtZ, p.vtY, p.vtX, &errNum);
+				 p.vtZ, p.vtY, p.vtX, &errNum);
 	  break;
 	default:
+	  WLZ_VTX_3_ZERO(p);        /* Not used, but keeps compiler happy. */
 	  break;
       }
       if(errNum == WLZ_ERR_NONE)
@@ -184,17 +185,17 @@ WlzObject			*WlzDomainNearby(
 	else
 	{
 	  WlzObject *dObj = NULL,
-	  	    *pObj = NULL,
+		    *pObj = NULL,
 		    *tObj = NULL;
 
 	  pObj = WlzAssignObject(
-	         WlzMakeSinglePixelObject(refObj->type, p.vtX, p.vtY, p.vtZ,
-		                          &errNum), NULL);
+		 WlzMakeSinglePixelObject(refObj->type, p.vtX, p.vtY, p.vtZ,
+					  &errNum), NULL);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    dObj = WlzAssignObject(
-	           WlzDistanceTransform(refObj, pObj, dFn, 0.0, dMax,
-		                        &errNum), NULL);
+		   WlzDistanceTransform(refObj, pObj, dFn, 0.0, dMax,
+					&errNum), NULL);
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
@@ -203,12 +204,13 @@ WlzObject			*WlzDomainNearby(
 	    thrV.type = WLZ_GREY_INT;
 	    thrV.v.inv = 1;
 	    tObj = WlzAssignObject(
-	           WlzThreshold(dObj, thrV, WLZ_THRESH_HIGH, &errNum), NULL);
+		   WlzThreshold(dObj, thrV, WLZ_THRESH_HIGH,
+				&errNum), NULL);
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    parObj[i] = WlzAssignObject(
-	    	        WlzUnion2(tObj, pObj, &errNum), NULL);
+			WlzUnion2(tObj, pObj, &errNum), NULL);
 	  }
 	  (void )WlzFreeObj(dObj);
 	  (void )WlzFreeObj(pObj);
