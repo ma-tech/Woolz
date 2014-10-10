@@ -164,6 +164,8 @@ bin_PROGRAMS		= \
 			  WlzNObjsGreyStats \
 			  WlzNearbyDomain \
 			  WlzObjToBoundary \
+			  WlzPointsFromDomain \
+			  WlzPointsToMarkers \
 			  WlzPolarSample \
 			  WlzPolygonToObj \
 			  WlzPrinicipalAngle \
@@ -688,6 +690,14 @@ WlzNearbyDomain_LDFLAGS			= $(AM_LFLAGS)
 WlzObjToBoundary_SOURCES		= WlzObjToBoundary.c
 WlzObjToBoundary_LDADD			= $(LDADD)
 WlzObjToBoundary_LDFLAGS		= $(AM_LFLAGS)
+
+WlzPointsFromDomain_SOURCES		= WlzPointsFromDomain.c
+WlzPointsFromDomain_LDADD		= $(LDADD)
+WlzPointsFromDomain_LDFLAGS		= $(AM_LFLAGS)
+
+WlzPointsToMarkers_SOURCES		= WlzPointsToMarkers.c
+WlzPointsToMarkers_LDADD		= $(LDADD)
+WlzPointsToMarkers_LDFLAGS		= $(AM_LFLAGS)
 
 WlzPolarSample_SOURCES			= WlzPolarSample.c
 WlzPolarSample_LDADD			= $(LDADD)
