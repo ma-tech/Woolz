@@ -419,34 +419,37 @@ WlzObject 			*WlzDomainFill3D(
 	  WlzErrorNum	errNum2 = WLZ_ERR_NONE;
 
 	  sDom2 = shlObj->domain.p->domains[p];
-	  newBnd = WlzDomFill3DDoBound2D(bDom2.b, sDom2, &errNum2);
-	  if(newBnd != NULL)
+	  if(sDom2.core)
 	  {
-	    fObj2 = WlzBoundToObj(newBnd, WLZ_SIMPLE_FILL, &errNum2);
-	    (void )WlzFreeBoundList(newBnd);
-	  }
-	  if(errNum2 == WLZ_ERR_NONE)
-	  {
-	    if(fObj2)
+	    newBnd = WlzDomFill3DDoBound2D(bDom2.b, sDom2, &errNum2);
+	    if(newBnd != NULL)
 	    {
-	      filDom.p->domains[p] = WlzAssignDomain(fObj2->domain, NULL);
+	      fObj2 = WlzBoundToObj(newBnd, WLZ_SIMPLE_FILL, &errNum2);
+	      (void )WlzFreeBoundList(newBnd);
 	    }
-	  }
-	  else
-	  {
+	    if(errNum2 == WLZ_ERR_NONE)
+	    {
+	      if(fObj2)
+	      {
+		filDom.p->domains[p] = WlzAssignDomain(fObj2->domain, NULL);
+	      }
+	    }
+	    else
+	    {
 #ifdef _OPENMP
 #pragma omp critical
-	    {
-#endif
-	      if(errNum == WLZ_ERR_NONE)
 	      {
-		errNum = errNum2;
-	      }
-#ifdef _OPENMP
-	    }
 #endif
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  errNum = errNum2;
+		}
+#ifdef _OPENMP
+	      }
+#endif
+	    }
+	    (void )WlzFreeObj(fObj2);
 	  }
-	  (void )WlzFreeObj(fObj2);
 	}
       }
     }
@@ -456,8 +459,24 @@ WlzObject 			*WlzDomainFill3D(
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      filObj = WlzMakeMain(srcObj->type, filDom, nullVal,
-    		         NULL, NULL, &errNum);
+      WlzObject	*tObj0 = NULL,
+      		*tObj1 = NULL;
+
+      /* Put back any isolated voxels this function has removed. */
+      tObj0 = WlzAssignObject(
+              WlzMakeMain(srcObj->type, filDom, nullVal,
+      			  NULL, NULL, &errNum), NULL);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        tObj1 = WlzUnion2(gvnObj, tObj0, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	filObj = WlzMakeMain(tObj1->type, tObj1->domain, nullVal,
+			     NULL, NULL, &errNum);
+      }
+      (void )WlzFreeObj(tObj0);
+      (void )WlzFreeObj(tObj1);
     }
   }
   (void )WlzFreeObj(bndObj);
