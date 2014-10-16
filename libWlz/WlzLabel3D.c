@@ -47,7 +47,7 @@ static char _WlzLabel3D_c[] = "University of Edinburgh $Id$";
 
 /*!
 * \return	A compund array object containing the labeled object
-* 		components of the given object or NULL on error.
+* 		components of the given object.
 * \ingroup	WlzBinaryOps
 * \brief	Labels (segments) a 3D domain object into connected component
 * 		objects using their connectivity. 
@@ -228,232 +228,278 @@ WlzObject			*WlzLabel3D(
       totNFrg += nFrg;
     }
   }
-  /* Create a find-union tree for all the fragment objects. */
-  if(errNum == WLZ_ERR_NONE)
+  if(errNum == WLZ_ERR_NONE) 
   {
-    if((uft = AlcUFTreeNew(totNFrg, totNFrg)) == NULL)
+    if(totNFrg < 1)
     {
-      errNum = WLZ_ERR_MEM_ALLOC;
+      /* No fragments but given a domain object. */
+      errNum = WLZ_ERR_DOMAIN_DATA;
     }
-  }
-  /* Walk down through the planes checking for conectivity between
-   * the fragments of the current plane and the previous plane updating
-   * the union-find tree to build the connectivity. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    int		p;		/* Current plane */
-
-#ifdef _OPENMP
-#pragma omp parallel for shared(nFrgTbl,cNFrgTbl,con3,uft)
-#endif
-    for(p = 1; p < nPln; ++p)
+    else if(totNFrg == 1)
     {
-
-      if(errNum == WLZ_ERR_NONE)
-      {
-	int	q,		/* Previous plane. */
-		nFrgP,		/* Number of fgragment objects on plane p */
-		nFrgQ; 		/* Number of fgragment objects on plane q */
-	WlzErrorNum errNum2 = WLZ_ERR_NONE;
-
-	q = p - 1;
-	nFrgP = nFrgTbl[p];
-	nFrgQ = nFrgTbl[q];
-	if((nFrgP > 0) && (nFrgQ > 0))
-	{
-	  int	  fP;		/* Fragment within the current plane p */
-	  WlzObject **frgP,	/* Array of fragment objects on plane p */
-		    **frgQ;	/* Array of fragment objects on plane q */
-
-	  frgP = frgTbl[p];
-	  frgQ = frgTbl[q];
-	  for(fP = 0; (errNum2 == WLZ_ERR_NONE) && (fP < nFrgP); ++fP)
-	  {
-	    int	fQ;
-	    WlzObject *fObjP;
-
-	    if(con3 == WLZ_0_CONNECTED)
-	    {
-	      fObjP = WlzAssignObject(frgP[fP], NULL);
-	    }
-	    else
-	    {
-	      fObjP = WlzDilation(frgP[fP], con3, &errNum2);
-	    }
-	    if((fObjP != NULL) &&
-	       (fObjP->type == WLZ_2D_DOMAINOBJ) &&
-	       (fObjP->domain.core != NULL))
-	    {
-	      for(fQ = 0; (errNum2 == WLZ_ERR_NONE) && (fQ < nFrgQ); ++fQ)
-	      {
-		WlzObject *fObjQ;
-
-		 fObjQ = frgQ[fQ];
-		/* Avoid calling WlzHasIntersection() if possible, saves
-		 * a significant amount of CPU time. */
-		if((fObjQ != NULL) &&
-		   (fObjQ->type == WLZ_2D_DOMAINOBJ) &&
-		   (fObjQ->domain.core != NULL) &&
-		   (fObjP->domain.i->kol1 < fObjQ->domain.i->lastkl) &&
-		   (fObjQ->domain.i->kol1 < fObjP->domain.i->lastkl) &&
-		   (fObjP->domain.i->line1 < fObjQ->domain.i->lastln) &&
-		   (fObjQ->domain.i->line1 < fObjP->domain.i->lastln) &&
-		   WlzHasIntersection(fObjQ, fObjP, &errNum2))
-		{
-#ifdef _OPENMP
-#pragma omp critical
-		  {
-#endif
-		    AlcUFTreeUnion(uft, cNFrgTbl[q] + fQ, cNFrgTbl[p] + fP);
-#ifdef _OPENMP
-		  }
-#endif
-		}
-	      }
-	    }
-	    (void )WlzFreeObj(fObjP);
-	  }
-	}
-#ifdef _OPENMP
-#pragma omp critical
-	{
-#endif
-	  if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
-	  {
-	    errNum = errNum2;
-	  }
-#ifdef _OPENMP
-	}
-#endif
-      }
-    }
-  }
-  /* The union-find tree now holds the connectivity of all the fragments.
-   * Create a simple table which maps the fragment index to the 3D labeled
-   * object index. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    nObjs = uft->nCmp;
-    if((frgToObjTb = (int *)AlcMalloc(totNFrg * sizeof(int))) == NULL)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-    else
-    {
-      int	f,
-      		o = 0;
-
-      /* First create mapping from the union-find tree components to 3D
-       * labeled object index. */
-      for(f = 0; f < totNFrg; ++f)
-      {
-        if(uft->pr[f] == f)
-	{
-	  frgToObjTb[f] = o++;
-	}
-      }
-      /* Now assign the 3D labeled object index to each fragment. */
-      for(f = 0; f < totNFrg; ++f)
-      {
-	frgToObjTb[f] = frgToObjTb[AlcUFTreeFind(uft, f)];
-      }
-    }
-  }
-  /* Finished with the union-find tree so free it. */
-  AlcUFTreeFree(uft);
-  /* Create a buffer large enough to hold all fragments on any plane (for
-   * each thread if using OpenMP) and a compound array object for the
-   * labeled 3D objects initialise them with the bounding box of the given
-   * object. The plane domains will be fixed later. */
-  if(errNum == WLZ_ERR_NONE)
-  {
-    objBufSz = maxFrgPln * sizeof(WlzObject *);
-    if((frgObjBuf = (WlzObject **)AlcMalloc(objBufSz)) == NULL)
-    {
-      errNum = WLZ_ERR_MEM_ALLOC;
-    }
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    objs = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 1, nObjs, NULL,
-				WLZ_3D_DOMAINOBJ, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    int		i;
-
-    for(i = 0; (errNum == WLZ_ERR_NONE) && (i < nObjs); ++i)
-    {
+      /* Just have a single fragment so no need for complex connectivity
+       * code, just make a compound object with the single fragment. */
+      int	p;
+      WlzObject	*obj2 = NULL;
       WlzDomain dom;
 
+      for(p = 0; p < nPln; ++p)
+      {
+	if(nFrgTbl[p])
+	{
+	  obj2 = *(frgTbl[p]);
+	  break;
+	}
+      }
       dom.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
-				 gObj->domain.p->plane1,
-				 gObj->domain.p->lastpl,
-				 gObj->domain.p->line1,
-				 gObj->domain.p->lastln,
-				 gObj->domain.p->kol1,
-				 gObj->domain.p->lastkl,
+				 gObj->domain.p->plane1 + p,
+				 gObj->domain.p->lastpl + p,
+				 obj2->domain.i->line1,
+				 obj2->domain.i->lastln,
+				 obj2->domain.i->kol1,
+				 obj2->domain.i->lastkl,
 				 &errNum);
+      objs = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 1, 1, NULL,
+				  WLZ_3D_DOMAINOBJ, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-        objs->o[i] = WlzAssignObject(
+        objs->n = 1;
+	objs->o[0] = WlzAssignObject(
 		     WlzMakeMain(WLZ_3D_DOMAINOBJ, dom, nulVal, NULL, NULL,
 				 &errNum), NULL);
       }
     }
-  }
-  /* Use the fragment to object index table to allocate the fragments
-   * within each plane to the appropriate object.*/
-  if(errNum == WLZ_ERR_NONE)
-  {
-    int		p;		/* Current plane */
-
-    for(p = 0; (errNum == WLZ_ERR_NONE) && (p < nPln); ++p)
+    else
     {
-      int	fP,		/* Fragment within current plane p */
-	      nFrgP,
-	      frgIdxP; 	/* Index of the first fragment on plane p */
-      WlzObject **frgP;
-
-      frgP = frgTbl[p];
-      nFrgP = nFrgTbl[p];
-      frgIdxP = cNFrgTbl[p];
-      for(fP = 0; (errNum == WLZ_ERR_NONE) && (fP < nFrgP); ++fP)
+      /* Have many fragments and so need to establish their connectivity. */
+      /* Create a find-union tree for all the fragment objects. */
+      if(errNum == WLZ_ERR_NONE)
       {
-	if(frgP[fP])
+	if((uft = AlcUFTreeNew(totNFrg, totNFrg)) == NULL)
 	{
-	  /* Put all fragments on this plane which are part of the same
-	   * labeled 3D object into a buffer. Form their union and the
-	   * add the domain to the 3D object. */
-	  int	  fP1,
-		objIdx,
-		frgBufIdx;
-	  WlzObject *obj2 = NULL;
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+      /* Walk down through the planes checking for conectivity between
+       * the fragments of the current plane and the previous plane updating
+       * the union-find tree to build the connectivity. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	int		p;		/* Current plane */
 
-	  frgBufIdx = 0;
-	  objIdx = frgToObjTb[frgIdxP + fP];
-	  for(fP1 = fP; fP1 < nFrgP; ++fP1)
+#ifdef _OPENMP
+#pragma omp parallel for shared(nFrgTbl,cNFrgTbl,con3,uft)
+#endif
+	for(p = 1; p < nPln; ++p)
+	{
+
+	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    if(objIdx == frgToObjTb[frgIdxP + fP1])
+	    int	q,		/* Previous plane. */
+		    nFrgP,	/* Number of fgragment objects on plane p */
+		    nFrgQ; 	/* Number of fgragment objects on plane q */
+	    WlzErrorNum errNum2 = WLZ_ERR_NONE;
+
+	    q = p - 1;
+	    nFrgP = nFrgTbl[p];
+	    nFrgQ = nFrgTbl[q];
+	    if((nFrgP > 0) && (nFrgQ > 0))
 	    {
-	      frgObjBuf[frgBufIdx++] = frgP[fP1];
-	      frgP[fP1] = NULL;
+	      int	  fP;	/* Fragment within the current plane p */
+	      WlzObject **frgP,	/* Array of fragment objects on plane p */
+			**frgQ;	/* Array of fragment objects on plane q */
+
+	      frgP = frgTbl[p];
+	      frgQ = frgTbl[q];
+	      for(fP = 0; (errNum2 == WLZ_ERR_NONE) && (fP < nFrgP); ++fP)
+	      {
+		int	fQ;
+		WlzObject *fObjP;
+
+		if(con3 == WLZ_0_CONNECTED)
+		{
+		  fObjP = WlzAssignObject(frgP[fP], NULL);
+		}
+		else
+		{
+		  fObjP = WlzDilation(frgP[fP], con3, &errNum2);
+		}
+		if((fObjP != NULL) &&
+		   (fObjP->type == WLZ_2D_DOMAINOBJ) &&
+		   (fObjP->domain.core != NULL))
+		{
+		  for(fQ = 0; (errNum2 == WLZ_ERR_NONE) && (fQ < nFrgQ); ++fQ)
+		  {
+		    WlzObject *fObjQ;
+
+		     fObjQ = frgQ[fQ];
+		    /* Avoid calling WlzHasIntersection() if possible, saves
+		     * a significant amount of CPU time. */
+		    if((fObjQ != NULL) &&
+		       (fObjQ->type == WLZ_2D_DOMAINOBJ) &&
+		       (fObjQ->domain.core != NULL) &&
+		       (fObjP->domain.i->kol1 < fObjQ->domain.i->lastkl) &&
+		       (fObjQ->domain.i->kol1 < fObjP->domain.i->lastkl) &&
+		       (fObjP->domain.i->line1 < fObjQ->domain.i->lastln) &&
+		       (fObjQ->domain.i->line1 < fObjP->domain.i->lastln) &&
+		       WlzHasIntersection(fObjQ, fObjP, &errNum2))
+		    {
+#ifdef _OPENMP
+#pragma omp critical
+		      {
+#endif
+			AlcUFTreeUnion(uft, cNFrgTbl[q] + fQ, cNFrgTbl[p] + fP);
+#ifdef _OPENMP
+		      }
+#endif
+		    }
+		  }
+		}
+		(void )WlzFreeObj(fObjP);
+	      }
+	    }
+#ifdef _OPENMP
+#pragma omp critical
+	    {
+#endif
+	      if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
+	      {
+		errNum = errNum2;
+	      }
+#ifdef _OPENMP
+	    }
+#endif
+	  }
+	}
+      }
+      /* The union-find tree now holds the connectivity of all the fragments.
+       * Create a simple table which maps the fragment index to the 3D labeled
+       * object index. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	nObjs = uft->nCmp;
+	if((frgToObjTb = (int *)AlcMalloc(totNFrg * sizeof(int))) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  int	f,
+		    o = 0;
+
+	  /* First create mapping from the union-find tree components to 3D
+	   * labeled object index. */
+	  for(f = 0; f < totNFrg; ++f)
+	  {
+	    if(uft->pr[f] == f)
+	    {
+	      frgToObjTb[f] = o++;
 	    }
 	  }
-	  if(frgBufIdx > 0)
+	  /* Now assign the 3D labeled object index to each fragment. */
+	  for(f = 0; f < totNFrg; ++f)
 	  {
-	    obj2 = WlzAssignObject(
-		   WlzUnionN(frgBufIdx, frgObjBuf, 0, &errNum), NULL);
+	    frgToObjTb[f] = frgToObjTb[AlcUFTreeFind(uft, f)];
 	  }
-	  if(obj2)
+	}
+      }
+      /* Finished with the union-find tree so free it. */
+      AlcUFTreeFree(uft);
+      /* Create a buffer large enough to hold all fragments on any plane (for
+       * each thread if using OpenMP) and a compound array object for the
+       * labeled 3D objects initialise them with the bounding box of the given
+       * object. The plane domains will be fixed later. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	objBufSz = maxFrgPln * sizeof(WlzObject *);
+	if((frgObjBuf = (WlzObject **)AlcMalloc(objBufSz)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	objs = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 1, nObjs, NULL,
+				    WLZ_3D_DOMAINOBJ, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	int		i;
+
+	for(i = 0; (errNum == WLZ_ERR_NONE) && (i < nObjs); ++i)
+	{
+	  WlzDomain dom;
+
+	  dom.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
+				     gObj->domain.p->plane1,
+				     gObj->domain.p->lastpl,
+				     gObj->domain.p->line1,
+				     gObj->domain.p->lastln,
+				     gObj->domain.p->kol1,
+				     gObj->domain.p->lastkl,
+				     &errNum);
+	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    objs->o[objIdx]->domain.p->domains[p] =
-		WlzAssignDomain(obj2->domain, NULL);
-	    (void )WlzFreeObj(obj2);
+	    objs->o[i] = WlzAssignObject(
+			 WlzMakeMain(WLZ_3D_DOMAINOBJ, dom, nulVal, NULL, NULL,
+				     &errNum), NULL);
 	  }
-	  for(fP1 = 0; fP1 < frgBufIdx; ++fP1)
+	}
+      }
+      /* Use the fragment to object index table to allocate the fragments
+       * within each plane to the appropriate object.*/
+      if(errNum == WLZ_ERR_NONE)
+      {
+	int		p;		/* Current plane */
+
+	for(p = 0; (errNum == WLZ_ERR_NONE) && (p < nPln); ++p)
+	{
+	  int	fP,		/* Fragment within current plane p */
+		  nFrgP,
+		  frgIdxP; 	/* Index of the first fragment on plane p */
+	  WlzObject **frgP;
+
+	  frgP = frgTbl[p];
+	  nFrgP = nFrgTbl[p];
+	  frgIdxP = cNFrgTbl[p];
+	  for(fP = 0; (errNum == WLZ_ERR_NONE) && (fP < nFrgP); ++fP)
 	  {
-	    (void )WlzFreeObj(frgObjBuf[fP1]);
+	    if(frgP[fP])
+	    {
+	      /* Put all fragments on this plane which are part of the same
+	       * labeled 3D object into a buffer. Form their union and the
+	       * add the domain to the 3D object. */
+	      int	  fP1,
+		    objIdx,
+		    frgBufIdx;
+	      WlzObject *obj2 = NULL;
+
+	      frgBufIdx = 0;
+	      objIdx = frgToObjTb[frgIdxP + fP];
+	      for(fP1 = fP; fP1 < nFrgP; ++fP1)
+	      {
+		if(objIdx == frgToObjTb[frgIdxP + fP1])
+		{
+		  frgObjBuf[frgBufIdx++] = frgP[fP1];
+		  frgP[fP1] = NULL;
+		}
+	      }
+	      if(frgBufIdx > 0)
+	      {
+		obj2 = WlzAssignObject(
+		       WlzUnionN(frgBufIdx, frgObjBuf, 0, &errNum), NULL);
+	      }
+	      if(obj2)
+	      {
+		objs->o[objIdx]->domain.p->domains[p] =
+		    WlzAssignDomain(obj2->domain, NULL);
+		(void )WlzFreeObj(obj2);
+	      }
+	      for(fP1 = 0; fP1 < frgBufIdx; ++fP1)
+	      {
+		(void )WlzFreeObj(frgObjBuf[fP1]);
+	      }
+	    }
 	  }
 	}
       }
@@ -461,74 +507,73 @@ WlzObject			*WlzLabel3D(
   }
   /* For each of the labeled objects, standardise the plane domain, set the
    * voxel size, values and possibly background for the objects. */
-  if((errNum == WLZ_ERR_NONE) && (gObj->values.core != NULL))
+  if((errNum == WLZ_ERR_NONE) && (totNFrg > 0) && (gObj->values.core != NULL))
   {
     bgdV = WlzGetBackground(gObj, &errNum);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    int		i;
-    WlzPlaneDomain *gPDom;
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int		i;
+      WlzPlaneDomain *gPDom;
 
-    gPDom = gObj->domain.p;
+      gPDom = gObj->domain.p;
 #ifdef _OPENMP
 #pragma omp parallel for shared(objs)
 #endif
-    for(i = 0; i < nObjs; ++i)
-    {
-      if(errNum == WLZ_ERR_NONE)
+      for(i = 0; i < nObjs; ++i)
       {
-	WlzPlaneDomain *nPDom;
-	WlzErrorNum    errNum2 = WLZ_ERR_NONE;
-	WlzValues	nVal;
-
-	nVal.core = NULL;
-	nPDom = objs->o[i]->domain.p;
-	nPDom->voxel_size[0] = gPDom->voxel_size[0];
-	nPDom->voxel_size[1] = gPDom->voxel_size[1];
-	nPDom->voxel_size[2] = gPDom->voxel_size[2];
-	if((errNum2 == WLZ_ERR_NONE) && (gObj->values.core != NULL))
+	if(errNum == WLZ_ERR_NONE)
 	{
-	  int		p;
-	  WlzValues	gVal;
+	  WlzPlaneDomain *nPDom;
+	  WlzErrorNum    errNum2 = WLZ_ERR_NONE;
+	  WlzValues	nVal;
 
-	  gVal = gObj->values;
-	  nVal.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
-	  			         nPDom->plane1, nPDom->lastpl,
-					 bgdV, NULL, &errNum2);
+	  nVal.core = NULL;
+	  nPDom = objs->o[i]->domain.p;
+	  nPDom->voxel_size[0] = gPDom->voxel_size[0];
+	  nPDom->voxel_size[1] = gPDom->voxel_size[1];
+	  nPDom->voxel_size[2] = gPDom->voxel_size[2];
+	  if((errNum2 == WLZ_ERR_NONE) && (gObj->values.core != NULL))
+	  {
+	    int		p;
+	    WlzValues	gVal;
+
+	    gVal = gObj->values;
+	    nVal.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+					   nPDom->plane1, nPDom->lastpl,
+					   bgdV, NULL, &errNum2);
+	    if(errNum2 == WLZ_ERR_NONE)
+	    {
+	      objs->o[i]->values = WlzAssignValues(nVal, NULL);
+	      for(p = nPDom->plane1; p <= nPDom->lastpl; ++p)
+	      {
+		int		gP,
+				  nP;
+
+		nP = p - nPDom->plane1;
+		gP = p + gPDom->plane1 - nPDom->plane1;
+		nVal.vox->values[nP] = WlzAssignValues(
+				       gVal.vox->values[gP], NULL);
+	      }
+	    }
+	  }
 	  if(errNum2 == WLZ_ERR_NONE)
 	  {
-	    objs->o[i]->values = WlzAssignValues(nVal, NULL);
-	    for(p = nPDom->plane1; p <= nPDom->lastpl; ++p)
-	    {
-	      int		gP,
-	      			nP;
-
-	      nP = p - nPDom->plane1;
-	      gP = p + gPDom->plane1 - nPDom->plane1;
-	      nVal.vox->values[nP] = WlzAssignValues(
-	      			     gVal.vox->values[gP], NULL);
-	    }
+	    errNum2 = WlzStandardPlaneDomain(nPDom, nVal.vox);
 	  }
-	}
-	if(errNum2 == WLZ_ERR_NONE)
-	{
-	  errNum2 = WlzStandardPlaneDomain(nPDom, nVal.vox);
-	}
-	if(errNum2 != WLZ_ERR_NONE)
-	{
+	  if(errNum2 != WLZ_ERR_NONE)
+	  {
 #ifdef _OPENMP
 #pragma omp critical
-	  {
-#endif
-	    if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
 	    {
-	      errNum = errNum2;
-	    }
-#ifdef _OPENMP
-	  }
 #endif
-
+	      if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
+	      {
+		errNum = errNum2;
+	      }
+#ifdef _OPENMP
+	    }
+#endif
+	  }
 	}
       }
     }
