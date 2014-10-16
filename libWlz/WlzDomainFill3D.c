@@ -331,7 +331,7 @@ WlzObject 			*WlzDomainFill3D(
     WlzObject	**csObj = NULL;
     const int 	maxCSObj = 10000;
 
-    errNum = WlzLabel(shlObj, &nCSObj, &csObj, maxCSObj, 1,
+    errNum = WlzLabel(shlObj, &nCSObj, &csObj, maxCSObj, 0,
 		      WLZ_26_CONNECTED);
     if(errNum == WLZ_ERR_NONE)
     {
