@@ -5549,8 +5549,10 @@ extern WlzRCCClass		WlzRegConCalcRCC(
 				  WlzObject *obj0,
 				  WlzObject *obj1,
 				  int noEnc,
-				  int *dstSizeArrayNrmVol,
-				  double **dstArrayNrmVol,
+				  int noAdj,
+				  int maxAdjDist,
+				  int *dstSizeArrayStats,
+				  double **dstArrayStats,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 

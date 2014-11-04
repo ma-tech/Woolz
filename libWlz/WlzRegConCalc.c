@@ -77,6 +77,22 @@ static WlzErrorNum 		WlzRCCMakeT(
 				  WlzObject **t,
 				  WlzObject **o,
 				  WlzRCCTOIdx i);
+static WlzErrorNum		WlzRCCAdjacency(
+				  WlzObject *obj0,
+				  WlzObject *obj1,
+				  int maxDist,
+				  double *dMean,
+				  double *dSD);
+static WlzErrorNum	WlzRCCCompDistHist2D(
+			  int maxDist,
+			  int *dHist,
+			  WlzObject *dObj,
+			  WlzObject *tobj);
+static WlzErrorNum	WlzRCCCompDistHist3D(
+			  int maxDist,
+			  int *dHist,
+			  WlzObject *dObj,
+			  WlzObject *tobj);
 
 /*!
 * \return	RCC classification of the given objects, ie object 0 is a
@@ -232,7 +248,7 @@ C_0
 \end{array}
 \right.
 		\f]
-*		The normalised volumes are computed for each classification
+*		The statistics are computed for each classification
 *		as below:
 * 		<table width="500" border="0">
 		<caption>
@@ -304,28 +320,54 @@ C_0
 		  <td>\f$ENCI(\Omega_0,\Omega_1)\f$</td>
 		  <td>\f$|\Omega_0^{\circ} \cap \Omega_1|/|\Omega_1|\f$</td>
 		</tr>
+		<tr>
+		  <td>\f$ADJ(\Omega_0,\Omega_1)\f$</td>
+		  <td>TODO</td>
+		</tr>
+		<tr>
+		  <td>\f$ADJI(\Omega_0,\Omega_1)\f$</td>
+		  <td>TODO</td>
+		</tr>
 		</table>
 *		Many of the objects that are computed during the classification
 *		are done so using a lazy evaluation with the functions
 *		WlzRCCMakeC() and WlzRCCMakeT().
-*		When computing the normalised volumes enclosure has the
-*		higher priority.
+*		Enclosure and adjacency are somwhat more expensive to compute
+*		than the other classifications, for this reason and because
+*		they are not strictly part of a RCC they can be avoided by
+*		setting the noEnc or noAdj flags.
+*		Enclosure will be computed if the noEnc has not been set and
+*		the classification is not one of WLZ_RCC_EQ, WLZ_RCC_TSUR,
+*		WLZ_RCC_TSURI, WLZ_RCC_NTSUR or WLZ_RCC_NTSURI.
+*		Enclosure will be computed if the noEnc parameter has not
+*		been set and the classification is not WLZ_RCC_EQ.
+*		Adjacency will be computed if the noAdj parameter has not
+*		been set and the classification is not WLZ_RCC_EQ.
+*		TODO add text for adjacency statistics HACK TODO.
 * \param	obj0			First given spatial domain object.
 * \param	obj1			Second given spatial domain object.
 * \param	noEnc			Don't include enclosure if non-zero.
-* \param	dstNrmVolCnt		Destination pointer for the number
+* \param	noAdj			Don't include adjacency if non-zero.
+* \param	maxAdjDist		Maximum distance for adjacency, not
+* 					used if noAdj is non-zero.
+* \param	dstStatCnt		Destination pointer for the number
 * 					of elements returned in the array of
-* 					normalized volumes (see above), may
-* 					be NULL. Ignored if dstNrmVolAry is
-* 					NULL.
-* \param	dstNrmVolAry		Destination pointer for an array of
-* 					normalized volumes (see above), may
-* 					be NULL. If an array is returned it
-* 					should be freed using AlcFree().
+* 					statistics (see above), may be NULL.
+* 					Ignored if dstStatAry is NULL.
+* \param	dstStatAry		Destination pointer for an array of
+* 					statistics (see above), may be NULL.
+* 					If an array is returned it should be
+* 					freed using AlcFree().
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
-				 int *dstNrmVolCnt, double **dstNrmVolAry,
+WlzRCCClass 			WlzRegConCalcRCC(
+				  WlzObject *obj0,
+				  WlzObject *obj1,
+				 int noEnc,
+				 int noAdj,
+				 int maxAdjDist,
+				 int *dstStatCnt,
+				 double **dstStatAry,
 				 WlzErrorNum *dstErr)
 {
   int 		i;
@@ -337,7 +379,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 		*o[2] = {NULL},		/* \Omega_i, i \in 0 \cdots 1 */
 		*t[WLZ_RCCTOIDX_CNT] = {NULL}; /* Temporary object as
 					in the enum WlzRCCTOIdx. */
-  double	nrmVol[WLZ_RCCIDX_CNT] = {0.0}; /* Normalized volumes. */
+  double	stats[WLZ_RCCIDX_CNT] = {0.0}; /* Classification statistics. */
   WlzValues	nullValues;
   WlzRCCClass	cls = WLZ_RCC_EMPTY; /* Classification mask. */
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -534,7 +576,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
   }
   /* Compute the maximum normalized volume for the classification(s) in the
    * classification mask. */
-  if((errNum == WLZ_ERR_NONE) && (dstNrmVolAry != NULL))
+  if((errNum == WLZ_ERR_NONE) && (dstStatAry != NULL))
   {
     int 	i,
     		m;
@@ -544,12 +586,12 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
       m = 1<<i;
       if(m & cls)
       {
-	double	nV = 0.0;
+	double	s = 0.0;
 
         switch(m)
 	{
 	  case WLZ_RCC_EQ:
-	    nV = 1.0;
+	    s = 1.0;
 	    break;
 	  case WLZ_RCC_PO:
 	    /* |\Omega_0 \cap \Omega_1| / |\Omega_0 \cup \Omega_1|  =
@@ -572,7 +614,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      nV = (double )(i01) / (double )u01;
+	      s = (double )(i01) / (double )u01;
             }
 	    break;
 	  case WLZ_RCC_TSUR: /* FALLTHROUGH */
@@ -598,7 +640,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      nV = (double )(u[0]) / (double )u01;
+	      s = (double )(u[0]) / (double )u01;
 	    }
 	    break;
 	  case WLZ_RCC_TSURI: /* FALLTHROUGH */
@@ -624,7 +666,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	    }
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      nV = (double )(u[1]) / (double )u01;
+	      s = (double )(u[1]) / (double )u01;
 	    }
 	    break;
 	  case WLZ_RCC_ENC:
@@ -632,7 +674,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	     * v_0 / u_0 */
 	    if(u[1] >= 0)
 	    {
-	      nV = (double )(v[0]) / (double )(u[0]);
+	      s = (double )(v[0]) / (double )(u[0]);
 	    }
 	    break;
 	  case WLZ_RCC_ENCI:
@@ -640,7 +682,7 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	     * v_1 / u_1 */
 	    if(v[1] >= 0)
 	    {
-	      nV = (double )(v[1]) / (double )(u[1]);
+	      s = (double )(v[1]) / (double )(u[1]);
 	    }
 	    break;
 	  default:
@@ -648,7 +690,56 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 	}
         if(errNum == WLZ_ERR_NONE)
 	{
-	  nrmVol[i] = nV;
+	  stats[i] = s;
+	}
+      }
+    }
+  }
+  /* If adjacency is required check for it and add to both the classification
+   * mask and statistics. */
+  if((errNum == WLZ_ERR_NONE) && (noAdj == 0) &&
+     ((cls & WLZ_RCC_EQ) == 0))
+  {
+    int		i;
+    double	adjMean,
+		adjSD;
+
+    for(i = 0; (i < 2) && (errNum == WLZ_ERR_NONE); ++i)
+    {
+      int	c,
+      		x;
+      WlzObject	*o0,
+      		*o1;
+
+      if(i == 0)
+      {
+        o0 = obj0;
+	o1 = obj1;
+	c = WLZ_RCC_ADJ;
+	x = WLZ_RCCIDX_ADJ;
+      }
+      else
+      {
+        o0 = obj1;
+	o1 = obj0;
+	c = WLZ_RCC_ADJI;
+	x = WLZ_RCCIDX_ADJI;
+      }
+      errNum = WlzRCCAdjacency(o0, o1, maxAdjDist, &adjMean, &adjSD);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	adjMean = adjMean / (double)maxAdjDist;
+	adjSD = adjSD / (double)maxAdjDist;
+#define WLZ_RCC_DEBUG_ADJ
+#ifdef WLZ_RCC_DEBUG_ADJ
+        (void )fprintf(stderr,
+	               "WLZ_RCC_DEBUG_ADJ %d %g %g\n", i, adjMean, adjSD);
+#endif
+	if((adjMean < 0.7) && (adjSD < 0.05))
+	{
+	  cls |= c;
+	  stats[x] = (1.0 - adjSD) * (1.0 - adjSD);
+
 	}
       }
     }
@@ -666,19 +757,19 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
   {
     (void )WlzFreeObj(o[i]);
   }
-  if((errNum == WLZ_ERR_NONE) && (dstNrmVolAry != NULL))
+  if((errNum == WLZ_ERR_NONE) && (dstStatAry != NULL))
   {
-    if((*dstNrmVolAry = (double *)
+    if((*dstStatAry = (double *)
                         AlcMalloc(sizeof(double) * WLZ_RCCIDX_CNT)) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
     else
     {
-      (void )memcpy(*dstNrmVolAry, nrmVol, sizeof(double) * WLZ_RCCIDX_CNT);
-      if(dstNrmVolCnt)
+      (void )memcpy(*dstStatAry, stats, sizeof(double) * WLZ_RCCIDX_CNT);
+      if(dstStatCnt)
       {
-        *dstNrmVolCnt = WLZ_RCCIDX_CNT;
+        *dstStatCnt = WLZ_RCCIDX_CNT;
       }
     }
   }
@@ -700,7 +791,10 @@ WlzRCCClass 	WlzRegConCalcRCC(WlzObject *obj0, WlzObject *obj1, int noEnc,
 * 					WlzRCCTOIdx.
 * \param	i			Index for the classification object.
 */
-static WlzErrorNum  WlzRCCMakeC(WlzObject **c, WlzObject **o, WlzObject **t,
+static WlzErrorNum  		WlzRCCMakeC(
+				  WlzObject **c,
+				  WlzObject **o,
+				  WlzObject **t,
 				int i)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -811,7 +905,10 @@ static WlzErrorNum  WlzRCCMakeC(WlzObject **c, WlzObject **o, WlzObject **t,
 * \param	o			Array of objects, o[0] and o[1].
 * \param	i			Temporary object index.
 */
-static WlzErrorNum WlzRCCMakeT(WlzObject **t, WlzObject **o, WlzRCCTOIdx i)
+static WlzErrorNum 		WlzRCCMakeT(
+				  WlzObject **t,
+				  WlzObject **o,
+				  WlzRCCTOIdx i)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -918,5 +1015,220 @@ static WlzErrorNum WlzRCCMakeT(WlzObject **t, WlzObject **o, WlzRCCTOIdx i)
   {
     errNum = WLZ_ERR_PARAM_DATA;
   }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzBinaryOps
+* \brief	Computes measures of adjacency within a given distance range.
+* 		The distances of all boundary vertices of obj0 from obj1
+* 		are found, The mean and standard deviation
+* 		(\f$\sqrt(\sigma)\f$) of the lowest 50% of these
+* 		distance (clamped at maxDist) are then the adjacency
+* 		adjacency statistics returned.
+* \param	obj0			First given spatial domain object,
+* 					must not be NULL.
+* \param	obj1			Second given spatial domain object,
+* 					must not be NULL.
+* \param	maxDist			Maximum distance for adjacency. This
+* 					is used to compute a distance object,
+* 					large distances will significantly
+* 					increase the processing time.
+* \param	dMean			Destination pointer for mean
+* 					adjacency distance, must not be NULL.
+* \param	dSD			Destination pointer for standard
+* 					deviation in adjacency distance,
+* 					must not be NULL.
+*/
+static WlzErrorNum		WlzRCCAdjacency(
+				  WlzObject *obj0,
+				  WlzObject *obj1,
+				  int maxDist,
+				  double *dMean,
+				  double *dSD)
+{
+  int		*dHist = NULL;
+  WlzObject	*dObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(((obj0->type == WLZ_2D_DOMAINOBJ) && (obj1->type == WLZ_2D_DOMAINOBJ)) ||
+     ((obj0->type == WLZ_3D_DOMAINOBJ) && (obj1->type == WLZ_3D_DOMAINOBJ)))
+  {
+    if((obj0->domain.core == NULL) || (obj1->domain.core == NULL))
+    {
+      errNum = WLZ_ERR_DOMAIN_NULL;
+    }
+  }
+  else
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzObject	*rObj = NULL,
+    		*sObj = NULL;
+
+    /* Compute distance object surrounding obj1 (out to given maximum
+     * distance, background value of maximum distance and value within
+     * obj1's domain of zero. */
+    sObj = WlzAssignObject(
+	   WlzMakeSphereObject(obj1->type, maxDist, 0, 0, 0, &errNum), NULL);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      rObj = WlzAssignObject(
+	     WlzStructDilation(obj1, sObj, &errNum), NULL);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      dObj = WlzAssignObject(
+	     WlzDistanceTransform(rObj, obj1, WLZ_OCTAGONAL_DISTANCE, 0.0,
+	     			  maxDist, &errNum), NULL);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzPixelV bgdV;
+
+      bgdV.type = WLZ_GREY_INT;
+      bgdV.v.inv = maxDist;
+      errNum = WlzSetBackground(dObj, bgdV);
+    }
+    (void )WlzFreeObj(rObj);
+    (void )WlzFreeObj(sObj);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((dHist = (int *)AlcCalloc(maxDist + 1, sizeof(int))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Compute the quantised distance histogram in which distances from
+     * all obj0's pixels/voxels to obj1 are quantized to integer values.
+     * Do this using the distance object. */
+    if(dObj->type == WLZ_2D_DOMAINOBJ)
+    {
+      errNum = WlzRCCCompDistHist2D(maxDist, dHist, dObj, obj0);
+    }
+    else
+    {
+      errNum = WlzRCCCompDistHist2D(maxDist, dHist, dObj, obj0);
+    }
+  }
+  WlzFreeObj(dObj);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Compute the adjacency statistics (mean and standard
+     * deviation) on the closest half of the distances. */
+    int		i,
+    		n,
+		n2;
+    double	mean = 0.0,
+		sum = 0.0,
+		sumSq = 0.0,
+		sd = 0.0;
+
+    n = 0;
+    for(i = 0; i <= maxDist; ++i)
+    {
+      n += dHist[i];
+    }
+    n2 = n / 2;
+    i = 0;
+    n = 0;
+    while((i <= maxDist) && ((n + dHist[i]) < n2))
+    {
+      double	d;
+
+      n += dHist[i];
+      d = (double )i;
+      sum   += d * (double )(dHist[i]);
+      sumSq += d * d * (double )(dHist[i]);
+      ++i;
+    }
+    if(n < n2)
+    {
+      double 	d;
+
+      d = (double )i;
+      sum   += d * (double )(n2 - n);
+      sumSq += d * d * (double )(n2 - n);
+    }
+    if(n2 > 0)
+    {
+      mean = sum / (double )n2;
+      if(n2 > 1)
+      {
+        double	var;
+
+        var = (sumSq - (sum * sum / (double )n2)) / ((double )n2 - 1.0);
+        sd = sqrt(var);
+      }
+    }
+    *dMean = mean;
+    *dSD = sd;
+  }
+  AlcFree(dHist);
+  return(errNum);
+}
+
+static WlzErrorNum	WlzRCCCompDistHist2D(
+			  int maxDist,
+			  int *dHist,
+			  WlzObject *dObj,
+			  WlzObject *tObj)
+{
+  WlzIntervalWSpace iWsp;
+  WlzGreyValueWSpace *gVWSp = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  gVWSp = WlzGreyValueMakeWSp(dObj, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzInitRasterScan(tObj, &iWsp, WLZ_RASTERDIR_ILIC);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    while((errNum = WlzNextInterval(&iWsp)) == WLZ_ERR_NONE)
+    {
+      WlzIVertex2 p;
+
+      p.vtY = iWsp.linpos;
+      for(p.vtX = iWsp.lftpos; p.vtX <= iWsp.lftpos; ++(p.vtX))
+      {
+	int	d;
+
+	WlzGreyValueGet(gVWSp, 0, p.vtY, p.vtX);
+	d = gVWSp->gVal[0].inv;
+	d = WLZ_CLAMP(d, 0, maxDist);
+	++(dHist[d]);
+      }
+    }
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
+  }
+  return(errNum);
+}
+
+static WlzErrorNum	WlzRCCCompDistHist3D(
+			  int maxDist,
+			  int *dHist,
+			  WlzObject *dObj,
+			  WlzObject *tobj)
+{
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+if(1) /* HACK */
+{
+FILE	*fP;
+fP = fopen("debug.wlz", "w");
+(void )WlzWriteObj(fP, dObj);
+(void )fclose(fP);
+}
+  /* HACK TODO */
   return(errNum);
 }

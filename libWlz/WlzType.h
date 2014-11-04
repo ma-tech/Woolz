@@ -646,7 +646,9 @@ typedef enum _WlzRCCClassIdx
                                              Inverse. */
   WLZ_RCCIDX_ENC	= (12),		/*!< ENCloses. */
   WLZ_RCCIDX_ENCI	= (13),		/*!< ENCloses Inverse. */
-  WLZ_RCCIDX_CNT	= (14)		/*!< Not a classification index, but
+  WLZ_RCCIDX_ADJ	= (14),		/*!< ADJacent. */
+  WLZ_RCCIDX_ADJI	= (15),		/*!< ADJacent Inverse. */
+  WLZ_RCCIDX_CNT	= (16)		/*!< Not a classification index, but
                                              the number of classification
 					     indices, keep last. */
 } WlzRCCClassIdx;
@@ -699,6 +701,14 @@ typedef enum _WlzRCCClass
   					     The majority of the second domain
 					     is within the convex hull of the
 					     first domain. */
+  WLZ_RCC_ADJ	= (1<<WLZ_RCCIDX_ADJ),	/*!< Adjacent:
+  					     The majority of the first
+					     domain's boundary is within d_max
+					     voxels of the second domain. */
+  WLZ_RCC_ADJI	= (1<<WLZ_RCCIDX_ADJI),	/*!< Encloses inverse:
+  					     The majority of the second
+					     domain's boundary is within d_max
+					     voxels of the first domain. */
   WLZ_RCC_MSK    = ((1<<WLZ_RCCIDX_CNT)-1) /*!< Not a clasification but a bit
   					     mask for all the possible
 					     classifications. */
