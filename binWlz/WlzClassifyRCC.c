@@ -50,21 +50,21 @@ WlzClassifyRCC - Classifies the given domain objects using the region
 calculus defined in Woolz.
 \par Synopsis
 \verbatim
-WlzClassifyRCC [-o<output file>] [-a] [-e] [-h] [<in object 0>] [<in object 1>]
+WlzClassifyRCC [-o<output file>] [-e] [-f] [-h] [<in object 0>] [<in object 1>]
 \endverbatim
 \par Options
 <table width="500" border="0">
-  <tr>
-    <td><b>-a</b></td>
-    <td>Don't include adjacency classifications.</td>
-  </tr>
   <tr>
     <td><b>-e</b></td>
     <td>Don't include enclosure classifications.</td>
   </tr>
   <tr>
+    <td><b>-f</b></td>
+    <td>Don't include offset classifications.</td>
+  </tr>
+  <tr>
     <td><b>-m</b></td>
-    <td>Maximum adjacency distance in piels/voxels,
+    <td>Maximum offset distance in piels/voxels,
         this should be a resonable distance since domains will be
 	dilated using this figure.</td>
   </tr>
@@ -116,9 +116,9 @@ extern int      optind,
 int             main(int argc, char **argv)
 {
   int		option,
-		noAdj = 0,
 		noEnc = 0,
-		maxAdj = 8,
+		noOst = 0,
+		maxOst = 8,
 		ok = 1,
 		usage = 0;
   double	*nrmVol = NULL;
@@ -129,7 +129,7 @@ int             main(int argc, char **argv)
   WlzObject	*iObj[2] = {NULL};
   char  	*iObjFileStr[2] = {NULL};
   const char	*errMsg;
-  static char	optList[] = "m:o:aeh",
+  static char	optList[] = "m:o:efh",
 		fileStrDef[] = "-";
   const double	eps = 1.0e-06;
 
@@ -141,11 +141,11 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
-      case 'a':
-        noAdj = 1;
-	break;
       case 'e':
         noEnc = 1;
+	break;
+      case 'f':
+        noOst = 1;
 	break;
       case 'm':
         {
@@ -157,7 +157,7 @@ int             main(int argc, char **argv)
 	  }
 	  else
 	  {
-	    maxAdj = ALG_NINT(t);
+	    maxOst = ALG_NINT(t);
 	  }
 	}
 	break;
@@ -222,7 +222,7 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    cls = WlzRegConCalcRCC(iObj[0], iObj[1], noEnc, noAdj, maxAdj,
+    cls = WlzRegConCalcRCC(iObj[0], iObj[1], noEnc, noOst, maxOst,
     			   NULL, &nrmVol, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
@@ -343,14 +343,14 @@ int             main(int argc, char **argv)
 
     fprintf(stderr,
 	    "Usage: %s"
-	    "  [-a] [-e] [-h] [-m<max adj dist>] [-o<out file>]\n"
+	    "  [-e] [-f] [-h] [-m<max offset dist>] [-o<out file>]\n"
 	    "\t\t[<in object 0>] [<in object 1>]\n"
 	    "Version: %s\n"
 	    "Options:\n"
-	    "  -a        Don't include adjacency classifications.\n"
 	    "  -e        Don't include enclosure classifications.\n"
+	    "  -f        Don't include offset classifications.\n"
 	    "  -h        Help, prints this usage message.\n"
-	    "  -m        Maximum adjacency distance in piels/voxels, this\n"
+	    "  -m        Maximum offset distance in piels/voxels, this\n"
 	    "            should be a resonable distance since domains will\n"
 	    "            be dilated using this figure (set to %d)\n"
 	    "  -o        Output file name.\n"
@@ -371,8 +371,7 @@ int             main(int argc, char **argv)
 	    "  WLZ_RCC_NTSURI - Non-Tangential SURrounds Inverse.\n"
 	    "  WLZ_RCC_ENC    - ENCloses.\n"
 	    "  WLZ_RCC_ENCI   - ENCloses Inverse.\n"
-	    "  WLZ_RCC_ADJ    - ADJacent.\n"
-	    "  WLZ_RCC_ADJI   - ADJacent Inverse.\n"
+	    "  WLZ_RCC_OST    - OffSeT.\n"
 	    "See WlzRegConCalcRCC(3) for more information.\n"
 	    "Example:\n%s somites.wlz embryonic.wlz\n"
 	    "giving output\n"
@@ -385,7 +384,7 @@ int             main(int argc, char **argv)
 	    "of somites which is within the convex hull of embryonic.\n",
 	    *argv,
 	    WlzVersion(),
-	    maxAdj,
+	    maxOst,
 	    *argv);
   }
   return(!ok);

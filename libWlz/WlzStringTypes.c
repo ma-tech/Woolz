@@ -1691,11 +1691,8 @@ const char	*WlzStringFromRCC(WlzRCCClass cls, WlzErrorNum *dstErr)
     case WLZ_RCC_ENCI:
       str = "WLZ_RCC_ENCI";
       break;
-    case WLZ_RCC_ADJ:
-      str = "WLZ_RCC_ADJ";
-      break;
-    case WLZ_RCC_ADJI:
-      str = "WLZ_RCC_ADJI";
+    case WLZ_RCC_OST:
+      str = "WLZ_RCC_OST";
       break;
     default:
       errNum = WLZ_ERR_PARAM_DATA;
@@ -1737,8 +1734,7 @@ WlzRCCClass	WlzStringToRCCClass(const char *cStr,
 			 "WLZ_RCC_NTSURI", WLZ_RCC_NTSURI,
 			 "WLZ_RCC_ENC", WLZ_RCC_ENC,
 			 "WLZ_RCC_ENCI", WLZ_RCC_ENCI,
-			 "WLZ_RCC_ADJ", WLZ_RCC_ADJ,
-			 "WLZ_RCC_ADJI", WLZ_RCC_ADJI,
+			 "WLZ_RCC_OST", WLZ_RCC_OST,
 			 NULL))
   {
     cls = tI0;

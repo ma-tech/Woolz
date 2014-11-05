@@ -69,46 +69,46 @@ typedef	enum	_WlzRCCTOIdx
 #endif
 
 static WlzErrorNum 		WlzRCCMakeC(
-                                  WlzObject **c,
 				  WlzObject **o,
+                                  WlzObject **c,
                                   WlzObject **t,
 				  int i);
 static WlzErrorNum 		WlzRCCMakeT(
-				  WlzObject **t,
 				  WlzObject **o,
+				  WlzObject **t,
 				  WlzRCCTOIdx i);
-static WlzErrorNum		WlzRCCAdjacency(
-				  WlzObject *obj0,
-				  WlzObject *obj1,
+static WlzErrorNum		WlzRCCOffset(
+				  WlzObject **o,
+				  WlzObject **t,
 				  int maxDist,
-				  double *dMean,
-				  double *dSD);
+				  int *dQ0,
+				  int *dQ1,
+				  int *dQ2);
 static WlzErrorNum	WlzRCCCompDistHist2D(
 			  int maxDist,
 			  int *dHist,
-			  WlzObject *dObj,
-			  WlzObject *tobj);
+			  WlzObject *dobj);
 static WlzErrorNum	WlzRCCCompDistHist3D(
 			  int maxDist,
 			  int *dHist,
-			  WlzObject *dObj,
-			  WlzObject *tobj);
+			  WlzObject *dobj);
 
 /*!
 * \return	RCC classification of the given objects, ie object 0 is a
 *               returned classification of object 1.
 * \ingroup	WlzBinaryOps
 * \brief	The given pair of spatial domain objects are classified
-*		using a RCC.
+*		using a RCC with optional enclosure and offset classifications.
 *
 *		For an explanation of RCC8 classifications
 *		see the type definition ::WlzRCCClass and the paper:
 *		D.A. Randell, etal,
 *		"Discrete Mereotopology for Spatial Reasoning in
 *		Automated Histological Image Analysis", PAMI 35(3) 2013.
-*		The RCC8 has been extended to include encloses and
-*		surrounds.
-* 		The classification is performed using simple combinations
+*		The RCC8 has been extended to include both tangential and
+*		non-tangential surrounds.
+*
+* 		The RCC classification is performed using simple combinations
 * 		of the Woolz union, intersection, exclusive or, dilation,
 * 		fill and convex hull operators on an ordered pair of
 * 		spatial domains(\f$\Omega_0\f$ and \f$\Omega_1\f$):
@@ -161,7 +161,7 @@ static WlzErrorNum	WlzRCCCompDistHist3D(
 *		  \f$|\Omega|\f$ the cardinality (area or volume) of
 *		  \f$\Omega\f$.
 * 		The decision tree for the classification excluding
-* 		enclosure is:
+* 		enclosure and offset is:
 * 		\f[
 C_0
 \left\{
@@ -321,35 +321,59 @@ C_0
 		  <td>\f$|\Omega_0^{\circ} \cap \Omega_1|/|\Omega_1|\f$</td>
 		</tr>
 		<tr>
-		  <td>\f$ADJ(\Omega_0,\Omega_1)\f$</td>
-		  <td>TODO</td>
-		</tr>
-		<tr>
-		  <td>\f$ADJI(\Omega_0,\Omega_1)\f$</td>
-		  <td>TODO</td>
+		  <td>\f$OST(\Omega_0,\Omega_1)\f$</td>
+		  <td>\f$q_1/(q_1 + q_2 - q_0)\f$</td>
 		</tr>
 		</table>
-*		Many of the objects that are computed during the classification
-*		are done so using a lazy evaluation with the functions
-*		WlzRCCMakeC() and WlzRCCMakeT().
-*		Enclosure and adjacency are somwhat more expensive to compute
+*
+*		Many of the objects that are computed during the
+*		classification are done so using a lazy evaluation with the
+*		functions WlzRCCMakeC() and WlzRCCMakeT().
+*
+*		Enclosure and offset are somwhat more expensive to compute
 *		than the other classifications, for this reason and because
 *		they are not strictly part of a RCC they can be avoided by
-*		setting the noEnc or noAdj flags.
+*		setting the noEnc or noOst flags.
+*
 *		Enclosure will be computed if the noEnc has not been set and
 *		the classification is not one of WLZ_RCC_EQ, WLZ_RCC_TSUR,
 *		WLZ_RCC_TSURI, WLZ_RCC_NTSUR or WLZ_RCC_NTSURI.
-*		Enclosure will be computed if the noEnc parameter has not
+*		Enclosure is computed using:
+*		\f[
+		  |\Omega_0 \cap \Omega_1^{\circ}|/|\Omega_0|
+		\f]
+*		for \f$\Omega_0\f$ to be encloded by \f$\Omega_1\f$ then
+*		at least half of \f$\Omega_0\f$ must intersect the convex
+*		hull of \f$\Omega_1\f$.
+*
+*		Offset will be computed if the noOst parameter has not
 *		been set and the classification is not WLZ_RCC_EQ.
-*		Adjacency will be computed if the noAdj parameter has not
-*		been set and the classification is not WLZ_RCC_EQ.
-*		TODO add text for adjacency statistics HACK TODO.
+*		Offset is computed within a restricted domain in which
+*		all pixels/voxels are equidistant for the domains of the
+*		given objects:
+		\f[
+		\Omega_e = (\Omega_0 \cup \Omega_1)^\circ \cap
+		           \Omega_0^{+d_{max}} \cap
+			   \Omega_1^{+d_{max}} \cap
+			   \Omega(D(\Omega_0) = D(\Omega_1))
+		\f]
+*		where \f$D(\Omega)\f$ is the distance transform of the domain
+*		\f$\Omega\f$. Within \f$\Omega_e\f$ the first, second and
+*		third quantiles (\f$q_0\f$, \f$q_1\f$ and \f$q_2\f$) of
+*		the distances \f$D(\Omega_0)\f$ (or equivalently
+*		\f$D(\Omega_1)\f$) are computed. The ratio of the median
+*		to the median plus interquartile range is then computed
+*		and the domains are classified as offset if this ratio
+*		is greater than or equal to one half:
+*		\f[
+		\frac{q_1}{q_1 + q_2 - q_0} \geq 0.5
+		\f]
 * \param	obj0			First given spatial domain object.
 * \param	obj1			Second given spatial domain object.
 * \param	noEnc			Don't include enclosure if non-zero.
-* \param	noAdj			Don't include adjacency if non-zero.
-* \param	maxAdjDist		Maximum distance for adjacency, not
-* 					used if noAdj is non-zero.
+* \param	noOst			Don't include offset if non-zero.
+* \param	maxOstDist		Maximum distance for offset, not
+* 					used if noOst is non-zero.
 * \param	dstStatCnt		Destination pointer for the number
 * 					of elements returned in the array of
 * 					statistics (see above), may be NULL.
@@ -364,8 +388,8 @@ WlzRCCClass 			WlzRegConCalcRCC(
 				  WlzObject *obj0,
 				  WlzObject *obj1,
 				 int noEnc,
-				 int noAdj,
-				 int maxAdjDist,
+				 int noOst,
+				 int maxOstDist,
 				 int *dstStatCnt,
 				 double **dstStatAry,
 				 WlzErrorNum *dstErr)
@@ -409,18 +433,18 @@ WlzRCCClass 			WlzRegConCalcRCC(
 		   WlzMakeMain(obj1->type, obj1->domain, nullValues,
 	  		       NULL, NULL, &errNum), NULL)) != NULL))
   {
-    errNum = WlzRCCMakeC(c, o, t, 0);
+    errNum = WlzRCCMakeC(o, c, t, 0);
   }
   if(errNum == WLZ_ERR_NONE)
   {
     if(WlzIsEmpty(c[0], NULL))
     {
-      errNum = WlzRCCMakeC(c, o, t, 1);
+      errNum = WlzRCCMakeC(o, c, t, 1);
       if(errNum == WLZ_ERR_NONE)
       {
 	if(WlzIsEmpty(c[1], NULL))
 	{
-	  errNum = WlzRCCMakeC(c, o, t, 7);
+	  errNum = WlzRCCMakeC(o, c, t, 7);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    if(WlzIsEmpty(c[7], NULL))
@@ -429,7 +453,7 @@ WlzRCCClass 			WlzRegConCalcRCC(
 	    }
 	    else
 	    {
-	      errNum = WlzRCCMakeC(c, o, t, 8);
+	      errNum = WlzRCCMakeC(o, c, t, 8);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 		if(WlzIsEmpty(c[8], NULL))
@@ -446,7 +470,7 @@ WlzRCCClass 			WlzRegConCalcRCC(
 	}
 	else
 	{
-	  errNum = WlzRCCMakeC(c, o, t, 7);
+	  errNum = WlzRCCMakeC(o, c, t, 7);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    if(WlzIsEmpty(c[7], NULL))
@@ -455,7 +479,7 @@ WlzRCCClass 			WlzRegConCalcRCC(
 	    }
 	    else
 	    {
-	      errNum = WlzRCCMakeC(c, o, t, 8);
+	      errNum = WlzRCCMakeC(o, c, t, 8);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 		if(WlzIsEmpty(c[8], NULL))
@@ -474,7 +498,7 @@ WlzRCCClass 			WlzRegConCalcRCC(
     }
     else
     {
-      errNum = WlzRCCMakeC(c, o, t, 2);
+      errNum = WlzRCCMakeC(o, c, t, 2);
       if(errNum == WLZ_ERR_NONE)
       {
         if(WlzIsEmpty(c[2], NULL))
@@ -483,12 +507,12 @@ WlzRCCClass 			WlzRegConCalcRCC(
 	}
 	else
 	{
-	  errNum = WlzRCCMakeC(c, o, t, 3);
+	  errNum = WlzRCCMakeC(o, c, t, 3);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    if(WlzIsEmpty(c[3], NULL))
 	    {
-	      errNum = WlzRCCMakeC(c, o, t, 4);
+	      errNum = WlzRCCMakeC(o, c, t, 4);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 		if(WlzIsEmpty(c[4], NULL))
@@ -503,12 +527,12 @@ WlzRCCClass 			WlzRegConCalcRCC(
 	    }
 	    else
 	    {
-	      errNum = WlzRCCMakeC(c, o, t, 5);
+	      errNum = WlzRCCMakeC(o, c, t, 5);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 		if(WlzIsEmpty(c[5], NULL))
 		{
-		  errNum = WlzRCCMakeC(c, o, t, 6);
+		  errNum = WlzRCCMakeC(o, c, t, 6);
 		  if(errNum == WLZ_ERR_NONE)
 		  {
 		    if(WlzIsEmpty(c[6], NULL))
@@ -541,7 +565,7 @@ WlzRCCClass 			WlzRegConCalcRCC(
   {
     for(i = 0; i <= 1; ++i)
     {
-      errNum = WlzRCCMakeT(t, o,
+      errNum = WlzRCCMakeT(o, t,
                            (i == 0)? WLZ_RCCTOIDX_O0O1CI: WLZ_RCCTOIDX_O0CO1I);
       if(errNum == WLZ_ERR_NONE)
       {
@@ -598,7 +622,7 @@ WlzRCCClass 			WlzRegConCalcRCC(
 	     * u_0 / u_01 */
 	    if(i01 <= 0)
 	    {
-	      errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1I);
+	      errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0O1I);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 	        i01 = WlzVolume(t[WLZ_RCCTOIDX_O0O1I], &errNum);
@@ -606,7 +630,7 @@ WlzRCCClass 			WlzRegConCalcRCC(
 	    }
 	    if((errNum == WLZ_ERR_NONE) && (u01 <= 0))
 	    {
-	      errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1U);
+	      errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0O1U);
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 	        u01 = WlzVolume(t[WLZ_RCCTOIDX_O0O1U], &errNum);
@@ -631,7 +655,7 @@ WlzRCCClass 			WlzRegConCalcRCC(
 	    {
 	      if(u01 <= 0)
 	      {
-	        errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1U);
+	        errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0O1U);
 		if(errNum == WLZ_ERR_NONE)
 		{
 		  u01 = WlzVolume(t[WLZ_RCCTOIDX_O0O1U], &errNum);
@@ -657,7 +681,7 @@ WlzRCCClass 			WlzRegConCalcRCC(
 	    {
 	      if(u01 <= 0)
 	      {
-		errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1U);
+		errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0O1U);
 		if(errNum == WLZ_ERR_NONE)
 		{
 		  u01 = WlzVolume(t[WLZ_RCCTOIDX_O0O1U], &errNum);
@@ -695,51 +719,38 @@ WlzRCCClass 			WlzRegConCalcRCC(
       }
     }
   }
-  /* If adjacency is required check for it and add to both the classification
+  /* If offset is required check for it and add to both the classification
    * mask and statistics. */
-  if((errNum == WLZ_ERR_NONE) && (noAdj == 0) &&
+  if((errNum == WLZ_ERR_NONE) && (noOst == 0) &&
      ((cls & WLZ_RCC_EQ) == 0))
   {
-    int		i;
-    double	adjMean,
-		adjSD;
+    int		ostQ[3];
 
-    for(i = 0; (i < 2) && (errNum == WLZ_ERR_NONE); ++i)
+    errNum = WlzRCCOffset(o, t,
+                          maxOstDist, &(ostQ[0]), &(ostQ[1]), &(ostQ[2]));
+    if(errNum == WLZ_ERR_NONE)
     {
-      int	c,
-      		x;
-      WlzObject	*o0,
-      		*o1;
-
-      if(i == 0)
-      {
-        o0 = obj0;
-	o1 = obj1;
-	c = WLZ_RCC_ADJ;
-	x = WLZ_RCCIDX_ADJ;
-      }
-      else
-      {
-        o0 = obj1;
-	o1 = obj0;
-	c = WLZ_RCC_ADJI;
-	x = WLZ_RCCIDX_ADJI;
-      }
-      errNum = WlzRCCAdjacency(o0, o1, maxAdjDist, &adjMean, &adjSD);
-      if(errNum == WLZ_ERR_NONE)
-      {
-	adjMean = adjMean / (double)maxAdjDist;
-	adjSD = adjSD / (double)maxAdjDist;
-#define WLZ_RCC_DEBUG_ADJ
-#ifdef WLZ_RCC_DEBUG_ADJ
-        (void )fprintf(stderr,
-	               "WLZ_RCC_DEBUG_ADJ %d %g %g\n", i, adjMean, adjSD);
+#ifdef WLZ_RCC_DEBUG_OST
+      (void )fprintf(stderr,
+		     "WLZ_RCC_DEBUG_OST %d %d %d\n",
+		     ostQ[0], ostQ[1], ostQ[2]);
 #endif
-	if((adjMean < 0.7) && (adjSD < 0.05))
-	{
-	  cls |= c;
-	  stats[x] = (1.0 - adjSD) * (1.0 - adjSD);
+      if((ostQ[1] > 0) && (ostQ[1] < maxOstDist) && (ostQ[2] >= ostQ[0]))
+      {
+	const double eps = 1.0e-06;
 
+	if(ostQ[2] > ostQ[0])
+	{
+	  stats[WLZ_RCCIDX_OST] = (double )ostQ[1] /
+		                  (double )(ostQ[2] + ostQ[1] - ostQ[0]);
+	}
+	else
+	{
+	  stats[WLZ_RCCIDX_OST] = 1.0;
+	}
+	if(stats[WLZ_RCCIDX_OST] > (0.5 - eps))
+	{
+	  cls |= WLZ_RCC_OST;
 	}
       }
     }
@@ -785,15 +796,15 @@ WlzRCCClass 			WlzRegConCalcRCC(
 * \ingroup	WlzBinaryOps
 * \brief	Test to see if the classification object \f$c_i\f$ as in
 * 		WlzRegConCalcRCC() has been computed and if not do so.
-* \param	c			Array c as in WlzRegConCalcRCC().
 * \param	o			Array of objects, o[0] and o[1].
+* \param	c			Array c as in WlzRegConCalcRCC().
 * \param	t			Array of temporary objects as in
 * 					WlzRCCTOIdx.
 * \param	i			Index for the classification object.
 */
 static WlzErrorNum  		WlzRCCMakeC(
-				  WlzObject **c,
 				  WlzObject **o,
+				  WlzObject **c,
 				  WlzObject **t,
 				int i)
 {
@@ -806,14 +817,14 @@ static WlzErrorNum  		WlzRCCMakeC(
       switch(i)
       {
 	case 0: /* \Omega_0 \cap \Omega_1 */
-	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1I);
+	  errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0O1I);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    c[i] = WlzAssignObject(t[WLZ_RCCTOIDX_O0O1I], NULL);
 	  }
 	  break;
 	case 1: /* \Omega_1^+ \cap \Omega_1 */
-	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0D);
+	  errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0D);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    c[i] = WlzAssignObject(
@@ -825,7 +836,7 @@ static WlzErrorNum  		WlzRCCMakeC(
 		 WlzXORDom(o[0], o[1], &errNum), NULL);
 	  break;
 	case 3: /* (\Omega_0 \cup \Omega_1) \oplus \Omega_1 */
-	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1U);
+	  errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0O1U);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    c[i] = WlzAssignObject(
@@ -834,7 +845,7 @@ static WlzErrorNum  		WlzRCCMakeC(
 	  }
 	  break;
 	case 4: /* (\Omega_0^+ \cup \Omega_1) \oplus \Omega_1 */
-	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0DO1U);
+	  errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0DO1U);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    c[i] = WlzAssignObject(
@@ -842,7 +853,7 @@ static WlzErrorNum  		WlzRCCMakeC(
 	  }
 	  break;
 	case 5: /* (\Omega_0 \cup \Omega_1) \oplus \Omega_0 */
-	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1U);
+	  errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0O1U);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    c[i] = WlzAssignObject(
@@ -850,7 +861,7 @@ static WlzErrorNum  		WlzRCCMakeC(
 	  }
 	  break;
 	case 6: /* (\Omega_0 \cup \Omega_1^+) \oplus \Omega_0 */
-	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1DU);
+	  errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0O1DU);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    c[i] = WlzAssignObject(
@@ -858,10 +869,10 @@ static WlzErrorNum  		WlzRCCMakeC(
 	  }
 	  break;
 	case 7:/*(\Omega_0^{\bullet} \cup \Omega_1) \oplus \Omega_0^{\bullet}*/
-	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0F);
+	  errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0F);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0FO1U);
+	    errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0FO1U);
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
@@ -871,10 +882,10 @@ static WlzErrorNum  		WlzRCCMakeC(
 	  }
 	  break;
 	case 8:/*(\Omega_0 \cup \Omega_1^{\bullet}) \oplus \Omega_1^{\bullet}*/
-	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O1F);
+	  errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O1F);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0O1FU);
+	    errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0O1FU);
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
@@ -901,13 +912,13 @@ static WlzErrorNum  		WlzRCCMakeC(
 * \ingroup	WlzBinaryOps
 * \brief	Make temporary objects as in WlzRCCTOIdx for
 * 		WlzRegConCalcRCC().
-* \param	t			Array of temporary objects.
 * \param	o			Array of objects, o[0] and o[1].
+* \param	t			Array of temporary objects.
 * \param	i			Temporary object index.
 */
 static WlzErrorNum 		WlzRCCMakeT(
-				  WlzObject **t,
 				  WlzObject **o,
+				  WlzObject **t,
 				  WlzRCCTOIdx i)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -951,7 +962,7 @@ static WlzErrorNum 		WlzRCCMakeT(
 	  break;
 
 	case WLZ_RCCTOIDX_O0DO1U:		/* o_0^+ \cup o_1 */
-	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0D);
+	  errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0D);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    t[i] = WlzAssignObject(
@@ -959,7 +970,7 @@ static WlzErrorNum 		WlzRCCMakeT(
 	  }
 	  break;
 	case WLZ_RCCTOIDX_O0O1DU:		/* o_0   \cup o_1^+ */
-	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O1D);
+	  errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O1D);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    t[i] = WlzAssignObject(
@@ -990,7 +1001,7 @@ static WlzErrorNum 		WlzRCCMakeT(
 	  }
 	  break;
 	case WLZ_RCCTOIDX_O0FO1U:		/* o_0^{\bullet} \cup o_1 */
-	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O0F);
+	  errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0F);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    t[i] = WlzAssignObject(
@@ -998,7 +1009,7 @@ static WlzErrorNum 		WlzRCCMakeT(
 	  }
 	  break;
 	case WLZ_RCCTOIDX_O0O1FU:		/* o_0 \cup o_1^{\bullet} */
-	  errNum = WlzRCCMakeT(t, o, WLZ_RCCTOIDX_O1F);
+	  errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O1F);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
 	    t[i] = WlzAssignObject(
@@ -1021,41 +1032,64 @@ static WlzErrorNum 		WlzRCCMakeT(
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzBinaryOps
-* \brief	Computes measures of adjacency within a given distance range.
-* 		The distances of all boundary vertices of obj0 from obj1
-* 		are found, The mean and standard deviation
-* 		(\f$\sqrt(\sigma)\f$) of the lowest 50% of these
-* 		distance (clamped at maxDist) are then the adjacency
-* 		adjacency statistics returned.
-* \param	obj0			First given spatial domain object,
-* 					must not be NULL.
-* \param	obj1			Second given spatial domain object,
-* 					must not be NULL.
-* \param	maxDist			Maximum distance for adjacency. This
+* \brief	Computes a metric which quantifies the extent to which
+* 		the domain of one of the given objects is offset from 
+* 		the domain of the second. This is a symetric metric, ie
+* 		\f$OST(\Omega_0, \Omega_1) \equiv OST(\Omega_0, \Omega_1)\f$.
+*		A domain is computed which is equidistant from the domains
+*		of the two given objects, is within maxDist of each object's
+*		domain and is within the convex hull of the union of the
+*		domains of the two given objects. Within this domain the
+*		1st, 2nd and 3rd quantiles of the distance
+*		(\f$q_0\f$, \f$q_1\f$ and \f$q_2\f$) are found.
+*		The object's domains are classified as offset if
+*		\f[
+		frac{q_1}{q_1 + (q_1  - q_0) + (q_2 - q_1)} \geq 0.5
+		\f]
+*		ie
+*		\f[
+		frac{q_1}{q_1 + q_2 - q_0} \geq 0.5
+		\f]
+*		Small equi-distant domains with a volume less than half
+*		the maximum distance do not classify the relationship as
+*		an overlap.
+* \param	o			Array with the two given spatial
+* 					domain objects, must not be NULL
+* 					and nor must the objects.
+* \param	t			Array of temporary objects as in
+* 					WlzRCCTOIdx.
+* \param	maxDist			Maximum distance for offset. This
 * 					is used to compute a distance object,
 * 					large distances will significantly
 * 					increase the processing time.
-* \param	dMean			Destination pointer for mean
-* 					adjacency distance, must not be NULL.
-* \param	dSD			Destination pointer for standard
-* 					deviation in adjacency distance,
+* \param	dQ0			Destination pointer for 1st quantile
+* 					offset distance, must not be NULL.
+* \param	dQ1			Destination pointer for 2nd quantile
+* 					(ie median) offset distance,
 * 					must not be NULL.
+* \param	dQ2			Destination pointer for 3rd quantile
+* 					offset distance, must not be NULL.
 */
-static WlzErrorNum		WlzRCCAdjacency(
-				  WlzObject *obj0,
-				  WlzObject *obj1,
+static WlzErrorNum		WlzRCCOffset(
+				  WlzObject **o,
+				  WlzObject **t,
 				  int maxDist,
-				  double *dMean,
-				  double *dSD)
+				  int *dQ0,
+				  int *dQ1,
+				  int *dQ2)
 {
+  int		empty = 0;
+  int		q[3] = {0};
   int		*dHist = NULL;
-  WlzObject	*dObj = NULL;
+  WlzObject	*eObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if(((obj0->type == WLZ_2D_DOMAINOBJ) && (obj1->type == WLZ_2D_DOMAINOBJ)) ||
-     ((obj0->type == WLZ_3D_DOMAINOBJ) && (obj1->type == WLZ_3D_DOMAINOBJ)))
+  if(((o[0]->type == WLZ_2D_DOMAINOBJ) &&
+      (o[1]->type == WLZ_2D_DOMAINOBJ)) ||
+     ((o[0]->type == WLZ_3D_DOMAINOBJ) &&
+      (o[1]->type == WLZ_3D_DOMAINOBJ)))
   {
-    if((obj0->domain.core == NULL) || (obj1->domain.core == NULL))
+    if((o[0]->domain.core == NULL) || (o[1]->domain.core == NULL))
     {
       errNum = WLZ_ERR_DOMAIN_NULL;
     }
@@ -1064,39 +1098,157 @@ static WlzErrorNum		WlzRCCAdjacency(
   {
     errNum = WLZ_ERR_OBJECT_TYPE;
   }
+  /* Compute distance transforms of the two given objects out to a given
+   * maximum distance and then using these distances the equi-distant
+   * domain between these two objects. The values of the eqi-distant object
+   * are those of the distance between the objects.*/
   if(errNum == WLZ_ERR_NONE)
   {
-    WlzObject	*rObj = NULL,
-    		*sObj = NULL;
+    int		i;
+    WlzObject	*sObj = NULL,
+    		*cObj = NULL;
+    WlzObject	*dObj[2];
 
-    /* Compute distance object surrounding obj1 (out to given maximum
-     * distance, background value of maximum distance and value within
-     * obj1's domain of zero. */
+    dObj[0] = dObj[1] = NULL;
+    /* Create structuring element with which to dilate the given object
+     * domains(by maxDist). */
     sObj = WlzAssignObject(
-	   WlzMakeSphereObject(obj1->type, maxDist, 0, 0, 0, &errNum), NULL);
+	   WlzMakeSphereObject(o[0]->type, maxDist, 0, 0, 0,
+	                       &errNum), NULL);
+    /* Create domain or convex hull of the union of the two given object
+     * domains. */
     if(errNum == WLZ_ERR_NONE)
     {
-      rObj = WlzAssignObject(
-	     WlzStructDilation(obj1, sObj, &errNum), NULL);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      dObj = WlzAssignObject(
-	     WlzDistanceTransform(rObj, obj1, WLZ_OCTAGONAL_DISTANCE, 0.0,
-	     			  maxDist, &errNum), NULL);
-    }
-    if(errNum == WLZ_ERR_NONE)
-    {
-      WlzPixelV bgdV;
+      WlzObject	*uObj = NULL,
+      		*xObj = NULL;
 
-      bgdV.type = WLZ_GREY_INT;
-      bgdV.v.inv = maxDist;
-      errNum = WlzSetBackground(dObj, bgdV);
+      errNum = WlzRCCMakeT(o, t, WLZ_RCCTOIDX_O0O1U);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	uObj = WlzAssignObject(t[WLZ_RCCTOIDX_O0O1U], NULL);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        xObj = WlzAssignObject(
+	       WlzObjToConvexHull(uObj, &errNum), NULL);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        cObj = WlzAssignObject(
+	       WlzConvexHullToObj(xObj, o[0]->type, &errNum), NULL);
+      }
+      (void )WlzFreeObj(xObj);
+      (void )WlzFreeObj(uObj);
     }
-    (void )WlzFreeObj(rObj);
+    /* Dilate the two given objects and find the ntersection of the
+     * dilated domains with each other and the convex hull computed
+     * above. Within his domain compute the distances. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      for(i = 0; i < 2; ++i)
+      {
+	WlzObject *tObj = NULL,
+		  *rObj = NULL;
+
+	tObj = WlzAssignObject(
+	       WlzStructDilation(o[i], sObj, &errNum), NULL);
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  rObj = WlzAssignObject(
+	         WlzIntersect2(tObj, cObj, &errNum), NULL);
+	}
+        (void )WlzFreeObj(tObj);
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  dObj[i] = WlzAssignObject(
+		    WlzDistanceTransform(rObj, o[!i],
+					 WLZ_OCTAGONAL_DISTANCE,
+					 0.0, maxDist, &errNum), NULL);
+	}
+        (void )WlzFreeObj(rObj);
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  WlzPixelV bgdV;
+
+	  bgdV.type = WLZ_GREY_INT;
+	  bgdV.v.inv = maxDist;
+	  errNum = WlzSetBackground(dObj[i], bgdV);
+	}
+        if(errNum != WLZ_ERR_NONE)
+	{
+	  break;
+	}
+      }
+    }
+    /* Find the domain which is equi-distant from the two given objects,
+     * within the xDist range and within the convex hull of the union of
+     * the two given object's domains. */
+    (void )WlzFreeObj(sObj); sObj = NULL;
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzLong	vol = 0;
+      WlzObject *qObj = NULL,
+      		*tObj = NULL;
+
+      qObj = WlzAssignObject(
+             WlzImageArithmetic(dObj[0], dObj[1], WLZ_BO_EQ, 0, &errNum), NULL);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	WlzPixelV thrV;
+
+	thrV.type = WLZ_GREY_INT;
+	thrV.v.inv = 1;
+        tObj = WlzAssignObject(
+	       WlzThreshold(qObj, thrV, WLZ_THRESH_HIGH, &errNum), NULL);
+      }
+      /* Check that the eqi-distant domain is of a reasonable size ie has
+       * a area or volume greater than half the maximum distance. */
+      if(errNum == WLZ_ERR_NONE)
+      {
+        vol = WlzVolume(tObj, &errNum);
+	if((maxDist / 2) >= vol)
+	{
+	  empty = 1;
+	}
+      }
+      if((errNum == WLZ_ERR_NONE) && !empty)
+      {
+	WlzObject *mObj;
+	WlzPixelV tmpV;
+
+	tmpV.type = WLZ_GREY_INT;
+	tmpV.v.inv = 0;
+        mObj = WlzAssignObject(
+	       WlzGreyTemplate(dObj[0], tObj, tmpV, &errNum), NULL);
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  tmpV.v.inv = 1;
+	  eObj = WlzAssignObject(
+	  	WlzThreshold(mObj, tmpV, WLZ_THRESH_HIGH, &errNum), NULL);
+	}
+	(void )WlzFreeObj(mObj);
+      }
+      (void )WlzFreeObj(tObj);
+      (void )WlzFreeObj(qObj);
+      if((errNum == WLZ_ERR_NONE) && !empty)
+      {
+	WlzLong vol;
+
+	vol = WlzVolume(eObj, &errNum);
+	if((maxDist / 2) >= vol)
+	{
+	  empty = 1;
+	}
+      }
+    }
+    (void )WlzFreeObj(cObj);
     (void )WlzFreeObj(sObj);
+    (void )WlzFreeObj(dObj[0]);
+    (void )WlzFreeObj(dObj[1]);
   }
-  if(errNum == WLZ_ERR_NONE)
+  /* Compute a quantised distance histogram in which equi-distant distances
+   * are quantized to integer values. */
+  if((errNum == WLZ_ERR_NONE) && !empty)
   {
     if((dHist = (int *)AlcCalloc(maxDist + 1, sizeof(int))) == NULL)
     {
@@ -1105,103 +1257,99 @@ static WlzErrorNum		WlzRCCAdjacency(
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Compute the quantised distance histogram in which distances from
-     * all obj0's pixels/voxels to obj1 are quantized to integer values.
-     * Do this using the distance object. */
-    if(dObj->type == WLZ_2D_DOMAINOBJ)
+    if(eObj->type == WLZ_2D_DOMAINOBJ)
     {
-      errNum = WlzRCCCompDistHist2D(maxDist, dHist, dObj, obj0);
+      errNum = WlzRCCCompDistHist2D(maxDist, dHist, eObj);
     }
     else
     {
-      errNum = WlzRCCCompDistHist2D(maxDist, dHist, dObj, obj0);
+      errNum = WlzRCCCompDistHist3D(maxDist, dHist, eObj);
     }
+#ifdef WLZ_RCC_DEBUG_OST
+    {
+      FILE *fP;
+
+      fP = fopen("WLZ_RCC_DEBUG_OST.wlz", "w");
+      (void )WlzWriteObj(fP, eObj);
+      (void )fclose(fP);
+    }
+#endif
   }
-  WlzFreeObj(dObj);
-  if(errNum == WLZ_ERR_NONE)
+  WlzFreeObj(eObj);
+  if((errNum == WLZ_ERR_NONE) && !empty)
   {
-    /* Compute the adjacency statistics (mean and standard
-     * deviation) on the closest half of the distances. */
     int		i,
     		n,
-		n2;
-    double	mean = 0.0,
-		sum = 0.0,
-		sumSq = 0.0,
-		sd = 0.0;
-
+		s,
+		nq;
+    /* Compute the median, first and third quantile offset distances,
+     * the ratio of median to the median plus inner inter-quantile range. */
     n = 0;
-    for(i = 0; i <= maxDist; ++i)
+    for(i = 0; i < maxDist; ++i)
     {
       n += dHist[i];
     }
-    n2 = n / 2;
     i = 0;
-    n = 0;
-    while((i <= maxDist) && ((n + dHist[i]) < n2))
+    s = 0;
+    nq = n / 4;
+    while(s < nq)
     {
-      double	d;
-
-      n += dHist[i];
-      d = (double )i;
-      sum   += d * (double )(dHist[i]);
-      sumSq += d * d * (double )(dHist[i]);
-      ++i;
+      s += dHist[i++];
     }
-    if(n < n2)
+    q[0] = i;
+    nq = n / 2;
+    while(s < nq)
     {
-      double 	d;
-
-      d = (double )i;
-      sum   += d * (double )(n2 - n);
-      sumSq += d * d * (double )(n2 - n);
+      s += dHist[i++];
     }
-    if(n2 > 0)
+    q[1] = i;
+    nq = (3 * n) / 4;
+    while(s < nq)
     {
-      mean = sum / (double )n2;
-      if(n2 > 1)
-      {
-        double	var;
-
-        var = (sumSq - (sum * sum / (double )n2)) / ((double )n2 - 1.0);
-        sd = sqrt(var);
-      }
+      s += dHist[i++];
     }
-    *dMean = mean;
-    *dSD = sd;
+    q[2] = i;
   }
   AlcFree(dHist);
+  *dQ0 = q[0];
+  *dQ1 = q[1];
+  *dQ2 = q[2];
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzBinaryOps
+* \brief	For each value in the given 2D distance object the count in
+* 		the given distance histogram (array) is incremented. The
+* 		distance if clipped to the range [0-maxDist].
+* \param	maxDist			Maximum distance value.
+* \param	dHist			Distance histogram (array).
+* \param	dObj			Given 2D distance object.
+*/
 static WlzErrorNum	WlzRCCCompDistHist2D(
 			  int maxDist,
 			  int *dHist,
-			  WlzObject *dObj,
-			  WlzObject *tObj)
+			  WlzObject *dObj)
 {
-  WlzIntervalWSpace iWsp;
-  WlzGreyValueWSpace *gVWSp = NULL;
+  WlzGreyWSpace	gWSp;
+  WlzIntervalWSpace iWSp;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  gVWSp = WlzGreyValueMakeWSp(dObj, &errNum);
+  errNum = WlzInitGreyScan(dObj, &iWSp, &gWSp);
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzInitRasterScan(tObj, &iWsp, WLZ_RASTERDIR_ILIC);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    while((errNum = WlzNextInterval(&iWsp)) == WLZ_ERR_NONE)
+    while((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)
     {
-      WlzIVertex2 p;
+      int	i;
+      int	*p;
 
-      p.vtY = iWsp.linpos;
-      for(p.vtX = iWsp.lftpos; p.vtX <= iWsp.lftpos; ++(p.vtX))
+      p = gWSp.u_grintptr.inp;
+      for(i = iWSp.lftpos; i <= iWSp.rgtpos; ++i)
       {
 	int	d;
 
-	WlzGreyValueGet(gVWSp, 0, p.vtY, p.vtX);
-	d = gVWSp->gVal[0].inv;
+	d = *p++;
 	d = WLZ_CLAMP(d, 0, maxDist);
 	++(dHist[d]);
       }
@@ -1214,21 +1362,46 @@ static WlzErrorNum	WlzRCCCompDistHist2D(
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzBinaryOps
+* \brief	For each value in the given 3D distance object the count in
+* 		the given distance histogram (array) is incremented. This
+* 		is done by forming 2D objects for each plane and calling
+* 		WlzRCCCompDistHist2D().
+* \param	maxDist			Maximum distance value.
+* \param	dHist			Distance histogram (array).
+* \param	dObj			Given 3D distance object.
+*/
 static WlzErrorNum	WlzRCCCompDistHist3D(
 			  int maxDist,
 			  int *dHist,
-			  WlzObject *dObj,
-			  WlzObject *tobj)
+			  WlzObject *dObj)
 {
+  int		n,
+  		p;
+  WlzVoxelValues *pVal;
+  WlzPlaneDomain *pDom;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-if(1) /* HACK */
-{
-FILE	*fP;
-fP = fopen("debug.wlz", "w");
-(void )WlzWriteObj(fP, dObj);
-(void )fclose(fP);
-}
-  /* HACK TODO */
+  pVal = dObj->values.vox;
+  pDom = dObj->domain.p;
+  n = pDom->lastpl - pDom->plane1 + 1;
+  for(p = 0; p < n; ++p)
+  {
+    if(pDom->domains[p].core != NULL)
+    {
+      WlzObject	*dObj2;
+
+      dObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ, pDom->domains[p], pVal->values[p],
+			  NULL, NULL, &errNum);
+      errNum = WlzRCCCompDistHist2D(maxDist, dHist, dObj2);
+      (void )WlzFreeObj(dObj2);
+      if(errNum != WLZ_ERR_NONE)
+      {
+        break;
+      }
+    }
+  }
   return(errNum);
 }
