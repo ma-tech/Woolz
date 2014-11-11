@@ -1255,7 +1255,7 @@ static WlzErrorNum		WlzRCCOffset(
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && !empty)
   {
     if(eObj->type == WLZ_2D_DOMAINOBJ)
     {
