@@ -438,17 +438,22 @@ WlzObject *WlzGetProjectionFromObject(
 * 					an array of 256 values. This may be
 * 					NULL if the integration mode is not
 * 					WLZ_PROJECT_INT_MODE_VALUES.
+* \param	depth			If greater than zero, the projection
+* 					depth perpendicular to the viewing
+* 					plane.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject 	*WlzProjectObjToPlane(WlzObject *obj,
   				WlzThreeDViewStruct *vStr,
-  				WlzProjectIntMode intMod, WlzUByte denDom,
-				WlzUByte *denVal, WlzErrorNum *dstErr)
+  				WlzProjectIntMode intMod,
+				WlzUByte denDom, WlzUByte *denVal,
+				double depth, WlzErrorNum *dstErr)
 {
   int		nThr = 1,
 		itvVal = 0;
   WlzIVertex2	prjSz;
   WlzIBox2	prjBox;
+  double	pln[4];
   WlzObject	*bufObj = NULL,
   		*prjObj = NULL;
   WlzThreeDViewStruct *vStr1 = NULL;
@@ -587,6 +592,11 @@ struct timeval	times[3];
       (void )WlzFree3DViewStruct(vStr2);
     }
   }
+  /* Compute plane equation, used to clip intervals if depth was given. */
+  if((errNum == WLZ_ERR_NONE) && (depth > eps))
+  {
+    Wlz3DViewGetPlaneEqn(vStr1, pln + 0, pln + 1, pln + 2, pln + 3);
+  }
   /* Create rectangular projection array buffers, one for each thread,
    * also if integrating values create a grey value workspace per thread. */
   if(errNum == WLZ_ERR_NONE)
@@ -705,7 +715,8 @@ struct timeval	times[3];
 	}
         if(errNum2 == WLZ_ERR_NONE)
 	{
-	  double      vMZX,
+	  double      plnZ,
+	  	      vMZX,
 	  	      vMZY;
 	  WlzIVertex3 p0,
 	    	      p1;
@@ -713,64 +724,116 @@ struct timeval	times[3];
 	  p0.vtZ = p1.vtZ = obj->domain.p->plane1 + pIdx;
 	  vMZX = (vMat[0][2] * p0.vtZ) + vMat[0][3] - prjBox.xMin;
 	  vMZY = (vMat[1][2] * p0.vtZ) + vMat[1][3] - prjBox.yMin;
+	  plnZ = (pln[2] * p0.vtZ) + pln[3];
 	  while(((itvVal == 0) &&
 	        ((errNum2 = WlzNextInterval(&iWSp)) == WLZ_ERR_NONE)) ||
 	        ((itvVal != 0) &&
 	        ((errNum2 = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE)))
 	  {
+	    int		skip = 0;
 	    WlzDVertex2 q0,
 	    		q1;
 
             p0.vtX = iWSp.lftpos;
 	    p1.vtX = iWSp.rgtpos;
 	    p0.vtY = p1.vtY = iWSp.linpos;
-	    q0.vtX = (vMat[0][0] * p0.vtX) + (vMat[0][1] * p0.vtY) + vMZX;
-	    q0.vtY = (vMat[1][0] * p0.vtX) + (vMat[1][1] * p0.vtY) + vMZY;
-	    q1.vtX = (vMat[0][0] * p1.vtX) + (vMat[0][1] * p1.vtY) + vMZX;
-	    q1.vtY = (vMat[1][0] * p1.vtX) + (vMat[1][1] * p1.vtY) + vMZY;
-	    switch(intMod)
+	    if(depth > eps)
 	    {
-	      case WLZ_PROJECT_INT_MODE_NONE:
-		{
-		  WlzIVertex2 u0,
-			      u1;
+	      int	c;
+	      double	d0,
+	      		d1,
+			plnYZ;
 
-		  WLZ_VTX_2_NINT(u0, q0);
-		  WLZ_VTX_2_NINT(u1, q1);
-		  WlzProjectObjLine((WlzUByte **)(prjAry[thrId]), u0, u1);
-		}
-	        break;
-	      case WLZ_PROJECT_INT_MODE_DOMAIN:
+	      /* Clip the 3D line segment p0,p1 using the plane equation. */
+	      plnYZ = (pln[1] * p0.vtY) + plnZ;
+	      d0 = (pln[0] * p0.vtX) + plnYZ;
+	      d1 = (pln[0] * p1.vtX) + plnYZ;
+	      c = ((d1 >  depth) << 3) || ((d0 >  depth) << 2) ||
+		  ((d1 < -depth) << 1) ||  (d0 < -depth);
+	      if(c)
+	      {
+		if((c == 3) || (c == 12)) /* 00-- or ++00 */
 		{
-	          int	      np,
-	    		      nq;
-		  WlzDVertex3 dq;
-		  WlzIVertex2 u0,
-			      u1;
-
-		  WLZ_VTX_2_NINT(u0, q0);
-		  WLZ_VTX_2_NINT(u1, q1);
-		  WLZ_VTX_2_SUB(dq, q0, q1);
-		  np = denDom * (iWSp.rgtpos - iWSp.lftpos + 1);
-		  nq = (int )ceil(WLZ_VTX_2_LENGTH(dq) + eps);
-		  WlzProjectObjLineDom((int **)(prjAry[thrId]), np / nq,
-		                       u0, u1);
-		}
-	        break;
-	      case WLZ_PROJECT_INT_MODE_VALUES:
-		if(itvVal)
-		{
-		  WlzProjectObjLineVal((int **)(prjAry[thrId]), denVal,
-				       gWSp.u_grintptr.ubp, NULL,
-				       vMat, vMZX, vMZY, p0, p1);
+		  /* Both out of range, so don't render. */
+		  skip = 1;
 		}
 		else
 		{
-		  WlzProjectObjLineVal((int **)(prjAry[thrId]), denVal,
-				       NULL, gVWSp[thrId],
-				       vMat, vMZX, vMZY, p0, p1);
+		  if(fabs(pln[0]) > eps)
+		  {
+		    double	plnX;
+
+		    plnX = -1.0 / pln[0];
+		    if((c &  1) != 0)      /* x0x- */
+		    {
+		      p0.vtX = plnX * (plnYZ + depth);
+		    }
+		    else if((c &  4) != 0) /* x+x0 */
+		    {
+		      p0.vtX = plnX * (plnYZ - depth);
+		    }
+		    if((c &  2) != 0)      /* 0x-x */
+		    {
+		      p1.vtX = plnX * (plnYZ + depth);
+		    }
+		    else if((c &  8) != 0) /* +x0x */
+		    {
+		      p1.vtX = plnX * (plnYZ - depth);
+		    }
+		  }
 		}
-		break;
+	      }
+	    }
+	    if(skip == 0)
+	    {
+	      q0.vtX = (vMat[0][0] * p0.vtX) + (vMat[0][1] * p0.vtY) + vMZX;
+	      q0.vtY = (vMat[1][0] * p0.vtX) + (vMat[1][1] * p0.vtY) + vMZY;
+	      q1.vtX = (vMat[0][0] * p1.vtX) + (vMat[0][1] * p1.vtY) + vMZX;
+	      q1.vtY = (vMat[1][0] * p1.vtX) + (vMat[1][1] * p1.vtY) + vMZY;
+	      switch(intMod)
+	      {
+		case WLZ_PROJECT_INT_MODE_NONE:
+		  {
+		    WlzIVertex2 u0,
+				u1;
+
+		    WLZ_VTX_2_NINT(u0, q0);
+		    WLZ_VTX_2_NINT(u1, q1);
+		    WlzProjectObjLine((WlzUByte **)(prjAry[thrId]), u0, u1);
+		  }
+		  break;
+		case WLZ_PROJECT_INT_MODE_DOMAIN:
+		  {
+		    int	        np,
+				nq;
+		    WlzDVertex3 dq;
+		    WlzIVertex2 u0,
+				u1;
+
+		    WLZ_VTX_2_NINT(u0, q0);
+		    WLZ_VTX_2_NINT(u1, q1);
+		    WLZ_VTX_2_SUB(dq, q0, q1);
+		    np = denDom * (iWSp.rgtpos - iWSp.lftpos + 1);
+		    nq = (int )ceil(WLZ_VTX_2_LENGTH(dq) + eps);
+		    WlzProjectObjLineDom((int **)(prjAry[thrId]), np / nq,
+					 u0, u1);
+		  }
+		  break;
+		case WLZ_PROJECT_INT_MODE_VALUES:
+		  if(itvVal)
+		  {
+		    WlzProjectObjLineVal((int **)(prjAry[thrId]), denVal,
+					 gWSp.u_grintptr.ubp, NULL,
+					 vMat, vMZX, vMZY, p0, p1);
+		  }
+		  else
+		  {
+		    WlzProjectObjLineVal((int **)(prjAry[thrId]), denVal,
+					 NULL, gVWSp[thrId],
+					 vMat, vMZX, vMZY, p0, p1);
+		  }
+		  break;
+	      }
 	    }
 	  }
 	  (void )WlzEndGreyScan(&iWSp, &gWSp);
