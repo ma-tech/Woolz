@@ -131,6 +131,7 @@ extern WlzObject		*WlzProjectObjToPlane(
 				  WlzProjectIntMode intMod,
 				  WlzUByte denDom,
 				  WlzUByte *denVal,
+				  double depth,
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzGetProjectionFromObject(
 				  WlzObject *obj,
