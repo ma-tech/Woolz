@@ -518,7 +518,7 @@ int main(int	argc,
       }
       WlzInit3DViewStruct(viewStr, obj);
       nobj = WlzProjectObjToPlane(obj, viewStr, intMod, denDom, denVal,
-      				  &errNum);
+      				  0.0, &errNum);
       if( nobj != NULL){
 	WlzWriteObj(outFP, nobj);
       }
