@@ -113,6 +113,11 @@ Wlz3DGetProjection [-h]
     <td>Up vector for up-is-up mode, default (0, 0, -1).</td>
   </tr>
   <tr>
+    <td><b>-t</b></td>
+    <td>Depth or thickness of the projection,
+        Default: 0.0 (implies whole volume)</td>
+  </tr>
+  <tr>
     <td><b>-i</b></td>
     <td>Integration mode, possible values:
     <table width="500" border="0">
@@ -170,7 +175,7 @@ static void ShowUsage(char *proc_str)
   "Usage:\t%s [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>] [-d <dist>]\n"
   "\t[-b <parameter bibfile>] [-m <mode>] [-s <scale>]\n"
   "\t[-o <output file>] [-u<ux,uy,uz>] [-r<vox rescale>]\n"
-  "\t[-i<int mod> [-D <den>] [-V <val lut>] [-h]\n"
+  "\t[-i<int mod> [-D <den>] [-V <val lut>] [-t<depth>] [-h]\n"
   "\t[<3D object input file>]\n"
   "\tGet an arbitrary sliceprojection from a 3D object\n"
   "\twriting the 2D object to standard output\n"
@@ -193,6 +198,8 @@ static void ShowUsage(char *proc_str)
       "\t                       bit 2 set - enable global scaling\n"
       "\t                     default - 0.\n"
       "\t  -s<scale>          Scale factor, default - 1.0\n"
+      "\t  -t<depth>          Depth or thickness of the projection,\n"
+      "\t                         Default: 0.0 (implies whole volume)\n"
       "\t  -u<ux,uy,uz>       Up vector for up-is-up mode.\n"
       "\t			  Default: (0,0,-1)\n"
       "\t  -i<int mode>	      Integration mode, possible values:\n"
@@ -224,10 +231,10 @@ int main(int	argc,
   char		*outFile = NULL,
                 *bibFile = NULL,
   		*lutFile = NULL;
-  char 		optList[] = "a:b:d:D:f:i:m:o:r:s:u:V:h";
+  char 		optList[] = "a:b:d:D:f:i:m:o:r:s:t:u:V:h";
   int		option;
   int		iVal;
-  double	dist=0.0, pitch=0.0, yaw=0.0, roll=0.0;
+  double	depth=0.0, dist=0.0, pitch=0.0, yaw=0.0, roll=0.0;
   double	scale=1.0;
   WlzDVertex3	fixed={0.0,0.0,0.0};
   WlzDVertex3	up={0.0,0.0,-1.0};
@@ -311,6 +318,12 @@ int main(int	argc,
     case 's':
       if( sscanf(optarg, "%lg", &scale) < 1 ){
 	usage = 2;
+      }
+      break;
+
+    case 't':
+      if( sscanf(optarg, "%lg", &depth) < 1 ){
+	break;
       }
       break;
 
@@ -518,7 +531,7 @@ int main(int	argc,
       }
       WlzInit3DViewStruct(viewStr, obj);
       nobj = WlzProjectObjToPlane(obj, viewStr, intMod, denDom, denVal,
-      				  0.0, &errNum);
+      				  depth, &errNum);
       if( nobj != NULL){
 	WlzWriteObj(outFP, nobj);
       }
