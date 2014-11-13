@@ -748,8 +748,8 @@ struct timeval	times[3];
 	      plnYZ = (pln[1] * p0.vtY) + plnZ;
 	      d0 = (pln[0] * p0.vtX) + plnYZ;
 	      d1 = (pln[0] * p1.vtX) + plnYZ;
-	      c = ((d1 >  depth) << 3) || ((d0 >  depth) << 2) ||
-		  ((d1 < -depth) << 1) ||  (d0 < -depth);
+	      c = ((d1 >  depth) << 3) | ((d0 >  depth) << 2) |
+		  ((d1 < -depth) << 1) |  (d0 < -depth);
 	      if(c)
 	      {
 		if((c == 3) || (c == 12)) /* 00-- or ++00 */
