@@ -2488,20 +2488,13 @@ double		WlzHistogramDistance(WlzObject *histObj0,
 				     WlzErrorNum *dstErrNum)
 {
   int		count,
-		idx,
 		idx0,
 		idx1;
   double	tD0,
   		tD1,
-		tD2,
-		tD3,
-		tD4,
-		tD5,
 		coefA = 0,
 		coefB = 0,
 		coefC = 0,
-		newOrigin,
-		newBinSize,
 		histDistance = 0.0;
   WlzGreyP	binVal0,
   		binVal1;
@@ -2526,35 +2519,48 @@ double		WlzHistogramDistance(WlzObject *histObj0,
        (tD1 > DBL_EPSILON))
     {
       /* Histograms need re-binning when calculating distance */
-      newOrigin = WLZ_MIN(histDom0->origin, histDom1->origin);
-      newBinSize = WLZ_MIN(histDom0->binSize, histDom1->binSize);
-      tD0 = ((histDom0->nBins - 1) * histDom0->binSize) + histDom0->origin;
-      tD1 = ((histDom1->nBins - 1) * histDom1->binSize) + histDom1->origin;
-      tD2 = newBinSize / histDom0->binSize;
-      tD3 = (newOrigin - histDom0->origin) / histDom0->binSize;
-      tD4 = newBinSize / histDom1->binSize;
-      tD5 = (newOrigin - histDom1->origin) / histDom1->binSize;
-      for(idx = 0; idx < newBinSize; ++idx)
+      double	v,
+		eps,
+      		inc,
+		nrm0,
+		nrm1,
+      		minVal,
+		maxVal,
+		lastVal0,
+		lastVal1;
+
+      /* tD0, tD1 = last bin value for histDom0, histDom1 */
+      lastVal0 = ((histDom0->nBins - 1) * histDom0->binSize) + histDom0->origin;
+      lastVal1 = ((histDom1->nBins - 1) * histDom1->binSize) + histDom1->origin;
+      nrm0 = 1.0 / histDom0->binSize;
+      nrm1 = 1.0 / histDom1->binSize;
+      inc = WLZ_MIN(histDom0->binSize, histDom1->binSize);
+      minVal = WLZ_MIN(histDom0->origin, histDom1->origin);
+      maxVal = WLZ_MAX(lastVal0, lastVal1);
+      eps = DBL_EPSILON * maxVal;
+      for(v = minVal; v < maxVal + eps; v += inc)
       {
-        idx0 = WLZ_NINT((idx * tD2) + tD3);
-	if((idx0 < 0) || (idx0 >= histDom0->nBins))
+        if((v < histDom0->origin) || (v > lastVal0))
 	{
-	  tD0 = 0.0;
+	  tD0 = 0;
 	}
 	else
 	{
+	  idx0 = WLZ_NINT((v - histDom0->origin) / histDom0->binSize);
 	  tD0 = (histDom0->type == WLZ_HISTOGRAMDOMAIN_INT)?
-		*(binVal0.inp + idx0): *(binVal0.dbp + idx0);
+	        *(binVal0.inp + idx0): *(binVal0.dbp + idx0);
+	  tD0 *= nrm0;
 	}
-	idx1 = (int )((idx * tD4) + tD5);
-	if((idx1 < 0) || (idx1 >= histDom1->nBins))
+        if((v < histDom1->origin) || (v > lastVal1))
 	{
-	  tD1 = 0.0;
+	  tD1 = 0;
 	}
 	else
 	{
+	  idx1 = WLZ_NINT((v - histDom1->origin) / histDom1->binSize);
 	  tD1 = (histDom1->type == WLZ_HISTOGRAMDOMAIN_INT)?
-		*(binVal1.inp + idx1): *(binVal1.dbp + idx1);
+	        *(binVal1.inp + idx1): *(binVal1.dbp + idx1);
+	  tD1 *= nrm1;
 	}
 	coefA += tD0 * tD0;
 	coefB += tD1 * tD1;
@@ -2569,7 +2575,7 @@ double		WlzHistogramDistance(WlzObject *histObj0,
 	while(count-- > 0)
 	{
 	  tD0 = *(binVal0.inp)++;
-	  tD1= *(binVal1.inp)++;
+	  tD1 = *(binVal1.inp)++;
 	  coefA += tD0 * tD0;
 	  coefB += tD1 * tD1;
 	  coefC += tD0 * tD1;
@@ -2580,15 +2586,15 @@ double		WlzHistogramDistance(WlzObject *histObj0,
 	while(count-- > 0)
 	{
 	  tD0 = *(binVal0.dbp)++;
-	  tD1= *(binVal1.dbp)++;
+	  tD1 = *(binVal1.dbp)++;
 	  coefA += tD0 * tD0;
 	  coefB += tD1 * tD1;
 	  coefC += tD0 * tD1;
 	}
       }
-      tD0 = coefA + coefB - coefC;
-      histDistance = (WLZ_ABS(tD0) > DBL_EPSILON)? (coefC / tD0): (1.0);
     }
+    tD0 = coefA + coefB - coefC;
+    histDistance = (WLZ_ABS(tD0) > DBL_EPSILON)? (coefC / tD0): (1.0);
   }
   if(dstErrNum)
   {
