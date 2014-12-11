@@ -130,7 +130,6 @@ static WlzErrorNum		WlzRmDirBleed(
 				  WlzObject *dObj,
 				  WlzObject *sObj,
 				  double alpha,
-				  double beta,
 				  double gamma,
 				  int nrm,
 				  WlzRasterDir dir);
@@ -166,8 +165,7 @@ int		main(int argc, char *argv[])
   char		*inFileStr,
 		*outFileStr;
   double	alpha = 0.5,
-		beta = 1.5,
-  		gamma = 4.0;
+  		gamma = 2.0;
   FILE		*fP = NULL;
   WlzRasterDir dir = WLZ_RASTERDIR_DPILIC;
   WlzGreyType 	gType = WLZ_GREY_ERROR;
@@ -175,7 +173,7 @@ int		main(int argc, char *argv[])
   		*outObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "hlmRTa:b:g:o:";
+  static char	optList[] = "hlmRTa:g:o:";
   const char    fileStrDef[] = "-";
 
   /* Parse the argument list and check for input files. */
@@ -188,12 +186,6 @@ int		main(int argc, char *argv[])
     {
       case 'a':
 	if((sscanf(optarg, "%lg", &alpha) != 1) || (alpha < 0.0))
-	{
-	  usage = 1;
-	}
-        break;
-      case 'b':
-	if((sscanf(optarg, "%lg", &beta) != 1) || (beta < 0.0))
 	{
 	  usage = 1;
 	}
@@ -402,7 +394,7 @@ int		main(int argc, char *argv[])
   /* Attempt to remove bleed. */
   if(ok)
   {
-    errNum = WlzRmDirBleed(outObj, inObj, alpha, beta, gamma, nrm, dir);
+    errNum = WlzRmDirBleed(outObj, inObj, alpha, gamma, nrm, dir);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -494,35 +486,33 @@ int		main(int argc, char *argv[])
 * 		The two objects must share the same domain and may also
 * 		share the same values.
 *
-* 		A single plane buffer ( \f$ f \f$ ) is updated at each
-* 		plane using the contents of the current and previous
-* 		source planes (s_p and s_{p - 1}):
+* 		At each plane the destination values are set using the
+* 		values of the previous section:
 * 		\f[
- 		  f = (1/(1 + \beta))  gauss(s_p + \beta  s_{p - 1}, \gamma)
+ 		  d_p = (1/(1 - \alpha))(s_p  gauss(s_{p - 1}, \gamma))
  		\f]
-* 		At each destination plane ( \f$ d_p \f$ ) a fraction of
-* 		the buffer is then subtracted.
- 		  d_p = s_p - \alpha f
-  		\f]
-* 		Here gauss is a Gaussian smoothing function, \f$\alpha\f$,
-* 		\f$\beta\f$ and \f$\gamma\f$ are given parameters.
+* 		where \f$ d_p \f$ and \f$s_p\f$ are the destination and
+* 		source images at plane \f$p\f$. Gauss is a Gaussian
+* 		smoothing function \f$\alpha\f$ and \f$\gamma\f$  are
+* 		given parameters.
 * \param	dObj			Destination object.
 * \param	sObj			Source object.
-* \param	alpha			Attenuation parameter with a useful
-* 					range [0.0-1.0].
-* \param	beta			
+* \param	alpha			Fraction of the Gaussain blured
+* 					previous plane to subtract from the
+* 					current plane, range [0.0-1.0].
 * \param	gamma			Gaussian smoothing parameter.
 * \param	nrm			Normalisation:
 * 					  0 - none,
 * 					  1 - histogram match the destination
 * 					      planes to the source planes.
 *					  2 - use plane min/max values.
+* \param	dir			Direction: WLZ_RASTERDIR_IPILIC or
+* 					WLZ_RASTERDIR_DPILIC.
 */
 static WlzErrorNum		WlzRmDirBleed(
 				  WlzObject *dObj,
 				  WlzObject *sObj,
 				  double alpha,
-				  double beta,
 				  double gamma,
 				  int nrm,
 				  WlzRasterDir dir)
@@ -552,7 +542,8 @@ static WlzErrorNum		WlzRmDirBleed(
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if((dir != WLZ_RASTERDIR_IPILIC) && (dir != WLZ_RASTERDIR_DPILIC))
+  else if((alpha < 0.0) || (alpha > 1.0) ||
+          ((dir != WLZ_RASTERDIR_IPILIC) && (dir != WLZ_RASTERDIR_DPILIC)))
   {
     errNum = WLZ_ERR_PARAM_DATA;
   }
@@ -631,17 +622,15 @@ static WlzErrorNum		WlzRmDirBleed(
   /* Work down through the planes x-y planes removing bleed. */
   if(errNum == WLZ_ERR_NONE)
   {
-    int		a,
-		b,
-    		p,
+    int		p,
 		plane1,
 		lastpl,
 		planei;
+    double	alpha1;
+    WlzObject	*hObj[2] = {NULL};
     WlzPlaneDomain *pDom;
-    const int	scale = 65536;
 
-    a = (int )floor(alpha * ((double )(scale - 1)));
-    b = (int )floor(beta  * ((double )(scale - 1)));
+    alpha1 = 1.0 / (1.0 - alpha);
     pDom = sObj->domain.p;
     if(dir == WLZ_RASTERDIR_IPILIC)
     {
@@ -659,8 +648,8 @@ static WlzErrorNum		WlzRmDirBleed(
         ((planei > 0) && (p <= lastpl)) || ((planei < 0) && (p >= lastpl));
 	p += planei)
     {
-      WlzObject	*hObj = NULL,
-      		*bObj2 = NULL,
+      int	skip = 0;
+      WlzObject	*bObj2 = NULL,
       		*sObj2 = NULL,
       		*dObj2 = NULL,
 		*gObj2 = NULL;
@@ -674,170 +663,174 @@ static WlzErrorNum		WlzRmDirBleed(
       sObj2 = WlzGetXYPlane(sObj, p, 0, NULL, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-        dObj2 =  WlzGetXYPlane(dObj, p, 1, &errNum);
+	dObj2 =  WlzGetXYPlane(dObj, p, 1, NULL, &errNum);
       }
       if(errNum == WLZ_ERR_NONE)
       {
 	bObj2 = WlzAssignObject(
 		WlzMakeMain(WLZ_2D_DOMAINOBJ, sObj2->domain, bufObj->values,
-	                    NULL, NULL, &errNum), NULL);
+			    NULL, NULL, &errNum), NULL);
       }
       if(errNum == WLZ_ERR_NONE)
       {
-	switch(nrm)
+	hObj[1] = WlzHistogramObj(sObj2, 0, 0.0, 1.0, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	skip |= (hObj[0] == NULL)? 2: 0; /* Something wrong with previous plane
+					  * so all processing in this plane. */
+	skip |= (hObj[1] == NULL)? 1: 0; /* Something wrong with current plane
+					  * so no processing of this plane,
+					  * just copy out. */
+	if(skip == 0)
 	{
-	  case 0:
-	    break;
-	  case 1:
-            hObj = WlzHistogramObj(sObj2, 0, 0.0, 1.0, &errNum);
-	    break;
-	  case 2:
-	    errNum =  WlzGreyRange(sObj2, &sMin, &sMax);
-	    break;
-	  default:
-	    break;
+	  double d;
+
+	  d = WlzHistogramDistance(hObj[0], hObj[1], &errNum);
+	  if(d < 0.7)
+	  {
+	    skip = 2;
+	  }
+	}
+	if((errNum == WLZ_ERR_NONE) && (skip == 2))
+	{
+	  errNum = WlzCopyObjectGreyValues(bObj2, sObj2);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  switch(nrm)
+	  {
+	    case 0:
+	      break;
+	    case 1:
+	      break;
+	    case 2:
+	      errNum = WlzGreyRange(sObj2, &sMin, &sMax);
+	      break;
+	    default:
+	      break;
+	  }
 	}
       }
-      /* Compute gauss(s_p + \beta s_{p - 1}, gamma) */
+      /* Compute gObj2 = gauss(bObj2, gamma) */
+      if((errNum == WLZ_ERR_NONE) && (skip != 1))
+      {
+	gObj2 = WlzAssignObject(          
+		WlzGauss2(bObj2, gamma, gamma, 0, 0, &errNum), NULL);
+      }
+      /* dObj2 = (1/(1 - alpha))gObj2
+       * bObj2 = sObj2  ready for the next plane
+       */
       if(errNum == WLZ_ERR_NONE)
       {
 	errNum = WlzInitGreyScan(bObj2, &(iWSp[0]), &(gWSp[0]));
-        if(errNum == WLZ_ERR_NONE)
+	if(errNum == WLZ_ERR_NONE)
 	{
 	  errNum = WlzInitGreyScan(sObj2, &(iWSp[1]), &(gWSp[1]));
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  while((errNum == WLZ_ERR_NONE) &&
-	        ((errNum = WlzNextGreyInterval(&(iWSp[0]))) == WLZ_ERR_NONE) &&
-		((errNum = WlzNextGreyInterval(&(iWSp[1]))) == WLZ_ERR_NONE))
-	  {
-	    int	i;
-	    int	*bp;
-	    WlzGreyP sp;
-
-	    bp = gWSp[0].u_grintptr.inp;
-	    sp = gWSp[1].u_grintptr;
-	    switch(gType)
-	    {
-	      case WLZ_GREY_INT:
-		for(i = 0; i < iWSp[0].colrmn; ++i)
-		{
-		  bp[i] = sp.inp[i] + (bp[i] * b) / scale;
-		}
-		break;
-	      case WLZ_GREY_SHORT:
-		for(i = 0; i < iWSp[0].colrmn; ++i)
-		{
-		  bp[i] = sp.shp[i] + (bp[i] * b) / scale;
-		}
-		break;
-	      case WLZ_GREY_UBYTE:
-		for(i = 0; i < iWSp[0].colrmn; ++i)
-		{
-		  bp[i] = sp.ubp[i] + (bp[i] * b) / scale;
-		}
-		break;
-	      default:
-		errNum = WLZ_ERR_GREY_TYPE;
-		break;
-	    }
-	  }
-	  if(errNum == WLZ_ERR_EOO)
-	  {
-	    errNum = WLZ_ERR_NONE;
-	  }
-	}
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	gObj2 = WlzAssignObject(          
-	        WlzGauss2(bObj2, gamma, gamma, 0, 0, &errNum), NULL);
-      }
-      /* f_p = \frac{1}{1 + \beta} gauss()
-       * d_p = s_p - \alpha f_p
-       * f_p = s_p */
-      if(errNum == WLZ_ERR_NONE)
-      {
-	errNum = WlzInitGreyScan(bObj2, &(iWSp[0]), &(gWSp[0]));
-        if(errNum == WLZ_ERR_NONE)
-	{
-	  errNum = WlzInitGreyScan(sObj2, &(iWSp[1]), &(gWSp[1]));
-	}
-        if(errNum == WLZ_ERR_NONE)
-	{
 	  errNum = WlzInitGreyScan(dObj2, &(iWSp[2]), &(gWSp[2]));
 	}
-        if(errNum == WLZ_ERR_NONE)
+	if((errNum == WLZ_ERR_NONE) && (skip != 1))
 	{
 	  errNum = WlzInitGreyScan(gObj2, &(iWSp[3]), &(gWSp[3]));
 	}
-        if(errNum == WLZ_ERR_NONE)
+	if(errNum == WLZ_ERR_NONE)
 	{
 	  while((errNum == WLZ_ERR_NONE) &&
-	        ((errNum = WlzNextGreyInterval(&(iWSp[0]))) == WLZ_ERR_NONE) &&
-	        ((errNum = WlzNextGreyInterval(&(iWSp[1]))) == WLZ_ERR_NONE) &&
-	        ((errNum = WlzNextGreyInterval(&(iWSp[2]))) == WLZ_ERR_NONE) &&
-	        ((errNum = WlzNextGreyInterval(&(iWSp[3]))) == WLZ_ERR_NONE))
+		((errNum = WlzNextGreyInterval(&(iWSp[0]))) == WLZ_ERR_NONE) &&
+		((errNum = WlzNextGreyInterval(&(iWSp[1]))) == WLZ_ERR_NONE) &&
+		((errNum = WlzNextGreyInterval(&(iWSp[2]))) == WLZ_ERR_NONE) &&
+		((skip == 1) ||
+		 ((errNum = WlzNextGreyInterval(&(iWSp[3]))) == WLZ_ERR_NONE)))
 	  {
-	    int	     i,
-	    	     t;
+	    int	     i;
+	    double   t;
 	    int      *bp,
-	    	     *gp;
+		     *gp;
 	    WlzGreyP dp,
-	    	     sp;
+		     sp;
 
 	    bp = gWSp[0].u_grintptr.inp;
 	    sp = gWSp[1].u_grintptr;
 	    dp = gWSp[2].u_grintptr;
-	    gp = gWSp[3].u_grintptr.inp;
-	    switch(gType)
+	    if(skip == 1)
 	    {
-	      case WLZ_GREY_INT:
-		for(i = 0; i < iWSp[0].colrmn; ++i)
-		{
-		  bp[i] = scale * gp[i] / (scale + b);
-		  dp.inp[i] = sp.inp[i] - (a * bp[i]) / scale;
-		  bp[i] = sp.inp[i];
-		}
-		break;
-	      case WLZ_GREY_SHORT:
-		for(i = 0; i < iWSp[0].colrmn; ++i)
-		{
-		  bp[i] = scale * gp[i] / (scale + b);
-		  t = sp.shp[i] - (a * bp[i]) / scale;
-		  dp.shp[i] = WLZ_CLAMP(t, SHRT_MIN, SHRT_MAX);
-		  bp[i] = sp.shp[i];
-		}
-		break;
-	      case WLZ_GREY_UBYTE:
-		for(i = 0; i < iWSp[0].colrmn; ++i)
-		{
-		  bp[i] = scale * gp[i] / (scale + b);
-		  t = sp.ubp[i] - (a * bp[i]) / scale;
-		  dp.ubp[i] = WLZ_CLAMP(t, 0, 255);
-		  bp[i] = sp.ubp[i];
-		}
-		break;
-	      default:
-	        errNum = WLZ_ERR_GREY_TYPE;
-		break;
+	      switch(gType)
+	      {
+		case WLZ_GREY_INT:
+		  for(i = 0; i < iWSp[0].colrmn; ++i)
+		  {
+		    bp[i] = sp.inp[i];
+		  }
+		  break;
+		case WLZ_GREY_SHORT:
+		  for(i = 0; i < iWSp[0].colrmn; ++i)
+		  {
+		    bp[i] = sp.shp[i];
+		  }
+		  break;
+		case WLZ_GREY_UBYTE:
+		  for(i = 0; i < iWSp[0].colrmn; ++i)
+		  {
+		    bp[i] = sp.ubp[i];
+		  }
+		  break;
+		default:
+		  errNum = WLZ_ERR_GREY_TYPE;
+		  break;
+	      }
+	    }
+	    else
+	    {
+	      gp = gWSp[3].u_grintptr.inp;
+	      switch(gType)
+	      {
+		case WLZ_GREY_INT:
+		  for(i = 0; i < iWSp[0].colrmn; ++i)
+		  {
+		    t = alpha1 * (sp.inp[i] - (alpha * gp[i]));
+		    dp.inp[i] = WLZ_CLAMP(t, INT_MIN, INT_MAX);
+		    bp[i] = sp.inp[i];
+		  }
+		  break;
+		case WLZ_GREY_SHORT:
+		  for(i = 0; i < iWSp[0].colrmn; ++i)
+		  {
+		    t = alpha1 * (sp.shp[i] - (alpha * gp[i]));
+		    dp.shp[i] = WLZ_CLAMP(t, SHRT_MIN, SHRT_MAX);
+		    bp[i] = sp.shp[i];
+		  }
+		  break;
+		case WLZ_GREY_UBYTE:
+		  for(i = 0; i < iWSp[0].colrmn; ++i)
+		  {
+		    t = alpha1 * (sp.ubp[i] - (alpha * gp[i]));
+		    dp.ubp[i] = WLZ_CLAMP(t, 0, 255);
+		    bp[i] = sp.ubp[i];
+		  }
+		  break;
+		default:
+		  errNum = WLZ_ERR_GREY_TYPE;
+		  break;
+	      }
 	    }
 	  }
 	  if(errNum == WLZ_ERR_EOO)
 	  {
 	    errNum = WLZ_ERR_NONE;
 	  }
-        }
+	}
       }
-      if(errNum == WLZ_ERR_NONE)
+      if((errNum == WLZ_ERR_NONE) && (skip != 1))
       {
 	switch(nrm)
 	{
 	  case 0:
 	    break;
 	  case 1:
-	    errNum = WlzHistogramMatchObj(dObj2, hObj, 0, 0, -0.1, 1.1, 1);
+	    errNum = WlzHistogramMatchObj(dObj2, hObj[1], 0, 0, -0.1, 1.1, 1);
 	    break;
 	  case 2:
 	    errNum = WlzGreyRange(dObj2, &dMin, &dMax);
@@ -855,16 +848,18 @@ static WlzErrorNum		WlzRmDirBleed(
       {
 	errNum = WlzSetXYPlane(dObj, dObj2, p);
       }
-      (void )WlzFreeObj(hObj);
+      (void )WlzFreeObj(hObj[0]);
+      hObj[0] = hObj[1];
       (void )WlzFreeObj(bObj2);
-      (void )WlzFreeObj(sObj2);
       (void )WlzFreeObj(dObj2);
       (void )WlzFreeObj(gObj2);
+      (void )WlzFreeObj(sObj2);
       if(errNum != WLZ_ERR_NONE)
       {
         break;
       }
     }
+    WlzFreeObj(hObj[0]);
   }
   (void )WlzFreeObj(bufObj);
   return(errNum);
