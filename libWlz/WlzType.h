@@ -789,11 +789,16 @@ typedef enum _WlzCompThreshType
   			   position of the histogram's maximum and the
 			   threshold value is the minimum following
                            the specified fraction of the values.  */
-  WLZ_COMPTHRESH_SMOOTHSPLIT /*!< The threshold value is found by
+  WLZ_COMPTHRESH_SMOOTHSPLIT, /*!< The threshold value is found by
   			   heavily smoothing the histogram and looking
-			   for the minimum. Successively lesser smmothing
-			   values are then applied and at each itteration
+			   for the minimum. Successively lesser smoothing
+			   values are then applied and at each iteration
 			   the minimum closest to the previous is found. */
+  WLZ_COMPTHRESH_OTSU	   /*!< The threshold value is found by using
+  			   Otsu's method. This is a clustering-based algorithm
+			   which computes an optimum threshold value that
+			   separates the two classes of an (assumed)
+			   bi-modal histogram. */
 } WlzCompThreshType;
 
 /*!

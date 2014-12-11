@@ -75,6 +75,10 @@ WlzCompThresh [-o<out file>] [-d] [-f] [-g] [-s] [-x#] [-h] [<in object>]
     <td>Extra fraction to add to computed threshold value. </td>
   </tr>
   <tr>
+    <td><b>-u</b></td>
+    <td>Use Otsu's optimal histogram partition method (default).</td>
+  </tr>
+  <tr>
     <td><b>-o</b></td>
     <td>Output object file name.</td>
   </tr>
@@ -106,6 +110,10 @@ following methods:
 \li WLZ_COMPTHRESH_SMOOTHSPLIT The threshold value is the found by
     first finding the minimum of a heavily smoothed histogram and
     then the closest minimum in successively less smoothed histograms.
+\li WLZ_COMPTHRESH_OTSU The threshold value is the found by
+    a clustering-based algorithm which computes an optimum threshold
+    value that separates the two classes of the (assumed) bi-modal
+    histogram.
 
 \par Examples
 \verbatim
@@ -146,13 +154,13 @@ int             main(int argc, char **argv)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   FILE		*fP = NULL;
   WlzObject	*inObj = NULL;
-  WlzCompThreshType thrMethod = WLZ_COMPTHRESH_GRADIENT;
+  WlzCompThreshType thrMethod = WLZ_COMPTHRESH_OTSU;
   double	extFrac = 0.0,
   		thrVal;
   char 		*outFileStr,
   		*inObjFileStr;
   const char	*errMsg;
-  static char	optList[] = "o:x:dfghs",
+  static char	optList[] = "o:x:dfghsu",
 		outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -184,6 +192,9 @@ int             main(int argc, char **argv)
 	  usage = 1;
 	  ok = 0;
 	}
+	break;
+      case 'u':
+        thrMethod = WLZ_COMPTHRESH_OTSU;
 	break;
       case 'h':
       default:
@@ -277,7 +288,7 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%s%s%sExample: %s%s",
     *argv,
-    " [-o<out file>] [-d] [-f] [-g] [-s] [-x#] [-h]\n"
+    " [-o<out file>] [-d] [-f] [-g] [-s] [-x#] [-u] [-h]\n"
     "                     [<in object>]\n"
     "Version: ",
     WlzVersion(),
@@ -288,8 +299,9 @@ int             main(int argc, char **argv)
     "  -f  Use histogram foot method.\n"
     "  -g  Use histogram gradient method.\n"
     "  -s  Use histogram smooth split.\n"
+    "  -u  Use Otsu's optimal histogram partition method (default).\n"
     "  -h  Help, prints this usage message.\n"
-    "  -x# Extra fraction to add to computed threshold value.\n"
+    "  -x  Extra fraction to add to computed threshold value.\n"
     "Computes a threshold value from the given histogram using one of the\n"
     "following methods:\n"
     "  WLZ_COMPTHRESH_DEPTH The threshold value is the point on the\n"
@@ -305,6 +317,10 @@ int             main(int argc, char **argv)
     "  WLZ_COMPTHRESH_SMOOTHSPLIT The threshold value is the found by\n"
     "    first finding the minimum of a heavily smoothed histogram and\n"
     "    then the closest minimum in successively less smoothed histograms.\n"
+    "  WLZ_COMPTHRESH_OTSU The threshold value is the found by\n"
+    "    a clustering-based algorithm which computes an optimum threshold\n"
+    "    value that separates the two classes of the (assumed) bi-modal\n"
+    "    histogram.\n"
     "The input object is read from stdin and values are written to stdout\n"
     "unless the filenames are given.\n",
     *argv,

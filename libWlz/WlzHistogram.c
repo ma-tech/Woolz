@@ -762,8 +762,9 @@ WlzObject	*WlzHistogramObj(WlzObject *srcObj, int nBins,
 					      WLZ_GREY_DOUBLE);
 		  (void )WlzValueConvertPixel(&greyMaxV, greyMaxV,
 					      WLZ_GREY_DOUBLE);
-		  nBins = (int )ceil(greyMaxV.v.dbv - greyMinV.v.dbv + 1.0);
-		  binOrigin = greyMinV.v.dbv;
+		  nBins0 = (int )ceil(greyMaxV.v.dbv - greyMinV.v.dbv + 1.0);
+		  binOrigin0 = greyMinV.v.dbv;
+	          binSize0 = 1.0;
 		}
 	      }
 	      else

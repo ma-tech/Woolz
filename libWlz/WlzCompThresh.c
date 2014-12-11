@@ -62,6 +62,8 @@ static double			WlzCompThreshSmoothSplit(
 				  WlzErrorNum *dstErr);
 static double			WlzCompThreshGradient(
 				  WlzHistogramDomain *hDom);
+static double			WlzCompThreshOtsu(
+				  WlzHistogramDomain *histDom);
 static double			WlzCompThreshLSqFit(
 				  WlzGreyP vec,
 				  int idx0,
@@ -175,6 +177,9 @@ WlzErrorNum	WlzCompThresholdVT(WlzObject *hObj, WlzCompThreshType method,
       case WLZ_COMPTHRESH_SMOOTHSPLIT:
 	tV.v.dbv = WlzCompThreshSmoothSplit(hObj, param0, param1, &errNum);
 	break;
+      case WLZ_COMPTHRESH_OTSU:
+        tV.v.dbv = WlzCompThreshOtsu(hDom);
+	break;
       default:
         errNum = WLZ_ERR_COMPTHRESH_TYPE;
 	break;
@@ -277,6 +282,9 @@ WlzErrorNum	WlzCompThreshold(double *dstThrVal, WlzObject *histObj,
         break;
       case WLZ_COMPTHRESH_SMOOTHSPLIT:
 	thrVal = WlzCompThreshSmoothSplit(histObj, smMin, smMax, &errNum);
+        break;
+      case WLZ_COMPTHRESH_OTSU:
+	thrVal = WlzCompThreshOtsu(histDom);
         break;
       default:
         errNum = WLZ_ERR_COMPTHRESH_TYPE;
@@ -1139,3 +1147,87 @@ static int	WlzCompThreshClosestMin(WlzHistogramDomain *hist, int idG)
   return(idM);
 }
 
+/*!
+* \return	Threshold value.
+* \ingroup 	WlzThreshold
+* \brief	Computes a threshold value from the given histogram
+*               domain using the WLZ_COMPTHRESH_OTSU method, ie:
+*		a value which optimaly separates the two classes of the
+*		given (assumed) bi-modal histogram.
+* \param	histDom			Given histogram domain.
+*/
+static double	WlzCompThreshOtsu(WlzHistogramDomain *histDom)
+{
+  double	thr,
+  		max = 0.0,
+  		sumB = 0.0,
+  		sumT = 0.0,
+		sumW = 0.0,
+		thr0 = 0.0,
+		thr1 = 0.0;
+  int		i,
+  		binCnt;
+  WlzGreyP	binVal;
+  const double  eps = 1.0e-09;
+
+  binCnt = histDom->nBins;
+  binVal = histDom->binValues;
+  sumT = WlzHistogramBinSum(histDom);
+  switch(histDom->type)
+  {
+    case WLZ_HISTOGRAMDOMAIN_INT:
+      for(i = 0; i < binCnt; ++i)
+      {
+        sumW += i * binVal.inp[i];
+      }
+      break;
+    case WLZ_HISTOGRAMDOMAIN_FLOAT:
+      for(i = 0; i < binCnt; ++i)
+      {
+        sumW += i * binVal.dbp[i];
+      }
+      break;
+    default:
+      break;
+  }
+  switch(histDom->type)
+  {
+    case WLZ_HISTOGRAMDOMAIN_INT:
+      for(i = 0; i < binCnt; ++i)
+      {
+	double	pB,
+		pF;
+
+        pB += binVal.inp[i];
+	if(pB > eps)
+	{
+	  pF = sumT - pB;
+	  if(pF > eps)
+	  {
+	    double	m,
+	    		mB,
+	    		mF;
+
+	    sumB += i * binVal.inp[i];
+	    mB = sumB / pB;
+	    mF = (sumW - sumB) / pF;
+	    m = pB * pF * (mB - mF) * (mB - mF);
+	    if(max < m)
+	    {
+	      thr0 = i;
+	      thr1 = i;
+	    }
+	    max = m;
+	  }
+	}
+      }
+      break;
+    case WLZ_HISTOGRAMDOMAIN_FLOAT:
+      /* HACK TOOD HACK */
+      break;
+    default:
+      break;
+  }
+  thr = (0.5 * (thr0 + thr1) * histDom->binSize) + histDom->origin; 
+  return(thr) ;
+}
