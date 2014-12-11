@@ -181,6 +181,7 @@ bin_PROGRAMS		= \
 			  WlzRGBCombine \
 			  WlzRGBChannelRatio \
 			  WlzRMSDiff \
+			  WlzRmDirBleed \
 			  WlzRsvFilterObj \
 			  WlzSampleObj \
 			  WlzScalarBinaryOp \
@@ -759,6 +760,10 @@ WlzRGBCombine_LDFLAGS			= $(AM_LFLAGS)
 WlzRMSDiff_SOURCES			= WlzRMSDiff.c
 WlzRMSDiff_LDADD			= $(LDADD)
 WlzRMSDiff_LDFLAGS			= $(AM_LFLAGS)
+
+WlzRmDirBleed_SOURCES			= WlzRmDirBleed.c
+WlzRmDirBleed_LDADD			= $(LDADD)
+WlzRmDirBleed_LDFLAGS			= $(AM_LFLAGS)
 
 WlzRsvFilterObj_SOURCES			= WlzRsvFilterObj.c
 WlzRsvFilterObj_LDADD			= $(LDADD)
