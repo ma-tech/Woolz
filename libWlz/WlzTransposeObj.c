@@ -516,6 +516,10 @@ static WlzObject *WlzTransposeRectObj(
 					   WlzGetBackground(obj, NULL),
 					   newvals.inp,
 					   &errNum)) == NULL ){
+	  if(errNum == WLZ_ERR_NONE) {
+	    values.r->freeptr = AlcFreeStackPush(
+	    	values.r->freeptr, (void *)(newvals.inp), NULL);
+	  }
 	  WlzFreeIntervalDomain(domain.i);
 	  return NULL;
 	}
