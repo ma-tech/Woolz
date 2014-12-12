@@ -1172,61 +1172,61 @@ static double	WlzCompThreshOtsu(WlzHistogramDomain *histDom)
 
   binCnt = histDom->nBins;
   binVal = histDom->binValues;
-  sumT = WlzHistogramBinSum(histDom);
   switch(histDom->type)
   {
     case WLZ_HISTOGRAMDOMAIN_INT:
       for(i = 0; i < binCnt; ++i)
       {
-        sumW += i * binVal.inp[i];
+	double	h;
+
+	h = binVal.inp[i];
+	sumT += h;
+        sumW += i * h;
       }
       break;
     case WLZ_HISTOGRAMDOMAIN_FLOAT:
       for(i = 0; i < binCnt; ++i)
       {
-        sumW += i * binVal.dbp[i];
+	double  h;
+
+	h = binVal.dbp[i];
+	sumT += h;
+        sumW += i * h;
       }
       break;
     default:
       break;
   }
-  switch(histDom->type)
+  for(i = 0; i < binCnt; ++i)
   {
-    case WLZ_HISTOGRAMDOMAIN_INT:
-      for(i = 0; i < binCnt; ++i)
+    double h,
+    	   pB,
+	   pF;
+
+    h = (histDom->type == WLZ_HISTOGRAMDOMAIN_INT)?
+	binVal.inp[i]: binVal.dbp[i];
+    pB += h;
+    if(pB > eps)
+    {
+      pF = sumT - pB;
+      if(pF > eps)
       {
-	double	pB,
-		pF;
+        double  m,
+		mB,
+		mF;
 
-        pB += binVal.inp[i];
-	if(pB > eps)
+	sumB += i * h;
+	mB = sumB / pB;
+	mF = (sumW - sumB) / pF;
+	m = pB * pF * (mB - mF) * (mB - mF);
+	if(max < m)
 	{
-	  pF = sumT - pB;
-	  if(pF > eps)
-	  {
-	    double	m,
-	    		mB,
-	    		mF;
-
-	    sumB += i * binVal.inp[i];
-	    mB = sumB / pB;
-	    mF = (sumW - sumB) / pF;
-	    m = pB * pF * (mB - mF) * (mB - mF);
-	    if(max < m)
-	    {
-	      thr0 = i;
-	      thr1 = i;
-	    }
-	    max = m;
-	  }
+	  thr0 = i;
+	  thr1 = i;
 	}
+	max = m;
       }
-      break;
-    case WLZ_HISTOGRAMDOMAIN_FLOAT:
-      /* HACK TOOD HACK */
-      break;
-    default:
-      break;
+    }
   }
   thr = (0.5 * (thr0 + thr1) * histDom->binSize) + histDom->origin; 
   return(thr) ;
