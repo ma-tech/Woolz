@@ -88,6 +88,7 @@ bin_PROGRAMS		=  \
 			  WlzPosterProcessForStackupKeep3StraitLines \
 			  WlzProductTransform \
 			  WlzProjectDomain \
+			  WlzRadialDistribution \
 			  WlzRawToWlz \
 			  WlzReconstruct \
 			  WlzSizeSelect \
@@ -230,6 +231,10 @@ WlzProductTransform_LDFLAGS	= $(AM_LFLAGS)
 WlzProjectDomain_SOURCES	= WlzProjectDomain.c
 WlzProjectDomain_LDADD		= $(LDADD)
 WlzProjectDomain_LDFLAGS	= $(AM_LFLAGS)
+
+WlzRadialDistribution_SOURCES	= WlzRadialDistribution.c
+WlzRadialDistribution_LDADD	= $(LDADD)
+WlzRadialDistribution_LDFLAGS	= $(AM_LFLAGS)
 
 WlzRawToWlz_SOURCES		= WlzRawToWlz.c
 WlzRawToWlz_LDADD		= $(LDADD)
