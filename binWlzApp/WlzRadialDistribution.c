@@ -51,7 +51,7 @@ WlzRadialDistribution - outputs the radial distribution of components of
 		        the input image.
 \par Synopsis
 \verbatim
-WlzRadialDistribution [-h] [-v] [-A] [-D] [-G] [-H] [-E] [-L]
+WlzRadialDistribution [-h] [-v] [-A] [-D] [-G] [-H] [-E] [-L] [-R]
                       [-c #,#] [-d <debug image>] [-n #]  [-o <out file>]
 		      [-t #] [<input image>]
 
@@ -72,11 +72,15 @@ WlzRadialDistribution [-h] [-v] [-A] [-D] [-G] [-H] [-E] [-L]
   </tr>
   <tr>
     <td><b>-D</td>
-    <td>Sort output by radial distance.</td>
+    <td>Sort output by distance from boundary.</td>
   </tr>
   <tr>
     <td><b>-G</td>
     <td>Sort output by angle.</td>
+  </tr>
+  <tr>
+    <td><b>-R</td>
+    <td>Sort output by radial distance from centre.</td>
   </tr>
   <tr>
     <td><b>-H</td>
@@ -115,7 +119,7 @@ the radial distribution is written to the standard output.
 The image formats understood include wlz, jpg and tif.
 The output format is:
 \verbatim
-  <angle> <radial distance from centre> <area> <x,y position>
+  <angle> <dist from centre> <area> <x pos>,<y pos> <dist form boundary>
 \endverbatim
 \par Examples
 \verbatim
@@ -156,13 +160,15 @@ typedef struct _WlzRadDistRec
   double	radius;
   double	area;
   WlzDVertex2	pos;
+  double	dist;
 } WlzRadDistRec;
 
 typedef enum _WlzRadDistVal
 {
   WLZ_RADDISTVAL_ANGLE,
   WLZ_RADDISTVAL_RADIUS,
-  WLZ_RADDISTVAL_AREA
+  WLZ_RADDISTVAL_AREA,
+  WLZ_RADDISTVAL_DIST
 } WlzRadDistVal;
 
 static int      		WlzRadDistRecSortAngle(
@@ -172,6 +178,9 @@ static int      		WlzRadDistRecSortArea(
                                   const void *p0,
 				  const void *p1);
 static int      		WlzRadDistRecSortRadius(
+                                  const void *p0,
+				  const void *p1);
+static int      		WlzRadDistRecSortDist(
                                   const void *p0,
 				  const void *p1);
 static int 			WlzRadDistParsePath(
@@ -210,7 +219,9 @@ int             main(int argc, char *argv[])
   WlzEffFormat	inFmt = WLZEFF_FORMAT_NONE,
   		dbgFmt = WLZEFF_FORMAT_NONE;
   WlzObject	*inObj = NULL,
+		*disObj = NULL,
   		*segObj = NULL;
+  WlzGreyValueWSpace *disGVWSp = NULL;
   WlzObject	**regObjs = NULL;
   FILE		*fP = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -218,7 +229,7 @@ int             main(int argc, char *argv[])
   char		pathBuf[FILENAME_MAX];
   const double	eps = 1.0e-06;
   const char	*errMsg;
-  static char	optList[] = "hvAGDHEL:c:d:n:o:t:",
+  static char	optList[] = "hvAGDHELR:c:d:n:o:t:",
 		defFile[] = "-";
 
   thrVal.type = WLZ_GREY_DOUBLE;
@@ -233,7 +244,7 @@ int             main(int argc, char *argv[])
         distSort = WLZ_RADDISTVAL_AREA;
 	break;
       case 'D':
-        distSort = WLZ_RADDISTVAL_RADIUS;
+        distSort = WLZ_RADDISTVAL_DIST;
 	break;
       case 'G':
         distSort = WLZ_RADDISTVAL_ANGLE;
@@ -246,6 +257,9 @@ int             main(int argc, char *argv[])
 	break;
       case 'L':
         thrMod = WLZ_THRESH_LOW;
+	break;
+      case 'R':
+        distSort = WLZ_RADDISTVAL_RADIUS;
 	break;
       case 'h':
         usage = 1;
@@ -403,6 +417,32 @@ int             main(int argc, char *argv[])
       }
     }
   }
+  /* Compute object with the same domain as the input object but in which
+   * the values are the minimum distance from an edge. */
+  if(ok)
+  {
+    WlzObject	*bObj = NULL;
+
+    bObj = WlzBoundaryDomain(inObj, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      disObj = WlzAssignObject(       
+               WlzDistanceTransform(inObj, bObj, WLZ_OCTAGONAL_DISTANCE,
+	       			    0.0, 0.0, &errNum), NULL);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      disGVWSp = WlzGreyValueMakeWSp(disObj, &errNum);
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsg);
+      (void )fprintf(stderr, "%s: failed to compute distance object (%s)\n",
+		     *argv, errMsg);
+    }
+    (void )WlzFreeObj(bObj);
+  }
   /* Output the debug image if required. */
   if(ok && dbgPath)
   {
@@ -550,11 +590,36 @@ int             main(int argc, char *argv[])
       com = WlzCentreOfMass2D(regObjs[idR], 1, &mass, NULL);
       if(mass > minArea - eps)
       {
+	WlzGreyValueGet(disGVWSp, 0.0, com.vtY, com.vtX);
 	distData[idS].pos = com;
 	distData[idS].area = mass;
 	WLZ_VTX_2_SUB(com, centre, com);
 	distData[idS].radius = WLZ_VTX_2_LENGTH(com);
 	distData[idS].angle = ALG_M_PI + atan2(com.vtY, com.vtX);
+	switch(disGVWSp->gType)
+	{
+	  case WLZ_GREY_LONG:
+	    distData[idS].dist = *(disGVWSp->gPtr[0].lnp);
+	    break;
+	  case WLZ_GREY_INT:
+	    distData[idS].dist = *(disGVWSp->gPtr[0].inp);
+	    break;
+	  case WLZ_GREY_SHORT:
+	    distData[idS].dist = *(disGVWSp->gPtr[0].shp);
+	    break;
+	  case WLZ_GREY_UBYTE:
+	    distData[idS].dist = *(disGVWSp->gPtr[0].ubp);
+	    break;
+	  case WLZ_GREY_FLOAT:
+	    distData[idS].dist = *(disGVWSp->gPtr[0].flp);
+	    break;
+	  case WLZ_GREY_DOUBLE:
+	    distData[idS].dist = *(disGVWSp->gPtr[0].dbp);
+	    break;
+	  default:
+	    distData[idS].dist = 0.0;
+	    break;
+	}
 	++idS;
       }
       ++idR;
@@ -573,6 +638,10 @@ int             main(int argc, char *argv[])
       case WLZ_RADDISTVAL_RADIUS:
         (void )qsort(distData, tNReg, sizeof(WlzRadDistRec),
 		     WlzRadDistRecSortRadius);
+	break;
+      case WLZ_RADDISTVAL_DIST:
+        (void )qsort(distData, tNReg, sizeof(WlzRadDistRec),
+		     WlzRadDistRecSortDist);
 	break;
     }
   }
@@ -598,12 +667,13 @@ int             main(int argc, char *argv[])
       a = (distData[idR].angle > 0.0)?
 	  0   + (180 * distData[idR].angle / ALG_M_PI):
           360 + (180 * distData[idR].angle / ALG_M_PI);
-      (void )fprintf(fP, "%g %g %g %g,%g\n",
+      (void )fprintf(fP, "%g %g %g %g,%g %g\n",
 		     a,
                      distData[idR].radius,
 		     distData[idR].area,
 		     distData[idR].pos.vtX,
-		     distData[idR].pos.vtY);
+		     distData[idR].pos.vtY,
+		     distData[idR].dist);
     }
   }
   if(strcmp(outFile, "-"))
@@ -612,7 +682,9 @@ int             main(int argc, char *argv[])
   }
   /* Tidy up. */
   AlcFree(distData);
+  WlzGreyValueFreeWSp(disGVWSp);
   (void )WlzFreeObj(inObj);
+  (void )WlzFreeObj(disObj);
   (void )WlzFreeObj(segObj);
   if(regObjs)
   {
@@ -627,7 +699,7 @@ int             main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-h] [-v] [-A] [-D] [-G] [-H] [-E] [-L]\n"
+    "Usage: %s [-h] [-v] [-A] [-D] [-G] [-H] [-E] [-L] [-R]\n"
     "\t\t[-c #,#] [-d <debug image>] [-n #]  [-o <out file>]\n"
     "\t\t[-t #] [<input image>]\n"
     "Segments the given object using a threshold value and outputs the \n"
@@ -637,11 +709,12 @@ int             main(int argc, char *argv[])
     "  -h  Help - prints this usage masseage.\n"
     "  -v  Verbose output.\n"
     "  -A  Sort output by area (default).\n"
-    "  -D  Sort output by radial distance.\n"
+    "  -D  Sort output by distance from boundary.\n"
     "  -G  Sort output by angle.\n"
     "  -H  Threshold high, use pixels at or above threshold (default).\n"
     "  -E  Threshold equal, use pixels at threshold.\n"
     "  -L  Threshold low, use pixels below threshold.\n"
+    "  -R  Sort output by radial distance from centre.\n"
     "  -c  Centre (default is image centre).\n"
     "  -d  Debug image.\n"
     "  -n  Minimum area (default %g).\n"
@@ -650,7 +723,7 @@ int             main(int argc, char *argv[])
     "the radial distribution is written to the standard output.\n"
     "The image formats understood include wlz, jpg and tif.\n"
     "The output format is:\n"
-    "  <angle> <radial distance from centre> <area> <x,y position>\n"
+    "  <angle> <dist from centre> <area> <x pos>,<y pos> <dist form boundary>\n"
     "Example:\n"
     "  %s -o out.txt -d debug.jpg in.tif\n"
     "The input image is read from in.tif, a debug image showing the\n"
@@ -729,6 +802,27 @@ static int      		WlzRadDistRecSortRadius(
   r0 = (WlzRadDistRec *)p0;
   r1 = (WlzRadDistRec *)p1;
   cmp = (r1->radius > r0->radius);
+  return(cmp);
+}
+
+/*!
+* \return	Difference between distance of records.
+* \brief	Comparison function for qsort() to sort radial distribution
+* 		records.
+* \param	p0			Pointer to first record.
+* \param	p1			Pointer to second record.
+*/
+static int      		WlzRadDistRecSortDist(
+				  const void *p0,
+				  const void *p1)
+{
+  int		cmp;
+  WlzRadDistRec *r0,
+  		*r1;
+  
+  r0 = (WlzRadDistRec *)p0;
+  r1 = (WlzRadDistRec *)p1;
+  cmp = (r1->dist > r0->dist);
   return(cmp);
 }
 
