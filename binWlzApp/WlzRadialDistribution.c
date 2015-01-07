@@ -826,6 +826,21 @@ static int      		WlzRadDistRecSortDist(
   return(cmp);
 }
 
+/*!
+* \return	Non zero on parse error.
+* \brief	Parses path for base directory, file name and file extension.
+* 		The file extension is used to set the file format if the
+* 		given file format in WLZEFF_FORMAT_NONE.
+* \param	path			Given path, must not be NULL.
+* \param	dstDir			Destination pointer for base directory,
+* 					may be NULL.
+* \param	dstFile			Destination pointer for file name,
+* 					may be NULL.
+* \param	dstExt			Destination pointer for file extension,
+* 					may be NULL.
+* \param	dstFmt			Destination pointer for file format,
+* 					may be NULL.
+*/
 static int 			WlzRadDistParsePath(
 				  char *path,
 				  char **dstDir,
@@ -834,22 +849,29 @@ static int 			WlzRadDistParsePath(
 				  WlzEffFormat *dstFmt)
 {
   int		len,
-  		usage = 0;
+  		err = 0;
   char		*dir,
   		*file,
 		*ext;
   WlzEffFormat  fmt = WLZEFF_FORMAT_NONE;
 
-  if(*dstFmt)
+  if(!path)
   {
-    fmt = *dstFmt;
+    err = 1;
   }
-  if(((len = strlen(path)) < 3) || /* Minimum of 3 chars. */
-      (*(path + len - 1) == '/'))  /* Directory not plain file. */
+  else
   {
-    usage = 1;
+    if(*dstFmt)
+    {
+      fmt = *dstFmt;
+    }
+    if(((len = strlen(path)) < 3) || /* Minimum of 3 chars. */
+	(*(path + len - 1) == '/'))  /* Directory not plain file. */
+    {
+      err = 1;
+    }
   }
-  if(!usage)
+  if(!err)
   {
     char	*sep,
     		*dot;
@@ -877,7 +899,7 @@ static int 			WlzRadDistParsePath(
       ext = NULL;
     }
   }
-  if(!usage)
+  if(!err)
   {
     if(fmt == WLZEFF_FORMAT_NONE)
     {
@@ -888,11 +910,11 @@ static int 			WlzRadDistParsePath(
       fmt = WlzEffStringExtToFormat(extBuf);
       if(fmt == WLZEFF_FORMAT_NONE)
       {
-        usage = 1;
+        err = 1;
       }
     }
   }
-  if(!usage)
+  if(!err)
   {
     if(dstDir)
     {
@@ -911,6 +933,6 @@ static int 			WlzRadDistParsePath(
       *dstFmt = fmt;
     }
   }
-  return(usage);
+  return(err);
 }
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
