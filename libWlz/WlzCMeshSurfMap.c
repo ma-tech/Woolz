@@ -148,7 +148,9 @@ WlzObject	*WlzCMeshCompSurfMapToCircle(WlzObject *inObj,
 * \ingroup	WlzTransform
 * \brief	Computes a least squares conformal transformation which
 * 		maps the source surface to a destination plane with z
-* 		coordinate zero. See WlzCMeshCompSurfMapIdx().
+* 		coordinate zero. When matching the mesh vertices from
+* 		their position, the closest vertices to the given positions
+* 		are used. See WlzCMeshCompSurfMapIdx().
 * \param	inObj			Input conforming mesh object which
 * 					must be of type WLZ_CMESH_2D5.
 * \param	nDV			Number of destination vertices.
@@ -201,9 +203,15 @@ WlzObject	*WlzCMeshCompSurfMap(WlzObject *inObj,
     }
     else
     {
-      if(WlzCMeshMatchNNodIdx2D5(mesh, nSV, sV, nodTb) != nDV)
+      int 	i;
+
+      for(i = 0; i < nSV; ++i)
       {
-        errNum = WLZ_ERR_DOMAIN_DATA;
+        if((nodTb[i] = WlzCMeshClosestNod2D5(mesh, sV[i])) < 0)
+	{
+	  errNum = WLZ_ERR_DOMAIN_DATA;
+	  break;
+	}
       }
     }
   }

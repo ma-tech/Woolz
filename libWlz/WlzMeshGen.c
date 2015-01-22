@@ -4321,6 +4321,8 @@ static WlzIVertex3 WlzCMeshCellIdxVtx3D(WlzCMesh3D *mesh, WlzDVertex3 vtx)
 *		grid cell containing the node.
 * \param	mesh			The mesh.
 * \param	pos			Given node position.
+* \param	tol			Tollerance to use when finding
+* 					mesh node.
 * \param	dstNod			Destination pointer for the matched
 *					node which will be NULL if there
 *					is no node at the given position.
@@ -4328,6 +4330,7 @@ static WlzIVertex3 WlzCMeshCellIdxVtx3D(WlzCMesh3D *mesh, WlzDVertex3 vtx)
 */
 int	 	WlzCMeshLocateNod2D(WlzCMesh2D *mesh, 
 				    WlzDVertex2 pos,
+				    double tol,
 				    WlzCMeshNod2D **dstNod)
 {
   int		found = 0;
@@ -4358,7 +4361,7 @@ int	 	WlzCMeshLocateNod2D(WlzCMesh2D *mesh,
       nod = cell->nod;
       while(nod != NULL)
       {
-	if(WLZ_VTX_2_EQUAL(nod->pos, pos, WLZ_MESH_TOLERANCE))
+	if(WLZ_VTX_2_EQUAL(nod->pos, pos, tol))
 	{
 	  found = 1;
 	  goto FOUND;
@@ -4382,6 +4385,8 @@ FOUND:
 *		grid cell containing the node.
 * \param	mesh			The mesh.
 * \param	pos			Given node position.
+* \param	tol			Tollerance to use when finding
+* 					mesh node.
 * \param	dstNod			Destination pointer for the matched
 *					node which will be NULL if there
 *					is no node at the given position.
@@ -4389,6 +4394,7 @@ FOUND:
 */
 int	 	WlzCMeshLocateNod2D5(WlzCMesh2D5 *mesh, 
 				     WlzDVertex3 pos,
+				     double tol,
 				     WlzCMeshNod2D5 **dstNod)
 {
   int		found = 0;
@@ -4423,7 +4429,7 @@ int	 	WlzCMeshLocateNod2D5(WlzCMesh2D5 *mesh,
 	nod = cell->nod;
 	while(nod != NULL)
 	{
-	  if(WLZ_VTX_3_EQUAL(nod->pos, pos, WLZ_MESH_TOLERANCE))
+	  if(WLZ_VTX_3_EQUAL(nod->pos, pos, tol))
 	  {
 	    found = 1;
 	    goto FOUND;
@@ -4456,6 +4462,8 @@ FOUND:
 *					cell is empty or the matched node
 *					is the first in the cell. Must not
 *					be NULL.
+* \param	tol			Tollerance to use when finding
+* 					mesh node.
 * \param	dstNod			Destination pointer for the matched
 *					node which will be NULL if there
 *					is no node at the given position.
@@ -4465,6 +4473,7 @@ int	 	WlzCMeshLocateNod3D(WlzCMesh3D *mesh,
 				    WlzDVertex3 pos,
 				    WlzIVertex3 *dstGPos,
 				    WlzCMeshNod3D **dstPrev,
+				    double tol,
 				    WlzCMeshNod3D **dstNod)
 {
   int		found = 0;
@@ -4499,7 +4508,7 @@ int	 	WlzCMeshLocateNod3D(WlzCMesh3D *mesh,
 	nod = cell->nod;
 	while(nod != NULL)
 	{
-	  if(WLZ_VTX_3_EQUAL(nod->pos, pos, WLZ_MESH_TOLERANCE))
+	  if(WLZ_VTX_3_EQUAL(nod->pos, pos, tol))
 	  {
 	    found = 1;
 	    goto FOUND;
@@ -4523,12 +4532,14 @@ FOUND:
 *		the given vertex.
 * \param	mesh			The mesh.
 * \param	nPos			Given vertex position.
+* \param	tol			Match tolerance.
 */
-WlzCMeshNod2D 	*WlzCMeshMatchNod2D(WlzCMesh2D *mesh, WlzDVertex2 nPos)
+WlzCMeshNod2D 	*WlzCMeshMatchNod2D(WlzCMesh2D *mesh, WlzDVertex2 nPos,
+				    double tol)
 {
   WlzCMeshNod2D	*mNod;
 
-  (void )WlzCMeshLocateNod2D(mesh, nPos, &mNod);
+  (void )WlzCMeshLocateNod2D(mesh, nPos, tol, &mNod);
   return(mNod);
 }
 
@@ -4541,12 +4552,14 @@ WlzCMeshNod2D 	*WlzCMeshMatchNod2D(WlzCMesh2D *mesh, WlzDVertex2 nPos)
 *		the given vertex.
 * \param	mesh			The mesh.
 * \param	nPos			Given vertex position.
+* \param	tol			Match tolerance.
 */
-WlzCMeshNod2D5 	*WlzCMeshMatchNod2D5(WlzCMesh2D5 *mesh, WlzDVertex3 nPos)
+WlzCMeshNod2D5 	*WlzCMeshMatchNod2D5(WlzCMesh2D5 *mesh, WlzDVertex3 nPos,
+				     double tol)
 {
   WlzCMeshNod2D5 *mNod;
 
-  (void )WlzCMeshLocateNod2D5(mesh, nPos, &mNod);
+  (void )WlzCMeshLocateNod2D5(mesh, nPos, tol, &mNod);
   return(mNod);
 }
 
@@ -4559,14 +4572,16 @@ WlzCMeshNod2D5 	*WlzCMeshMatchNod2D5(WlzCMesh2D5 *mesh, WlzDVertex3 nPos)
 *		the given vertex.
 * \param	mesh			The mesh.
 * \param	nPos			Given vertex position.
+* \param	tol			Match tolerance.
 */
-WlzCMeshNod3D 	*WlzCMeshMatchNod3D(WlzCMesh3D *mesh, WlzDVertex3 nPos)
+WlzCMeshNod3D 	*WlzCMeshMatchNod3D(WlzCMesh3D *mesh, WlzDVertex3 nPos,
+				     double tol)
 {
   WlzIVertex3	gPos;
   WlzCMeshNod3D	*prev,
   		*mNod;
 
-  (void )WlzCMeshLocateNod3D(mesh, nPos, &gPos, &prev, &mNod);
+  (void )WlzCMeshLocateNod3D(mesh, nPos, &gPos, &prev, tol, &mNod);
   return(mNod);
 }
 
@@ -4580,17 +4595,20 @@ WlzCMeshNod3D 	*WlzCMeshMatchNod3D(WlzCMesh3D *mesh, WlzDVertex3 nPos)
 * \param	mesh			The mesh.
 * \param	nNod			Number of node positions to match.
 * \param	nPos			Node positions.
+* \param	tol			Match tolerance.
 * \param	mNod			Array for matched nodes.
 */
 int		WlzCMeshMatchNNod2D(WlzCMesh2D *mesh, int nNod,
-				    WlzDVertex2 *nPos, WlzCMeshNod2D **mNod)
+				    WlzDVertex2 *nPos, double tol,
+				    WlzCMeshNod2D **mNod)
 {
   int		idN,
   		cnt = 0;
 
   for(idN = 0; idN < nNod; ++idN)
   {
-    cnt += (*(mNod + idN) = WlzCMeshMatchNod2D(mesh, *(nPos + idN))) != NULL;
+    cnt += (*(mNod + idN) =
+            WlzCMeshMatchNod2D(mesh, *(nPos + idN), tol)) != NULL;
   }
   return(cnt);
 }
@@ -4600,22 +4618,25 @@ int		WlzCMeshMatchNNod2D(WlzCMesh2D *mesh, int nNod,
 * \ingroup	WlzMesh
 * \brief	Locates the nodes matching the given vertex positions.
 *		The matched nodes are the mesh nodes which have the
-*		same positions (within WLZ_MESH_TOLERANCE distance) of
+*		same positions (within given tolerance distance) of
 *		the given vertices.
 * \param	mesh			The mesh.
 * \param	nNod			Number of node positions to match.
 * \param	nPos			Node positions.
+* \param	tol			Match tolerance.
 * \param	mNod			Array for matched nodes.
 */
 int		WlzCMeshMatchNNod2D5(WlzCMesh2D5 *mesh, int nNod,
-				     WlzDVertex3 *nPos, WlzCMeshNod2D5 **mNod)
+				     WlzDVertex3 *nPos, double tol,
+				     WlzCMeshNod2D5 **mNod)
 {
   int		idN,
   		cnt = 0;
 
   for(idN = 0; idN < nNod; ++idN)
   {
-    cnt += (*(mNod + idN) = WlzCMeshMatchNod2D5(mesh, *(nPos + idN))) != NULL;
+    cnt += (*(mNod + idN) =
+            WlzCMeshMatchNod2D5(mesh, *(nPos + idN), tol)) != NULL;
   }
   return(cnt);
 }
@@ -4625,22 +4646,25 @@ int		WlzCMeshMatchNNod2D5(WlzCMesh2D5 *mesh, int nNod,
 * \ingroup	WlzMesh
 * \brief	Locates the nodes matching the given vertex positions.
 *		The matched nodes are the mesh nodes which have the
-*		same positions (within WLZ_MESH_TOLERANCE distance) of
+*		same positions (within given tolerance distance) of
 *		the given vertices.
 * \param	mesh			The mesh.
 * \param	nNod			Number of node positions to match.
 * \param	nPos			Node positions.
+* \param	tol			Match tolerance.
 * \param	mNod			Array for matched nodes.
 */
 int		WlzCMeshMatchNNod3D(WlzCMesh3D *mesh, int nNod,
-				    WlzDVertex3 *nPos, WlzCMeshNod3D **mNod)
+				    WlzDVertex3 *nPos, double tol,
+				    WlzCMeshNod3D **mNod)
 {
   int		idN,
   		cnt = 0;
 
   for(idN = 0; idN < nNod; ++idN)
   {
-    cnt += (*(mNod + idN) = WlzCMeshMatchNod3D(mesh, *(nPos + idN))) != NULL;
+    cnt += (*(mNod + idN) =
+            WlzCMeshMatchNod3D(mesh, *(nPos + idN), tol)) != NULL;
   }
   return(cnt);
 }
@@ -4650,15 +4674,17 @@ int		WlzCMeshMatchNNod3D(WlzCMesh3D *mesh, int nNod,
 * \ingroup	WlzMesh
 * \brief	Locates the nodes matching the given vertex positions.
 *		The matched nodes are the mesh nodes which have the
-*		same positions (within WLZ_MESH_TOLERANCE distance) of
+*		same positions (within given tolerance distance) of
 *		the given vertices.
 * \param	mesh			The mesh.
 * \param	nNod			Number of node positions to match.
 * \param	nPos			Node positions.
+* \param	tol			Match tolerance.
 * \param	mIdx			For indices of the matched nodes.
 */
 int		WlzCMeshMatchNNodIdx2D(WlzCMesh2D *mesh, int nNod,
-				       WlzDVertex2 *nPos, int *mIdx)
+				       WlzDVertex2 *nPos, double tol,
+				       int *mIdx)
 {
   int		idN,
   		cnt = 0;
@@ -4666,7 +4692,7 @@ int		WlzCMeshMatchNNodIdx2D(WlzCMesh2D *mesh, int nNod,
 
   for(idN = 0; idN < nNod; ++idN)
   {
-    nod = WlzCMeshMatchNod2D(mesh, *(nPos + idN));
+    nod = WlzCMeshMatchNod2D(mesh, *(nPos + idN), tol);
     if((nod != NULL) && (nod->idx >= 0))
     {
       *(mIdx + idN) = nod->idx;
@@ -4686,10 +4712,12 @@ int		WlzCMeshMatchNNodIdx2D(WlzCMesh2D *mesh, int nNod,
 * \param	mesh			The mesh.
 * \param	nNod			Number of node positions to match.
 * \param	nPos			Node positions.
+* \param	tol			Match tolerance.
 * \param	mIdx			For indices of the matched nodes.
 */
 int		WlzCMeshMatchNNodIdx2D5(WlzCMesh2D5 *mesh, int nNod,
-				        WlzDVertex3 *nPos, int *mIdx)
+				        WlzDVertex3 *nPos, double tol,
+					int *mIdx)
 {
   int		idN,
   		cnt = 0;
@@ -4697,7 +4725,7 @@ int		WlzCMeshMatchNNodIdx2D5(WlzCMesh2D5 *mesh, int nNod,
 
   for(idN = 0; idN < nNod; ++idN)
   {
-    nod = WlzCMeshMatchNod2D5(mesh, *(nPos + idN));
+    nod = WlzCMeshMatchNod2D5(mesh, *(nPos + idN), tol);
     if((nod != NULL) && (nod->idx >= 0))
     {
       *(mIdx + idN) = nod->idx;
@@ -4717,10 +4745,12 @@ int		WlzCMeshMatchNNodIdx2D5(WlzCMesh2D5 *mesh, int nNod,
 * \param	mesh			The mesh.
 * \param	nNod			Number of node positions to match.
 * \param	nPos			Node positions.
+* \param	tol			Match tolerance.
 * \param	mIdx			For indices of the matched nodes.
 */
 int		WlzCMeshMatchNNodIdx3D(WlzCMesh3D *mesh, int nNod,
-				       WlzDVertex3 *nPos, int *mIdx)
+				       WlzDVertex3 *nPos, double tol,
+				       int *mIdx)
 {
   int		idN,
   		cnt = 0;
@@ -4728,7 +4758,7 @@ int		WlzCMeshMatchNNodIdx3D(WlzCMesh3D *mesh, int nNod,
 
   for(idN = 0; idN < nNod; ++idN)
   {
-    nod = WlzCMeshMatchNod3D(mesh, *(nPos + idN));
+    nod = WlzCMeshMatchNod3D(mesh, *(nPos + idN), tol);
     if((nod != NULL) && (nod->idx >= 0))
     {
       *(mIdx + idN) = nod->idx;
@@ -7353,7 +7383,7 @@ static WlzErrorNum WlzCMeshAddLBTNode2D(WlzCMesh2D *mesh,
   /* Compute mesh node positions. */
   nNod = WlzCMeshCompLBTNodPos2D(nPos, lDom, idN,  cls, rot);
   /* Match mesh nodes to computed positions. */
-  (void )WlzCMeshMatchNNod2D(mesh, nNod, nPos, mNod);
+  (void )WlzCMeshMatchNNod2D(mesh, nNod, nPos, WLZ_MESH_TOLERANCE, mNod);
   /* Create nodes that don't already exist. */
   for(idN = 0; idN < nNod; ++idN)
   {
@@ -7450,7 +7480,7 @@ static WlzErrorNum WlzCMeshAddLBTNode3D(WlzCMesh3D *mesh,
     /* Compute the positions of the mesh nodes. */
     nNod = WlzCMeshCompLBTFceNodPos3D(nPos, lDom, idN,  idF, cls, rot);
     /* Match mesh nodes to computed positions. */
-    (void )WlzCMeshMatchNNod3D(mesh, nNod, nPos, mNod);
+    (void )WlzCMeshMatchNNod3D(mesh, nNod, nPos, WLZ_MESH_TOLERANCE, mNod);
     /* Create nodes that don't already exist. */
     for(idM = 0; idM < nNod; ++idM)
     {
@@ -9462,7 +9492,8 @@ static WlzErrorNum WlzCMeshElmFuse2D3(WlzCMesh2D *mesh, WlzCMeshElm2D *gElm)
   {
     for(idN = 0; idN < nBNod; ++idN)
     {
-      if((bNod[idN] = WlzCMeshMatchNod2D(mesh, bPos[idN])) == NULL)
+      if((bNod[idN] = WlzCMeshMatchNod2D(mesh, bPos[idN],
+                                         WLZ_MESH_TOLERANCE)) == NULL)
       {
         bNod[idN] = WlzCMeshNewNod2D(mesh, bPos[idN], &errNum);
 	if(errNum != WLZ_ERR_NONE)

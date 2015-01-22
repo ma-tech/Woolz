@@ -3363,6 +3363,7 @@ WlzCMesh2D	*WlzCMeshCopy2D(WlzCMesh2D *gvnMesh, int squeeze,
 	      for(idN = 0; idN < 3; ++idN)
 	      {
 		if(WlzCMeshLocateNod2D(newMesh, gvnNodes[idN]->pos,
+				       WLZ_MESH_TOLERANCE,
 				       newNodes + idN) == 0)
 		{
 		  newNodes[idN] = WlzCMeshNewNod2D(newMesh, gvnNodes[idN]->pos,
@@ -3583,6 +3584,7 @@ WlzCMesh2D5	*WlzCMeshCopy2D5(WlzCMesh2D5 *gvnMesh, int squeeze,
 	      for(idN = 0; idN < 3; ++idN)
 	      {
 		if(WlzCMeshLocateNod2D5(newMesh, gvnNodes[idN]->pos,
+					WLZ_MESH_TOLERANCE,
 					newNodes + idN) == 0)
 		{
 		  newNodes[idN] = WlzCMeshNewNod2D5(newMesh,
@@ -3808,6 +3810,7 @@ WlzCMesh3D	*WlzCMeshCopy3D(WlzCMesh3D *gvnMesh, int squeeze,
 
 		if(WlzCMeshLocateNod3D(newMesh, gvnNodes[idN]->pos,
 				       &dumGrdPos, &dumNod,
+				       WLZ_MESH_TOLERANCE,
 				       newNodes + idN) == 0)
 		{
 		  newNodes[idN] = WlzCMeshNewNod3D(newMesh, gvnNodes[idN]->pos,

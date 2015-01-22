@@ -4831,10 +4831,16 @@ extern WlzCMeshNod3D		*WlzCMeshAllocNod3D(
 				  WlzCMesh3D *mesh);
 extern WlzCMeshNod2D            *WlzCMeshMatchNod2D(
                                   WlzCMesh2D *mesh,
-                                  WlzDVertex2 pos);
+                                  WlzDVertex2 pos,
+				  double tol);
 extern WlzCMeshNod2D5           *WlzCMeshMatchNod2D5(
                                   WlzCMesh2D5 *mesh,
-                                  WlzDVertex3 pos);
+                                  WlzDVertex3 pos,
+				  double tol);
+extern WlzCMeshNod3D            *WlzCMeshMatchNod3D(
+                                  WlzCMesh3D *mesh,
+                                  WlzDVertex3 pos,
+				  double tol);
 extern WlzCMeshElm2D		*WlzCMeshAllocElm2D(
 				  WlzCMesh2D *mesh);
 extern WlzCMeshElm2D5		*WlzCMeshAllocElm2D5(
@@ -4943,45 +4949,54 @@ extern int                      WlzCMeshMatchNNod2D(
                                   WlzCMesh2D *mesh,
                                   int nNod,
                                   WlzDVertex2 *nPos,
+				  double tol,
                                   WlzCMeshNod2D **mNod);
 extern int			WlzCMeshMatchNNod2D5(
 				  WlzCMesh2D5 *mesh,
 				  int nNod,
 				  WlzDVertex3 *nPos,
+				  double tol,
 				  WlzCMeshNod2D5 **mNod);
 extern int                      WlzCMeshMatchNNod3D(
                                   WlzCMesh3D *mesh,
                                   int nNod,
                                   WlzDVertex3 *nPos,
+				  double tol,
                                   WlzCMeshNod3D **mNod);
 extern int			WlzCMeshMatchNNodIdx2D(
 				  WlzCMesh2D *mesh,
 				  int nNod,
 				  WlzDVertex2 *nPos,
+				  double tol,
 				  int *mIdx);
 extern int			WlzCMeshMatchNNodIdx2D5(
 				  WlzCMesh2D5 *mesh,
 				  int nNod,
 				  WlzDVertex3 *nPos,
+				  double tol,
 				  int *mIdx);
 extern int			WlzCMeshMatchNNodIdx3D(
 				  WlzCMesh3D *mesh,
 				  int nNod,
 				  WlzDVertex3 *nPos,
+				  double tol,
 				  int *mIdx);
 extern int                      WlzCMeshLocateNod2D(
                                   WlzCMesh2D *mesh,
                                   WlzDVertex2 nPos,
+				  double tol,
                                   WlzCMeshNod2D **dstNod);
 extern int                      WlzCMeshLocateNod2D5(
                                   WlzCMesh2D5 *mesh,
                                   WlzDVertex3 nPos,
+				  double tol,
                                   WlzCMeshNod2D5 **dstNod);
 extern int                      WlzCMeshLocateNod3D(
                                   WlzCMesh3D *mesh,
                                   WlzDVertex3 nPos,
                                   WlzIVertex3 *dstGPos,
                                   WlzCMeshNod3D **dstPrev,
+				  double tol,
                                   WlzCMeshNod3D **dstNod);
 extern int             		WlzCMeshClosestNod2D(
 				  WlzCMesh2D *mesh,
