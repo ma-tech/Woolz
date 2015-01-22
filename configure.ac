@@ -237,7 +237,7 @@ CPP="cpp"
 
 AC_ARG_ENABLE(debug,
   [  --enable-debug	build with debugging flags set],
-    CFLAGS="${CFLAGS} -g -DDEBUG"
+    CFLAGS="${CFLAGS} -g -fPIC -DDEBUG"
     LDFLAGS="${LDFLAGS} -g -DDEBUG")
 
 AC_ARG_ENABLE(optimise,
