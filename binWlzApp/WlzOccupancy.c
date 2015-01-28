@@ -767,7 +767,6 @@ int main(int	argc,
   }
 
   /* freespace so purify can check for leaks */
-  WlzFreeObj(obj1);
   while( n-- ){
     WlzFreeObj(objlist[n]);
   }
