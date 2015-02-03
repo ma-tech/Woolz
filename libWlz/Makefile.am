@@ -151,6 +151,7 @@ libWlz_la_SOURCES 	= \
 			  WlzImageArithmetic.c \
 			  WlzIndexObj.c \
 			  WlzInsideDomain.c \
+			  WlzInteriority.c \
 			  WlzIntersect2.c \
 			  WlzIntersect3d.c \
 			  WlzIntersectN.c \

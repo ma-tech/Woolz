@@ -3892,6 +3892,19 @@ extern int			WlzInsideDomain3D(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzInteriority.c							*
+************************************************************************/
+double				WlzInteriority(
+				  WlzObject *refObj,
+				  WlzObject *tstObj,
+				  WlzErrorNum *dstErr);
+double				*WlzInteriorityN(
+				  WlzObject *refObj,
+				  int nTstObj,
+				  WlzObject **tstObjs,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzIntersect2.c							*
 ************************************************************************/
 extern WlzObject 		*WlzIntersect2(

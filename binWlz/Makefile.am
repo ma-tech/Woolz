@@ -146,6 +146,7 @@ bin_PROGRAMS		= \
 			  WlzIndexObjFromCompound \
 			  WlzIndexObjToCompound \
 			  WlzInsideDomain \
+			  WlzInteriority \
 			  WlzIntersect \
 			  WlzIntRescaleObj \
 			  WlzIsEmpty \
@@ -620,6 +621,10 @@ WlzIndexObjToCompound_LDFLAGS		= $(AM_LFLAGS)
 WlzInsideDomain_SOURCES			= WlzInsideDomain.c
 WlzInsideDomain_LDADD			= $(LDADD)
 WlzInsideDomain_LDFLAGS			= $(AM_LFLAGS)
+
+WlzInteriority_SOURCES			= WlzInteriority.c
+WlzInteriority_LDADD			= $(LDADD)
+WlzInteriority_LDFLAGS			= $(AM_LFLAGS)
 
 WlzIntRescaleObj_SOURCES		= WlzIntRescaleObj.c
 WlzIntRescaleObj_LDADD			= $(LDADD)
