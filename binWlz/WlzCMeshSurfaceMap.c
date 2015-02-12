@@ -51,8 +51,8 @@ WlzCMeshSurfaceMap - computes a conforming mesh transform which maps a
                      surface in 3D to a plane.
 \par Synopsis
 \verbatim
-WlzCMeshSurfaceMap [-2] [-h] [-i#] [-n #] [-o<output object>] [-p<points file>]
-                   [-r#] [<input object>]
+WlzCMeshSurfaceMap [-2] [-h] [-i#] [-n #] [-d<domain object>]
+                   [-o<output object>] [-p<points file>] [-r#] [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -65,13 +65,17 @@ WlzCMeshSurfaceMap [-2] [-h] [-i#] [-n #] [-o<output object>] [-p<points file>]
     <td>Help, prints usage message.</td>
   </tr>
   <tr>
+    <td><b>-d</b></td>
+    <td>Optional 2D spatial domain object.</td>
+  </tr>
+  <tr>
     <td><b>-i</b></td>
-    <td>Maximum number of itterations, 0 implies one itteration and
-        mapping will preserve angles.</td>
+    <td>Maximum number of iterations, 0 implies one iteration and
+        mapping will preserve angles (unimplemented).</td>
   </tr>
   <tr>
     <td><b>-n</b></td>
-    <td>Weight for preserving angles, range 0.0 - 1.0.</td>
+    <td>Weight for preserving angles, range 0.0 - 1.0 (unimplemented).</td>
   </tr>
   <tr>
     <td><b>-o</b></td>
@@ -83,18 +87,24 @@ WlzCMeshSurfaceMap [-2] [-h] [-i#] [-n #] [-o<output object>] [-p<points file>]
   </tr>
   <tr>
     <td><b>-r</b></td>
-    <td>Weight for preserving areas, range 0.0 - 1.0.</td>
+    <td>Weight for preserving areas, range 0.0 - 1.0 (unimplemented).</td>
   </tr>
 </table>
 \par Description
 Computes a conforming mesh transform which maps the surface defined by
 the 2D5 conforming mesh onto another surface defined by the mesh with
 displacements. The given displacements are used to compute the least
-squares best conformal (minimum angular distortion) mapping. All files
-are read from the standard input and written to the standard output
-unless filenames are given.
+squares best conformal (minimum angular distortion) mapping.
+If a 2D spatial domain object is supplied, then it must be a single
+piece, it's boundary must correspond to that of the input mesh and
+the given displacements must lie on (or be very near to) the spatial
+domain and mesh boundaries.
+It is possible that an invalid mesh will be generated when the
+surface is too heavily constrained.
+All files are read from the standard input and written to the standard
+output unless filenames are given.
 The displacements must be specified as a list of lines with each line
-having six double precission numbers that are white space seperated.
+having six double precision numbers that are white space separated.
 In each of these lines the values must have the format:
 \verbatim
   Sx Sy Sz Dx Dy Dz
@@ -150,15 +160,17 @@ int             main(int argc, char **argv)
   WlzDVertex3	*srcV = NULL,
   		*dstV = NULL;
   WlzObject     *inObj = NULL,
+		*domObj = NULL,
 		*mapObj = NULL,
   		*outObj = NULL;
   FILE		*fP = NULL;
   char		*ptsFileStr,
   		*inObjFileStr,
-  		*outObjFileStr;
+  		*outObjFileStr,
+		*domObjFileStr = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
-  static char	optList[] = "2hi:n:o:p:r:",
+  static char	optList[] = "2hd:i:n:o:p:r:",
   		fileStrDef[] = "-";
 
   opterr = 0;
@@ -171,6 +183,9 @@ int             main(int argc, char **argv)
     {
       case '2':
         flg2D = 1;
+	break;
+      case 'd':
+        domObjFileStr = optarg;
 	break;
       case 'i':
         if(sscanf(optarg, "%d", &maxItr) != 1)
@@ -249,6 +264,7 @@ int             main(int argc, char **argv)
   /* Read displacements. */
   if(ok)
   {
+    fP = NULL;
     if((fP = (strcmp(ptsFileStr, "-")?
              fopen(ptsFileStr, "r"): stdin)) == NULL)
     {
@@ -276,10 +292,39 @@ int             main(int argc, char **argv)
       (void )fclose(fP);
     }
   }
+  /* If given, read the optional 2D domain object. */
+  if(ok && domObjFileStr)
+  {
+    fP = NULL;
+    if((*domObjFileStr == '\0') ||
+       ((fP = (strcmp(domObjFileStr, "-")?
+	       fopen(domObjFileStr, "r"): stdin)) == NULL) ||
+	((domObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
+	(errNum != WLZ_ERR_NONE))
+    {
+      ok = 0;
+    }
+    if(fP)
+    {
+      if(strcmp(domObjFileStr, "-"))
+      {
+	(void )fclose(fP);
+      }
+      fP = NULL;
+    }
+  }
   /* Compute mapping transform. */
   if(ok)
   {
-    mapObj = WlzCMeshCompSurfMap(inObj, nV, dstV, nV, srcV, &errNum);
+    if(domObj)
+    {
+      mapObj = WlzCMeshCompSurfMapToDomain(inObj, domObj, nV, dstV, nV, srcV,
+                                           &errNum);
+    }
+    else
+    {
+      mapObj = WlzCMeshCompSurfMap(inObj, nV, dstV, nV, srcV, &errNum);
+    }
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -331,6 +376,7 @@ int             main(int argc, char **argv)
     }
   }
   (void )WlzFreeObj(inObj);
+  (void )WlzFreeObj(domObj);
   (void )WlzFreeObj(mapObj);
   (void )WlzFreeObj(outObj);
   if(usage)
@@ -338,28 +384,36 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%s%s%sExample: %s%s",
     *argv,
-    " [-2] [-h] [-i#] [-n #] [-o<output object>]\n"
-    "                          [-p<points file>] [-r#] [<input object>]\n"
+    " [-2] [-h] [-i#] [-n #] [-d<domain object>]\n"
+    "\t\t[-o<output object>] [-p<points file>] [-r#]\n"
+    "\t\t[<input object>]\n"
     "Version: ",
     WlzVersion(),
     "\n"
     "Options:\n"
     "  -2  Output a 2D mesh rather than a 3D mesh with displacements.\n"
+    "  -d  Optional 2D spatial domain object.\n"
     "  -h  Help, prints usage message.\n"
-    "  -i  Maximum number of itterations, 0 implies one itteration and\n"
-    "      mapping will preserve angles.\n"
-    "  -n  Weight for preserving angles, range 0.0 - 1.0.\n"
+    "  -i  Maximum number of iterations, 0 implies one iteration and\n"
+    "      mapping will preserve angles (unimplimented).\n"
+    "  -n  Weight for preserving angles, range 0.0 - 1.0 (unimplimented).\n"
     "  -p  Displacements file.\n"
     "  -o  Output object file.\n"
-    "  -r  Weight for preserving areas, range 0.0 - 1.0.\n"
+    "  -r  Weight for preserving areas, range 0.0 - 1.0 (unimplimented).\n"
     "Computes a conforming mesh transform which maps the surface defined by\n"
     "the 2D5 conforming mesh onto another surface defined by the mesh with\n"
     "displacements. The given displacements are used to compute the least\n"
-    "squares best conformal (minimum angular distortion) mapping. All files\n"
-    "are read from the standard input and written to the standard output\n"
-    "unless filenames are given.\n"
+    "squares best conformal (minimum angular distortion) mapping.\n"
+    "If a 2D spatial domain object is supplied, then it must be a single\n"
+    "piece, it's boundary must correspond to that of the input mesh and\n"
+    "the given displacements must lie on (or be very near to) the spatial\n"
+    "domain and mesh boundaries.\n"
+    "It is possible that an invalid mesh will be generated when the\n"
+    "surface is too heavily constrained.\n"
+    "All files are read from the standard input and written to the standard\n"
+    "output unless filenames are given.\n"
     "The displacements must be specified as a list of lines with each line\n"
-    "having six double precission numbers that are white space seperated.\n"
+    "having six double precision numbers that are white space separated.\n"
     "In each of these lines the values must have the format:\n"
     "  Sx Sy Sz Dx Dy Dz\n"
     "where S and D signify source and displacement.\n",
