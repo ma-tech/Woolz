@@ -1526,6 +1526,12 @@ extern WlzCMeshElm3D		*WlzCMeshNextElm3D(
 /************************************************************************
 * WlzCMeshSurfMap.c                                                   *
 ************************************************************************/
+extern WlzObject		*WlzCMeshCompSurfMapToDomain(
+                                  WlzObject *mshObj,
+                                  WlzObject *domObj,
+                                  int nDV, WlzDVertex3 *dV,
+                                  int nMV, WlzDVertex3 *mV,
+                                  WlzErrorNum *dstErr);
 extern WlzObject		*WlzCMeshCompSurfMap(
 				  WlzObject *inObj,
 				  int nDV,
@@ -1929,7 +1935,8 @@ extern WlzErrorNum		WlzCMeshGetBoundNodes2D(
 extern WlzErrorNum		WlzCMeshGetBoundNodes2D5(
 				  WlzCMesh2D5 *mesh,
 				  int *dstSizeArrayNod,
-				  int **dstArrayNod);
+				  int **dstArrayNod,
+				  int ordered);
 extern WlzErrorNum		WlzCMeshGetBoundNodes3D(
 				  WlzCMesh3D *mesh,
 				  int *dstSizeArrayNod,

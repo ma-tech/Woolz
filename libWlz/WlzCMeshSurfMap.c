@@ -57,36 +57,67 @@ static WlzGMModel 		*WlzCMeshToGMModel2D5(
 				  WlzErrorNum *dstErr);
 
 /*!
-* \return	Woolz object with mesh transform.
+* \return	New mesh object with displacements set or NULL on error.
 * \ingroup	WlzTransform
-* \brief	Computes a conforming mesh transform which maps the
-* 		given surface mesh to a circular domain on a plane.
-* \param	inObj			Given surface mesh.
-* \param	dstErr			Destination error pointer, may be NULL.
+* \brief	Computes a least squares conformal transformation which
+* 		maps the mesh surface to the the given planar spatial domain.
+* 		The boundaries of the mesh and spatial domain are
+* 		considered to be equivalent and the given vertices must
+* 		lie on these boundaries. This function can give invalid
+* 		meshes with flipped/crossing elements when the given
+* 		domain or mesh boundary are non-convex.
+* \param	mshObj			Input conforming mesh object which
+* 					must be of type WLZ_CMESH_2D5.
+* \param	domObj			Given planar spatial domain, which
+* 					must be a single piece.
+* \param	nDV			Number of spatial domain vertices
+* 					which must be the same as nMV.
+* \param	dV			Spatial domain vertices which must
+* 					be on or near the domain boundary.
+* 					These are 3D vertices with the Z
+* 					component zero.
+* \param	nMV			Number of in mesh vertices.
+* \param	mV			Mesh vertices.
+* \param	dstErr			Woolz error code, may be NULL.
 */
-WlzObject	*WlzCMeshCompSurfMapToCircle(WlzObject *inObj,
-				WlzErrorNum *dstErr)
+WlzObject			*WlzCMeshCompSurfMapToDomain(
+				  WlzObject *mshObj,
+				  WlzObject *domObj,
+				  int nDV, WlzDVertex3 *dV,
+				  int nMV, WlzDVertex3 *mV,
+				  WlzErrorNum *dstErr)
 {
-  int		nBN;
-  int		*gBN = NULL;
-  WlzDVertex3	*dBV = NULL,
-  		*gBV = NULL;
-  WlzDVertex3	plNm,
-  		plCn;
+  int		nPin = 0,	/* Number of pin vertex, node index pairs. */
+		nPlyBV = 0,	/* Number of boundary polygon vertices. */
+  		nMshBN = 0;     /* Number of boundary mesh nodes. */
+  int	 	*mshNI = NULL,  /* Given point indices of nodes in mesh. */
+		*prmI  = NULL,  /* Permutation to make given points cyclic. */
+		*pinNI = NULL,  /* Pin node indices. */
+  		*plyVI = NULL,  /* Given point indices in boundary polygon. */
+		*mshBNI = NULL; /* Mesh boundary node indices. */
+  AlcVector	*mshNV;         /* Mesh node vector. */
+  WlzIVertex2	*plyV;
+  WlzDVertex2	*mshV2 = NULL,
+  		*plyV2 = NULL;
+  WlzDVertex3	*pinV = NULL;
+  WlzBasisFnTransform *bFn = NULL;
+  WlzPolygonDomain *ply = NULL;
+  WlzObject	*prmObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;      
   WlzCMesh2D5	*mesh;
-  WlzObject	*rtnObj = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   /* Check object. */
-  if(inObj == NULL)
+  if((mshObj == NULL) || (domObj == NULL))
   {
     errNum = WLZ_ERR_OBJECT_NULL;
   }
-  else if(inObj->type != WLZ_CMESH_2D5)
+  else if((mshObj->type != WLZ_CMESH_2D5) ||
+          (domObj->type != WLZ_2D_DOMAINOBJ))
   {
     errNum = WLZ_ERR_OBJECT_TYPE;
   }
-  else if((mesh = inObj->domain.cm2d5) == NULL)
+  else if(((mesh = mshObj->domain.cm2d5) == NULL) ||
+          (domObj->domain.core == NULL))
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
@@ -94,53 +125,259 @@ WlzObject	*WlzCMeshCompSurfMapToCircle(WlzObject *inObj,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
+  else if((nMV <= 3) || (nMV != nDV))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if((mV == NULL) || (dV == NULL))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
   else
   {
-    errNum = WlzCMeshGetBoundNodes2D5(mesh, &nBN, &gBN);
-  }
-  if(errNum == WLZ_ERR_NONE)
-  {
-    if(((dBV = AlcMalloc(nBN * sizeof(WlzDVertex3))) == NULL) ||
-       ((gBV = AlcMalloc(nBN * sizeof(WlzDVertex3))) == NULL))
+    mshNV = mesh->res.nod.vec;
+    /* Allocate polygon and mesh node index arrays for the closest
+     * vertices and nodes to the given vertices. */
+    if(((prmI = (int *)AlcCalloc(nMV, sizeof(int))) == NULL) ||
+       ((mshNI = (int *)AlcCalloc(nMV, sizeof(int))) == NULL) ||
+       ((plyVI = (int *)AlcCalloc(nMV, sizeof(int))) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    int		idN;
-    AlcVector	*vec;
+    WlzObject	*bndObj;
 
-    /* Gather boundary node positions. */
-    vec =  mesh->res.nod.vec;
-    for(idN = 0; idN < nBN; ++idN)
+    /* Get the boundary polygon of the given 2D spatial domain object,
+     * making sure that it is a simple chain of equi-spaced vertices
+     * (but including the given vertices). */
+    bndObj = WlzObjToBoundary(domObj, 0, &errNum);
+    if(errNum == WLZ_ERR_NONE)
     {
-      WlzCMeshNod2D5 *nod;
-
-      nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(vec, idN);
-      gBV[idN] = nod->pos;
+      if((bndObj == NULL) || (bndObj->type != WLZ_BOUNDLIST) ||
+         (bndObj->domain.b == NULL) ||
+	 (bndObj->domain.b->up != NULL) ||
+	 (bndObj->domain.b->next != NULL) ||
+	 (bndObj->domain.b->down != NULL) ||
+	 (bndObj->domain.b->poly == NULL))
+      {
+        errNum = WLZ_ERR_DOMAIN_DATA;
+      }
+      else
+      {
+        ply = WlzPolyEquispace(bndObj->domain.b->poly,
+			       0, 1.0, 1, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  plyV = ply->vtx;
+          nPlyBV = ply->nvertices;
+	}
+      }
     }
-    /* Fit plane to the given mesh boundary nodes while finding the
-     * centre of mass of the nodes. */
-    errNum = WlzGeometryLSqOPlane(&plNm, &plCn, nBN, gBV);
+    (void )WlzFreeObj(bndObj);
   }
+  /* Find the indices of the boundary nodes of the mesh and get them as
+   * a cyclic ordered array. */
   if(errNum == WLZ_ERR_NONE)
   {
-    /* Fit a circle to the boundary nodes projected onto the plane. */
+    errNum = WlzCMeshGetBoundNodes2D5(mesh, &nMshBN, &mshBNI, 1);
+  }
+  /* Find the indices of the closest 2D domain boundary polygon vertices to
+   * each of the given 2D vertices. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		i;
 
-    /* For each of the boundary nodes, set it's displacement to be
-     * the closest point on the fitted circle. */
-    
-    /* TODO */
+    for(i = 0; i < nMV; ++i)
+    {
+      int	j;
+      double	d;
+      WlzDVertex2 gV,
+      		  fV;
+
+      gV.vtX = dV[i].vtX;
+      gV.vtY = dV[i].vtY;
+      WLZ_VTX_2_SUB(fV, gV, plyV[0]);
+      d = WLZ_VTX_2_SQRLEN(fV);
+      for(j = 1; j < nPlyBV; ++j)
+      {
+	double	    d1;
+        WlzDVertex2 bV,
+	            tV;
+
+	bV.vtX = plyV[j].vtX;
+	bV.vtY = plyV[j].vtY;
+	WLZ_VTX_2_SUB(tV, bV, gV);
+	d1 = WLZ_VTX_2_SQRLEN(tV);
+	if(d1 < d)
+	{
+	  d = d1;
+	  plyVI[i] = j;
+	}
+      }
+    }
   }
-  /* Compute conformal mapping of the mesh to the circular boundary. */
+  /* Find the indices of the closest mesh boundary nodes to each of the
+   * given 3D vertices. */
   if(errNum == WLZ_ERR_NONE)
   {
-    rtnObj = WlzCMeshCompSurfMap(inObj, nBN, dBV, nBN, gBV, &errNum);
+    int		i;
+
+    for(i = 0; i < nMV; ++i)
+    {
+      int	j;
+      double	d = DBL_MAX;
+      WlzDVertex3 gV;
+
+      gV = mV[i];
+      for(j = 0; j < nMshBN; ++j)
+      {
+	double    d1;
+	WlzDVertex2 tV;
+        WlzCMeshNod2D5 *nod;
+
+	/* All nodes will be valid on boundary. */
+	nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mshNV, mshBNI[j]);
+	WLZ_VTX_2_SUB(tV, nod->pos, gV);
+	d1 = WLZ_VTX_2_SQRLEN(tV);
+	if(d1 < d)
+	{
+	  d = d1;
+	  mshNI[i] = j;
+	}
+      }
+    }
   }
-  AlcFree(dBV);
-  AlcFree(gBV);
-  return(rtnObj);
+  /* Compute the permutation which makes the given 2D vertices a cycle on
+   * the given domain's boundary. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		i;
+
+    for(i = 0; i < nMV; ++i)
+    {
+      prmI[i] = i;
+    }
+    AlgHeapSortIdx(plyVI, prmI, nMV, AlgHeapSortCmpIdxIFn);
+  }
+  /* Allocate vertex and mesh node pin arrays such that theye will always have
+   * less elements that the number allocated. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+
+    nPin = ALG_MAX(ply->nvertices, nMshBN);
+    if(((pinNI = (int *)AlcMalloc(sizeof(int) * nPin)) == NULL) ||
+       ((pinV = (WlzDVertex3 *)AlcMalloc(sizeof(WlzDVertex3) * nPin)) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Using the permutation index array to ensure that the spatial domain
+   * boundary vertices are in a cyclic ordering (around the domain):
+   * For each inter mesh boundary node segment interpolate using the
+   * inter-node and inter-polygon distances to find the spatial domain
+   * boundary polygon vertex. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		i;
+
+    nPin = 0;
+    for(i = 0; i < nMV; ++i)
+    {
+      int	j,
+      		j0,     /* Cyclic ordered index of 1st vertex/node. */
+      		j1,    	/* Cyclic ordered index of 2nd vertex/node. */
+		k,
+		nSPV, 	/* Number of polygon vertices in segment. */
+		nSMN; 	/* Number of mesh nodes in segment. */
+      double	d,
+      		d3;     /* Distance from 1st to 2nd node of mesh. */
+      WlzCMeshNod2D5 *nod[2];
+
+      j0 = prmI[i];
+      j1 = prmI[(i + 1) % nMV];
+      nSPV = ((plyVI[j1] - plyVI[j0] + ply->nvertices) % ply->nvertices) + 1;
+      nSMN = ((mshNI[j1] - mshNI[j0] + nMshBN) % nMshBN) + 1;
+      /* Don't need to find the polygon segment distance from 1st to 2nd
+       * given vertex of the polygon because they're equispaced. *
+       * Find distance from 1st to 2nd given node of mesh boundary. */
+      d3 = 0.0;
+      k = mshNI[j0];
+      nod[1] = (WlzCMeshNod2D5 *)AlcVectorItemGet(mshNV, mshBNI[k]);
+      for(j = 1; j < nSMN; ++j)
+      {
+	WlzDVertex3 t3;
+
+	k = (k + 1) % nMshBN;
+	nod[0] = nod[1];
+        nod[1] = (WlzCMeshNod2D5 *)AlcVectorItemGet(mshNV, mshBNI[k]);
+        WLZ_VTX_3_SUB(t3, nod[0]->pos, nod[1]->pos);
+	d3 += WLZ_VTX_3_LENGTH(t3);
+      }
+      /* Set the pins using the mesh boundary nodes and the corresponding
+       * spatial domain boundary polygon vertices. */
+      d = 0.0;
+      k = mshNI[j0];                                 
+      pinV[nPin].vtX = plyV[plyVI[j0]].vtX;
+      pinV[nPin].vtY = plyV[plyVI[j0]].vtY;
+      pinV[nPin].vtZ = 0.0;
+      pinNI[nPin] = mshBNI[k];
+      ++nPin;
+      nod[1] = (WlzCMeshNod2D5 *)AlcVectorItemGet(mshNV, mshBNI[k]);
+      for(j = 1; j < nSMN; ++j)
+      {
+	int	    p;
+	WlzDVertex3 t3;
+
+	k = (k + 1) % nMshBN;
+	nod[0] = nod[1];
+        nod[1] = (WlzCMeshNod2D5 *)AlcVectorItemGet(mshNV, mshBNI[k]);
+        WLZ_VTX_3_SUB(t3, nod[0]->pos, nod[1]->pos);
+	d += WLZ_VTX_3_LENGTH(t3);
+	p = (plyVI[j0] + ALG_NINT(nSPV * (d / d3))) % nPlyBV;
+	pinV[nPin].vtX = plyV[p].vtX;
+	pinV[nPin].vtY = plyV[p].vtY;
+	pinV[nPin].vtZ = 0.0;
+        pinNI[nPin] = mshBNI[k];
+        ++nPin;
+      }
+    }
+    if(pinNI[nPin - 1] == pinNI[0])   /* Avoid duplicated start node at end. */
+    {
+      --nPin;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(nPin < 3)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+  }
+  AlcFree(mshNI);
+  AlcFree(plyVI);
+  (void )WlzFreePolyDmn(ply);
+  /* Compute the parameterised mesh using the pinned nodes and their
+   * parameterised positions. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    prmObj = WlzCMeshCompSurfMapIdx(mesh, nPin, pinV, pinNI, &errNum);
+  }
+  AlcFree(pinNI);
+  AlcFree(mshV2);
+  AlcFree(plyV2);
+  (void )WlzBasisFnFreeTransform(bFn);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeObj(prmObj);
+    prmObj = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(prmObj);
 }
 
 /*!
@@ -419,7 +656,15 @@ WlzObject	*WlzCMeshCompSurfMapIdx(WlzCMesh2D5 *mesh,
 
 	    idV = nIdxTb[nod[idN]->idx];
 	    if((idPP = bsearch(&(nod[idN]->idx), pIdxSorted, nP, sizeof(int),
-		    WlzCMeshSurfMapIdxCmpFn)) != NULL)
+		    WlzCMeshSurfMapIdxCmpFn)) == NULL)
+	    {
+	      /* Node is free. */
+	      (void )AlgMatrixSet(aM, idT,      idV,       wR[idN]);
+	      (void )AlgMatrixSet(aM, idT + nE, idV,      -wI[idN]);
+	      (void )AlgMatrixSet(aM, idT,      idV + nN,  wI[idN]);
+	      (void )AlgMatrixSet(aM, idT + nE, idV + nN,  wR[idN]);
+	    }
+	    else
 	    {
 	      int idQ,
 	      idP;
@@ -433,14 +678,6 @@ WlzObject	*WlzCMeshCompSurfMapIdx(WlzCMesh2D5 *mesh,
 	      (void )AlgMatrixSet(bPM, idT + nE, idQ + nP,  wR[idN]);
 	      bUV[idQ     ] = dPV[idP].vtX;
 	      bUV[idQ + nP] = dPV[idP].vtY;
-	    }
-	    else
-	    {
-	      /* Node is free. */
-	      (void )AlgMatrixSet(aM, idT,      idV,       wR[idN]);
-	      (void )AlgMatrixSet(aM, idT + nE, idV,      -wI[idN]);
-	      (void )AlgMatrixSet(aM, idT,      idV + nN,  wI[idN]);
-	      (void )AlgMatrixSet(aM, idT + nE, idV + nN,  wR[idN]);
 	    }
 	  }
 	}
@@ -480,15 +717,20 @@ WlzObject	*WlzCMeshCompSurfMapIdx(WlzCMesh2D5 *mesh,
 	  dsp = (double *)WlzIndexedValueGet(ixv, nod->idx);
 	  idV = nIdxTb[nod->idx];
 	  if(bsearch(&(nod->idx), pIdxSorted, nP, sizeof(int),
-		WlzCMeshSurfMapIdxCmpFn) != NULL)
+		WlzCMeshSurfMapIdxCmpFn) == NULL)
 	  {
-	    dsp[0] = 0.0;
-	    dsp[1] = 0.0;
+	    /* Node is free. */
+	    dsp[0] = -(xV[idV     ] + nod->pos.vtX);
+	    dsp[1] = -(xV[idV + nN] + nod->pos.vtY);
 	  }
 	  else
 	  {
-	    dsp[0] = -(xV[idV     ] + nod->pos.vtX);
-	    dsp[1] = -(xV[idV + nN] + nod->pos.vtY);
+	    /* Node is pinned. */
+	    WlzDVertex3 *pV;
+
+	    pV = dPV + pIdxIdxTb[idV];
+	    dsp[0] = pV->vtX - nod->pos.vtX;
+	    dsp[1] = pV->vtY - nod->pos.vtY;
 	  }
 	  dsp[2] = -(nod->pos.vtZ);
 	}

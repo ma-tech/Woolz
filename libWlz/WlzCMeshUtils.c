@@ -844,6 +844,7 @@ int		WlzCMeshSetBoundNodFlags3D(WlzCMesh3D *mesh)
 * \return	Woolz error code.
 * \ingroup	WlzMesh
 * \brief	Gets the indeces of the boundary nodes of the mesh.
+* 		The boundary nodes will be unordered.
 * \param	mesh			Given mesh.
 * \param	dstNNod			Return pointer for number of boundary
 * 					nodes, must be non NULL.
@@ -867,7 +868,7 @@ WlzErrorNum	WlzCMeshGetBoundNodes(WlzCMeshP mesh, int *dstNNod,
         errNum = WlzCMeshGetBoundNodes2D(mesh.m2, dstNNod, dstNod);
 	break;
       case WLZ_CMESH_2D5:
-        errNum = WlzCMeshGetBoundNodes2D5(mesh.m2d5, dstNNod, dstNod);
+        errNum = WlzCMeshGetBoundNodes2D5(mesh.m2d5, dstNNod, dstNod, 0);
 	break;
       case WLZ_CMESH_3D:
         errNum = WlzCMeshGetBoundNodes3D(mesh.m3, dstNNod, dstNod);
@@ -955,15 +956,20 @@ WlzErrorNum	WlzCMeshGetBoundNodes2D(WlzCMesh2D *mesh, int *dstNNod,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzMesh
-* \brief	Gets the indeces of the boundary nodes of the 2D5 mesh.
+* \brief	Gets the indices of the boundary nodes of the 2D5 mesh.
 * \param	mesh			Given mesh.
 * \param	dstNNod			Return pointer for number of boundary
 * 					nodes, must be non NULL.
 * \param	dstNod			Return pointer for array of boundary
 * 					node indices, must be non NULL.
+* \param	ordered			If zero gets the indices of all
+* 					boundary nodes, unordered. If
+* 					non-zero gets the boundary nodes
+* 					as a single cycle of node indices,
+* 					from the first boundary node found.
 */
 WlzErrorNum	WlzCMeshGetBoundNodes2D5(WlzCMesh2D5 *mesh, int *dstNNod,
-				        int **dstNod)
+				        int **dstNod, int ordered)
 {
   int		nNod = 0;
   int		*nodes = NULL;
@@ -984,19 +990,27 @@ WlzErrorNum	WlzCMeshGetBoundNodes2D5(WlzCMesh2D5 *mesh, int *dstNNod,
   else
   {
     nNod = WlzCMeshCountBoundNodes2D5(mesh);
-    if(nNod > 0)
+    if(nNod <= 0)
+    {
+      errNum = WLZ_ERR_DOMAIN_DATA;
+    }
+    else
     {
       if((nodes = AlcMalloc(sizeof(int) * nNod)) == NULL)
       {
         errNum = WLZ_ERR_MEM_ALLOC;
       }
     }
-    if(nodes != NULL)
-    {
-      int	idB,
-      		idN;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int	idB,
+	      idN;
 
-      idB = 0;
+    idB = 0;
+    /* Find a boundary node. */
+    if(!ordered)
+    {
       for(idN = 0; idN < mesh->res.nod.maxEnt; ++idN)
       {
 	WlzCMeshNod2D5 *nod;
@@ -1011,6 +1025,51 @@ WlzErrorNum	WlzCMeshGetBoundNodes2D5(WlzCMesh2D5 *mesh, int *dstNNod,
 	  }
 	}
       }
+    }
+    else
+    {
+      int	bnd = 0;
+      WlzCMeshEdgU2D5 *edu0,
+		      *edu1;
+
+      /* Find a node with a boundary edge use (knowing there is one). */
+      for(idN = 0; (bnd == 0) && (idN < mesh->res.nod.maxEnt); ++idN)
+      {
+	WlzCMeshNod2D5 *nod;
+
+	nod = (WlzCMeshNod2D5 *)AlcVectorItemGet(mesh->res.nod.vec, idN);
+	if((nod->idx >= 0) && (nod->edu != NULL))
+	{
+	  edu0 = edu1 = nod->edu;
+	  do
+	  {
+	    if((edu1->opp == NULL) || (edu1->opp == edu1))
+	    {
+	      bnd = 1;
+	      break;
+	    }
+            edu1 = edu1->nnxt;
+	  } while(edu1 != edu0);
+	}
+      }
+      /* Walk around the boundary from the found edge use recording the
+       * node indices. */
+      edu0 = edu1;
+      do
+      {
+	nodes[idB++] = edu1->nod->idx;
+#ifdef WLZ_DEBUG_CMESHUTILS
+      (void )fprintf(stderr, "%4d %3.3g %3.3g %3.3g\n",
+		     edu1->nod->idx, edu1->nod->pos.vtX,
+		     edu1->nod->pos.vtY, edu1->nod->pos.vtZ);
+#endif /* WLZ_DEBUG_CMESHUTILS */
+	edu1 = edu1->next;
+	while((edu1->opp != NULL) || (edu1->opp == edu1))
+	{
+	  edu1 = edu1->nnxt;
+	}
+      } while((edu1 != edu0) && (idB < nNod));
+      nNod = idB;
     }
   }
   if(errNum != WLZ_ERR_NONE)
