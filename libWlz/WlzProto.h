@@ -3901,11 +3901,11 @@ extern int			WlzInsideDomain3D(
 /************************************************************************
 * WlzInteriority.c							*
 ************************************************************************/
-double				WlzInteriority(
+extern double			WlzInteriority(
 				  WlzObject *refObj,
 				  WlzObject *tstObj,
 				  WlzErrorNum *dstErr);
-double				*WlzInteriorityN(
+extern double			*WlzInteriorityN(
 				  WlzObject *refObj,
 				  int nTstObj,
 				  WlzObject **tstObjs,
