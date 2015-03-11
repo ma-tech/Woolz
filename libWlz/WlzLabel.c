@@ -238,16 +238,23 @@ WlzErrorNum 			WlzLabel(
       }
       else
       {
+	int	nObj;
 	WlzObject *lObj;
 
         lObj = WlzLabel3D(obj, maxNumObjs, ignlns, connect, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  int	i,
-	  	nObj;
+	  nObj = ((WlzCompoundArray *)lObj)->n;
+	  if(nObj > maxNumObjs)
+	  {
+	    errNum = WLZ_ERR_DOMAIN_DATA;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  int	i;
 	  WlzObject **objs;
 
-	  nObj = ((WlzCompoundArray *)lObj)->n;
 	  objs = ((WlzCompoundArray *)lObj)->o;
 	  *mm = nObj;
 	  for(i = 0; i < nObj; ++i)
