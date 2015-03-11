@@ -328,11 +328,24 @@ WlzObject 			*WlzDomainFill3D(
     int		i,
 		j,
     		nCSObj = 0;
+    WlzIBox3	bBox;
     WlzObject	**csObj = NULL;
-    const int 	maxCSObj = 10000;
 
-    errNum = WlzLabel(shlObj, &nCSObj, &csObj, maxCSObj, 0,
-		      WLZ_26_CONNECTED);
+    bBox = WlzBoundingBox3I(shlObj, &errNum);
+    if(errNum == WLZ_ERR_NONE)      
+    {
+      int	maxCSObj;
+
+      maxCSObj = ((bBox.xMax - bBox.xMin + 1) *
+      		  (bBox.yMax - bBox.yMin + 1) *
+      		  (bBox.zMax - bBox.zMin + 1)) / 8;
+      if(maxCSObj < 8)
+      {
+        maxCSObj = 8;
+      }
+      errNum = WlzLabel(shlObj, &nCSObj, &csObj, maxCSObj, 0,
+			WLZ_26_CONNECTED);
+    }
     if(errNum == WLZ_ERR_NONE)
     {
       for(i = 0; i < nCSObj; ++i)
