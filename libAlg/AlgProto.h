@@ -443,12 +443,29 @@ extern AlgMatrixLLR		*AlgMatrixLLRNew(
 extern AlgError			AlgMatrixLLRCopyInPlace(
 				  AlgMatrixLLR *aM,
 				  AlgMatrixLLR *bM);
+extern void			AlgMatrixZero(
+				  AlgMatrix mat);
 extern void            		AlgMatrixRectZero(
 				  AlgMatrixRect *mat);
 extern void            		AlgMatrixSymZero(
 				  AlgMatrixSym *mat);
 extern void            		AlgMatrixLLRZero(
 				  AlgMatrixLLR *mat);
+extern AlgError			AlgMatrixSetAll(
+  				  AlgMatrix mat,
+				  double val);
+extern void			AlgMatrixRectSetAll(
+				  AlgMatrixRect *mat,
+				  double val);
+extern void			AlgMatrixRectSetAll(
+				  AlgMatrixRect *mat,
+				  double val);
+extern void 			AlgMatrixSymSetAll(
+				  AlgMatrixSym *mat,
+				  double val);
+extern AlgError			AlgMatrixLLRSetAll(
+				  AlgMatrixLLR *mat,
+				  double val);
 extern void			AlgMatrixLLRERemove(
 				  AlgMatrixLLR *mat,
 				  size_t row,
