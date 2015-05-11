@@ -5428,6 +5428,7 @@ WlzObject 	*WlzCMeshTransformObj(WlzObject *srcObj,
   WlzErrorNum	errNum = WLZ_ERR_NONE;
  
   dstDom.core = NULL;
+  dstValues.core = NULL;
   srcValues.core = NULL;
   if((srcObj == NULL) || (mObj == NULL))
   {
