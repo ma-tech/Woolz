@@ -53,7 +53,52 @@ static char _WlzDomainNearby_c[] = "University of Edinburgh $Id$";
 * 		the given location(s) are outside of the reference object's
 * 		domain. On error a NULL pointer will be returned.
 * \ingroup	WlzMorphologyOps
-* \brief	
+* \brief	This function is just a wrapper for WlzDomainNearby().
+* \param	refObj		Reference object which must be of type
+* 				WLZ_EMPTY_OBJ or WLZ_3D_DOMAINOBJ.
+* \param	nPos		Number of locations.
+* \param	pos		3D locations.
+* \param	dFn		The connectivity to use when establishing
+* 				distance. This must be one of:
+*				<ul>
+*				<li>WLZ_OCTAGONAL_DISTANCE
+*				<li>WLZ_4_DISTANCE
+*				<li>WLZ_6_DISTANCE
+*				<li>WLZ_8_DISTANCE
+*				<li>WLZ_18_DISTANCE
+*				<li>WLZ_26_DISTANCE
+*				</ul>
+*				Distances must be appropriate for the given
+*				object type although all are acceptable
+*				for an empty object.
+* \param	dMax		Maximum distance for a pixel/voxel to be
+* 				considered nearby.
+* \param	dstErr		Destination error pointer, may be NULL.
+*/
+WlzObject			*WlzDomainNearby3D(
+				  WlzObject *refObj,
+				  int nPos, WlzDVertex3 *pos,
+				  WlzDistanceType dFn,
+				  double dMax,
+				  WlzErrorNum *dstErr)
+{
+  WlzVertexP	posP;
+  WlzObject	*rtnObj;
+
+  posP.d3 = pos;
+  rtnObj = WlzDomainNearby(refObj, nPos, posP, dFn, dMax, dstErr);
+  return(rtnObj);
+}
+
+/*!
+* \return	A new domain in which all pixels/voxels are nearby the given
+* 		location(s). The object returned will either be of the same
+* 		type as the reference object or an empty object if (all)
+* 		the given location(s) are outside of the reference object's
+* 		domain. On error a NULL pointer will be returned.
+* \ingroup	WlzMorphologyOps
+* \brief	Computes a new domain in which all pixels/voxels are nearby
+* 		given location(s) and within the reference domain.
 * \param	refObj		Reference object which must be of type
 * 				WLZ_EMPTY_OBJ, WLZ_2D_DOMAINOBJ or
 * 				WLZ_3D_DOMAINOBJ.
