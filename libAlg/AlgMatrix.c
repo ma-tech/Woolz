@@ -159,6 +159,7 @@ void		AlgMatrixFree(AlgMatrix mat)
     }
   }
 }
+
 /*!
 * \ingroup	AlcMatrix
 * \brief	Frees a rectangular matrix.
@@ -663,6 +664,13 @@ AlgError	AlgMatrixSet(AlgMatrix mat,
   return(errNum);
 }
 
+/*!
+* \return	Alg error code.
+* \ingroup	AlgMatrix
+* \brief	Copy the second LLR matrix to the first.
+* \param	aM			First given matrix.
+* \param	bM			Second given matrix.
+*/
 AlgError	AlgMatrixLLRCopyInPlace(AlgMatrixLLR *aM, AlgMatrixLLR *bM)
 {
   AlgError	errNum = ALG_ERR_NONE;                   
@@ -930,6 +938,32 @@ static void 	AlgMatrixLLRInsert(AlgMatrixLLR *mat, size_t row,
 }
 
 /*!
+* \ingroup	AlgMatrix
+* \brief	Sets all elements of the matrix to zero.
+* \param	mat			Given matrix.
+*/
+void		AlgMatrixZero(AlgMatrix mat)
+{
+  if(mat.core)
+  {
+    switch(mat.core->type)
+    {
+      case ALG_MATRIX_RECT:
+        AlgMatrixRectZero(mat.rect);
+        break;
+      case ALG_MATRIX_SYM:
+        AlgMatrixSymZero(mat.sym);
+        break;
+      case ALG_MATRIX_LLR:
+        AlgMatrixLLRZero(mat.llr);
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+/*!
 * \ingroup      AlgMatrix
 * \brief        Sets all elements of the matrix to zero.
 * \param        mat                     Given rectangular matrix.
@@ -976,6 +1010,141 @@ void            AlgMatrixLLRZero(AlgMatrixLLR *mat)
     mat->tbl[idR] = NULL;
   }
   mat->numEnt = 0;
+}
+
+/*!
+* \return	Alg error code. An error may occur if the matrix type
+* 		is not appropriate (ie not one of ALG_MATRIX_RECT,
+* 		ALG_MATRIX_SYM or ALG_MATRIX_LLR) or if the elements
+* 		of a ALG_MATRIX_LLR matrix can not be allocated.
+* \ingroup	AlgMatrix
+* \brief	Sets all elements of the given matrix to the given value.
+* \param	mat			Given matrix.
+* \param	val			Given value.
+*/
+AlgError	AlgMatrixSetAll(AlgMatrix mat, double val)
+{
+  AlgError 	errNum = ALG_ERR_NONE;
+
+  if(mat.core)
+  {
+    switch(mat.core->type)
+    {
+      case ALG_MATRIX_RECT:
+        AlgMatrixRectSetAll(mat.rect, val);
+        break;
+      case ALG_MATRIX_SYM:
+        AlgMatrixSymSetAll(mat.sym, val);
+        break;
+      case ALG_MATRIX_LLR:
+        AlgMatrixLLRSetAll(mat.llr, val);
+        break;
+      default:
+        errNum = ALG_ERR_MATRIX_TYPE;
+	break;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \ingroup      AlgMatrix
+* \brief        Sets all elements of the given rectangular matrix to the
+* 		given value.
+* \param        mat                     Given rectangular matrix.
+* \param	val			Given value.
+*/
+void            AlgMatrixRectSetAll(AlgMatrixRect *mat, double val)
+{
+  size_t	i,
+  		nR,
+		nC;
+
+  nR = mat->nR;
+  nC = mat->nC;
+#ifdef _OPENMP
+   #pragma omp parallel for default(shared)
+#endif
+  for(i = 0; i < nR; ++i)
+  {
+    size_t  	j;
+    double 	*a;
+
+    a = mat->array[i];
+    for(j = 0; j < nC; ++j)
+    {
+      a[j] = val;
+    }
+  }
+}
+
+/*!
+* \ingroup      AlgMatrix
+* \brief        Sets all elements of the given symmetric matrix to the given
+* 		value.
+* \param        mat                     Given symmetric matrix.
+* \param	val			Given value.
+*/
+void            AlgMatrixSymSetAll(AlgMatrixSym *mat, double val)
+{
+  size_t	i,
+  		nR;
+
+  nR = mat->nR;
+#ifdef _OPENMP
+   #pragma omp parallel for default(shared)
+#endif
+  for(i = 0; i < nR; ++i)
+  {
+    size_t  	j,
+    		nC;
+    double 	*a;
+
+    a = mat->array[i];
+    nC = i + 1;
+    for(j = 0; j < nC; ++j)
+    {
+      a[j] = val;
+    }
+  }
+}
+
+/*!
+* \return	Error code.
+* \ingroup      AlgMatrix
+* \brief        Sets all elements of the given linked list row matrix to the
+* 		given value. This is not an efficient use of a linked list
+* 		row matrix since all values will be allocate and set.
+* \param        mat                     Given linked list row matrix.
+* \param	val			Given value.
+*/
+AlgError        AlgMatrixLLRSetAll(AlgMatrixLLR *mat, double val)
+{
+  AlgError	errNum = ALG_ERR_NONE;
+
+  if(fabs(val) > mat->tol)
+  {
+    errNum = AlgMatrixLLRExpand(mat, mat->nR * mat->nC);
+    if(errNum == ALG_ERR_NONE)
+    {
+      size_t	i;
+
+      for(i = 0; i < mat->nR; ++i)
+      {
+        size_t	j;
+
+        for(j = 0; j < mat->nC; ++j)
+	{
+	  (void )AlgMatrixLLRSet(mat, i, j, val);
+	}
+      }
+    }
+  }
+  else
+  {
+    AlgMatrixLLRZero(mat);
+  }
+  return(errNum);
 }
 
 /*!
