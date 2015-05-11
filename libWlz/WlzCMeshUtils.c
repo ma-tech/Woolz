@@ -4861,6 +4861,33 @@ int		WlzCMeshSetElmIdxTbl3D(WlzCMesh3D *mesh, int *idxTb)
 }
 
 /*!
+* \return	Number of nodes directly connected to the given
+* 		node (including itself) or zero if the node is
+* 		invalid.
+* \ingroup	WlzMesh
+* \brief	Computes the number of nodes directly connected to the given
+* 		node.
+* \param	nod			Given node.
+*/
+int		WlzCMeshNodNbrCnt2D5(WlzCMeshNod2D5 *nod)
+{
+  int		cnt = 0;
+  WlzCMeshEdgU2D5 *edu;
+
+  if(nod && (nod->idx >= 0) && ((edu = nod->edu) != NULL))
+  {
+    cnt = 1;
+    do
+    {
+      ++cnt;
+      edu = edu->nnxt;
+    }
+    while(edu != nod->edu);
+  }
+  return(cnt);
+}
+
+/*!
 * \return	Number of nodes in the ring plus one for the given node or
 * 		zero on error.
 * \ingroup	WlzMesh
