@@ -1090,7 +1090,7 @@ int                      	WlzVertexHeapSortIdxFnD2(
                 *v0,
                 *v1;
 
-  v = (WlzDVertex3 *)data;
+  v = (WlzDVertex2 *)data;
   v0 = v + idx[id0];
   v1 = v + idx[id1];
   if((d = v0->vtY - v1->vtY) > 0.0)
@@ -1110,7 +1110,7 @@ int                      	WlzVertexHeapSortIdxFnD2(
     }
     else if (d < 0.0)
     {
-      cmp -1;
+      cmp = -1;
     }
   }
   return(cmp);
@@ -1169,7 +1169,7 @@ int                      	WlzVertexHeapSortIdxFnD3(
       }
       else if (d < 0.0)
       {
-	cmp -1;
+	cmp = -1;
       }
     }
   }
