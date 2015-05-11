@@ -1539,12 +1539,6 @@ extern WlzObject		*WlzCMeshCompSurfMap(
 				  int nSV,
 				  WlzDVertex3 *sV,
 				  WlzErrorNum *dstErr);
-extern WlzObject       		*WlzCMeshCompSurfMapIdx(
-				  WlzCMesh2D5 *mesh,
-				  int nP,
-				  WlzDVertex3 *dPV,
-				  int *pIdx,
-				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzCMeshToContour(
 				  WlzObject *mObj,
 				  double disp,
@@ -1556,15 +1550,6 @@ extern WlzGMModel		*WlzCMeshToGMModel(
 extern WlzObject		*WlzCMeshFlatten2D5(
 				  WlzObject *gObj,
 				  WlzErrorNum *dstErr);
-#ifndef WLZ_EXT_BIND
-extern WlzObject		*WlzCMeshCompSurfMapConformalIdx(
-				  WlzCMesh2D5 *mesh,
-				  int nPN,
-				  WlzDVertex3 *dPV,
-				  int *pIdx,
-				  double minA,
-				  WlzErrorNum *dstErr);
-#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzCMeshFMar.c.c							*
@@ -1906,6 +1891,8 @@ extern int			WlzCMeshElmRingElmIndices3D(
 				  int *maxIdxBuf,
 				  int **idxBuf,
 				  WlzErrorNum *dstErr);
+extern int			WlzCMeshNodNbrCnt2D5(
+				  WlzCMeshNod2D5 *nod);
 extern double                   WlzCMeshElmSnArea22D(
                                   WlzCMeshElm2D *elm);
 extern double			WlzCMeshElmSqArea22D5(
@@ -2498,6 +2485,12 @@ extern WlzObject 		*WlzDomainFill3D(
 /************************************************************************
 * WlzDomainNearby.c							*
 ************************************************************************/
+extern WlzObject		*WlzDomainNearby3D(
+				  WlzObject *refObj,
+				  int nPos, WlzDVertex3 *pos,
+				  WlzDistanceType dFn,
+				  double dMax,
+				  WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
 extern WlzObject		*WlzDomainNearby(
 				  WlzObject *refObj,
@@ -4699,7 +4692,8 @@ extern WlzCMesh3D               *WlzCMeshFromObj3D(
 				  WlzObject **dstDilObj,
 				  int conform,
                                   WlzErrorNum *dstErr);
-extern WlzCMesh2D5		*WlzCMeshFromGM(WlzGMModel *model,
+extern WlzCMesh2D5		*WlzCMeshFromGM(
+				  WlzGMModel *model,
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzCMeshSetElm2D(
 				  WlzCMesh2D *mesh,
