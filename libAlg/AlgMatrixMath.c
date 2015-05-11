@@ -968,34 +968,6 @@ void		AlgMatrixScalar(AlgMatrix aM, double sv)
 
 /*!
 * \ingroup      AlgMatrix
-* \brief        Sets the elements of the given matrix to zero.
-* \note		For efficiency the given parameters are not checked.
-*		\f[
-		\mathbf{A} = \mathbf{0}
-		\f]
-* \note		Matrix size is limited only by address space.
-* \param        mat 			Supplied matrix for result.
-*/
-void            AlgMatrixZero(AlgMatrix mat)
-{
-  switch(mat.core->type)
-  {
-    case ALG_MATRIX_RECT:
-      AlgMatrixRectZero(mat.rect);
-      break;
-    case ALG_MATRIX_SYM:
-      AlgMatrixSymZero(mat.sym);
-      break;
-    case ALG_MATRIX_LLR:
-      AlgMatrixLLRZero(mat.llr);
-      break;
-    default:
-      break;
-  }
-}
-
-/*!
-* \ingroup      AlgMatrix
 * \brief	Multiplies the matrix \f$\mathbf{B}\f$ by the vector
 *		\f$\mathbf{c}\f$:
 *		\f[
