@@ -1,5 +1,3 @@
-/* TODO Written but needs to be debuged tested */
-
 #if defined(__GNUC__)
 #ident "University of Edinburgh $Id$"
 #else
