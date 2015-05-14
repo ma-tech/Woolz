@@ -1032,7 +1032,7 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 		dstInvWidth,
   		maxItvCount = 0,
 		backgroundVal = 0;
-  WlzGreyType	greyType;
+  WlzGreyType	greyType = WLZ_GREY_ERROR;
   int		**bufData = NULL;
   int		*tIP0,
 		*tIP1,
@@ -1405,7 +1405,7 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 		dstInvLeftPos,
 		dstInvRgtPos,
 		dstInvWidth;
-  WlzGreyType 	greyType;
+  WlzGreyType 	greyType = WLZ_GREY_ERROR;
   double	tD0,
 		backgroundVal = 0.0;
   double	**bufData = NULL;
