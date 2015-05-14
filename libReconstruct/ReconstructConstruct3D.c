@@ -102,8 +102,8 @@ RecError	RecConstruct3DObj(WlzObject **dstObj, HGUDlpList *secList,
   		allSrcFlg,
 		firstPlaneFlg = 1,
   		numPlanes,
-		plane1,
-		lastPl;
+		plane1 = 0,
+		lastPl = 0;
   double	plane1D,
   		lastPlD,
 		gaussHWidth = 1.0;
