@@ -1576,7 +1576,7 @@ WlzObject	*WlzMakeCuboid(int plane1, int lastpl,
   WlzDomain	dom,
   		dom2D;
   WlzDomain	*dom2DP = NULL;
-  WlzObjectType	tbType;
+  WlzObjectType	tbType = WLZ_NULL;
   WlzValues	val,
   		val2D;
   WlzValues	*val2DP = NULL;
