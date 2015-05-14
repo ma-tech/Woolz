@@ -1262,12 +1262,12 @@ static void	WlzMeshOutputPS(int dbg, WlzMeshTransform *meshTr,
   int		elmCount,
   		nodCount,
 		scaleSet = 0;
-  double	scale;
+  double	scale = 0.0;
   WlzMeshNode	*nod;
   WlzMeshElem	*elm;
   WlzDVertex2	tVx,
-  		offset;
-  WlzDBox2	bBox;
+  		offset = {0.0};
+  WlzDBox2	bBox = {0.0};
   WlzDVertex2	vx[3];
 
   (void )fprintf(stderr, "%%!\n"
