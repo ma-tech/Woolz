@@ -43,28 +43,24 @@ static char _WlzDomainFill_c[] = "University of Edinburgh $Id$";
 #include <Wlz.h>
 
 
-/* function:     WlzDomainFill    */
 /*! 
 * \ingroup      WlzDomainOps
-* \brief        fill holes in a woolz domain object domain. The returned
- object will have a NULL valuetable.
-*
 * \return       Domain object with holes filled.
-* \param    obj	Input domain object.
-* \param    dstErr	Error return
-* \par      Source:
-*                WlzDomainFill.c
+* \brief        Fills holes in a Woolz domain object domain. The returned
+*		object will have a NULL valuetable.
+*
+* \param    	obj			Input domain object.
+* \param    	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject *WlzDomainFill(
   WlzObject	*obj,
   WlzErrorNum	*dstErr)
 {
-  WlzObject	*rtnObj=NULL, *obj1, *obj2;
+  WlzObject	*rtnObj = NULL,
+  		*obj1;
   WlzBoundList	*bndList;
-  WlzDomain	domain;
   WlzValues	values;
-  WlzPlaneDomain	*pdom, *rtnpdom;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
   int		p;
 
   /* check the object pointer and type */
