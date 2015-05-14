@@ -1030,7 +1030,7 @@ WlzErrorNum	WlzCMeshGetBoundNodes2D5(WlzCMesh2D5 *mesh, int *dstNNod,
     {
       int	bnd = 0;
       WlzCMeshEdgU2D5 *edu0,
-		      *edu1;
+		      *edu1 = NULL;
 
       /* Find a node with a boundary edge use (knowing there is one). */
       for(idN = 0; (bnd == 0) && (idN < mesh->res.nod.maxEnt); ++idN)
@@ -1049,27 +1049,34 @@ WlzErrorNum	WlzCMeshGetBoundNodes2D5(WlzCMesh2D5 *mesh, int *dstNNod,
 	      break;
 	    }
             edu1 = edu1->nnxt;
-	  } while(edu1 != edu0);
+	  } while(edu1 && (edu1 != edu0));
 	}
       }
       /* Walk around the boundary from the found edge use recording the
        * node indices. */
-      edu0 = edu1;
-      do
+      if(edu1 == NULL)
       {
-	nodes[idB++] = edu1->nod->idx;
-#ifdef WLZ_DEBUG_CMESHUTILS
-      (void )fprintf(stderr, "%4d %3.3g %3.3g %3.3g\n",
-		     edu1->nod->idx, edu1->nod->pos.vtX,
-		     edu1->nod->pos.vtY, edu1->nod->pos.vtZ);
-#endif /* WLZ_DEBUG_CMESHUTILS */
-	edu1 = edu1->next;
-	while((edu1->opp != NULL) || (edu1->opp == edu1))
+        errNum = WLZ_ERR_DOMAIN_DATA;
+      }
+      else
+      {
+	edu0 = edu1;
+	do
 	{
-	  edu1 = edu1->nnxt;
-	}
-      } while((edu1 != edu0) && (idB < nNod));
-      nNod = idB;
+	  nodes[idB++] = edu1->nod->idx;
+#ifdef WLZ_DEBUG_CMESHUTILS
+	  (void )fprintf(stderr, "%4d %3.3g %3.3g %3.3g\n",
+			 edu1->nod->idx, edu1->nod->pos.vtX,
+			 edu1->nod->pos.vtY, edu1->nod->pos.vtZ);
+#endif /* WLZ_DEBUG_CMESHUTILS */
+	  edu1 = edu1->next;
+	  while((edu1->opp != NULL) || (edu1->opp == edu1))
+	  {
+	    edu1 = edu1->nnxt;
+	  }
+	} while((edu1 != edu0) && (idB < nNod));
+	nNod = idB;
+      }
     }
   }
   if(errNum != WLZ_ERR_NONE)
