@@ -1007,7 +1007,7 @@ static WlzObject *WlzThreshold3D(WlzObject	*obj,
   	WlzDomain	*domains,
 			*ndomains;
   	WlzValues	*values,
-			*nvalues;
+			*nvalues = NULL;
 	WlzObject	*gObj2D = NULL,
 			*tObj2D = NULL;
 	WlzErrorNum 	errNum2D = WLZ_ERR_NONE;
