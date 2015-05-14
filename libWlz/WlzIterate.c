@@ -143,7 +143,7 @@ void		WlzIterateWSpFree(WlzIterateWSpace *itWSp)
   {
     if(itWSp->iWSp && itWSp->gWSp)
     {
-      WlzEndGreyScan(itWSp, itWSp->gWSp);
+      WlzEndGreyScan(itWSp->iWSp, itWSp->gWSp);
     }
     AlcFree(itWSp->iWSp);
     AlcFree(itWSp->gWSp);
