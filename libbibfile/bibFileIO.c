@@ -188,7 +188,7 @@ BibFileError	BibFileRecordRead(BibFileRecord **record, char **eMsg,
 {
   int		endFlag = 0;
   BibFileError	errFlag = BIBFILE_ER_NONE;
-  BibFileField	**field;
+  BibFileField	**field = NULL;
 
   errFlag = BibFileCharMatch(BIBFILE_TOK_NEW, 1, 1, fP);
   if(errFlag != BIBFILE_ER_EOF)
