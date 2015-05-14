@@ -611,6 +611,9 @@ static WlzErrorNum WlzRegICPCheckVertices(WlzVertexP *vData, int *vCnt,
 	case WLZ_VERTEX_D3:
 	  type[idx] = 2;
 	  break;
+         default:
+	  errNum = WLZ_ERR_PARAM_DATA;
+	  break;
       }
     } while(++idx < 2);
     idx = 0;
