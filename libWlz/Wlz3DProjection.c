@@ -452,12 +452,12 @@ WlzObject 	*WlzProjectObjToPlane(WlzObject *obj,
   int		nThr = 1,
 		itvVal = 0;
   WlzIVertex2	prjSz;
-  WlzIBox2	prjBox;
+  WlzIBox2	prjBox = {0};
   double	pln[4];
   WlzObject	*bufObj = NULL,
   		*prjObj = NULL;
   WlzThreeDViewStruct *vStr1 = NULL;
-  double	**vMat;
+  double	**vMat = NULL;
   WlzValues	nullVal;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzAffineTransform *rescaleTr = NULL;
