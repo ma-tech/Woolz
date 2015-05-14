@@ -5293,10 +5293,10 @@ static int	WlzGeomTriangleTriangleIntersect3DA(WlzDVertex3 s[],
 		cop = 0,
   		isn = 0;
   double	tmp,
-  		ds0ds1,
-		ds0ds2,
-  		dt0dt1,
-		dt0dt2;
+  		ds0ds1 = 0.0,
+		ds0ds2 = 0.0,
+  		dt0dt1 = 0.0,
+		dt0dt2 = 0.0;
   WlzDVertex3	e,
   		ae;
   double	d[2],
