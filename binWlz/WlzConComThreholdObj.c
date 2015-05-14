@@ -487,7 +487,7 @@ static WlzVertexP		WlzCCTParseSeedList(
   }
   else
   {
-    char 	*pStr[3];
+    char 	*pStr[3] = {NULL};
 
     pStr[0] = strtok(seedListStr, ",");
     while((err == 0) && (pStr[0] != NULL) && (seedCnt < maxSeed)) 
