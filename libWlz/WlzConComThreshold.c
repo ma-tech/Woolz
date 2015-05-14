@@ -400,7 +400,7 @@ WlzObject 			*WlzConComThreshold(
 		 * this seed is inside it. Can only be inside one. */
 		for(c = 0; c < nC; ++c)
 		{
-		  int	in;
+		  int	in = 0;
 
 		  if(pObj)
 		  {
@@ -426,7 +426,7 @@ WlzObject 			*WlzConComThreshold(
 		    in = WlzInsideDomain(cAry[c], pos.vtZ, pos.vtY, pos.vtX,
 					 &errNum);
 		  }
-		  if((errNum == WLZ_ERR_NONE) & in)
+		  if((errNum == WLZ_ERR_NONE) && in)
 		  {
 		    WlzObject *uObj;
 
