@@ -958,7 +958,7 @@ static WlzErrorNum WlzLUTTransformObj3D(WlzObject *rObj, WlzObject *gObj,
     {
       WlzDomain *gDom2,
       		*rDom2;
-      WlzValues *gVal2,
+      WlzValues *gVal2 = NULL,
       		*rVal2;
       WlzErrorNum errNum2 = WLZ_ERR_NONE;
 
