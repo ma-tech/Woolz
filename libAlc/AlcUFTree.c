@@ -99,7 +99,6 @@ AlcUFTree			*AlcUFTreeNew(
 				  int nNod)
 {
   AlcUFTree	*uft = NULL;
-  AlcErrno	errNum = ALC_ER_NONE;
 
   if(((uft = (AlcUFTree *)AlcCalloc(1, sizeof(AlcUFTree))) == NULL) ||
      ((uft->pr = (int *)AlcMalloc(maxNod * 2 * sizeof(int))) == NULL))
