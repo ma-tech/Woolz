@@ -1982,6 +1982,8 @@ static WlzConvHullDomain3	*WlzConvexHullDegenerate3(
 	   \right.
        \f]
      */ 
+    l2 = 0; 		/* These two assignments keep the compiller happy */
+    v2 = v0;		/* allowing for (impossible ?) coincident vertices. */
     for(i = 0; i < nPnt; ++i)
     {
       l2 = 0;
