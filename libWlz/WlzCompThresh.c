@@ -1200,7 +1200,7 @@ static double	WlzCompThreshOtsu(WlzHistogramDomain *histDom)
   for(i = 0; i < binCnt; ++i)
   {
     double h,
-    	   pB,
+    	   pB = 0.0,
 	   pF;
 
     h = (histDom->type == WLZ_HISTOGRAMDOMAIN_INT)?
