@@ -415,7 +415,7 @@ void		WlzTiledValueBufferFlush(WlzTiledValueBuffer *tvb,
     {
       int	i,
       		io,
-		itc,
+		itc = 0,
 		rmn;
       size_t	ii;
 
