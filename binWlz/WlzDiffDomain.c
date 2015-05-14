@@ -106,7 +106,9 @@ int main(int	argc,
 	 char	**argv)
 {
 
-  WlzObject	*obj, *obj1, *obj2;
+  WlzObject	*obj = NULL,
+                *obj1 = NULL,
+		*obj2 = NULL;
   WlzObjectType	type = (WlzObjectType) -1;
   int 		n;
   FILE		*inFile;
