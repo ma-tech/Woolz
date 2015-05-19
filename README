@@ -85,8 +85,6 @@ libReconstruct: Library with code for 3D alignment of 2D section images to
 libWlz:         The Woolz image processing library.
 libWlzBnd:      Library with small functions that bind Woolz to other languages.
 libWlzExtFF:    Library for external data format input/output.
-java:           Directory structure in which the Woolz Java binding can be
-                built.
 binWlz:         Small command line based Woolz programs.
 binWlzApp:      More small command line based Woolz programs.
 binWlzExtFF:    Small command line based Woolz programs which use external file formats.
@@ -136,13 +134,6 @@ The build script build.sh simply runs
   autoreconf
 followed by
   ./configure
-
-If building JavaWoolz then the build requires all libraries (including
-external file format libraries such as Jpeg, NIfTI and Tiff) to be built
-with relocatable code (use -fPIC with gcc). Sometimes the JavaWoolz
-build fails because of something to do with the Java classpath. You
-can often work around this by running make within the JavaWoolz C2Java
-directory and then rerunning make from the top level directory again.
 
 A prefix can be given in the configure stage to define where the programs,
 libraries are will be installed, conventionally this is /opt/MouseAtlas.
