@@ -42,6 +42,8 @@ AC_GNU_SOURCE
 
 AM_INIT_AUTOMAKE
 
+AC_CONFIG_MACRO_DIR([m4])
+
 AC_CONFIG_SRCDIR([libWlz/Wlz.h])
 
 # Set defaults
@@ -60,13 +62,6 @@ HAVE_NIFTI="no"
 NIFTI_DIR="no"
 HAVE_TIFF="no"
 TIFF_DIR="no"
-ENABLE_JAVA="no"
-HAVE_JNI="no"
-JDK_DIR="no"
-JAR="no"
-JAVA="no"
-JAVAC="no"
-JAVACC="no"
 ENABLE_TEST="no"
 AC_SUBST(CP)
 AC_SUBST(RM)
@@ -312,12 +307,6 @@ AC_ARG_ENABLE(extff,
      ENABLE_EXTFF="no")
 AM_CONDITIONAL([BUILD_EXTFF], [test x"$ENABLE_EXTFF" = x"yes"])
 
-AC_ARG_ENABLE(java,
-  [  --enable-java	        build with java bindings],
-     ENABLE_JAVA="yes",
-     ENABLE_JAVA="no")
-AM_CONDITIONAL([BUILD_JAVA], [test x"$ENABLE_JAVA" = x"yes"])
-
 AC_ARG_ENABLE(test,
   [  --enable-test		build test programs],
      ENABLE_TEST="yes",
@@ -405,53 +394,6 @@ then
 			binWlzExtFF/Makefile])
 fi
 
-if test x${ENABLE_JAVA} = "xyes"
-then
-  AC_ARG_WITH(jdk, [  --with-jdk=DIR          Directory with Java development
-                          kit defaults to the value of the JAVA_HOME
-			  environment variable.],
-		     JDK_DIR=$withval, JDK_DIR=no)
-  if test ${JDK_DIR} = "no"
-  then
-      # no --with-jdk argument given
-      if test x${JAVA_HOME} = "x"
-      then
-	AC_MSG_ERROR([JDK base directory required, use --with-jdk=DIR.])
-      else
-        JDK_DIR=${JAVA_HOME}
-      fi
-  fi
-  if test ${JDK_DIR} != "no"
-  then
-    JAR=${JDK_DIR}/bin/jar
-    JAVA=${JDK_DIR}/bin/java
-    JAVAC=${JDK_DIR}/bin/javac
-  fi
-  AC_ARG_WITH(javacc, [  --with-javacc=PATH      Full path of the javacc
-                          executable, by default the standard paths are
-			  searched.],
-		     JAVACC=$withval, JAVACC=no)
-  if test ${JAVACC} = "no"
-  then
-    AC_PATH_PROG(JAVACC, javacc)
-    if test x${JAVACC} = "x"
-    then
-      AC_MSG_ERROR([Program javacc required, use --with-javacc=PATH.])
-    fi
-  fi
-  AC_SUBST(JAVA)
-  AC_SUBST(JAVAC)
-  AC_SUBST(JAVACC)
-  AC_CONFIG_FILES([     java/uk/ac/mrc/hgu/Wlz/C2Java/Makefile \
-                        java/uk/ac/mrc/hgu/Wlz/C/Makefile \
-			java/uk/ac/mrc/hgu/Wlz/Java/Makefile ])
-
-  if test x${ENABLE_TEST} = "xyes"
-  then
-    AC_CONFIG_FILES([   java/uk/ac/mrc/hgu/Wlz/Test/Makefile ])
-  fi
-fi
-
 case $host in
   *mingw*)
     LIBS="-lregex $LIBS"
@@ -476,12 +418,6 @@ Woolz core has been configured on ${host} with
   CFLAGS:                         ${CFLAGS}
   LIBS needed for configure:       ${LIBS_EXTFF} ${LIBS}
   Woolz external file format code:  ${ENABLE_EXTFF}
-  Java Woolz binding:               ${ENABLE_JAVA}
-  JDK directory:                    ${JDK_DIR}
-  jar:                              ${JAR}
-  java:                             ${JAVA}
-  javac:                            ${JAVAC}
-  javacc:                           ${JAVACC}
   Test programs:                    ${ENABLE_TEST}
 
 To build Woolz:                     make

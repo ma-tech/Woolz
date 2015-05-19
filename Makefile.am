@@ -56,13 +56,6 @@ if  BUILD_EXTFF
 		binWlzExtFF
 endif
 
-if BUILD_JAVA
-  SUBDIRS +=	\
-		java/uk/ac/mrc/hgu/Wlz/C2Java  \
-		java/uk/ac/mrc/hgu/Wlz/C \
-		java/uk/ac/mrc/hgu/Wlz/Java
-endif
-
 doc:
 		doxygen Doxyfile_Core
 
