@@ -400,6 +400,7 @@ then
 			libhguDlpList/Makefile \
 			libReconstruct/Makefile \
   			libWlzExtFF/Makefile \
+  		        libWlzBnd/Makefile \
 			binWlzApp/Makefile \
 			binWlzExtFF/Makefile])
 fi
@@ -441,8 +442,7 @@ then
   AC_SUBST(JAVA)
   AC_SUBST(JAVAC)
   AC_SUBST(JAVACC)
-  AC_CONFIG_FILES([     libWlzBnd/Makefile \
-                        java/uk/ac/mrc/hgu/Wlz/C2Java/Makefile \
+  AC_CONFIG_FILES([     java/uk/ac/mrc/hgu/Wlz/C2Java/Makefile \
                         java/uk/ac/mrc/hgu/Wlz/C/Makefile \
 			java/uk/ac/mrc/hgu/Wlz/Java/Makefile ])
 
