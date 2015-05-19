@@ -51,13 +51,13 @@ if  BUILD_EXTFF
 		libhguDlpList \
 		libWlzExtFF \
 		libReconstruct \
+  		libWlzBnd \
 		binWlzApp \
 		binWlzExtFF
 endif
 
 if BUILD_JAVA
   SUBDIRS +=	\
-  		libWlzBnd \
 		java/uk/ac/mrc/hgu/Wlz/C2Java  \
 		java/uk/ac/mrc/hgu/Wlz/C \
 		java/uk/ac/mrc/hgu/Wlz/Java
