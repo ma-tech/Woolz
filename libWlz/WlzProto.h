@@ -3900,8 +3900,8 @@ extern double			WlzInteriority(
 				  WlzErrorNum *dstErr);
 extern double			*WlzInteriorityN(
 				  WlzObject *refObj,
-				  int nTstObj,
-				  WlzObject **tstObjs,
+				  int sizeArrayObjs,
+				  WlzObject **arrayObjs,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
