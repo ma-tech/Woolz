@@ -58,10 +58,7 @@ WlzErrorNum	WlzBndGreyInvert(WlzObject *obj)
   {
     WlzValueConvertPixel(&min, gmin, WLZ_GREY_DOUBLE);
     WlzValueConvertPixel(&max, gmax, WLZ_GREY_DOUBLE);
-
     errNum = WlzGreyInvertMinMax(obj, min, max);
   }
   return(errNum);
 }
-
-
