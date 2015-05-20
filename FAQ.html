@@ -10,7 +10,7 @@
 <body>
 
 <h1 align=center>
-Frequently Asked Questions About Woolz (Version 1.3.0).
+Frequently Asked Questions About Woolz (Version 1.6.0).
 </h1>
 
 <h2 id="general-questions">General questions</h2>
@@ -34,6 +34,8 @@ Frequently Asked Questions About Woolz (Version 1.3.0).
 <li><a href="#usage_000000">How can I find out what's in a Woolz object?</a></li>
 <li><a href="#usage_000001">How can I threshold an object to segment it and then
 compute the volume of the segmented parts?</a></li>
+<li><a href="#usage_000002">How can I make a memory mapped object?</a></li>
+<li><a href="#usage_000003">I've a 200GB 3D object, how can I cut sections from it?</a></li>
 </ol>
 
 <h2 id="general-questions">General questions</h2>
@@ -246,6 +248,62 @@ where the image values are greater than or equal to the given value (100),
 splits the segmentation into separate objects using connectivity (using
 WlzLabel) and then computes (and prints) the volume of each of these
 separate objects where the values are above threshold.
+</p>
+
+<p>
+<dt id="usage_000002"><font size=+1>Q.</font>
+How can I make a memory mapped object?</dt>
+<font size=+1>A.</font>
+Memory mapped tiled objects allow voxel values to be accessed without
+reading all voxel values into memory. This can make operations, such
+as cutting a virtual section from a very large 3D image, possible even
+on a machine with little memory. If the 3D image fits within the memory
+of the machine being used then a tiled object can be made in a single
+operation:
+<pre>
+  WlzTiledObjFromDomain -c -o tiled.wlz ts14.wlz
+</pre>
+
+If the image is far greater than the memory available then the
+tiled object needs to be created in stages. First creating a
+tiled object into which the values can be written, this requires
+a spatial domain, but a simple cuboid might be sufficient as in
+this example:
+<pre>
+  WlzMakeRect -3 -x0,9999 -y0,9999 -z0,9999 -o dom.wlz
+  WlzVolume dom.wlz
+    Object 1: number of voxels = 1000000000000
+  WlzTiledObjFromDomain  -b 0 -o tiled.wlz dom.wlz
+</pre>
+The size of the domain object will typically be around 200kB, while that
+of the tiled object will be around 1TB. At this stage the tiled object
+will be filled with the given background value (0 in the example).
+If the actual values for the tiled object are in separate tiff files then
+these might be written to the tiled object using a simple shell loop:
+<pre>
+  N=0
+  while [ $N -lt 10000 ]
+  do
+    WlzExtFFConvert -F wlz -o - sect$N.tif | \
+    WlzCopyToTiledObj -z $N -t tiled.wlz -
+  done
+</pre>
+
+<dt id="usage_000002"><font size=+1>Q.</font>
+I've a 200GB 3D object, how can I cut sections from it?</dt>
+<font size=+1>A.</font>
+Convert your object to a memory mapped Woolz object, you can then
+apply many of the Woolz command line programs or functions to it.
+See (<a href="#usage_000002">How can I make a memory mapped object?</a>).
+For example, to cut sections orthogonal to the x-y plane use:
+<pre>
+Wlz3DGetSection -d 10 -a 90,0,0 -o out.wlz tiled.wlz
+</pre>
+or
+<pre>
+Wlz3DGetSection -d 10 -a 90,90,0 -o out.wlz tiled.wlz
+</pre>
+</p>
 
 </ol>
 
