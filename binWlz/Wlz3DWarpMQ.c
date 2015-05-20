@@ -686,8 +686,6 @@ static void usage(char *proc_str)
 	  "\tcover the Woolz object. Sure, you can also just give a small cuboid\n"
 	  "\tby transfer only part of your Woolz object. \n"
 	  "\n"
-	  "\tPlease report bugs to RAO.JIANGUO@hgu.mrc.ac.uk\n"
-	  "\n"
 	  "\tOptions are:\n"
 	  "\t  -h        Help - prints this usage message\n"
 	  "\t  -l        input the number of cuboid elements along x-direction\n"
