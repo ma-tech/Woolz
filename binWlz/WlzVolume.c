@@ -118,7 +118,8 @@ int main(int	argc,
   FILE		*inFile;
   char 		optList[] = "nh";
   int		option;
-  int		count, vol;
+  int		count;
+  WlzLong	vol;
   int		numericFlg=0;
   const char    *errMsg;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
@@ -180,10 +181,10 @@ int main(int	argc,
        }
        else {
 	 if( numericFlg ){
-	   fprintf(stdout, "%d\n", vol);
+	   fprintf(stdout, "%lld\n", vol);
 	 }
 	 else {
-	   fprintf(stderr, "Object %d: number of voxels = %d\n", count, vol);
+	   fprintf(stderr, "Object %d: number of voxels = %lld\n", count, vol);
 	 }
        }
        break;
