@@ -101,7 +101,7 @@ Margaret Stark
 Nick Burton
 Richard Baldock
 
-To contact the authors please use ma-tech@hgu.mrc.ac.uk.
+To contact the authors please use ma-tech@igmm.ed.ac.uk.
 
 The skeleton for the autoconf system was shamelessly copied from Tina
 (http://www.tina-vision.net).
@@ -153,15 +153,46 @@ command line with pipes. These programs include those for:
   applying affine, basis function and mesh based transforms
   registration of spatial domain objects and surfaces
   reconstruction from serial sections
-  morphological operations (erosion, dilation, etc>)
+  morphological operations (erosion, dilation, etc) and fill
   set operations (union, intersection etc)
   feature extraction
   mesh generation
   contour generation
+  convex hulls
   distance transforms
   histograms
   thresholding and labelling
   grey and colour image value filters
+
+As an example, the following thresholds a 3D image, applies erosion and
+dilation to remove small isolated regions, labels (segments) the image
+into separate objects and the prints the volume of each isolated object:
+
+prompt% WlzThreshold -v135 -L ts14.wlz | \
+        WlzErosion  -c26 -r2 | \
+        WlzDilation -c26 -r2 | \
+	WlzLabel | \
+	WlzVolume
+Object 1: number of voxels = 66
+Object 2: number of voxels = 45
+Object 3: number of voxels = 45
+Object 4: number of voxels = 66
+Object 5: number of voxels = 159
+Object 6: number of voxels = 45
+Object 7: number of voxels = 45
+Object 8: number of voxels = 58
+Object 9: number of voxels = 276
+Object 10: number of voxels = 45
+Object 11: number of voxels = 138
+Object 12: number of voxels = 45
+Object 13: number of voxels = 45
+Object 14: number of voxels = 137
+Object 15: number of voxels = 45
+
+Woolz can also be used as a set of C libraries, or via a binding
+to another language. Currently these bindings exist for Java, Python
+and R. For details of these bindings see the JavaWoolz, PyWoolz and
+RWoolz repositories.
 
 5) File formats.
 ----------------
@@ -173,9 +204,89 @@ Woolz objects. Woolz objects can also (usualy with some loss of information)
 be written to other (external) file formats.
 
 The program WlzExtFFConvert can be used to convert between supported
-file formats. The library functions WlzEffReadObj() and WlzEffWriteObj()
-(in libWlzExtFF) can also be used to read and write non-Woolz format
-files.
+file formats. As with all the small Woolz programs, the -h option will
+show usage, but for WlzExtFFConvert it will also list the file formats
+which are understood:
+
+prompt% WlzExtFFConvert -h
+Usage: WlzExtFFConvert [-h] [-s] [-b<background>]
+                       [-d<min-dimension>] [-D<max-dimension>]
+                       [-f<input format>] [-F<output format>]
+                       [-x<x size>] [-y<y size>] [-z<z size>]
+                       [-o<output file>] [<input file>)]
+Converts objects between one file format and another, neither of
+which need be the Woolz data file format.
+Version: 1.6.0
+Options:
+  -h    Help, prints this usage information.
+  -s    Split labeled volumes into domains.This will also split
+        a tiled or pyramidal tiff into resolution slices and tiles.
+  -G    Apply grey value transforms.
+  -S    Use spatial transforms to create WLZ_TRANS_OBJ objects
+        (by default just offsets are applied).
+  -b#   Set background to value,
+  -d#   Set size of minimum dimension, i.e. min of width or height
+  -D#   Set size of maximum dimension, i.e. max of width or height
+  -f#   Input file format.
+  -F#   Ouput file format.
+  -o#   Output file name.
+  -x#   X voxel/pixel size.
+  -y#   Y voxel/pixel size.
+  -z#   Z voxel/pixel size.
+The known file formats are:
+  Description                                       Extension
+  ***********                                       *********
+  Amira Lattice                                     am
+  Microsoft Bitmap                                  bmp
+  Stanford Density                                  den
+  Netgen neutral mesh format                        emt
+  Graphics Interchange Format                       gif
+  ANALYZE HDR                                       hdr
+  Image Cytometry Standard                          ics
+  IPLab                                             ipl
+  JPEG                                              jpg
+  Pascal Frey's medit tetrahedral mesh format       mesh
+  Neuroimaging Informatics Technology Initiative    nii
+  Jonathan Shewchuk's mesh format                   node
+  Wavefront                                         obj
+  BioRad Confocal                                   pic
+  Riken PLY2                                        ply2
+  PNM                                               pnm
+  Drishti dot NC format                             pvl.nc
+  Raw                                               raw
+  SLC                                               slc
+  GRUMMP SMESH                                      smesh
+  Stereolithography format                          stl
+  Tiff                                              tif
+  Text                                              txt
+  Sunvision VFF                                     vff
+  GRUMMP VMESH                                      vmesh
+  Visualization Toolkit VTK                         vtk
+Simple example:
+  WlzExtFFConvert -f wlz -F slc <in.wlz >out.slc
+  Converts the Woolz object in.wlz to an SLC data file out.slc
+More complex example:
+  WlzExtFFConvert -f den -F pnm -o out.pgm in.den
+  Converts the Stanford density file in.den to a series of PGM files
+  each with a name of the form out000001.pgm where the number
+  encodes the image plane and a control file which specifies the
+  volume origin, size and voxel dimensions.
+By default objects are read from the standard input and written to
+the standard output.
+File formats which use more than one file can not be read or written
+using the standard input or standard output.
+The TIFF file format must be read/written from/to a file i.e. not
+from/to stdin or stdout
+Not all formats can retain position information i.e. they can
+only keep the size of the bounding box. In these formats the
+size of the bounding box is maintained but the position is set to
+(0,0). This implies that conversion back to woolz will, in general,
+result in a shifted image, i.e. registration is lost. Most 3D
+formats encode this data, of the 2D formats only woolz can retain
+all offsets, TIFF can only encode positive offsets.
+
+The library functions WlzEffReadObj() and WlzEffWriteObj() (in libWlzExtFF)
+can also be used to read and write non-Woolz format files.
 
 6) How can I write my own Woolz code?
 -------------------------------------
