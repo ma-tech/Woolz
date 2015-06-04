@@ -281,9 +281,11 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
 	}
       }
       if((sTrans == 0) &&
-         (((nim->ndim == 2) && ((sTrType == WLZ_TRANSFORM_2D_TRANS) ||
+         (((nim->ndim == 2) && ((sTrType == WLZ_TRANSFORM_EMPTY) ||
+	                        (sTrType == WLZ_TRANSFORM_2D_TRANS) ||
 	                        (sTrType == WLZ_TRANSFORM_2D_AFFINE))) ||
-          ((nim->ndim == 3) && ((sTrType == WLZ_TRANSFORM_3D_TRANS) ||
+          ((nim->ndim == 3) && ((sTrType == WLZ_TRANSFORM_EMPTY) ||
+	                        (sTrType == WLZ_TRANSFORM_3D_TRANS) ||
 	                        (sTrType == WLZ_TRANSFORM_3D_AFFINE)))))
       {
         /* Shift the 2 or 3D object(s). */
@@ -291,17 +293,22 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
 	WlzIVertex3 sft;
 	WlzObject *nObj;
 
-	if(nim->ndim == 2)
+	sft.vtX = 0;
+	sft.vtY = 0;
+	if(sTrType != WLZ_TRANSFORM_EMPTY)
 	{
-          sft.vtX = sTr->mat[0][2];
-	  sft.vtY = sTr->mat[1][2];
-	  sft.vtZ = 0;
-	}
-	else /* nim->ndim == 3 */
-	{
-          sft.vtX = sTr->mat[0][3];
-	  sft.vtY = sTr->mat[1][3];
-	  sft.vtZ = sTr->mat[2][3];
+	  if(nim->ndim == 2)
+	  {
+	    sft.vtX = sTr->mat[0][2];
+	    sft.vtY = sTr->mat[1][2];
+	    sft.vtZ = 0;
+	  }
+	  else /* nim->ndim == 3 */
+	  {
+	    sft.vtX = sTr->mat[0][3];
+	    sft.vtY = sTr->mat[1][3];
+	    sft.vtZ = sTr->mat[2][3];
+	  }
 	}
         switch(obj->type)
 	{
