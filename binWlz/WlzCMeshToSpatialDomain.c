@@ -52,7 +52,8 @@ WlzCMeshToSpatialDomain - computes a new spatial domain corresponding to the
 			  conforming mesh.
 \par Synopsis
 \verbatim
-WlzCMeshToSpatialDomain [-h] [-o<out obj file>] [-s#] [<input mesh file>]
+WlzCMeshToSpatialDomain [-h] [-i] [-L] [-o<out obj file>] [-s#]
+                        [<input mesh file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -61,16 +62,25 @@ WlzCMeshToSpatialDomain [-h] [-o<out obj file>] [-s#] [<input mesh file>]
     <td>Help, prints usage message.</td>
   </tr>
   <tr> 
+    <td><b>-i</b></td>
+    <td>Set values using first indexed value.</td>
+  </tr>
+  <tr>
+    <td><b>-L</b></td>
+    <td>Use kriging rather than barycentric interpolation for values./td>
+  </tr>
+  <tr> 
     <td><b>-o</b></td>
     <td>Output object file.</td>
   </tr>
   <tr> 
     <td><b>-s</b></td>
-    <td>Scale factor from mesh to spatial domain.</td>
+    <td>Scale factor from mesh to spatial domain
+        (can not be used if setting values).</td>
   </tr>
 </table>
 \par Description
-Constructs a 2D or 3D spatial domain object (without values) that corresponds
+Constructs a 2D or 3D spatial domain object that corresponds
 to the given conforming mesh. The domain of the output object covers the input
 mesh.
 \par Examples
@@ -108,7 +118,9 @@ int		main(int argc, char *argv[])
 {
   int		option,
   		ok = 1,
-  		usage = 0;
+		interp = 0,
+  		usage = 0,
+		setVal = 0;
   double	scale = 1.0;
   FILE		*fP = NULL;
   char		*inObjFileStr = NULL,
@@ -117,7 +129,7 @@ int		main(int argc, char *argv[])
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
-  static char   optList[] = "ho:s:";
+  static char   optList[] = "hiLo:s:";
   const double	eps = 0.000001;
   const char    inObjFileStrDef[] = "-",
   	        outObjFileStrDef[] = "-";
@@ -129,6 +141,12 @@ int		main(int argc, char *argv[])
   {
     switch(option)
     {
+      case 'i':
+        setVal = 1;
+	break;
+      case 'L':
+        interp = 1;
+	break;
       case 'o':
         outObjFileStr = optarg;
 	break;
@@ -141,6 +159,13 @@ int		main(int argc, char *argv[])
       default:
 	usage = 1;
 	break;
+    }
+  }
+  if(usage == 0)
+  {
+    if((fabs(scale - 1.0) > eps) && (setVal != 0))
+    {
+      usage = 1;
     }
   }
   ok = usage == 0;
@@ -202,7 +227,8 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    outObj = WlzCMeshToDomObj(inObj, 0, scale, &errNum);
+    outObj = WlzAssignObject(
+             WlzCMeshToDomObj(inObj, 0, scale, &errNum), NULL);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -212,6 +238,18 @@ int		main(int argc, char *argv[])
 		argv[0],
 		errMsgStr);
     }
+  }
+  if(ok && setVal)
+  {
+    WlzObject *tObj;
+
+    tObj = WlzAssignObject(
+           WlzCMeshToDomObjValues(outObj, inObj,
+	                          (interp)? WLZ_INTERPOLATION_LINEAR:
+				            WLZ_INTERPOLATION_NEAREST,
+			          &errNum), NULL);
+    WlzFreeObj(outObj);
+    outObj = tObj;
   }
   WlzFreeObj(inObj);
   if(ok)
@@ -235,15 +273,18 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-      "Usage: %s [-h] [-o<out obj file>] [-s #]\n"
+      "Usage: %s [-h] [-o<out obj file>] [-i] [-s #]\n"
       "                               [<input mesh file>]\n"
-      "Constructs a 2D or 3D spatial domain object without values which\n"
-      "covers the given conforming mesh.\n"
+      "Constructs a 2D or 3D spatial domain object which covers the given\n"
+      "conforming mesh.\n"
       "Version: %s\n"
       "Options are:\n"
       "  -h  Help, prints this usage message.\n"
       "  -o  Output object.\n"
-      "  -s  Additional scale factor from the mesh to the spatial domain\n.",
+      "  -i  Set values using first indexed element value.\n"
+      "  -L  Use kriging rather than barycentric interpolation for values.\n"
+      "  -s  Additional scale factor from the mesh to the spatial domain\n"
+      "      (can not be used if setting values).",
       argv[0],
       WlzVersion());
 
