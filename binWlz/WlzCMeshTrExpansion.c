@@ -52,7 +52,8 @@ WlzCMeshTrExpansion - computes strain tensors for the given conforming
                          mesh transform.
 \par Synopsis
 \verbatim
-WlzCMeshTrExpansion [-h] [-i] [-I] [-L] [-o<out file>] [<input file>]
+WlzCMeshTrExpansion [-h] [-i] [-E|T|V] [-I] [-L] [-n] [-o<out file>]
+                    [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -70,11 +71,19 @@ WlzCMeshTrExpansion [-h] [-i] [-I] [-L] [-o<out file>] [<input file>]
   </tr>
   <tr> 
     <td><b>-E</b></td>
-    <td>Use maximum tensor eigenvalue rather than trace.</td>
+    <td>Use maximum strain tensor eigenvalue.</td>
   </tr>
   <tr> 
     <td><b>-L</b></td>
     <td>Use kriging rather than barycentric interpolation./td>
+  </tr>
+  <tr> 
+    <td><b>-T</b></td>
+    <td>Use strain tensor trace.</td>
+  </tr>
+  <tr> 
+    <td><b>-V</b></td>
+    <td>Use element volume (default).</td>
   </tr>
   <tr> 
     <td><b>-n</b></td>
@@ -131,7 +140,7 @@ int		main(int argc, char *argv[])
 {
   int		option,
 		image = 0,
-		eigen = 0,
+		meth = 2,
 		interp = 0,
 		inverse = 0,
 		norm = 0,
@@ -145,7 +154,7 @@ int		main(int argc, char *argv[])
 		*meshExpObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char   optList[] = "hiIELno:";
+  static char   optList[] = "hiIELTVno:";
   const char    fileStrDef[] = "-";
 
   opterr = 0;
@@ -159,13 +168,19 @@ int		main(int argc, char *argv[])
         image = 1;
 	break;
       case 'E':
-        eigen = 1;
+        meth = 1;
 	break;
       case 'I':
         inverse = 1;
 	break;
       case 'L':
         interp = 1;
+	break;
+      case 'T':
+        meth = 0;
+	break;
+      case 'V':
+        meth = 2;
 	break;
       case 'n':
         norm = 1;
@@ -214,7 +229,7 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    meshExpObj = WlzAssignObject(WlzCMeshExpansion(inObj, inverse, eigen,
+    meshExpObj = WlzAssignObject(WlzCMeshExpansion(inObj, inverse, meth,
                                                    &errNum), NULL);
     if(errNum != WLZ_ERR_NONE)
     {
@@ -291,7 +306,7 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-      "Usage: %s [-h] [-i]  [-p] [-o<out file>] [-s<x>,<y>,<z>]\n"
+      "Usage: %s [-h] [-i] [-E|T|V] [-I] [-L] [-n] [-o<out file>]\n"
       "\t\t[<input file>]\n"
       "Computes the expansion of each element of the given mesh transform.\n"
       "The expansion may be output as a mesh with scalar values attached to\n"
@@ -304,9 +319,11 @@ int		main(int argc, char *argv[])
       "Options are:\n"
       "  -h  Help, prints this usage message.\n"
       "  -i  Output spatial domain image not a conforming mesh.\n"
-      "  -E  Use maximum tensor eigenvalue rather than trace.\n"
+      "  -E  Use maximum strain tensor eigenvalue.\n"
       "  -I  Use inverse transform.\n"
       "  -L  Use kriging rather than barycentric interpolation.\n"
+      "  -T  Use strain tensor trace.\n"
+      "  -V  Use volumes of tetrahedra (default).\n"
       "  -n  Normalise expansion factors.\n"
       "  -o  Output object.\n"
       "%s -o meshexp.wlz -i -n meshtr.wlz\n"

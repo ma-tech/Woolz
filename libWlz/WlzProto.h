@@ -1688,7 +1688,7 @@ extern WlzObject		*WlzCMeshProduct(
 extern WlzObject       		*WlzCMeshExpansion(
 				  WlzObject *cObj,
 				  int inverse,
-				  int eigenvalue,
+				  int method,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************

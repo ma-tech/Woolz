@@ -381,12 +381,12 @@ static WlzObject 		*WlzCMeshToDomObjValues3D(
 static WlzObject 		*WlzCMeshExpansion2D(
 				  WlzObject *cObj,
 				  int inverse,
-				  int eigen,
+				  int method,
 				  WlzErrorNum *dstErr);
 static WlzObject 		*WlzCMeshExpansion3D(
 				  WlzObject *cObj,
 				  int inverse,
-				  int eigen,
+				  int method,
 				  WlzErrorNum *dstErr);
 static WlzPolygonDomain 	*WlzCMeshTransformPoly(
 				  WlzPolygonDomain *srcPoly,
@@ -9392,12 +9392,19 @@ static WlzObject *WlzCMeshProduct3D(WlzObject *tr0, WlzObject *tr1,
 * 		is a more sensitive feature.
 * \param	cObj			Given conforming mesh transform.
 * \param	inverse			Use inverse of transform if non zero.
-* \param	eigen			Use maximum eigenvalue instead of
-* 					the trace if non-zero.
+* \param	method			Method used:
+* 					* 0 - average expansion from strain
+* 					      tensor trace
+* 					* 1 - maximum expansion from maximum
+* 					      eigenvalue of the strain tensor
+* 					* 2 - ratio of element volumes,
+* 					expansion will be DBL_MAX for
+* 					infinite expansion and zero for
+* 					complete collapse.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject	*WlzCMeshExpansion(WlzObject *cObj,
-				   int inverse, int eigen,
+				   int inverse, int method,
 				   WlzErrorNum *dstErr)
 {
   WlzObject	*eObj = NULL;
@@ -9412,10 +9419,10 @@ WlzObject	*WlzCMeshExpansion(WlzObject *cObj,
     switch(cObj->type)
     {
       case WLZ_CMESH_2D:
-	eObj = WlzCMeshExpansion2D(cObj, inverse, eigen, &errNum);
+	eObj = WlzCMeshExpansion2D(cObj, inverse, method, &errNum);
 	break;
       case WLZ_CMESH_3D:
-	eObj = WlzCMeshExpansion3D(cObj, inverse, eigen, &errNum);
+	eObj = WlzCMeshExpansion3D(cObj, inverse, method, &errNum);
         break;
       default: 
         errNum = WLZ_ERR_OBJECT_TYPE;
@@ -9441,12 +9448,11 @@ WlzObject	*WlzCMeshExpansion(WlzObject *cObj,
 * 		See WlzCMeshExpansion().
 * \param	cObj			Given conforming mesh transform.
 * \param	inverse			Use inverse of transform if non zero.
-* \param	eigen			Use maximum eigenvalue instead of
-* 					the trace if non-zero.
+* \param	method			Method used, see WlzCMeshExpansion().
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 static WlzObject *WlzCMeshExpansion2D(WlzObject *cObj,
-				      int inverse, int eigen,
+				      int inverse, int method,
 				      WlzErrorNum *dstErr)
 {
   WlzObject	*eObj = NULL;
@@ -9471,29 +9477,38 @@ static WlzObject *WlzCMeshExpansion2D(WlzObject *cObj,
 * 		See WlzCMeshExpansion().
 * \param	tObj			Given conforming mesh transform.
 * \param	inverse			Use inverse of transform if non zero.
-* \param	eigen			Use maximum eigenvalue instead of
-* 					the trace if non-zero.
+* \param	method			Method used, see WlzCMeshExpansion().
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
-				      int inverse, int eigen,
+				      int inverse, int method,
 				      WlzErrorNum *dstErr)
 {
-  int		nThr = 1;
+  int		nThr = 1,
+  		useTensor = 0;
   WlzObject	*eObj = NULL,
   		*tObj = NULL;
   WlzCMesh3D	*mesh;
   AlgMatrixRect	**matTbl = NULL;
-  WlzIndexedValues *ixvT,
+  WlzIndexedValues *ixvD,
+  		   *ixvT,
   		   *ixvE = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  tObj = WlzCMeshStrainTensor(cObj, inverse, &errNum);
+  ixvD = cObj->values.x;
+  if((method == 0) || (method == 1))
+  {
+    useTensor = 1;
+    tObj = WlzCMeshStrainTensor(cObj, inverse, &errNum);
+  }
   if(errNum == WLZ_ERR_NONE)
   {
-    mesh = tObj->domain.cm3;
-    ixvT = tObj->values.x;
-    ixvE = WlzMakeIndexedValues(tObj, 0, NULL, WLZ_GREY_DOUBLE,
+    if(useTensor)
+    {
+      ixvT = tObj->values.x;
+    }
+    mesh = cObj->domain.cm3;
+    ixvE = WlzMakeIndexedValues(cObj, 0, NULL, WLZ_GREY_DOUBLE,
                                 WLZ_VALUE_ATTACH_ELM, &errNum);
     if(errNum == WLZ_ERR_NONE)
     {
@@ -9510,7 +9525,7 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
       ixvE = NULL;
     }
   }
-  if(errNum == WLZ_ERR_NONE)
+  if((errNum == WLZ_ERR_NONE) && useTensor)
   {
 #ifdef _OPENMP
 #pragma omp parallel
@@ -9521,7 +9536,7 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
       }
     }
 #endif
-    if(eigen != 0)
+    if(method == 1) 				        /* Eigenvalue method */
     {
       if((matTbl = (AlgMatrixRect **)
                    AlcCalloc(nThr, sizeof(AlgMatrixRect *))) == NULL)
@@ -9546,54 +9561,101 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
   if(errNum == WLZ_ERR_NONE)
   {
     int		idE,
-    		maxEnt;
-    AlcVector	*vec;
+    		maxElm;
+    AlcVector	*eVec;
 
-    vec = mesh->res.elm.vec;
-    maxEnt = mesh->res.elm.maxEnt;
+    eVec = mesh->res.elm.vec;
+    maxElm = mesh->res.elm.maxEnt;
 #ifdef _OPENMP
 #pragma omp parallel for private(idE) num_threads(nThr)
 #endif
-    for(idE = 0; idE < maxEnt; ++idE)
+    for(idE = 0; idE < maxElm; ++idE)
     {
       WlzCMeshElm3D *elm;
 
-      elm = (WlzCMeshElm3D *)AlcVectorItemGet(vec, idE);
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(eVec, idE);
       if(elm->idx >= 0)
       {
         double 	*fac,
 		*ten;
 
-        ten = (double *)WlzIndexedValueGet(ixvT, elm->idx);
 	fac = (double *)WlzIndexedValueGet(ixvE, elm->idx);
-	if(eigen)
+	if(useTensor)
 	{
-	  int 		idU,
-			idV,
-	  		idT,
-			thrId = 0;
-	  double	val[3];
-          AlgMatrix 	mat;
-
-	  idT = 0;
-#ifdef _OPENMP
-	  thrId = omp_get_thread_num();
-#endif
-	  mat.rect = matTbl[thrId];
-	  val[0] = val[1] = val[2] = 0.0;
-	  for(idV = 0; idV < 3; ++idV)
-	  {
-	    for(idU = 0; idU < 3; ++idU)
-	    {
-	      mat.rect->array[idV][idU] = ten[idT++];
-	    }
-	  }
-	  (void )AlgMatrixRSEigen(mat, val, 0);
-	  *fac = ALG_MAX3(val[0], val[1], val[2]);
+          ten = (double *)WlzIndexedValueGet(ixvT, elm->idx);
 	}
-	else
+	switch(method)
 	{
-	  *fac = ten[0] + ten[4] + ten[8];
+	  case 0:                                 /* Trace of strain tensor. */
+	    *fac = ten[0] + ten[4] + ten[8];
+	    break;
+	  case 1:                                      /* Eigenvalue method. */
+	    {
+	      int 		idU,
+			    idV,
+			    idT,
+			    thrId = 0;
+	      double	val[3];
+	      AlgMatrix 	mat;
+
+	      idT = 0;
+#ifdef _OPENMP
+	      thrId = omp_get_thread_num();
+#endif
+	      mat.rect = matTbl[thrId];
+	      val[0] = val[1] = val[2] = 0.0;
+	      for(idV = 0; idV < 3; ++idV)
+	      {
+		for(idU = 0; idU < 3; ++idU)
+		{
+		  mat.rect->array[idV][idU] = ten[idT++];
+		}
+	      }
+	      (void )AlgMatrixRSEigen(mat, val, 0);
+	      *fac = ALG_MAX3(val[0], val[1], val[2]);
+	    }
+	    break;
+	  case 2:
+	    {
+	      int	  idN;
+	      double	  sVol,
+	      		  dVol;
+	      WlzCMeshNod3D *nod[4];
+	      WlzDVertex3 sPos[4],
+	      		  dPos[4];
+              const double eps = 0.000001;
+
+	      nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+	      nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+	      nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+	      nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
+	      for(idN = 0; idN < 4; ++idN)
+	      {
+		double	*dsp;
+
+		sPos[idN] = nod[idN]->pos;
+		dsp = (double *)WlzIndexedValueGet(ixvD, nod[idN]->idx);
+		dPos[idN].vtX = sPos[idN].vtX + dsp[0];
+		dPos[idN].vtY = sPos[idN].vtY + dsp[1];
+		dPos[idN].vtZ = sPos[idN].vtZ + dsp[2];
+	      }
+	      sVol = fabs(WlzGeomTetraSnVolume6(sPos[0], sPos[1],
+	                                        sPos[2], sPos[3]));
+	      dVol = fabs(WlzGeomTetraSnVolume6(dPos[0], dPos[1],
+	                                        dPos[2], dPos[3]));
+	      if(inverse)
+	      {
+	        *fac = (dVol < eps)? DBL_MAX: sVol / dVol;
+	      }
+	      else
+	      {
+	        *fac = (sVol < eps)? DBL_MAX: dVol / sVol;
+	      }
+	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_PARAM_DATA;
+	    break;
 	}
       }
     }
