@@ -284,7 +284,7 @@ int		main(int argc, char *argv[])
       "  -i  Set values using first indexed element value.\n"
       "  -L  Use kriging rather than barycentric interpolation for values.\n"
       "  -s  Additional scale factor from the mesh to the spatial domain\n"
-      "      (can not be used if setting values).",
+      "      (can not be used if setting values).\n",
       argv[0],
       WlzVersion());
 
