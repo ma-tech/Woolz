@@ -65,6 +65,9 @@ static WlzErrorNum 		WlzEffWriteCMesh3DVtk(
 static WlzErrorNum		WlzEffHeadReadVtk(
 				  WlzEffVtkHeader *header,
 				  FILE *fP);
+static WlzErrorNum 		WlzEffWritePointsVtk(
+				  FILE *fP,
+				  WlzObject *obj);
 static WlzObject		*WlzEffReadCMeshVtk(
 				  FILE *fP,
 				  WlzEffVtkHeader *header,
@@ -178,6 +181,9 @@ WlzErrorNum	WlzEffWriteObjVtk(FILE *fP, WlzObject *obj)
       case WLZ_CMESH_3D:
         errNum = WlzEffWriteCMesh3DVtk(fP, obj->domain.cm3);
         break;
+      case WLZ_POINTS:
+        errNum = WlzEffWritePointsVtk(fP, obj);
+	break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
 	break;
@@ -596,6 +602,122 @@ static WlzErrorNum WlzEffWriteCMesh2DVtk(FILE *fP, WlzCMesh2D *mesh)
         errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	break;
       }
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the given Woolz points object to the
+*		given stream using the Visualization Toolkit
+*		polydata format, but without polygons.
+* \param	fP			Output file stream.
+* \param	model			Given points object.
+*/
+static WlzErrorNum WlzEffWritePointsVtk(FILE *fP, WlzObject *obj)
+{
+
+  WlzPoints	*pnt;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((pnt = obj->domain.pts) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(pnt->type)
+    {
+      case WLZ_POINTS_2I: /* FALLTHROUGH */
+      case WLZ_POINTS_2D: /* FALLTHROUGH */
+      case WLZ_POINTS_3I: /* FALLTHROUGH */
+      case WLZ_POINTS_3D:
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Output the file header. */
+    if(fprintf(fP,
+	       "# vtk DataFile Version 1.0\n"
+	       "Written by WlzEffWritePointsVtk().\n"
+	       "ASCII\n"
+	       "DATASET POLYDATA\n"
+	       "POINTS %d float\n",
+	       pnt->nPoints) <= 0)
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		i;
+
+    /* Output the point positions. */
+    switch(pnt->type)
+    {
+      case WLZ_POINTS_2I:
+	for(i = 0; i < pnt->nPoints; ++i)
+        {
+	  WlzIVertex2 *p;
+
+	  p = pnt->points.i2 + i;
+	  if(fprintf(fP, "%g %g 0\n",
+	             (double )(p->vtX), (double )(p->vtY)) <= 0)
+	  {
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	    break;
+	  }
+	}
+	break;
+      case WLZ_POINTS_2D:
+	for(i = 0; i < pnt->nPoints; ++i)
+        {
+	  WlzDVertex2 *p;
+
+	  p = pnt->points.d2 + i;
+	  if(fprintf(fP, "%g %g 0\n", p->vtX, p->vtY) <= 0)
+	  {
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	    break;
+	  }
+	}
+	break;
+      case WLZ_POINTS_3I:
+	for(i = 0; i < pnt->nPoints; ++i)
+        {
+	  WlzIVertex3 *p;
+
+	  p = pnt->points.i3 + i;
+	  if(fprintf(fP, "%g %g %g\n",
+	             (double )(p->vtX), (double )(p->vtY),
+		     (double )(p->vtZ)) <= 0)
+	  {
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	    break;
+	  }
+	}
+	break;
+      case WLZ_POINTS_3D:
+	for(i = 0; i < pnt->nPoints; ++i)
+        {
+	  WlzDVertex3 *p;
+
+	  p = pnt->points.d3 + i;
+	  if(fprintf(fP, "%g %g %g\n", p->vtX, p->vtY, p->vtZ) <= 0)
+	  {
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	    break;
+	  }
+	}
+        break;
+      default:
+	break;
     }
   }
   return(errNum);
