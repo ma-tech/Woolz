@@ -42,6 +42,7 @@ static char _WlzExtFFStl_c[] = "University of Edinburgh $Id$";
 
 #include <ctype.h>
 #include <string.h>
+#include <stdint.h>
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
@@ -85,7 +86,7 @@ WlzObject	*WlzEffReadObjStl(FILE *fP, WlzErrorNum *dstErr)
   WlzDomain	dom;
   WlzValues	val;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  char		cBuf[256];
+  char		buf[256];
 
   dom.core = NULL;
   val.core = NULL;
@@ -97,106 +98,182 @@ WlzObject	*WlzEffReadObjStl(FILE *fP, WlzErrorNum *dstErr)
   {
     model = WlzGMModelNew(WLZ_GMMOD_3D, 0, 0, &errNum);
   }
-  while((errNum == WLZ_ERR_NONE) &&
-        ((str = WlzEffReadObjStlRec(fP, cBuf, 256)) != NULL))
+  /* Read just the first 5 bytes, these will contain the string "solid" if
+   * the STL file is ASCII or something else if binary. */
+  if(fread(buf, sizeof(char), 5, fP) != 5)
   {
-    if((tok = ALC_STRTOK_R(str, " \t", &sav)) != NULL)
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else
+  {
+    buf[5] = '\0';
+    if(strncmp(buf, "solid", 5) != 0) 		 /* Binary not ASCII */
     {
-      if(strncmp(tok, "solid", 5) == 0)
-      {
-        if(inSolid == 0)
-	{
-	  inSolid = 1;
-	}
-	else
-	{
-	  errNum = WLZ_ERR_READ_INCOMPLETE;
-	}
-      }
-      else if(strncmp(tok, "facet", 5) == 0)
-      {
-        if((inSolid == 1) && (inFacet == 0))
-	{
-	  inFacet = 1;
-	  /* Normal vector is ignored. */
-	}
-	else
-	{
-	  errNum = WLZ_ERR_READ_INCOMPLETE;
-	}
-      }
-      else if(strncmp(tok, "outer", 5) == 0)
-      {
-        if(((tok = ALC_STRTOK_R(NULL, " \t", &sav)) == NULL) ||
-	   (strncmp(tok, "loop", 4) != 0) ||
-           (inSolid == 0) || (inFacet == 0) || (inLoop != 0))
-	{
-	  errNum = WLZ_ERR_READ_INCOMPLETE;
-	}
-	else
-	{
-	  vCnt = 0;
-	  inLoop = 1;
-	}
-      }
-      else if(strncmp(tok, "vertex", 6) == 0)
-      {
-	char *pTok[3];
+      uint32_t tIdx,
+	       nT = 0;
+      WlzGreyV tx = {0};
 
-        if((vCnt < 3) &&
-	   ((pTok[0] = ALC_STRTOK_R(NULL, " \t", &sav)) != NULL) &&
-	   ((pTok[1] = ALC_STRTOK_R(NULL, " \t", &sav)) != NULL) &&
-	   ((pTok[2] = ALC_STRTOK_R(NULL, " \t", &sav)) != NULL) &&
-	   (sscanf(pTok[0], "%lg", &(vBuf[vCnt].vtX)) == 1) &&
-	   (sscanf(pTok[1], "%lg", &(vBuf[vCnt].vtY)) == 1) &&
-	   (sscanf(pTok[2], "%lg", &(vBuf[vCnt].vtZ)) == 1))
-	{
-	  ++vCnt;
-	}
-	else
+      /* Discard the remaining 75 bytes of the 80 byte header block. */
+      (void )fread(buf, sizeof(char), 75, fP);
+      /* Read number of triangles. */
+      if(fread(buf, sizeof(char), 4, fP) != 4)
+      {
+	errNum = WLZ_ERR_READ_INCOMPLETE;
+      }
+      else
+      {
+	tx.bytes[0] = buf[0];
+	tx.bytes[1] = buf[1];
+	tx.bytes[2] = buf[2];
+	tx.bytes[3] = buf[3];
+	nT = (uint32_t)(tx.inv);
+	if(nT < 1)
 	{
 	  errNum = WLZ_ERR_READ_INCOMPLETE;
 	}
       }
-      else if(strncmp(tok, "endloop", 7) == 0)
+      for(tIdx = 0; (errNum == WLZ_ERR_NONE) && (tIdx < nT); ++tIdx)
       {
-        if(inLoop == 1)
+	if(fread(buf, sizeof(char), 50, fP) != 50)
 	{
-	  inLoop = 0;
-	  if(vCnt == 3)
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+	else
+	{
+	  int	vIdx;
+	  size_t bOff = 12;
+
+	  for(vIdx = 0; vIdx < 3; ++vIdx)
 	  {
-	    errNum = WlzGMModelConstructSimplex3D(model, vBuf);
+	    tx.bytes[0] = buf[bOff++];
+	    tx.bytes[1] = buf[bOff++];
+	    tx.bytes[2] = buf[bOff++];
+	    tx.bytes[3] = buf[bOff++];
+	    vBuf[vIdx].vtX = tx.flv;
+	    tx.bytes[0] = buf[bOff++];
+	    tx.bytes[1] = buf[bOff++];
+	    tx.bytes[2] = buf[bOff++];
+	    tx.bytes[3] = buf[bOff++];
+	    vBuf[vIdx].vtY = tx.flv;
+	    tx.bytes[0] = buf[bOff++];
+	    tx.bytes[1] = buf[bOff++];
+	    tx.bytes[2] = buf[bOff++];
+	    tx.bytes[3] = buf[bOff++];
+	    vBuf[vIdx].vtZ = tx.flv;
+
 	  }
-	  else
+	  errNum = WlzGMModelConstructSimplex3D(model, vBuf);
+	}
+      }
+    }
+    else						 /* ASCII not binary */
+    {
+      /* Discard rest of the first line. */
+      (void )WlzEffReadObjStlRec(fP, buf, 256);
+      /* Read and parse ACSII records. */
+      inSolid = 1;
+      while((errNum == WLZ_ERR_NONE) &&
+	    ((str = WlzEffReadObjStlRec(fP, buf, 256)) != NULL))
+      {
+	if((tok = ALC_STRTOK_R(str, " \t", &sav)) != NULL)
+	{
+	  if(strncmp(tok, "solid", 5) == 0)
 	  {
-	    errNum = WLZ_ERR_READ_INCOMPLETE;
+	    if(inSolid == 0)
+	    {
+	      inSolid = 1;
+	    }
+	    else
+	    {
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	    }
 	  }
-	}
-	else
-	{
-	  errNum = WLZ_ERR_READ_INCOMPLETE;
-	}
-      }
-      else if(strncmp(tok, "endfacet", 8) == 0)
-      {
-        if(inFacet == 1)
-	{
-	  inFacet = 0;
-	}
-	else
-	{
-	  errNum = WLZ_ERR_READ_INCOMPLETE;
-	}
-      }
-      else if(strncmp(tok, "endsolid", 8) == 0)
-      {
-        if(inSolid == 1)
-	{
-	  inSolid = 0;
-	}
-	else
-	{
-	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	  else if(strncmp(tok, "facet", 5) == 0)
+	  {
+	    if((inSolid == 1) && (inFacet == 0))
+	    {
+	      inFacet = 1;
+	      /* Normal vector is ignored. */
+	    }
+	    else
+	    {
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	    }
+	  }
+	  else if(strncmp(tok, "outer", 5) == 0)
+	  {
+	    if(((tok = ALC_STRTOK_R(NULL, " \t", &sav)) == NULL) ||
+	       (strncmp(tok, "loop", 4) != 0) ||
+	       (inSolid == 0) || (inFacet == 0) || (inLoop != 0))
+	    {
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	    }
+	    else
+	    {
+	      vCnt = 0;
+	      inLoop = 1;
+	    }
+	  }
+	  else if(strncmp(tok, "vertex", 6) == 0)
+	  {
+	    char *pTok[3];
+
+	    if((vCnt < 3) &&
+	       ((pTok[0] = ALC_STRTOK_R(NULL, " \t", &sav)) != NULL) &&
+	       ((pTok[1] = ALC_STRTOK_R(NULL, " \t", &sav)) != NULL) &&
+	       ((pTok[2] = ALC_STRTOK_R(NULL, " \t", &sav)) != NULL) &&
+	       (sscanf(pTok[0], "%lg", &(vBuf[vCnt].vtX)) == 1) &&
+	       (sscanf(pTok[1], "%lg", &(vBuf[vCnt].vtY)) == 1) &&
+	       (sscanf(pTok[2], "%lg", &(vBuf[vCnt].vtZ)) == 1))
+	    {
+	      ++vCnt;
+	    }
+	    else
+	    {
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	    }
+	  }
+	  else if(strncmp(tok, "endloop", 7) == 0)
+	  {
+	    if(inLoop == 1)
+	    {
+	      inLoop = 0;
+	      if(vCnt == 3)
+	      {
+		errNum = WlzGMModelConstructSimplex3D(model, vBuf);
+	      }
+	      else
+	      {
+		errNum = WLZ_ERR_READ_INCOMPLETE;
+	      }
+	    }
+	    else
+	    {
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	    }
+	  }
+	  else if(strncmp(tok, "endfacet", 8) == 0)
+	  {
+	    if(inFacet == 1)
+	    {
+	      inFacet = 0;
+	    }
+	    else
+	    {
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	    }
+	  }
+	  else if(strncmp(tok, "endsolid", 8) == 0)
+	  {
+	    if(inSolid == 1)
+	    {
+	      inSolid = 0;
+	    }
+	    else
+	    {
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	    }
+	  }
 	}
       }
     }
