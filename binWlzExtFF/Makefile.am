@@ -55,12 +55,17 @@ LDADD 			= -L$(top_srcdir)/libWlzExtFF/.libs -lWlzExtFF \
 			  ${LIBS}
 
 bin_PROGRAMS		= \
+			  WlzExtFFAffineTrFitBox \
 			  WlzExtFFConstruct3D \
 			  WlzExtFFContourObj \
 			  WlzExtFFConvert \
 			  WlzExtFFWlzToXYZ \
 			  WlzSAToWlz \
 			  WlzTiff2Wlz
+
+WlzExtFFAffineTrFitBox_SOURCES	= WlzExtFFAffineTrFitBox.c
+WlzExtFFAffineTrFitBox_LDADD	= $(LDADD)
+WlzExtFFAffineTrFitBox_LDFLAGS	= $(AM_LFLAGS)
 
 WlzExtFFConstruct3D_SOURCES	= WlzExtFFConstruct3D.c
 WlzExtFFConstruct3D_LDADD	= $(LDADD)
