@@ -5290,6 +5290,11 @@ extern void			*WlzPointValueGet(
 extern WlzPoints		*WlzPointsFromDomObj(
 				  WlzObject *gvnObj,
 				  double dMin,
+				  int voxelScaling,
+				  WlzErrorNum *dstErr);
+extern WlzPoints		*WlzPointsDither(
+				  WlzPoints *gPts,
+				  WlzDVertex3 dSz,
 				  WlzErrorNum *dstErr);
 extern WlzObject 		*WlzPointsToMarkers(
 				  WlzPoints *pts,

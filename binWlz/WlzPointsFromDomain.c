@@ -47,7 +47,8 @@ static char _WlzPointsFromDomain_c[] = "University of Edinburgh $Id$";
 WlzPointsFromDomain - computes points from a given spatial domain object.
 \par Synopsis
 \verbatim
-WlzNearbyDomain [-d#] [-o<output object>] [-h] [-T] [<input object>]
+WlzNearbyDomain [-d#] [-D #,#[#]] [-o<output object>] [-h] [-T] [-x]
+                [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -56,12 +57,21 @@ WlzNearbyDomain [-d#] [-o<output object>] [-h] [-T] [<input object>]
     <td>Mainmum distance between points.</td>
   </tr>
   <tr> 
+    <td><b>-D</b></td>
+    <td>Dither the points by applying a random offset. Supplied values
+        are the maximum dither displacement.</td>
+  </tr>
+  <tr> 
     <td><b>-o</b></td>
     <td>Output file.</td>
   </tr>
   <tr>
     <td><b>-T</b></td>
     <td>Report elapsed time.</td>
+  </tr>
+  <tr>
+    <td><b>-x</b></td>
+    <td>Use voxel size scaling.</td>
   </tr>
   <tr> 
     <td><b>-h</b></td>
@@ -106,17 +116,20 @@ int		main(int argc, char *argv[])
   int		ok = 1,
   		option,
 		usage = 0,
-		timeFlg = 0;
+		dither = 0,
+		timeFlg = 0,
+		voxelScaling = 0;
   char		*inFileStr,
 		*outFileStr;
   double	dMin = 32.0;
   FILE		*fP = NULL;
+  WlzDVertex3	ditherSz = {0.0};
   WlzObject	*inObj = NULL,
 		*outObj = NULL;
   struct timeval times[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "hTd:o:";
+  static char	optList[] = "hTxd:D:o:";
   const char    fileStrDef[] = "-";
 
   /* Parse the argument list and check for input files. */
@@ -133,11 +146,22 @@ int		main(int argc, char *argv[])
 	  usage = 1;
 	}
         break;
+      case 'D':
+	dither = 1;
+	if(sscanf(optarg, "%lg,%lg,%lg",
+	          &(ditherSz.vtX), &(ditherSz.vtY), &(ditherSz.vtZ)) < 2)
+	{
+	  usage = 1;
+	}
+	break;
       case 'o':
 	outFileStr = optarg;
 	break;
       case 'T':
         timeFlg = 1;
+	break;
+      case 'x':
+        voxelScaling = 1;
 	break;
       case 'h':
       default:
@@ -192,7 +216,15 @@ int		main(int argc, char *argv[])
     {
       gettimeofday(times + 0, NULL);
     }
-    outDom.pts = WlzPointsFromDomObj(inObj, dMin, &errNum);
+    outDom.pts = WlzPointsFromDomObj(inObj, dMin, voxelScaling, &errNum);
+    if((errNum == WLZ_ERR_NONE) && dither)
+    {
+      WlzPoints	*pts;
+
+      pts = WlzPointsDither(outDom.pts, ditherSz, &errNum);
+      (void )WlzFreeDomain(outDom);
+      outDom.pts = pts;
+    }
     if(timeFlg)
     {
       gettimeofday(times + 1, NULL);
@@ -250,14 +282,17 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-d#] [-o<output file>] [-T] [-h]\n"
+    "Usage: %s [-d#] [-D#,#[,#]] [-o<output file>] [-T] [-x] [-h]\n"
     "\t\t[<Reference object file>]\n"
     "Computes points from a given spatial domain object.\n"
     "Version: %s\n"
     "Options:\n"
     "  -d  Minimum distance between points.\n"
+    "  -D  Dither the points by applying a random offset. Supplied values\n"
+    "      are the maximum dither displacement.\n"
     "  -o  Output object file.\n"
     "  -T  Report elapsed time.\n"
+    "  -x  Use voxel size scaling.\n"
     "  -h  Help - prints this usage message\n"
     "By default all files are read from the standard input and written to\n"
     "the standard output.\n"

@@ -219,11 +219,13 @@ void		*WlzPointValueGet(WlzPointValues *pts, int idx)
 * \param	gvnObj			Given spatial domain object.
 * \param	dMin			Given minimum distance (if less than
 * 					1.0 then will be set to 1.0)..
+* \param	voxelScaling		Use voxel scaling if non-zero.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzPoints			*WlzPointsFromDomObj(
 				  WlzObject *gvnObj,
 				  double dMin,
+				  int voxelScaling,
 				  WlzErrorNum *dstErr)
 {
   int		dim = 0,
@@ -234,10 +236,12 @@ WlzPoints			*WlzPointsFromDomObj(
   WlzPoints	*pts = NULL;
   WlzObject	*curObj = NULL,
   		*strObj = NULL;;
+  WlzDVertex3	voxSz;
   AlcVector	*vec = NULL;
   size_t	vtxSz = 0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  voxSz.vtX = voxSz.vtY = voxSz.vtZ = 1.0;
   if(gvnObj == NULL)
   {
     errNum = WLZ_ERR_OBJECT_NULL;
@@ -263,6 +267,35 @@ WlzPoints			*WlzPointsFromDomObj(
       if(gvnObj->domain.core == NULL)
       {
         errNum = WLZ_ERR_DOMAIN_NULL;
+      }
+      if(dim == 2)
+      {
+        switch(gvnObj->domain.core->type)
+	{
+	  case WLZ_INTERVALDOMAIN_INTVL:
+	  case WLZ_INTERVALDOMAIN_RECT:
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+      }
+      else /* dim == 3 */
+      {
+        switch(gvnObj->domain.core->type)
+	{
+	  case WLZ_PLANEDOMAIN_DOMAIN:
+	    if(voxelScaling)
+	    {
+	      voxSz.vtX = gvnObj->domain.p->voxel_size[0];
+	      voxSz.vtY = gvnObj->domain.p->voxel_size[1];
+	      voxSz.vtZ = gvnObj->domain.p->voxel_size[2];
+	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
       }
     }
   }
@@ -445,10 +478,25 @@ WlzPoints			*WlzPointsFromDomObj(
   if(errNum == WLZ_ERR_NONE)
   {
     WlzVertexP nullP;
+    WlzObjectType pntType;
 
     nullP.v = NULL;
-    pts = WlzMakePoints((dim == 2)? WLZ_POINTS_2I: WLZ_POINTS_3I,
-                        0, nullP, vecIdx, &errNum);
+    if(dim == 2)
+    {
+      pntType = WLZ_POINTS_2I;
+    }
+    else 
+    {
+      if(voxelScaling)
+      {
+        pntType = WLZ_POINTS_3D;
+      }
+      else
+      {
+        pntType = WLZ_POINTS_3I;
+      }
+    }
+    pts = WlzMakePoints(pntType, 0, nullP, vecIdx, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -466,10 +514,23 @@ WlzPoints			*WlzPointsFromDomObj(
     }
     else
     {
-      for(i = 0; i < vecIdx; ++i)
+      if(voxelScaling)
       {
-        p.v = AlcVectorItemGet(vec, i);
-        pts->points.i3[i] = *(p.i3);
+	for(i = 0; i < vecIdx; ++i)
+	{
+	  p.v = AlcVectorItemGet(vec, i);
+	  pts->points.d3[i].vtX = p.i3->vtX * voxSz.vtX;
+	  pts->points.d3[i].vtY = p.i3->vtY * voxSz.vtY;
+	  pts->points.d3[i].vtZ = p.i3->vtZ * voxSz.vtZ;
+	}
+      }
+      else
+      {
+	for(i = 0; i < vecIdx; ++i)
+	{
+	  p.v = AlcVectorItemGet(vec, i);
+	  pts->points.i3[i] = *(p.i3);
+	}
       }
     }
   }
@@ -522,7 +583,6 @@ WlzObject			*WlzPointsToMarkers(
 	break;
       case WLZ_POINTS_3D:
         vType = WLZ_VERTEX_D3;
-	break;
         break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -540,3 +600,97 @@ WlzObject			*WlzPointsToMarkers(
   }
   return(mObj);
 }
+
+/*!
+* \return	New points domain.
+* \ingroup	WlzFeatures
+* \brief	Dithers the vertices of the given points by adding a
+* 		random displacement within the range -d to +d, where
+* 		d is the given dither size.
+* \param	gPts			Given points.
+* \param	dSz			Dither size (z component is not
+* 					used if points are 2D).
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzPoints			*WlzPointsDither(
+				  WlzPoints *gPts,
+				  WlzDVertex3 dSz,
+				  WlzErrorNum *dstErr)
+{
+  WlzPoints	*dPts = NULL;
+  WlzObjectType dPntType = WLZ_POINTS_2D;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gPts == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(gPts->type)
+    {
+      case WLZ_POINTS_2I:        
+      case WLZ_POINTS_2D:        
+        dPntType = WLZ_POINTS_2D;
+	break;
+      case WLZ_POINTS_3I:        
+      case WLZ_POINTS_3D:        
+        dPntType = WLZ_POINTS_3D;
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzVertexP nullP;
+
+    nullP.v = NULL;
+    dPts = WlzMakePoints(dPntType, 0, nullP, gPts->nPoints, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)                
+  {
+    int		idx;
+
+    dPts->nPoints = gPts->nPoints;
+    for(idx = 0; idx < gPts->nPoints; ++idx)
+    {
+      WlzDVertex3 d;
+
+      d.vtX = dSz.vtX * ((AlgRandUniform() * 2.0) - 1.0);
+      d.vtY = dSz.vtY * ((AlgRandUniform() * 2.0) - 1.0);
+      switch(gPts->type)
+      {
+	case WLZ_POINTS_2I:        
+	  dPts->points.d2[idx].vtX = gPts->points.i2[idx].vtX + d.vtX;
+	  dPts->points.d2[idx].vtY = gPts->points.i2[idx].vtY + d.vtY;
+	  break;
+	case WLZ_POINTS_2D:        
+	  dPts->points.d2[idx].vtX = gPts->points.d2[idx].vtX + d.vtX;
+	  dPts->points.d2[idx].vtY = gPts->points.d2[idx].vtY + d.vtY;
+	  break;
+	case WLZ_POINTS_3I:        
+          d.vtZ = dSz.vtZ * ((AlgRandUniform() * 2.0) - 1.0);
+	  dPts->points.d3[idx].vtX = gPts->points.i3[idx].vtX + d.vtX;
+	  dPts->points.d3[idx].vtY = gPts->points.i3[idx].vtY + d.vtY;
+	  dPts->points.d3[idx].vtZ = gPts->points.i3[idx].vtZ + d.vtZ;
+	  break;
+	case WLZ_POINTS_3D:        
+          d.vtZ = dSz.vtZ * ((AlgRandUniform() * 2.0) - 1.0);
+	  dPts->points.d3[idx].vtX = gPts->points.d3[idx].vtX + d.vtX;
+	  dPts->points.d3[idx].vtY = gPts->points.d3[idx].vtY + d.vtY;
+	  dPts->points.d3[idx].vtZ = gPts->points.d3[idx].vtZ + d.vtZ;
+	  break;
+	default:
+	  break;
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dPts);
+}
+
