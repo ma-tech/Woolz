@@ -618,8 +618,7 @@ static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
 	{
 	  d1 = d0;
 	  d2 = d0;
-	  f1 = ((a2 * a3) * d0) / (b0 + b1 + 1);
-	  f2 = ((a2 * a3) * d2) / (b0 + b1 + 1);
+	  f1 = f2 = ((a2 * a3) * d0) / (b0 + b1 + 1);
 	}
 	else
 	{
@@ -665,8 +664,7 @@ static void	WlzRsvFilterFilterBufYF(WlzRsvFilter *ftr,
 	if(((*iBP1 & iBM) == 0) || ((*iBP2 & iBM) == 0))
 	{
 	  d1 = d0;
-	  f1 = ((a0 + a1) * d0) / (b0 + b1 + 1);
-	  f2 = ((a0 + a1) * d0) / (b0 + b1 + 1);
+	  f1 = f2 = ((a0 + a1) * d0) / (b0 + b1 + 1);
 	}
 	else
 	{
