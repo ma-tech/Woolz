@@ -171,7 +171,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
 	    errNum = WlzFreeConvexHullDomain2(obj->domain.cvh2);
 	    break;
 	  case WLZ_CONVHULL_DOMAIN_3D:
-	    errNum = WlzFreeConvexHullDomain3(obj->domain.cvh2);
+	    errNum = WlzFreeConvexHullDomain3(obj->domain.cvh3);
 	    break;
 	  default:
 	    errNum = WLZ_ERR_DOMAIN_TYPE;
