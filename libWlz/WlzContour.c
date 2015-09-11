@@ -885,11 +885,8 @@ static WlzErrorNum WlzContourScaleModelVoxSz(WlzGMModel *model,
   {
     /* Set up the transform. */
     tr->mat[0][0] = pDom->voxel_size[0];
-    tr->mat[0][3] = pDom->kol1 * (1.0 - pDom->voxel_size[0]);
     tr->mat[1][1] = pDom->voxel_size[1];
-    tr->mat[1][3] = pDom->line1 * (1.0 - pDom->voxel_size[1]);
     tr->mat[2][2] = pDom->voxel_size[2];
-    tr->mat[2][3] = pDom->plane1 * (1.0 - pDom->voxel_size[2]);
     /* Transform the model. */
     (void )WlzAffineTransformGMModel(model, tr, 0, &errNum);
   }
