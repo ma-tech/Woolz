@@ -654,6 +654,9 @@ WlzPoints			*WlzPointsDither(
     int		idx;
 
     dPts->nPoints = gPts->nPoints;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for(idx = 0; idx < gPts->nPoints; ++idx)
     {
       WlzDVertex3 d;
