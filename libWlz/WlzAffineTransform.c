@@ -802,7 +802,6 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
   int		idx,
   		cnt;
   AlcVector	*vec;
-  WlzGMElemP	elmP;
   WlzGMModel 	*dstM = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -815,89 +814,127 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Transform vertex geometries. */
-    idx = 0;
     vec = dstM->res.vertexG.vec;
     cnt = (int )(dstM->res.vertexG.numIdx);
-    while((idx < cnt) && (errNum == WLZ_ERR_NONE))
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(idx = 0; idx < cnt; ++idx)
     {
-      elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, (size_t )idx);
-      if(elmP.core && (elmP.core->idx >= 0))
+      if(errNum == WLZ_ERR_NONE)
       {
-        switch(dstM->type)
+        WlzGMElemP	elmP;
+
+	elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, (size_t )idx);
+	if(elmP.core && (elmP.core->idx >= 0))
 	{
-	  case WLZ_GMMOD_2I:
-	    elmP.vertexG2I->vtx = WlzAffineTransformVertexI2(tr,
-	    				elmP.vertexG2I->vtx, &errNum);
-	    break;
-	  case WLZ_GMMOD_2D:
-	    elmP.vertexG2D->vtx = WlzAffineTransformVertexD2(tr,
-	    				elmP.vertexG2D->vtx, &errNum);
-	    break;
-	  case WLZ_GMMOD_2N:
-	    elmP.vertexG2N->vtx = WlzAffineTransformVertexD2(tr,
-	    				elmP.vertexG2N->vtx, &errNum);
-	    elmP.vertexG2N->nrm = WlzAffineTransformNormalD2(tr,
-	    				elmP.vertexG2N->nrm, &errNum);
-	    break;
-	  case WLZ_GMMOD_3I:
-	    elmP.vertexG3I->vtx = WlzAffineTransformVertexI3(tr,
-	    				elmP.vertexG3I->vtx, &errNum);
-	    break;
-	  case WLZ_GMMOD_3D:
-	    elmP.vertexG3D->vtx = WlzAffineTransformVertexD3(tr,
-	    				elmP.vertexG3D->vtx, &errNum);
-	    break;
-	  case WLZ_GMMOD_3N:
-	    elmP.vertexG3N->vtx = WlzAffineTransformVertexD3(tr,
-	    				elmP.vertexG3N->vtx, &errNum);
-	    elmP.vertexG3N->nrm = WlzAffineTransformNormalD3(tr,
-	    				elmP.vertexG3N->nrm, &errNum);
-	    break;
-	  default:
-	    errNum = WLZ_ERR_DOMAIN_TYPE;
-	    break;
+	  WlzErrorNum	errNum2 = WLZ_ERR_NONE;
+
+	  switch(dstM->type)
+	  {
+	    case WLZ_GMMOD_2I:
+	      elmP.vertexG2I->vtx = WlzAffineTransformVertexI2(tr,
+					  elmP.vertexG2I->vtx, &errNum2);
+	      break;
+	    case WLZ_GMMOD_2D:
+	      elmP.vertexG2D->vtx = WlzAffineTransformVertexD2(tr,
+					  elmP.vertexG2D->vtx, &errNum2);
+	      break;
+	    case WLZ_GMMOD_2N:
+	      elmP.vertexG2N->vtx = WlzAffineTransformVertexD2(tr,
+					  elmP.vertexG2N->vtx, &errNum2);
+	      elmP.vertexG2N->nrm = WlzAffineTransformNormalD2(tr,
+					  elmP.vertexG2N->nrm, &errNum2);
+	      break;
+	    case WLZ_GMMOD_3I:
+	      elmP.vertexG3I->vtx = WlzAffineTransformVertexI3(tr,
+					  elmP.vertexG3I->vtx, &errNum2);
+	      break;
+	    case WLZ_GMMOD_3D:
+	      elmP.vertexG3D->vtx = WlzAffineTransformVertexD3(tr,
+					  elmP.vertexG3D->vtx, &errNum2);
+	      break;
+	    case WLZ_GMMOD_3N:
+	      elmP.vertexG3N->vtx = WlzAffineTransformVertexD3(tr,
+					  elmP.vertexG3N->vtx, &errNum2);
+	      elmP.vertexG3N->nrm = WlzAffineTransformNormalD3(tr,
+					  elmP.vertexG3N->nrm, &errNum2);
+	      break;
+	    default:
+	      errNum2 = WLZ_ERR_DOMAIN_TYPE;
+	      break;
+	  }
+#ifdef _OPENMP
+#pragma omp critical
+	  {
+#endif
+	    if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
+	    {
+	      errNum = errNum2;
+	    }
+#ifdef _OPENMP
+	  }
+#endif
 	}
       }
-      ++idx;
     }
   }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Transform shell geometries. */
-    idx = 0;
     vec = dstM->res.shellG.vec;
     cnt = (int )(dstM->res.shellG.numIdx);
-    while((idx < cnt) && (errNum == WLZ_ERR_NONE))
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(idx = 0; idx < cnt; ++idx)
     {
-      elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, (size_t )idx);
-      if(elmP.core && (elmP.core->idx >= 0))
+      if(errNum == WLZ_ERR_NONE)
       {
-        switch(dstM->type)
+        WlzGMElemP	elmP;
+
+	elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, (size_t )idx);
+	if(elmP.core && (elmP.core->idx >= 0))
 	{
-	  case WLZ_GMMOD_2I:
-	    elmP.shellG2I->bBox = WlzAffineTransformBBoxI2(tr,
-	    				elmP.shellG2I->bBox, &errNum);
-	    break;
-	  case WLZ_GMMOD_2D: /* FALLTHROUGH */
-	  case WLZ_GMMOD_2N:
-	    elmP.shellG2D->bBox = WlzAffineTransformBBoxD2(tr,
-	    				elmP.shellG2D->bBox, &errNum);
-	    break;
-	  case WLZ_GMMOD_3I:
-	    elmP.shellG3I->bBox = WlzAffineTransformBBoxI3(tr,
-	    				elmP.shellG3I->bBox, &errNum);
-	    break;
-	  case WLZ_GMMOD_3D: /* FALLTHROUGH */
-	  case WLZ_GMMOD_3N:
-	    elmP.shellG3D->bBox = WlzAffineTransformBBoxD3(tr,
-	    				elmP.shellG3D->bBox, &errNum);
-	    break;
-	  default:
-	    errNum = WLZ_ERR_DOMAIN_TYPE;
-	    break;
+	  WlzErrorNum errNum2 = WLZ_ERR_NONE;
+
+	  switch(dstM->type)
+	  {
+	    case WLZ_GMMOD_2I:
+	      elmP.shellG2I->bBox = WlzAffineTransformBBoxI2(tr,
+					  elmP.shellG2I->bBox, &errNum2);
+	      break;
+	    case WLZ_GMMOD_2D: /* FALLTHROUGH */
+	    case WLZ_GMMOD_2N:
+	      elmP.shellG2D->bBox = WlzAffineTransformBBoxD2(tr,
+					  elmP.shellG2D->bBox, &errNum2);
+	      break;
+	    case WLZ_GMMOD_3I:
+	      elmP.shellG3I->bBox = WlzAffineTransformBBoxI3(tr,
+					  elmP.shellG3I->bBox, &errNum2);
+	      break;
+	    case WLZ_GMMOD_3D: /* FALLTHROUGH */
+	    case WLZ_GMMOD_3N:
+	      elmP.shellG3D->bBox = WlzAffineTransformBBoxD3(tr,
+					  elmP.shellG3D->bBox, &errNum2);
+	      break;
+	    default:
+	      errNum2 = WLZ_ERR_DOMAIN_TYPE;
+	      break;
+	  }
+#ifdef _OPENMP
+#pragma omp critical
+	  {
+#endif
+	    if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
+	    {
+	      errNum = errNum2;
+	    }
+#ifdef _OPENMP
+	  }
+#endif
 	}
       }
-      ++idx;
     }
   }
   if(errNum == WLZ_ERR_NONE)
