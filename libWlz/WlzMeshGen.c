@@ -5237,22 +5237,21 @@ int		WlzCMeshElmClosestPosIn3D(WlzCMesh3D *mesh,
       d = minDstSq;
       idx.vtX = idx0.vtX + idx1.vtX;
 #ifdef WLZ_FAST_CODE
-      if((unsigned int )(idx.vtX) <= (unsigned int )(mesh->cGrid.nCells.vtX))
+      if((unsigned int )(idx.vtX) < (unsigned int )(mesh->cGrid.nCells.vtX))
 #else
       if((idx.vtX >= 0) && (idx.vtX < mesh->cGrid.nCells.vtX))
 #endif
       {
 	idx.vtY = idx0.vtY + idx1.vtY;
 #ifdef WLZ_FAST_CODE
-	if((unsigned int )(idx.vtY) <= (unsigned int )(mesh->cGrid.nCells.vtY))
+	if((unsigned int )(idx.vtY) < (unsigned int )(mesh->cGrid.nCells.vtY))
 #else
         if((idx.vtY >= 0) && (idx.vtY < mesh->cGrid.nCells.vtY))
 #endif
 	{
           idx.vtZ = idx0.vtZ + idx1.vtZ;
 #ifdef WLZ_FAST_CODE
-	  if((unsigned int )(idx.vtZ) <=
-	     (unsigned int )(mesh->cGrid.nCells.vtZ))
+	  if((unsigned int )(idx.vtZ) < (unsigned int )(mesh->cGrid.nCells.vtZ))
 #else
           if((idx.vtZ >= 0) && (idx.vtZ < mesh->cGrid.nCells.vtZ))
 #endif
