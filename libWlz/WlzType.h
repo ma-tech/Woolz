@@ -4257,7 +4257,7 @@ typedef double (*WlzBasisEvalFn)(void *, double);
 #ifdef WLZ_EXT_BIND
 typedef void *WlzBasisDistFn;
 #else /* WLZ_EXT_BIND */
-typedef double (*WlzBasisDistFn)(void *, int, WlzVertex);
+typedef double (*WlzBasisDistFn)(void *, int, WlzVertex, void *);
 #endif /* WLZ_EXT_BIND */
 
 /*!

@@ -47,6 +47,19 @@ static char _WlzBasisFn_c[] = "University of Edinburgh $Id$";
 #include <math.h>
 #include <Wlz.h>
 
+/*!
+* \struct	_WlzBasisFnMapData3D
+* \ingroup	WlzFunction
+* \brief	Used to memorise the nodes of a mesh element between
+* 		3D distance function evaluation calls.
+*/
+typedef struct	_WlzBasisFnMapData3D
+{
+  int		elmIdx;
+  double	lambda[4];
+  WlzCMeshNod3D *nod[4];
+} WlzBasisFnMapData3D;
+
 static void			WlzBasisFnEditSV(
 				  int n,
 				  double *vV);
@@ -98,19 +111,23 @@ static double			WlzBasisFnScalarMOS3DEvalFn(
 static double			WlzBasisFnEucDistFn2D(
 				  void *bFnP,
 				  int idP,
-				  WlzVertex pos);
+				  WlzVertex pos,
+				  void *data);
 static double			WlzBasisFnEucDistFn3D(
 				  void *bFnP,
 				  int idP,
-				  WlzVertex pos);
+				  WlzVertex pos,
+				  void *data);
 static double			WlzBasisFnMapDistFn2D(
 				  void *bFnP,
 				  int idP,
-				  WlzVertex pos);
+				  WlzVertex pos,
+				  void *data);
 static double			WlzBasisFnMapDistFn3D(
 				  void *bFnP,
 				  int idP,
-				  WlzVertex pos);
+				  WlzVertex pos,
+				  void *data);
 static WlzDVertex2 		WlzBasisFnValueRedPoly2D(
 				  WlzDVertex2 *poly,
 				  WlzDVertex2 srcVx);
@@ -234,7 +251,7 @@ WlzDVertex2 	WlzBasisFnValueGauss2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
     }
     else
     {
-      tD0 = basisFn->distFn(basisFn, idx, sPt);
+      tD0 = basisFn->distFn(basisFn, idx, sPt, NULL);
     }
     tD1 = (tD0 > DBL_EPSILON)? exp(tD0 * delta): 1.0;
     newVx.vtX += basisCo->vtX * tD1;
@@ -284,7 +301,7 @@ WlzDVertex2 	WlzBasisFnValueMQ2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
     }
     else
     {
-      tD0 = basisFn->distFn(basisFn, idx, sPt);
+      tD0 = basisFn->distFn(basisFn, idx, sPt, NULL);
     }
     tD0 = sqrt(tD0 + delta);
     newVx.vtX += basisCo->vtX * tD0;
@@ -318,11 +335,13 @@ WlzDVertex3 	WlzBasisFnValueMQ3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
   WlzDVertex3    polyVx,
   		 newVx;
   WlzVertex	sPt;
+  WlzBasisFnMapData3D mapData;
 
   sPt.d3 = srcVx;
   newVx.vtX = 0.0;
   newVx.vtY = 0.0;
   newVx.vtZ = 0.0;
+  mapData.elmIdx = -1;
   cPts    = basisFn->vertices.d3;
   basisCo = basisFn->basis.d3;
   delta = *((double *)(basisFn->param));
@@ -337,7 +356,7 @@ WlzDVertex3 	WlzBasisFnValueMQ3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
     }
     else
     {
-      tD0 = basisFn->distFn(basisFn, idx, sPt);
+      tD0 = basisFn->distFn(basisFn, idx, sPt, &mapData);
     }
     tD0 = sqrt(tD0 + delta);
     newVx.vtX += basisCo->vtX * tD0;
@@ -389,7 +408,7 @@ WlzDVertex2 	WlzBasisFnValueIMQ2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
     }
     else
     {
-      tD0 = basisFn->distFn(basisFn, idx, sPt);
+      tD0 = basisFn->distFn(basisFn, idx, sPt, NULL);
     }
     tD0 = 1.0 / sqrt(tD0 + delta);
     newVx.vtX += basisCo->vtX * tD0;
@@ -423,11 +442,13 @@ WlzDVertex3 	WlzBasisFnValueIMQ3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
   WlzDVertex3    polyVx,
   		 newVx;
   WlzVertex	sPt;
+  WlzBasisFnMapData3D mapData;
 
   sPt.d3 = srcVx;
   newVx.vtX = 0.0;
   newVx.vtY = 0.0;
   newVx.vtZ = 0.0;
+  mapData.elmIdx = -1;
   cPts    = basisFn->vertices.d3;
   basisCo = basisFn->basis.d3;
   delta = *((double *)(basisFn->param));
@@ -442,7 +463,7 @@ WlzDVertex3 	WlzBasisFnValueIMQ3D(WlzBasisFn *basisFn, WlzDVertex3 srcVx)
     }
     else
     {
-      tD0 = basisFn->distFn(basisFn, idx, sPt);
+      tD0 = basisFn->distFn(basisFn, idx, sPt, &mapData);
     }
     tD0 = 1.0 / sqrt(tD0 + delta);
     newVx.vtX += basisCo->vtX * tD0;
@@ -492,7 +513,7 @@ WlzDVertex2 	WlzBasisFnValueTPS2D(WlzBasisFn *basisFn, WlzDVertex2 srcVx)
     }
     else
     {
-      tD0 = basisFn->distFn(basisFn, idx, sPt);
+      tD0 = basisFn->distFn(basisFn, idx, sPt, NULL);
       tD0 *= tD0;
     }
     if(tD0 > DBL_EPSILON)
@@ -772,8 +793,11 @@ double          WlzBasisFnValueMOSPhi(double r, double delta, double tau)
 * \param	pos			Given position passed using the
 *					vertex pointer union but always
 *					either 2D or 3D double..
+* \param	data			Used to pass optional data for
+* 					distance evaluation, ignored.
 */
-static double	WlzBasisFnEucDistFn2D(void *bFnP, int idP, WlzVertex pos)
+static double	WlzBasisFnEucDistFn2D(void *bFnP, int idP, WlzVertex pos,
+				      void *data)
 {
   double	dist = DBL_MAX;
   WlzDVertex2	tmp;
@@ -799,8 +823,11 @@ static double	WlzBasisFnEucDistFn2D(void *bFnP, int idP, WlzVertex pos)
 * \param	pos			Given position passed using the
 *					vertex pointer union but always
 *					either 2D or 3D double..
+* \param	data			Used to pass optional data for
+* 					distance evaluation, ignored.
 */
-static double	WlzBasisFnEucDistFn3D(void *bFnP, int idP, WlzVertex pos)
+static double	WlzBasisFnEucDistFn3D(void *bFnP, int idP, WlzVertex pos,
+				      void *data)
 {
   double	dist = DBL_MAX;
   WlzDVertex3	tmp;
@@ -827,8 +854,14 @@ static double	WlzBasisFnEucDistFn3D(void *bFnP, int idP, WlzVertex pos)
 * \param	pos			Given position passed using the
 *					vertex pointer union but always
 *					either 2D or 3D double..
+* \param	data			Used to pass optional data for
+* 					distance evaluation, if non NULL
+* 					should point to an int with initial
+* 					value -1.
+* 					
 */
-static double	WlzBasisFnMapDistFn2D(void *bFnP, int idP, WlzVertex pos)
+static double	WlzBasisFnMapDistFn2D(void *bFnP, int idP, WlzVertex pos,
+				      void *data)
 {
   int		idE;
   double	dist = DBL_MAX;
@@ -866,8 +899,13 @@ static double	WlzBasisFnMapDistFn2D(void *bFnP, int idP, WlzVertex pos)
 * \param	pos			Given position passed using the
 *					vertex pointer union but always
 *					either 2D or 3D double..
+* \param	data			Used to pass optional data for
+* 					distance evaluation, if non NULL
+* 					should point to an int with initial
+* 					value -1.
 */
-static double	WlzBasisFnMapDistFn3D(void *bFnP, int idP, WlzVertex pos)
+static double	WlzBasisFnMapDistFn3D(void *bFnP, int idP, WlzVertex pos,
+				      void *data)
 {
   int		idE;
   double	dist = DBL_MAX;
@@ -875,23 +913,64 @@ static double	WlzBasisFnMapDistFn3D(void *bFnP, int idP, WlzVertex pos)
   WlzBasisFn	*bFn;
   WlzCMeshElm3D *elm;
   WlzCMeshNod3D *nod[4];
+  WlzBasisFnMapData3D *mapData;
 
   bFn = (WlzBasisFn *)bFnP;
   map = bFn->distMap[idP];
-  if((idE = WlzCMeshElmEnclosingPos3D(bFn->mesh.m3, -1,
-                                      pos.d3.vtX, pos.d3.vtY, pos.d3.vtZ,
-				      0, NULL)) >= 0)
+  mapData = (WlzBasisFnMapData3D *)data;
+  if(mapData && (mapData->elmIdx >= 0))
   {
-    elm = (WlzCMeshElm3D *)AlcVectorItemGet(bFn->mesh.m3->res.elm.vec, idE);
-    nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
-    nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
-    nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
-    nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
-    dist = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
+    idE = mapData->elmIdx;
+    nod[0] = mapData->nod[0];
+    nod[1] = mapData->nod[1];
+    nod[2] = mapData->nod[2];
+    nod[3] = mapData->nod[3];
+  }
+  else
+  {
+    if((idE = WlzCMeshElmEnclosingPos3D(bFn->mesh.m3, -1,
+					pos.d3.vtX, pos.d3.vtY, pos.d3.vtZ,
+					0, NULL)) >= 0)
+    {
+      elm = (WlzCMeshElm3D *)AlcVectorItemGet(bFn->mesh.m3->res.elm.vec, idE);
+      nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+      nod[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+      nod[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+      nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
+    }
+  }
+  if(idE >= 0)
+  {
+    if(mapData)
+    {
+      if(mapData->elmIdx < 0)
+      {
+	mapData->elmIdx = idE;
+	mapData->nod[0] = nod[0];
+	mapData->nod[1] = nod[1];
+	mapData->nod[2] = nod[2];
+	mapData->nod[3] = nod[3];
+	if(WlzGeomBaryCoordsTet3D(nod[0]->pos, nod[1]->pos,
 				   nod[2]->pos, nod[3]->pos,
-				   map[nod[0]->idx], map[nod[1]->idx],
-				   map[nod[2]->idx], map[nod[3]->idx],
-				   pos.d3);
+				   pos.d3, mapData->lambda) == 0)
+	{
+	  mapData->lambda[0] = mapData->lambda[1] =
+	  mapData->lambda[2] = mapData->lambda[3] = 0.25;
+	}
+      }
+      dist = mapData->lambda[0] * map[mapData->nod[0]->idx] +
+             mapData->lambda[1] * map[mapData->nod[1]->idx] +
+	     mapData->lambda[2] * map[mapData->nod[2]->idx] +
+	     mapData->lambda[3] * map[mapData->nod[3]->idx];
+    }
+    else
+    {
+      dist = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
+				     nod[2]->pos, nod[3]->pos,
+				     map[nod[0]->idx], map[nod[1]->idx],
+				     map[nod[2]->idx], map[nod[3]->idx],
+				     pos.d3);
+    }
     dist *= dist;
   }
   return(dist);
@@ -1249,7 +1328,7 @@ WlzBasisFn *WlzBasisFnGauss2DFromCPts(int nPts, WlzDVertex2 *dPts,
       for(idX = 0; idX < idY; ++idX)
       {
 	sPt.d2 = dPts[idX];
-	tD0 = newBasisFn->distFn(newBasisFn, idY, sPt);
+	tD0 = newBasisFn->distFn(newBasisFn, idY, sPt, NULL);
 	tD0 *= deltaRg;
 	tD1 = (tD0 > DBL_EPSILON)? exp(tD0): 1.0;
 	idX3 = idX + 3;
@@ -1855,7 +1934,7 @@ WlzBasisFn *WlzBasisFnMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
 	if(newBasisFn->distMap)
 	{
 	  sPt.d2 = dPts[idX];
-	  tD0 = newBasisFn->distFn(newBasisFn, idY, sPt);
+	  tD0 = newBasisFn->distFn(newBasisFn, idY, sPt, NULL);
 	}
 	else
 	{
@@ -2219,7 +2298,7 @@ WlzBasisFn *WlzBasisFnMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
 	if(newBasisFn->distMap)
 	{
 	  sPt.d3 = dPts[idX];
-	  tD0 = newBasisFn->distFn(newBasisFn, idY, sPt);
+	  tD0 = newBasisFn->distFn(newBasisFn, idY, sPt, NULL);
 	}
 	else
 	{
@@ -2609,7 +2688,7 @@ WlzBasisFn *WlzBasisFnIMQ2DFromCPts(int nPts, WlzDVertex2 *dPts,
 	if(newBasisFn->distMap)
 	{
 	  sPt.d2 = dPts[idX];
-	  tD0 = newBasisFn->distFn(newBasisFn, idY, sPt);
+	  tD0 = newBasisFn->distFn(newBasisFn, idY, sPt, NULL);
 	}
 	else
 	{
@@ -2987,7 +3066,7 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
 	if(newBasisFn->distMap)
 	{
 	  sPt.d3 = dPts[idX];
-	  tD0 = newBasisFn->distFn(newBasisFn, idY, sPt);
+	  tD0 = newBasisFn->distFn(newBasisFn, idY, sPt, NULL);
 	}
 	else
 	{
@@ -3345,7 +3424,7 @@ WlzBasisFn *WlzBasisFnTPS2DFromCPts(int nPts,
 	if(newBasisFn->distFn)
 	{
 	  sPt.d2 = dPts[idX];
-	  tD0 = newBasisFn->distFn(newBasisFn, idY, sPt);
+	  tD0 = newBasisFn->distFn(newBasisFn, idY, sPt, NULL);
 	  tD0 *= tD0;
 	}
 	else

@@ -4744,6 +4744,63 @@ static double	WlzGeomCot2D3(WlzDVertex2 a, WlzDVertex2 b, WlzDVertex2 c)
 }
 
 /*!
+* \return	Non zero if barycentric coordinates valid.
+* \ingroup	WlzGeometry
+* \brief	Given the coordinates of the vertices of a 3D tetrahedron
+* 		and a position within the tetrahedron, thisfunction
+* 		computes the barycentric coordinates (\f$\lambda_0\f$,
+* 		\f$\lambda_0\f$, \f$\lambda_2\f$, \f$\lambda_3\f$)
+* 		of the position.
+* \param	p0			First vertex of tetrahedron.
+* \param	p1			Second vertex of tetrahedron.
+* \param	p2			Third vertex of tetrahedron.
+* \param	p3			Fourth vertex of tetrahedron.
+* \param	pX			Given position, which is within
+* 					(or on) the tetrahedron.
+* \param	lambda			Given array for the four lambda
+* 					values.
+*/
+extern int	WlzGeomBaryCoordsTet3D(WlzDVertex3 p0, WlzDVertex3 p1,
+                                       WlzDVertex3 p2, WlzDVertex3 p3,
+				       WlzDVertex3 pX, double *lambda)
+{
+  int		valid = 0;
+  double	d;
+  double	c[3];
+  WlzDVertex3	q0,
+  		q1,
+		q2,
+		qX;
+  const double	eps = ALG_DBL_TOLLERANCE;
+
+  WLZ_VTX_3_SUB(q0, p0, p3);
+  WLZ_VTX_3_SUB(q1, p1, p3);
+  WLZ_VTX_3_SUB(q2, p2, p3);
+  WLZ_VTX_3_SUB(qX, pX, p3);
+  d = q0.vtX * (q1.vtY * q2.vtZ - q2.vtY * q1.vtZ) +
+      q1.vtX * (q2.vtY * q0.vtZ - q0.vtY * q2.vtZ) +
+      q2.vtX * (q0.vtY * q1.vtZ - q1.vtY * q0.vtZ);
+  if(fabs(d) > eps)
+  {
+    valid = 1;
+    c[0] = qX.vtX * (q1.vtY * q2.vtZ - q2.vtY * q1.vtZ) +
+	   q1.vtX * (q2.vtY * qX.vtZ - qX.vtY * q2.vtZ) +
+	   q2.vtX * (qX.vtY * q1.vtZ - q1.vtY * qX.vtZ);
+    c[1] = q0.vtX * (qX.vtY * q2.vtZ - q2.vtY * qX.vtZ) +
+           qX.vtX * (q2.vtY * q0.vtZ - q0.vtY * q2.vtZ) +
+           q2.vtX * (q0.vtY * qX.vtZ - qX.vtY * q0.vtZ);
+    c[2] = q0.vtX * (q1.vtY * qX.vtZ - qX.vtY * q1.vtZ) +
+           q1.vtX * (qX.vtY * q0.vtZ - q0.vtY * qX.vtZ) +
+           qX.vtX * (q0.vtY * q1.vtZ - q1.vtY * q0.vtZ);
+    lambda[0] = c[0] / d;
+    lambda[1] = c[1] / d;
+    lambda[2] = c[2] / d;
+    lambda[3] = 1.0 - (lambda[0] + lambda[1] + lambda[2]);
+  }
+  return(valid);
+}
+
+/*!
 * \return	Interpolated value.
 * \ingroup	WlzGeometry
 * \brief	Given the coordinates of the vertices of a 3D tetrahedron
@@ -4775,38 +4832,11 @@ extern double	WlzGeomInterpolateTet3D(WlzDVertex3 p0, WlzDVertex3 p1,
 					double v2, double v3,
 					WlzDVertex3 pX)
 {
-  double	d,
-  		vX;
-  double	c[3],
-  		l[4];
-  WlzDVertex3	q0,
-  		q1,
-		q2,
-		qX;
-  const double	eps = ALG_DBL_TOLLERANCE;
+  double	vX;
+  double	l[4];
 
-  WLZ_VTX_3_SUB(q0, p0, p3);
-  WLZ_VTX_3_SUB(q1, p1, p3);
-  WLZ_VTX_3_SUB(q2, p2, p3);
-  WLZ_VTX_3_SUB(qX, pX, p3);
-  d = q0.vtX * (q1.vtY * q2.vtZ - q2.vtY * q1.vtZ) +
-      q1.vtX * (q2.vtY * q0.vtZ - q0.vtY * q2.vtZ) +
-      q2.vtX * (q0.vtY * q1.vtZ - q1.vtY * q0.vtZ);
-  if(fabs(d) > eps)
+  if(WlzGeomBaryCoordsTet3D(p0, p1, p2, p3, pX, l))
   {
-    c[0] = qX.vtX * (q1.vtY * q2.vtZ - q2.vtY * q1.vtZ) +
-	   q1.vtX * (q2.vtY * qX.vtZ - qX.vtY * q2.vtZ) +
-	   q2.vtX * (qX.vtY * q1.vtZ - q1.vtY * qX.vtZ);
-    c[1] = q0.vtX * (qX.vtY * q2.vtZ - q2.vtY * qX.vtZ) +
-           qX.vtX * (q2.vtY * q0.vtZ - q0.vtY * q2.vtZ) +
-           q2.vtX * (q0.vtY * qX.vtZ - qX.vtY * q0.vtZ);
-    c[2] = q0.vtX * (q1.vtY * qX.vtZ - qX.vtY * q1.vtZ) +
-           q1.vtX * (qX.vtY * q0.vtZ - q0.vtY * qX.vtZ) +
-           qX.vtX * (q0.vtY * q1.vtZ - q1.vtY * q0.vtZ);
-    l[0] = c[0] / d;
-    l[1] = c[1] / d;
-    l[2] = c[2] / d;
-    l[3] = 1.0 - (l[0] + l[1] + l[2]);
     vX = l[0] * v0  + l[1] * v1 + l[2] * v2 + l[3] * v3;
   }
   else

@@ -3456,6 +3456,15 @@ extern double			WlzGeomInterpolateConvexPoly2D(
 				  double *v,
 				  double *w,
 				  WlzDVertex2 q);
+#ifndef WLZ_EXT_BIND
+extern int			WlzGeomBaryCoordsTet3D(
+				  WlzDVertex3 p0,
+				  WlzDVertex3 p1,
+				  WlzDVertex3 p2,
+				  WlzDVertex3 p3,
+				  WlzDVertex3 pX,
+				  double *lambda);
+#endif /* WLZ_EXT_BIND */
 extern double			WlzGeomInterpolateTet3D(
 				  WlzDVertex3 p0,
 				  WlzDVertex3 p1,
