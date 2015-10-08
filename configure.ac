@@ -173,22 +173,18 @@ AC_SUBST(INCL_EXTFF)
 AC_PROG_CC
 
 AC_ARG_ENABLE(icc,
-  [  --enable-icc          build using the Intel C compiler],
-  GCC="no"
+  [  --enable-icc          build using the Intel C compiler])
+AS_IF([test x"$enable_icc" = "xyes"], [
+  CFLAGS="${CFLAGS} -w2"
   CC="icc"
   CXX="icpc"
   LD="xild"
   AR="xiar"
-  )
-
-if test "$CC" = "gcc"
-then
+], [
   CFLAGS="${CFLAGS} -pipe -Wall -Wno-deprecated"
-fi
-if test "$CC" = "icc"
-then
-  CFLAGS="${CFLAGS} -w2"
-fi
+  CC="gcc"
+  CXX="g++"
+])
 
 CFLAGS="${CFLAGS} ${CDEF_ARCH}"
 
