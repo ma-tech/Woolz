@@ -353,7 +353,7 @@ then
 		    AC_CHECK_LIB(tiff, TIFFOpen,
 				 [
 				   HAVE_TIFF=yes
-				   LIBS_EXTFF="-ltiff  ${LIBS_EXTFF} "
+				   LIBS_EXTFF="-ltiff  ${LIBS_EXTFF}"
 				 ]))
   else
     HAVE_TIFF=yes
@@ -415,8 +415,8 @@ Woolz core has been configured on ${host} with
   Linker:                           ${LD}
   Archiver:                         ${AR}
   CFLAGS:                          ${CFLAGS}
-  LIBS needed for configure:       ${LIBS_EXTFF} ${LIBS}
-  Woolz external file format code:  ${ENABLE_EXTFF}
+  LIBS needed for configure:        ${LIBS_EXTFF} ${LIBS}
+  Woolz external file format code:  ${enable_extff}
   Test programs:                    ${ENABLE_TEST}
 
 To build Woolz:                     make
