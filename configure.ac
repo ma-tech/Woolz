@@ -55,7 +55,6 @@ RMRF="rm -rf"
 CDEF_ARCH=""
 USE_CTAGS=1
 USE_ETAGS=0
-ENABLE_EXTFF="no"
 HAVE_JPEG="no"
 JPEG_DIR="no"
 HAVE_NIFTI="no"
@@ -66,7 +65,6 @@ ENABLE_TEST="no"
 AC_SUBST(CP)
 AC_SUBST(RM)
 AC_SUBST(RMRF)
-AC_SUBST(ENABLE_EXTFF)
 
 # Check CPU type
 echo "Checking target cpu/system type"
@@ -304,10 +302,9 @@ AS_IF([test "x$enable_profile" = "xyes"], [
 ])
 
 AC_ARG_ENABLE(extff,
-  [  --enable-extff	build with external file format support],
-     ENABLE_EXTFF="yes",
-     ENABLE_EXTFF="no")
-AM_CONDITIONAL([BUILD_EXTFF], [test x"$ENABLE_EXTFF" = x"yes"])
+  [  --enable-extff	build with external file format support])
+AM_CONDITIONAL([BUILD_EXTFF], [test x"$enable_extff" = x"yes"])
+AC_SUBST(ENABLE_EXTFF, ${enable_extff})
 
 AC_ARG_ENABLE(test,
   [  --enable-test		build test programs],
@@ -328,7 +325,7 @@ AC_CONFIG_FILES([	Makefile \
 			binAlgTst/Makefile \
 			binWlzTst/Makefile ])
 
-if test x${ENABLE_EXTFF} = "xyes"
+if test x${enable_extff} = "xyes"
 then
   AC_ARG_WITH(jpeg, [  --with-jpeg=DIR         Directory containing the jpeg
                           lib and include directories.],
