@@ -371,7 +371,7 @@ then
 				 ]))
   else
     HAVE_NIFTI=yes
-    INCL_EXTFF="${INCL_EXTFF} -I${NIFTI_DIR}/include"
+    INCL_EXTFF="${INCL_EXTFF} -I${NIFTI_DIR}/include -I${NIFTI_DIR}/include/nifti"
     LIBS_EXTFF="-L${NIFTI_DIR}/lib -lniftiio -lznz ${LIBS_EXTFF}"
   fi
   if test ${NIFTI_DIR} = "no"
