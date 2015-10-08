@@ -213,7 +213,7 @@ else
 	CFLAGS="${CFLAGS} -m32 -xK"
 	;;
       i686)
-	CFLAGS="${CFLAGS}  -xN"
+	CFLAGS="${CFLAGS} -xN"
 	;;
       x86_64|amd64)
 	CFLAGS="${CFLAGS} -m64"
@@ -411,7 +411,7 @@ Woolz core has been configured on ${host} with
   C++ compiler:                     ${CXX}
   Linker:                           ${LD}
   Archiver:                         ${AR}
-  CFLAGS:                         ${CFLAGS}
+  CFLAGS:                          ${CFLAGS}
   LIBS needed for configure:       ${LIBS_EXTFF} ${LIBS}
   Woolz external file format code:  ${ENABLE_EXTFF}
   Test programs:                    ${ENABLE_TEST}
