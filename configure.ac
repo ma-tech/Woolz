@@ -412,6 +412,7 @@ Woolz core has been configured on ${host} with
   Linker:                           ${LD}
   Archiver:                         ${AR}
   CFLAGS:                          ${CFLAGS}
+  LDFLAGS:                         ${LDFLAGS}
   LIBS needed for configure:        ${LIBS_EXTFF} ${LIBS}
   Woolz external file format code:  ${enable_extff}
   Test programs:                    ${enable_test}
