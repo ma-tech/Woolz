@@ -61,7 +61,6 @@ HAVE_NIFTI="no"
 NIFTI_DIR="no"
 HAVE_TIFF="no"
 TIFF_DIR="no"
-ENABLE_TEST="no"
 AC_SUBST(CP)
 AC_SUBST(RM)
 AC_SUBST(RMRF)
@@ -307,10 +306,8 @@ AM_CONDITIONAL([BUILD_EXTFF], [test x"$enable_extff" = x"yes"])
 AC_SUBST(ENABLE_EXTFF, ${enable_extff})
 
 AC_ARG_ENABLE(test,
-  [  --enable-test		build test programs],
-     ENABLE_TEST="yes",
-     ENABLE_TEST="no")
-AM_CONDITIONAL([BUILD_TEST], [test x"$ENABLE_TEST" = x"yes"])
+  [  --enable-test		build test programs])
+AM_CONDITIONAL([BUILD_TEST], [test x"$enable_test" = x"yes"])
 
 if test ${USE_CTAGS} = 1
 then
@@ -417,7 +414,7 @@ Woolz core has been configured on ${host} with
   CFLAGS:                          ${CFLAGS}
   LIBS needed for configure:        ${LIBS_EXTFF} ${LIBS}
   Woolz external file format code:  ${enable_extff}
-  Test programs:                    ${ENABLE_TEST}
+  Test programs:                    ${enable_test}
 
 To build Woolz:                     make
 To install Woolz:                   make install
