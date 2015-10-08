@@ -227,13 +227,15 @@ fi
 CPP="cpp"
 
 AC_ARG_ENABLE(debug,
-  [  --enable-debug	build with debugging flags set],
+  [  --enable-debug	build with debugging flags set])
+AS_IF([test "x$enable_debug" = "xyes"], [
     CFLAGS="${CFLAGS} -g -fPIC -DDEBUG"
-    LDFLAGS="${LDFLAGS} -g -DDEBUG")
+    LDFLAGS="${LDFLAGS} -g -DDEBUG"
+])
 
 AC_ARG_ENABLE(optimise,
-  [  --enable-optimise	build with optimisation flags set],
-  [
+  [  --enable-optimise	build with optimisation flags set])
+AS_IF([test "x$enable_optimise" = "xyes"], [
     # GNU CC
     if test "$CC" = "gcc"
     then
@@ -280,7 +282,8 @@ AC_ARG_ENABLE(optimise,
     ])
 
 AC_ARG_ENABLE(openmp,
-  [  --enable-openmp	build with openmp flags set],
+  [  --enable-openmp	build with openmp flags set])
+AS_IF([test "x$enable_openmp" = "xyes"], [
     # GNU CC
     if test "$CC" = "gcc"
     then
@@ -290,12 +293,15 @@ AC_ARG_ENABLE(openmp,
     if test "$CC" = "icc"
     then
       CFLAGS="${CFLAGS} -openmp"
-    fi)
+    fi
+])
 
 AC_ARG_ENABLE(profile,
-  [  --enable-profile	build with profiling set],
+  [  --enable-profile	build with profiling set])
+AS_IF([test "x$enable_profile" = "xyes"], [
     CFLAGS="${CFLAGS} -pg"
-    LDFLAGS="${LDFLAGS} -pg")
+    LDFLAGS="${LDFLAGS} -pg"
+])
 
 AC_ARG_ENABLE(extff,
   [  --enable-extff	build with external file format support],
