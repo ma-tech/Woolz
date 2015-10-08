@@ -51,7 +51,7 @@ if  BUILD_EXTFF
 		libhguDlpList \
 		libWlzExtFF \
 		libReconstruct \
-  		libWlzBnd \
+		libWlzBnd \
 		binWlzApp \
 		binWlzExtFF
 endif
