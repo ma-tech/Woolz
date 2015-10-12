@@ -351,6 +351,16 @@ static WlzObject 		*WlzCMeshTransformObjV3D(
 				  WlzObject *mObj,
 				  WlzInterpolationType interp,
 				  WlzErrorNum *dstErr);
+static WlzContour		*WlzCMeshTransformContour(
+				  WlzContour *srcCtr,
+				  WlzObject *mObj,
+				  int newModFlg,
+				  WlzErrorNum *dstErr);
+static WlzGMModel		*WlzCMeshTransformGMModel(
+				  WlzGMModel *srcM,
+				  WlzObject *mObj,
+				  int newModFlg,
+				  WlzErrorNum *dstErr);
 static WlzObject 		*WlzCMeshScanObjPDomain3D(
 				  WlzObject *srcObj,
 				  WlzCMeshScanWSp3D *mSWSp,
@@ -5535,6 +5545,27 @@ WlzObject 	*WlzCMeshTransformObj(WlzObject *srcObj,
 	  }
 	}
 	break;
+      case WLZ_CONTOUR:
+        if(srcObj->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else
+	{
+	  dstDom.ctr = WlzCMeshTransformContour(srcObj->domain.ctr,
+	                                         mObj, 1, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  dstObj = WlzMakeMain(srcObj->type, dstDom,  srcValues,
+				 NULL, NULL, &errNum);
+	                       
+	}
+	if((errNum != WLZ_ERR_NONE) && dstDom.core)
+	{
+	  (void )WlzFreeDomain(dstDom);
+	}
+	break;
       case WLZ_2D_POLYGON: /* FALLTHROUGH */
       case WLZ_BOUNDLIST:
 	if(srcObj->domain.core == NULL)
@@ -6172,6 +6203,148 @@ static WlzObject *WlzCMeshTransformObjPDomain3D(WlzObject *srcObj,
     *dstErr = errNum;
   }
   return(dstObj);
+}
+
+/*!
+* \return	Transformed object, NULL on error.
+* \ingroup	WlzTransform
+* \brief	Applies a 3D conforming mesh transform to the given contour.
+* \param	srcCtr			Object to be transformed.
+* \param	mObj			Conforming mesh transform object.
+* * \param	newModFlg		Make a new model if non-zero,
+* 					otherwise transform the given
+* 					model in place.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzContour	*WlzCMeshTransformContour(WlzContour *srcCtr,
+					WlzObject *mObj, int newModFlg,
+					WlzErrorNum *dstErr)
+{
+  WlzContour    *dstCtr = NULL;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  dstCtr = WlzMakeContour(&errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(srcCtr->model == NULL)
+    {
+      errNum = WLZ_ERR_DOMAIN_NULL;
+    }
+    else
+    {
+      dstCtr->model = WlzAssignGMModel(
+	  	      WlzCMeshTransformGMModel(srcCtr->model, mObj, newModFlg,
+	                                       &errNum), NULL);
+    }
+  }
+  if((errNum != WLZ_ERR_NONE) && dstCtr)
+  {
+    (void )WlzFreeContour(dstCtr);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstCtr);
+}
+
+/*!
+* \return	Transformed model or NULL on error.
+* \ingroup	WlzTransform
+* \brief	Applies a conforming mesh transform to the given 2
+* 		dimensional geometric model.
+* \param	srcM			Given geometric model.
+* \param	trObj			Given conforming mesh transform.
+* \param	newModFlg		Make a new model if non-zero,
+* 					otherwise transform the given
+* 					model in place.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzGMModel	*WlzCMeshTransformGMModel(WlzGMModel *srcM,
+					WlzObject *trObj, int newModFlg,
+					WlzErrorNum *dstErr)
+{
+  WlzGMModel	*dstM = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(srcM == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    dstM = (newModFlg)? WlzGMModelCopy(srcM, &errNum):
+	   WlzAssignGMModel(srcM, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idx,
+    		cnt;
+    AlcVector	*vec;
+
+    vec = dstM->res.vertexG.vec;
+    cnt = (int )(dstM->res.vertexG.numIdx);
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(idx = 0; idx < cnt; ++idx)
+    {
+      if(errNum == WLZ_ERR_NONE)
+      {
+        WlzGMElemP      elmP;
+
+        elmP.core = (WlzGMCore *)AlcVectorItemGet(vec, (size_t )idx);
+        if(elmP.core && (elmP.core->idx >= 0))
+        {
+          WlzErrorNum   errNum2 = WLZ_ERR_NONE;
+
+          switch(dstM->type)
+          {
+            case WLZ_GMMOD_2I:
+	      errNum2 = WlzCMeshTransformVtxAry2I(trObj, 1,
+	                                          &(elmP.vertexG2I->vtx));
+              break;
+            case WLZ_GMMOD_2D:
+	      errNum2 = WlzCMeshTransformVtxAry2D(trObj, 1,
+	                                          &(elmP.vertexG2D->vtx));
+              break;
+            case WLZ_GMMOD_3I:
+	      errNum2 = WlzCMeshTransformVtxAry3I(trObj, 1,
+	                                          &(elmP.vertexG3I->vtx));
+              break;
+            case WLZ_GMMOD_3D:
+	      errNum2 = WlzCMeshTransformVtxAry3D(trObj, 1,
+	                                          &(elmP.vertexG3D->vtx));
+              break;
+            default:
+              errNum2 = WLZ_ERR_DOMAIN_TYPE;
+              break;
+          }
+#ifdef _OPENMP
+#pragma omp critical
+          {
+#endif
+            if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
+            {
+              errNum = errNum2;
+            }
+#ifdef _OPENMP
+          }
+#endif
+        }
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Rehash the geometric model. */
+    errNum = WlzGMModelRehashVHT(dstM, 0);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstM);
 }
 
 /*!
@@ -9680,3 +9853,4 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
   }
   return(eObj);
 }
+
