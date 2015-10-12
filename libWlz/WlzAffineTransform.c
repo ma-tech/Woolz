@@ -809,8 +809,11 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  dstM = (newModFlg)? WlzGMModelCopy(srcM, &errNum):
-  		      WlzAssignGMModel(srcM, &errNum);
+  else
+  {
+    dstM = (newModFlg)? WlzGMModelCopy(srcM, &errNum):
+			WlzAssignGMModel(srcM, &errNum);
+  }
   if(errNum == WLZ_ERR_NONE)
   {
     /* Transform vertex geometries. */
