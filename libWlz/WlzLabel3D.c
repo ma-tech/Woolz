@@ -550,7 +550,7 @@ WlzObject			*WlzLabel3D(
 				  nP;
 
 		nP = p - nPDom->plane1;
-		gP = p + gPDom->plane1 - nPDom->plane1;
+		gP = p - gPDom->plane1;
 		nVal.vox->values[nP] = WlzAssignValues(
 				       gVal.vox->values[gP], NULL);
 	      }
