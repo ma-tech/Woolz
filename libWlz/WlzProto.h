@@ -5286,6 +5286,15 @@ extern WlzObject		*WlzDomainOccupancy(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzOffsetDist.c							*
+************************************************************************/
+extern WlzObject		*WlzOffsetDist(
+				  WlzObject *obj0,
+				  WlzObject *obj1,
+				  int maxDist,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzPoints.c								*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
