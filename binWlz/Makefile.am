@@ -166,6 +166,7 @@ bin_PROGRAMS		= \
 			  WlzNearbyDomain \
 			  WlzObjToBoundary \
 			  WlzOffsetDistance \
+			  WlzPerturbLandmarks \
 			  WlzPointsFromDomain \
 			  WlzPointsToMarkers \
 			  WlzPointsToText \
@@ -702,6 +703,10 @@ WlzObjToBoundary_LDFLAGS		= $(AM_LFLAGS)
 WlzOffsetDistance_SOURCES		= WlzOffsetDistance.c
 WlzOffsetDistance_LDADD			= $(LDADD)
 WlzOffsetDistance_LDFLAGS		= $(AM_LFLAGS)
+
+WlzPerturbLandmarks_SOURCES		= WlzPerturbLandmarks.c
+WlzPerturbLandmarks_LDADD		= $(LDADD)
+WlzPerturbLandmarks_LDFLAGS		= $(AM_LFLAGS)
 
 WlzPointsFromDomain_SOURCES		= WlzPointsFromDomain.c
 WlzPointsFromDomain_LDADD		= $(LDADD)
