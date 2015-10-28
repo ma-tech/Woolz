@@ -180,6 +180,7 @@ libWlz_la_SOURCES 	= \
 			  WlzNObjGreyStats.c \
 			  WlzObjToBoundary.c \
 			  WlzOccupancy.c \
+			  WlzOffsetDist.c \
 			  WlzPoints.c \
 			  WlzPolarSample.c \
 			  WlzPolyDecimate.c \

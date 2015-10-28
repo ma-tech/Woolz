@@ -165,6 +165,8 @@ bin_PROGRAMS		= \
 			  WlzNObjsGreyStats \
 			  WlzNearbyDomain \
 			  WlzObjToBoundary \
+			  WlzOffsetDistance \
+			  WlzPerturbLandmarks \
 			  WlzPointsFromDomain \
 			  WlzPointsToMarkers \
 			  WlzPointsToText \
@@ -697,6 +699,14 @@ WlzNearbyDomain_LDFLAGS			= $(AM_LFLAGS)
 WlzObjToBoundary_SOURCES		= WlzObjToBoundary.c
 WlzObjToBoundary_LDADD			= $(LDADD)
 WlzObjToBoundary_LDFLAGS		= $(AM_LFLAGS)
+
+WlzOffsetDistance_SOURCES		= WlzOffsetDistance.c
+WlzOffsetDistance_LDADD			= $(LDADD)
+WlzOffsetDistance_LDFLAGS		= $(AM_LFLAGS)
+
+WlzPerturbLandmarks_SOURCES		= WlzPerturbLandmarks.c
+WlzPerturbLandmarks_LDADD		= $(LDADD)
+WlzPerturbLandmarks_LDFLAGS		= $(AM_LFLAGS)
 
 WlzPointsFromDomain_SOURCES		= WlzPointsFromDomain.c
 WlzPointsFromDomain_LDADD		= $(LDADD)

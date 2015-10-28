@@ -367,7 +367,7 @@ typedef enum _WlzObjectType
   WLZ_POINTS_2I			= 21,	/*!< Integer 2D points domain. */
   WLZ_POINTS_2D			= 22,	/*!< Integer 2D points domain. */
   WLZ_POINTS_3I	                = 23,    /*!< Double precision floating point
-					      2D points domain. */
+					      3D points domain. */
   WLZ_POINTS_3D	                = 24,    /*!< Double precision floating point
 					      3D points domain. */
   /**********************************************************************
