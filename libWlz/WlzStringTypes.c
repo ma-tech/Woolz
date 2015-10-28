@@ -430,17 +430,25 @@ const char	*WlzStringFromObjDomainType(WlzObject *obj,
       case WLZ_3D_VIEW_STRUCT:
 	oDomTypeStr = "WLZ_3D_VIEW_STRUCT";
 	break;
-      case WLZ_POINTS_2I:
-        oDomTypeStr = "WLZ_POINTS_2I";
-	break;
-      case WLZ_POINTS_2D:
-        oDomTypeStr = "WLZ_POINTS_2D";
-	break;
-      case WLZ_POINTS_3I:
-        oDomTypeStr = "WLZ_POINTS_3I";
-	break;
-      case WLZ_POINTS_3D:
-        oDomTypeStr = "WLZ_POINTS_3D";
+      case WLZ_POINTS:
+        switch(obj->domain.core->type)
+	{
+	  case WLZ_POINTS_2I:
+	    oDomTypeStr = "WLZ_POINTS_2I";
+	    break;
+	  case WLZ_POINTS_2D:
+	    oDomTypeStr = "WLZ_POINTS_2D";
+	    break;
+	  case WLZ_POINTS_3I:
+	    oDomTypeStr = "WLZ_POINTS_3I";
+	    break;
+	  case WLZ_POINTS_3D:
+	    oDomTypeStr = "WLZ_POINTS_3D";
+	    break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+        }
 	break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
