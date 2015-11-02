@@ -69,9 +69,13 @@ WlzObject	*WlzAssignObject(WlzObject *obj, WlzErrorNum *dstErr)
     {
       rtnObj = obj;
 #ifdef _OPENMP
-#pragma omp atomic
+#pragma omp critical (WlzLinkcount)
+      {
 #endif
-      obj->linkcount++;
+        obj->linkcount++;
+#ifdef _OPENMP
+      }
+#endif
     }
   }
 #ifdef WLZ_NO_NULL
@@ -110,9 +114,13 @@ WlzDomain 	WlzAssignDomain(WlzDomain domain, WlzErrorNum *dstErr)
     {
       rtnDomain = domain;
 #ifdef _OPENMP
-#pragma omp atomic
+#pragma omp critical (WlzLinkcount)
+      {
 #endif
-      domain.core->linkcount++;
+        domain.core->linkcount++;
+#ifdef _OPENMP
+      }
+#endif
     }
   }
 #ifdef WLZ_NO_NULL
@@ -151,9 +159,13 @@ WlzValues 	WlzAssignValues(WlzValues values, WlzErrorNum	*dstErr)
     {
       rtnValues = values;
 #ifdef _OPENMP
-#pragma omp atomic
+#pragma omp critical (WlzLinkcount)
+      {
 #endif
-      values.core->linkcount++;
+        values.core->linkcount++;
+#ifdef _OPENMP
+      }
+#endif
     }
   }
 #ifdef WLZ_NO_NULL
@@ -193,9 +205,13 @@ WlzProperty WlzAssignProperty(WlzProperty property, WlzErrorNum *dstErr)
     {
       rtnProp = property;
 #ifdef _OPENMP
-#pragma omp atomic
+#pragma omp critical (WlzLinkcount)
+      {
 #endif
-      property.core->linkcount++;
+        property.core->linkcount++;
+#ifdef _OPENMP
+      }
+#endif
     }
   }
 #ifdef WLZ_NO_NULL
@@ -234,9 +250,13 @@ WlzPropertyList *WlzAssignPropertyList(WlzPropertyList *pList,
     {
       rtnPList = pList;
 #ifdef _OPENMP
-#pragma omp atomic
+#pragma omp critical (WlzLinkcount)
+      {
 #endif
-      pList->linkcount++;
+        pList->linkcount++;
+#ifdef _OPENMP
+      }
+#endif
     }
   }
 #ifdef WLZ_NO_NULL
@@ -277,9 +297,13 @@ WlzAffineTransform *WlzAssignAffineTransform(
     {
       rtnTrans = trans;
 #ifdef _OPENMP
-#pragma omp atomic
+#pragma omp critical (WlzLinkcount)
+      {
 #endif
-      ++(trans->linkcount);
+        ++(trans->linkcount);
+#ifdef _OPENMP
+      }
+#endif
     }
   }
 #ifdef WLZ_NO_NULL
@@ -318,9 +342,13 @@ WlzTransform 	WlzAssignTransform(WlzTransform t, WlzErrorNum *dstErr)
     else
     {
 #ifdef _OPENMP
-#pragma omp atomic
+#pragma omp critical (WlzLinkcount)
+      {
 #endif
-      ++(t.core->linkcount);
+        ++(t.core->linkcount);
+#ifdef _OPENMP
+      }
+#endif
       tR = t;
     }
   }
@@ -356,9 +384,13 @@ WlzThreeDViewStruct *WlzAssign3DViewStruct(
     {
       rtnViewStr = viewStr;
 #ifdef _OPENMP
-#pragma omp atomic
+#pragma omp critical (WlzLinkcount)
+      {
 #endif
-      ++(viewStr->linkcount);
+        ++(viewStr->linkcount);
+#ifdef _OPENMP
+      }
+#endif
     }
   }
 #ifdef WLZ_NO_NULL
@@ -397,9 +429,13 @@ WlzBoundList 	*WlzAssignBoundList(WlzBoundList *blist, WlzErrorNum *dstErr)
     {
       rtnBlist = blist;
 #ifdef _OPENMP
-#pragma omp atomic
+#pragma omp critical (WlzLinkcount)
+      {
 #endif
-      ++(blist->linkcount);
+        ++(blist->linkcount);
+#ifdef _OPENMP
+      }
+#endif
     }
   }
 #ifdef WLZ_NO_NULL
@@ -440,9 +476,13 @@ WlzPolygonDomain *WlzAssignPolygonDomain(
     {
       rtnPoly = poly;
 #ifdef _OPENMP
-#pragma omp atomic
+#pragma omp critical (WlzLinkcount)
+      {
 #endif
-      ++(poly->linkcount);
+	++(poly->linkcount);
+#ifdef _OPENMP
+      }
+#endif
     }
   }
 #ifdef WLZ_NO_NULL
@@ -481,9 +521,13 @@ WlzGMModel 	*WlzAssignGMModel(WlzGMModel *model, WlzErrorNum *dstErr)
     {
       rtnModel = model;
 #ifdef _OPENMP
-#pragma omp atomic
+#pragma omp critical (WlzLinkcount)
+      {
 #endif
       ++(model->linkcount);
+#ifdef _OPENMP
+      }
+#endif
     }
   }
   if(dstErr)
