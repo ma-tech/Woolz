@@ -5063,7 +5063,7 @@ int		WlzCMeshElmClosestPosIn2D(WlzCMesh2D *mesh,
   WlzCMeshCell2D *cell;
   const double	eps = ALG_DBL_TOLLERANCE,
   		tol2 = WLZ_MESH_TOLERANCE * 10.0,
-  		tolSq = WLZ_MESH_TOLERANCE_SQ;
+  		tolSq = WLZ_MESH_TOLERANCE_SQ * 10.0;
 
   dMaxSq = dMax * dMax;
   minInPos.vtX = minInPos.vtY = 0.0;
@@ -5145,17 +5145,28 @@ int		WlzCMeshElmClosestPosIn2D(WlzCMesh2D *mesh,
       elmIdx = minElm->idx;
       if(dstPos)
       {
-	if(minDstSq > -(tolSq + eps))
+	if(minDstSq < (tolSq + eps))
 	{
-	  WlzDVertex2	c;
+	  double	f,
+	  		lc,
+	  		lp;
+	  WlzDVertex2	c,
+	  		d,
+			x;
 	  WlzCMeshNod2D *nod[3];
 
 	  nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(minElm);
 	  nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(minElm);
 	  nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(minElm);
 	  c = WlzGeomTriangleCen2D(nod[0]->pos, nod[1]->pos, nod[2]->pos);
-	  pos.vtX = WlzCMeshAddTolToBndAndClamp(minInPos.vtX, c.vtX, tol2);
-	  pos.vtY = WlzCMeshAddTolToBndAndClamp(minInPos.vtY, c.vtY, tol2);
+	  WLZ_VTX_2_SUB(d, c, minInPos);
+	  lp = fabs(minDstSq);
+	  lc = WLZ_VTX_2_SQRLEN(d);
+	  f = sqrt(lp / (lc + tolSq));
+	  x.vtX = tol2 + (fabs(d.vtX) * f);
+	  x.vtY = tol2 + (fabs(d.vtY) * f);
+	  pos.vtX = WlzCMeshAddTolToBndAndClamp(minInPos.vtX, c.vtX, x.vtX);
+	  pos.vtY = WlzCMeshAddTolToBndAndClamp(minInPos.vtY, c.vtY, x.vtY);
 	}
         *dstPos = pos;
       }
@@ -5218,7 +5229,7 @@ int		WlzCMeshElmClosestPosIn3D(WlzCMesh3D *mesh,
   WlzCMeshCell3D *cell;
   const double	eps = ALG_DBL_TOLLERANCE,
   		tol2 = WLZ_MESH_TOLERANCE * 10.0,
-  		tolSq = WLZ_MESH_TOLERANCE_SQ;
+  		tolSq = WLZ_MESH_TOLERANCE_SQ * 10.0;
 
   cPos = pos;
   dMaxSq = dMax * dMax;
@@ -5312,9 +5323,14 @@ int		WlzCMeshElmClosestPosIn3D(WlzCMesh3D *mesh,
       elmIdx = minElm->idx;
       if(dstPos)
       {
-	if(minDstSq > -(tolSq + eps))
+	if(minDstSq < (tolSq + eps))
 	{
-	  WlzDVertex3	c;
+	  double	f,
+	  		lc,
+	  		lp;
+	  WlzDVertex3	c,
+	  		d,
+			x;
 	  WlzCMeshNod3D *nod[4];
 
 	  nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(minElm);
@@ -5323,9 +5339,16 @@ int		WlzCMeshElmClosestPosIn3D(WlzCMesh3D *mesh,
 	  nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(minElm);
 	  c = WlzGeomTetrahedronCen3D(nod[0]->pos, nod[1]->pos,
 	                              nod[2]->pos, nod[3]->pos);
-	  cPos.vtX = WlzCMeshAddTolToBndAndClamp(minInPos.vtX, c.vtX, tol2);
-	  cPos.vtY = WlzCMeshAddTolToBndAndClamp(minInPos.vtY, c.vtY, tol2);
-	  cPos.vtZ = WlzCMeshAddTolToBndAndClamp(minInPos.vtZ, c.vtZ, tol2);
+	  WLZ_VTX_3_SUB(d, c, minInPos);
+	  lp = fabs(minDstSq);
+	  lc = WLZ_VTX_3_SQRLEN(d);
+	  f = sqrt(lp / (lc + tolSq));
+	  x.vtX = tol2 + (fabs(d.vtX) * f);
+	  x.vtY = tol2 + (fabs(d.vtY) * f);
+	  x.vtZ = tol2 + (fabs(d.vtZ) * f);
+	  cPos.vtX = WlzCMeshAddTolToBndAndClamp(minInPos.vtX, c.vtX, x.vtX);
+	  cPos.vtY = WlzCMeshAddTolToBndAndClamp(minInPos.vtY, c.vtY, x.vtY);
+	  cPos.vtZ = WlzCMeshAddTolToBndAndClamp(minInPos.vtZ, c.vtZ, x.vtZ);
 	}
         *dstPos = cPos;
       }
