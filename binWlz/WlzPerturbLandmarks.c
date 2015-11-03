@@ -708,6 +708,59 @@ int             main(int argc, char **argv)
 	  *argv,  errMsg);
     }
   }
+  /* Again ensure landmarks are within the mesh. */
+  if(ok && mshObj)
+  {
+    int		idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(idx = 0; idx < nLmk; ++idx)
+    {
+      if(errNum == WLZ_ERR_NONE)
+      {
+	WlzVertex   posV;
+	WlzDVertex3 pos3;
+	WlzErrorNum errNum2 = WLZ_ERR_NONE;
+
+	if(dim == 2)
+	{
+	  posV.d2 = dstV.d2[idx];
+	}
+	else /* dim == 3 */
+	{
+	  posV.d3 = dstV.d3[idx];
+	}
+	pos3 = WlzEnsureVertexInMesh(mshObj, dim, posV, 10.0, &errNum2);
+	if(errNum2 == WLZ_ERR_NONE)
+	{
+	  if(dim == 2)
+	  {
+	    WLZ_VTX_2_SET(dstV.d2[idx], pos3.vtX, pos3.vtY);
+	  }
+	  else /* dim == 3 */
+	  {
+	    dstV.d3[idx] = pos3;
+	  }
+	}
+	else
+	{
+#ifdef _OPENMP
+#pragma omp critical
+	  {
+#endif
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = errNum2;
+	    }
+#ifdef _OPENMP
+	  }
+#endif
+	}
+      }
+    }
+  }
   /* Write landmarks. */
   if(ok)  
   {
