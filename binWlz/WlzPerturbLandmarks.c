@@ -115,6 +115,7 @@ The perturbed landmarks are written to the file 'out.num'.
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -233,8 +234,7 @@ static WlzDVertex3 WlzRandNearby(WlzObject *cnsObj, WlzObject *mshObj,
     {
       WlzVertex  posV;
       WlzVertexP posP;
-      WlzObject  *dObj = NULL,
-		 *tObj = NULL;
+      WlzObject  *dObj = NULL;
 
       if(dim == 2)
       {
@@ -246,16 +246,9 @@ static WlzDVertex3 WlzRandNearby(WlzObject *cnsObj, WlzObject *mshObj,
         posV.d3 = pos;
 	posP.d3 = &(posV.d3);
       }
-      tObj = WlzAssignObject(
+      dObj = WlzAssignObject(
 	     WlzDomainNearby(cnsObj, 1, posP, WLZ_OCTAGONAL_DISTANCE,
 	                     maxDsp, &errNum), NULL);
-      if(errNum == WLZ_ERR_NONE)
-      {
-	/* Make sure within the constraining domain. Erode because some
-	 * uncertainty with mesh floating point. */
-	dObj = WlzErosion(tObj, WLZ_26_CONNECTED, &errNum);
-      }
-      (void )WlzFreeObj(tObj);
       if(errNum == WLZ_ERR_NONE)
       {
 	if((dObj == NULL) || (dObj->type == WLZ_EMPTY_OBJ))
@@ -519,9 +512,17 @@ int             main(int argc, char **argv)
 	case WLZ_CMESH_2D: /* FALLTHROUGH */
 	case WLZ_CMESH_3D:
 	  {
+	    WlzObject *tObj = NULL;
+
 	    mshObj = cnsObj;
-	    cnsObj = WlzAssignObject(WlzCMeshToDomObj(mshObj, 0, 1.0,
-	                                              &errNum), NULL);
+	    tObj = WlzAssignObject(
+	           WlzCMeshToDomObj(mshObj, 0, 1.0, &errNum), NULL);
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      cnsObj = WlzAssignObject(
+	               WlzDilation(tObj, WLZ_26_CONNECTED, &errNum), NULL);
+	    }
+	    (void )WlzFreeObj(tObj);
 	  }
 	  break;
         default:

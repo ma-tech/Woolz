@@ -5061,9 +5061,6 @@ int		WlzCMeshElmClosestPosIn2D(WlzCMesh2D *mesh,
   WlzCMeshElm2D *minElm = NULL;
   WlzCMeshCellElm2D *cElm;
   WlzCMeshCell2D *cell;
-  const double	eps = ALG_DBL_TOLLERANCE,
-  		tol2 = WLZ_MESH_TOLERANCE * 10.0,
-  		tolSq = WLZ_MESH_TOLERANCE_SQ * 10.0;
 
   dMaxSq = dMax * dMax;
   minInPos.vtX = minInPos.vtY = 0.0;
@@ -5145,28 +5142,21 @@ int		WlzCMeshElmClosestPosIn2D(WlzCMesh2D *mesh,
       elmIdx = minElm->idx;
       if(dstPos)
       {
-	if(minDstSq < (tolSq + eps))
+	if(minDstSq > -(WLZ_MESH_TOLERANCE))
 	{
-	  double	f,
-	  		lc,
-	  		lp;
 	  WlzDVertex2	c,
-	  		d,
-			x;
+	  		e;
 	  WlzCMeshNod2D *nod[3];
 
 	  nod[0] = WLZ_CMESH_ELM2D_GET_NODE_0(minElm);
 	  nod[1] = WLZ_CMESH_ELM2D_GET_NODE_1(minElm);
 	  nod[2] = WLZ_CMESH_ELM2D_GET_NODE_2(minElm);
 	  c = WlzGeomTriangleCen2D(nod[0]->pos, nod[1]->pos, nod[2]->pos);
-	  WLZ_VTX_2_SUB(d, c, minInPos);
-	  lp = fabs(minDstSq);
-	  lc = WLZ_VTX_2_SQRLEN(d);
-	  f = sqrt(lp / (lc + tolSq));
-	  x.vtX = tol2 + (fabs(d.vtX) * f);
-	  x.vtY = tol2 + (fabs(d.vtY) * f);
-	  pos.vtX = WlzCMeshAddTolToBndAndClamp(minInPos.vtX, c.vtX, x.vtX);
-	  pos.vtY = WlzCMeshAddTolToBndAndClamp(minInPos.vtY, c.vtY, x.vtY);
+	  WLZ_VTX_2_SUB(e, c, minInPos);
+	  WLZ_VTX_2_FABS(e, e);
+	  WLZ_VTX_2_SCALE(e, e, 10.0 * WLZ_MESH_TOLERANCE);
+	  pos.vtX = WlzCMeshAddTolToBndAndClamp(minInPos.vtX, c.vtX, e.vtX);
+	  pos.vtY = WlzCMeshAddTolToBndAndClamp(minInPos.vtY, c.vtY, e.vtY);
 	}
         *dstPos = pos;
       }
@@ -5227,9 +5217,6 @@ int		WlzCMeshElmClosestPosIn3D(WlzCMesh3D *mesh,
   WlzCMeshElm3D *minElm = NULL;
   WlzCMeshCellElm3D *cElm;
   WlzCMeshCell3D *cell;
-  const double	eps = ALG_DBL_TOLLERANCE,
-  		tol2 = WLZ_MESH_TOLERANCE * 10.0,
-  		tolSq = WLZ_MESH_TOLERANCE_SQ * 10.0;
 
   cPos = pos;
   dMaxSq = dMax * dMax;
@@ -5318,19 +5305,14 @@ int		WlzCMeshElmClosestPosIn3D(WlzCMesh3D *mesh,
     {
       /* Have found an element which either encloses the vertex or else
        * is the closest and within the given maximum distance (dMax).
-       * Now find position within mesh that is at least tol2 from the
-       * element boundary. */
+       * Now find position within mesh that is inside the element. */
       elmIdx = minElm->idx;
       if(dstPos)
       {
-	if(minDstSq < (tolSq + eps))
+	if(minDstSq > -(WLZ_MESH_TOLERANCE))
 	{
-	  double	f,
-	  		lc,
-	  		lp;
 	  WlzDVertex3	c,
-	  		d,
-			x;
+	  		e;
 	  WlzCMeshNod3D *nod[4];
 
 	  nod[0] = WLZ_CMESH_ELM3D_GET_NODE_0(minElm);
@@ -5339,16 +5321,9 @@ int		WlzCMeshElmClosestPosIn3D(WlzCMesh3D *mesh,
 	  nod[3] = WLZ_CMESH_ELM3D_GET_NODE_3(minElm);
 	  c = WlzGeomTetrahedronCen3D(nod[0]->pos, nod[1]->pos,
 	                              nod[2]->pos, nod[3]->pos);
-	  WLZ_VTX_3_SUB(d, c, minInPos);
-	  lp = fabs(minDstSq);
-	  lc = WLZ_VTX_3_SQRLEN(d);
-	  f = sqrt(lp / (lc + tolSq));
-	  x.vtX = tol2 + (fabs(d.vtX) * f);
-	  x.vtY = tol2 + (fabs(d.vtY) * f);
-	  x.vtZ = tol2 + (fabs(d.vtZ) * f);
-	  cPos.vtX = WlzCMeshAddTolToBndAndClamp(minInPos.vtX, c.vtX, x.vtX);
-	  cPos.vtY = WlzCMeshAddTolToBndAndClamp(minInPos.vtY, c.vtY, x.vtY);
-	  cPos.vtZ = WlzCMeshAddTolToBndAndClamp(minInPos.vtZ, c.vtZ, x.vtZ);
+	  WLZ_VTX_3_SUB(e, c, minInPos);
+	  WLZ_VTX_3_SCALE(e, e, 10.0 * WLZ_MESH_TOLERANCE);
+	  WLZ_VTX_3_ADD(cPos, minInPos, e);
 	}
         *dstPos = cPos;
       }
