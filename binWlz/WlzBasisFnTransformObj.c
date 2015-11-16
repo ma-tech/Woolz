@@ -55,7 +55,7 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
 		       [-D<flags>] [-P<param>]
 		       [-d] [-g] [-h] [-q] [-Q] [-s] [-t] [-y]
 		       [-B] [-C] [-E] [-G] [-L] [-N] [-R] [-S] [-T]
-		       [<in object>]
+		       [-U] [<in object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -942,7 +942,7 @@ int             main(int argc, char **argv)
     "                  [-D<flags>] [-P<param>]\n"
     "                  [-d] [-g] [-h] [-q] [-s] [-t] [-y]\n"
     "                  [-B] [-C] [-E] [-G] [-L] [-N] [-Q] [-R] [-S] [-T]\n"
-    "                  [<in object>]\n"
+    "                  [-U] [<in object>]\n"
     "Version: ",
     WlzVersion(),
     "\n"
