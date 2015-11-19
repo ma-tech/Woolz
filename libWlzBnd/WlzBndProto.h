@@ -172,6 +172,11 @@ extern const char 		*WlzGetPropName(
 				  WlzErrorNum *dstErr);
 extern int 			WlzDestroyObj(
 				  WlzObject *obj);
+extern WlzObject		*WlzThresholdI(
+				  WlzObject *obj,
+				  int thr,
+				  WlzThresholdType hilo,
+				  WlzErrorNum *dstErr);
 
 #ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus
