@@ -252,6 +252,7 @@ int		main(int argc, char *argv[])
 						    1.0f, 1.0f, 1.0f,
 						    &errNum);
 		  }
+		  else
 		  {
 		    obj1 = WlzAssignObject(inObj, NULL);
 		  }
