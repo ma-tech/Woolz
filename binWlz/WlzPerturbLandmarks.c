@@ -115,6 +115,7 @@ The perturbed landmarks are written to the file 'out.num'.
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -146,6 +147,41 @@ static double	WlzRRandUniform(unsigned int *seed)
 }
 
 /*!
+* \return	Position in mesh.
+* \brief	Ensures given vertex is within mesh object.
+* \param	mshObj			Given mesh object, must be valid.
+* \param	dim			Dimension (2 or 3).
+* \param	gvnPos			Given position, must be of appropriate
+* 					type: WlzDVertex2 for dim == 2
+* 					or WlzDVertex3 for dim == 3.
+* \param        maxDist			Maximum distance within which to
+* 					search for position in the mesh,
+* 					should always be greater than zero.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzDVertex3 WlzEnsureVertexInMesh(WlzObject *mshObj, int dim,
+                            	WlzVertex gvnPos, double maxDist,
+				WlzErrorNum *dstErr)
+{
+  WlzDVertex3 pos;
+
+  if(dim == 2)
+  {
+    WlzDVertex2 pos2;
+
+    WLZ_VTX_2_SET(pos2, gvnPos.d2.vtX, gvnPos.d2.vtY);
+    (void )WlzCMeshElmClosestPosIn2D(mshObj->domain.cm2, &pos2, pos2, maxDist);
+    WLZ_VTX_3_SET(pos, pos2.vtX, pos2.vtY, 0.0);
+  }
+  else
+  {
+    pos = gvnPos.d3;
+    (void )WlzCMeshElmClosestPosIn3D(mshObj->domain.cm3, &pos, pos, maxDist);
+  }
+  return(pos);
+}
+
+/*!
 * \return	Random nearby vertex position.
 * \brief	Computes a random vertex position which is nearby to the given
 * 		position and within given spatial domain object.
@@ -163,110 +199,125 @@ static double	WlzRRandUniform(unsigned int *seed)
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 static WlzDVertex3 WlzRandNearby(WlzObject *cnsObj, WlzObject *mshObj,
-			         int dim, WlzVertexP gvnPos, double maxDsp,
+			         int dim, WlzVertex gvnPos, double maxDsp,
 				 unsigned int *seedP, WlzErrorNum *dstErr)
 {
   WlzDVertex3	pos;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const double	eps = 1.0e-04;
 
-  if(maxDsp < eps)
+  if(dim == 2)
   {
-    if(dim == 2)
-    {
-      pos.vtX = gvnPos.d2[0].vtX;
-      pos.vtY = gvnPos.d2[0].vtY;
-      pos.vtZ = 0.0;
-    }
-    else /* dim == 3 */
-    {
-      pos = gvnPos.d3[0];
-    }
+    pos.vtX = gvnPos.d2.vtX;
+    pos.vtY = gvnPos.d2.vtY;
+    pos.vtZ = 0.0;
   }
-  else if(cnsObj == NULL)
+  else /* dim == 3 */
   {
-    maxDsp *= 2.0;
-    if(dim == 2)
-    {
-      pos.vtX = gvnPos.d2[0].vtX + (WlzRRandUniform(seedP) - 0.5) * maxDsp;
-      pos.vtY = gvnPos.d2[0].vtY + (WlzRRandUniform(seedP) - 0.5) * maxDsp;
-    }
-    else /* dim == 3 */
-    {
-      pos.vtX = gvnPos.d3[0].vtX + (WlzRRandUniform(seedP) - 0.5) * maxDsp;
-      pos.vtY = gvnPos.d3[0].vtY + (WlzRRandUniform(seedP) - 0.5) * maxDsp;
-      pos.vtZ = gvnPos.d3[0].vtZ + (WlzRRandUniform(seedP) - 0.5) * maxDsp;
-    }
+    pos = gvnPos.d3;
   }
-  else
+  if(maxDsp > eps)
   {
-    WlzObject  *dObj = NULL;
+    if(cnsObj == NULL)
+    {
+      double	md2;
 
-    dObj = WlzAssignObject(
-	   WlzDomainNearby(cnsObj, 1, gvnPos, WLZ_OCTAGONAL_DISTANCE, maxDsp,
-			   &errNum), NULL);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      if(dObj->type == WLZ_EMPTY_OBJ)
+      md2 = maxDsp * 2.0;
+      pos.vtX += (WlzRRandUniform(seedP) - 0.5) * md2;
+      pos.vtY += (WlzRRandUniform(seedP) - 0.5) * md2;
+      if(dim == 3)
       {
-	pos = WlzRandNearby(NULL, NULL, dim, gvnPos, maxDsp, seedP, NULL);
+	pos.vtZ += (WlzRRandUniform(seedP) - 0.5) * md2;
       }
-      else
-      {
-	WlzPixelV  thrV;
-	WlzLong	   vol = 0;
-        WlzObject  *tObj = NULL,
-		   *vObj = NULL;
-	WlzIBox3   box = {0};
-
-	vol = WlzVolume(dObj, &errNum);
-	if(vol < 1)
-	{
-	  errNum = WLZ_ERR_DOMAIN_DATA;
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  thrV.type = WLZ_GREY_INT;
-	  thrV.v.inv = (int )floor((vol - 1) * WlzRRandUniform(seedP));
-	  vObj = WlzAssignObject(
-		 WlzGreyNewIncValues(dObj, &errNum), NULL);
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  tObj = WlzAssignObject(
-		 WlzThreshold(vObj, thrV, WLZ_THRESH_EQUAL, &errNum), NULL);
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  box = WlzBoundingBox3I(tObj, &errNum);
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  pos.vtX = box.xMin;
-	  pos.vtY = box.yMin;
-	  pos.vtZ = box.zMin;
-	}
-	(void )WlzFreeObj(tObj);
-	(void )WlzFreeObj(vObj);
-      }
-    }
-    (void )WlzFreeObj(dObj);
-  }
-  if(mshObj && (errNum == WLZ_ERR_NONE))
-  {
-    if(dim == 2)
-    {
-      WlzDVertex2 pos2;
-
-      WLZ_VTX_2_SET(pos2, pos.vtX, pos.vtY);
-      (void )WlzCMeshElmClosestPosIn2D(mshObj->domain.cm2, &pos2, pos2,
-                                       10.0 * maxDsp);
-      WLZ_VTX_3_SET(pos, pos2.vtX, pos2.vtY, 0.0);
     }
     else
     {
-      (void )WlzCMeshElmClosestPosIn3D(mshObj->domain.cm3, &pos, pos,
-                                       10.0 * maxDsp);
+      WlzVertex  posV;
+      WlzVertexP posP;
+      WlzObject  *dObj = NULL;
+
+      if(dim == 2)
+      {
+        WLZ_VTX_2_SET(posV.d2, pos.vtX, pos.vtY);
+	posP.d2 = &(posV.d2);
+      }
+      else
+      {
+        posV.d3 = pos;
+	posP.d3 = &(posV.d3);
+      }
+      dObj = WlzAssignObject(
+	     WlzDomainNearby(cnsObj, 1, posP, WLZ_OCTAGONAL_DISTANCE,
+	                     maxDsp, &errNum), NULL);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	if((dObj == NULL) || (dObj->type == WLZ_EMPTY_OBJ))
+	{
+	  pos = WlzRandNearby(NULL, mshObj, dim, gvnPos, maxDsp, seedP, NULL);
+	  /* Reject any perturbed points with distance greater than the
+	   * maximum, which can happen if the original point is outside
+	   * the mesh. */
+	  if(dim == 2)
+	  {
+	    WlzDVertex2 t;
+
+	    WLZ_VTX_2_SUB(t, pos, gvnPos.d2);
+	    if(WLZ_VTX_2_LENGTH(t) > maxDsp)
+	    {
+	      WLZ_VTX_3_SET(pos, 0.0, gvnPos.d2.vtY, gvnPos.d2.vtX);
+	    }
+	  }
+	  else
+	  {
+	    WlzDVertex3 t;
+
+	    WLZ_VTX_3_SUB(t, pos, gvnPos.d3);
+	    if(WLZ_VTX_3_LENGTH(t) > maxDsp)
+	    {
+	      pos = gvnPos.d3;
+	    }
+	  }
+	}
+	else
+	{
+	  WlzPixelV  thrV;
+	  WlzLong    vol = 0;
+	  WlzObject  *tObj = NULL,
+		     *vObj = NULL;
+	  WlzIBox3   box = {0};
+
+	  vol = WlzVolume(dObj, &errNum);
+	  if(vol < 1)
+	  {
+	    errNum = WLZ_ERR_DOMAIN_DATA;
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    thrV.type = WLZ_GREY_INT;
+	    thrV.v.inv = (int )floor((vol - 1) * WlzRRandUniform(seedP));
+	    vObj = WlzAssignObject(
+		   WlzGreyNewIncValues(dObj, &errNum), NULL);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    tObj = WlzAssignObject(
+		   WlzThreshold(vObj, thrV, WLZ_THRESH_EQUAL, &errNum), NULL);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    box = WlzBoundingBox3I(tObj, &errNum);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    pos.vtX = box.xMin;
+	    pos.vtY = box.yMin;
+	    pos.vtZ = box.zMin;
+	  }
+	  (void )WlzFreeObj(tObj);
+	  (void )WlzFreeObj(vObj);
+	}
+      }
+      (void )WlzFreeObj(dObj);
     }
   }
   if(dstErr)
@@ -461,9 +512,17 @@ int             main(int argc, char **argv)
 	case WLZ_CMESH_2D: /* FALLTHROUGH */
 	case WLZ_CMESH_3D:
 	  {
+	    WlzObject *tObj = NULL;
+
 	    mshObj = cnsObj;
-	    cnsObj = WlzAssignObject(WlzCMeshToDomObj(mshObj, 0, 1.0,
-	                                              &errNum), NULL);
+	    tObj = WlzAssignObject(
+	           WlzCMeshToDomObj(mshObj, 0, 1.0, &errNum), NULL);
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      cnsObj = WlzAssignObject(
+	               WlzDilation(tObj, WLZ_26_CONNECTED, &errNum), NULL);
+	    }
+	    (void )WlzFreeObj(tObj);
 	  }
 	  break;
         default:
@@ -505,6 +564,60 @@ int             main(int argc, char **argv)
       (void )fclose(fP);
     }
   }
+  /* Ensure landmarks are within the mesh (some may be very close, but
+   * just outside). */
+  if(ok && mshObj)
+  {
+    int		idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(idx = 0; idx < nLmk; ++idx)
+    {
+      if(errNum == WLZ_ERR_NONE)
+      {
+	WlzVertex   posV;
+	WlzDVertex3 pos3;
+	WlzErrorNum errNum2 = WLZ_ERR_NONE;
+
+	if(dim == 2)
+	{
+	  posV.d2 = dstV.d2[idx];
+	}
+	else /* dim == 3 */
+	{
+	  posV.d3 = dstV.d3[idx];
+	}
+	pos3 = WlzEnsureVertexInMesh(mshObj, dim, posV, 10.0, &errNum2);
+	if(errNum2 == WLZ_ERR_NONE)
+	{
+	  if(dim == 2)
+	  {
+	    WLZ_VTX_2_SET(dstV.d2[idx], pos3.vtX, pos3.vtY);
+	  }
+	  else /* dim == 3 */
+	  {
+	    dstV.d3[idx] = pos3;
+	  }
+	}
+	else
+	{
+#ifdef _OPENMP
+#pragma omp critical
+	  {
+#endif
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = errNum2;
+	    }
+#ifdef _OPENMP
+	  }
+#endif
+	}
+      }
+    }
+  }
   /* Perturb landmarks. */
   if(ok && (maxDsp > eps))  
   {
@@ -540,7 +653,7 @@ int             main(int argc, char **argv)
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  int	      thrId = 0;
-	  WlzVertexP  posP;
+	  WlzVertex   posV;
 	  WlzErrorNum errNum2 = WLZ_ERR_NONE;
 
 #ifdef _OPENMP
@@ -548,10 +661,17 @@ int             main(int argc, char **argv)
 #endif
 	  if(dim == 2)
 	  {
+	    posV.d2 = dstV.d2[idx];
+	  }
+	  else /* dim == 3 */
+	  {
+	    posV.d3 = dstV.d3[idx];
+	  }
+	  if(dim == 2)
+	  {
 	    WlzDVertex3 tmpV;
 
-	    posP.d2 = &(dstV.d2[idx]);
-	    tmpV = WlzRandNearby(cnsObj, mshObj, dim, posP, maxDsp,
+	    tmpV = WlzRandNearby(cnsObj, mshObj, dim, posV, maxDsp,
 	                         &(seeds[thrId]), &errNum2);
 	    if(errNum2 == WLZ_ERR_NONE)
 	    {
@@ -560,8 +680,7 @@ int             main(int argc, char **argv)
 	  }
 	  else
 	  {
-	    posP.d3 = &(dstV.d3[idx]);
-	    dstV.d3[idx] = WlzRandNearby(cnsObj, mshObj, dim, posP, maxDsp,
+	    dstV.d3[idx] = WlzRandNearby(cnsObj, mshObj, dim, posV, maxDsp,
 					 &(seeds[thrId]), &errNum2);
 	  }
 	  if(errNum2 != WLZ_ERR_NONE)
@@ -588,6 +707,59 @@ int             main(int argc, char **argv)
       (void )fprintf(stderr,
 	  "%s: Failed to compute perturbed positions (%s).\n",
 	  *argv,  errMsg);
+    }
+  }
+  /* Again ensure landmarks are within the mesh. */
+  if(ok && mshObj)
+  {
+    int		idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(idx = 0; idx < nLmk; ++idx)
+    {
+      if(errNum == WLZ_ERR_NONE)
+      {
+	WlzVertex   posV;
+	WlzDVertex3 pos3;
+	WlzErrorNum errNum2 = WLZ_ERR_NONE;
+
+	if(dim == 2)
+	{
+	  posV.d2 = dstV.d2[idx];
+	}
+	else /* dim == 3 */
+	{
+	  posV.d3 = dstV.d3[idx];
+	}
+	pos3 = WlzEnsureVertexInMesh(mshObj, dim, posV, 10.0, &errNum2);
+	if(errNum2 == WLZ_ERR_NONE)
+	{
+	  if(dim == 2)
+	  {
+	    WLZ_VTX_2_SET(dstV.d2[idx], pos3.vtX, pos3.vtY);
+	  }
+	  else /* dim == 3 */
+	  {
+	    dstV.d3[idx] = pos3;
+	  }
+	}
+	else
+	{
+#ifdef _OPENMP
+#pragma omp critical
+	  {
+#endif
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = errNum2;
+	    }
+#ifdef _OPENMP
+	  }
+#endif
+	}
+      }
     }
   }
   /* Write landmarks. */

@@ -480,3 +480,37 @@ int		WlzDestroyObj(WlzObject *obj)
   }
   return(success);
 }
+
+/*!
+* \return	New Woolz object or NULL on error.
+* \ingroup	LibWlzBnd
+* \brief	Wrapper avoiding pixel type with WlzThreshold().
+* \param	obj			Object to be thresholded.
+* \param	thr			Int threshold pixel value.
+* \param	hilo			Mode parameter with possible values:
+*					<ul>
+*					<li> WLZ_THRESH_LOW - thresholded
+*					object is of values < given value.
+*					</li>
+*					<li> WLZ_THRESH_HIGH - thresholded
+*					object is of values >= given value.
+*					</li>
+*					<li> WLZ_THRESH_EQUAL - thresholded
+*					object is of values == given value.
+*					</li>
+*					</ul>
+* \param	dstErr			Destination pointer for error number,
+*					may be NULL.
+*/
+WlzObject		*WlzThresholdI(WlzObject *obj, int thr,
+				       WlzThresholdType hilo,
+			               WlzErrorNum *dstErr)
+{
+  WlzObject	*tObj = NULL;
+  WlzPixelV	thrV;
+
+  thrV.type = WLZ_GREY_INT;
+  thrV.v.inv = thr;
+  tObj = WlzThreshold(obj, thrV, hilo, dstErr);
+  return(tObj);
+}
