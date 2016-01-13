@@ -45,6 +45,7 @@ static char _WlzCMeshTransformObj_c[] = "University of Edinburgh $Id$";
 #include <stdio.h>
 #include <float.h>
 #include <math.h>
+#include <sys/time.h>
 #include <string.h>
 #include <Wlz.h>
 
@@ -55,8 +56,10 @@ static char _WlzCMeshTransformObj_c[] = "University of Edinburgh $Id$";
 WlzCMeshTransformObj - transforms an object using a constrained mesh transform.
 \par Synopsis
 \verbatim
-WlzCMeshTransformObj [-h] [-t<input transform>] [-i] [-N] [-x<interpolation value> [-o<output woolz file>]] |
-  [-s<number of interpolations> [-b <output body>] [-e <output extension>]] ] [<input object>]
+WlzCMeshTransformObj [-h] [-t<input transform>] [-i] [-N]
+                     [-x<interpolation value>] [-o<output woolz file>]
+                     [-s<number of interpolations> [-b <output body>]
+		     [-E] [-e <output extension>]] ] [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -67,6 +70,10 @@ WlzCMeshTransformObj [-h] [-t<input transform>] [-i] [-N] [-x<interpolation valu
   <tr>
     <td><b>-t</b></td>
     <td>Transform object.</td>
+  </tr>
+  <tr> 
+    <td><b>-E</b></td>
+    <td>Output evaluation times to stderr.</td>
   </tr>
   <tr>
     <td><b>-i</b></td>
@@ -142,6 +149,7 @@ int		main(int argc, char *argv[])
   		option,
   		inv = 0,
 		nStep = 1,
+		timer = 0,
 		useStep = 0,
   		ok = 1,
   		usage = 0;
@@ -160,7 +168,8 @@ int		main(int argc, char *argv[])
                 *inObj = NULL,
                 *outObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  static char   optList[] = "iho:t:s:x:Lb:e:";
+  struct timeval times[3];
+  static char   optList[] = "iho:t:s:x:ELb:e:";
   const char    txFileStrDef[] = "-",
   		inFileStrDef[] = "-",
                 outFileStrDef[] = "-",
@@ -172,6 +181,7 @@ int		main(int argc, char *argv[])
   inFileStr = (char *)inFileStrDef;
   outFileStr = (char *)outFileStrDef;
   outObjFileExtStr = (char *)outObjFileExtStrDef;
+  (void )memset(times, 0, 3 * sizeof(struct timeval));
   while((usage == 0) && ((option = getopt(argc, argv, optList)) != EOF))
   {
     switch(option)
@@ -191,6 +201,9 @@ int		main(int argc, char *argv[])
       case 't':
         txFileStr = optarg;
         break;
+      case 'E':
+        timer = 1;
+	break;
       case 'L':
         interp = WLZ_INTERPOLATION_LINEAR;
         break;
@@ -400,7 +413,9 @@ int		main(int argc, char *argv[])
 	  errNum = WlzScaleCMeshValue(transition, trObj);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
+            gettimeofday(times + 0, NULL);
 	    outObj = WlzCMeshTransformObj(inObj, trObj, interp, &errNum);
+            gettimeofday(times + 1, NULL);
 	    if(errNum != WLZ_ERR_NONE)
 	    {
 	      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
@@ -450,6 +465,14 @@ int		main(int argc, char *argv[])
   {
     (void )fclose(inFP); inFP = NULL;
   }
+  if(timer)
+  {
+    ALC_TIMERSUB(times + 1, times + 0, times + 2);
+    (void )fprintf(stderr,
+    "%s: Elapsed time to transform the object was: %g seconds\n",
+    *argv,
+    times[2].tv_sec + (0.000001 * times[2].tv_usec));
+  }
   if(usage)
   {
       fprintf(stderr,
@@ -470,6 +493,7 @@ int		main(int argc, char *argv[])
             "  -h  Help, prints this usage message.\n"
             "  -t  Transform object.\n"
             "  -i  Invert the transform after reading.\n"
+            "  -E  Output execution time to stderr.\n"
             "  -L  Use WLZ_INTERPOLATION_LINEAR (instead of the default\n"
 	    "      WLZ_INTERPOLATION_NEAREST).\n"
             "  -x  Interpolation value, with 0 <= ivalue <= 1.\n"
