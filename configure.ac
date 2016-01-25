@@ -293,8 +293,23 @@ AS_IF([test "x$enable_openmp" = "xyes"], [
     fi
 ])
 
+AC_ARG_ENABLE(lto,
+  [  --enable-lto	build with link time optimisation flags set])
+AS_IF([test "x$enable_lto" = "xyes"], [
+    # GNU CC
+    if test "$CC" = "gcc"
+    then
+      CFLAGS="${CFLAGS} -flto"
+    fi
+    # Intel CC
+    if test "$CC" = "icc"
+    then
+      CFLAGS="${CFLAGS} -ipo"
+    fi
+])
+
 AC_ARG_ENABLE(profile,
-  [  --enable-profile	build with profiling set])
+  [  --enable-profile		build with profiling set])
 AS_IF([test "x$enable_profile" = "xyes"], [
     CFLAGS="${CFLAGS} -pg"
     LDFLAGS="${LDFLAGS} -pg"
