@@ -219,8 +219,8 @@ WlzObject	*WlzMakeTiledValuesFromObj(WlzObject *gObj, size_t tileSz,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzAllocation
-* \brief	Allocates tiles for the tiles values but does not set
-* 		the values within the tiles.
+* \brief	Allocates tiles for the tiles values and sets background value
+* 		within the tiles.
 * \param	tVal			Given tiled values.
 */
 WlzErrorNum	WlzMakeTiledValuesTiles(WlzTiledValues *tVal)
@@ -242,6 +242,11 @@ WlzErrorNum	WlzMakeTiledValuesTiles(WlzTiledValues *tVal)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzValueSetGrey(tVal->tiles, 0, tVal->bckgrnd.v, tVal->bckgrnd.type,
+                    tVal->numTiles * tVal->tileSz);
   }
   return(errNum);
 }
