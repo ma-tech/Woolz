@@ -44,6 +44,11 @@ static char _Wlz3DSubSection_c[] = "University of Edinburgh $Id$";
 
 #include <Wlz.h>
 
+static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
+  WlzObject		*obj,
+  WlzObject		*subDomain,
+  WlzThreeDViewStruct	*viewStr,
+  WlzErrorNum		*dstErr);
 static WlzObject *WlzGetSubSectionFrom3DDomObj(
   WlzObject 		*obj,
   WlzObject		*subDomain,
@@ -97,10 +102,20 @@ WlzObject 	*WlzGetSubSectionFromObject(
     switch(obj->type)
     {
       case WLZ_3D_DOMAINOBJ:
-	newObj = WlzGetSubSectionFrom3DDomObj(obj, subDomain, view,
-					      interp, maskRtn, &errNum);
+	if(obj->values.core &&
+	   (maskRtn == NULL) &&
+	   (interp == WLZ_INTERPOLATION_NEAREST) &&
+	   WlzGreyTableIsTiled(obj->values.core->type))
+	{
+	  newObj = WlzGetSubSectionFrom3DTiledValueObj(obj, subDomain, view,
+	                                               &errNum);
+	}
+	else
+	{
+	  newObj = WlzGetSubSectionFrom3DDomObj(obj, subDomain, view,
+						interp, maskRtn, &errNum);
+	}
         break;
-
       default:
 	newObj = WlzGetSectionFromObject(obj, view, interp, &errNum);
 	break;
@@ -111,6 +126,239 @@ WlzObject 	*WlzGetSubSectionFromObject(
     *dstErr = errNum;
   }
   return(newObj);
+}
+
+/*!
+* \return	New sub-section object.
+* \ingroup	WlzSectionTransform
+* \brief	Computes a section through the given 3D domain object
+* 		where that object has tiled values and only the section
+* 		values are required.
+* \param	obj			Given 3D object which is known to
+* 					be non-NULL, have non-NULL domain
+* 					and values with the values being
+* 					tiled values.
+* \param	subDomain		Given 2D domain within which to
+* 					restrict the section. If NULL
+* 					returned section will be have a
+* 					rectangular domain which is the maximum
+* 					for the given object and view
+* 					transform.
+* \param	view			Given view transform.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
+  WlzObject		*obj,
+  WlzObject		*subDomain,
+  WlzThreeDViewStruct	*view,
+  WlzErrorNum		*dstErr)
+{
+  WlzObject		*dstObj = NULL;
+  WlzDomain		dstDom;
+  WlzValues		dstVal;
+  WlzGreyType		gType;
+  WlzPixelV		bgd;
+  WlzTiledValues        *tv;
+  WlzIBox2 		subBox;
+  WlzErrorNum		errNum = WLZ_ERR_NONE;
+
+  dstDom.core = NULL;
+  dstVal.core = NULL;
+  if(view == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(view->type != WLZ_3D_VIEW_STRUCT)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(!(view->initialised))
+  {
+    errNum = WLZ_ERR_OBJECT_DATA;
+  }
+  else
+  {
+    tv = obj->values.t;
+  }
+  /* Make rectangular domain. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    subBox.xMin = WLZ_NINT(view->minvals.vtX);
+    subBox.xMax = WLZ_NINT(view->maxvals.vtX);
+    subBox.yMin = WLZ_NINT(view->minvals.vtY);
+    subBox.yMax = WLZ_NINT(view->maxvals.vtY);
+    if(subDomain)
+    {
+      switch(subDomain->type)
+      {
+	case WLZ_2D_DOMAINOBJ:
+	  dstObj = WlzClipObjToBox2D(subDomain, subBox, &errNum);
+	  break;
+	default:
+	  errNum = WLZ_ERR_OBJECT_TYPE;
+	  break;
+      }
+    }
+    else
+    {
+      if((dstDom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+					   subBox.yMin, subBox.yMax,
+					   subBox.xMin, subBox.xMax,
+					   &errNum)) != NULL)
+      {
+	dstObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dstDom, dstVal,
+	                     NULL, NULL, &errNum);
+      }
+    }
+  }
+  /* Make and add a rectangular value table */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    subBox.xMin = dstObj->domain.i->kol1;
+    subBox.xMax = dstObj->domain.i->lastkl;
+    subBox.yMin = dstObj->domain.i->line1;
+    subBox.yMax = dstObj->domain.i->lastln;
+    bgd = WlzGetBackground(obj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    gType = WlzGreyTypeFromObj(obj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((dstVal.v = WlzNewValueTb(dstObj,
+                                 WlzGreyTableType(WLZ_GREY_TAB_RECT, gType, NULL),
+				 bgd, &errNum)))
+    {
+      dstObj->values = WlzAssignValues(dstVal, &errNum);
+    }
+  }
+  /* Set section values from tiles. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		ln;
+    size_t	width;
+    WlzGreyP	dstGP;
+
+    dstGP = dstObj->values.r->values;
+    width = subBox.xMax - subBox.xMin + 1;
+    for(ln = subBox.yMin; ln <= subBox.yMax; ++ln)
+    {
+      int         y,
+                  kl,
+                  lnRel;
+      WlzDVertex3 vty;
+      WlzGreyP	  lnGP;
+
+      switch(gType)
+      {
+	case WLZ_GREY_INT:
+	  lnGP.inp = dstGP.inp + (width * lnRel);
+	  break;
+	case WLZ_GREY_SHORT:
+	  lnGP.shp = dstGP.shp + (width * lnRel);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  lnGP.ubp = dstGP.ubp + (width * lnRel);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  lnGP.flp = dstGP.flp + (width * lnRel);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  lnGP.dbp = dstGP.dbp + (width * lnRel);
+	  break;
+	case WLZ_GREY_RGBA:
+	  lnGP.rgbp= dstGP.rgbp+ (width * lnRel);
+	  break;
+	default:
+	  break;
+      }
+      lnRel = ln - subBox.yMin;
+      lnGP.ubp = dstGP.ubp + (width * lnRel);
+      y = ln - WLZ_NINT(view->minvals.vtY);
+      vty.vtX = view->yp_to_x[y];
+      vty.vtY = view->yp_to_y[y];
+      vty.vtZ = view->yp_to_z[y];
+      WlzValueSetGrey(lnGP, 0, bgd.v, WLZ_GREY_UBYTE, width);
+      for(kl = subBox.xMin; kl <= subBox.xMax; ++kl)
+      {
+	int	      x,
+		      klRel;
+	double	      tp;
+	WlzIVertex3   p;
+	WlzIVertex3   tIdx;
+
+	klRel = kl - subBox.xMin;
+	x = kl - WLZ_NINT(view->minvals.vtX);
+	tp = view->xp_to_z[x] + vty.vtZ;
+	p.vtZ = WLZ_NINT(tp) - tv->plane1;
+	tIdx.vtZ = p.vtZ / tv->tileWidth;
+	if((p.vtZ >= 0) && (tIdx.vtZ < tv->nIdx[2]))
+	{
+	  tp = view->xp_to_y[x] + vty.vtY;
+	  p.vtY = WLZ_NINT(tp) - tv->line1;
+	  tIdx.vtY = p.vtY / tv->tileWidth;
+	  if((p.vtY >= 0) && (tIdx.vtY < tv->nIdx[1]))
+	  {
+	    tp = view->xp_to_x[x] + vty.vtX;
+	    p.vtX = WLZ_NINT(tp) - tv->kol1;
+	    tIdx.vtX = p.vtX / tv->tileWidth;
+	    if((p.vtX >= 0) && (tIdx.vtX  < tv->nIdx[0]))
+	    {
+	      size_t	idx;
+	      idx = ((tIdx.vtZ * tv->nIdx[1] + tIdx.vtY) * tv->nIdx[0]) +
+	            tIdx.vtX;
+	      idx = *(tv->indices + idx);
+#ifdef WLZ_FAST_CODE
+              if((unsigned int)(idx) < (unsigned int)(tv->numTiles))
+#else
+	      if((idx >= 0) && (idx < tv->numTiles))
+#endif
+	      {
+		size_t   off;
+		WlzIVertex3 tOff;
+
+		tOff.vtX = p.vtX % tv->tileWidth;
+		tOff.vtY = p.vtY % tv->tileWidth;
+		tOff.vtZ = p.vtZ % tv->tileWidth;
+		off = (idx * tv->tileSz) +
+		      ((tOff.vtZ * tv->tileWidth + tOff.vtY) *
+		       tv->tileWidth) + tOff.vtX;
+		switch(gType)
+		{
+	          case WLZ_GREY_INT:
+		    *(lnGP.inp + klRel) = *(tv->tiles.inp + off);
+		    break;
+	          case WLZ_GREY_SHORT:
+		    *(lnGP.shp + klRel) = *(tv->tiles.shp + off);
+		    break;
+	          case WLZ_GREY_UBYTE:
+		    *(lnGP.ubp + klRel) = *(tv->tiles.ubp + off);
+		    break;
+	          case WLZ_GREY_FLOAT:
+		    *(lnGP.flp + klRel) = *(tv->tiles.flp + off);
+		    break;
+	          case WLZ_GREY_DOUBLE:
+		    *(lnGP.dbp + klRel) = *(tv->tiles.dbp + off);
+		    break;
+	          case WLZ_GREY_RGBA:
+		    *(lnGP.rgbp + klRel) = *(tv->tiles.rgbp + off);
+		    break;
+		  default:
+		    break;
+		}
+	      }
+	    }
+	  }
+	}
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstObj);
 }
 
 #define WLZ_GETSUBSEC_POS(P,V,X,Y) \
