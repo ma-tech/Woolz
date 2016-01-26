@@ -192,22 +192,22 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    if((inRefFileStr == NULL) ||
-       (*inRefFileStr == '\0') ||
-       ((fP = (strcmp(inRefFileStr, "-")?
-              fopen(inRefFileStr, "r"): stdin)) == NULL) ||
-       ((refObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
-       (errNum != WLZ_ERR_NONE))
-    {
-      ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsg);
-      (void )fprintf(stderr,
-                     "%s: Failed to read object from file %s (%s).\n",
-                     *argv, inRefFileStr, errMsg);
-    }
-    if(fP && strcmp(inRefFileStr, "-"))
-    {
-      (void )fclose(fP); fP = NULL;
+    if(strcasecmp(inRefFileStr, "null")) {
+      if(((fP = (strcmp(inRefFileStr, "-")?
+		fopen(inRefFileStr, "r"): stdin)) == NULL) ||
+	 ((refObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
+	 (errNum != WLZ_ERR_NONE))
+      {
+	ok = 0;
+	(void )WlzStringFromErrorNum(errNum, &errMsg);
+	(void )fprintf(stderr,
+		       "%s: Failed to read object from file %s (%s).\n",
+		       *argv, inRefFileStr, errMsg);
+      }
+      if(fP && strcmp(inRefFileStr, "-"))
+      {
+	(void )fclose(fP); fP = NULL;
+      }
     }
   }
   if(ok)
@@ -273,7 +273,8 @@ int		main(int argc, char *argv[])
     "      is up-is-up.\n"
     "  -u  Up vector, default 0.0,0.0,1.0.\n"
     "  -o  Output object file name.\n"
-    "  -r  Reference object, within which cut section lies.\n",
+    "  -r  Reference object, within which cut section lies. The string\n"
+    "      \"null\" may be used to indicate no reference object.\n",
     *argv,
     " -o out.wlz -r ref.wlz in.wlz\n"
     "Creates output object out.wlz by cutting a section through in.wlz\n"
