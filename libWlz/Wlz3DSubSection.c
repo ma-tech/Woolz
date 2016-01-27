@@ -242,6 +242,10 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
 
     dstGP = dstObj->values.r->values;
     width = subBox.xMax - subBox.xMin + 1;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, 256)
+#endif
     for(ln = subBox.yMin; ln <= subBox.yMax; ++ln)
     {
       int         y,
@@ -268,7 +272,7 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
 	  lnGP.dbp = dstGP.dbp + (width * lnRel);
 	  break;
 	case WLZ_GREY_RGBA:
-	  lnGP.rgbp= dstGP.rgbp+ (width * lnRel);
+	  lnGP.rgbp = dstGP.rgbp + (width * lnRel);
 	  break;
 	default:
 	  break;
@@ -282,32 +286,40 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
       WlzValueSetGrey(lnGP, 0, bgd.v, WLZ_GREY_UBYTE, width);
       for(kl = subBox.xMin; kl <= subBox.xMax; ++kl)
       {
-	int	      x,
-		      klRel;
-	double	      tp;
-	WlzIVertex3   p;
-	WlzIVertex3   tIdx;
+	int   		x,
+			iz,
+			pz,
+			klRel;
+	double	        tz;
 
 	klRel = kl - subBox.xMin;
 	x = kl - WLZ_NINT(view->minvals.vtX);
-	tp = view->xp_to_z[x] + vty.vtZ;
-	p.vtZ = WLZ_NINT(tp) - tv->plane1;
-	tIdx.vtZ = p.vtZ / tv->tileWidth;
-	if((p.vtZ >= 0) && (tIdx.vtZ < tv->nIdx[2]))
+	tz = view->xp_to_z[x] + vty.vtZ;
+	pz = WLZ_NINT(tz) - tv->plane1;
+	iz = pz / tv->tileWidth;
+	if((pz >= 0) && (iz < tv->nIdx[2]))
 	{
-	  tp = view->xp_to_y[x] + vty.vtY;
-	  p.vtY = WLZ_NINT(tp) - tv->line1;
-	  tIdx.vtY = p.vtY / tv->tileWidth;
-	  if((p.vtY >= 0) && (tIdx.vtY < tv->nIdx[1]))
+	  int		iy,
+	                py;
+	  double	ty;
+
+	  ty = view->xp_to_y[x] + vty.vtY;
+	  py = WLZ_NINT(ty) - tv->line1;
+	  iy = py / tv->tileWidth;
+	  if((py >= 0) && (iy < tv->nIdx[1]))
 	  {
-	    tp = view->xp_to_x[x] + vty.vtX;
-	    p.vtX = WLZ_NINT(tp) - tv->kol1;
-	    tIdx.vtX = p.vtX / tv->tileWidth;
-	    if((p.vtX >= 0) && (tIdx.vtX  < tv->nIdx[0]))
+	    int 	ix,
+	                px;
+	    double	tx;
+
+	    tx = view->xp_to_x[x] + vty.vtX;
+	    px = WLZ_NINT(tx) - tv->kol1;
+	    ix = px / tv->tileWidth;
+	    if((px >= 0) && (ix  < tv->nIdx[0]))
 	    {
 	      size_t	idx;
-	      idx = ((tIdx.vtZ * tv->nIdx[1] + tIdx.vtY) * tv->nIdx[0]) +
-	            tIdx.vtX;
+
+	      idx = ((iz * tv->nIdx[1] + iy) * tv->nIdx[0]) + ix;
 	      idx = *(tv->indices + idx);
 #ifdef WLZ_FAST_CODE
               if((unsigned int)(idx) < (unsigned int)(tv->numTiles))
@@ -318,31 +330,31 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
 		size_t   off;
 		WlzIVertex3 tOff;
 
-		tOff.vtX = p.vtX % tv->tileWidth;
-		tOff.vtY = p.vtY % tv->tileWidth;
-		tOff.vtZ = p.vtZ % tv->tileWidth;
+		tOff.vtX = px % tv->tileWidth;
+		tOff.vtY = py % tv->tileWidth;
+		tOff.vtZ = pz % tv->tileWidth;
 		off = (idx * tv->tileSz) +
 		      ((tOff.vtZ * tv->tileWidth + tOff.vtY) *
 		       tv->tileWidth) + tOff.vtX;
 		switch(gType)
 		{
 	          case WLZ_GREY_INT:
-		    *(lnGP.inp + klRel) = *(tv->tiles.inp + off);
+		    lnGP.inp[klRel] = tv->tiles.inp[off];
 		    break;
 	          case WLZ_GREY_SHORT:
-		    *(lnGP.shp + klRel) = *(tv->tiles.shp + off);
+		    lnGP.shp[klRel] = tv->tiles.shp[off];
 		    break;
 	          case WLZ_GREY_UBYTE:
-		    *(lnGP.ubp + klRel) = *(tv->tiles.ubp + off);
+		    lnGP.ubp[klRel] = tv->tiles.ubp[off];
 		    break;
 	          case WLZ_GREY_FLOAT:
-		    *(lnGP.flp + klRel) = *(tv->tiles.flp + off);
+		    lnGP.flp[klRel] = tv->tiles.flp[off];
 		    break;
 	          case WLZ_GREY_DOUBLE:
-		    *(lnGP.dbp + klRel) = *(tv->tiles.dbp + off);
+		    lnGP.dbp[klRel] = tv->tiles.dbp[off];
 		    break;
 	          case WLZ_GREY_RGBA:
-		    *(lnGP.rgbp + klRel) = *(tv->tiles.rgbp + off);
+		    lnGP.rgbp[klRel] = tv->tiles.rgbp[off];
 		    break;
 		  default:
 		    break;
