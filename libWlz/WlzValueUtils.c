@@ -46,6 +46,10 @@ static char _WlzValueUtils_c[] = "University of Edinburgh $Id$";
 #include <float.h>
 #include <Wlz.h>
 
+#ifdef _OPENMP
+#define WLZ_VALUE_OMP_CHUNKSZ 1024    /* To avoid parallelising small loops. */
+#endif
+
 /*!
 * \return	void
 * \ingroup	WlzValuesUtils
@@ -61,9 +65,14 @@ void		WlzValueSetInt(int *vec, int value,
 {
   if(value)
   {
-    while(count-- > 0)
+    int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+    for(idx = 0; idx < count; ++idx)
     {
-      *vec++ = value;
+      vec[idx] = value;
     }
   }
   else
@@ -87,9 +96,14 @@ void		WlzValueSetShort(short *vec, short value,
 {
   if(value)
   {
-    while(count-- > 0)
+    int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+    for(idx = 0; idx < count; ++idx)
     {
-      *vec++ = value;
+      vec[idx] = value;
     }
   }
   else
@@ -127,9 +141,14 @@ void		WlzValueSetUByte(WlzUByte *vec, WlzUByte value,
 void		WlzValueSetFloat(float *vec, float value,
 				 size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *vec++ = value;
+    vec[idx] = value;
   }
 }
 
@@ -146,9 +165,14 @@ void		WlzValueSetFloat(float *vec, float value,
 void		WlzValueSetDouble(double *vec, double value,
 				  size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *vec++ = value;
+    vec[idx] = value;
   }
 }
 
@@ -167,9 +191,14 @@ void		WlzValueSetRGBA(WlzUInt *vec, WlzUInt value,
 {
   if(value)
   {
-    while(count-- > 0)
+    int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+    for(idx = 0; idx < count; ++idx)
     {
-      *vec++ = value;
+      vec[idx] = value;
     }
   }
   else
@@ -191,9 +220,14 @@ void		WlzValueSetRGBA(WlzUInt *vec, WlzUInt value,
 void		WlzValueSetDVertex(WlzDVertex2 *vec, WlzDVertex2 value,
 				   size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *vec++ = value;
+    vec[idx] = value;
   }
 }
 
@@ -210,9 +244,14 @@ void		WlzValueSetDVertex(WlzDVertex2 *vec, WlzDVertex2 value,
 void		WlzValueSetFVertex(WlzFVertex2 *vec, WlzFVertex2 value,
 				   size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *vec++ = value;
+    vec[idx] = value;
   }
 }
 
@@ -231,9 +270,14 @@ void		WlzValueSetIVertex(WlzIVertex2 *vec, WlzIVertex2 value,
 {
   if(value.vtX || value.vtY)
   {
-    while(count-- > 0)
+    int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+    for(idx = 0; idx < count; ++idx)
     {
-      *vec++ = value;
+      vec[idx] = value;
     }
   }
   else
@@ -331,17 +375,21 @@ WlzGreyP	WlzValueSetGreyP(WlzGreyP base, WlzGreyType gType, size_t off)
 */
 void		 WlzValueClampIntToShort(int *vec, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*vec > SHRT_MAX)
+    if(vec[idx] > SHRT_MAX)
     {
-      *vec = SHRT_MAX;
+      vec[idx] = SHRT_MAX;
     }
-    else if(*vec < SHRT_MIN)
+    else if(vec[idx] < SHRT_MIN)
     {
-      *vec = SHRT_MIN;
+      vec[idx] = SHRT_MIN;
     }
-    ++vec;
   }
 }
 
@@ -355,17 +403,21 @@ void		 WlzValueClampIntToShort(int *vec, size_t count)
 */
 void		 WlzValueClampIntToUByte(int *vec, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*vec > UCHAR_MAX)
+    if(vec[idx] > UCHAR_MAX)
     {
-      *vec = UCHAR_MAX;
+      vec[idx] = UCHAR_MAX;
     }
-    else if(*vec < 0)
+    else if(vec[idx] < 0)
     {
-      *vec = 0;
+      vec[idx] = 0;
     }
-    ++vec;
   }
 }
 
@@ -379,17 +431,21 @@ void		 WlzValueClampIntToUByte(int *vec, size_t count)
 */
 void		 WlzValueClampShortToUByte(short *vec, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*vec > UCHAR_MAX)
+    if(vec[idx] > UCHAR_MAX)
     {
-      *vec = UCHAR_MAX;
+      vec[idx] = UCHAR_MAX;
     }
-    else if(*vec < 0)
+    else if(vec[idx] < 0)
     {
-      *vec = 0;
+      vec[idx] = 0;
     }
-    ++vec;
   }
 }
 
@@ -403,17 +459,21 @@ void		 WlzValueClampShortToUByte(short *vec, size_t count)
 */
 void		 WlzValueClampDoubleToInt(double *vec, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*vec > INT_MAX)
+    if(vec[idx] > INT_MAX)
     {
-      *vec = INT_MAX;
+      vec[idx] = INT_MAX;
     }
-    else if(*vec < INT_MIN)
+    else if(vec[idx] < INT_MIN)
     {
-      *vec = INT_MIN;
+      vec[idx] = INT_MIN;
     }
-    ++vec;
   }
 }
 
@@ -427,17 +487,21 @@ void		 WlzValueClampDoubleToInt(double *vec, size_t count)
 */
 void		 WlzValueClampDoubleToShort(double *vec, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*vec > SHRT_MAX)
+    if(vec[idx] > SHRT_MAX)
     {
-      *vec = SHRT_MAX;
+      vec[idx] = SHRT_MAX;
     }
-    else if(*vec < SHRT_MIN)
+    else if(vec[idx] < SHRT_MIN)
     {
-      *vec = SHRT_MIN;
+      vec[idx] = SHRT_MIN;
     }
-    ++vec;
   }
 }
 
@@ -451,17 +515,21 @@ void		 WlzValueClampDoubleToShort(double *vec, size_t count)
 */
 void		 WlzValueClampDoubleToUByte(double *vec, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*vec > UCHAR_MAX)
+    if(vec[idx] > UCHAR_MAX)
     {
-      *vec = UCHAR_MAX;
+      vec[idx] = UCHAR_MAX;
     }
-    else if(*vec < 0)
+    else if(vec[idx] < 0)
     {
-      *vec = 0;
+      vec[idx] = 0;
     }
-    ++vec;
   }
 }
 
@@ -475,17 +543,21 @@ void		 WlzValueClampDoubleToUByte(double *vec, size_t count)
 */
 void		 WlzValueClampDoubleToRGBA(double *vec, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*vec > UCHAR_MAX)
+    if(vec[idx] > UCHAR_MAX)
     {
-      *vec = UCHAR_MAX;
+      vec[idx] = UCHAR_MAX;
     }
-    else if(*vec < 0)
+    else if(vec[idx] < 0)
     {
-      *vec = 0;
+      vec[idx] = 0;
     }
-    ++vec;
   }
 }
 
@@ -499,17 +571,21 @@ void		 WlzValueClampDoubleToRGBA(double *vec, size_t count)
 */
 void		 WlzValueClampDoubleToFloat(double *vec, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*vec > FLT_MAX)
+    if(vec[idx] > FLT_MAX)
     {
-      *vec = FLT_MAX;
+      vec[idx] = FLT_MAX;
     }
-    else if(*vec < FLT_MIN)
+    else if(vec[idx] < FLT_MIN)
     {
-      *vec = FLT_MIN;
+      vec[idx] = FLT_MIN;
     }
-    ++vec;
   }
 }
 
@@ -523,17 +599,21 @@ void		 WlzValueClampDoubleToFloat(double *vec, size_t count)
 */
 void		 WlzValueClampFloatToInt(float *vec, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*vec > INT_MAX)
+    if(vec[idx] > INT_MAX)
     {
-      *vec = INT_MAX;
+      vec[idx] = INT_MAX;
     }
-    else if(*vec < INT_MIN)
+    else if(vec[idx] < INT_MIN)
     {
-      *vec = INT_MIN;
+      vec[idx] = INT_MIN;
     }
-    ++vec;
   }
 }
 
@@ -547,17 +627,21 @@ void		 WlzValueClampFloatToInt(float *vec, size_t count)
 */
 void		 WlzValueClampFloatToShort(float *vec, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*vec > SHRT_MAX)
+    if(vec[idx] > SHRT_MAX)
     {
-      *vec = SHRT_MAX;
+      vec[idx] = SHRT_MAX;
     }
-    else if(*vec < SHRT_MIN)
+    else if(vec[idx] < SHRT_MIN)
     {
-      *vec = SHRT_MIN;
+      vec[idx] = SHRT_MIN;
     }
-    ++vec;
   }
 }
 
@@ -571,17 +655,21 @@ void		 WlzValueClampFloatToShort(float *vec, size_t count)
 */
 void		 WlzValueClampFloatToUByte(float *vec, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*vec > UCHAR_MAX)
+    if(vec[idx] > UCHAR_MAX)
     {
-      *vec = UCHAR_MAX;
+      vec[idx] = UCHAR_MAX;
     }
-    else if(*vec < 0)
+    else if(vec[idx] < 0)
     {
-      *vec = 0;
+      vec[idx] = 0;
     }
-    ++vec;
   }
 }
 
@@ -596,22 +684,25 @@ void		 WlzValueClampFloatToUByte(float *vec, size_t count)
 */
 void		 WlzValueClampIntIntoShort(short *dst, int *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > SHRT_MAX)
+    if(src[idx] > SHRT_MAX)
     {
-      *dst = SHRT_MAX;
+      dst[idx] = SHRT_MAX;
     }
-    else if(*src < SHRT_MIN)
+    else if(src[idx] < SHRT_MIN)
     {
-      *dst = SHRT_MIN;
+      dst[idx] = SHRT_MIN;
     }
     else
     {
-      *dst = (short )*src;
+      dst[idx] = (short )src[idx];
     }
-    ++src;
-    ++dst;
   }
 }
 
@@ -627,22 +718,25 @@ void		 WlzValueClampIntIntoShort(short *dst, int *src, size_t count)
 void		 WlzValueClampIntIntoUByte(WlzUByte *dst, int *src,
 					   size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > UCHAR_MAX)
+    if(src[idx] > UCHAR_MAX)
     {
-      *dst = UCHAR_MAX;
+      dst[idx] = UCHAR_MAX;
     }
-    else if(*src < 0)
+    else if(src[idx] < 0)
     {
-      *dst = 0;
+      dst[idx] = 0;
     }
     else
     {
-      *dst = (WlzUByte )*src;
+      dst[idx] = (WlzUByte )src[idx];
     }
-    ++src;
-    ++dst;
   }
 }
 
@@ -658,22 +752,25 @@ void		 WlzValueClampIntIntoUByte(WlzUByte *dst, int *src,
 void		 WlzValueClampShortIntoUByte(WlzUByte *dst, short *src,
 					     size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > UCHAR_MAX)
+    if(src[idx] > UCHAR_MAX)
     {
-      *dst = UCHAR_MAX;
+      dst[idx] = UCHAR_MAX;
     }
-    else if(*src < 0)
+    else if(src[idx] < 0)
     {
-      *dst = 0;
+      dst[idx] = 0;
     }
     else
     {
-      *dst = (WlzUByte )*src;
+      dst[idx] = (WlzUByte )src[idx];
     }
-    ++src;
-    ++dst;
   }
 }
 
@@ -688,22 +785,25 @@ void		 WlzValueClampShortIntoUByte(WlzUByte *dst, short *src,
 */
 void		WlzValueClampFloatIntoInt(int *dst, float *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > INT_MAX)
+    if(src[idx] > INT_MAX)
     {
-      *dst = INT_MAX;
+      dst[idx] = INT_MAX;
     }
-    else if(*src < INT_MIN)
+    else if(src[idx] < INT_MIN)
     {
-      *dst = INT_MIN;
+      dst[idx] = INT_MIN;
     }
     else
     {
-      *dst = WLZ_NINT(*src);
+      dst[idx] = WLZ_NINT(src[idx]);
     }
-    ++src;
-    ++dst;
   }
 }
 
@@ -719,22 +819,25 @@ void		WlzValueClampFloatIntoInt(int *dst, float *src, size_t count)
 void		WlzValueClampFloatIntoShort(short *dst, float *src,
 					    size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > SHRT_MAX)
+    if(src[idx] > SHRT_MAX)
     {
-      *dst = SHRT_MAX;
+      dst[idx] = SHRT_MAX;
     }
-    else if(*src < SHRT_MIN)
+    else if(src[idx] < SHRT_MIN)
     {
-      *dst = SHRT_MIN;
+      dst[idx] = SHRT_MIN;
     }
     else
     {
-      *dst = (short )WLZ_NINT(*src);
+      dst[idx] = (short )WLZ_NINT(src[idx]);
     }
-    ++src;
-    ++dst;
   }
 }
 
@@ -750,22 +853,25 @@ void		WlzValueClampFloatIntoShort(short *dst, float *src,
 void		WlzValueClampFloatIntoUByte(WlzUByte *dst, float *src,
 					    size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > UCHAR_MAX)
+    if(src[idx] > UCHAR_MAX)
     {
-      *dst = UCHAR_MAX;
+      dst[idx] = UCHAR_MAX;
     }
-    else if(*src < 0.0)
+    else if(src[idx] < 0.0)
     {
-      *dst = 0;
+      dst[idx] = 0;
     }
     else
     {
-      *dst = (WlzUByte )(*src + 0.5);
+      dst[idx] = (WlzUByte )(src[idx] + 0.5);
     }
-    ++src;
-    ++dst;
   }
 }
 
@@ -780,22 +886,25 @@ void		WlzValueClampFloatIntoUByte(WlzUByte *dst, float *src,
 */
 void		WlzValueClampDoubleIntoInt(int *dst, double *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > INT_MAX)
+    if(src[idx] > INT_MAX)
     {
-      *dst = INT_MAX;
+      dst[idx] = INT_MAX;
     }
-    else if(*src < INT_MIN)
+    else if(src[idx] < INT_MIN)
     {
-      *dst = INT_MIN;
+      dst[idx] = INT_MIN;
     }
     else
     {
-      *dst = WLZ_NINT(*src);
+      dst[idx] = WLZ_NINT(src[idx]);
     }
-    ++src;
-    ++dst;
   }
 }
 
@@ -811,22 +920,25 @@ void		WlzValueClampDoubleIntoInt(int *dst, double *src, size_t count)
 void		WlzValueClampDoubleIntoShort(short *dst, double *src,
 					     size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > SHRT_MAX)
+    if(src[idx] > SHRT_MAX)
     {
-      *dst = SHRT_MAX;
+      dst[idx] = SHRT_MAX;
     }
-    else if(*src < SHRT_MIN)
+    else if(src[idx] < SHRT_MIN)
     {
-      *dst = SHRT_MIN;
+      dst[idx] = SHRT_MIN;
     }
     else
     {
-      *dst = (short )WLZ_NINT(*src);
+      dst[idx] = (short )WLZ_NINT(src[idx]);
     }
-    ++src;
-    ++dst;
   }
 }
 
@@ -842,22 +954,25 @@ void		WlzValueClampDoubleIntoShort(short *dst, double *src,
 void		WlzValueClampDoubleIntoUByte(WlzUByte *dst, double *src,
 					     size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > UCHAR_MAX)
+    if(src[idx] > UCHAR_MAX)
     {
-      *dst = UCHAR_MAX;
+      dst[idx] = UCHAR_MAX;
     }
-    else if(*src < 0.0)
+    else if(src[idx] < 0.0)
     {
-      *dst = 0;
+      dst[idx] = 0;
     }
     else
     {
-      *dst = (WlzUByte )(*src + 0.5);
+      dst[idx] = (WlzUByte )(src[idx] + 0.5);
     }
-    ++src;
-    ++dst;
   }
 }
 
@@ -873,22 +988,25 @@ void		WlzValueClampDoubleIntoUByte(WlzUByte *dst, double *src,
 void		WlzValueClampDoubleIntoFloat(float *dst, double *src,
 					     size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > FLT_MAX)
+    if(src[idx] > FLT_MAX)
     {
-      *dst = FLT_MAX;
+      dst[idx] = FLT_MAX;
     }
-    else if(*src < FLT_MIN)
+    else if(src[idx] < FLT_MIN)
     {
-      *dst = FLT_MIN;
+      dst[idx] = FLT_MIN;
     }
     else
     {
-      *dst = (float )*src;
+      dst[idx] = (float )src[idx];
     }
-    ++src;
-    ++dst;
   }
 }
 
@@ -903,24 +1021,28 @@ void		WlzValueClampDoubleIntoFloat(float *dst, double *src,
 */
 void		WlzValueClampIntIntoRGBA(WlzUInt *dst, int *src, size_t count)
 {
-  WlzUInt val;
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > 255)
+    WlzUInt val;
+
+    if(src[idx] > 255)
     {
       val = 255;
     }
-    else if(*src < 0)
+    else if(src[idx] < 0)
     {
       val = 0;
     }
     else
     {
-      val = (WlzUInt) *src;
+      val = (WlzUInt )src[idx];
     }
-    WLZ_RGBA_RGBA_SET(*dst, val, val, val, 255);
-    ++src;
-    ++dst;
+    WLZ_RGBA_RGBA_SET(dst[idx], val, val, val, 255);
   }
 }
 
@@ -936,24 +1058,28 @@ void		WlzValueClampIntIntoRGBA(WlzUInt *dst, int *src, size_t count)
 void		WlzValueClampShortIntoRGBA(WlzUInt *dst, short *src,
 					   size_t count)
 {
-  WlzUInt val;
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > 255)
+    WlzUInt val;
+
+    if(src[idx] > 255)
     {
       val = 255;
     }
-    else if(*src < 0)
+    else if(src[idx] < 0)
     {
       val = 0;
     }
     else
     {
-      val = (WlzUInt) *src;
+      val = (WlzUInt )src[idx];
     }
-    WLZ_RGBA_RGBA_SET(*dst, val, val, val, 255);
-    ++src;
-    ++dst;
+    WLZ_RGBA_RGBA_SET(dst[idx], val, val, val, 255);
   }
 }
 
@@ -969,24 +1095,28 @@ void		WlzValueClampShortIntoRGBA(WlzUInt *dst, short *src,
 void		WlzValueClampFloatIntoRGBA(WlzUInt *dst, float *src,
 					   size_t count)
 {
-  WlzUInt val;
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > 255)
+    WlzUInt val;
+
+    if(src[idx] > 255)
     {
       val = 255;
     }
-    else if(*src < 0)
+    else if(src[idx] < 0)
     {
       val = 0;
     }
     else
     {
-      val = (WlzUInt) *src;
+      val = (WlzUInt )src[idx];
     }
-    WLZ_RGBA_RGBA_SET(*dst, val, val, val, 255);
-    ++src;
-    ++dst;
+    WLZ_RGBA_RGBA_SET(dst[idx], val, val, val, 255);
   }
 }
 
@@ -1002,24 +1132,28 @@ void		WlzValueClampFloatIntoRGBA(WlzUInt *dst, float *src,
 void		WlzValueClampDoubleIntoRGBA(WlzUInt *dst, double *src,
 					    size_t count)
 {
-  WlzUInt val;
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    if(*src > 255)
+    WlzUInt val;
+
+    if(src[idx] > 255)
     {
       val = 255;
     }
-    else if(*src < 0)
+    else if(src[idx] < 0)
     {
       val = 0;
     }
     else
     {
-      val = (WlzUInt) *src;
+      val = (WlzUInt )src[idx];
     }
-    WLZ_RGBA_RGBA_SET(*dst, val, val, val, 255);
-    ++src;
-    ++dst;
+    WLZ_RGBA_RGBA_SET(dst[idx], val, val, val, 255);
   }
 }
 
@@ -1260,9 +1394,14 @@ void		WlzValueCopyIntToInt(int *dst, int *src, size_t count)
 */
 void		WlzValueCopyIntToShort(short *dst, int *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = (short )*src++;
+    dst[idx] = (short )src[idx];
   }
 }
 
@@ -1276,9 +1415,14 @@ void		WlzValueCopyIntToShort(short *dst, int *src, size_t count)
 */
 void		WlzValueCopyIntToUByte(WlzUByte *dst, int *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = (WlzUByte )*src++;
+    dst[idx] = (WlzUByte )src[idx];
   }
 }
 
@@ -1292,9 +1436,14 @@ void		WlzValueCopyIntToUByte(WlzUByte *dst, int *src, size_t count)
 */
 void		WlzValueCopyIntToFloat(float *dst, int *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = (float )*src++;
+    dst[idx] = (float )src[idx];
   }
 }
 
@@ -1308,9 +1457,14 @@ void		WlzValueCopyIntToFloat(float *dst, int *src, size_t count)
 */
 void		WlzValueCopyIntToDouble(double *dst, int *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = *src++;
+    dst[idx] = src[idx];
   }
 }
 
@@ -1337,9 +1491,14 @@ void		WlzValueCopyIntToRGBA(WlzUInt *dst, int *src, size_t count)
 */
 void		WlzValueCopyShortToInt(int *dst, short *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = *src++;
+    dst[idx] = src[idx];
   }
 }
 
@@ -1367,9 +1526,14 @@ void		WlzValueCopyShortToShort(short *dst, short *src, size_t count)
 void		WlzValueCopyShortToUByte(WlzUByte *dst, short *src,
 				         size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = (WlzUByte )*src++;
+    dst[idx] = (WlzUByte )src[idx];
   }
 }
 
@@ -1383,9 +1547,14 @@ void		WlzValueCopyShortToUByte(WlzUByte *dst, short *src,
 */
 void		WlzValueCopyShortToFloat(float *dst, short *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = *src++;
+    dst[idx] = src[idx];
   }
 }
 
@@ -1400,9 +1569,14 @@ void		WlzValueCopyShortToFloat(float *dst, short *src, size_t count)
 void		WlzValueCopyShortToDouble(double *dst, short *src,
 					        size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = *src++;
+    dst[idx] = src[idx];
   }
 }
 
@@ -1416,9 +1590,14 @@ void		WlzValueCopyShortToDouble(double *dst, short *src,
 */
 void		WlzValueCopyUByteToInt(int *dst, WlzUByte *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = *src++;
+    dst[idx] = src[idx];
   }
 }
 
@@ -1446,9 +1625,14 @@ void		WlzValueCopyShortToRGBA(WlzUInt *dst, short *src, size_t count)
 void		WlzValueCopyUByteToShort(short *dst, WlzUByte *src,
 					 size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = *src++;
+    dst[idx] = src[idx];
   }
 }
 
@@ -1477,9 +1661,14 @@ void		WlzValueCopyUByteToUByte(WlzUByte *dst, WlzUByte *src,
 void		WlzValueCopyUByteToFloat(float *dst, WlzUByte *src,
 					 size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = *src++;
+    dst[idx] = src[idx];
   }
 }
 
@@ -1494,9 +1683,14 @@ void		WlzValueCopyUByteToFloat(float *dst, WlzUByte *src,
 void		WlzValueCopyUByteToDouble(double *dst, WlzUByte *src,
 					  size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = *src++;
+    dst[idx] = src[idx];
   }
 }
 
@@ -1511,11 +1705,14 @@ void		WlzValueCopyUByteToDouble(double *dst, WlzUByte *src,
 void		WlzValueCopyUByteToRGBA(WlzUInt *dst, WlzUByte *src,
 				        size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    WLZ_RGBA_RGBA_SET(*dst, *src, *src, *src, 255);
-    dst++;
-    src++;
+    WLZ_RGBA_RGBA_SET(dst[idx], src[idx], src[idx], src[idx], 255);
   }
 }
 
@@ -1529,10 +1726,14 @@ void		WlzValueCopyUByteToRGBA(WlzUInt *dst, WlzUByte *src,
 */
 void		WlzValueCopyFloatToInt(int *dst, float *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = WLZ_NINT(*src);
-    ++src;
+    dst[idx] = WLZ_NINT(src[idx]);
   }
 }
 
@@ -1546,10 +1747,14 @@ void		WlzValueCopyFloatToInt(int *dst, float *src, size_t count)
 */
 void		WlzValueCopyFloatToShort(short *dst, float *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = (short )WLZ_NINT(*src);
-    ++src;
+    dst[idx] = (short )WLZ_NINT(src[idx]);
   }
 }
 
@@ -1564,10 +1769,14 @@ void		WlzValueCopyFloatToShort(short *dst, float *src, size_t count)
 void		WlzValueCopyFloatToUByte(WlzUByte *dst, float *src,
 				         size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = (WlzUByte )WLZ_NINT(*src);
-    ++src;
+    dst[idx] = (WlzUByte )WLZ_NINT(src[idx]);
   }
 }
 
@@ -1595,9 +1804,14 @@ void		WlzValueCopyFloatToFloat(float *dst, float *src, size_t count)
 void		WlzValueCopyFloatToDouble(double *dst, float *src,
 				          size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = *src++;
+    dst[idx] = src[idx];
   }
 }
 
@@ -1624,10 +1838,14 @@ void		WlzValueCopyFloatToRGBA(WlzUInt *dst, float *src, size_t count)
 */
 void		WlzValueCopyDoubleToInt(int *dst, double *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = WLZ_NINT(*src);
-    ++src;
+    dst[idx] = WLZ_NINT(src[idx]);
   }
 }
 
@@ -1641,10 +1859,14 @@ void		WlzValueCopyDoubleToInt(int *dst, double *src, size_t count)
 */
 void		WlzValueCopyDoubleToShort(short *dst, double *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = (short )WLZ_NINT(*src);
-    ++src;
+    dst[idx] = (short )WLZ_NINT(src[idx]);
   }
 }
 
@@ -1659,10 +1881,14 @@ void		WlzValueCopyDoubleToShort(short *dst, double *src, size_t count)
 void		WlzValueCopyDoubleToUByte(WlzUByte *dst, double *src,
 					  size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = (WlzUByte )WLZ_NINT(*src);
-    ++src;
+    dst[idx] = (WlzUByte )WLZ_NINT(src[idx]);
   }
 }
 
@@ -1677,9 +1903,14 @@ void		WlzValueCopyDoubleToUByte(WlzUByte *dst, double *src,
 void		WlzValueCopyDoubleToFloat(float *dst, double *src,
 					  size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = (float )*src++;
+    dst[idx] = (float )src[idx];
   }
 }
 
@@ -1721,10 +1952,14 @@ void		WlzValueCopyDoubleToRGBA(WlzUInt *dst, double *src,
 */
 void		WlzValueCopyRGBAToInt(int *dst, WlzUInt *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = (int )WLZ_RGBA_MODULUS(*src);
-    ++src;
+    dst[idx] = (int )WLZ_RGBA_MODULUS(src[idx]);
   }
 }
 
@@ -1738,10 +1973,14 @@ void		WlzValueCopyRGBAToInt(int *dst, WlzUInt *src, size_t count)
 */
 void		WlzValueCopyRGBAToShort(short *dst, WlzUInt *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = (short )WLZ_RGBA_MODULUS(*src);
-    ++src;
+    dst[idx] = (short )WLZ_RGBA_MODULUS(src[idx]);
   }
 }
 
@@ -1756,13 +1995,17 @@ void		WlzValueCopyRGBAToShort(short *dst, WlzUInt *src, size_t count)
 void		WlzValueCopyRGBAToUByte(WlzUByte *dst, WlzUInt *src,
 				        size_t count)
 {
-  int	ival;
+  int idx;
 
-  while(count-- > 0)
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    ival = (int )WLZ_RGBA_MODULUS(*src);
-    *dst++ = (WlzUByte )WLZ_CLAMP(ival, 0, 255);
-    ++src;
+    int	ival;
+
+    ival = (int )WLZ_RGBA_MODULUS(src[idx]);
+    dst[idx] = (WlzUByte )WLZ_CLAMP(ival, 0, 255);
   }
 }
 
@@ -1776,10 +2019,14 @@ void		WlzValueCopyRGBAToUByte(WlzUByte *dst, WlzUInt *src,
 */
 void		WlzValueCopyRGBAToFloat(float *dst, WlzUInt *src, size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = (float )WLZ_RGBA_MODULUS(*src);
-    ++src;
+    dst[idx] = (float )WLZ_RGBA_MODULUS(src[idx]);
   }
 }
 
@@ -1794,10 +2041,14 @@ void		WlzValueCopyRGBAToFloat(float *dst, WlzUInt *src, size_t count)
 void		WlzValueCopyRGBAToDouble(double *dst, WlzUInt *src,
 					 size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    *dst++ = WLZ_RGBA_MODULUS(*src);
-    ++src;
+    dst[idx] = WLZ_RGBA_MODULUS(src[idx]);
   }
 }
 
@@ -1812,10 +2063,7 @@ void		WlzValueCopyRGBAToDouble(double *dst, WlzUInt *src,
 void		WlzValueCopyRGBAToRGBA(WlzUInt *dst, WlzUInt *src,
 				       size_t count)
 {
-  while(count-- > 0)
-  {
-    *dst++ = *src++;
-  }
+  (void )memcpy(dst, src, count * sizeof(WlzUInt));
 }
 
 /*!
@@ -2059,12 +2307,15 @@ void		WlzValueCopyDVertexToFVertex(WlzFVertex2 *dst,
 					     WlzDVertex2 *src,
 					     size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    dst->vtX = (float )(src->vtX);
-    dst->vtY = (float )(src->vtY);
-    ++dst;
-    ++src;
+    dst[idx].vtX = (float )(src[idx].vtX);
+    dst[idx].vtY = (float )(src[idx].vtY);
   }
 }
 
@@ -2081,12 +2332,15 @@ void		WlzValueCopyDVertexToIVertex(WlzIVertex2 *dst,
 					     WlzDVertex2 *src,
 					     size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    dst->vtX = WLZ_NINT(src->vtX);
-    dst->vtY = WLZ_NINT(src->vtY);
-    ++dst;
-    ++src;
+    dst[idx].vtX = WLZ_NINT(src[idx].vtX);
+    dst[idx].vtY = WLZ_NINT(src[idx].vtY);
   }
 }
 
@@ -2103,12 +2357,15 @@ void		WlzValueCopyFVertexToDVertex(WlzDVertex2 *dst,
 					     WlzFVertex2 *src,
 					     size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    dst->vtX = src->vtX;
-    dst->vtY = src->vtY;
-    ++dst;
-    ++src;
+    dst[idx].vtX = src[idx].vtX;
+    dst[idx].vtY = src[idx].vtY;
   }
 }
 
@@ -2141,12 +2398,15 @@ void		WlzValueCopyFVertexToIVertex(WlzIVertex2 *dst,
 					     WlzFVertex2 *src,
 					     size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    dst->vtX = WLZ_NINT(src->vtX);
-    dst->vtY = WLZ_NINT(src->vtY);
-    ++dst;
-    ++src;
+    dst[idx].vtX = WLZ_NINT(src[idx].vtX);
+    dst[idx].vtY = WLZ_NINT(src[idx].vtY);
   }
 }
 
@@ -2163,12 +2423,15 @@ void		WlzValueCopyIVertexToDVertex(WlzDVertex2 *dst,
 					     WlzIVertex2 *src,
 					     size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    dst->vtX = src->vtX;
-    dst->vtY = src->vtY;
-    ++dst;
-    ++src;
+    dst[idx].vtX = src[idx].vtX;
+    dst[idx].vtY = src[idx].vtY;
   }
 }
 
@@ -2185,12 +2448,15 @@ void		WlzValueCopyIVertexToFVertex(WlzFVertex2 *dst,
 					     WlzIVertex2 *src,
 					     size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    dst->vtX = (float )(src->vtX);
-    dst->vtY = (float )(src->vtY);
-    ++dst;
-    ++src;
+    dst[idx].vtX = (float )(src[idx].vtX);
+    dst[idx].vtY = (float )(src[idx].vtY);
   }
 }
 
@@ -2239,13 +2505,16 @@ void		WlzValueCopyDVertexToFVertex3(WlzFVertex3 *dst,
 					      WlzDVertex3 *src,
 					      size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    dst->vtX = (float )(src->vtX);
-    dst->vtY = (float )(src->vtY);
-    dst->vtZ = (float )(src->vtZ);
-    ++dst;
-    ++src;
+    dst[idx].vtX = (float )(src[idx].vtX);
+    dst[idx].vtY = (float )(src[idx].vtY);
+    dst[idx].vtZ = (float )(src[idx].vtZ);
   }
 }
 
@@ -2262,13 +2531,16 @@ void		WlzValueCopyDVertexToIVertex3(WlzIVertex3 *dst,
 					      WlzDVertex3 *src,
 					      size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    dst->vtX = WLZ_NINT(src->vtX);
-    dst->vtY = WLZ_NINT(src->vtY);
-    dst->vtZ = WLZ_NINT(src->vtZ);
-    ++dst;
-    ++src;
+    dst[idx].vtX = WLZ_NINT(src[idx].vtX);
+    dst[idx].vtY = WLZ_NINT(src[idx].vtY);
+    dst[idx].vtZ = WLZ_NINT(src[idx].vtZ);
   }
 }
 
@@ -2285,13 +2557,16 @@ void		WlzValueCopyFVertexToDVertex3(WlzDVertex3 *dst,
 					      WlzFVertex3 *src,
 					      size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    dst->vtX = src->vtX;
-    dst->vtY = src->vtY;
-    dst->vtZ = src->vtZ;
-    ++dst;
-    ++src;
+    dst[idx].vtX = src[idx].vtX;
+    dst[idx].vtY = src[idx].vtY;
+    dst[idx].vtZ = src[idx].vtZ;
   }
 }
 
@@ -2324,13 +2599,16 @@ void		WlzValueCopyFVertexToIVertex3(WlzIVertex3 *dst,
 					      WlzFVertex3 *src,
 					      size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    dst->vtX = WLZ_NINT(src->vtX);
-    dst->vtY = WLZ_NINT(src->vtY);
-    dst->vtZ = WLZ_NINT(src->vtZ);
-    ++dst;
-    ++src;
+    dst[idx].vtX = WLZ_NINT(src[idx].vtX);
+    dst[idx].vtY = WLZ_NINT(src[idx].vtY);
+    dst[idx].vtZ = WLZ_NINT(src[idx].vtZ);
   }
 }
 
@@ -2347,13 +2625,16 @@ void		WlzValueCopyIVertexToDVertex3(WlzDVertex3 *dst,
 					      WlzIVertex3 *src,
 					      size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    dst->vtX = src->vtX;
-    dst->vtY = src->vtY;
-    dst->vtZ = src->vtZ;
-    ++dst;
-    ++src;
+    dst[idx].vtX = src[idx].vtX;
+    dst[idx].vtY = src[idx].vtY;
+    dst[idx].vtZ = src[idx].vtZ;
   }
 }
 
@@ -2370,13 +2651,16 @@ void		WlzValueCopyIVertexToFVertex3(WlzFVertex3 *dst,
 					      WlzIVertex3 *src,
 					      size_t count)
 {
-  while(count-- > 0)
+  int idx;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+  for(idx = 0; idx < count; ++idx)
   {
-    dst->vtX = (float )(src->vtX);
-    dst->vtY = (float )(src->vtY);
-    dst->vtZ = (float )(src->vtZ);
-    ++dst;
-    ++src;
+    dst[idx].vtX = (float )(src[idx].vtX);
+    dst[idx].vtY = (float )(src[idx].vtY);
+    dst[idx].vtZ = (float )(src[idx].vtZ);
   }
 }
 
