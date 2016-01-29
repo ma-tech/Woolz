@@ -44,6 +44,10 @@ static char _Wlz3DSubSection_c[] = "University of Edinburgh $Id$";
 
 #include <Wlz.h>
 
+#ifndef WLZ_FAST_CODE
+#define WLZ_FAST_CODE
+#endif
+
 static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
   WlzObject		*obj,
   WlzObject		*subDomain,
@@ -227,7 +231,8 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
   if(errNum == WLZ_ERR_NONE)
   {
     if((dstVal.v = WlzNewValueTb(dstObj,
-                                 WlzGreyTableType(WLZ_GREY_TAB_RECT, gType, NULL),
+                                 WlzGreyTableType(WLZ_GREY_TAB_RECT,
+				                  gType, NULL),
 				 bgd, &errNum)))
     {
       dstObj->values = WlzAssignValues(dstVal, &errNum);
@@ -239,10 +244,23 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
     int		ln;
     size_t	width;
     WlzGreyP	dstGP;
+    WlzIVertex3	ntw;
 
     dstGP = dstObj->values.r->values;
     width = subBox.xMax - subBox.xMin + 1;
-
+/*
+ * Throughout this function WLZ_FAST_CODE assumes that the tiles are
+ * 16 x 16 x 16 voxels.
+ */
+#ifdef WLZ_FAST_CODE
+    ntw.vtX = tv->nIdx[0] << 4;
+    ntw.vtY = tv->nIdx[1] << 4;
+    ntw.vtZ = tv->nIdx[2] << 4;
+#else
+    ntw.vtX = tv->nIdx[0] * tv->tileWidth;
+    ntw.vtY = tv->nIdx[1] * tv->tileWidth;
+    ntw.vtZ = tv->nIdx[2] * tv->tileWidth;
+#endif
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static, 256)
 #endif
@@ -287,7 +305,6 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
       for(kl = subBox.xMin; kl <= subBox.xMax; ++kl)
       {
 	int   		x,
-			iz,
 			pz,
 			klRel;
 	double	        tz;
@@ -296,29 +313,54 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
 	x = kl - WLZ_NINT(view->minvals.vtX);
 	tz = view->xp_to_z[x] + vty.vtZ;
 	pz = WLZ_NINT(tz) - tv->plane1;
-	iz = pz / tv->tileWidth;
-	if((pz >= 0) && (iz < tv->nIdx[2]))
+#ifdef WLZ_FAST_CODE
+	if((unsigned int)(pz) < (unsigned int)(ntw.vtZ))
+#else
+	if((pz >= 0) && (pz < ntw.vtZ))
+#endif
 	{
-	  int		iy,
+	  int		iz,
 	                py;
 	  double	ty;
 
+#ifdef WLZ_FAST_CODE
+          iz = pz >> 4;
+#else
+	  iz = pz / tv->tileWidth;
+#endif
 	  ty = view->xp_to_y[x] + vty.vtY;
 	  py = WLZ_NINT(ty) - tv->line1;
-	  iy = py / tv->tileWidth;
-	  if((py >= 0) && (iy < tv->nIdx[1]))
+#ifdef WLZ_FAST_CODE
+	  if((unsigned int)(py) < (unsigned int)(ntw.vtY))
+#else
+	  if((py >= 0) && (py < ntw.vtY))
+#endif
 	  {
-	    int 	ix,
+	    int 	iy,
 	                px;
 	    double	tx;
 
+#ifdef WLZ_FAST_CODE
+	    iy = py >> 4;
+#else
+	    iy = py / tv->tileWidth;
+#endif
 	    tx = view->xp_to_x[x] + vty.vtX;
 	    px = WLZ_NINT(tx) - tv->kol1;
-	    ix = px / tv->tileWidth;
-	    if((px >= 0) && (ix  < tv->nIdx[0]))
+#ifdef WLZ_FAST_CODE
+	  if((unsigned int)(px) < (unsigned int)(ntw.vtX))
+#else
+	    if((px >= 0) && (px < ntw.vtX))
+#endif
 	    {
-	      size_t	idx;
+	      size_t	ix,
+	      		idx;
 
+#ifdef WLZ_FAST_CODE
+              ix = px >> 4;
+#else
+	      ix = px / tv->tileWidth;
+#endif
 	      idx = ((iz * tv->nIdx[1] + iy) * tv->nIdx[0]) + ix;
 	      idx = *(tv->indices + idx);
 #ifdef WLZ_FAST_CODE
@@ -328,6 +370,11 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
 #endif
 	      {
 		size_t   off;
+
+#ifdef WLZ_FAST_CODE
+		off = (idx  << 12) +
+		      ((((pz & 15) << 4) + (py & 15)) << 4) + (px & 15);
+#else
 		WlzIVertex3 tOff;
 
 		tOff.vtX = px % tv->tileWidth;
@@ -336,6 +383,7 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
 		off = (idx * tv->tileSz) +
 		      ((tOff.vtZ * tv->tileWidth + tOff.vtY) *
 		       tv->tileWidth) + tOff.vtX;
+#endif
 		switch(gType)
 		{
 	          case WLZ_GREY_INT:
