@@ -272,6 +272,7 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
       WlzDVertex3 vty;
       WlzGreyP	  lnGP;
 
+      lnRel = ln - subBox.yMin;
       switch(gType)
       {
 	case WLZ_GREY_INT:
@@ -295,13 +296,11 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
 	default:
 	  break;
       }
-      lnRel = ln - subBox.yMin;
-      lnGP.ubp = dstGP.ubp + (width * lnRel);
       y = ln - WLZ_NINT(view->minvals.vtY);
       vty.vtX = view->yp_to_x[y];
       vty.vtY = view->yp_to_y[y];
       vty.vtZ = view->yp_to_z[y];
-      WlzValueSetGrey(lnGP, 0, bgd.v, WLZ_GREY_UBYTE, width);
+      WlzValueSetGrey(lnGP, 0, bgd.v, gType, width);
       for(kl = subBox.xMin; kl <= subBox.xMax; ++kl)
       {
 	int   		x,
