@@ -143,9 +143,9 @@ The output domain is then written to the file "out.wlz".
 \ref WlzConComThreholdObj.c "WlzConComThreholdObj.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref WlzConComThreshold(3) "WlzConComThreshold(3)"
-\ref WlzLabel(3) "WlzLabel(3)"
-\ref WlzThreshold(3) "WlzThreshold(3)"
+\ref WlzConComThreshold "WlzConComThreshold(3)"
+\ref WlzLabel "WlzLabel(3)"
+\ref WlzThreshold "WlzThreshold(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

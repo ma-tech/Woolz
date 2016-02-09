@@ -81,7 +81,7 @@ given Woolz file.
 \ref WlzVTKTensor.c "WlzVTKTensor.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref WlzCMeshTrStrainTensor "WlzCMeshTrStrainTensor(1)"
+\ref wlzcmeshtrstraintensor "WlzCMeshTrStrainTensor(1)"
 */
 
 #ifndef  DOXYGEN_SHOULD_SKIP_THIS

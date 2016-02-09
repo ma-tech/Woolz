@@ -4,7 +4,7 @@
 static char _WlzInteriority_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzInteriority.c
+* \file         binWlz/WlzInteriority.c
 * \author       Bill Hill
 * \date         January 2015
 * \version      $Id$

@@ -39,9 +39,17 @@ static char _WlzDisplacementToVtk_c[] = "University of Edinburgh $Id$";
 * \brief	Computes VTK visualisation of displacements.
 *
 * \par Binary
-* ref wlzdisplacementtovtk "WlzDisplacementToVtk"
+* \ref wlzdisplacementtovtk "WlzDisplacementToVtk"
 */
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzdisplacementtovtk WlzDisplacementToVtk
+\par Name
+WlzDisplacementToVtk
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <Wlz.h>
@@ -305,4 +313,4 @@ static WlzErrorNum WlzDisplacementsToVtk(FILE *outFile,
 
   return errNum;
 } 
-
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

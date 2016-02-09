@@ -40,9 +40,17 @@ static char _WlzFixedPlaneAlign_c[] = "University of Edinburgh $Id$";
 * \ingroup	BinWlzApp
 
 * \par Binary
-* ref wlzfixedplanealign "WlzFixedPlaneAlign"
+* \ref wlzfixedplanealign "WlzFixedPlaneAlign"
 */
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzfixedplanealign WlzFixedPlaneAlign
+\par Name
+WlzFixedPlaneAlign
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -560,3 +568,4 @@ int main(int	argc,
 
   return 0;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

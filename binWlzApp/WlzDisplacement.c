@@ -39,9 +39,17 @@ static char _WlzDisplacement_c[] = "University of Edinburgh $Id$";
 * \brief 	Computes displacement object.
 *
 * \par Binary
-* ref wlzdisplacement "WlzDisplacement"
+* \ref wlzdisplacement "WlzDisplacement"
 */
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzdisplacement WlzDisplacement
+\par Name
+WlzDisplacement
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -570,3 +578,4 @@ static WlzCompoundArray *WlzBasisFnTransformObjPrv(WlzObject *inObj,
   }
   return(cArray);
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

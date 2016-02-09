@@ -1538,7 +1538,7 @@ const char	*WlzStringFromValueAttachType(WlzValueAttach at,
 * \ingroup      WlzStrings
 * \brief	Finds an enumerated type for the given values attachment
 * 		type string.
-* \param	iStr			Given values attachment type string.
+* \param	aStr			Given values attachment type string.
 * \param	dstErr			Destination error pointer, may
 *                                       be null.
 */

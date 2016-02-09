@@ -89,7 +89,7 @@ WlzCopyToTiledObj.
 \ref WlzCopyToTiledObj.c "WlzCopyToTiledObj.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref WlzTiledObjFromDomain "WlzTiledObjFromDomain(1)"
+\ref wlztiledobjfromdomain "WlzTiledObjFromDomain(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

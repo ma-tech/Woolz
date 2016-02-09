@@ -40,12 +40,12 @@ static char _WlzSplitImage_c[] = "University of Edinburgh $Id$";
 * \ingroup	BinWlzApp
 *
 * \par Binary
-* \ref wlzSplitImage "WlzSplitImage"
+* \ref wlzsplitimage "WlzSplitImage"
 */
 
 /*!
 \ingroup BinWlzApp
-\defgroup wlzSplitImage WlzSplitImage
+\defgroup wlzsplitimage WlzSplitImage
 \par Name
 WlzSplitImage - splits an object that is composed of several components
                 seperated by background into seperate objects.
@@ -107,9 +107,9 @@ origins of their bounding boxes increase.
 \ref WlzSplitImage.c "WlzSplitImage.c"
 \par See Also
 \ref BinWlzApp "WlzIntro(1)"
-\ref WlzLabel "WlzLabel(1)"
-\ref WlzThreshold "WlzThreshold(1)"
-\ref WlzSplitMontage "WlzSplitMontage(1)"
+\ref wlzlabel "WlzLabel(1)"
+\ref wlzthreshold "WlzThreshold(1)"
+\ref wlzsplitmontage "WlzSplitMontage(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

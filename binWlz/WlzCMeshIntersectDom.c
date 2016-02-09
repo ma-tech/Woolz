@@ -104,9 +104,10 @@ The 2D domain object is then writen to the file out.wlz.
 \ref WlzCMeshIntersectDom.c "WlzCMeshIntersectDom.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref WlzCMeshIntersectDom "WlzCMeshIntersectDom(3)"
-\ref WlzCMeshFromContour "WlzCMeshFromContour(1)"
-\ref WlzCMeshSurfaceMap "WlzCMeshSurfaceMap(1)"
+\ref WlzCMeshIntersect "WlzCMeshIntersect(3)"
+\ref WlzCMeshIntersectDom2D5 "WlzCMeshIntersectDom2D5(3)"
+\ref wlzcmeshfromcontour "WlzCMeshFromContour(1)"
+\ref wlzcmeshsurfacemap "WlzCMeshSurfaceMap(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

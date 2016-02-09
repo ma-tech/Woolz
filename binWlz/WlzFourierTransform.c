@@ -80,7 +80,7 @@ a pipe computes the inverse transform writing the output to out.wlz.
 \ref WlzFourierTransform.c "WlzFourierTransform.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref wlzfouriertransformobj "WlzFourierTransformObj(3)"
+\ref WlzFourierTransformObj "WlzFourierTransformObj(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

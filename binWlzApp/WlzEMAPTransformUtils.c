@@ -39,9 +39,15 @@ static char _WlzEMAPTransformUtils_c[] = "University of Edinburgh $Id$";
 * \brief        Utilities to transform between standard EMAP models.
 *
 * \par Binary
-* ref wlzemaptransformutils "WlzEMAPTransformUtils"
+* \ref wlzemaptransformutils "WlzEMAPTransformUtils"
 */
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzemaptransformutils WlzEMAPTransformUtils
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -556,3 +562,4 @@ WlzObject *WlzEMAPDomainTransform(
   }
   return rtnObj;
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

@@ -109,8 +109,8 @@ out.wlz.
 \par See Also
 \ref BinWlz "WlzIntro(1)"
 \ref WlzCMeshCurvToImage "WlzCMeshCurvToImage(3)"
-\ref WlzCMeshFromContour "WlzCMeshFromContour(1)"
-\ref WlzCMeshSurfaceMap "WlzCMeshSurfaceMap(1)"
+\ref wlzcmeshfromcontour "WlzCMeshFromContour(1)"
+\ref wlzcmeshsurfacemap "WlzCMeshSurfaceMap(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

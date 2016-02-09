@@ -40,7 +40,7 @@ static char _WlzRadialDistribution_c[] = "University of Edinburgh $Id$";
 * \ingroup	BinWlzApp
 *
 * \par Binary
-* \ref WlzRadialDistribution "WlzRadialDistribution"
+* \ref wlzradialdistribution "WlzRadialDistribution"
 */
 
 /*!
@@ -67,47 +67,47 @@ WlzRadialDistribution [-h] [-v] [-A] [-D] [-G] [-H] [-E] [-L] [-R]
     <td>Be verbose output.</td>
   </tr>
   <tr>
-    <td><b>-A</td>
+    <td><b>-A</b></td>
     <td>Sort output by area (default).</td>
   </tr>
   <tr>
-    <td><b>-D</td>
+    <td><b>-D</b></td>
     <td>Sort output by distance from boundary.</td>
   </tr>
   <tr>
-    <td><b>-G</td>
+    <td><b>-G</b></td>
     <td>Sort output by angle.</td>
   </tr>
   <tr>
-    <td><b>-R</td>
+    <td><b>-R</b></td>
     <td>Sort output by radial distance from centre.</td>
   </tr>
   <tr>
-    <td><b>-H</td>
+    <td><b>-H</b></td>
     <td>Threshold high, use pixels at or above threshold (default).</td>
   </tr>
   <tr>
-    <td><b>-E</td>
+    <td><b>-E</b></td>
     <td>Threshold equal, use pixels at threshold.</td>
   </tr>
   <tr>
-    <td><b>-L</td>
+    <td><b>-L</b></td>
     <td>Threshold low, use pixels below threshold.</td>
   </tr>
   <tr>
-    <td><b>-c</td>
+    <td><b>-c</b></td>
     <td>Centre (default is image centre).</td>
   </tr>
   <tr>
-    <td><b>-d</td>
+    <td><b>-d</b></td>
     <td>Debug image.</td>
   </tr>
   <tr>
-    <td><b>-n</td>
+    <td><b>-n</b></td>
     <td>Minimum area (default %g).</td>
     </tr>
   <tr>
-    <td><b>-t</td>
+    <td><b>-t</b></td>
     <td>Threshold value (default is to compute using Otsu's method).</td>
   </tr>
 </table>
@@ -139,9 +139,9 @@ with radius proportional to the square root of the component area:
 \ref WlzRadialDistribution.c "WlzRadialDistribution.c"
 \par See Also
 \ref BinWlzApp "WlzIntro(1)"
-\ref WlzLabel "WlzLabel(1)"
-\ref WlzThreshold "WlzThreshold(1)"
-\ref WlzExtFFConvert "WlzExtFFConvert(1)"
+\ref wlzlabel "WlzLabel(1)"
+\ref wlzthreshold "wlzThreshold(1)"
+\ref wlzextffconvert "WlzExtFFConvert(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

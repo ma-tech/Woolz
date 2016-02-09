@@ -61,7 +61,7 @@ WlzExtFFAffineTrFitBox [-h] [-T] [-o<output file>]
 \par Options
 <table width="500" border="0">
   <tr>
-  <td><b>-h</b></md>
+  <td><b>-h</b></td>
     <td>Prints usage information.</td>
   </tr>
   <tr>
@@ -102,7 +102,7 @@ is written to the file out.wlz.
 WlzExtFFAffineTrFitBox.c "WlzExtFFAffineTrFitBox.c"
 \par See Also
 \ref BinWlzExtFF "WlzIntro(1)"
-\ref WlzExtFFConvert "WlzExtFFConvert(1)"
+\ref wlzextffconvert "WlzExtFFConvert(1)"
 \ref WlzAffineTransformLSq "WlzAffineTransformLSq"
 */
 

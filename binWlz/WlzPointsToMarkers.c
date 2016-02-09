@@ -45,7 +45,7 @@ static char _WlzPointsToMarkers_c[] = "University of Edinburgh $Id$";
 
 /*!
 \ingroup BinWlz
-\defgroup wlzmarkerstodomain WlzPointsToMarkers
+\defgroup wlzpointstomarkers  WlzPointsToMarkers
 \par Name
 WlzPointsToMarkers - creates a domain with a marker located at the position
 		     of the vertex of each point in a points object.
@@ -88,7 +88,7 @@ the points in the points object read from the file in.wlz.
 \ref WlzPointsToMarkers.c "WlzPointsToMarkers.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref WlzPointsFromDomain "WlzPointsFromDomain(1)"
+\ref wlzpointsfromdomain "WlzPointsFromDomain(1)"
 \ref WlzPointsToMarkers  "WlzPointsToMarkers(3)"
 */
 

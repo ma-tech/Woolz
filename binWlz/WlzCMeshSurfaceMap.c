@@ -122,7 +122,84 @@ displacements. The output mesh is written to the file out.wlz
 \ref WlzCMeshSurfaceMap.c "WlzCMeshSurfaceMap.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref WlzCMeshFromContour "WlzCMeshFromContour(3)"
+\ref WlzCMeshFromGM "WlzCMeshFromGM(3)"
+*/
+
+/*!
+\ingroup BinWlz
+\defgroup wlzcmeshsurfacemap WlzCMeshSurfaceMap
+\par Name
+WlzCMeshSurfaceMap - Computes a conforming mesh transform for surface
+                     using least squares best conformal mapping.
+\par Synopsis
+\verbatim    
+WlzCMeshSurfaceMap [-2] [-h] [-i#] [-n #] [-d<domain object>]
+                   [-o<output object>] [-p<points file>] [-r#]
+                   [<input object>]
+\endverbatim
+\par Options
+<table width="500" border="0">
+  <tr>
+    <td><b>-2</b></td>
+    <td>Output a 2D mesh rather than a 3D mesh with displacements.</td>
+  </tr><tr>
+  <td><b>-d</b></td>
+  <td>Optional 2D spatial domain object.</td>
+  </tr><tr>
+  <td><b>-h</b></td>
+  <td>Help, prints usage message.</td>
+  </tr><tr>
+  <td><b>-i</b></td>
+  <td>Maximum number of iterations, 0 implies one iteration and
+      mapping will preserve angles (unimplimented).</td>
+  </tr><tr>
+  <td><b>-n</b></td>
+  <td>Weight for preserving angles, range 0.0 - 1.0 (unimplimented).</td>
+  </tr><tr>
+  <td><b>-p</b></td>
+  <td>Displacements file.</td>
+  </tr><tr>
+  <td><b>-o</b></td>
+  <td>Output object file.</td>
+  </tr><tr>
+  <td><b>-r</b></td>
+  <td>Weight for preserving areas, range 0.0 - 1.0 (unimplimented).</td>
+</table>
+\par Description
+Computes a conforming mesh transform which maps the surface defined by
+the 2D5 conforming mesh onto another surface defined by the mesh with
+displacements. The given displacements are used to compute the least
+squares best conformal (minimum angular distortion) mapping.
+If a 2D spatial domain object is supplied, then it must be a single
+piece, it's boundary must correspond to that of the input mesh and
+the given displacements must lie on (or be very near to) the spatial
+domain and mesh boundaries.
+It is possible that an invalid mesh will be generated when the
+surface is too heavily constrained.
+All files are read from the standard input and written to the standard
+output unless filenames are given.
+The displacements must be specified as a list of lines with each line
+having six double precision numbers that are white space separated.
+In each of these lines the values must have the format:
+\verbatim
+  Sx Sy Sz Dx Dy Dz
+\endverbatim
+where S and D signify source and displacement.
+\par Examples
+\verbatim
+WlzCMeshSurfaceMap -o out.wlz -p points.tie in.wlz
+\endverbatim
+The displacements in the file points.tie are used to compute a least
+squares conformal mapping which is output as a mesh with the same
+domain as the input (read from in.wlz), but with the computed
+displacements. The output mesh is written to the file out.wlz
+\par File
+\ref WlzCMeshSurfaceMap.c "WlzCMeshSurfaceMap.c"
+\par See Also
+\ref BinWlz "WlzIntro(1)"
+\ref WlzCMeshCompSurfMapToDomain WlzCMeshCompSurfMapToDomain(3)
+\ref WlzCMeshCompSurfMap WlzCMeshCompSurfMap(3)
+\ref WlzCMeshExtract2D WlzCMeshExtract2D(3)
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -400,6 +477,8 @@ int             main(int argc, char **argv)
     "  -p  Displacements file.\n"
     "  -o  Output object file.\n"
     "  -r  Weight for preserving areas, range 0.0 - 1.0 (unimplimented).\n"
+    "Computes a conforming mesh transform for surface using least squares\n"
+    "best conformal mapping.\n"
     "Computes a conforming mesh transform which maps the surface defined by\n"
     "the 2D5 conforming mesh onto another surface defined by the mesh with\n"
     "displacements. The given displacements are used to compute the least\n"

@@ -90,8 +90,7 @@ the maximum index  value are set to the min and max values respectively.
 \ref wlzfacts "WlzFacts(1)"
 \ref WlzLUTGreyTransformNew "WlzLUTGreyTransformNew(3)"
 \ref WlzLUTMergeToRGBA "WlzLUTMergeToRGBA(3)"
-\ref WlzLUTTransformObj "WlzLUTTransformObj(1)"
-\ref WlzLUTGreyTransformMerge "WlzLUTTransformMerge(1)"
+\ref wlzlutgreytransformmerge "WlzLUTTransformMerge(1)"
 \ref WlzMakeEmpty "WlzMakeEmpty(1)"
 */
 

@@ -115,7 +115,7 @@ byte range and with 0 to the value 128.
 \ref BinWlz "WlzIntro(1)"
 \ref WlzAssignObject "WlzAssignObject(WlzCMeshExpansion(3)"
 \ref WlzCMeshValuesNormalise "WlzCMeshValuesNormalise(3)"
-\ref WlzSetMeshInverse "WlzCMeshToDomObj(3)"
+\ref WlzCMeshToDomObj "WlzCMeshToDomObj(3)"
 \ref WlzCMeshToDomObjValues "WlzCMeshToDomObjValues(3)"
 */
 

@@ -93,7 +93,7 @@ the tiles are set in this example using WlzCopyToTiledObj.
 \ref WlzTiledObjFromDomain.c "WlzTiledObjFromDomain.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref WlzCopyToTiledObj "WlzCopyToTiledObj(1)"
+\ref wlzcopytotiledobj "WlzCopyToTiledObj(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

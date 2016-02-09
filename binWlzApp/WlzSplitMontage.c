@@ -40,12 +40,12 @@ static char _WlzSplitMontage_c[] = "University of Edinburgh $Id$";
 * \ingroup	BinWlzApp
 *
 * \par Binary
-* \ref wlzSplitMontage "WlzSplitMontage"
+* \ref wlzsplitmontage "WlzSplitMontage"
 */
 
 /*!
 \ingroup BinWlzApp
-\defgroup wlzSplitMontage WlzSplitMontage
+\defgroup wlzsplitmontage WlzSplitMontage
 \par Name
 WlzSplitMontage - splits a montage image, one that is composed of several
                 axis aligned rectangular component images separated a gap.
@@ -118,9 +118,9 @@ written to the files img000001.jpg, img000002.jpg, etc..
 \ref WlzSplitMontage.c "WlzSplitMontage.c"
 \par See Also
 \ref BinWlzApp "WlzIntro(1)"
-\ref WlzLabel "WlzLabel(1)"
-\ref WlzThreshold "WlzThreshold(1)"
-\ref WlzSplitImage "WlzSplitImage(1)"
+\ref wlzlabel "WlzLabel(1)"
+\ref wlzthreshold "WlzThreshold(1)"
+\ref wlzsplitimage "WlzSplitImage(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

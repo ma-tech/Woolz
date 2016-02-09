@@ -182,7 +182,7 @@ to the file out.num.
 \par File
 \ref WlzDrawDomainObj.c "WlzDrawDomainObj.c"
 \par See Also
-\ref WlzDomainOps WlzDrawDomainObj().
+\ref WlzDrawDomainObj WlzDrawDomainObj(3).
 \ref BinWlzApp "WlzIntro(1)"
 */
 

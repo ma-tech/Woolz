@@ -94,8 +94,8 @@ The resulting object is written to the file out.wlz.
 \par See Also
 \ref BinWlz "WlzIntro(1)"
 \ref WlzOffsetDist "WlzOffsetDist(3)"
-\ref WlzClassifyRCC "WlzClassifyRCC(1)"
-\ref WlzGreyStats "WlzGreyStats(1)"
+\ref wlzclassifyrcc "WlzClassifyRCC(1)"
+\ref wlzgreystats "WlzGreyStats(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

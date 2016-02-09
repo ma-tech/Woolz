@@ -39,6 +39,7 @@ static char _Wlz3DWarpMQ_S_c[] = "University of Edinburgh $Id$";
 * \ingroup	WlzTransform
 */
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 /* This code started at 13/09/2001 by J. Rao 13/09/2001 
          Richard and Bill have also made contributions
          it experienced a great deal changes 26/10/2001 
@@ -5730,3 +5731,4 @@ WlzMeshTransform2D5  *Wlz2D5TransformFromCut3Dmesh(double zConst,
   return(wmt2D5);
  }
 
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

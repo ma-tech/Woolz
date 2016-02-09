@@ -44,7 +44,7 @@ static char _WlzPointsToText_c[] = "University of Edinburgh $Id$";
 
 /*!
 \ingroup BinWlz
-\defgroup wlzmarkerstodomain WlzPointsToText
+\defgroup wlzpointstotext WlzPointsToText
 \par Name
 WlzPointsToText - writes out a Woolz points object as text.
 \par Synopsis
@@ -87,7 +87,7 @@ output file text out.num.
 \ref WlzPointsToText.c "WlzPointsToText.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref WlzPointsFromDomain "WlzPointsFromDomain(1)"
+\ref wlzpointsfromdomain "WlzPointsFromDomain(1)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

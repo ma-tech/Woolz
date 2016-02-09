@@ -39,9 +39,17 @@ static char _WlzPosterProcessForStackupKeep3StraitLines_c[] = "University of Edi
 * \ingroup	BinWlzApp
 *
 * \par Binary
-* ref wlzposterprocessforstackupkeepvertical "WlzPosterProcessForStackupKeepVertical"
+* \ref wlzposterprocessforstackupkeepvertical "WlzPosterProcessForStackupKeepVertical"
 */
 
+/*!
+\ingroup BinWlzApp
+\defgroup wlzposterprocessforstackupkeepvertical WlzPosterProcessForStackupKeepVertical
+\par Name
+WlzPosterProcessForStackupKeepVertical
+*/
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -1472,3 +1480,4 @@ static WlzErrorNum WlzGetDxDy(
    return errNum;
 
 }
+#endif /* DOXYGEN_SHOULD_SKIP_THIS */

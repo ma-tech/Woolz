@@ -40,8 +40,16 @@ static char _WlzApplyTileFunction_c[] = "University of Edinburgh $Id$";
 *               output a vector of values.
 *               
 * \par Binary
-* ref wlzapplytilefunction "WlzApplyTileFunction"
+* \ref wlzapplytilefunction "WlzApplyTileFunction"
 */
+
+/*!
+\ingroup BinWlzApp
+\defgroup wlzapplytilefunction WlzApplyTileFunction
+\par Name
+WlzApplyTileFunction
+*/
+
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 
 #include <stdio.h>

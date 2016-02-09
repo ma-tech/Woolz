@@ -47,19 +47,23 @@ static char _WlzPointsFromDomain_c[] = "University of Edinburgh $Id$";
 WlzPointsFromDomain - computes points from a given spatial domain object.
 \par Synopsis
 \verbatim
-WlzNearbyDomain [-d#] [-D #,#[#]] [-o<output object>] [-h] [-T] [-x]
-                [<input object>]
+WlzNearbyDomain [-d#] [-D #,#[#]] [-g[<min>],[<max>],[<gam>]] 
+                [-o<output object>] [-h] [-T] [-x] [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-d</b></td>
-    <td>Mainmum distance between points.</td>
+    <td>Minmum distance between points.</td>
   </tr>
   <tr> 
     <td><b>-D</b></td>
     <td>Dither the points by applying a random offset. Supplied values
         are the maximum dither displacement.</td>
+  </tr>
+  <tr> 
+    <td><b>-g</b></td>
+    <td>Use given object grey values to determine point density.</td>
   </tr>
   <tr> 
     <td><b>-o</b></td>
@@ -80,6 +84,14 @@ WlzNearbyDomain [-d#] [-D #,#[#]] [-o<output object>] [-h] [-T] [-x]
 </table>
 \par Description
 Computes points from a given spatial domain object.
+If the given objects grey values are used, then the probability of
+a point being placed is proportional to 
+\f[
+  \left\{ \begin{array}{ll}
+  0.0 & g_i < g_{min} \\
+  frac{(g_i - g_{min})^\gamma}{g_{max} - g_{min}} & g_i > g_{min}
+  \end{array} \right.
+\f]
 By default all files are read from the standard input and written to
 the standard output.
 \par Examples
@@ -282,14 +294,18 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-d#] [-D#,#[,#]] [-o<output file>] [-T] [-x] [-h]\n"
-    "\t\t[<Reference object file>]\n"
+    "Usage: %s [-d#] [-D#,#[,#]] [-g[<min>],[<max>],[<gam>]]\n"
+    "\t\t[-o<output file>] [-T] [-x] [-h] [<Reference object file>]\n"
     "Computes points from a given spatial domain object.\n"
+    "If the given objects grey values are used, then the probability of\n"
+    "a point being placed is proportional to:\n"
+    " 0.0 if g_i < g_min else ((g_i - g_min)^gam)/(g_max - g_min).\n"
     "Version: %s\n"
     "Options:\n"
     "  -d  Minimum distance between points.\n"
     "  -D  Dither the points by applying a random offset. Supplied values\n"
     "      are the maximum dither displacement.\n"
+    "  -g  Use given object grey values to determine point density.\n"
     "  -o  Output object file.\n"
     "  -T  Report elapsed time.\n"
     "  -x  Use voxel size scaling.\n"

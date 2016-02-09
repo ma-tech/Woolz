@@ -76,8 +76,8 @@ i.e. transform \f$\mathbf{T_0}\f$ is applied first then \f$\mathbf{T_1}\f$.
 \par See Also
 \ref BinWlz "WlzIntro(1)"
 \ref wlzaffinetransformobj "WlzAffineTransformObj(1)"
-\ref wlztransformproduct "WlzTransformProduct(3)"
-\ref wlzaffinetransformproduct "WlzAffineTransformProduct(3)"
+\ref WlzTransformProduct "WlzTransformProduct(3)"
+\ref WlzAffineTransformProduct "WlzAffineTransformProduct(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

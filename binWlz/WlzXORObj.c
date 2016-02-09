@@ -45,7 +45,7 @@ static char _WlzXORObj_c[] = "University of Edinburgh $Id$";
 
 /*!
 \ingroup BinWlz
-\defgroup wlzimagearithmetic WlzImageArithmetic
+\defgroup wlzxorobj WlzXORObj
 \par Name
 WlzXORObj - computes the set exclusive or of the two objects.
 \par Synopsis
@@ -77,7 +77,7 @@ computed and written to out.wlz.
 \ref WlzXORObj.c "WlzXORObj.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref wlzxordom "WlzXORDom(3)"
+\ref WlzXORDom "WlzXORDom(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

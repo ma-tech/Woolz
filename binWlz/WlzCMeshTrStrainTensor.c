@@ -103,7 +103,6 @@ elements.
 \par See Also
 \ref BinWlz "WlzIntro(1)"
 \ref WlzCMeshStrainTensor "WlzCMeshStrainTensor(3)"
-\ref WlzVTKTensor "WlzVTKTensor(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

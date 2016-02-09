@@ -5618,7 +5618,6 @@ int		WlzCMeshElmRingElmIndices3D(WlzCMeshElm3D *elm, int *maxIdxBuf,
 * 					outliers and normalises to the range
 * 					of mesh values minus this fraction at
 * 					both ends of the value range.
-* \param	dstErr
 */
 WlzErrorNum	WlzCMeshValuesNormalise(WlzObject *cObj,
 					int mapZero,

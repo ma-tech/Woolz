@@ -128,12 +128,12 @@ Wlz3DGetProjection [-h]
     </td>
   </tr>
   <tr>
-    <td><b>-D</td>
+    <td><b>-D</b></td>
     <td>Domain density for use with uniform domain density integration
         mode, range [0-255] (default 255).</td>
   </tr>
   <tr>
-    <td><b>-V</td>
+    <td><b>-V</b></td>
     <td>Value to density look up table for use with value integration
         mode, all 256 entries to have range [0-255] (default identity).</td>
   </tr>

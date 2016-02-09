@@ -78,7 +78,7 @@ written to the file out.num as white space seperated acsii text.
 \ref WlzBoundaryVertices.c "WlzBoundaryVertices.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref WlzBoundaryVertices "WlzBoundaryVertices(3)"
+\ref wlzboundaryvertices "WlzBoundaryVertices(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

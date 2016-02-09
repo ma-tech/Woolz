@@ -73,7 +73,7 @@ to the standard error output.
 \ref WlzFile.c "WlzFile.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref WlzFacts "WlzFacts(1)"
+\ref wlzfacts "WlzFacts(1)"
 \ref WlzReadObjType "WlzReadObjType(3)"
 */
 

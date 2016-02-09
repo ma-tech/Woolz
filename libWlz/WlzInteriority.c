@@ -54,7 +54,7 @@ static WlzObject		*WlzInteriorityCompDisObj(
 
 /*!
 * \return	Array of interiority scores with a score for each of the
-* 		test objects or NULL on error..
+* 		test objects or NULL on error.
 * \ingroup	WlzFeatures
 * \brief	Computes an interiority score for each test object with
 * 		respect to the reference object. See WlzInteriority().
@@ -64,7 +64,7 @@ static WlzObject		*WlzInteriorityCompDisObj(
 		If not NULL the returned array of scores should be freed
 		using AlcFree().
 * \param	refObj			Given reference object.
-* \param 	nTstObj,		Number of test objects.
+* \param 	nTstObj			Number of test objects.
 * \param	tstObjs			Array of test objects.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
