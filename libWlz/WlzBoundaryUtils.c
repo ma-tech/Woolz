@@ -297,16 +297,40 @@ WlzObject			*WlzBoundaryDomain(
 				  WlzObject *gvnObj,
 				  WlzErrorNum *dstErr)
 {
-  WlzObject	*tObj = NULL,
-  		*bndObj = NULL;
+  WlzConnectType con;
+  WlzObject	*bndObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  tObj = WlzAssignObject(WlzErosion(gvnObj, WLZ_8_CONNECTED, &errNum), NULL);
-  if(tObj)
+  if(gvnObj == NULL)
   {
-    bndObj = WlzDiffDomain(gvnObj, tObj, &errNum);
+    errNum = WLZ_ERR_OBJECT_NULL;
   }
-  (void )WlzFreeObj(tObj);
+  else
+  {
+    switch(gvnObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+        con = WLZ_8_CONNECTED;
+	break;
+      case WLZ_3D_DOMAINOBJ:
+        con = WLZ_26_CONNECTED;
+	break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzObject	*tObj;
+
+    tObj = WlzAssignObject(WlzErosion(gvnObj, con, &errNum), NULL);
+    if(tObj)
+    {
+      bndObj = WlzDiffDomain(gvnObj, tObj, &errNum);
+    }
+    (void )WlzFreeObj(tObj);
+  }
   if(dstErr)
   {
     *dstErr = errNum;
