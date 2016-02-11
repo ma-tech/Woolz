@@ -65,7 +65,7 @@ static int			AlcKDTNodeValueCompare(
 				  AlcKDTTree *tree,
 				  AlcKDTNode *node,
 				  AlcPointP key);
-static int			AlcKDTNodeIntersectsSphere(
+static int			AlcKDTNodeIntersectsSphereBB(
 				  AlcKDTTree *tree,
 				  AlcKDTNode *node,
 				  AlcPointP centre,
@@ -741,7 +741,7 @@ AlcKDTNode	*AlcKDTGetNN(AlcKDTTree *tree,  void *keyVal,
        * or the parent node does not intersect the hyper-sphere with
        * centre at key with radius minDist). */
       while(((tstNode1 = tstNode0->parent) != NULL) &&
-	    AlcKDTNodeIntersectsSphere(tree, tstNode1, key, minDist))
+	    AlcKDTNodeIntersectsSphereBB(tree, tstNode1, key, minDist))
       {
 	tstNode0 = tstNode1;
       }
@@ -802,7 +802,7 @@ static AlcKDTNode *AlcKDTNodeGetNN(AlcKDTTree *tree,  AlcKDTNode *node,
 
   /* If this node's bounding box intersects the hyper-sphere check
    * the node and its children for the nearest neighbour. */
-  if(AlcKDTNodeIntersectsSphere(tree, node, key, minDist))
+  if(AlcKDTNodeIntersectsSphereBB(tree, node, key, minDist))
   {
     tstDistSq = AlcKDTKeyDistSq(tree, node->key, key);
     if(tstDistSq < (minDist * minDist))
@@ -840,21 +840,27 @@ static AlcKDTNode *AlcKDTNodeGetNN(AlcKDTTree *tree,  AlcKDTNode *node,
 * \return	Non zero if the given node intersects the given sphere.
 * \ingroup	AlcKDTree
 * \brief  	Computes whether the given node intersects the given
-*		hyper-sphere.
+*		hyper-sphere's bounding box.
 *		There are 2 algorithms that can be used.
 *		* Always true test, NOT RECOMENDED for anything except
 *		  testing.
 *		* Box intersection test, checks for an intersection
 *		  between the bounding boxes of the node and the
 *		  hyper-sphere.
+* 		
+* 		This function will in most cases dominate the performance
+* 		of kD-tree queries so there's been some effort to optimise
+* 		the code.
 * \param     	tree			Given tree,
 * \param	node			Given node.
-* \param	key			Given key at centre of the
+* \param	centre			Given key at centre of the
 *					hyper-sphere.
 * \param	radius			Radius of the hyper-sphere.
 */
-static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
-					   AlcPointP centre, double radius)
+static int	AlcKDTNodeIntersectsSphereBB(AlcKDTTree *tree,
+				             AlcKDTNode *node,
+					     AlcPointP centre,
+					     double radius)
 #ifdef ALC_KDT_ALWAYSTRUE_TEST
 {
   return(1);
@@ -862,30 +868,56 @@ static int	AlcKDTNodeIntersectsSphere(AlcKDTTree *tree,  AlcKDTNode *node,
 #else
 {
   int  		idx,
-		inSphere = 1;
+		inside = 1;
 
-  /* This code only checks for the intersection with the hyper-sphere's
-   * bounding box. */
   idx = 0;
   if(tree->type == ALC_POINTTYPE_INT)
   {
-    do
+    int		radF,
+    		radC;
+
+    radF = (int )floor(radius);
+    radC = (int )ceil(radius);
+    switch(tree->dim)
     {
-      inSphere &= (*(node->boundP.kI + idx) >= (*(centre.kI + idx) - radius)) &
-		  (*(node->boundN.kI + idx) <= (*(centre.kI + idx) + radius));
+      case 2:
+	{
+	  inside &= (node->boundP.kI[0] >= (centre.kI[0] - radF)) &
+		    (node->boundN.kI[0] <= (centre.kI[0] + radC)) &
+	            (node->boundP.kI[1] >= (centre.kI[1] - radF)) &
+		    (node->boundN.kI[1] <= (centre.kI[1] + radC));
+	}
+	break;
+      case 3:
+	{
+	  inside &= (node->boundP.kI[0] >= (centre.kI[0] - radF)) &
+		    (node->boundN.kI[0] <= (centre.kI[0] + radC)) &
+	            (node->boundP.kI[1] >= (centre.kI[1] - radF)) &
+		    (node->boundN.kI[1] <= (centre.kI[1] + radC)) &
+	            (node->boundP.kI[2] >= (centre.kI[2] - radF)) &
+		    (node->boundN.kI[2] <= (centre.kI[2] + radC));
+	}
+	break;
+      default:
+	do
+	{
+	  inside &= (node->boundP.kI[idx] >= (centre.kI[idx] - radF)) &
+		    (node->boundN.kI[idx] <= (centre.kI[idx] + radC));
+	}
+	while(inside && (++idx < tree->dim));
+	break;
     }
-    while(inSphere && (++idx < tree->dim));
   }
   else /* tree->type == ALC_POINTTYPE_DBL */
   {
     do
     {
-      inSphere &= (*(node->boundP.kD + idx) >= (*(centre.kD + idx) - radius)) &
-		  (*(node->boundN.kD + idx) <= (*(centre.kD + idx) + radius));
+      inside &= (node->boundP.kD[idx] >= (centre.kD[idx] - radius)) &
+		(node->boundN.kD[idx] <= (centre.kD[idx] + radius));
     }
-    while(inSphere && (++idx < tree->dim));
+    while(inside && (++idx < tree->dim));
   }
-  return(inSphere);
+  return(inside);
 }
 #endif
 
