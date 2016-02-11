@@ -47,7 +47,7 @@ static char _WlzPointsFromDomain_c[] = "University of Edinburgh $Id$";
 WlzPointsFromDomain - computes points from a given spatial domain object.
 \par Synopsis
 \verbatim
-WlzNearbyDomain [-d#] [-D #,#[#]] [-g[<min>],[<max>],[<gam>]] 
+WlzPointsFromDomain [-d#] [-D #,#[#]] [-g[<min>][,<max>][,<gam>]] 
                 [-o<output object>] [-h] [-T] [-x] [<input object>]
 \endverbatim
 \par Options
@@ -130,10 +130,14 @@ int		main(int argc, char *argv[])
 		usage = 0,
 		dither = 0,
 		timeFlg = 0,
+		useGrey = 0,
 		voxelScaling = 0;
   char		*inFileStr,
 		*outFileStr;
-  double	dMin = 32.0;
+  double	dMin = 32.0,
+                gMin = 0.0,
+		gMax = 255.0,
+		gGam = 1.0;
   FILE		*fP = NULL;
   WlzDVertex3	ditherSz = {0.0};
   WlzObject	*inObj = NULL,
@@ -141,7 +145,7 @@ int		main(int argc, char *argv[])
   struct timeval times[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "hTxd:D:o:";
+  static char	optList[] = "hTxd:D:g:o:";
   const char    fileStrDef[] = "-";
 
   /* Parse the argument list and check for input files. */
@@ -164,6 +168,46 @@ int		main(int argc, char *argv[])
 	          &(ditherSz.vtX), &(ditherSz.vtY), &(ditherSz.vtZ)) < 2)
 	{
 	  usage = 1;
+	}
+	break;
+      case 'g':
+	useGrey = 1;
+	{
+	  char  *tok,
+	  	*buf;
+
+	  buf = AlcStrDup(optarg);
+	  tok = strsep(&buf, ",");
+	  if(tok && *tok)
+	  {
+	    if(sscanf(tok, "%lg", &gMin) != 1)
+	    {
+	      usage = 1;
+	    }
+	  }
+	  if(usage == 0)
+	  {
+	    tok = strsep(&buf, ",");
+	    if(tok && *tok)
+	    {
+	      if(sscanf(tok, "%lg", &gMax) != 1)
+	      {
+	        usage = 1;
+	      }
+	    }
+	  }
+	  if(usage == 0)
+	  {
+	    tok = strsep(&buf, ",");
+	    if(tok && *tok)
+	    {
+	      if(sscanf(tok, "%lg", &gGam) != 1)
+	      {
+	        usage = 1;
+	      }
+	    }
+	  }
+	  AlcFree(buf);
 	}
 	break;
       case 'o':
@@ -228,7 +272,8 @@ int		main(int argc, char *argv[])
     {
       gettimeofday(times + 0, NULL);
     }
-    outDom.pts = WlzPointsFromDomObj(inObj, dMin, voxelScaling, &errNum);
+    outDom.pts = WlzPointsFromDomObj(inObj, dMin, voxelScaling,
+                                     useGrey, gMin, gMax, gGam, &errNum);
     if((errNum == WLZ_ERR_NONE) && dither)
     {
       WlzPoints	*pts;
@@ -294,7 +339,7 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-d#] [-D#,#[,#]] [-g[<min>],[<max>],[<gam>]]\n"
+    "Usage: %s [-d#] [-D#,#[,#]] [-g[<min>][,<max>][,<gam>]]\n"
     "\t\t[-o<output file>] [-T] [-x] [-h] [<Reference object file>]\n"
     "Computes points from a given spatial domain object.\n"
     "If the given objects grey values are used, then the probability of\n"

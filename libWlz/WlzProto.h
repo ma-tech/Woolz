@@ -5309,6 +5309,10 @@ extern WlzPoints		*WlzPointsFromDomObj(
 				  WlzObject *gvnObj,
 				  double dMin,
 				  int voxelScaling,
+				  int useGrey,
+				  double gMin,
+				  double gMax,
+				  double gGam,
 				  WlzErrorNum *dstErr);
 extern WlzPoints		*WlzPointsDither(
 				  WlzPoints *gPts,

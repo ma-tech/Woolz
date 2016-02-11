@@ -216,16 +216,32 @@ void		*WlzPointValueGet(WlzPointValues *pts, int idx)
 * \ingroup	WlzFeatures
 * \brief	Finds points which are within the given opjects domain
 * 		and are seperated by at least the given minimum distance.
+* 		If the given object's grey values are used, then the
+* 		probability of a point being placed is proportional to:
+* 		\f[
+		\left\{ \begin{array}{ll}
+		0.0 & g_i < g_{min} \\
+		frac{(g_i - g_{min})^\gamma}{g_{max} - g_{min}} & g_i > g_{min}
+		\end{array} \right.
+ 		\f]
 * \param	gvnObj			Given spatial domain object.
 * \param	dMin			Given minimum distance (if less than
 * 					1.0 then will be set to 1.0)..
 * \param	voxelScaling		Use voxel scaling if non-zero.
+* \param	useGrey			Use grey values.
+* \param	gMin			Minimum grey value.
+* \param	gMax			Maximum grey value.
+* \param	gGam			Gamma for grey value.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzPoints			*WlzPointsFromDomObj(
 				  WlzObject *gvnObj,
 				  double dMin,
 				  int voxelScaling,
+				  int useGrey,
+				  double gMin,
+				  double gMax,
+				  double gGam,
 				  WlzErrorNum *dstErr)
 {
   int		dim = 0,
@@ -235,11 +251,14 @@ WlzPoints			*WlzPointsFromDomObj(
   AlcKDTTree	*tree = NULL;
   WlzPoints	*pts = NULL;
   WlzObject	*curObj = NULL,
-  		*strObj = NULL;;
+  		*strObj = NULL,
+		*thrObj = NULL;
   WlzDVertex3	voxSz;
   AlcVector	*vec = NULL;
   size_t	vtxSz = 0;
+  WlzGreyValueWSpace *gVWSp = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double  eps = 1.0e-06;
 
   voxSz.vtX = voxSz.vtY = voxSz.vtZ = 1.0;
   if(gvnObj == NULL)
@@ -297,6 +316,17 @@ WlzPoints			*WlzPointsFromDomObj(
 	    break;
 	}
       }
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && useGrey)
+  {
+    if(gvnObj->values.core == NULL)
+    {
+      errNum = WLZ_ERR_VALUES_NULL;
+    }
+    else if(((gMax - gMin) < eps) || (gGam < eps))
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
     }
   }
   /* Create a vector in which to collect vertices. */
@@ -395,16 +425,30 @@ WlzPoints			*WlzPointsFromDomObj(
         errNum = WLZ_ERR_MEM_ALLOC;
       }
     }
-    /* Add vertices to the KD-tree as long as their seperation distance is
-     * >= dMin. */
+    if(useGrey)
+    {
+      WlzPixelV thrV;
+
+      thrV.type = WLZ_GREY_DOUBLE;
+      thrV.v.dbv = gMin;
+      thrObj = WlzThreshold(gvnObj, thrV, WLZ_THRESH_HIGH, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        gVWSp = WlzGreyValueMakeWSp(thrObj, &errNum);
+      }
+    }
+    /* Add vertices to the KD-tree as long as their seperation distance
+     * is >= dMin and if using grey values the grey probability is above
+     * threshold. */
     if(errNum == WLZ_ERR_NONE)
     {
       int	i;
 
       for(i = 0; i < nVtx; ++i)
       {
-        int 	j;
-	double	d;
+        int 	j,
+		ins;
+	double	d = 0.0;
 	int	pos[3];
 	AlcKDTNode *nod;
 
@@ -420,8 +464,62 @@ WlzPoints			*WlzPointsFromDomObj(
 	  pos[1] = vtx.i3[j].vtY;
 	  pos[2] = vtx.i3[j].vtZ;
 	}
-	nod = AlcKDTGetNN(tree, pos, DBL_MAX, &d, NULL);
-	if((nod == NULL) || (d > dMin))
+	nod = AlcKDTGetNN(tree, pos, 2 * dMin, &d, NULL);
+	ins = (nod == NULL) || (d > dMin);
+	if(ins && useGrey)
+	{
+	  double g;
+
+	  WlzGreyValueGet(gVWSp, pos[2], pos[1], pos[0]);
+	  switch(gVWSp->gType)
+	  {
+	    case WLZ_GREY_INT:
+	      g = gVWSp->gVal[0].inv;
+	      break;
+	    case WLZ_GREY_SHORT:
+	      g = gVWSp->gVal[0].shv;
+	      break;
+	    case WLZ_GREY_UBYTE:
+	      g = gVWSp->gVal[0].ubv;
+	      break;
+	    case WLZ_GREY_FLOAT:
+	      g = gVWSp->gVal[0].flv;
+	      break;
+	    case WLZ_GREY_DOUBLE:
+	      g = gVWSp->gVal[0].dbv;
+	      break;
+	    case WLZ_GREY_RGBA:
+	      g = WLZ_RGBA_MODULUS(gVWSp->gVal[0].inv);
+	      break;
+	    default:
+	      ins = 0;
+	      errNum = WLZ_ERR_GREY_TYPE;
+	      break;
+	  }
+	  if(ins)
+	  {
+	    if(g < gMin)
+	    {
+	      g = 0.0;
+	      ins = 0;
+	    }
+	    else if(g > gMax)
+	    {
+	      g = 1.0;
+	      ins = 1;
+	    }
+	    else
+	    {
+	      double r;
+
+	      g = (g - gMin) / (gMax - gMin);
+	      g = pow(g, gGam);
+	      r = AlgRandUniform();
+	      ins = ((g - eps) > r);
+	    }
+	  }
+	}
+	if(ins)
 	{
 	  AlcErrno alcErr = ALC_ER_NONE;
 
@@ -450,6 +548,7 @@ WlzPoints			*WlzPointsFromDomObj(
       }
     }
     AlcFree(vtx.v);
+    WlzGreyValueFreeWSp(gVWSp);
     /* Erode the current object. */
     if(errNum == WLZ_ERR_NONE)
     {
@@ -473,6 +572,7 @@ WlzPoints			*WlzPointsFromDomObj(
   AlcFree(shfBuf);
   (void )WlzFreeObj(curObj);
   (void )WlzFreeObj(strObj);
+  (void )WlzFreeObj(thrObj);
   (void )AlcKDTTreeFree(tree);
   /* Construct the points using the vector of vertex locations. */
   if(errNum == WLZ_ERR_NONE)
