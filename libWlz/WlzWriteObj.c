@@ -594,13 +594,9 @@ static WlzErrorNum WlzWriteUByte(FILE *fP, WlzUByte *iP, size_t nI)
 {
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
-  while((errNum == WLZ_ERR_NONE) && (nI-- > 0))
+  if(fwrite(iP, sizeof(WlzUByte), nI, fP) != nI)
   {
-    if(!putc((unsigned int )*iP, fP))
-    {
-      errNum = WLZ_ERR_WRITE_INCOMPLETE;
-    }
-    ++iP;
+    errNum = WLZ_ERR_WRITE_INCOMPLETE;
   }
   return(errNum);
 }
@@ -625,6 +621,10 @@ static WlzErrorNum WlzWriteFloat(FILE *fP, float *iP, size_t nI)
       errNum = WLZ_ERR_WRITE_INCOMPLETE;
     }
     ++iP;
+  }
+  if(fwrite(iP, sizeof(float), nI, fP) != nI)
+  {
+    errNum = WLZ_ERR_WRITE_INCOMPLETE;
   }
   return(errNum);
 }
