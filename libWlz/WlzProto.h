@@ -5314,6 +5314,10 @@ extern WlzPoints		*WlzPointsFromDomObj(
 				  double gMax,
 				  double gGam,
 				  WlzErrorNum *dstErr);
+extern WlzPointValues		*WlzPointValuesFromDomObj(
+				  WlzPoints *pdm,
+				  WlzObject *domObj,
+				  WlzErrorNum *dstErr);
 extern WlzPoints		*WlzPointsDither(
 				  WlzPoints *gPts,
 				  WlzDVertex3 dSz,
