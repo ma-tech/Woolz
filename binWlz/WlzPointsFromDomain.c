@@ -47,7 +47,7 @@ static char _WlzPointsFromDomain_c[] = "University of Edinburgh $Id$";
 WlzPointsFromDomain - computes points from a given spatial domain object.
 \par Synopsis
 \verbatim
-WlzPointsFromDomain [-d#] [-D #,#[#]] [-g[<min>][,<max>][,<gam>]] 
+WlzPointsFromDomain [-d#] [-D #,#[#]] [-g[<min>][,<max>][,<gam>]]  [-G]
                 [-o<output object>] [-h] [-T] [-x] [<input object>]
 \endverbatim
 \par Options
@@ -64,6 +64,10 @@ WlzPointsFromDomain [-d#] [-D #,#[#]] [-g[<min>][,<max>][,<gam>]]
   <tr> 
     <td><b>-g</b></td>
     <td>Use given object grey values to determine point density.</td>
+  </tr>
+  <tr> 
+    <td><b>-G</b></td>
+    <td>Include sampled grey values.</td>
   </tr>
   <tr> 
     <td><b>-o</b></td>
@@ -130,6 +134,7 @@ int		main(int argc, char *argv[])
 		usage = 0,
 		dither = 0,
 		timeFlg = 0,
+		samGrey = 0,
 		useGrey = 0,
 		voxelScaling = 0;
   char		*inFileStr,
@@ -145,7 +150,7 @@ int		main(int argc, char *argv[])
   struct timeval times[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "hTxd:D:g:o:";
+  static char	optList[] = "hGTxd:D:g:o:";
   const char    fileStrDef[] = "-";
 
   /* Parse the argument list and check for input files. */
@@ -174,9 +179,10 @@ int		main(int argc, char *argv[])
 	useGrey = 1;
 	{
 	  char  *tok,
-	  	*buf;
+	  	*buf,
+		*savbuf;
 
-	  buf = AlcStrDup(optarg);
+	  buf = savbuf = AlcStrDup(optarg);
 	  tok = strsep(&buf, ",");
 	  if(tok && *tok)
 	  {
@@ -207,8 +213,11 @@ int		main(int argc, char *argv[])
 	      }
 	    }
 	  }
-	  AlcFree(buf);
+	  AlcFree(savbuf);
 	}
+	break;
+      case 'G':
+        samGrey = 1;
 	break;
       case 'o':
 	outFileStr = optarg;
@@ -264,10 +273,10 @@ int		main(int argc, char *argv[])
   if(ok)
   {
     WlzDomain outDom;
-    WlzValues nullVal;
+    WlzValues outVal;
 
     outDom.core = NULL;
-    nullVal.core = NULL;
+    outVal.core = NULL;
     if(timeFlg)
     {
       gettimeofday(times + 0, NULL);
@@ -282,6 +291,10 @@ int		main(int argc, char *argv[])
       (void )WlzFreeDomain(outDom);
       outDom.pts = pts;
     }
+    if((errNum == WLZ_ERR_NONE) && samGrey)
+    {
+      outVal.pts = WlzPointValuesFromDomObj(outDom.pts, inObj, &errNum);
+    }
     if(timeFlg)
     {
       gettimeofday(times + 1, NULL);
@@ -294,7 +307,7 @@ int		main(int argc, char *argv[])
     if(errNum == WLZ_ERR_NONE)
     {
       outObj = WlzAssignObject(
-      	       WlzMakeMain(WLZ_POINTS, outDom, nullVal, NULL, NULL, &errNum),
+      	       WlzMakeMain(WLZ_POINTS, outDom, outVal, NULL, NULL, &errNum),
 	       NULL);
     }
     if(errNum != WLZ_ERR_NONE)
@@ -339,7 +352,7 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-d#] [-D#,#[,#]] [-g[<min>][,<max>][,<gam>]]\n"
+    "Usage: %s [-d#] [-D#,#[,#]] [-g[<min>][,<max>][,<gam>]] [-G]\n"
     "\t\t[-o<output file>] [-T] [-x] [-h] [<Reference object file>]\n"
     "Computes points from a given spatial domain object.\n"
     "If the given objects grey values are used, then the probability of\n"
@@ -351,6 +364,7 @@ int		main(int argc, char *argv[])
     "  -D  Dither the points by applying a random offset. Supplied values\n"
     "      are the maximum dither displacement.\n"
     "  -g  Use given object grey values to determine point density.\n"
+    "  -G  Include sampled grey values.\n"
     "  -o  Output object file.\n"
     "  -T  Report elapsed time.\n"
     "  -x  Use voxel size scaling.\n"
