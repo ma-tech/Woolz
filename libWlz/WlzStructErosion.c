@@ -641,6 +641,8 @@ static WlzObject *WlzStructErosion3d(
 	obj2 = WlzAssignObject(obj2, NULL);
 	objList[i] = WlzAssignObject(WlzStructErosion(obj1, obj2, NULL),
 				     NULL);
+	WlzFreeObj(obj1);
+	WlzFreeObj(obj2);
       }
       obj3 = WlzIntersectN(nStructPlanes, objList, 0, &errNum);
       if( (obj3 == NULL) || (obj3->type == WLZ_EMPTY_OBJ) ){
@@ -649,8 +651,6 @@ static WlzObject *WlzStructErosion3d(
       else {
 	*domains = WlzAssignDomain(obj3->domain, NULL);
       }
-      WlzFreeObj(obj1);
-      WlzFreeObj(obj2);
       if( obj3 ){
 	WlzFreeObj(obj3);
       }
