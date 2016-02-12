@@ -245,6 +245,7 @@ WlzPoints			*WlzPointsFromDomObj(
 				  WlzErrorNum *dstErr)
 {
   int		dim = 0,
+		gInv = 0,
 		vecIdx = 0,
   		nShfBuf = 0;
   int		*shfBuf = NULL;
@@ -320,6 +321,15 @@ WlzPoints			*WlzPointsFromDomObj(
   }
   if((errNum == WLZ_ERR_NONE) && useGrey)
   {
+    if(gMin > gMax)
+    {
+      double t;
+
+      gInv = 1;
+      t = gMax;
+      gMax = gMin;
+      gMin = t;
+    }
     if(gvnObj->values.core == NULL)
     {
       errNum = WLZ_ERR_VALUES_NULL;
@@ -381,6 +391,23 @@ WlzPoints			*WlzPointsFromDomObj(
     	     WlzMakeMain(gvnObj->type, gvnObj->domain, nullVal,
 	                 NULL, NULL, &errNum), NULL);
   }
+  /* If using grey values threshold the given object and make a grey
+   * workspace for for it. */
+  if(useGrey)
+  {
+    WlzPixelV thrV;
+
+    thrV.type = WLZ_GREY_DOUBLE;
+    thrV.v.dbv = (gInv)? gMax: gMin;
+    thrObj = WlzAssignObject(
+             WlzThreshold(gvnObj, thrV,
+	                  (gInv)? WLZ_THRESH_LOW: WLZ_THRESH_HIGH,
+			  &errNum), NULL);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      gVWSp = WlzGreyValueMakeWSp(thrObj, &errNum);
+    }
+  }
   /* Erode the current object while adding points from the boundary until
    * the current object has been eroded away. */
   while((errNum == WLZ_ERR_NONE) && (curObj != NULL))
@@ -423,18 +450,6 @@ WlzPoints			*WlzPointsFromDomObj(
       if(AlcVectorExtend(vec, vecIdx + nVtx + 1) != ALC_ER_NONE)
       {
         errNum = WLZ_ERR_MEM_ALLOC;
-      }
-    }
-    if(useGrey)
-    {
-      WlzPixelV thrV;
-
-      thrV.type = WLZ_GREY_DOUBLE;
-      thrV.v.dbv = gMin;
-      thrObj = WlzThreshold(gvnObj, thrV, WLZ_THRESH_HIGH, &errNum);
-      if(errNum == WLZ_ERR_NONE)
-      {
-        gVWSp = WlzGreyValueMakeWSp(thrObj, &errNum);
       }
     }
     /* Add vertices to the KD-tree as long as their seperation distance
@@ -489,7 +504,7 @@ WlzPoints			*WlzPointsFromDomObj(
 	      g = gVWSp->gVal[0].dbv;
 	      break;
 	    case WLZ_GREY_RGBA:
-	      g = WLZ_RGBA_MODULUS(gVWSp->gVal[0].inv);
+	      g = WLZ_RGBA_MODULUS(gVWSp->gVal[0].rgbv);
 	      break;
 	    default:
 	      ins = 0;
@@ -513,7 +528,7 @@ WlzPoints			*WlzPointsFromDomObj(
 	      double r;
 
 	      g = (g - gMin) / (gMax - gMin);
-	      g = pow(g, gGam);
+	      g = (gInv)? pow(1.0 - g, gGam): pow(g, gGam);
 	      r = AlgRandUniform();
 	      ins = ((g - eps) > r);
 	    }
@@ -548,7 +563,6 @@ WlzPoints			*WlzPointsFromDomObj(
       }
     }
     AlcFree(vtx.v);
-    WlzGreyValueFreeWSp(gVWSp);
     /* Erode the current object. */
     if(errNum == WLZ_ERR_NONE)
     {
@@ -570,6 +584,7 @@ WlzPoints			*WlzPointsFromDomObj(
     }
   }
   AlcFree(shfBuf);
+  WlzGreyValueFreeWSp(gVWSp);
   (void )WlzFreeObj(curObj);
   (void )WlzFreeObj(strObj);
   (void )WlzFreeObj(thrObj);
@@ -640,6 +655,233 @@ WlzPoints			*WlzPointsFromDomObj(
     *dstErr = errNum;
   }
   return(pts);
+}
+
+/*!
+* \return	New point values or NULL on error.
+* \ingroup	WlzFeatures
+* \brief	Creates a new point values using the given points domain
+* 		and domain object with values. Values are sampled from the
+* 		domain object using the locations of the points in the points
+* 		domain.
+* \param	pdm			Given points domain.
+* \param	domObj			Given domain object with values.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzPointValues			*WlzPointValuesFromDomObj(
+				  WlzPoints *pdm,
+				  WlzObject *domObj,
+				  WlzErrorNum *dstErr)
+{
+  int		dim = 0;
+  void		**buf = NULL;
+  WlzPointValues *pvl = NULL;
+  WlzObject	*rtnObj = NULL;
+  WlzGreyValueWSpace *gVWSp = NULL;
+  WlzGreyType	gType = WLZ_GREY_ERROR;
+  WlzVertexType vType = WLZ_VERTEX_ERROR;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(pdm == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(domObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(domObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(domObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    switch(pdm->type)
+    {
+      case WLZ_POINTS_2I:
+	dim = 2;
+        vType = WLZ_VERTEX_I2;
+	break;
+      case WLZ_POINTS_2D:
+	dim = 2;
+        vType = WLZ_VERTEX_D2;
+	break;
+      case WLZ_POINTS_3I:
+	dim = 3;
+        vType = WLZ_VERTEX_I3;
+	break;
+      case WLZ_POINTS_3D:
+	dim = 3;
+        vType = WLZ_VERTEX_D3;
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(domObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+        if(dim != 2)
+	{
+	  errNum = WLZ_ERR_OBJECT_TYPE;
+	}
+	break;
+      case WLZ_3D_DOMAINOBJ:
+        if(dim != 3)
+	{
+	  errNum = WLZ_ERR_OBJECT_TYPE;
+	}
+	break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    gVWSp = WlzGreyValueMakeWSp(domObj, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((buf = (void **)AlcMalloc(sizeof(void *) * pdm->nPoints)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    gType = gVWSp->gType;
+    pvl = WlzMakePointValues(pdm->nPoints, 0, NULL, gType, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idx;
+
+    switch(vType)
+    {
+      case WLZ_VERTEX_I2:
+	for(idx = 0; idx < pdm->nPoints; ++idx)
+	{
+	  WlzIVertex2 *vp;
+
+	  vp = pdm->points.i2 + idx;
+	  WlzGreyValueGet(gVWSp, 0, vp->vtY, vp->vtX);
+	  buf[idx] = gVWSp->gPtr[0].v;
+	}
+	break;
+      case WLZ_VERTEX_I3:
+	for(idx = 0; idx < pdm->nPoints; ++idx)
+	{
+	  WlzIVertex3 *vp;
+
+	  vp = pdm->points.i3 + idx;
+	  WlzGreyValueGet(gVWSp, vp->vtZ, vp->vtY, vp->vtX);
+	  buf[idx] = gVWSp->gPtr[0].v;
+	}
+	break;
+      case WLZ_VERTEX_D2:
+	for(idx = 0; idx < pdm->nPoints; ++idx)
+	{
+	  WlzDVertex2 *vp;
+
+	  vp = pdm->points.d2 + idx;
+	  WlzGreyValueGet(gVWSp, 0, vp->vtY, vp->vtX);
+	  buf[idx] = gVWSp->gPtr[0].v;
+	}
+	break;
+      case WLZ_VERTEX_D3:
+	for(idx = 0; idx < pdm->nPoints; ++idx)
+	{
+	  WlzDVertex3 *vp;
+
+	  vp = pdm->points.d3 + idx;
+	  WlzGreyValueGet(gVWSp, vp->vtZ, vp->vtY, vp->vtX);
+	  buf[idx] = gVWSp->gPtr[0].v;
+	}
+	break;
+      default:
+	break;
+    }
+    switch(gType)
+    {
+      case WLZ_GREY_INT:
+        for(idx = 0; idx < pdm->nPoints; ++idx)
+	{
+	  WlzGreyP tgp;
+
+	  tgp.v = buf[idx];
+	  pvl->values.inp[idx] = *(tgp.inp);
+	}
+	break;
+      case WLZ_GREY_SHORT:
+        for(idx = 0; idx < pdm->nPoints; ++idx)
+	{
+	  WlzGreyP tgp;
+
+	  tgp.v = buf[idx];
+	  pvl->values.shp[idx] = *(tgp.shp);
+	}
+	break;
+      case WLZ_GREY_UBYTE:
+        for(idx = 0; idx < pdm->nPoints; ++idx)
+	{
+	  WlzGreyP tgp;
+
+	  tgp.v = buf[idx];
+	  pvl->values.ubp[idx] = *(tgp.ubp);
+	}
+	break;
+      case WLZ_GREY_FLOAT:
+        for(idx = 0; idx < pdm->nPoints; ++idx)
+	{
+	  WlzGreyP tgp;
+
+	  tgp.v = buf[idx];
+	  pvl->values.flp[idx] = *(tgp.flp);
+	}
+	break;
+      case WLZ_GREY_DOUBLE:
+        for(idx = 0; idx < pdm->nPoints; ++idx)
+	{
+	  WlzGreyP tgp;
+
+	  tgp.v = buf[idx];
+	  pvl->values.dbp[idx] = *(tgp.dbp);
+	}
+	break;
+      case WLZ_GREY_RGBA:
+        for(idx = 0; idx < pdm->nPoints; ++idx)
+	{
+	  WlzGreyP tgp;
+
+	  tgp.v = buf[idx];
+	  pvl->values.rgbp[idx] = *(tgp.rgbp);
+	}
+	break;
+      default:
+        errNum = WLZ_ERR_GREY_TYPE;
+	break;
+    }
+  }
+  AlcFree(buf);
+  WlzGreyValueFreeWSp(gVWSp);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreePointValues(pvl);
+    pvl = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pvl);
 }
 
 /*!
