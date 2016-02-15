@@ -619,16 +619,17 @@ static WlzErrorNum WlzEffWriteCMesh2DVtk(FILE *fP, WlzCMesh2D *mesh)
 static WlzErrorNum WlzEffWritePointsVtk(FILE *fP, WlzObject *obj)
 {
 
-  WlzPoints	*pnt;
+  WlzPoints	 *pdm;
+  WlzPointValues *pvl;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  if((pnt = obj->domain.pts) == NULL)
+  if((pdm = obj->domain.pts) == NULL)
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
   else
   {
-    switch(pnt->type)
+    switch(pdm->type)
     {
       case WLZ_POINTS_2I: /* FALLTHROUGH */
       case WLZ_POINTS_2D: /* FALLTHROUGH */
@@ -649,24 +650,24 @@ static WlzErrorNum WlzEffWritePointsVtk(FILE *fP, WlzObject *obj)
 	       "ASCII\n"
 	       "DATASET POLYDATA\n"
 	       "POINTS %d float\n",
-	       pnt->nPoints) <= 0)
+	       pdm->nPoints) <= 0)
     {
       errNum = WLZ_ERR_WRITE_INCOMPLETE;
     }
   }
+  /* Output the point domain. */
   if(errNum == WLZ_ERR_NONE)
   {
     int		i;
 
-    /* Output the point positions. */
-    switch(pnt->type)
+    switch(pdm->type)
     {
       case WLZ_POINTS_2I:
-	for(i = 0; i < pnt->nPoints; ++i)
+	for(i = 0; i < pdm->nPoints; ++i)
         {
 	  WlzIVertex2 *p;
 
-	  p = pnt->points.i2 + i;
+	  p = pdm->points.i2 + i;
 	  if(fprintf(fP, "%g %g 0\n",
 	             (double )(p->vtX), (double )(p->vtY)) <= 0)
 	  {
@@ -676,11 +677,11 @@ static WlzErrorNum WlzEffWritePointsVtk(FILE *fP, WlzObject *obj)
 	}
 	break;
       case WLZ_POINTS_2D:
-	for(i = 0; i < pnt->nPoints; ++i)
+	for(i = 0; i < pdm->nPoints; ++i)
         {
 	  WlzDVertex2 *p;
 
-	  p = pnt->points.d2 + i;
+	  p = pdm->points.d2 + i;
 	  if(fprintf(fP, "%g %g 0\n", p->vtX, p->vtY) <= 0)
 	  {
 	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
@@ -689,11 +690,11 @@ static WlzErrorNum WlzEffWritePointsVtk(FILE *fP, WlzObject *obj)
 	}
 	break;
       case WLZ_POINTS_3I:
-	for(i = 0; i < pnt->nPoints; ++i)
+	for(i = 0; i < pdm->nPoints; ++i)
         {
 	  WlzIVertex3 *p;
 
-	  p = pnt->points.i3 + i;
+	  p = pdm->points.i3 + i;
 	  if(fprintf(fP, "%g %g %g\n",
 	             (double )(p->vtX), (double )(p->vtY),
 		     (double )(p->vtZ)) <= 0)
@@ -704,11 +705,11 @@ static WlzErrorNum WlzEffWritePointsVtk(FILE *fP, WlzObject *obj)
 	}
 	break;
       case WLZ_POINTS_3D:
-	for(i = 0; i < pnt->nPoints; ++i)
+	for(i = 0; i < pdm->nPoints; ++i)
         {
 	  WlzDVertex3 *p;
 
-	  p = pnt->points.d3 + i;
+	  p = pdm->points.d3 + i;
 	  if(fprintf(fP, "%g %g %g\n", p->vtX, p->vtY, p->vtZ) <= 0)
 	  {
 	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
@@ -718,6 +719,103 @@ static WlzErrorNum WlzEffWritePointsVtk(FILE *fP, WlzObject *obj)
         break;
       default:
 	break;
+    }
+  }
+  /* Output point values if they exist. */
+  if((errNum == WLZ_ERR_NONE) && ((pvl = obj->values.pts) != NULL))
+  {
+    if(pvl->rank == 0)
+    {
+      const char *gStr;
+      int	 unsup = 1;
+
+      switch(pvl->vType)
+      {
+        case WLZ_GREY_UBYTE:
+	  unsup = 0;
+	  gStr = "char";
+	  break;
+        case WLZ_GREY_INT:   /* FALLTHROUGH */
+	case WLZ_GREY_SHORT: /* FALLTHROUGH */
+	case WLZ_GREY_FLOAT: /* FALLTHROUGH */
+	case WLZ_GREY_DOUBLE:
+	  unsup = 0;
+	  gStr = "float";
+	  break;
+	default:
+	  break;
+      }
+      if(unsup == 0)
+      {
+	if(fprintf(fP,
+		   "POINT_DATA %d\n"
+		   "SCALARS fromwlz %s\n"
+		   "LOOKUP_TABLE default\n",
+		   pdm->nPoints, gStr) <= 0)
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+	else
+	{
+          int	i;
+
+	  switch(pvl->vType)
+	  {
+	    case WLZ_GREY_UBYTE:
+	      for(i = 0; i < pdm->nPoints; ++i)
+	      {
+	        if(fprintf(fP, "%d\n", pvl->values.ubp[i]) <= 0)
+		{
+		  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+		  break;
+		}
+	      }
+	      break;
+	    case WLZ_GREY_INT:
+	      for(i = 0; i < pdm->nPoints; ++i)
+	      {
+	        if(fprintf(fP, "%g\n", (float )(pvl->values.inp[i])) <= 0)
+		{
+		  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+		  break;
+		}
+	      }
+	      break;
+	    case WLZ_GREY_SHORT:
+	      for(i = 0; i < pdm->nPoints; ++i)
+	      {
+	        if(fprintf(fP, "%g\n", (float )(pvl->values.shp[i])) <= 0)
+		{
+		  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+		  break;
+		}
+	      }
+	      break;
+	    case WLZ_GREY_FLOAT:
+	      for(i = 0; i < pdm->nPoints; ++i)
+	      {
+	        if(fprintf(fP, "%g\n", pvl->values.flp[i]) <= 0)
+		{
+		  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+		  break;
+		}
+	      }
+	      break;
+	    case WLZ_GREY_DOUBLE:
+	      for(i = 0; i < pdm->nPoints; ++i)
+	      {
+	        if(fprintf(fP, "%g\n", (float )(pvl->values.dbp[i])) <= 0)
+		{
+		  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+		  break;
+		}
+	      }
+	      break;
+	    default:
+	      break;
+	  }
+	}
+      }
     }
   }
   return(errNum);
