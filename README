@@ -1,8 +1,7 @@
 The Woolz Image Processing System
 =================================
-($Id$)
 
-Bill.Hill@igmm.mrc.ac.uk 2012
+Bill.Hill@igmm.mrc.ac.uk 2016
 
 Contents
 --------
@@ -130,10 +129,8 @@ In these cases running
   autoreconf -i --force
 may fix the problems.
 
-The build script build.sh simply runs
-  autoreconf
-followed by
-  ./configure
+The build script build.sh simply runs autoreconf followed by ./configure
+with the appropraite options.
 
 A prefix can be given in the configure stage to define where the programs,
 libraries are will be installed, conventionally this is /opt/MouseAtlas.
@@ -216,7 +213,7 @@ Usage: WlzExtFFConvert [-h] [-s] [-b<background>]
                        [-o<output file>] [<input file>)]
 Converts objects between one file format and another, neither of
 which need be the Woolz data file format.
-Version: 1.6.0
+Version: 1.6.8
 Options:
   -h    Help, prints this usage information.
   -s    Split labeled volumes into domains.This will also split
@@ -606,6 +603,6 @@ values.
 7)  Documentation
 -----------------
 
-Woolz uses Doxygen (http://www.doxygen.org) for documentation, but the
+Woolz uses Doxygen (http://www.doxygen.org) for documentation, but the best
 documentation is, as always, the source code itself!
 
