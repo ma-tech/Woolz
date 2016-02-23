@@ -882,26 +882,26 @@ static int	AlcKDTNodeIntersectsSphereBB(AlcKDTTree *tree,
     {
       case 2:
 	{
-	  inside &= (node->boundP.kI[0] >= (centre.kI[0] - radF)) &
-		    (node->boundN.kI[0] <= (centre.kI[0] + radC)) &
-	            (node->boundP.kI[1] >= (centre.kI[1] - radF)) &
-		    (node->boundN.kI[1] <= (centre.kI[1] + radC));
+	  inside = (node->boundP.kI[0] >= (centre.kI[0] - radF)) &&
+		   (node->boundN.kI[0] <= (centre.kI[0] + radC)) &&
+	           (node->boundP.kI[1] >= (centre.kI[1] - radF)) &&
+		   (node->boundN.kI[1] <= (centre.kI[1] + radC));
 	}
 	break;
       case 3:
 	{
-	  inside &= (node->boundP.kI[0] >= (centre.kI[0] - radF)) &
-		    (node->boundN.kI[0] <= (centre.kI[0] + radC)) &
-	            (node->boundP.kI[1] >= (centre.kI[1] - radF)) &
-		    (node->boundN.kI[1] <= (centre.kI[1] + radC)) &
-	            (node->boundP.kI[2] >= (centre.kI[2] - radF)) &
-		    (node->boundN.kI[2] <= (centre.kI[2] + radC));
+	  inside = (node->boundP.kI[0] >= (centre.kI[0] - radF)) &&
+		   (node->boundN.kI[0] <= (centre.kI[0] + radC)) &&
+	           (node->boundP.kI[1] >= (centre.kI[1] - radF)) &&
+		   (node->boundN.kI[1] <= (centre.kI[1] + radC)) &&
+	           (node->boundP.kI[2] >= (centre.kI[2] - radF)) &&
+		   (node->boundN.kI[2] <= (centre.kI[2] + radC));
 	}
 	break;
       default:
 	do
 	{
-	  inside &= (node->boundP.kI[idx] >= (centre.kI[idx] - radF)) &
+	  inside &= (node->boundP.kI[idx] >= (centre.kI[idx] - radF)) &&
 		    (node->boundN.kI[idx] <= (centre.kI[idx] + radC));
 	}
 	while(inside && (++idx < tree->dim));
@@ -912,7 +912,7 @@ static int	AlcKDTNodeIntersectsSphereBB(AlcKDTTree *tree,
   {
     do
     {
-      inside &= (node->boundP.kD[idx] >= (centre.kD[idx] - radius)) &
+      inside &= (node->boundP.kD[idx] >= (centre.kD[idx] - radius)) &&
 		(node->boundN.kD[idx] <= (centre.kD[idx] + radius));
     }
     while(inside && (++idx < tree->dim));
@@ -962,23 +962,50 @@ static double	AlcKDTKeyDistSq(AlcKDTTree *tree,
 				AlcPointP key0, AlcPointP key1)
 {
   int		idx;
-  double	tD0,
-		distSq = 0;
+  double	distSq = 0;
 
   if(tree->type == ALC_POINTTYPE_INT)
   {
-    for(idx = 0; idx < tree->dim; ++idx)
+    switch(tree->dim)
     {
-      tD0 = (double )(*(key0.kI + idx) - *(key1.kI + idx));
-      distSq += tD0 * tD0;
+      case 2:
+	{
+	  double  d[2];
+
+	  d[0] = key0.kI[0] - key1.kI[0];
+	  d[1] = key0.kI[1] - key1.kI[1];
+	  distSq = (d[0] * d[0]) + (d[1] * d[1]);
+	}
+        break;
+      case 3:
+	{
+	  double  d[3];
+
+	  d[0] = key0.kI[0] - key1.kI[0];
+	  d[1] = key0.kI[1] - key1.kI[1];
+	  d[2] = key0.kI[2] - key1.kI[2];
+	  distSq = (d[0] * d[0]) + (d[1] * d[1]) + (d[2] * d[2]);
+	}
+        break;
+      default:
+	for(idx = 0; idx < tree->dim; ++idx)
+	{
+	  double d;
+
+	  d = key0.kI[idx] - key1.kI[idx];
+	  distSq += d * d;
+	}
+	break;
     }
   }
   else /* tree->type = ALC_POINTTYPE_DBL */
   {
     for(idx = 0; idx < tree->dim; ++idx)
     {
-      tD0 = *(key0.kD + idx) - *(key1.kD + idx);
-      distSq += tD0 * tD0;
+      double	d;
+
+      d = key0.kD[idx] - key1.kD[idx];
+      distSq += d * d;
     }
   }
   return(distSq);
