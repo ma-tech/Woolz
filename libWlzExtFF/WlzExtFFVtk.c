@@ -1923,7 +1923,7 @@ WlzObject	*WlzEffReadPolyVtk(FILE *fP, WlzEffVtkHeader *header,
 	      {
 		if((strtok(NULL, " \t\n\r\f\v") == NULL) ||
 		   ((valS = strtok(NULL, " \t\n\r\f\v")) == NULL) ||
-		   strcmp(valS, "float"))
+		   (strcmp(valS, "float") && strcmp(valS, "char")))
 		{
 		  errNum = WLZ_ERR_READ_INCOMPLETE;
 		}
