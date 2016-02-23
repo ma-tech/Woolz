@@ -43,6 +43,7 @@ static char _WlzExtFFVtk_c[] = "University of Edinburgh $Id$";
 #include <Wlz.h>
 #include <WlzExtFF.h>
 #include <string.h>
+#include <float.h>
 
 static WlzErrorNum 		WlzEffWriteImgVtk(
 				  FILE *fP,
@@ -72,11 +73,7 @@ static WlzObject		*WlzEffReadCMeshVtk(
 				  FILE *fP,
 				  WlzEffVtkHeader *header,
 				  WlzErrorNum *dstErr);
-static WlzObject		*WlzEffReadCtrVtk(
-				  FILE *fP,
-				  WlzEffVtkHeader *header,
-				  WlzErrorNum *dstErr);
-static WlzGMModel		*WlzEffReadGMVtk(
+static WlzObject		*WlzEffReadPolyVtk(
 				  FILE *fP,
 				  WlzEffVtkHeader *header,
 				  WlzErrorNum *dstErr);
@@ -119,7 +116,7 @@ WlzObject	*WlzEffReadObjVtk(FILE *fP, WlzErrorNum *dstErr)
 	obj = WlzEffReadImgVtk(fP, &header, &errNum);
         break;
       case WLZEFF_VTK_TYPE_POLYDATA:
-	obj = WlzEffReadCtrVtk(fP, &header, &errNum);
+	obj = WlzEffReadPolyVtk(fP, &header, &errNum);
         break;
       case WLZEFF_VTK_TYPE_UNSTRUCTURED_GRID:
         obj = WlzEffReadCMeshVtk(fP, &header, &errNum);
@@ -1209,47 +1206,6 @@ static WlzErrorNum WlzEffHeadReadVtk(WlzEffVtkHeader *header, FILE *fP)
 /*!
 * \return	Object read from file.
 * \ingroup	WlzExtFF
-* \brief	Reads a Woolz contour object from the given stream using
-*		the Visualization Toolkit (polydata) file format.
-* \param	fP			Input file stream.
-* \param	header			Header data structure.
-* \param	dstErr			Destination error number ptr, may be
-* 					NULL.
-*/
-WlzObject	*WlzEffReadCtrVtk(FILE *fP, WlzEffVtkHeader *header,
-				  WlzErrorNum *dstErr)
-{
-  WlzDomain	dom;
-  WlzValues	val;
-  WlzObject	*obj = NULL;
-  WlzContour	*ctr = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
-
-  if((ctr = WlzMakeContour(&errNum)) != NULL)
-  {
-    ctr->model = WlzAssignGMModel(WlzEffReadGMVtk(fP, header, &errNum), NULL);
-    if(errNum == WLZ_ERR_NONE)
-    {
-      dom.ctr = ctr;
-      val.core = NULL;
-      obj = WlzMakeMain(WLZ_CONTOUR, dom, val, NULL, NULL, &errNum);
-    }
-    if(errNum != WLZ_ERR_NONE)
-    {
-      WlzFreeContour(ctr);
-      ctr = NULL;
-    }
-  }
-  if(dstErr)
-  {
-    *dstErr = errNum;
-  }
-  return(obj);
-}
-
-/*!
-* \return	Object read from file.
-* \ingroup	WlzExtFF
 * \brief	Reads a Woolz CMESH object from the given stream using
 *		the Visualization Toolkit (unstructured grid) file format.
 * \param	fP			Input file stream.
@@ -1665,27 +1621,30 @@ WlzObject	*WlzEffReadCMeshVtk(FILE *fP, WlzEffVtkHeader *header,
 * \param	dstErr			Destination error number ptr, may be
 * 					NULL.
 */
-WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
-				 WlzErrorNum *dstErr)
+WlzObject	*WlzEffReadPolyVtk(FILE *fP, WlzEffVtkHeader *header,
+				   WlzErrorNum *dstErr)
 {
   int		valI,
 		pIdx,
-		nLine,
-		nPoly,
-		nPoints,
-		sumPoints,
-		endOfData,
+		nLine = 0,
+		nPoly = 0,
+		nPoints = 0,
+		nPointData = 0,
+		sumPoints = 0,
+		endOfData = 0,
 		vHTSz;
   char 		*valS = NULL;
   WlzGMModel	*model = NULL;
-  WlzEffVtkPolyDataType prim;
+  WlzDomain	dom;
+  WlzValues	val;
+  WlzObject	*obj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzDVertex3	*pointBuf = NULL;
-  WlzDVertex3	triBuf[3];
-  WlzDVertex2	linBuf[3];
-  int		polyBuf[3];
+  float		*pointDataBuf = NULL;
   char		buf[256];
 
+  dom.core = NULL;
+  val.core = NULL;
   if(header->dataType == WLZEFF_VTK_DATATYPE_BINARY)
   {
     /* Can only read ascii polydata. */
@@ -1693,10 +1652,10 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    sumPoints = 0;
-    endOfData = 0;
     do
     {
+      WlzEffVtkPolyDataType prim;
+
       /* Read line containing token. */
       if(fgets(buf, 256, fP) == NULL)
       {
@@ -1716,6 +1675,10 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 		"LINES", WLZEFF_VTK_POLYDATATYPE_LINES,
 		"POLYGONS", WLZEFF_VTK_POLYDATATYPE_POLYGONS,
 		"TRIANGLE_STRIPS", WLZEFF_VTK_POLYDATATYPE_TRIANGLE_STRIPS,
+		"POINT_DATA", WLZEFF_VTK_POLYDATATYPE_POINT_DATA,
+		"VECTORS", WLZEFF_VTK_POLYDATATYPE_VECTORS,
+		"SCALARS", WLZEFF_VTK_POLYDATATYPE_SCALARS,
+		"LOOKUP_TABLE", WLZEFF_VTK_POLYDATATYPE_LOOKUP_TABLE,
 		NULL) != 0))
 	{
 	  prim = valI;
@@ -1762,18 +1725,40 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      }
 	      break;
 	    case WLZEFF_VTK_POLYDATATYPE_POLYGONS:
-	      if(model == NULL)
+	      if(obj == NULL)
 	      {
-		vHTSz = (nPoints < 1024)? 1024: nPoints / 3;
-    		model = WlzGMModelNew(WLZ_GMMOD_3D, 0, vHTSz, &errNum);
+		vHTSz = (sumPoints < 1024)? 1024: sumPoints / 3;
+		model = WlzGMModelNew(WLZ_GMMOD_3D, 0, vHTSz, &errNum);
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  dom.ctr = WlzMakeContour(&errNum);
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    dom.ctr->model = WlzAssignGMModel(model, NULL);
+	            obj = WlzMakeMain(WLZ_CONTOUR, dom, val, NULL, NULL,
+		                      &errNum);
+		    if(obj == NULL)
+		    {
+		      (void )WlzFreeContour(dom.ctr);
+		    }
+		  }
+		  else
+		  {
+		    (void )WlzGMModelFree(model);
+		  }
+		}
 	      }
-	      else
+	      else if(model && (model->type == WLZ_GMMOD_3D))
 	      {
-	        vHTSz = (sumPoints < 1024)? 1024: sumPoints / 3;
+		vHTSz = (sumPoints < 1024)? 1024: sumPoints / 3;
 		if(model->vertexHTSz < vHTSz)
 		{
 		  errNum = WlzGMModelRehashVHT(model, vHTSz);
 		}
+	      }
+	      else
+	      {
+	        errNum = WLZ_ERR_READ_INCOMPLETE;
 	      }
 	      if(errNum == WLZ_ERR_NONE)
 	      {
@@ -1786,30 +1771,34 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      }
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-	        valS = strtok(NULL, " \t\n\r\f\v");
+		valS = strtok(NULL, " \t\n\r\f\v");
 		if((valS == NULL) || (sscanf(valS, "%d", &valI) != 1) ||
 		   (valI < 0) || ((valI / nPoly) != 4))
-	        {
+		{
 		  /* Can only use triangles ((valI / nPoly) != (1 + 3)). */
 		  errNum = WLZ_ERR_READ_INCOMPLETE;
 		}
 	      }
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-	        pIdx = 0;
+                int	polyBuf[3];
+
+		pIdx = 0;
 		while((errNum == WLZ_ERR_NONE) && (pIdx < nPoly))
 		{
 		  if((fscanf(fP, "%d", &valI) != 1) || (valI != 3) ||
 		     (fscanf(fP, "%d %d %d",
-		             polyBuf + 0, polyBuf + 1, polyBuf + 2) != 3) ||
-		     (*(polyBuf + 0) < 0) || (*(polyBuf + 0) >= nPoints) ||
-		     (*(polyBuf + 1) < 0) || (*(polyBuf + 1) >= nPoints) ||
-		     (*(polyBuf + 2) < 0) || (*(polyBuf + 2) >= nPoints))
+			     polyBuf + 0, polyBuf + 1, polyBuf + 2) != 3) ||
+		     (*(polyBuf + 0) < 0) || (*(polyBuf + 0) >= sumPoints) ||
+		     (*(polyBuf + 1) < 0) || (*(polyBuf + 1) >= sumPoints) ||
+		     (*(polyBuf + 2) < 0) || (*(polyBuf + 2) >= sumPoints))
 		  {
 		    errNum = WLZ_ERR_READ_INCOMPLETE;
 		  }
 		  else
 		  {
+                    WlzDVertex3	triBuf[3];
+
 		    /* Add triangle to GM. */
 		    *(triBuf + 0) = *(pointBuf + *(polyBuf + 0));
 		    *(triBuf + 1) = *(pointBuf + *(polyBuf + 1));
@@ -1829,18 +1818,32 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      errNum = WLZ_ERR_READ_INCOMPLETE;
 	      break;
 	    case WLZEFF_VTK_POLYDATATYPE_LINES:     /* FALLTHROUGH */
-	      if(model == NULL)
+	      if(obj == NULL)
 	      {
-		vHTSz = (nPoints < 1024)? 1024: nPoints / 2;
-    		model = WlzGMModelNew(WLZ_GMMOD_2D, 0, vHTSz, &errNum);
+		vHTSz = (sumPoints < 1024)? 1024: sumPoints / 2;
+		model = WlzGMModelNew(WLZ_GMMOD_2D, 0, vHTSz, &errNum);
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  dom.ctr = WlzMakeContour(&errNum);
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    dom.ctr->model = WlzAssignGMModel(model, NULL);
+	            obj = WlzMakeMain(WLZ_CONTOUR, dom, val, NULL, NULL,
+		                      &errNum);
+		  }
+		}
 	      }
-	      else
+	      else if(model && (model->type == WLZ_GMMOD_2D))
 	      {
 	        vHTSz = (sumPoints < 1024)? 1024: sumPoints / 2;
 		if(model->vertexHTSz < vHTSz)
 		{
 		  errNum = WlzGMModelRehashVHT(model, vHTSz);
 		}
+	      }
+	      else
+	      {
+	        errNum = WLZ_ERR_READ_INCOMPLETE;
 	      }
 	      if(errNum == WLZ_ERR_NONE)
 	      {
@@ -1864,19 +1867,23 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 	      }
 	      if(errNum == WLZ_ERR_NONE)
 	      {
+                int	polyBuf[2];
+
 	        pIdx = 0;
 		while((errNum == WLZ_ERR_NONE) && (pIdx < nLine))
 		{
 		  if((fscanf(fP, "%d", &valI) != 1) || (valI != 2) ||
 		     (fscanf(fP, "%d %d",
 		             polyBuf + 0, polyBuf + 1) != 2) ||
-		     (*(polyBuf + 0) < 0) || (*(polyBuf + 0) >= nPoints) ||
-		     (*(polyBuf + 1) < 0) || (*(polyBuf + 1) >= nPoints))
+		     (*(polyBuf + 0) < 0) || (*(polyBuf + 0) >= sumPoints) ||
+		     (*(polyBuf + 1) < 0) || (*(polyBuf + 1) >= sumPoints))
 		  {
 		    errNum = WLZ_ERR_READ_INCOMPLETE;
 		  }
 		  else
 		  {
+                    WlzDVertex2	linBuf[3];
+
 		    /* Add line to GM. */
 		    (linBuf + 0)->vtX = (pointBuf + *(polyBuf + 0))->vtX;
 		    (linBuf + 0)->vtY = (pointBuf + *(polyBuf + 0))->vtY;
@@ -1884,6 +1891,137 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
 		    (linBuf + 1)->vtY = (pointBuf + *(polyBuf + 1))->vtY;
 		    errNum = WlzGMModelConstructSimplex2D(model, linBuf);
 		    ++pIdx;
+		  }
+		}
+	      }
+	      break;
+	    case WLZEFF_VTK_POLYDATATYPE_POINT_DATA:
+	      if(obj || nPointData)
+	      {
+	        errNum = WLZ_ERR_READ_INCOMPLETE;
+	      }
+	      else
+	      {
+
+		valS = strtok(NULL, " \t\n\r\f\v");
+		if((valS == NULL) || (sscanf(valS, "%d", &nPointData) != 1) ||
+		   (nPointData != sumPoints))
+		{
+		  errNum = WLZ_ERR_READ_INCOMPLETE;
+		}
+	      }
+	      break;
+	    case WLZEFF_VTK_POLYDATATYPE_VECTORS:
+	      errNum = WLZ_ERR_READ_INCOMPLETE;
+	      break;
+	    case WLZEFF_VTK_POLYDATATYPE_SCALARS:
+	      if(nPointData <= 0)
+	      {
+	        errNum = WLZ_ERR_READ_INCOMPLETE;
+	      }
+	      else
+	      {
+		if((strtok(NULL, " \t\n\r\f\v") == NULL) ||
+		   ((valS = strtok(NULL, " \t\n\r\f\v")) == NULL) ||
+		   strcmp(valS, "float"))
+		{
+		  errNum = WLZ_ERR_READ_INCOMPLETE;
+		}
+	      }
+	      break;
+	    case WLZEFF_VTK_POLYDATATYPE_LOOKUP_TABLE:
+	      if((nPointData <= 0) |
+	         ((valS = strtok(NULL, " \t\n\r\f\v")) == NULL) ||
+	         strcmp(valS, "default"))
+	      {
+	        errNum = WLZ_ERR_READ_INCOMPLETE;
+	      }
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		WlzGreyType vType = WLZ_GREY_UBYTE;
+
+		if((pointDataBuf = (float *)
+		    AlcMalloc(sizeof(float) * nPointData)) == NULL)
+		{
+		  errNum = WLZ_ERR_MEM_ALLOC;
+		}
+		else
+		{
+		  float pVal;
+
+		  pIdx = 0;
+		  while((errNum == WLZ_ERR_NONE) && (pIdx < nPointData))
+		  {
+		    if(fscanf(fP, "%g", &pVal) != 1)
+		    {
+		      errNum = WLZ_ERR_READ_INCOMPLETE;
+		    }
+		    else
+		    {
+		      int iVal;
+
+		      iVal = WLZ_NINT(pVal);
+		      if(vType != WLZ_GREY_FLOAT)
+		      {
+			if(fabs(pVal - iVal) > FLT_EPSILON)
+			{
+			  vType = WLZ_GREY_FLOAT;
+			}
+			else if((unsigned int )iVal > 255)
+			{
+			  vType = WLZ_GREY_INT;
+			}
+		      }
+		      pointDataBuf[pIdx] = pVal;
+		    }
+		    ++pIdx;
+		  }
+		}
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  WlzVertexP pBuf;
+
+		  pBuf.d3 = pointBuf;
+		  dom.pts = WlzMakePoints(WLZ_POINTS_3D, nPointData,  pBuf,
+					  nPointData, &errNum);
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    val.pts = WlzMakePointValues(nPointData, 0, NULL, vType,
+						 &errNum);
+		  }
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    obj = WlzMakeMain(WLZ_POINTS, dom, val, NULL, NULL,
+		                      &errNum);
+		  }
+		}
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  switch(vType)
+		  {
+		    case WLZ_GREY_INT:
+		      for(pIdx = 0; pIdx < nPointData; ++pIdx)
+		      {
+			val.pts->values.inp[pIdx] = 
+			    WLZ_NINT(pointDataBuf[pIdx]);
+		      }
+		      break;
+		    case WLZ_GREY_UBYTE:
+		      for(pIdx = 0; pIdx < nPointData; ++pIdx)
+		      {
+			val.pts->values.ubp[pIdx] = 
+			    WLZ_NINT(pointDataBuf[pIdx]);
+		      }
+		      break;
+		    case WLZ_GREY_FLOAT:
+		      for(pIdx = 0; pIdx < nPointData; ++pIdx)
+		      {
+			val.pts->values.flp[pIdx] = pointDataBuf[pIdx];
+		      }
+		      break;
+		    default:
+		      errNum = WLZ_ERR_GREY_TYPE;
+		      break;
 		  }
 		}
 	      }
@@ -1897,19 +2035,30 @@ WlzGMModel	*WlzEffReadGMVtk(FILE *fP, WlzEffVtkHeader *header,
     }
     while((endOfData == 0) && (errNum == WLZ_ERR_NONE));
   }
+  if((errNum == WLZ_ERR_NONE) && (obj == NULL) && (sumPoints > 0))
+  {
+    WlzVertexP pBuf;
+
+    pBuf.d3 = pointBuf;
+    dom.pts = WlzMakePoints(WLZ_POINTS_3D, sumPoints,  pBuf, sumPoints,
+                            &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      obj = WlzMakeMain(WLZ_POINTS, dom, val, NULL, NULL, &errNum);
+    }
+  }
+  AlcFree(pointBuf);
+  AlcFree(pointDataBuf);
   if(errNum != WLZ_ERR_NONE)
   {
-    if(model)
-    {
-      (void )WlzGMModelFree(model);
-      model = NULL;
-    }
+    WlzFreeObj(obj);
+    obj = NULL;
   }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(model);
+  return(obj);
 }
 
 /*!
