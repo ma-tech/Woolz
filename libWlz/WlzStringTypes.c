@@ -543,9 +543,6 @@ const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
   {
     switch(obj->values.core->type)
     {
-      case WLZ_POINT_VALUES:
-        oValTypeStr = "WLZ_POINT_VALUES";
-	break;
       case WLZ_LUT:
         oValTypeStr = "WLZ_LUT";
 	break;
@@ -601,6 +598,17 @@ const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
 	      break;
 	    case WLZ_TRANS_OBJ:
 	      oValTypeStr = WlzStringFromObjType(obj->values.obj, &errNum);
+	      break;
+	    case WLZ_POINTS:
+	      switch(valType)                
+	      {
+		case WLZ_POINT_VALUES:
+		  oValTypeStr = "WLZ_POINT_VALUES";
+		  break;
+	        default:
+		  errNum = WLZ_ERR_VOXELVALUES_TYPE;
+		  break;
+	      }
 	      break;
 	    default:
 	      errNum = WLZ_ERR_OBJECT_TYPE;
