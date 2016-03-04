@@ -5,7 +5,7 @@ static char _WlzBackground_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzBackground.c
-* \author       Richard Baldock
+* \author       Richard Baldock, Bill Hill
 * \date         March 1999
 * \version      $Id$
 * \par
@@ -280,4 +280,59 @@ WlzPixelV WlzGetBackground(
     *dstErr = errNum;
   }
   return bgd;
+}
+
+/*!
+* \return	New Woolz object or NULL on error. 
+* \ingroup	WlzValuesUtils
+* \brief	Creates a new Woolz object in which the background value
+* 		is as given. The given object must be either a 2D or 3D
+* 		domain object with a valid domain, however it's values can
+* 		be NULL. If the values are NULL then a new value table is
+* 		created with the same grey type as the given background
+* 		value, or if non-NULL then a new value table is created
+* 		while sharing the values of the original object's value
+* 		table when this is possible. The given object remains
+* 		unchanged apart from linkcounts.
+* \param	gObj			Given object.
+* \param	bgdV			Given background value.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject			*WlzSetBackGroundNewObj(
+				  WlzObject *gObj,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr)
+{
+  WlzObjectType tType;
+  WlzObject	*rObj = NULL;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  if(gObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(gObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(gObj->values.core == NULL)
+  {
+    /* Given object has NULL values so create a new value table. */
+    tType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, bgdV.type, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      rObj = WlzNewObjectValues(gObj, tType, bgdV, 1, bgdV, &errNum);
+    }
+  }
+  else
+  {
+    /* Given object has values so create new value table using the same
+     * values. */
+    rObj = WlzNewObjectValueTable(gObj, bgdV, &errNum);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
 }
