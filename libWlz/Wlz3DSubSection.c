@@ -110,7 +110,8 @@ WlzObject 	*WlzGetSubSectionFromObject(
 	   (maskRtn == NULL) &&
 	   (interp == WLZ_INTERPOLATION_NEAREST) &&
 	   WlzGreyTableIsTiled(obj->values.core->type) &&
-	   (obj->values.t->tileWidth == 16))
+	   (obj->values.t->tileWidth == 16) &&
+	   (obj->values.t->original_table.core == NULL))
 	{
 	  newObj = WlzGetSubSectionFrom3DTiledValueObj(obj, subDomain, view,
 	                                               &errNum);
@@ -138,7 +139,9 @@ WlzObject 	*WlzGetSubSectionFromObject(
 * \ingroup	WlzSectionTransform
 * \brief	Computes a section through the given 3D domain object
 * 		where that object has tiled values and only the section
-* 		values are required. Assumes a tile width of 16 voxels.
+* 		values are required. Assumes a tile width of 16 voxels
+* 		and that there is a valid background value in that part
+* 		of each tile which falls outside of the object's domain.
 * \param	obj			Given 3D object which is known to
 * 					be non-NULL, have non-NULL domain
 * 					and values with the values being
