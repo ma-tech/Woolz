@@ -51,13 +51,17 @@ WlzSetBackground - sets the background value of a domain object with
                    grey values.
 \par Synopsis
 \verbatim
-WlzSetBackground [-h] [-v] [-b#] [<input file>]
+WlzSetBackground [-f] [-h] [-v] [-b#] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-f</b></td>
+    <td>Force new object, probably only useful for tests.</td>
   </tr>
   <tr> 
     <td><b>-v</b></td>
@@ -104,7 +108,7 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-b#] [-h] [-v] [<input file>]\n"
+	  "Usage:\t%s [-b#] [-f] [-h] [-v] [<input file>]\n"
 	  "\tSet the background of a grey-level woolz object\n"
 	  "\twriting the new object to standard output.\n"
 	  "\tThe background value is converted to the grey type\n"
@@ -112,6 +116,7 @@ static void usage(char *proc_str)
 	  "Version: %s\n"
 	  "Options:\n"
 	  "\t  -b#       required background value, default 0\n"
+	  "\t  -f        force new object (probably only useful for tests)\n"
 	  "\t  -h        help - prints this usage message\n"
 	  "\t  -v        verbose operation\n",
 	  proc_str,
@@ -125,8 +130,9 @@ int main(int	argc,
 
   WlzObject	*obj;
   FILE		*inFile;
-  char 		optList[] = "b:hv";
-  int		option;
+  char 		optList[] = "b:fhv";
+  int		forceNew = 0,
+  		option;
   WlzPixelV	bckgrnd;
   int		verboseFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -139,20 +145,19 @@ int main(int	argc,
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
-
-    case 'b':
-      bckgrnd.v.dbv = atof(optarg);
-      break;
-
-    case 'v':
-      verboseFlg = 1;
-      break;
-
-    case 'h':
-    default:
-      usage(argv[0]);
-      return 1;
-
+      case 'b':
+	bckgrnd.v.dbv = atof(optarg);
+	break;
+      case 'f':
+	forceNew = 1;
+	break;
+      case 'v':
+	verboseFlg = 1;
+	break;
+      case 'h':
+      default:
+	usage(argv[0]);
+	return 1;
     }
   }
 
@@ -173,7 +178,16 @@ int main(int	argc,
     {
     case WLZ_2D_DOMAINOBJ:
     case WLZ_3D_DOMAINOBJ:
-      errNum = WlzSetBackground(obj, bckgrnd);
+      if(forceNew) {
+        WlzObject *tObj;
+
+	tObj = WlzAssignObject(
+	       WlzSetBackGroundNewObj(obj, bckgrnd, &errNum), NULL);
+	WlzFreeObj(obj);
+	obj = tObj;
+      } else {
+        errNum = WlzSetBackground(obj, bckgrnd);
+      }
       if( errNum == WLZ_ERR_NONE ){
 	if( verboseFlg ){
 	  fprintf(stderr,
