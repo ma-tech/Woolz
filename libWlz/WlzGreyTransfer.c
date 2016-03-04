@@ -5,7 +5,7 @@ static char _WlzGreyTransfer_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         libWlz/WlzGreyTransfer.c
-* \author       Richard Baldock
+* \author       Richard Baldock, Bill Hill
 * \date         September 2002
 * \version      $Id$
 * \par
@@ -38,310 +38,231 @@ static char _WlzGreyTransfer_c[] = "University of Edinburgh $Id$";
 * \brief	Transfers grey values from a source to a destination
 * 		object. The source object grey values are set in the
 * 		intersection domain between source and destination.
-* 		Destination domain and the destination values outside of the
-* 		intersection are unchanged.
+* 		Destination domain and the destination values outside
+* 		of the intersection are unchanged.
 * \ingroup	WlzValuesUtils
 */
 
 #include <stdio.h>
 #include <string.h>
-
 #include <Wlz.h>
 
-static WlzObject *WlzGreyTransfer3d(WlzObject	*obj,
-				    WlzObject	*tmpl,
-				    WlzErrorNum	*dstErr);
+static WlzErrorNum		WlzGreyTransfer2D(
+				  WlzObject *dObj,
+				  WlzObject *sObj);
 
 
-
-/* function:     WlzGreyTransfer    */
-/*! 
-* \ingroup      WlzValuesUtils
-* \brief        Transfer grey values from the source object to the
- destination object. Currently it is assumed that the objects are
- of the same type (2D/3D) and have the same grey-value type.
-*
-* \return       Woolz object with transferred grey values
-* \param    obj	destination object
-* \param    srcObj	source object
-* \param    dstErr	error return
-* \par      Source:
-*                WlzGreyTransfer.c
+/*!
+* \return	New object or NULL on error.
+* \ingroup	WlzValuesUtils
+* \brief 	Transfers grey values from the source object to the
+*               destination object within the intersection of the source
+*               and destination. Grey values within the destination
+*               object outside of the source object are unchanged.
+*               It is an error if either object has a different dimension
+*               or grey value type, except for when either is an empty
+*               object.
+* \param	dObj			Destination object which may be
+* 					empty, but otherwise should be of the
+* 					same dimension as the source object
+* 					with valid values..
+* \param	sObj			Source object which if not empty must
+* 					have both a valid domain and valid
+* 					values.
+* \param	inplace			Overwrite the destination object's
+* 					values if non zero.
+* \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject *WlzGreyTransfer(
-  WlzObject	*obj,
-  WlzObject	*srcObj,
-  WlzErrorNum	*dstErr)
+WlzObject			*WlzGreyTransfer(
+				  WlzObject *dObj,
+				  WlzObject *sObj,
+				  int inplace,
+				  WlzErrorNum *dstErr)
 {
-  WlzObject	*rtnObj=NULL;
-  WlzObject	*obj1, *obj2;
-  WlzValues	values;
-  WlzIntervalWSpace	iwsp1, iwsp2;
-  WlzGreyWSpace		gwsp1, gwsp2;
-  int			size;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* check destination obj */
-  if( obj == NULL ){
+  if((dObj == NULL) || (sObj == NULL))
+  {
     errNum = WLZ_ERR_OBJECT_NULL;
   }
-  else {
-    switch( obj->type ){
-    case WLZ_2D_DOMAINOBJ:
-      if( obj->values.core == NULL ){
-	errNum = WLZ_ERR_VALUES_NULL;
-      } else if(WlzGreyTableIsTiled(obj->values.core->type)) {
-        errNum = WLZ_ERR_VALUES_TYPE;
-      }
-      else {
-        rtnObj = WlzCopyObject(obj, &errNum);
-      }
-      break;
-
-    case WLZ_3D_DOMAINOBJ:
-      return WlzGreyTransfer3d(obj, srcObj, dstErr);
-
-    case WLZ_TRANS_OBJ:
-      if((values.obj = WlzGreyTransfer(obj->values.obj, srcObj,
-				       &errNum)) != NULL){
-	return WlzMakeMain(WLZ_TRANS_OBJ, obj->domain, values,
-			   NULL, NULL, dstErr);
-      }
-      break;
-
-    case WLZ_EMPTY_OBJ:
-      return WlzMakeEmpty(dstErr);
-
-    default:
-      errNum = WLZ_ERR_OBJECT_TYPE;
-      break;
-    }
+  else if(WlzIsEmpty(dObj, NULL))
+  {
+    rObj = WlzMakeEmpty(&errNum);
   }
-
-  /* check the source object */
-  if( errNum == WLZ_ERR_NONE ){
-    if( srcObj == NULL ){
-      errNum = WLZ_ERR_OBJECT_NULL;
-    }
-    else {
-      switch( srcObj->type ){
-      case WLZ_2D_DOMAINOBJ:
-	break;
-
-      case WLZ_TRANS_OBJ:
-	srcObj = srcObj->values.obj;
-	break;
-
-      case WLZ_EMPTY_OBJ:
-	if( dstErr ){
-	  *dstErr = errNum;
-	}
-	return rtnObj;
-
-      default:
-	errNum = WLZ_ERR_OBJECT_TYPE;
-	break;
-      }
-    }
+  else if(WlzIsEmpty(sObj, NULL))
+  {
+    rObj = WlzMakeMain(dObj->type, dObj->domain, dObj->values,
+                       dObj->plist, NULL, &errNum);
   }
-
-  /* copy source obj values within the intersection */
-  if( errNum == WLZ_ERR_NONE ){
-    if((srcObj->type != WLZ_EMPTY_OBJ) ){
-      if( (obj1 = WlzIntersect2(srcObj, rtnObj, &errNum)) ){
-	obj1->values = WlzAssignValues(rtnObj->values, NULL);
-	obj2 = WlzMakeMain(obj1->type, obj1->domain, srcObj->values,
-			   NULL, NULL, NULL);
-
-	errNum = WlzInitGreyScan(obj1, &iwsp1, &gwsp1);
-	errNum = WlzInitGreyScan(obj2, &iwsp2, &gwsp2);
-	switch( gwsp1.pixeltype ){
-	case WLZ_GREY_INT:
-	  size = sizeof(int);
-	  break;
-	case WLZ_GREY_SHORT:
-	  size = sizeof(short);
-	  break;
-	case WLZ_GREY_UBYTE:
-	  size = sizeof(WlzUByte);
-	  break;
-	case WLZ_GREY_FLOAT:
-	  size = sizeof(float);
-	  break;
-	case WLZ_GREY_DOUBLE:
-	  size = sizeof(double);
-	  break;
-	case WLZ_GREY_RGBA:
-	  size = sizeof(WlzUInt);
-	  break;
-	default:
-	  errNum = WLZ_ERR_GREY_TYPE;
-	  break;
-	}
-
-	while((errNum == WLZ_ERR_NONE) &&
-	      (errNum = WlzNextGreyInterval(&iwsp1)) == WLZ_ERR_NONE){
-	  (void) WlzNextGreyInterval(&iwsp2);
-	  memcpy((void *) gwsp1.u_grintptr.inp,
-		 (const void *) gwsp2.u_grintptr.inp,
-		 size * iwsp1.colrmn);
-	}
-	if( errNum == WLZ_ERR_EOO ){
-	  errNum = WLZ_ERR_NONE;
-	}
-	WlzFreeObj(obj2);
-	WlzFreeObj(obj1);
-      }
-      else {
-	WlzFreeObj(rtnObj);
-	rtnObj = NULL;
-      }
-    }
+  else if(dObj->type != sObj->type)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
   }
-
-  if( dstErr ){
-    *dstErr = errNum;
-  }
-  return rtnObj;
-}
-
-/* function:     WlzGreyTransfer3d    */
-/*! 
-* \ingroup      WlzValuesUtils
-* \brief        static function to implement WlzGreyTransfer for 3D objects.
-*
-* \return       woolz object
-* \param    obj	destination object
-* \param    srcObj	source object
-* \param    dstErr	error return
-* \par      Source:
-*                WlzGreyTransfer.c
-*/
-static WlzObject *WlzGreyTransfer3d(
-  WlzObject	*obj,
-  WlzObject	*srcObj,
-  WlzErrorNum	*dstErr)
-{
-  WlzObject	*rtnObj=NULL;
-  WlzObject	*obj1, *obj2, *tmpObj;
-  WlzDomain	*domains;
-  WlzValues	values, *valuess;
-  WlzPlaneDomain	*pdom;
-  int		p;
-  WlzErrorNum	errNum=WLZ_ERR_NONE;
-
-  /* check the object - it is non-NULL and 3D but the
-     domain needs checking */
-  if( obj->domain.p == NULL ){
+  else if((dObj->domain.core == NULL) || (sObj->domain.core == NULL))
+  {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else {
-    switch( obj->domain.p->type ){
-    case WLZ_2D_DOMAINOBJ:
-      /* check there is a valuetable */
-      if( obj->values.core == NULL ){
-	errNum = WLZ_ERR_VALUES_NULL;
-      } else if(WlzGreyTableIsTiled(obj->values.core->type)) {
-        errNum = WLZ_ERR_VALUES_TYPE;
-      }
-      break;
-
-    default:
-      errNum = WLZ_ERR_DOMAIN_TYPE;
-      break;
-    }
+  else if((dObj->values.core == NULL) || (sObj->values.core == NULL))
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
   }
+  else
+  {
+    switch(sObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+      case WLZ_3D_DOMAINOBJ: /* FALLTHROUGH */
+        {
+	  WlzObject	*rIObj = NULL;
 
-  /* check the source object */
-  if( errNum == WLZ_ERR_NONE ){
-    if( srcObj == NULL ){
-      errNum = WLZ_ERR_OBJECT_NULL;
-    }
-    else {
-      switch( srcObj->type ){
-
-      case WLZ_3D_DOMAINOBJ:
-	if( srcObj->domain.p ){
-	  switch( srcObj->domain.p->type ){
-	  case WLZ_2D_DOMAINOBJ:
-	    break;
-
-	  default:
-	    errNum = WLZ_ERR_DOMAIN_TYPE;
-	    break;
+	  rIObj = WlzIntersect2(dObj, sObj, &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    rObj = (inplace)?
+		   WlzMakeMain(dObj->type, dObj->domain, dObj->values,
+			       dObj->plist, NULL, &errNum):
+		   WlzCopyObject(dObj, &errNum);
 	  }
-	}
-	else {
-	  errNum = WLZ_ERR_DOMAIN_NULL;
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    if(sObj->type == WLZ_2D_DOMAINOBJ)
+	    {
+	      WlzObject *sIObj;
+
+	      rIObj->values = WlzAssignValues(rObj->values, NULL);
+	      sIObj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+	                          rIObj->domain, sObj->values,
+				  NULL, NULL, &errNum);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+	        errNum = WlzGreyTransfer2D(rIObj, sIObj);
+	      }
+	      (void )WlzFreeObj(sIObj);
+	    }
+	    else /* sObj->type == WLZ_3D_DOMAINOBJ */
+	    {
+	      int	p,
+			rTiled,
+			sTiled,
+	      		nPlanes;
+
+	      rTiled = WlzGreyTableIsTiled(rObj->values.core->type);
+	      sTiled = WlzGreyTableIsTiled(sObj->values.core->type);
+	      nPlanes = rIObj->domain.p->lastpl - rIObj->domain.p->plane1 + 1;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+	      for(p = 0; p < nPlanes; ++p)
+	      {
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  int	     pln;
+		  WlzDomain  dom;
+		  WlzValues  val;
+		  WlzObject  *rIObj2D = NULL,
+			     *sIObj2D = NULL;
+                  WlzErrorNum errNum2D = WLZ_ERR_NONE;
+
+		  pln = p + rIObj->domain.p->plane1;
+		  dom = rIObj->domain.p->domains[p];
+		  val = (rTiled)?
+		        rObj->values:
+		        rObj->values.vox->values[pln -
+			                         rObj->values.vox->plane1];
+		  rIObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+		                        dom, val, NULL, NULL, &errNum2D);
+		  if(errNum2D == WLZ_ERR_NONE)
+		  {
+		    val = (sTiled)?
+		          sObj->values:
+			  sObj->values.vox->values[pln -
+			                           sObj->values.vox->plane1];
+		    sIObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+		                          dom, val, NULL, NULL, &errNum2D);
+		  }
+		  if(errNum2D == WLZ_ERR_NONE)
+		  {
+		    errNum2D = WlzGreyTransfer2D(rIObj2D, sIObj2D);
+		  }
+		  (void )WlzFreeObj(rIObj2D);
+		  (void )WlzFreeObj(sIObj2D);
+#ifdef _OPENMP
+#pragma omp critical
+		  {
+#endif
+		    if((errNum == WLZ_ERR_NONE) && (errNum2D != WLZ_ERR_NONE))
+		    {
+		      errNum = errNum2D;
+		    }
+#ifdef _OPENMP
+		  }
+#endif
+		}
+	      }
+	    }
+	  }
+	  (void )WlzFreeObj(rIObj);
 	}
 	break;
-
-      case WLZ_EMPTY_OBJ:
-	return WlzCopyObject(obj, dstErr);
-
       default:
 	errNum = WLZ_ERR_OBJECT_TYPE;
-	break;
-      }
+        break;
     }
   }
-
-  /* now we have a 3D obj and 3D srcObject so run through the source
-     and map values as required */
-  if( errNum == WLZ_ERR_NONE ){
-    WlzDomain	*objDoms;
-    WlzValues	*objVals;
-
-    /* attach a voxel table with empty values list */
-    values.vox = WlzMakeVoxelValueTb(obj->values.vox->type,
-				     obj->domain.p->plane1,
-				     obj->domain.p->lastpl,
-				     obj->values.vox->bckgrnd,
-				     NULL, NULL);
-    rtnObj = WlzMakeMain(obj->type, obj->domain, values, NULL, NULL, &errNum);
-
-    /* set some local variables */
-    pdom = rtnObj->domain.p;
-    domains = rtnObj->domain.p->domains;
-    valuess = rtnObj->values.vox->values;
-    objDoms = obj->domain.p->domains;
-    objVals = obj->values.vox->values;
-
-    /* calculate the new valuetables */
-    for(p=pdom->plane1; p <= pdom->lastpl;
-	p++, domains++, valuess++, objDoms++, objVals++){
-      if(((*domains).core)){
-	obj1 = WlzMakeMain(WLZ_2D_DOMAINOBJ, *objDoms, *objVals,
-			   NULL, NULL, &errNum);
-	obj1 = WlzAssignObject(obj1, &errNum);
-			   
-	if((p >= srcObj->domain.p->plane1) &&
-	   (p <= srcObj->domain.p->lastpl) &&
-	   (srcObj->domain.p->domains[p-srcObj->domain.p->plane1].core)){
-	  obj2 = 
-	    WlzMakeMain(WLZ_2D_DOMAINOBJ,
-			srcObj->domain.p->domains[p-srcObj->domain.p->plane1],
-			srcObj->values.vox->values[p-srcObj->domain.p->plane1],
-			NULL, NULL, &errNum);
-	}
-	else {
-	  obj2 = WlzMakeEmpty(NULL);
-	}
-	obj2 = WlzAssignObject(obj2, &errNum);
-
-	tmpObj = WlzGreyTransfer(obj1, obj2, &errNum);
-	*valuess = WlzAssignValues(tmpObj->values, &errNum);
-	WlzFreeObj(obj1);
-	WlzFreeObj(obj2);
-	WlzFreeObj(tmpObj);
-      }
-    }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    WlzFreeObj(rObj);
+    rObj = NULL;
   }
-
-  if( dstErr ){
+  if(dstErr)
+  {
     *dstErr = errNum;
   }
-  return rtnObj;
+  return(rObj);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValuesUtils
+* \brief 	Transfers grey values from the 2D source object to the
+*               2D destination object where both share the same domain.
+*               The objects are assumed valid 2D domain objects from
+*               WlzGreyTransfer().
+* \param	dObj			Destination object.
+* \param	sObj			Source object.
+*/
+static WlzErrorNum		WlzGreyTransfer2D(
+				  WlzObject *dObj,
+				  WlzObject *sObj)
+{
+  WlzGreyWSpace sGWSp,
+  		dGWSp;
+  WlzIntervalWSpace sIWSp,
+  		    dIWSp;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzInitGreyScan(sObj, &sIWSp, &sGWSp);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzInitGreyScan(dObj, &dIWSp, &dGWSp);
+  }
+  while((errNum == WLZ_ERR_NONE) &&
+	((errNum = WlzNextGreyInterval(&sIWSp)) == WLZ_ERR_NONE) &&
+	((errNum = WlzNextGreyInterval(&dIWSp)) == WLZ_ERR_NONE))
+  {
+    WlzValueCopyGreyToGrey(dGWSp.u_grintptr, 0, dGWSp.pixeltype,
+                           sGWSp.u_grintptr, 0, sGWSp.pixeltype,
+			   sIWSp.colrmn);
+  }
+  if(errNum == WLZ_ERR_EOO)
+  {
+    (void )WlzEndGreyScan(&sIWSp, &sGWSp);
+    (void )WlzEndGreyScan(&dIWSp, &dGWSp);
+    errNum = WLZ_ERR_NONE;
+  }
+  return(errNum);
+}
