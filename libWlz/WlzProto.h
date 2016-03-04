@@ -976,6 +976,10 @@ extern WlzPixelV 		WlzGetBackground(
 extern WlzErrorNum 		WlzSetBackground(
 				  WlzObject *obj,
 				  WlzPixelV bckgrnd);
+extern WlzObject		*WlzSetBackGroundNewObj(
+				  WlzObject *gObj,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzBasisFn.c								*
@@ -3704,6 +3708,7 @@ extern WlzObject 		*WlzGreyTemplate(
 extern WlzObject 		*WlzGreyTransfer(
 				  WlzObject *obj,
 				  WlzObject *tmpl,
+				  int inplace,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -4535,6 +4540,10 @@ extern WlzObject		*WlzMakeRect(
 				  WlzPixelV bckgrnd,
 				  WlzPropertyList *plist,
 				  WlzObject *assoc_obj,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzNewObjectValueTable(
+				  WlzObject *sObj,
+				  WlzPixelV bgdV,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 extern WlzObject		*WlzMakeEmpty(
@@ -6262,6 +6271,10 @@ extern WlzErrorNum		WlzFreeTiledValues(
 				  WlzTiledValues *tVal);
 extern WlzErrorNum		WlzMakeTiledValuesTiles(
 				  WlzTiledValues *tVal);
+extern WlzTiledValues		*WlzNewTiledValues(
+				  WlzTiledValues *gVal,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzMakeTiledValuesFromObj(
 				  WlzObject *gObj,
 				  size_t tileSz,
