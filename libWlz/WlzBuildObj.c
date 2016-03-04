@@ -549,13 +549,13 @@ static WlzObject *WlzBuildObj2(WlzObject *cObj,
 	WlzObject 	*tObj;
 
 	/* Copy existing values to new object. */
-	tObj = WlzGreyTransfer(nObj, cObj, &errNum);
+	tObj = WlzGreyTransfer(nObj, cObj, 0, &errNum);
 	(void )WlzFreeObj(nObj);
 	nObj = tObj;
 	/* Then copy buffer values to new object. */
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  tObj = WlzGreyTransfer(nObj, bObj, &errNum);
+	  tObj = WlzGreyTransfer(nObj, bObj, 0, &errNum);
 	  (void )WlzFreeObj(nObj);
 	  nObj = tObj;
 	}

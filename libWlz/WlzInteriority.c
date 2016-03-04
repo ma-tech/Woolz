@@ -292,7 +292,7 @@ static double			WlzInteriorityPrv(
       if(errNum == WLZ_ERR_NONE)
       {
         ist = WlzAssignObject(
-	      WlzGreyTransfer(isv, disObj, &errNum), NULL);
+	      WlzGreyTransfer(isv, disObj, 0, &errNum), NULL);
       }
       (void )WlzFreeObj(isv);
       if(errNum == WLZ_ERR_NONE)
