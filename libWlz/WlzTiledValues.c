@@ -129,35 +129,114 @@ WlzErrorNum	WlzFreeTiledValues(WlzTiledValues *tVal)
   {
     if(WlzUnlink(&(tVal->linkcount), &errNum))
     {
-      AlcFree(tVal->indices);
       AlcFree(tVal->nIdx);
-      if(tVal->tiles.v)
+      if(tVal->original_table.core)
       {
-#ifdef WLZ_USE_MMAP
-	if(tVal->fd >= 0)
+	if(tVal->original_table.core->type != tVal->type)
 	{
-	  size_t        gSz,
-	  		tSz;
-	  WlzGreyType	gType;
-
-	  gType = WlzGreyTableTypeToGreyType(tVal->type, &errNum);
-	  gSz = WlzGreySize(gType);
-	  tSz = tVal->numTiles * tVal->tileSz;
-	  (void )munmap(tVal->tiles.v, tSz * gSz);
-	  (void )close(tVal->fd);
+	  errNum = WLZ_ERR_VALUES_TYPE;
 	}
 	else
 	{
-#endif /* WLZ_USE_MMAP */
-          AlcFree(tVal->tiles.v);
-#ifdef WLZ_USE_MMAP
+          errNum = WlzFreeTiledValues(tVal->original_table.t);
 	}
+      }
+      else
+      {
+	AlcFree(tVal->indices);
+	if(tVal->tiles.v)
+	{
+#ifdef WLZ_USE_MMAP
+	  if(tVal->fd >= 0)
+	  {
+	    size_t        gSz,
+			  tSz;
+	    WlzGreyType	gType;
+
+	    gType = WlzGreyTableTypeToGreyType(tVal->type, &errNum);
+	    gSz = WlzGreySize(gType);
+	    tSz = tVal->numTiles * tVal->tileSz;
+	    (void )munmap(tVal->tiles.v, tSz * gSz);
+	    (void )close(tVal->fd);
+	  }
+	  else
+	  {
 #endif /* WLZ_USE_MMAP */
+	    AlcFree(tVal->tiles.v);
+#ifdef WLZ_USE_MMAP
+	  }
+#endif /* WLZ_USE_MMAP */
+	}
       }
       AlcFree(tVal);
     }
   }
   return(errNum);
+}
+
+/*!
+* \return	New tiled values or NULL on error.
+* \ingroup	WlzAllocation
+* \brief	Creates a new tiled values table which shares both
+*  		the grey value tiles and indexing with the given
+*  		tiled values. This is done by using the original_table
+*  		field.
+* \param	gVal			The given tiled values.
+* \param	bgdV			Background value for the new values.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzTiledValues	*WlzNewTiledValues(WlzTiledValues *gVal, WlzPixelV bgdV,
+				   WlzErrorNum *dstErr)
+{
+  WlzTiledValues *rVal = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gVal == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    rVal = WlzMakeTiledValues(gVal->dim, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int   i;
+      WlzValues val;
+
+      rVal->type       = gVal->type;
+      rVal->dim        = gVal->dim;
+      rVal->kol1       = gVal->kol1;
+      rVal->lastkl     = gVal->lastkl;
+      rVal->line1      = gVal->line1;
+      rVal->lastln     = gVal->lastln;
+      rVal->plane1     = gVal->plane1;
+      rVal->lastpl     = gVal->lastpl;
+      rVal->tileSz     = gVal->tileSz;
+      rVal->tileWidth  = gVal->tileWidth;
+      rVal->numTiles   = gVal->numTiles;
+      rVal->fd         = gVal->fd;
+      rVal->tileOffset = gVal->tileOffset;
+      rVal->tiles.v    = gVal->tiles.v;
+      rVal->indices    = gVal->indices;
+      rVal->bckgrnd    = bgdV;
+      for(i = 0; i < gVal->dim; ++i)
+      {
+	rVal->nIdx[i] = gVal->nIdx[i];
+      }
+      val.t = gVal;
+      rVal->original_table = WlzAssignValues(val, NULL);
+    }
+  }
+  if((errNum != WLZ_ERR_NONE) && rVal)
+  {
+    (void )WlzFreeTiledValues(rVal);
+    rVal = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rVal);
 }
 
 /*!
