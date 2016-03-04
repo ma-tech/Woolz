@@ -51,13 +51,17 @@ WlzGreyTransfer - copies grey values from a source object to a destination
 object within the intersection of the object's domains.
 \par Synopsis
 \verbatim
-WlzGreyTransfer [-h] [<source image> [<destination obj>]]
+WlzGreyTransfer [-h] [-i] [<source image> [<destination obj>]]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-i</b></td>
+    <td>Transfer grey values in place to destination.</td>
   </tr>
 </table>
 \par Description
@@ -97,7 +101,7 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   (void )fprintf(stderr,
-	  "Usage:\t%s [-h] [-v] [<source image> [<destination obj>]]\n"
+	  "Usage:\t%s [-h] [-i] [<source image> [<destination obj>]]\n"
 	  "\tCopy grey values from the source object to the destination\n"
 	  "\tobject within the domain of intersection. The output object\n"
 	  "\thas the domain and grey-values of the destination object \n"
@@ -105,6 +109,7 @@ static void usage(char *proc_str)
 	  "\tfirst object is the destination and the second the source.\n"
 	  "Version: %s\n"
 	  "Options:\n"
+	  "\t  -i        transfer grey values in place to destination\n"
 	  "\t  -h        help - prints this usage message\n",
 	  proc_str,
 	  WlzVersion());
@@ -117,8 +122,9 @@ int main(int	argc,
 
   WlzObject	*obj, *tmpl, *newobj;
   FILE		*inFile;
-  char 		optList[] = "h";
-  int		option;
+  char 		optList[] = "ih";
+  int		inplace = 0,
+  		option;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
     
@@ -127,6 +133,9 @@ int main(int	argc,
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
+    case 'i':
+      inplace = 1;
+      break;
     case 'h':
     default:
       usage(argv[0]);
@@ -204,7 +213,7 @@ int main(int	argc,
   }
     
   /* apply template and write resultant object */
-  if((newobj = WlzGreyTransfer(obj, tmpl, &errNum)) != NULL){
+  if((newobj = WlzGreyTransfer(obj, tmpl, inplace, &errNum)) != NULL){
     if((errNum = WlzWriteObj(stdout, newobj)) != WLZ_ERR_NONE) {
       (void )WlzStringFromErrorNum(errNum, &errMsg);
       (void )fprintf(stderr,
