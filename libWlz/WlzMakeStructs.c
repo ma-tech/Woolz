@@ -43,6 +43,16 @@ static char _WlzMakeStructs_c[] = "University of Edinburgh $Id$";
 #include <string.h>
 #include <Wlz.h>
 
+static WlzValues		WlzNewObjectValueTable2D(
+				  WlzValues gVal,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr);
+static WlzValues		WlzNewObjectValueTable3D(
+				  WlzObject *gObj,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr);
+
+
 /* function:     WlzMakeIntervalDomain    */
 /*! 
 * \ingroup      WlzAllocation
@@ -1540,6 +1550,242 @@ WlzObject *WlzMakeRect(int 			line1,
     *dstErr = errNum;
   }
   return(obj);
+}
+
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzAllocation
+* \brief	Creates a new Woolz object using the given object's
+* 		domain and a new value table, but uses the grey values
+* 		of the given object's value table.
+* \param	gObj			Given object.
+* \param	bgdV			Required background value.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject			*WlzNewObjectValueTable(
+				  WlzObject *gObj,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr)
+{
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(gObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(gObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(gObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    WlzValues	rVal;
+
+    rVal.core = NULL;
+    switch(gObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+        rVal = WlzNewObjectValueTable2D(gObj->values, bgdV, &errNum);
+        break;
+      case WLZ_3D_DOMAINOBJ:
+        rVal = WlzNewObjectValueTable3D(gObj, bgdV, &errNum);
+        break;
+      default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+        break;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      rObj = WlzMakeMain(gObj->type, gObj->domain, rVal, gObj->plist,
+                          gObj, &errNum);
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzAllocation
+* \brief	Creates a new 2D Woolz object using the given 2D object's
+* 		domain and a new value table, but uses the grey values
+* 		of the given object's value table. There is no object
+* 		checking in this function as it is expected to be called only
+* 		by WlzNewObjectValueTable() or WlzNewObjectValueTable3D()
+* 		where this will have been done.
+* \param	gVal			Given values.
+* \param	bgdV			Required background value.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzValues		WlzNewObjectValueTable2D(
+				  WlzValues gVal,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr)
+{
+  WlzValues	rVal;
+  WlzGreyType	gType;
+  WlzObjectType tType;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  rVal.core = NULL;
+  tType = WlzGreyTableTypeToTableType(gVal.core->type, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    gType = WlzGreyTableTypeToGreyType(gVal.core->type, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzValueConvertPixel(&bgdV, bgdV, gType);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(tType)
+    {
+      case WLZ_GREY_TAB_RAGR:
+        rVal.v = WlzMakeValueTb(gVal.v->type,
+				gVal.v->line1, gVal.v->lastln, gVal.v->kol1,
+				bgdV, NULL, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  rVal.v->original_table = WlzAssignValues(gVal, NULL);
+	}
+        break;
+      case WLZ_GREY_TAB_RECT:
+	rVal.r = WlzMakeRectValueTb(gVal.r->type,
+	                            gVal.r->line1, gVal.r->lastln,
+				    gVal.r->kol1, gVal.r->width,
+				    bgdV, gVal.r->values.inp, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  rVal.r->original_table = WlzAssignValues(gVal, NULL);
+	}
+        break;
+      case WLZ_GREY_TAB_INTL:
+        if((rVal.i = (WlzIntervalValues *)
+	             AlcCalloc(1, sizeof(WlzIntervalValues))) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  rVal.i->type           = gVal.i->type;
+	  rVal.i->line1          = gVal.i->line1;
+	  rVal.i->lastln         = gVal.i->lastln;
+	  rVal.i->kol1           = gVal.i->kol1;
+	  rVal.i->width          = gVal.i->width;
+	  rVal.i->bckgrnd        = bgdV;
+	  rVal.i->original_table = WlzAssignValues(gVal, NULL);
+	  rVal.i->vil            = gVal.i->vil;
+	}
+        break;
+      case WLZ_GREY_TAB_TILED:
+	rVal.t = WlzNewTiledValues(gVal.t, bgdV, &errNum);
+        break;
+      default:
+        errNum = WLZ_ERR_VALUES_TYPE;
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rVal);
+}
+
+/*!
+* \return	New Woolz object.
+* \ingroup	WlzAllocation
+* \brief	Creates a new 3D Woolz object using the given 3D object's
+* 		domain and a new value table, but uses the grey values
+* 		of the given object's value table. There is no object
+* 		checking in this function as it is expected to be called only
+* 		by WlzNewObjectValueTable() where this will have been done.
+* \param	gObj			Given object.
+* \param	bgdV			Required background value.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzValues		WlzNewObjectValueTable3D(
+				  WlzObject *gObj,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr)
+{
+  WlzValues	gVal,
+  		rVal;
+  WlzGreyType	gType;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  rVal.core = NULL;
+  gVal = gObj->values;
+  gType = WlzGreyTypeFromObj(gObj, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzValueConvertPixel(&bgdV, bgdV, gType);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(gVal.core->type)
+    {
+      case WLZ_VOXELVALUETABLE_GREY:
+	rVal.vox = WlzMakeVoxelValueTb(gVal.vox->type,
+				       gVal.vox->plane1, gVal.vox->lastpl,
+				       bgdV, NULL, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+        {
+	  int	p,
+	  	nPlanes;
+
+	  /* Make new 2D value tables. */
+	  nPlanes = gVal.vox->lastpl - gVal.vox->plane1 + 1;
+	  for(p = 0; p < nPlanes; ++p)
+	  {
+	    WlzValues tVal;
+	    WlzValues *gValues,
+		      *rValues = NULL;
+
+	    gValues = gVal.vox->values + p;
+	    rValues = rVal.vox->values + p;
+	    tVal = WlzNewObjectValueTable2D(*gValues, bgdV, &errNum);
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      *rValues = WlzAssignValues(tVal, NULL);
+	    }
+	    else
+	    {
+	      break;
+	    }
+	  }
+	}
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  (void )WlzFreeVoxelValueTb(rVal.vox);
+	}
+	break;
+      default:
+	if(WlzGreyTableIsTiled(gVal.core->type))
+	{
+	  rVal.t = WlzNewTiledValues(gVal.t, bgdV, &errNum);
+	}
+	else
+	{
+	  errNum = WLZ_ERR_VALUES_TYPE;
+	}
+	break;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rVal);
 }
 
 /*!
