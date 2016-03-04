@@ -3087,6 +3087,9 @@ typedef struct _WlzTiledValues
   void          *freeptr;		/*!< From WlzCoreValues, although
   					     this won't free the values
 					     themselves. */
+  WlzValues 	original_table;		/*!< If non-NULL, the values table
+  					     which owns the raw values we
+					     are using. */
   int		dim;			/*!< The dimension of the value table,
   					     ie 2 or 3D. */
   int		kol1;			/*!< First column. */
