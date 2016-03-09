@@ -277,6 +277,7 @@ int		main(int argc, char *argv[])
     (void )fprintf(stderr,
     "Usage: %s [-m#] [-S] [-o<output file>] [-h]\n"
     "\t\t[<object 1>] [<object 2>]\n"
+    "Version: %s\n"
     "Computes an object with domain and values that are the set of minimum\n"
     "distances between the two given objects. The equidistant boundary is\n"
     "computed between the domains of the two given objects, within the\n"
