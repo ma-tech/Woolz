@@ -252,18 +252,21 @@ static WlzErrorNum		WlzGreyTransfer2D(
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if((sGWSp.pixeltype == dGWSp.pixeltype) &&
-       (sGWSp.pixeltype == WLZ_GREY_UBYTE))
+    int		bub;
+
+    bub = (sGWSp.pixeltype == dGWSp.pixeltype) &&
+          (sGWSp.pixeltype == WLZ_GREY_UBYTE);
+    while((errNum == WLZ_ERR_NONE) &&
+	  ((errNum = WlzNextGreyInterval(&sIWSp)) == WLZ_ERR_NONE) &&
+	  ((errNum = WlzNextGreyInterval(&dIWSp)) == WLZ_ERR_NONE))
     {
-      /* Avoid function calls for the most common case. */
-      (void )memcpy(dGWSp.u_grintptr.ubp, sGWSp.u_grintptr.ubp,
-                    sIWSp.colrmn * sizeof(WlzUByte));
-    }
-    else
-    {
-      while((errNum == WLZ_ERR_NONE) &&
-	    ((errNum = WlzNextGreyInterval(&sIWSp)) == WLZ_ERR_NONE) &&
-	    ((errNum = WlzNextGreyInterval(&dIWSp)) == WLZ_ERR_NONE))
+      if(bub)
+      {
+	/* Avoid switches and function calls for the most common case. */
+	(void )memcpy(dGWSp.u_grintptr.ubp, sGWSp.u_grintptr.ubp,
+		      sIWSp.colrmn * sizeof(WlzUByte));
+      }
+      else
       {
 	WlzValueCopyGreyToGrey(dGWSp.u_grintptr, 0, dGWSp.pixeltype,
 			       sGWSp.u_grintptr, 0, sGWSp.pixeltype,
