@@ -125,9 +125,13 @@ options. It's probably best to copy build.sh to mybuild.sh and then set the
 required options for the build you want.
 
 Sometimes the configuration will fail with messages relating to libtool.
-In these cases running
+In these cases running:
   autoreconf -i --force
 may fix the problems.
+
+Complains from configure that m4 can't be found can probably be fixed
+by running:
+  automake --add-missing
 
 The build script build.sh simply runs autoreconf followed by ./configure
 with the appropraite options.
