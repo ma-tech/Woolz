@@ -35,13 +35,35 @@ static char _AlcHeap_c[] = "University of Edinburgh $Id$";
 * License along with this program; if not, write to the Free
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
-* \brief	A basic heap data structure.
+* \brief	A basic heap data structure which uses an array.
 * \ingroup	AlcHeap
 */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <Alc.h>
+
+static void			AlcHeapEntCopy(
+				  AlcHeap *heap,
+				  int idD,
+				  int idS);
+static void			AlcHeapEntSwap(
+				  AlcHeap *heap,
+				  int id0,
+				  int id1);
+static double			AlcHeapEntPriority(
+				  AlcHeap *heap,
+				  int id);
+static void			AlcHeapEntSet(
+				  AlcHeap *heap,
+				  int idD,
+				  void *entS);
+#ifdef ALC_HEAP_DEBUG
+static void			AlcHeapPrint(
+				  AlcHeap *heap,
+				  FILE *fP,
+				  const char *msg);
+#endif /* ALC_HEAP_DEBUG */
 
 /*!
 * \return       New heap data structure, NULL on error.
@@ -145,10 +167,8 @@ void     	AlcHeapFree(AlcHeap *heap)
 void     	AlcHeapEntFree(AlcHeap *heap)
 {
   int           id0,
-                id1;
-  void		*ent0,
-		*ent1,
-		*ent2;
+                id1,
+		id2;
   double        p0,
   		p1,
 		p2;
@@ -157,27 +177,33 @@ void     	AlcHeapEntFree(AlcHeap *heap)
   {
     if(--(heap->nEnt) >= 0)
     {
-      p0 = ((AlcHeapEntryCore *)((char *)(heap->entries) +
-                                 (heap->nEnt * heap->entSz)))->priority;
       id0 = 0;
       id1 = ((id0 + 1) * 2) - 1;
+      AlcHeapEntCopy(heap, id0, heap->nEnt);
+      p0 = AlcHeapEntPriority(heap, id0);
       while(id1 <= heap->nEnt)
       {
-	ent1 = (void *)((char *)(heap->entries) + (id1 * heap->entSz));
-	ent2 = (void *)((char *)ent1 + heap->entSz);
-	p1 = ((AlcHeapEntryCore *)ent1)->priority;
-	p2 = ((AlcHeapEntryCore *)ent2)->priority;
-	if((id1 + 1 <= heap->nEnt) && (p1 > p2))
+	int	idM;
+	double	pM;
+
+	pM = p0;
+	idM = id0;
+	id2 = id1 + 1;
+	p1 = AlcHeapEntPriority(heap, id1);
+	p2 = AlcHeapEntPriority(heap, id2);
+	if(p1 > p0)
 	{
-	  ++id1;
-	  ent1 = ent2;
-	  p1 = p2;
+	  pM = p1;
+	  idM = id1;
 	}
-	if(p1 < p0)
+	if((id2 <= heap->nEnt) && (p2 > pM))
 	{
-	  ent0 = (void *)((char *)(heap->entries) + (id0 * heap->entSz));
-	  (void )memcpy(ent0, ent1, heap->entSz);
-	  id0 = id1;
+	  idM = id2;
+	}
+	if(idM != id0)
+	{
+	  AlcHeapEntSwap(heap, id0, idM);
+	  id0 = idM;
 	  id1 = ((id0 + 1) * 2) - 1;
 	}
 	else
@@ -185,24 +211,10 @@ void     	AlcHeapEntFree(AlcHeap *heap)
 	  break;
 	}
       }
-      ent0 = (void *)((char *)(heap->entries) + (id0 * heap->entSz));
-      ent1 = (void *)((char *)(heap->entries) + (heap->nEnt * heap->entSz));
-      (void )memmove(ent0, ent1, heap->entSz);
     }
   }
 #ifdef ALC_HEAP_DEBUG
-  (void )fprintf(stderr, "AlcHeapEntFree()\n");
-  if(heap != NULL)
-  {
-    (void )fprintf(stderr, "heap->nEnt = %d\n", heap->nEnt);
-    for(id0 = 0; id0 < heap->nEnt; ++id0)
-    {
-      ent0 = heap->entries + (id0 * heap->entSz);
-      p0 = ((AlcHeapEntryCore *)ent0)->priority;
-      (void )fprintf(stderr, "% 8d %g\n", id0, p0);
-    }
-    (void )fprintf(stderr, "\n");
-  }
+  AlcHeapPrint(heap, stderr, "AlcHeapEntFree()\n");
 #endif
 }
 
@@ -241,16 +253,14 @@ AlcErrno	AlcHeapInsertEnt(AlcHeap *heap, void *ent)
 {
   int           id0,
                 id1;
-  double	p,
-                p1;
-  void		*ent0,
-  		*ent1;
+  double	p;
+  void		*ent0;
   AlcErrno   	alcErr = ALC_ER_NONE;
 
   if((heap != NULL) && (ent != NULL))
   {
     id0 = (heap->nEnt)++;
-    if(heap->nEnt > heap->maxEnt)
+    if((heap->nEnt + 1) > heap->maxEnt)   /* Plus 1 to keep last for swap(). */
     {
       heap->maxEnt += heap->entInc;
       if((heap->entries = AlcRealloc(heap->entries,
@@ -261,43 +271,19 @@ AlcErrno	AlcHeapInsertEnt(AlcHeap *heap, void *ent)
     }
     if(alcErr == ALC_ER_NONE)
     {
-      p = ((AlcHeapEntryCore *)ent)->priority;
-      while(id0 > 0)
+      AlcHeapEntSet(heap, id0, ent);
+      p = AlcHeapEntPriority(heap, id0);
+      id1 = ((id0 + 1) / 2) - 1;
+      while((id0 > 0) && (p > AlcHeapEntPriority(heap, id1)))
       {
-	id1 = ((id0 + 1) / 2) - 1;
-        ent1 = (void *)((char *)(heap->entries) + (id1 * heap->entSz));
-	p1 = ((AlcHeapEntryCore *)ent1)->priority;
-	if(p1 > p)
-	{
-          ent0 = (void *)((char *)(heap->entries) + (id0 * heap->entSz));
-          (void )memcpy(ent0, ent1, heap->entSz);
-	}
-	else
-	{
-	  break;
-	}
+        AlcHeapEntSwap(heap, id0, id1);
 	id0 = id1;
+	id1 = ((id0 + 1) / 2) - 1;
       }
-      ent0 = (void *)((char *)(heap->entries) + (id0 * heap->entSz));
-      (void )memcpy(ent0, ent, heap->entSz);
     }
   }
 #ifdef ALC_HEAP_DEBUG
-  (void )fprintf(stderr, "AlcHeapInsertEnt()\n");
-  if((heap != NULL) && (ent != NULL))
-  {
-    if(alcErr == ALC_ER_NONE)
-    {
-      (void )fprintf(stderr, "heap->nEnt = %d\n", heap->nEnt);
-      for(id1 = 0; id1 < heap->nEnt; ++id1)
-      {
-	ent1 = heap->entries + (id1 * heap->entSz);
-        p1 = ((AlcHeapEntryCore *)ent1)->priority;
-	(void )fprintf(stderr, "% 8d %g\n", id1, p1);
-      }
-      (void )fprintf(stderr, "\n");
-    }
-  }
+  AlcHeapPrint(heap, stderr, "AlcHeapInsertEnt()\n");
 #endif
   return(alcErr);
 }
@@ -306,7 +292,7 @@ AlcErrno	AlcHeapInsertEnt(AlcHeap *heap, void *ent)
 * \return       The entry at the top of the heap.
 * \ingroup      AlcHeap
 * \brief        Gets the top heap entry.
-* \param        heap                   Given priority queue.
+* \param        heap                   Given heap.
 */
 void		 *AlcHeapTop(AlcHeap *heap)
 {
@@ -324,6 +310,110 @@ void		 *AlcHeapTop(AlcHeap *heap)
 #endif
   return(ent);
 }
+
+/*!
+* \ingroup	AlcHeap
+* \brief	Copies the second indexed heap entry to the first.
+* \param	heap			The heap.
+* \param	idD			Destination entry index.
+* \param	entS			Source entry.
+*/
+static void	AlcHeapEntSet(AlcHeap *heap, int idD, void *entS)
+{
+  void 		*entD;
+
+  entD = (void *)((char *)(heap->entries) + (idD * heap->entSz));
+  (void )memcpy(entD, entS, heap->entSz);
+}
+
+/*!
+* \ingroup	AlcHeap
+* \brief	Copies the second indexed heap entry to the first.
+* \param	heap			The heap.
+* \param	idD			Destination entry index.
+* \param	idS			Source entry index.
+*/
+static void	AlcHeapEntCopy(AlcHeap *heap, int idD, int idS)
+{
+  void 		*entD,
+		*entS;
+
+  if(idD != idS)
+  {
+    entD = (void *)((char *)(heap->entries) + (idD * heap->entSz));
+    entS = (void *)((char *)(heap->entries) + (idS * heap->entSz));
+    (void )memcpy(entD, entS, heap->entSz);
+  }
+}
+
+/*!
+* \ingroup	AlcHeap
+* \brief	Swaps the two indexed heap entries.
+* 		This function uses the last allocated entry which is
+* 		reserved for this purpose.
+* \param	heap			The heap.
+* \param	id0			First entry index.
+* \param	id1			Second entry index.
+*/
+static void	AlcHeapEntSwap(AlcHeap *heap, int id0, int id1)
+{
+  int		idW;
+  void 		*ent0,
+  		*ent1,
+		*entW;
+
+  idW = heap->maxEnt - 1;
+  ent0 = (void *)((char *)(heap->entries) + (id0 * heap->entSz));
+  ent1 = (void *)((char *)(heap->entries) + (id1 * heap->entSz));
+  entW = (void *)((char *)(heap->entries) + (idW * heap->entSz));
+  (void )memcpy(entW, ent0, heap->entSz);
+  (void )memcpy(ent0, ent1, heap->entSz);
+  (void )memcpy(ent1, entW, heap->entSz);
+}
+
+/*!
+* \return	Entry priority.
+* \ingroup	AlcHeap
+* \brief	Returns the priority of the indexed entry.
+* \param	heap			The heap.
+* \param	id			Given entry index.
+*/
+static double	AlcHeapEntPriority(AlcHeap *heap, int id)
+{
+  double	p;
+  void		*ent;
+
+  ent = (void *)((char *)(heap->entries) + (id * heap->entSz));
+  p = ((AlcHeapEntryCore *)ent)->priority;
+  return(p);
+}
+
+#ifdef ALC_HEAP_DEBUG
+static void	AlcHeapPrint(AlcHeap *heap, FILE *fP, const char *msg)
+{
+  if(msg)
+  {
+    (void )fprintf(fP, msg);
+  }
+  if(heap != NULL)
+  {
+    int		id0;
+
+    (void )fprintf(fP, "heap->nEnt = %d\n", heap->nEnt);
+    for(id0 = 0; id0 < heap->nEnt; ++id0)
+    {
+      void	*ent0;
+      double	p0;
+
+      ent0 = heap->entries + (id0 * heap->entSz);
+      p0 = ((AlcHeapEntryCore *)ent0)->priority;
+      (void )fprintf(fP, "% 8d %g\n", id0, p0);
+    }
+    (void )fprintf(fP, "\n");
+  }
+}
+#endif
+
 #ifdef ALC_HEAP_TEST_MAIN_1
 /* Test #1
  * Very basic test - probably only useful to get profiles.
@@ -461,7 +551,8 @@ int             main(int argc, char *argv[])
     " -h  Prints this usage information.\n"
     " -r  Number of repeats building and breaking down heap.\n"
     " -s  Size of heap (number of entries).\n"
-    " -t  Output time to build and break down heap for all repeats.\n");
+    " -t  Output time to build and break down heap for all repeats.\n"
+    " -v  Verbose output.\n");
     (void )exit(1);
   }
   if((randoms = (double *)AlcMalloc(sizeof(double) * size)) == NULL)
