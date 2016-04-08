@@ -243,7 +243,6 @@ int		main(int argc, char *argv[])
       gettimeofday(times + 0, NULL);
     }
     outObj = WlzThinToPoints(inObj, useGrey, gStart, gInc, &errNum);
-    /* HACK TODO use voxel scaling */
     if(timeFlg)
     {
       gettimeofday(times + 1, NULL);
@@ -252,6 +251,45 @@ int		main(int argc, char *argv[])
                      "%s: Elapsed time for WlzPointsFromDomObj()  %gus\n",
 		     argv[0],
 		     (1000000.0 * times[2].tv_sec) + times[2].tv_usec);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      /* Perform voxel scaling if required. */
+      if(voxelScaling &&
+	 (inObj->type == WLZ_3D_DOMAINOBJ) &&
+         (outObj->domain.pts->type == WLZ_POINTS_3I))
+      {
+	int	   nPts;
+	WlzDomain  sclDom;
+	WlzVertexP nullP;
+
+	nullP.v = NULL;
+	nPts = outObj->domain.pts->nPoints;
+	sclDom.pts = WlzMakePoints(WLZ_POINTS_3D, 0, nullP,
+	                           outObj->domain.pts->nPoints, &errNum);
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  int	i;
+	  WlzIVertex3 *p;
+	  WlzDVertex3 *q;
+	  WlzDVertex3  s;
+	  
+	  sclDom.pts->nPoints = nPts;
+	  q = sclDom.pts->points.d3;
+	  p = outObj->domain.pts->points.i3;
+	  s.vtX = inObj->domain.p->voxel_size[0];
+	  s.vtY = inObj->domain.p->voxel_size[1];
+	  s.vtZ = inObj->domain.p->voxel_size[2];
+	  for(i = 0; i < nPts; ++i)
+	  {
+	    q[i].vtX = p[i].vtX * s.vtX;
+	    q[i].vtY = p[i].vtY * s.vtY;
+	    q[i].vtZ = p[i].vtZ * s.vtZ;
+	  }
+	  (void )WlzFreeDomain(outObj->domain);
+	  outObj->domain = WlzAssignDomain(sclDom, NULL);
+	}
+      }
     }
     if(errNum != WLZ_ERR_NONE)
     {
