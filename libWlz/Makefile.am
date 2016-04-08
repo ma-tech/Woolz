@@ -227,6 +227,7 @@ libWlz_la_SOURCES 	= \
 			  WlzStructDilation.c \
 			  WlzStructErosion.c \
 			  WlzTensor.c \
+			  WlzThinToPoints.c \
 			  WlzThreshold.c \
 			  WlzTiledValues.c \
 			  WlzTransform.c \

@@ -6252,6 +6252,16 @@ extern WlzObject       		*WlzCMeshStrainTensorAtPts(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzThinToPoints.c							*
+************************************************************************/
+extern WlzObject		*WlzThinToPoints(
+				  WlzObject *gObj,
+				  int gThin,
+				  int gStart,
+				  int gInc,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzThreshold.c							*
 ************************************************************************/
 extern WlzObject 		*WlzThreshold(

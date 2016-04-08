@@ -205,6 +205,7 @@ bin_PROGRAMS		= \
 			  WlzStructErosion \
 			  WlzTiledObjFromDomain \
 			  WlzThreshold \
+			  WlzThinObjToPoints \
 			  WlzTransformProduct \
 			  WlzTransposeObj \
 			  WlzTransposePlanes \
@@ -867,6 +868,10 @@ WlzTransposePlanes_LDFLAGS		= $(AM_LFLAGS)
 WlzThreshold_SOURCES			= WlzThreshold.c
 WlzThreshold_LDADD			= $(LDADD)
 WlzThreshold_LDFLAGS			= $(AM_LFLAGS)
+
+WlzThinObjToPoints_SOURCES		= WlzThinObjToPoints.c
+WlzThinObjToPoints_LDADD		= $(LDADD)
+WlzThinObjToPoints_LDFLAGS		= $(AM_LFLAGS)
 
 WlzTiledObjFromDomain_SOURCES		= WlzTiledObjFromDomain.c
 WlzTiledObjFromDomain_LDADD		= $(LDADD)
