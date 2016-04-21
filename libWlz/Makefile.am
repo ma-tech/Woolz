@@ -235,6 +235,7 @@ libWlz_la_SOURCES 	= \
 			  WlzUnion2.c \
 			  WlzUnion3d.c \
 			  WlzUnionN.c \
+			  WlzValuesFromCoords.c \
 			  WlzValueTableUtils.c \
 			  WlzValueUtils.c \
 			  WlzVerifyObj.c \

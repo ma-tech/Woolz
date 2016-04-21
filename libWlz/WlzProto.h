@@ -6349,6 +6349,13 @@ extern WlzObject 		*WlzUnionN(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzValuesFromCoords.c							*
+************************************************************************/
+extern WlzObject		*WlzValuesFromCoords(
+				  WlzObject *gObj,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzValueTableUtils.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND

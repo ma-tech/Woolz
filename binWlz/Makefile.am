@@ -210,6 +210,7 @@ bin_PROGRAMS		= \
 			  WlzTransposeObj \
 			  WlzTransposePlanes \
 			  WlzUnion \
+			  WlzValuesFromCoords \
 			  WlzVerifyObj \
 			  WlzVolume \
 			  WlzWindow \
@@ -880,6 +881,10 @@ WlzTiledObjFromDomain_LDFLAGS		= $(AM_LFLAGS)
 WlzUnion_SOURCES			= WlzUnion.c
 WlzUnion_LDADD				= $(LDADD)
 WlzUnion_LDFLAGS			= $(AM_LFLAGS)
+
+WlzValuesFromCoords_SOURCES		= WlzValuesFromCoords.c
+WlzValuesFromCoords_LDADD		= $(LDADD)
+WlzValuesFromCoords_LDFLAGS		= $(AM_LFLAGS)
 
 WlzVerifyObj_SOURCES			= WlzVerifyObj.c
 WlzVerifyObj_LDADD			= $(LDADD)
