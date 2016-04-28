@@ -5,7 +5,7 @@ static char _WlzGreyTransfer_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         binWlz/WlzGreyTransfer.c
-* \author       Richard Baldock
+* \author       Richard Baldock, Bill Hill
 * \date         January 2002
 * \version      $Id$
 * \par
@@ -51,7 +51,7 @@ WlzGreyTransfer - copies grey values from a source object to a destination
 object within the intersection of the object's domains.
 \par Synopsis
 \verbatim
-WlzGreyTransfer [-h] [-i] [<source image> [<destination obj>]]
+WlzGreyTransfer [-h] [-i] [-o <out file>] [<source image> [<destination obj>]]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -62,6 +62,10 @@ WlzGreyTransfer [-h] [-i] [<source image> [<destination obj>]]
   <tr> 
     <td><b>-i</b></td>
     <td>Transfer grey values in place to destination.</td>
+  </tr>
+  <tr> 
+    <td><b>-o</b></td>
+    <td>Output file.</td>
   </tr>
 </table>
 \par Description
@@ -101,7 +105,8 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   (void )fprintf(stderr,
-	  "Usage:\t%s [-h] [-i] [<source image> [<destination obj>]]\n"
+	  "Usage:\t%s [-h] [-i] [-o<out file>]\n"
+	  "\t\t[<source image> [<destination obj>]]\n"
 	  "\tCopy grey values from the source object to the destination\n"
 	  "\tobject within the domain of intersection. The output object\n"
 	  "\thas the domain and grey-values of the destination object \n"
@@ -110,6 +115,7 @@ static void usage(char *proc_str)
 	  "Version: %s\n"
 	  "Options:\n"
 	  "\t  -i        transfer grey values in place to destination\n"
+	  "\t  -o        output file\n"
 	  "\t  -h        help - prints this usage message\n",
 	  proc_str,
 	  WlzVersion());
@@ -121,8 +127,9 @@ int main(int	argc,
 {
 
   WlzObject	*obj, *tmpl, *newobj;
-  FILE		*inFile;
-  char 		optList[] = "ih";
+  FILE		*fP;
+  char		*outFile = NULL;
+  char 		optList[] = "iho:";
   int		inplace = 0,
   		option;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -136,6 +143,9 @@ int main(int	argc,
     case 'i':
       inplace = 1;
       break;
+    case 'o':
+      outFile = optarg;
+      break;
     case 'h':
     default:
       usage(argv[0]);
@@ -147,51 +157,51 @@ int main(int	argc,
      it is the template and the object should be on stdin */
   if( (argc - optind) >= 2 ){
     /* read the template */
-    if( (inFile = fopen(*(argv+optind), "r")) == NULL ){
+    if( (fP = fopen(*(argv+optind), "r")) == NULL ){
       fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
       usage(argv[0]);
       return 1;
     }
-    if( (tmpl = WlzAssignObject(WlzReadObj(inFile, NULL), NULL)) == NULL ){
+    if( (tmpl = WlzAssignObject(WlzReadObj(fP, NULL), NULL)) == NULL ){
       fprintf(stderr, "%s: can't read template from file %s\n", argv[0],
 	      *(argv+optind));
       usage(argv[0]);
       return 1;
     }
-    fclose( inFile );
+    fclose( fP );
     optind++;
 
     /* read the object */
-    if( (inFile = fopen(*(argv+optind), "r")) == NULL ){
+    if( (fP = fopen(*(argv+optind), "r")) == NULL ){
       fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
       usage(argv[0]);
       return 1;
     }
-    if( (obj = WlzAssignObject(WlzReadObj(inFile, NULL), NULL)) == NULL ){
+    if( (obj = WlzAssignObject(WlzReadObj(fP, NULL), NULL)) == NULL ){
       fprintf(stderr, "%s: can't read obj from file %s\n", argv[0],
 	      *(argv+optind));
 
       usage(argv[0]);
       return 1;
     }
-    fclose( inFile );
+    fclose( fP );
   }
   else if( (argc - optind) == 1 ){
     /* read the template */
-    if( (inFile = fopen(*(argv+optind), "r")) == NULL ){
+    if( (fP = fopen(*(argv+optind), "r")) == NULL ){
       fprintf(stderr, "%s: can't open file %s\n", argv[0], *(argv+optind));
       usage(argv[0]);
       return 1;
     }
-    if( (tmpl = WlzAssignObject(WlzReadObj(inFile, NULL), NULL)) == NULL ){
+    if( (tmpl = WlzAssignObject(WlzReadObj(fP, NULL), NULL)) == NULL ){
       fprintf(stderr, "%s: can't read template from file %s\n", argv[0],
 	      *(argv+optind));
       usage(argv[0]);
       return 1;
     }
-    fclose( inFile );
-    inFile = stdin;
-    if( (obj = WlzAssignObject(WlzReadObj(inFile, NULL), NULL)) == NULL ){
+    fclose( fP );
+    fP = stdin;
+    if( (obj = WlzAssignObject(WlzReadObj(fP, NULL), NULL)) == NULL ){
       fprintf(stderr, "%s: can't read obj from stdin\n", argv[0]);
       usage(argv[0]);
       return 1;
@@ -199,13 +209,13 @@ int main(int	argc,
   }
   else {
     /* else read objects from stdin */
-    inFile = stdin;
-    if( (obj = WlzAssignObject(WlzReadObj(inFile, NULL), NULL)) == NULL ){
+    fP = stdin;
+    if( (obj = WlzAssignObject(WlzReadObj(fP, NULL), NULL)) == NULL ){
       fprintf(stderr, "%s: can't read obj from stdin\n", argv[0]);
       usage(argv[0]);
       return 1;
     }
-    if( (tmpl = WlzAssignObject(WlzReadObj(inFile, NULL), NULL)) == NULL ){
+    if( (tmpl = WlzAssignObject(WlzReadObj(fP, NULL), NULL)) == NULL ){
       fprintf(stderr, "%s: can't read template from stdin\n", argv[0]);
       usage(argv[0]);
       return 1;
@@ -214,18 +224,36 @@ int main(int	argc,
     
   /* apply template and write resultant object */
   if((newobj = WlzGreyTransfer(obj, tmpl, inplace, &errNum)) != NULL){
-    if((errNum = WlzWriteObj(stdout, newobj)) != WLZ_ERR_NONE) {
-      (void )WlzStringFromErrorNum(errNum, &errMsg);
-      (void )fprintf(stderr,
-		     "%s: failed to write object (%s).\n",
-		     argv[0], errMsg);
-      return(1);
+    fP = NULL;
+    if(outFile) {
+      if(strcmp(outFile, "-")){
+	if((fP = fopen(outFile, "w")) == NULL){
+	  (void )fprintf(stderr,
+	      "%s: Failed to open output file %s.\n",
+	      *argv, outFile);
+	  return(1);
+	}
+      }
+      else{
+	fP = stdout;
+      }
+    }
+    if(fP) {
+      if((errNum = WlzWriteObj(fP, newobj)) != WLZ_ERR_NONE) {
+	(void )WlzStringFromErrorNum(errNum, &errMsg);
+	(void )fprintf(stderr,
+		       "%s: failed to write object (%s).\n",
+		       argv[0], errMsg);
+	return(1);
+      }
+      if(strcmp(outFile, "-")) {
+        (void )fclose(fP);
+      }
     }
     WlzFreeObj(newobj);
   }
   WlzFreeObj(tmpl);
   WlzFreeObj(obj);
-
-  return 0;
+  return(0);
 }
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
