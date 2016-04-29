@@ -103,7 +103,7 @@ WlzObject			*WlzGreyTransfer(
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if((dObj->values.core == NULL) || (sObj->values.core == NULL))
+  else if(sObj->values.core == NULL)
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
@@ -123,6 +123,46 @@ WlzObject			*WlzGreyTransfer(
 		   WlzMakeMain(dObj->type, dObj->domain, dObj->values,
 			       dObj->plist, NULL, &errNum):
 		   WlzCopyObject(dObj, &errNum);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    /* If the destination object does not have values then
+	     * create them to match the domain of the destination
+	     * object. */
+	    if((sObj->values.core != NULL) && (rObj->values.core == NULL))
+	    {
+	      WlzPixelV bgdV;
+	      WlzGreyType gType;
+	      WlzObjectType gTT;
+	      WlzValues	newVal;
+
+	      newVal.core = NULL;
+	      bgdV = WlzGetBackground(sObj, &errNum);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		gType = WlzGreyTypeFromObj(sObj, &errNum);
+	      }
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
+		if(rObj->type == WLZ_2D_DOMAINOBJ)
+		{
+		  newVal.v = WlzNewValueTb(rObj, gTT, bgdV, &errNum);
+		}
+		else /* rObj->type == WLZ_3D_DOMAINOBJ */
+		{
+		  newVal.vox = WlzNewValuesVox(rObj, gTT, bgdV, &errNum);
+		}
+	      }
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		rObj->values = WlzAssignValues(newVal, NULL);
+	      }
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		errNum = WlzGreySetValue(rObj, bgdV);
+	      }
+	    }
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
