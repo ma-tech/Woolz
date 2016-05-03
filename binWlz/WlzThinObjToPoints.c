@@ -4,7 +4,7 @@
 static char _WlzThinObjToPoints_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzThinObjToPoints.c
+* \file         binWlz/WlzThinObjToPoints.c
 * \author       Bill Hill
 * \date         April 2016
 * \version      $Id$
@@ -44,7 +44,7 @@ static char _WlzThinObjToPoints_c[] = "University of Edinburgh $Id$";
 
 /*!
 \ingroup BinWlz
-\defgroup wlzpointsfromdomain WlzThinObjToPoints
+\defgroup wlzthinobjtopoints WlzThinObjToPoints
 \par Name
 WlzThinObjToPoints - computes points by thinning spatial domain object.
 \par Synopsis

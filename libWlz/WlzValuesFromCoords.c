@@ -4,7 +4,7 @@
 static char _WlzValuesFromCoords_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzValuesFromCoords.c
+* \file         libWlz/WlzValuesFromCoords.c
 * \author       Bill Hill
 * \date         April 2016
 * \version      $Id$
