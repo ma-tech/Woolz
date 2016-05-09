@@ -191,14 +191,29 @@ void     	AlcHeapEntFree(AlcHeap *heap)
 	id2 = id1 + 1;
 	p1 = AlcHeapEntPriority(heap, id1);
 	p2 = AlcHeapEntPriority(heap, id2);
-	if(p1 > p0)
+	if(heap->topPriLo)
 	{
-	  pM = p1;
-	  idM = id1;
+	  if(p1 < p0)
+	  {
+	    pM = p1;
+	    idM = id1;
+	  }
+	  if((id2 <= heap->nEnt) && (p2 < pM))
+	  {
+	    idM = id2;
+	  }
 	}
-	if((id2 <= heap->nEnt) && (p2 > pM))
+	else
 	{
-	  idM = id2;
+	  if(p1 > p0)
+	  {
+	    pM = p1;
+	    idM = id1;
+	  }
+	  if((id2 <= heap->nEnt) && (p2 > pM))
+	  {
+	    idM = id2;
+	  }
 	}
 	if(idM != id0)
 	{
@@ -254,7 +269,6 @@ AlcErrno	AlcHeapInsertEnt(AlcHeap *heap, void *ent)
   int           id0,
                 id1;
   double	p;
-  void		*ent0;
   AlcErrno   	alcErr = ALC_ER_NONE;
 
   if((heap != NULL) && (ent != NULL))
@@ -274,11 +288,23 @@ AlcErrno	AlcHeapInsertEnt(AlcHeap *heap, void *ent)
       AlcHeapEntSet(heap, id0, ent);
       p = AlcHeapEntPriority(heap, id0);
       id1 = ((id0 + 1) / 2) - 1;
-      while((id0 > 0) && (p > AlcHeapEntPriority(heap, id1)))
+      if(heap->topPriLo)
       {
-        AlcHeapEntSwap(heap, id0, id1);
-	id0 = id1;
-	id1 = ((id0 + 1) / 2) - 1;
+	while((id0 > 0) && (p < AlcHeapEntPriority(heap, id1)))
+	{
+	  AlcHeapEntSwap(heap, id0, id1);
+	  id0 = id1;
+	  id1 = ((id0 + 1) / 2) - 1;
+	}
+      }
+      else
+      {
+	while((id0 > 0) && (p > AlcHeapEntPriority(heap, id1)))
+	{
+	  AlcHeapEntSwap(heap, id0, id1);
+	  id0 = id1;
+	  id1 = ((id0 + 1) / 2) - 1;
+	}
       }
     }
   }
@@ -500,6 +526,7 @@ int             main(int argc, char *argv[])
   		repeats = 1,
   		size = 10,
 		time = 0,
+		tpl = 0,
 		usage = 0,
 		verbose = 0;
   double	execTime;
@@ -508,13 +535,16 @@ int             main(int argc, char *argv[])
   double	*randoms = NULL;
   AlcHeapEntryTest ent;
   AlcHeapEntryTest *entP;
-  const char   optList[] = "hr:s:tv";
+  const char   optList[] = "hlr:s:tv";
   AlcErrno	alcErr = ALC_ER_NONE;
 
   while((usage == 0) && ((option = getopt(argc, argv, optList)) != -1))
   {
     switch(option)
     {
+      case 'l':
+	tpl = 1;
+        break;
       case 'r':
 	if(sscanf(optarg, "%d", &repeats) != 1)
 	{
@@ -544,11 +574,12 @@ int             main(int argc, char *argv[])
     (void )fprintf(stderr,
     "Usage: %s%s",
     *argv,
-    " [-h] [-r#] [-s#] [-t] [-v]\n"
+    " [-h] [-l] [-r#] [-s#] [-t] [-v]\n"
     "Test for the AlcHeap data structure which builds a heap and then\n"
     "breaks it down again.\n"
     "Options:\n"
     " -h  Prints this usage information.\n"
+    " -l  Top of heap has low priority.\n"
     " -r  Number of repeats building and breaking down heap.\n"
     " -s  Size of heap (number of entries).\n"
     " -t  Output time to build and break down heap for all repeats.\n"
@@ -571,6 +602,7 @@ int             main(int argc, char *argv[])
     (void )fprintf(stderr, "%s: Failed to create a heap.\n", *argv);
     exit(1);
   }
+  heap->topPriLo = tpl;
   if(time != 0)
   {
     (void )gettimeofday(&tp, NULL);

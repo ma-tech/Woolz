@@ -448,8 +448,10 @@ typedef struct _AlcKDTTree
 */
 typedef struct _AlcHeapEntryCore
 {
-  double                priority;       /*!< Entry priority highest priority
-                                             at the head of the queue. */
+  double                priority;       /*!< Entry priority highest/lowest
+  					     priority at the head of the
+					     queue depending on
+					     AlcHeap::topPriLo. */
 } AlcHeapEntryCore;
 
 /*!
@@ -469,6 +471,11 @@ typedef struct _AlcHeap
                                              entries, allocate space for
                                              this many at a time. */
   int                   entSz;          /*!< Size of each heap entry. */
+  int			topPriLo;	/*!< If non-zero the top priority
+  					     is low rather than high. This
+					     should be set (default is zero)
+					     before any entries are added
+					     to the heap. */
   void			*data;		/*!< Application data. */
   void                  *entries;       /*!< Allocated heap entries. */
 } AlcHeap;
