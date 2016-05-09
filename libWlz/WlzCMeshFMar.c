@@ -528,6 +528,7 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    nodQ->topPriLo = 1;
     if(nSeeds > 0)
     {
       errNum = WlzCMeshFMarAddSeeds2D(nodQ, mesh, cnt + 1,
@@ -565,6 +566,10 @@ WlzErrorNum	WlzCMeshFMarNodes2D(WlzCMesh2D *mesh, double *distances,
     if((elmQ = AlcHeapNew(sizeof(WlzCMeshFMarElmQEnt), 1024, NULL)) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      elmQ->topPriLo = 1;
     }
   }
   /* Until the queue is empty: Pop the node with lowest priority (ie
@@ -718,6 +723,7 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    nodQ->topPriLo = 1;
     if(nSeeds > 0)
     {
       errNum = WlzCMeshFMarAddSeeds3D(nodQ, mesh, cnt + 1,
@@ -755,6 +761,10 @@ WlzErrorNum	WlzCMeshFMarNodes3D(WlzCMesh3D *mesh, double *distances,
     if((elmQ = AlcHeapNew(sizeof(WlzCMeshFMarElmQEnt), 1024, NULL)) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      elmQ->topPriLo = 1;
     }
   }
   /* Until the queue is empty: Pop the node with lowest priority (ie
@@ -1645,6 +1655,7 @@ static WlzErrorNum WlzCMeshFMarAddSeeds2D(AlcHeap *nodQ,
   }
   else
   {
+    sElmQ->topPriLo = 1;
     /* For each seed: Update the Euclidean distances. */
     while((errNum == WLZ_ERR_NONE) && (idS < nSeeds))
     {
@@ -1741,6 +1752,7 @@ static WlzErrorNum WlzCMeshFMarAddSeeds3D(AlcHeap *nodQ,
   }
   else
   {
+    sElmQ->topPriLo = 1;
     /* For each seed: Update the Euclidean distances. */
     while((errNum == WLZ_ERR_NONE) && (idS < nSeeds))
     {
