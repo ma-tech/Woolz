@@ -66,7 +66,7 @@ WlzCMeshDistance [-b] [-h] [-i] [-L] [-o<out obj file>] [-r<ref obj file>]
   </tr>
   <tr> 
     <td><b>-i</b></td>
-    <td>Output and image with interpolated distance values rather than a
+    <td>Output an image with interpolated distance values rather than a
         mesh with indexed values.</td>
   </tr>
   <tr> 
@@ -506,7 +506,7 @@ int		main(int argc, char *argv[])
 	    "Version: %s\n"
 	    "Options:\n"
 	    "  -h  Help, prints this usage message.\n"
-            "  -i  Output and image (ie a 2 or 3D domain object) with\n"
+            "  -i  Output an image (ie a 2 or 3D domain object) with\n"
 	    "      interpolated distance values rather than a mesh with\n"
 	    "      indexed values.\n"
 	    "  -L  Use expensive interpolation (mainly useful as a test).\n"
