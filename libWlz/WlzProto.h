@@ -186,6 +186,11 @@ extern WlzThreeDViewStruct 	*WlzMake3DViewStruct(
 extern WlzThreeDViewStruct	*WlzMake3DViewStructCopy(
 				  WlzThreeDViewStruct *given,
 				  WlzErrorNum *dstErr);
+extern WlzThreeDViewStruct	*Wlz3DViewStructFromNormal(
+				  WlzDVertex3 nrm,
+				  WlzDVertex3 org,
+				  WlzDVertex3 up,
+				  WlzErrorNum *dstErr);
 extern WlzErrorNum 		WlzFree3DViewStruct(
 				  WlzThreeDViewStruct *viewStr);
 extern WlzErrorNum 		WlzInit3DViewStruct(
@@ -2590,6 +2595,16 @@ extern WlzObject		*WlzFilterNObjValues(
 				  int fn,
 				  double rank,
 				  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzFitPlane.c
+************************************************************************/
+extern WlzErrorNum		WlzFitPlaneSVD(
+				  WlzVertexType vtxType,
+				  int nVtx,
+				  WlzVertexP vtx,
+				  WlzDVertex3 *dstPinP,
+				  WlzDVertex3 *dstNrm);
 
 /************************************************************************
 * WlzFreeSpace.c							*
