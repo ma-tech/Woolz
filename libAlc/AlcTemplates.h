@@ -55,10 +55,10 @@ extern "C" {
 * \ingroup	AlcArray
 * \brief	A template for functions which allocate 1 dimensional
 *		zero'd arrays of any type.
-* 		- D:			Destination pointer, of type T *.
-*		- T:			Type, eg char, short, int, ....
-*		- M:			Number of elements in array.
-*		- F:			String with name of function.
+* \param        D                     Destination pointer, of type T *.
+* \param        T                     Type, eg char, short, int, ....
+* \param        M                     Number of elements in array.
+* \param        F                     String with name of function.
 */
 #define ALC_TEMPLATE_C1D(D,T,M,F) \
   AlcErrno	alcErrno = ALC_ER_NONE; \
@@ -81,10 +81,10 @@ extern "C" {
 * \ingroup	AlcArray
 * \brief	A template for functions which allocate	1 dimensional
 *		non-zero'd arrays of any type.
-* 		- D:			Destination pointer, of type T *.
-*		- T:			Type, eg char, short, int, ....
-*		- M:			Number of elements in array.
-*		- F:			String with name of function.
+* \param        D                     Destination pointer, of type T *.
+* \param        T                     Type, eg char, short, int, ....
+* \param        M                     Number of elements in array.
+* \param        F                     String with name of function.
 */
 #define ALC_TEMPLATE_M1D(D,T,M,F) \
   AlcErrno	alcErrno = ALC_ER_NONE; \
@@ -107,12 +107,11 @@ extern "C" {
 * \ingroup	AlcArray
 * \brief	A template for functions which allocate 2 dimensional
 *		zero'd arrays of any type.
-* 		- D:			Destination pointer, of type T **.
-*		- T:			Type, eg char, short, int, ....
-*		- M:			Number of 1D arrays.
-*		- N:			Number of elements in each 1D
-*					array.
-*		- F:			String with name of function.
+* \param        D                     Destination pointer, of type T **.
+* \param        T                     Type, eg char, short, int, ....
+* \param        M                     Number of 1D arrays.
+* \param        N                     Number of elements in each 1D array.
+* \param        F                     String with name of function.
 */
 #define ALC_TEMPLATE_C2D(D,T,M,N,F) \
   size_t	index; \
@@ -152,12 +151,11 @@ extern "C" {
 * \ingroup	AlcArray
 * \brief	A template for functions which allocate 2 dimensional
 *		non-zero'd arrays of any type.
-* 		- D:			Destination pointer, of type T **.
-*		- T:			Type, eg char, short, int, ....
-*		- M:			Number of 1D arrays.
-*		- N:			Number of elements in each 1D
-*					array.
-*		- F:			String with name of function.
+* \param        D                     Destination pointer, of type T **.
+* \param        T                     Type, eg char, short, int, ....
+* \param        M                     Number of 1D arrays.
+* \param        N                     Number of elements in each 1D array.
+* \param        F                     String with name of function.
 */
 #define ALC_TEMPLATE_M2D(D,T,M,N,F) \
   size_t	index; \
@@ -199,10 +197,10 @@ extern "C" {
 *		zero'd symetric arrays of any type. Obviously symetric
 *               arrays are square, but in this representation only the
 *		lower trinagle is stored.
-* 		- D:			Destination pointer, of type T **.
-*		- T:			Type, eg char, short, int, ....
-*		- N:			Number of rows or columns.
-*		- F:			String with name of function.
+* \param        D                     Destination pointer, of type T **.
+* \param        T                     Type, eg char, short, int, ....
+* \param        N                     Number of rows or columns.
+* \param        F                     String with name of function.
 */
 #define ALC_TEMPLATE_SYM_C2D(D,T,N,F) \
   size_t	totElm, \
@@ -257,10 +255,10 @@ extern "C" {
 *		zero'd symetric arrays of any type. Obviously symetric
 *               arrays are square, but in this representation only the
 *		lower trinagle is stored.
-* 		- D:			Destination pointer, of type T **.
-*		- T:			Type, eg char, short, int, ....
-*		- N:			Number of rows or columns.
-*		- F:			String with name of function.
+* \param        D                     Destination pointer, of type T **.
+* \param        T                     Type, eg char, short, int, ....
+* \param        N                     Number of rows or columns.
+* \param        F                     String with name of function.
 */
 #define ALC_TEMPLATE_SYM_M2D(D,T,N,F) \
   size_t	totElm, \
@@ -314,8 +312,8 @@ extern "C" {
 * \brief	A template for functions which free 2 dimensional
 *		arrays of any type, actualy no type information
 *		is used in freeing the array.
-* 		- D:			Pointer for array to be free'd.
-*		- F:			String with name of function.
+* \param        D                     Pointer for array to be free'd.
+* \param        F                     String with name of function.
 */
 #define ALC_TEMPLATE_F2D(D,F) \
   AlcErrno	alcErrno = ALC_ER_NONE; \
@@ -337,13 +335,12 @@ extern "C" {
 * \ingroup	AlcArray
 * \brief	A template for functions which allocate 3 dimensional
 *		zero'd arrays of any type.
-* 		- D:			Destination pointer, of type T **.
-*		- T:			Type, eg char, short, int, ....
-*		- M:			Number of 2D arrays.
-*		- N:			Number of 1D arrays.
-*		- O:			Number of elements in each 1D
-*					array.
-*		- F:			String with name of function.
+* \param        D                     Destination pointer, of type T **.
+* \param        T                     Type, eg char, short, int, ....
+* \param        M                     Number of 2D arrays.
+* \param        N                     Number of 1D arrays.
+* \param        O                     Number of elements in each 1D array.
+* \param        F                     String with name of function.
 */
 #define ALC_TEMPLATE_C3D(D,T,M,N,O,F) \
   size_t	index0, \
@@ -393,13 +390,12 @@ extern "C" {
 * \ingroup	AlcArray
 * \brief	A template for functions which allocate 3 dimensional
 *		non-zero'd arrays of any type.
-* 		- D:			Destination pointer, of type T **.
-*		- T:			Type, eg char, short, int, ....
-*		- M:			Number of 2D arrays.
-*		- N:			Number of 1D arrays.
-*		- O:			Number of elements in each 1D
-*					array.
-*		- F:			String with name of function.
+* \param        D                     Destination pointer, of type T **.
+* \param        T                     Type, eg char, short, int, ....
+* \param        M                     Number of 2D arrays.
+* \param        N                     Number of 1D arrays.
+* \param        O                     Number of elements in each 1D array.
+* \param        F                     String with name of function.
 */
 #define ALC_TEMPLATE_M3D(D,T,M,N,O,F) \
   size_t	index0, \
@@ -450,8 +446,8 @@ extern "C" {
 * \brief	A template for functions which free 3 dimensional
 *		arrays of any type, actualy no type information
 *		is used in freeing the array.
-* 		- D:			Pointer for array to be free'd.
-*		- F:			String with name of function.
+* \param        D                     Pointer for array to be free'd.
+* \param        F                     String with name of function.
 */
 #define ALC_TEMPLATE_F3D(D,F) \
   AlcErrno	alcErrno = ALC_ER_NONE; \
