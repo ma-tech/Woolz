@@ -41,6 +41,7 @@ static char _Wlz3DViewStructUtils_c[] = "University of Edinburgh $Id$";
 
 #include <stdlib.h>
 #include <float.h>
+#include <math.h>
 #include <Wlz.h>
 
 static double viewStructAtan2(
@@ -433,7 +434,7 @@ WlzErrorNum WlzInit3DViewStructAffineTransform(
 }
 
 /*!
-* \return				Woolz error code.
+* \return	Woolz error code.
 * \ingroup      WlzSectionTransform
 * \brief	Sets up the transformation look up tables of the given view.
 * \param	viewStr			Given view.
@@ -1869,6 +1870,7 @@ WlzErrorNum Wlz3DViewGetMinvals(
 
 /*!
 * \return	void
+* \ingroup      WlzSectionTransform
 * \brief	Computes the parameters of the equation of the plane
 *		defined by the given 3D view.
 *
@@ -1913,6 +1915,7 @@ void		Wlz3DViewGetPlaneEqn(WlzThreeDViewStruct *view,
 /*!
 * \return				Non zero if there is an intersection
 *					otherwise zero.
+* \ingroup      WlzSectionTransform
 * \brief	Tests for an intersection between the plane defined by the
 * 		given 3D view and the given axis aligned bounding box (AABB).
 * \param	view			Given view which defines a plane.
@@ -1929,4 +1932,88 @@ int		Wlz3DViewIntersectAABB(WlzThreeDViewStruct *view,
   /* Check for intersection. */
   intersect = WlzGeomPlaneAABBIntersect(p[0], p[1], p[2], p[3], box);
   return(intersect);
+}
+
+/*!
+* \return	New 3D view structure with angles and fixed point set
+* 		or NULL on error.
+* \ingroup	WlzSectionTransform
+* \brief	Creates a new 3D view structure with angles and fixed point
+* 		set.
+*
+* 		Given normal \f$\vec{n}\f$ with \f$\vec{n} = (n_x,n_y,n_z)\f$,
+* 		then:
+* 		\f{eqnarray*}{
+		\cos(\phi) = \frac{n_z}{|\vec{n}|} \\
+		\tan(\theta) = \frac{n_y}{n_x}
+		\f}
+* \param	nrm			Normal to the view plane (need not
+* 					be a unit normal).
+* \param	org			Fixed point origin for the view
+* 					structure.
+* \param	up			Up vector which is only used if the
+* 					length of the up vector is not close
+* 					to zero
+* 					( \f$|\vec{u}|^2 > 1.0e-06\f$ ).
+* 					When the up vector is used then the
+* 					mode of the view structure is set to
+* 					up-is-up.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzThreeDViewStruct	*Wlz3DViewStructFromNormal(WlzDVertex3 nrm,
+						   WlzDVertex3 org,
+						   WlzDVertex3 up,
+						   WlzErrorNum *dstErr)
+{
+  double	len;
+  WlzThreeDViewStruct *vs = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	eps = 1.0e-06;
+
+  len = WLZ_VTX_3_LENGTH(nrm);
+  if(len < eps)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    if((vs = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      vs->theta = atan2(nrm.vtY, nrm.vtX);
+      vs->phi   = acos(nrm.vtZ / len);
+      vs->fixed = org;
+      len = WLZ_VTX_3_LENGTH(up);
+      if(len > eps)
+      {
+	double 	cp,
+		ct,
+		sp,
+		st;
+
+        cp = cos(vs->phi);
+	ct = cos(vs->theta);
+	sp = sin(vs->phi);
+	st = sin(vs->theta);
+	vs->view_mode = WLZ_UP_IS_UP_MODE;
+	vs->up.vtX = (((ct * ct * cp) + (st * st)) * up.vtX) +
+	             (ct * st * (cp - 1.0) * up.vtY) +
+		     (ct * sp * up.vtZ);
+	vs->up.vtY = (ct * st * (cp - 1.0) * up.vtX) +
+		     (((st * st * cp) + (ct * ct)) * up.vtY) +
+		     ((st * sp) * up.vtZ);
+	vs->up.vtZ = (-ct * sp * up.vtX) +
+	             (-st * sp * up.vtY) +
+		     (cp * up.vtZ);
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vs);
 }
