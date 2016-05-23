@@ -149,14 +149,18 @@ AlgError	AlgMatrixSVSolve(AlgMatrix aMat, double *bVec, double tol,
 * \return	Error code.
 * \ingroup      AlgMatrix
 * \brief	Performs singular value decomposition of the given
-*		matrix (A) and computes two additional matricies
-*		(U and V) such that:
-*		  A = U.W.V'
-*		where V' is the transpose of V.
+*		matrix ( \f$A\f$ ) and computes two additional matricies
+*		( \f$U\f$ ) and ( \f$V\f$ ) such that:
+*		\f[
+		  A = U W V^T
+		\f]
+*		where \f$V^T\f$ is the transpose of \f$V\f$.
 *		The code for AlgMatrixSVDecomp was derived from:
 *		Numerical Recipies function svdcmp(), EISPACK
 *		subroutine SVD(), CERN subroutine SVD() and ACM
 *		algorithm 358.
+*		The singular values ( \f$W\f$ ) and singular vectors
+*		( \f$V\f$ ) are returned unsorted.
 *		See AlgMatrixSVSolve() for a usage example.
 * \param	aMat			The given matrix A, and U on
 *					return.
@@ -201,7 +205,7 @@ AlgError	AlgMatrixSVDecomp(AlgMatrix aMat, double *wVec, AlgMatrix vMat)
   if((aMat.core == NULL) || (aMat.core->type != ALG_MATRIX_RECT) ||
      (vMat.core == NULL) || (aMat.core->type != vMat.core->type) ||
      (aMat.core->nR <= 0) || (aMat.core->nR < aMat.core->nC) ||
-     (aMat.core->nR != vMat.core->nR) || (aMat.core->nC != vMat.core->nC) ||
+     (vMat.core->nR < aMat.core->nC) || (vMat.core->nC < aMat.core->nC) ||
      (wVec == NULL))
   {
     errCode = ALG_ERR_FUNC;
