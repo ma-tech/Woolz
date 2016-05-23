@@ -53,7 +53,7 @@ Wlz3DGetSection  [-h] [-A] [-C] [-L] [-N]
                  [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>]
                  [-d <dist>] [-b <parameter bibfile>] [-m <mode>]
 		 [-r <vox scaling>] [-s <scale>] [-o <output file>]
-		 [-u<ux,uy,uz>] [<3D object input file>]
+		 [-t<view transform>] [-u<ux,uy,uz>] [<3D object input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -125,6 +125,10 @@ Wlz3DGetSection  [-h] [-A] [-C] [-L] [-N]
   <tr> 
     <td><b>-o</b></td>
     <td>Output filename, default is stdout.</td>
+  </tr>
+  <tr> 
+    <td><b>-t</b></td>
+    <td>View transform file.</td>
   </tr>
   <tr> 
     <td><b>-u</b></td>
@@ -207,6 +211,7 @@ static void usage(char *proc_str)
           "\t                       default 1.0.\n"
 	  "\t  -R<ROI domain>     Only calculate values within the ROI domain.\n"
 	  "\t  -T                 Report section cutting time.\n"
+	  "\t  -t                 View transform file.\n"
 	  "\t  -h                 Help - prints this usage message\n",
 	  proc_str,
 	  WlzVersion());
@@ -218,9 +223,9 @@ int main(int	argc,
 {
 
   WlzObject	*obj = NULL, *nobj = NULL, *subDomain = NULL;
-  FILE		*inFP = NULL, *outFP = NULL, *bibFP = NULL;
-  char		*outFile = NULL, *bibFile = NULL;
-  char 		optList[] = "ACLNTa:b:d:f:m:o:r:s:u:R:h";
+  FILE		*inFP = NULL, *outFP = NULL, *trFP = NULL, *bibFP = NULL;
+  char		*outFile = NULL, *trFile = NULL, *bibFile = NULL;
+  char 		optList[] = "ACLNTa:b:d:f:m:o:r:s:t:u:R:h";
   int		option;
   int		i,
   		j,
@@ -244,6 +249,7 @@ int main(int	argc,
   /* additional defaults */
   outFile = "-";
   bibFile = NULL;
+  trFile = NULL;
   subDomain = NULL;
 
   /* read the argument list and check for an input file */
@@ -367,6 +373,9 @@ int main(int	argc,
     case 'T':
       timer = 1;
       break;
+    case 't':
+      trFile = optarg;
+      break;
     case 'h':
     default:
       usage(argv[0]);
@@ -428,6 +437,11 @@ int main(int	argc,
     viewStr->voxelRescaleFlg = voxRescale;
   }
 
+  if((errNum == WLZ_ERR_NONE) && (bibFile != NULL) && (trFile != NULL)) {
+    fprintf(stderr, "%s: both bibfile and transform file specified.\n",
+            argv[0]);
+  }
+
   /* check bibfile - select first section parameters in the file */
   if((errNum == WLZ_ERR_NONE) && (bibFile != NULL)){
     if((bibFP = fopen(bibFile, "r")) != NULL){
@@ -453,6 +467,41 @@ int main(int	argc,
     }
   }
   
+  if((errNum == WLZ_ERR_NONE) && (trFile != NULL)){
+    if((trFP = fopen(trFile, "r")) != NULL){
+      WlzObject *trObj = NULL;
+
+      if((trObj = WlzReadObj(trFP, &errNum)) != NULL) {
+        if(trObj->type != WLZ_3D_VIEW_STRUCT) {
+	  errNum = WLZ_ERR_OBJECT_TYPE;
+	}
+	else if (trObj->domain.core == NULL) {
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else {
+	  WlzThreeDViewStruct *fViewStr;
+
+	  fViewStr = trObj->domain.vs3d;
+	  viewStr->theta = fViewStr->theta;
+	  viewStr->phi = fViewStr->phi;
+	  viewStr->zeta = fViewStr->zeta;
+	  viewStr->dist = fViewStr->dist;
+	  viewStr->fixed = fViewStr->fixed;
+	  viewStr->up = fViewStr->up;
+	  viewStr->view_mode = fViewStr->view_mode;
+	  viewStr->scale = fViewStr->scale;
+	  viewStr->voxelRescaleFlg = fViewStr->voxelRescaleFlg;
+	}
+	(void )WlzFreeObj(trObj);
+      }
+    }
+    if(errNum != WLZ_ERR_NONE) {
+      fprintf(stderr,
+              "%s: error reading section view transform from %s.\n",
+              argv[0], trFile);
+      return 1;
+    }
+  }
 
   /* read objects and section if possible */
   while((errNum == WLZ_ERR_NONE) &&
