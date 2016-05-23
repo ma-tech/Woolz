@@ -112,6 +112,7 @@ bin_PROGRAMS		= \
 			  WlzFacts \
 			  WlzFile \
 			  WlzFilterNObjsValues \
+			  WlzFitPlane \
 			  WlzFourierTransform \
 			  WlzGauss \
 			  WlzGaussNoise \
@@ -485,6 +486,10 @@ WlzFacts_LDFLAGS			= $(AM_LFLAGS)
 WlzFile_SOURCES				= WlzFile.c
 WlzFile_LDADD				= $(LDADD)
 WlzFile_LDFLAGS				= $(AM_LFLAGS)
+
+WlzFitPlane_SOURCES			= WlzFitPlane.c
+WlzFitPlane_LDADD			= $(LDADD)
+WlzFitPlane_LDFLAGS			= $(AM_LFLAGS)
 
 WlzFilterNObjsValues_SOURCES		= WlzFilterNObjsValues.c
 WlzFilterNObjsValues_LDADD		= $(LDADD)
