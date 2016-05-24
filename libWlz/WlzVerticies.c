@@ -121,12 +121,16 @@ static WlzDVertex3  		*WlzDVerticesFromCMesh3D(
 				  WlzErrorNum *dstErr);
 
 /*!
+* \return	Allocated vertices.
 * \ingroup      WlzFeatures
-* \return				Allocated vertices.
 * \brief	Allocates a buffer which it fills with the vertices
-*		from the given object. The object must be one of the
-*		types that is represented by vertices, eg
-*		polylines, boundlists and contours.
+*		from the given object. If the object is not one of the
+*		types that is represented by vertices, eg polylines,
+*		boundlists, contours ..., then this may result in a
+*		very large number of vertices, with for example one
+*		per voxel. Normals will only be allocated and set
+*		for objects represented by vertices, eg there will
+*		be no normals for voxel based objects.
 * \param	obj			Given polygon domain object.
 * \param	dstNr			Destination ptr for normals.
 *					The normals will always be
@@ -159,6 +163,14 @@ WlzVertexP	WlzVerticesFromObj(WlzObject *obj, WlzVertexP *dstNr,
   {
     switch(obj->type)
     {
+      case WLZ_2D_DOMAINOBJ:
+	*dstType = WLZ_VERTEX_I2;
+        errNum = WlzVerticesFromObj2I(obj, dstCnt, &(vData.i2));
+	break;
+      case WLZ_3D_DOMAINOBJ:
+	*dstType = WLZ_VERTEX_I3;
+        errNum = WlzVerticesFromObj3I(obj, dstCnt, &(vData.i3));
+	break;
       case WLZ_2D_POLYGON:
 	vData = WlzVerticesFromPoly2(obj->domain.poly, dstNr,
 				      dstCnt, dstType, &errNum);
