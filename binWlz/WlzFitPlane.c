@@ -92,11 +92,15 @@ WlzFitPlane [-o <output file>] [-h]
     <td>Up vector, the default is (0, 0, 0) which implies that
         the up vector is not explicitly set.</td>
   </tr>
+  <tr>
+    <td><b>-w</b></td>
+    <td>Input is a Woolz object rather than ascii vertices.</td>
+  </tr>
 </table>
   
 \par Description
 WlzFitPlane computes a least squares best fit plane through the given
-input vertices. 
+input vertices or object. 
 Text output is of the form:
 \verbatim
   <nx> <ny> <nz> <fx> <fy> <fz> <pitch> <yaw>
@@ -178,12 +182,14 @@ int             main(int argc, char **argv)
 		ok = 1,
 		usage = 0,
       		nVx = 0,
+		inputWlz = 0,
 		testFlg = 0;
   WlzVertexP	vxp;
   WlzDVertex3	up,
   		nrm,
 		pip;
   WlzObject	*outObj = NULL;
+  WlzVertexType vtxType = WLZ_VERTEX_D3;
   WlzObjectType	outObjType = WLZ_NULL;
   WlzDomain	outDomain;
   WlzValues	outValues;
@@ -193,7 +199,7 @@ int             main(int argc, char **argv)
   char		*inFileStr = NULL,
 		*outFileStr = NULL;
   const char	*errMsg;
-  static char	optList[] = "ahstTA:o:u:",
+  static char	optList[] = "ahstTwA:o:u:",
 		fileStrDef[] = "-";
 
   /* These vertices correspond to a plane in EMA27 with
@@ -260,6 +266,9 @@ int             main(int argc, char **argv)
 	  ok = 0;
 	}
 	break;
+      case 'w':
+        inputWlz = 1;
+	break;
       case 'h':
       default:
         usage = 1;
@@ -299,45 +308,82 @@ int             main(int argc, char **argv)
       }
       else
       {
-	size_t nM = 0,
-	       nN = 0;
-        double **inData = NULL;
+        if(inputWlz)
+	{
+	  WlzObject *inObj = NULL;
 
-	if((AlcDouble2ReadAsci(fP, &inData, &nM, &nN) != ALC_ER_NONE) ||
-	   (nM < 1) || (nN != 3))
-	{
-	  ok = 0;
-	  errNum = WLZ_ERR_PARAM_DATA;
+	  if((inObj = WlzReadObj(fP, &errNum)) != NULL)
+	  {
+	    WlzVertexP inVxP;
+	    WlzVertexType inVxType;
+
+	    inVxP = WlzVerticesFromObj(inObj, NULL, &nVx, &inVxType, &errNum);
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      switch(inVxType)
+	      {
+	        case WLZ_VERTEX_I3: /* FALLTHROUGH */
+		case WLZ_VERTEX_F3: /* FALLTHROUGH */
+		case WLZ_VERTEX_D3:
+		  vtxType = inVxType;
+		  vxp.v = inVxP.v;
+		  inVxP.v = NULL;
+		  break;
+	        default:
+		  errNum = WLZ_ERR_OBJECT_TYPE;
+		  break;
+	      }
+	      AlcFree(inVxP.v);
+	    }
+	    (void )WlzFreeObj(inObj);
+	  }
 	}
-	(void )fclose(fP);
-	if(ok)
+	else
 	{
-	  nVx = nM;
-	  if((vxp.d3 = (WlzDVertex3 *)
-		       AlcMalloc(nVx * sizeof(WlzDVertex3))) == NULL)
+	  size_t nM = 0,
+		 nN = 0;
+	  double **inData = NULL;
+
+	  if((AlcDouble2ReadAsci(fP, &inData, &nM, &nN) != ALC_ER_NONE) ||
+	     (nM < 1) || (nN != 3))
 	  {
 	    ok = 0;
-	    errNum = WLZ_ERR_MEM_ALLOC;
+	    errNum = WLZ_ERR_PARAM_DATA;
 	  }
-	}
-	if(ok)
-	{
-	  int	idx;
-
-	  for(idx = 0; idx < nVx; ++idx)
+	  (void )fclose(fP);
+	  if(ok)
 	  {
-	    vxp.d3[idx].vtX = inData[idx][0];
-	    vxp.d3[idx].vtY = inData[idx][1];
-	    vxp.d3[idx].vtZ = inData[idx][2];
+	    nVx = nM;
+	    if((vxp.d3 = (WlzDVertex3 *)
+			 AlcMalloc(nVx * sizeof(WlzDVertex3))) == NULL)
+	    {
+	      ok = 0;
+	      errNum = WLZ_ERR_MEM_ALLOC;
+	    }
 	  }
+	  if(ok)
+	  {
+	    int	idx;
+
+	    for(idx = 0; idx < nVx; ++idx)
+	    {
+	      vxp.d3[idx].vtX = inData[idx][0];
+	      vxp.d3[idx].vtY = inData[idx][1];
+	      vxp.d3[idx].vtZ = inData[idx][2];
+	    }
+	  }
+	  (void )AlcDouble2Free(inData);
 	}
-	(void )AlcDouble2Free(inData);
+	if(strcmp(inFileStr, "-"))
+	{
+	  (void )fclose(fP);
+	}
       }
       if(!ok)
       {
         (void )WlzStringFromErrorNum(errNum, &errMsg);
 	(void )fprintf(stderr,
-	               "%s: failed to open input file %s (%s).\n",
+	               "%s: failed to input vertices from file %s (%s).\n",
 		       *argv, inFileStr, errMsg);
       }
     }
@@ -347,7 +393,7 @@ int             main(int argc, char **argv)
     switch(alg)
     {
       case WLZ_FITPLANE_ALG_SVD:
-	errNum = WlzFitPlaneSVD(WLZ_VERTEX_D3, nVx, vxp, &pip, &nrm);
+	errNum = WlzFitPlaneSVD(vtxType, nVx, vxp, &pip, &nrm);
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  outDomain.vs3d = Wlz3DViewStructFromNormal(nrm, pip, up, &errNum);
@@ -474,7 +520,7 @@ int             main(int argc, char **argv)
     "Usage: %s%s%s%s",
     *argv,
     " [-a] [-A <alg>] [-o <output file>] [-h]\n"
-    "\t\t[-s] [-t] [-T] [-u<x>,<y>,<z>] [<input data file>]\n"
+    "\t\t[-s] [-t] [-T] [-u<x>,<y>,<z>] [<input file>]\n"
     "Version: ",
     WlzVersion(),
     "\n"
@@ -490,8 +536,9 @@ int             main(int argc, char **argv)
     "  -T  Use test data, probably only useful for debugging.\n"
     "  -u  Up vector, the default is (0, 0, 0) which implies that\n"
     "      the up vector is not explicitly set.\n"
+    "  -w  Input is a Woolz object rather than ascii vertices.\n"
     "Calculates the best (least squares) plane through the given input\n"
-    "input vertices.\n"
+    "vertices or object.\n"
     "Text output is of the form:\n"
     "  <nx> <ny> <nz> <cx> <cy> <cz> <pitch> <yaw>\n"
     "where these are the normal components, centroid location in the plane\n"
