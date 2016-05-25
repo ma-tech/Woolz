@@ -49,7 +49,7 @@ static char _Wlz3DViewTransformObj_c[] = "University of Edinburgh $Id$";
 Wlz3DViewTransformObj - transforms a section view to a 3D object.
 \par Synopsis
 \verbatim
-Wlz3DViewTransformObj  [-h] [-v]
+Wlz3DViewTransformObj  [-h] [-v] [-D]
                  [-a <pitch,yaw[,roll]>] [-f <fx,fy,fz>]
                  [-d <dist>] [-b <view bibfile>] [-m <mode>]
 		 [-u<ux,uy,uz>] [<3D object input file>]
@@ -97,6 +97,10 @@ Wlz3DViewTransformObj  [-h] [-v]
     <td><b>-u</b></td>
     <td>Up vector for up-is-up mode, default (0, 0, -1).</td>
   </tr>
+  <tr>
+    <td><b>-D</b></td>
+    <td>Command line viewing angles are degrees and not radians.</td>
+  </tr>
 </table>
 \par Description
 Transforms a section view to a 3D object
@@ -131,19 +135,22 @@ static void usage(char *proc_str)
 {
   (void )fprintf(stderr,
 	  "Usage:\t%s [-t<pitch,yaw[,roll]>] [-b<bibfile>]\n"
-	  "\t[-f<fx,fy,fz>] [-d<dist>]"
+	  "\t[-f<fx,fy,fz>] [-d<dist>] [-D]"
 	  " [-h] [-m<mode>] [<2D object input file>]\n"
 	  "\tTransform an section view to a 3D object\n"
 	  "\twriting the 3D object to standard output\n"
 	  "Version: %s\n"
 	  "Options:\n"
-	  "\t  -a<pitch,yaw[,roll]> viewing angles in degrees - default 0.0\n"
+	  "\t  -a<pitch,yaw[,roll]> viewing angles - default 0,0,0\n"
 	  "\t  -b<view-bibfile>   input parameters from the view\n"
 	  "\t                     bibfile - e.g. saved from MAPaint\n"
 	  "\t  -f<fx,fy,fz>       fixed point position - default zero\n"
 	  "\t  -d<dist>           distance parameter - default zero\n"
-	  "\t  -m<mode>           viewing mode, one of: up-is-up, statue, absolute\n"
+	  "\t  -m<mode>           viewing mode, one of: up-is-up, statue,\n"
+	  "\t                     absolute\n"
 	  "\t  -u<ux,uy,uz>       up vector - default (0.0, 0.0, 1.0)\n"
+	  "\t  -D                 Command line viewing angles are degrees\n"
+	  "\t                     not radians.\n"
 	  "\t  -h                 Help - prints this usage message\n"
 	  "\t  -v                 Verbose operation\n",
 	  proc_str,
@@ -157,8 +164,10 @@ int main(int	argc,
 
   WlzObject		*obj, *nobj;
   FILE			*inFile;
-  char 			optList[] = "a:b:d:f:hm:v";
-  int			option;
+  char 			optList[] = "a:b:d:f:m:hvD";
+  int			option,
+  			useDegrees = 0,
+			anglesSetOnCmdLine = 0;
   double		dist=0.0, theta=0.0, phi=0.0, zeta=0.0;
   WlzDVertex3		fixed={0.0,0.0,0.0};
   WlzThreeDViewStruct	*viewStr=NULL;
@@ -175,6 +184,7 @@ int main(int	argc,
     switch( option ){
 
     case 'a':
+      anglesSetOnCmdLine = 1;
       if( sscanf(optarg, "%lg,%lg,%lg", &phi, &theta, &zeta) < 2 ){
 	usage(argv[0]);
 	return 1;
@@ -204,6 +214,7 @@ int main(int	argc,
 	}
 
 	/* parse the record */
+        anglesSetOnCmdLine = 0;
 	numParsedFields = BibFileFieldParseFmt
 	  (bibfileRecord->field,
 	   (void *) &(fixed.vtX), "%lg ,%*lg ,%*lg", "FixedPoint",
@@ -304,6 +315,9 @@ int main(int	argc,
       verboseFlg = 1;
       break;
 
+    case 'D':
+      useDegrees = 1;
+      break;
     case 'h':
     default:
       usage(argv[0]);
@@ -323,6 +337,13 @@ int main(int	argc,
 
   /* create the view structure */
   if( errNum == WLZ_ERR_NONE ){
+    if(useDegrees && anglesSetOnCmdLine) {
+      const double	dtr = WLZ_M_PI / 180.0;
+
+      theta *= dtr;
+      phi *= dtr;
+      zeta *= dtr;
+    }
     if((viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) != NULL){
       viewStr->fixed 	= fixed;
       viewStr->theta 	= theta;
