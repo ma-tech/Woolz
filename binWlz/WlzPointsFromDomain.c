@@ -47,7 +47,7 @@ static char _WlzPointsFromDomain_c[] = "University of Edinburgh $Id$";
 WlzPointsFromDomain - computes points from a given spatial domain object.
 \par Synopsis
 \verbatim
-WlzPointsFromDomain [-d#] [-D #,#[#]] [-g[<min>][,<max>][,<gam>]]  [-G]
+WlzPointsFromDomain [-d#] [-D #,#[#]] [-g[<min>][,<max>][,<gam>]] [-G] [-M]
                 [-o<output object>] [-h] [-T] [-x] [<input object>]
 \endverbatim
 \par Options
@@ -68,6 +68,10 @@ WlzPointsFromDomain [-d#] [-D #,#[#]] [-g[<min>][,<max>][,<gam>]]  [-G]
   <tr> 
     <td><b>-G</b></td>
     <td>Include sampled grey values.</td>
+  </tr>
+  <tr> 
+    <td><b>-M</b></td>
+    <td>Transform the sampled grey values using gamma function.</td>
   </tr>
   <tr> 
     <td><b>-o</b></td>
@@ -117,6 +121,8 @@ written to the file out.wlz
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
+#include <float.h>
 #include <sys/time.h>
 #include <Wlz.h>
 
@@ -136,6 +142,7 @@ int		main(int argc, char *argv[])
 		timeFlg = 0,
 		samGrey = 0,
 		useGrey = 0,
+		useGreyGamma = 0,
 		voxelScaling = 0;
   char		*inFileStr,
 		*outFileStr;
@@ -150,7 +157,7 @@ int		main(int argc, char *argv[])
   struct timeval times[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "hGTxd:D:g:o:";
+  static char	optList[] = "hGMTxd:D:g:o:";
   const char    fileStrDef[] = "-";
 
   /* Parse the argument list and check for input files. */
@@ -218,6 +225,9 @@ int		main(int argc, char *argv[])
 	break;
       case 'G':
         samGrey = 1;
+	break;
+      case 'M':
+        useGreyGamma = 1;
 	break;
       case 'o':
 	outFileStr = optarg;
@@ -294,6 +304,72 @@ int		main(int argc, char *argv[])
     if((errNum == WLZ_ERR_NONE) && samGrey)
     {
       outVal.pts = WlzPointValuesFromDomObj(outDom.pts, inObj, &errNum);
+      if((errNum == WLZ_ERR_NONE) && useGreyGamma)
+      {
+	int	idx;
+	double 	g,
+		gr;
+	WlzPoints *pd;
+	WlzPointValues *pv;
+
+        pd = outDom.pts;
+	pv = outVal.pts;
+	gr = gMax - gMin;
+	switch(pv->vType)
+	{
+	  case WLZ_GREY_INT:
+            for(idx = 0; idx < pd->nPoints; ++idx)
+	    {
+              g = pv->values.inp[idx];
+              g = (g - gMin) / gr;
+              g = gMin  + (gr * pow(g, gGam));
+	      pv->values.inp[idx] = (int )WLZ_CLAMP(g, INT_MIN, INT_MAX);
+	    }
+	    break;
+	  case WLZ_GREY_SHORT:
+            for(idx = 0; idx < pd->nPoints; ++idx)
+	    {
+              g = pv->values.shp[idx];
+              g = (g - gMin) / gr;
+              g = gMin  + (gr * pow(g, gGam));
+	      pv->values.shp[idx] = (short )WLZ_CLAMP(g, SHRT_MIN, SHRT_MAX);
+	    }
+	    break;
+	  case WLZ_GREY_UBYTE:
+            for(idx = 0; idx < pd->nPoints; ++idx)
+	    {
+
+              g = pv->values.ubp[idx];
+              g = (g - gMin) / gr;
+              g = gMin  + (gr * pow(g, gGam));
+	      pv->values.ubp[idx] = (WlzUByte )WLZ_CLAMP(g, 0, 255);
+	    }
+	    break;
+	  case WLZ_GREY_FLOAT:
+            for(idx = 0; idx < pd->nPoints; ++idx)
+	    {
+
+              g = pv->values.flp[idx];
+              g = (g - gMin) / gr;
+              g = gMin  + (gr * pow(g, gGam));
+	      pv->values.flp[idx] = (float )WLZ_CLAMP(g, -FLT_MAX, FLT_MAX);
+	    }
+	    break;
+	  case WLZ_GREY_DOUBLE:
+            for(idx = 0; idx < pd->nPoints; ++idx)
+	    {
+
+              g = pv->values.dbp[idx];
+              g = (g - gMin) / gr;
+              g = gMin  + (gr * pow(g, gGam));
+	      pv->values.dbp[idx] = g;
+	    }
+	    break;
+	  default:
+	    errNum = WLZ_ERR_VALUES_TYPE;
+	    break;
+        }
+      }
     }
     if(timeFlg)
     {
@@ -353,7 +429,7 @@ int		main(int argc, char *argv[])
   {
     (void )fprintf(stderr,
     "Usage: %s [-d#] [-D#,#[,#]] [-g[<min>][,<max>][,<gam>]] [-G]\n"
-    "\t\t[-o<output file>] [-T] [-x] [-h] [<Reference object file>]\n"
+    "\t\t[-M] [-o<output file>] [-T] [-x] [-h] [<Reference object file>]\n"
     "Computes points from a given spatial domain object.\n"
     "If the given objects grey values are used, then the probability of\n"
     "a point being placed is proportional to:\n"
@@ -365,6 +441,7 @@ int		main(int argc, char *argv[])
     "      are the maximum dither displacement.\n"
     "  -g  Use given object grey values to determine point density.\n"
     "  -G  Include sampled grey values.\n"
+    "  -M  Transform the sampled grey values using gamma function.\n"
     "  -o  Output object file.\n"
     "  -T  Report elapsed time.\n"
     "  -x  Use voxel size scaling.\n"
