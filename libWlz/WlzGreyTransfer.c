@@ -117,127 +117,127 @@ WlzObject			*WlzGreyTransfer(
 	  WlzObject	*rIObj = NULL;
 
 	  rIObj = WlzIntersect2(dObj, sObj, &errNum);
-	  if(errNum == WLZ_ERR_NONE)
+	  if((errNum == WLZ_ERR_NONE) && (WlzIsEmpty(rIObj, NULL) == 0))
 	  {
 	    rObj = (inplace)?
 		   WlzMakeMain(dObj->type, dObj->domain, dObj->values,
 			       dObj->plist, NULL, &errNum):
 		   WlzCopyObject(dObj, &errNum);
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    /* If the destination object does not have values then
-	     * create them to match the domain of the destination
-	     * object. */
-	    if((sObj->values.core != NULL) && (rObj->values.core == NULL))
+	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      WlzPixelV bgdV;
-	      WlzGreyType gType;
-	      WlzObjectType gTT;
-	      WlzValues	newVal;
+	      /* If the destination object does not have values then
+	       * create them to match the domain of the destination
+	       * object. */
+	      if((sObj->values.core != NULL) && (rObj->values.core == NULL))
+	      {
+		WlzPixelV bgdV;
+		WlzGreyType gType;
+		WlzObjectType gTT;
+		WlzValues	newVal;
 
-	      newVal.core = NULL;
-	      bgdV = WlzGetBackground(sObj, &errNum);
-	      if(errNum == WLZ_ERR_NONE)
-	      {
-		gType = WlzGreyTypeFromObj(sObj, &errNum);
-	      }
-	      if(errNum == WLZ_ERR_NONE)
-	      {
-		gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
-		if(rObj->type == WLZ_2D_DOMAINOBJ)
+		newVal.core = NULL;
+		bgdV = WlzGetBackground(sObj, &errNum);
+		if(errNum == WLZ_ERR_NONE)
 		{
-		  newVal.v = WlzNewValueTb(rObj, gTT, bgdV, &errNum);
+		  gType = WlzGreyTypeFromObj(sObj, &errNum);
 		}
-		else /* rObj->type == WLZ_3D_DOMAINOBJ */
+		if(errNum == WLZ_ERR_NONE)
 		{
-		  newVal.vox = WlzNewValuesVox(rObj, gTT, bgdV, &errNum);
+		  gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
+		  if(rObj->type == WLZ_2D_DOMAINOBJ)
+		  {
+		    newVal.v = WlzNewValueTb(rObj, gTT, bgdV, &errNum);
+		  }
+		  else /* rObj->type == WLZ_3D_DOMAINOBJ */
+		  {
+		    newVal.vox = WlzNewValuesVox(rObj, gTT, bgdV, &errNum);
+		  }
 		}
-	      }
-	      if(errNum == WLZ_ERR_NONE)
-	      {
-		rObj->values = WlzAssignValues(newVal, NULL);
-	      }
-	      if(errNum == WLZ_ERR_NONE)
-	      {
-		errNum = WlzGreySetValue(rObj, bgdV);
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  rObj->values = WlzAssignValues(newVal, NULL);
+		}
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  errNum = WlzGreySetValue(rObj, bgdV);
+		}
 	      }
 	    }
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    if(sObj->type == WLZ_2D_DOMAINOBJ)
+	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      WlzObject *sIObj;
-
-	      rIObj->values = WlzAssignValues(rObj->values, NULL);
-	      sIObj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-	                          rIObj->domain, sObj->values,
-				  NULL, NULL, &errNum);
-	      if(errNum == WLZ_ERR_NONE)
+	      if(sObj->type == WLZ_2D_DOMAINOBJ)
 	      {
-	        errNum = WlzGreyTransfer2D(rIObj, sIObj);
-	      }
-	      (void )WlzFreeObj(sIObj);
-	    }
-	    else /* sObj->type == WLZ_3D_DOMAINOBJ */
-	    {
-	      int	p,
-			rTiled,
-			sTiled,
-	      		nPlanes;
+		WlzObject *sIObj;
 
-	      rTiled = WlzGreyTableIsTiled(rObj->values.core->type);
-	      sTiled = WlzGreyTableIsTiled(sObj->values.core->type);
-	      nPlanes = rIObj->domain.p->lastpl - rIObj->domain.p->plane1 + 1;
+		rIObj->values = WlzAssignValues(rObj->values, NULL);
+		sIObj = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+				    rIObj->domain, sObj->values,
+				    NULL, NULL, &errNum);
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  errNum = WlzGreyTransfer2D(rIObj, sIObj);
+		}
+		(void )WlzFreeObj(sIObj);
+	      }
+	      else /* sObj->type == WLZ_3D_DOMAINOBJ */
+	      {
+		int	p,
+			  rTiled,
+			  sTiled,
+			  nPlanes;
+
+		rTiled = WlzGreyTableIsTiled(rObj->values.core->type);
+		sTiled = WlzGreyTableIsTiled(sObj->values.core->type);
+		nPlanes = rIObj->domain.p->lastpl - rIObj->domain.p->plane1 + 1;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-	      for(p = 0; p < nPlanes; ++p)
-	      {
-		if(errNum == WLZ_ERR_NONE)
+		for(p = 0; p < nPlanes; ++p)
 		{
-		  int	     pln;
-		  WlzDomain  dom;
-		  WlzValues  val;
-		  WlzObject  *rIObj2D = NULL,
-			     *sIObj2D = NULL;
-                  WlzErrorNum errNum2D = WLZ_ERR_NONE;
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    int	     pln;
+		    WlzDomain  dom;
+		    WlzValues  val;
+		    WlzObject  *rIObj2D = NULL,
+			       *sIObj2D = NULL;
+		    WlzErrorNum errNum2D = WLZ_ERR_NONE;
 
-		  pln = p + rIObj->domain.p->plane1;
-		  dom = rIObj->domain.p->domains[p];
-		  val = (rTiled)?
-		        rObj->values:
-		        rObj->values.vox->values[pln -
-			                         rObj->values.vox->plane1];
-		  rIObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-		                        dom, val, NULL, NULL, &errNum2D);
-		  if(errNum2D == WLZ_ERR_NONE)
-		  {
-		    val = (sTiled)?
-		          sObj->values:
-			  sObj->values.vox->values[pln -
-			                           sObj->values.vox->plane1];
-		    sIObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-		                          dom, val, NULL, NULL, &errNum2D);
-		  }
-		  if(errNum2D == WLZ_ERR_NONE)
-		  {
-		    errNum2D = WlzGreyTransfer2D(rIObj2D, sIObj2D);
-		  }
-		  (void )WlzFreeObj(rIObj2D);
-		  (void )WlzFreeObj(sIObj2D);
+		    pln = p + rIObj->domain.p->plane1;
+		    dom = rIObj->domain.p->domains[p];
+		    val = (rTiled)?
+			  rObj->values:
+			  rObj->values.vox->values[pln -
+						   rObj->values.vox->plane1];
+		    rIObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+					  dom, val, NULL, NULL, &errNum2D);
+		    if(errNum2D == WLZ_ERR_NONE)
+		    {
+		      val = (sTiled)?
+			    sObj->values:
+			    sObj->values.vox->values[pln -
+						     sObj->values.vox->plane1];
+		      sIObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+					    dom, val, NULL, NULL, &errNum2D);
+		    }
+		    if(errNum2D == WLZ_ERR_NONE)
+		    {
+		      errNum2D = WlzGreyTransfer2D(rIObj2D, sIObj2D);
+		    }
+		    (void )WlzFreeObj(rIObj2D);
+		    (void )WlzFreeObj(sIObj2D);
 #ifdef _OPENMP
 #pragma omp critical
-		  {
-#endif
-		    if((errNum == WLZ_ERR_NONE) && (errNum2D != WLZ_ERR_NONE))
 		    {
-		      errNum = errNum2D;
-		    }
-#ifdef _OPENMP
-		  }
 #endif
+		      if((errNum == WLZ_ERR_NONE) && (errNum2D != WLZ_ERR_NONE))
+		      {
+			errNum = errNum2D;
+		      }
+#ifdef _OPENMP
+		    }
+#endif
+		  }
 		}
 	      }
 	    }
