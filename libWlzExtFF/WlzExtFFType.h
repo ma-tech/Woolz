@@ -92,6 +92,7 @@ typedef enum _WlzEffFormat
   WLZEFF_FORMAT_EMT,            /*!< Netgen neutral mesh format. */
   WLZEFF_FORMAT_STL,            /*!< Stereolithography file format. */
   WLZEFF_FORMAT_PVL,            /*!< Drishti PVL dot NC format. */
+  WLZEFF_FORMAT_NRRD,           /*!< Utah nearly raw raster data format. */
   WLZEFF_FORMAT_COUNT 		/*!< Keep last: Number of formats (including
   				     WLZEFF_FORMAT_NONE). */
 } WlzEffFormat;
@@ -394,6 +395,8 @@ typedef struct _WlzEffVffHeader
   WlzDVertex3	aspect;
 } WlzEffVffHeader;
 
+/* VTK format */
+
 #define	WLZEFF_VTK_VERSION_MAJOR	(1)
 #define	WLZEFF_VTK_VERSION_MINOR	(0)
 
@@ -444,6 +447,97 @@ typedef struct _WlzEffVtkHeader
   WlzEffVtkDataType dataType;
   WlzEffVtkType type;
 } WlzEffVtkHeader;
+
+/* NRRD format. */
+
+#define WLZEFF_NRRD_VERSION		(5)
+#define WLZEFF_NRRD_MAX_DIMENSION	(16)
+
+typedef enum _WlzEffNrrdDataType
+{
+  WLZEFF_NRRD_TYPE_UNSUP	= 0,
+  WLZEFF_NRRD_TYPE_INT8,
+  WLZEFF_NRRD_TYPE_UINT8,
+  WLZEFF_NRRD_TYPE_INT16,
+  WLZEFF_NRRD_TYPE_UINT16,
+  WLZEFF_NRRD_TYPE_INT32,
+  WLZEFF_NRRD_TYPE_UINT32,
+  WLZEFF_NRRD_TYPE_INT64,
+  WLZEFF_NRRD_TYPE_UINT64,
+  WLZEFF_NRRD_TYPE_FLOAT,
+  WLZEFF_NRRD_TYPE_DOUBLE,
+  WLZEFF_NRRD_TYPE_BLOCK
+} WlzEffNrrdDataType;
+
+typedef enum _WlzEffNrrdEncoding
+{
+  WLZEFF_NRRD_ENCODE_UNSUP = 0,
+  WLZEFF_NRRD_ENCODE_BZ2,
+  WLZEFF_NRRD_ENCODE_GZ,
+  WLZEFF_NRRD_ENCODE_HEX,
+  WLZEFF_NRRD_ENCODE_RAW,
+  WLZEFF_NRRD_ENCODE_TXT
+} WlzEffNrrdEncoding;
+
+typedef enum _WlzEffNrrdEndian
+{
+  WLZEFF_NRRD_ENDIAN_UNSUP = 0,
+  WLZEFF_NRRD_ENDIAN_BIG,
+  WLZEFF_NRRD_ENDIAN_LITTLE
+} WlzEffNrrdEndian;
+
+typedef enum _WlzEffNrrdFields
+{
+  WLZEFF_NRRD_FIELD_UNSUP = 0,
+  WLZEFF_NRRD_FIELD_AXIS_MAX,
+  WLZEFF_NRRD_FIELD_AXIS_MIN,
+  WLZEFF_NRRD_FIELD_BLOCK_SIZE,
+  WLZEFF_NRRD_FIELD_BYTE_SKIP,
+  WLZEFF_NRRD_FIELD_CENTERING,
+  WLZEFF_NRRD_FIELD_CENTERS,
+  WLZEFF_NRRD_FIELD_COMMENT,
+  WLZEFF_NRRD_FIELD_DATA_FILE,
+  WLZEFF_NRRD_FIELD_DIMENSION,
+  WLZEFF_NRRD_FIELD_ENCODING,
+  WLZEFF_NRRD_FIELD_ENDIAN,
+  WLZEFF_NRRD_FIELD_KINDS,
+  WLZEFF_NRRD_FIELD_LABELS,
+  WLZEFF_NRRD_FIELD_LINE_SKIP,
+  WLZEFF_NRRD_FIELD_MEASUREMENT_FRM,
+  WLZEFF_NRRD_FIELD_NUMBER,
+  WLZEFF_NRRD_FIELD_SIZES,
+  WLZEFF_NRRD_FIELD_SPACE,
+  WLZEFF_NRRD_FIELD_SPACE_DIM,
+  WLZEFF_NRRD_FIELD_SPACE_DIR,
+  WLZEFF_NRRD_FIELD_SPACE_ORG,
+  WLZEFF_NRRD_FIELD_SPACE_UNITS,
+  WLZEFF_NRRD_FIELD_SPACINGS,
+  WLZEFF_NRRD_FIELD_THICKNESS,
+  WLZEFF_NRRD_FIELD_TYPE
+} WlzEffNrrdFields;
+
+typedef struct _WlzEffNrrdHeader
+{
+  int		version;
+  WlzEffNrrdDataType dataType;
+  WlzEffNrrdEncoding encoding;
+  WlzEffNrrdEndian endian;
+  int		dimension;
+  size_t	blockSz;
+  size_t	lineSkip;
+  size_t	byteSkip;
+  int		sizes[WLZEFF_NRRD_MAX_DIMENSION];
+  double	origin[WLZEFF_NRRD_MAX_DIMENSION];
+  double	spacings[WLZEFF_NRRD_MAX_DIMENSION];
+  char		*space;
+  char 		*spaceDirections;
+  char		*spaceUnits;
+  char 		*thickness;
+  char 		*centers;
+  char 		*centering;
+  char 		*labels;
+  char 		*kinds;
+} WlzEffNrrdHeader;
 
 /* IPLab format */
 
