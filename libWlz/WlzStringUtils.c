@@ -81,7 +81,7 @@ int		WlzStringMatchValue(int *datum,
 	       testStr, (testStr)? (testStr): "(null)", testVal));
       if(!matchedFlag)
       {
-	matchedFlag = !strncmp(targetStr, testStr, strlen(testStr));
+	matchedFlag = !strcmp(targetStr, testStr);
 	if(matchedFlag)
 	{
 	  *datum = testVal;
@@ -157,6 +157,25 @@ char		*WlzStringWhiteSpSkip(char *str)
       s0 += (isspace(*s0) == 0);
     }
     *s0 = '\0';
+  }
+  return(str);
+}
+
+/*!
+* \return	The given string.
+* \ingroup	WlzStrings
+* \brief	Removes all white space characters (as determined by
+* 		isspace(3)) from the given string.
+* \param	str			Given string.
+*/
+char		*WlzStringWhiteSpSkipLeading(char *str)
+{
+  if(str)
+  {
+    while(*str && isspace(*str))
+    {
+      ++str;
+    }
   }
   return(str);
 }
