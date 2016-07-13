@@ -615,7 +615,10 @@ WlzErrorNum WlzFreeVoxelValueTb(WlzVoxelValues *voxtab)
     nplanes = voxtab->lastpl - voxtab->plane1 + 1;
     values = voxtab->values;
     while( nplanes-- ){
-      errNum |= WlzFreeValues(*values);
+      if((errNum = WlzFreeValues(*values)) != WLZ_ERR_NONE)
+      {
+        break;
+      }
       values++;
     }
     WlzFreeVoxelValueTb(voxtab->original_table.vox);
