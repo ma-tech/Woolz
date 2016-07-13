@@ -167,6 +167,13 @@ extern WlzErrorNum 		WlzEffWriteObjNodeEle(
 				  const char *gvnFileName,
 				  WlzObject *obj);
 
+/* From WlzExtFFNrrd.c */
+extern WlzObject		*WlzEffReadObjNrrd(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzEffWriteObjNrrd(
+				  FILE *fP,
+				  WlzObject *obj);
 /* From WlzExtFFMesh.c */
 extern WlzObject 		*WlzEffReadObjMesh(
 				  FILE *fP,
