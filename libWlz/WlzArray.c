@@ -939,12 +939,6 @@ WlzErrorNum WlzToRArray3D(WlzIVertex3 *dstSizeArrayDat,
 *		If the destination pointer points to a non-NULL 
 *		pointer then it is assumed to be a suitable Alc array.
 *		The data are assumed to be within the valid range.
-* \param	dstP
-* \param	srcObj
-* \param	size
-* \param	origin
-* \param	noiseFlag
-* \param	dstGreyType
 * \param	dstP			Destination pointer (assumed 
 *					valid if *dstP is non-NULL).
 * \param	srcObj			Given Woolz object.	
@@ -2961,7 +2955,8 @@ WlzObject *WlzFromBArray1D(
 *					resulting object.
 * \param	gDat			The 1D array of data.
 * \param	noCopy			If non-zero then the data are not
-* 					copied but are used in place.
+* 					copied but are used in place. Use
+* 					with caution.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject	*WlzFromArray1D(WlzObjectType oType,
@@ -2969,8 +2964,8 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
 				WlzGreyType gType, WlzGreyP gDat,
 				int noCopy, WlzErrorNum *dstErr)
 {
-  int		idP,
-  		gSz2;
+  int		idP;
+  size_t	gSz2;
   WlzObject	*obj = NULL;
   WlzObjectType	gTabType;
   WlzDomain	dom;
@@ -2983,31 +2978,32 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
   dom.core = NULL;
   val.core = NULL;
   bgdV.type = gType;
+  gSz2 = sz.vtX * sz.vtY;
   switch(gType)
   {
     case WLZ_GREY_INT:
       bgdV.v.inv = 0;
-      gSz2 = sz.vtX * sz.vtY * sizeof(int);
+      gSz2 *= sizeof(int);
       break;
     case WLZ_GREY_SHORT:
       bgdV.v.shv = 0;
-      gSz2 = sz.vtX * sz.vtY * sizeof(short);
+      gSz2 *= sizeof(short);
       break;
     case WLZ_GREY_UBYTE:
       bgdV.v.ubv = 0;
-      gSz2 = sz.vtX * sz.vtY * sizeof(WlzUByte);
+      gSz2 *= sizeof(WlzUByte);
       break;
     case WLZ_GREY_FLOAT:
       bgdV.v.flv = 0;
-      gSz2 = sz.vtX * sz.vtY * sizeof(float);
+      gSz2 *= sizeof(float);
       break;
     case WLZ_GREY_DOUBLE:
       bgdV.v.dbv = 0;
-      gSz2 = sz.vtX * sz.vtY * sizeof(double);
+      gSz2 *= sizeof(double);
       break;
     case WLZ_GREY_RGBA:
       bgdV.v.rgbv = 0;
-      gSz2 = sz.vtX * sz.vtY * sizeof(WlzUInt);
+      gSz2 *= sizeof(WlzUInt);
       break;
     default:
       errNum = WLZ_ERR_GREY_TYPE;
@@ -3061,7 +3057,8 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
 				     &errNum);
 	  if((val.r != NULL) && (noCopy == 0))
 	  {
-	    val.r->freeptr = cDat.inp;
+	    val.r->freeptr = AlcFreeStackPush(val.r->freeptr,
+	                             cDat.v, NULL);
 	  }
 	}
 	if(errNum == WLZ_ERR_NONE)
@@ -3102,16 +3099,24 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
 	idP = 0;
 	while((errNum == WLZ_ERR_NONE) && (idP < sz.vtZ))
 	{
-	  (dom.p->domains + idP)->i =
-		WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
+	  WlzDomain *dom2;
+	  WlzValues *val2;
+
+	  dom2 = dom.p->domains + idP;
+	  val2 = val.vox->values + idP;
+	  (*dom2).i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
 				org.vtY, org.vtY + sz.vtY - 1,
 				org.vtX, org.vtX + sz.vtX - 1,
 				&errNum);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
+	    WlzGreyP	src;
+
+	    src.ubp = gDat.ubp + (gSz2 * idP);
+	    (void )WlzAssignDomain(*(dom2), NULL);
 	    if(noCopy)
 	    {
-	     cDat.v = gDat.ubp + (gSz2 * idP);
+	     cDat = src;
 	    }
 	    else
 	    {
@@ -3121,21 +3126,26 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
 	      }
 	      else
 	      {
-		(void )memcpy(cDat.v, (void *)(gDat.ubp + (gSz2 * idP)), gSz2);
+		(void )memcpy(cDat.v, src.v, gSz2);
 	      }
 	    }
 	  }
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    (val.vox->values + idP)->r = WlzMakeRectValueTb(gTabType, 
+	    (*val2).r = WlzMakeRectValueTb(gTabType, 
 				org.vtY, org.vtY + sz.vtY - 1,
 				org.vtX, sz.vtX,
 				bgdV, cDat.inp,
 				&errNum);
-	    if(((val.vox->values + idP)->r != NULL) && (noCopy == 0))
+	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      (val.vox->values + idP)->r->freeptr = cDat.inp;
-	      cDat.v = NULL;
+	      (void )WlzAssignValues((*val2), NULL);
+	      if(noCopy == 0)
+	      {
+		(*val2).r->freeptr = AlcFreeStackPush((*val2).r->freeptr,
+				cDat.v, NULL);
+		cDat.v = NULL;
+	      }
 	    }
 	  }
 	  ++idP;
