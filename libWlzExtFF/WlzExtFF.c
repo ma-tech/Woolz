@@ -68,8 +68,9 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "jpeg",   WLZEFF_FORMAT_JPEG,
 			 "jpg",    WLZEFF_FORMAT_JPEG,
 			 "mesh",   WLZEFF_FORMAT_MESH,
-			 "nii",    WLZEFF_FORMAT_NIFTI,
+			 "nrrd",   WLZEFF_FORMAT_NRRD,
 			 "node",   WLZEFF_FORMAT_NODEELE,
+			 "nii",    WLZEFF_FORMAT_NIFTI,
 			 "obj",    WLZEFF_FORMAT_OBJ,
 			 "pgm",    WLZEFF_FORMAT_PNM,
 			 "pic",    WLZEFF_FORMAT_PIC,
@@ -118,6 +119,7 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
 	 "Pascal Frey's medit tetrahedral mesh format", WLZEFF_FORMAT_MESH,
 	 "Neuroimaging Informatics Technology Initiative", WLZEFF_FORMAT_NIFTI,
 	 "Jonathan Shewchuk's mesh format", WLZEFF_FORMAT_NODEELE,
+	 "Utah nearly raw raster data (NRRD) format", WLZEFF_FORMAT_NRRD,
 	 "OBJ", WLZEFF_FORMAT_OBJ,
 	 "PNM", WLZEFF_FORMAT_PNM,
 	 "Raw", WLZEFF_FORMAT_RAW,
@@ -176,6 +178,8 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*fmtNiftiStr = "Neuroimaging Informatics Technology Initiative",
 		*extNodeEleStr = "node",
 		*fmtNodeEleStr = "Jonathan Shewchuk's mesh format",
+		*extNrrdStr = "nrrd",
+		*fmtNrrdStr = "Utah nearly raw raster data (NRRD) format",
   		*extObjStr  = "obj",
   		*fmtObjStr  = "Wavefront",
   		*extPnmStr  = "pnm",
@@ -309,6 +313,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
       fmtStr = fmtNiftiStr;
       extStr = extNiftiStr;
       break;
+    case WLZEFF_FORMAT_NRRD:
+      fmtStr = fmtNrrdStr;
+      extStr = extNrrdStr;
+      break;
     case WLZEFF_FORMAT_SMESH:
       fmtStr = fmtSMeshStr;
       extStr = extSMeshStr;
@@ -408,12 +416,14 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
   }
   else if(fP == NULL)
   {
+    /* Open file if required, some formats need to open/close file(s)
+     * themselves. */
     switch(fFmt)
     {
       case WLZEFF_FORMAT_ANL:     /* FALLTHROUGH */
       case WLZEFF_FORMAT_BMP:     /* FALLTHROUGH */
       case WLZEFF_FORMAT_ICS:     /* FALLTHROUGH */
-      case WLZEFF_FORMAT_NIFTI: /* FALLTHROUGH */
+      case WLZEFF_FORMAT_NIFTI:   /* FALLTHROUGH */
       case WLZEFF_FORMAT_NODEELE: /* FALLTHROUGH */
       case WLZEFF_FORMAT_PNM:     /* FALLTHROUGH */
       case WLZEFF_FORMAT_TIFF:
@@ -475,6 +485,9 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
 	break;
       case WLZEFF_FORMAT_NODEELE:
 	obj = WlzEffReadObjNodeEle(fName, &errNum);
+	break;
+      case WLZEFF_FORMAT_NRRD:
+	obj = WlzEffReadObjNrrd(fP, &errNum);
 	break;
       case WLZEFF_FORMAT_MESH:
 	obj = WlzEffReadObjMesh(fP, &errNum);
@@ -548,13 +561,15 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
   }
   else if(fP == NULL)
   {
+    /* Open file if required, some formats need to open/close file(s)
+     * themselves. */
     switch(fFmt)
     {
       case WLZEFF_FORMAT_ANL:     /* FALLTHROUGH */
       case WLZEFF_FORMAT_BMP:     /* FALLTHROUGH */
       case WLZEFF_FORMAT_ICS:     /* FALLTHROUGH */
       case WLZEFF_FORMAT_PNM:     /* FALLTHROUGH */
-      case WLZEFF_FORMAT_NIFTI: /* FALLTHROUGH */
+      case WLZEFF_FORMAT_NIFTI:   /* FALLTHROUGH */
       case WLZEFF_FORMAT_NODEELE: /* FALLTHROUGH */
       case WLZEFF_FORMAT_TIFF:
         break;
@@ -654,6 +669,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 	break;
       case WLZEFF_FORMAT_NIFTI:
 	errNum = WlzEffWriteObjNifti(fName, obj);
+	break;
+      case WLZEFF_FORMAT_NRRD:
+	errNum = WlzEffWriteObjNrrd(fP, obj);
 	break;
       case WLZEFF_FORMAT_SMESH:
 	errNum = WlzEffWriteObjSMesh(fP, obj);
