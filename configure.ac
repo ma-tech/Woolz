@@ -61,6 +61,8 @@ HAVE_NIFTI="no"
 NIFTI_DIR="no"
 HAVE_TIFF="no"
 TIFF_DIR="no"
+HAVE_BZLIB="no"
+HAVE_ZLIB="no"
 AC_SUBST(CP)
 AC_SUBST(RM)
 AC_SUBST(RMRF)
@@ -163,14 +165,14 @@ AM_CONDITIONAL(HAVE_DOXYGEN, test x$HAVE_DOXYGEN = xyes)
 # Compilation and linking flags
 CFLAGS=""
 INCL_EXTFF=""
-LIBS_EXTFF="-lz"
+dnd LIBS_EXTFF="-lz"
 AC_SUBST(LIBS_EXTFF)
 AC_SUBST(INCL_EXTFF)
 
 AC_PROG_CC
 
 AC_ARG_ENABLE(icc,
-  [  --enable-icc          build using the Intel C compiler])
+  [  --enable-icc            build using the Intel C compiler])
 AS_IF([test x"$enable_icc" = "xyes"], [
   CFLAGS="${CFLAGS} -w2"
   CC="icc"
@@ -224,14 +226,14 @@ fi
 CPP="cpp"
 
 AC_ARG_ENABLE(debug,
-  [  --enable-debug	build with debugging flags set])
+  [  --enable-debug	  build with debugging flags set])
 AS_IF([test "x$enable_debug" = "xyes"], [
     CFLAGS="${CFLAGS} -g -fPIC -DDEBUG"
     LDFLAGS="${LDFLAGS} -g -DDEBUG"
 ])
 
 AC_ARG_ENABLE(optimise,
-  [  --enable-optimise	build with optimisation flags set])
+  [  --enable-optimise	  build with optimisation flags set])
 AS_IF([test "x$enable_optimise" = "xyes"], [
     # GNU CC
     if test "$CC" = "gcc"
@@ -279,7 +281,7 @@ AS_IF([test "x$enable_optimise" = "xyes"], [
     ])
 
 AC_ARG_ENABLE(openmp,
-  [  --enable-openmp	build with openmp flags set])
+  [  --enable-openmp	  build with openmp flags set])
 AS_IF([test "x$enable_openmp" = "xyes"], [
     # GNU CC
     if test "$CC" = "gcc"
@@ -294,7 +296,7 @@ AS_IF([test "x$enable_openmp" = "xyes"], [
 ])
 
 AC_ARG_ENABLE(lto,
-  [  --enable-lto	build with link time optimisation flags set])
+  [  --enable-lto	          build with link time optimisation flags set])
 AS_IF([test "x$enable_lto" = "xyes"], [
     # GNU CC
     if test "$CC" = "gcc"
@@ -309,25 +311,31 @@ AS_IF([test "x$enable_lto" = "xyes"], [
 ])
 
 AC_ARG_ENABLE(profile,
-  [  --enable-profile		build with profiling set])
+  [  --enable-profile        build with profiling set])
 AS_IF([test "x$enable_profile" = "xyes"], [
     CFLAGS="${CFLAGS} -pg"
     LDFLAGS="${LDFLAGS} -pg"
 ])
 
 AC_ARG_ENABLE(extff,
-  [  --enable-extff	build with external file format support])
+  [  --enable-extff	  build with external file format support])
 AM_CONDITIONAL([BUILD_EXTFF], [test x"$enable_extff" = x"yes"])
 AC_SUBST(ENABLE_EXTFF, ${enable_extff})
 
 AC_ARG_ENABLE(test,
-  [  --enable-test		build test programs])
+  [  --enable-test		  build test programs])
 AM_CONDITIONAL([BUILD_TEST], [test x"$enable_test" = x"yes"])
 
 if test ${USE_CTAGS} = 1
 then
   AC_CHECK_PROG(GNC_CTAGS_FILE, ctags, tags)
 fi
+
+AC_ARG_ENABLE(bzip2,
+              AS_HELP_STRING([--disable-bzip2], [build without bzip2 support]))
+
+AC_ARG_ENABLE(zlib,
+              AS_HELP_STRING([--disable-zlib], [build without zlib support]))
 
 AC_CONFIG_FILES([	Makefile \
 			libAlc/Makefile \
@@ -387,13 +395,35 @@ then
   else
     HAVE_NIFTI=yes
     INCL_EXTFF="${INCL_EXTFF} -I${NIFTI_DIR}/include -I${NIFTI_DIR}/include/nifti"
-    LIBS_EXTFF="-L${NIFTI_DIR}/lib -lniftiio -lznz ${LIBS_EXTFF}"
+    LIBS_EXTFF=" -L${NIFTI_DIR}/lib -lniftiio -lznz ${LIBS_EXTFF}"
   fi
-  if test ${NIFTI_DIR} = "no"
+
+  if test ${ENABLE_EXTFF} = "yes"
   then
-    CFLAGS="${CFLAGS} -DHAVE_NIFTI=0"
-  else
-    CFLAGS="${CFLAGS} -DHAVE_NIFTI=1"
+    AS_IF([test x"$enable_bzip2" != x"no"], [
+      AC_SEARCH_LIBS([BZ2_bzCompress], [bz2], [HAVE_BZLIB=yes])
+    ])
+    AS_IF([test x"$enable_zlib" != x"no"], [
+      AC_SEARCH_LIBS([zlibVersion], [z], [HAVE_ZLIB=yes])
+    ])
+    if test ${HAVE_BZLIB} = "no"
+    then
+      CFLAGS="${CFLAGS} -DHAVE_BZLIB=0"
+    else
+      CFLAGS="${CFLAGS} -DHAVE_BZLIB=1"
+    fi
+    if test ${HAVE_ZLIB} = "no"
+    then
+      CFLAGS="${CFLAGS} -DHAVE_ZLIB=0"
+    else
+      CFLAGS="${CFLAGS} -DHAVE_ZLIB=1"
+    fi
+    if test ${NIFTI_DIR} = "no"
+    then
+      CFLAGS="${CFLAGS} -DHAVE_NIFTI=0"
+    else
+      CFLAGS="${CFLAGS} -DHAVE_NIFTI=1"
+    fi
   fi
 
   AC_CONFIG_FILES([	libbibfile/Makefile \
@@ -428,7 +458,7 @@ Woolz core has been configured on ${host} with
   Archiver:                         ${AR}
   CFLAGS:                          ${CFLAGS}
   LDFLAGS:                         ${LDFLAGS}
-  LIBS needed for configure:        ${LIBS_EXTFF} ${LIBS}
+  LIBS needed for configure:       ${LIBS_EXTFF} ${LIBS}
   Woolz external file format code:  ${enable_extff}
   Test programs:                    ${enable_test}
 
