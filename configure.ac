@@ -165,7 +165,6 @@ AM_CONDITIONAL(HAVE_DOXYGEN, test x$HAVE_DOXYGEN = xyes)
 # Compilation and linking flags
 CFLAGS=""
 INCL_EXTFF=""
-dnd LIBS_EXTFF="-lz"
 AC_SUBST(LIBS_EXTFF)
 AC_SUBST(INCL_EXTFF)
 
