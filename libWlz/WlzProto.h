@@ -6083,6 +6083,8 @@ extern int 			WlzValueMatchString(
 				  ...);
 extern char 			*WlzStringWhiteSpSkip(
 				  char *str);
+extern char            		*WlzStringWhiteSpSkipLeading(
+				  char *str);
 extern char			*WlzStringToUpper(
 				  char *str);
 extern char			*WlzStringToLower(
