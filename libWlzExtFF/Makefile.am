@@ -63,6 +63,7 @@ libWlzExtFF_la_SOURCES 	= \
 			  WlzExtFFMesh.c \
 			  WlzExtFFNifti.c \
 			  WlzExtFFNodeEle.c \
+			  WlzExtFFNrrd.c \
 			  WlzExtFFObj.c \
 			  WlzExtFFPic.c \
 			  WlzExtFFPly2.c \
