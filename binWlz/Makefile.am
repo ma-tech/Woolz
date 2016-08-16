@@ -68,6 +68,7 @@ bin_PROGRAMS		= \
 			  WlzClosestVertices \
 			  WlzCMeshDeleteUnusedNodes \
 			  WlzCMeshDistance \
+			  WlzCMeshExtrapolate \
 			  WlzCMeshFromContour \
 			  WlzCMeshGen \
 			  WlzCMeshIntersectDom \
@@ -311,9 +312,9 @@ WlzCMeshDeleteUnusedNodes_SOURCES	= WlzCMeshDeleteUnusedNodes.c
 WlzCMeshDeleteUnusedNodes_LDADD		= $(LDADD)
 WlzCMeshDeleteUnusedNodes_LDFLAGS	= $(AM_LFLAGS)
 
-WlzCMeshDistance_SOURCES		= WlzCMeshDistance.c
-WlzCMeshDistance_LDADD			= $(LDADD)
-WlzCMeshDistance_LDFLAGS		= $(AM_LFLAGS)
+WlzCMeshExtrapolate_SOURCES		= WlzCMeshExtrapolate.c
+WlzCMeshExtrapolate_LDADD		= $(LDADD)
+WlzCMeshExtrapolate_LDFLAGS		= $(AM_LFLAGS)
 
 WlzCMeshFromContour_SOURCES		= WlzCMeshFromContour.c
 WlzCMeshFromContour_LDADD		= $(LDADD)
