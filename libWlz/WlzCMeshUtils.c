@@ -6350,3 +6350,223 @@ WlzErrorNum	WlzCMeshValuesNormalise3D(WlzObject *cObj,
   }
   return(errNum);
 }
+
+/*!
+* \return	Array of bytes set to non zero value when range test
+* 		is satisfied where the array indices correspond to
+* 		the indices of the given objects values or NULL on error.
+* 		The returned array should be freed using AlcFree().
+* \ingroup	WlzMesh
+* \brief	Allocates and array of byte values and then sets these
+* 		to non-zero values for the conforming mesh value indices
+* 		where the values satisfy the given range test.
+* 		If either the lower or upper limit is NaN then the
+* 		test is simply for the conforming meshes values being
+* 		NaN.
+* \param	obj			Given conforming mesh object
+* 					with values.
+* \param	lo			Lower limit value of range,
+* 					may be NaN.
+* \param	hi			Upper limit value of range,
+* 					may be NaN.
+* \param	in			If zero set bytes to non-zero when
+* 					test is not satisfied, otherwise if
+* 					zero set bytes to non-zero when
+* 					test is satisfied.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzUByte			*WlzCMeshIndexMaskFromValueRange(
+				  WlzObject *obj,
+				  double lo,
+				  double hi,
+				  int in,
+				  WlzErrorNum *dstErr)
+{
+  size_t	maxIdx = 0;
+  WlzUByte	*found = NULL;
+  WlzIndexedValues *ixv;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((obj->type != WLZ_CMESH_2D) && (obj->type != WLZ_CMESH_3D))
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(obj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if((obj->domain.core->type != WLZ_CMESH_2D) &&
+          (obj->domain.core->type != WLZ_CMESH_3D))
+  {
+    errNum = WLZ_ERR_DOMAIN_TYPE;
+  }
+  else if((ixv = obj->values.x)->type != WLZ_INDEXED_VALUES)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else if(ixv->rank != 0)
+  {
+    /* Only allow scalar indexed values. */
+    errNum = WLZ_ERR_VALUES_DATA;
+  }
+  else
+  {
+    switch(ixv->attach)
+    {
+      case WLZ_VALUE_ATTACH_NOD:
+	maxIdx = (obj->domain.core->type == WLZ_CMESH_2D)?
+		 obj->domain.cm2->res.nod.maxEnt:
+		 obj->domain.cm3->res.nod.maxEnt;
+        break;
+      case WLZ_VALUE_ATTACH_ELM:
+	maxIdx = (obj->domain.core->type == WLZ_CMESH_2D)?
+		 obj->domain.cm2->res.elm.maxEnt:
+		 obj->domain.cm3->res.elm.maxEnt;
+        break;
+      default:
+	errNum = WLZ_ERR_VALUES_DATA;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if((found = (WlzUByte *)AlcCalloc(maxIdx, sizeof(WlzUByte))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(ixv->vType)
+    {
+      case WLZ_GREY_LONG:
+      case WLZ_GREY_INT: 
+      case WLZ_GREY_SHORT:
+      case WLZ_GREY_UBYTE:
+      case WLZ_GREY_FLOAT:
+      case WLZ_GREY_DOUBLE:
+	break;
+      default:
+	errNum = WLZ_ERR_VALUES_DATA;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int	i;
+
+    if(isnan(lo) || isnan(hi))
+    {
+      switch(ixv->vType)
+      {
+        case WLZ_GREY_FLOAT:
+	  for(i = 0; i < maxIdx; ++i)
+	  {
+	    WlzGreyP	v;
+
+	    v.v = WlzIndexedValueGet(ixv, i);
+	    found[i] = isnan(v.flp[0]);
+	  }
+	  break;
+        case WLZ_GREY_DOUBLE:
+	  for(i = 0; i < maxIdx; ++i)
+	  {
+	    WlzGreyP	v;
+
+	    v.v = WlzIndexedValueGet(ixv, i);
+	    found[i] = isnan(v.dbp[0]);
+	  }
+	  break;
+        default:
+	  break;
+      }
+    }
+    else
+    {
+      switch(ixv->vType)
+      {
+	case WLZ_GREY_LONG:
+	  for(i = 0; i < maxIdx; ++i)
+	  {
+	    WlzGreyP	v;
+
+	    v.v = WlzIndexedValueGet(ixv, i);
+	    found[i] = !((v.lnp[0] < lo) || (v.lnp[0] > hi));
+	  }
+	  break;
+	case WLZ_GREY_INT: 
+	  for(i = 0; i < maxIdx; ++i)
+	  {
+	    WlzGreyP	v;
+
+	    v.v = WlzIndexedValueGet(ixv, i);
+	    found[i] = !((v.inp[0] < lo) || (v.inp[0] > hi));
+	  }
+	  break;
+	case WLZ_GREY_SHORT:
+	  for(i = 0; i < maxIdx; ++i)
+	  {
+	    WlzGreyP	v;
+
+	    v.v = WlzIndexedValueGet(ixv, i);
+	    found[i] = !((v.shp[0] < lo) || (v.shp[0] > hi));
+	  }
+	  break;
+	case WLZ_GREY_UBYTE:
+	  for(i = 0; i < maxIdx; ++i)
+	  {
+	    WlzGreyP	v;
+
+	    v.v = WlzIndexedValueGet(ixv, i);
+	    found[i] = !((v.ubp[0] < lo) || (v.ubp[0] > hi));
+	  }
+	  break;
+	case WLZ_GREY_FLOAT:
+	  for(i = 0; i < maxIdx; ++i)
+	  {
+	    WlzGreyP	v;
+
+	    v.v = WlzIndexedValueGet(ixv, i);
+	    found[i] = !((v.flp[0] < lo) || (v.flp[0] > hi));
+	  }
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  for(i = 0; i < maxIdx; ++i)
+	  {
+	    WlzGreyP	v;
+
+	    v.v = WlzIndexedValueGet(ixv, i);
+	    found[i] = !((v.dbp[0] < lo) || (v.dbp[0] > hi));
+	  }
+	  break;
+	default:
+	  break;
+      }
+    }
+    if(!in)
+    {
+      for(i = 0; i < maxIdx; ++i)
+      {
+        found[i] = !found[i];
+      }
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    AlcFree(found);
+    found = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(found);
+}
