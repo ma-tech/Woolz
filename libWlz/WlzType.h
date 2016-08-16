@@ -4100,6 +4100,23 @@ typedef union _WlzCMeshEntP
 } WlzCMeshEntP;
 
 /*!
+* \union	_WlzCMeshEntPP
+* \ingroup	WlzMesh
+* \brief	Union of second level pointers to top level mesh entities.
+* 		Typedef: ::WlzCMeshEntP
+*/
+typedef union _WlzCMeshEntPP
+{
+  void			*v;		/*!< Generic pointer. */
+  struct _WlzCMeshNod2D **n2;		/*!< 2D node pointer. */
+  struct _WlzCMeshNod2D **n2d5;		/*!< 2D5 node pointer. */
+  struct _WlzCMeshNod3D **n3;		/*!< 3D node pointer. */
+  struct _WlzCMeshElm2D	**e2;		/*!< 2D element pointer. */
+  struct _WlzCMeshElm2D	**e2d5;		/*!< 2D5 element pointer. */
+  struct _WlzCMeshElm3D	**e3;		/*!< 3D element pointer. */
+} WlzCMeshEntPP;
+
+/*!
 * \struct       _WlzCMesh2D
 * \ingroup      WlzMesh
 * \brief        A graph based mesh model for 2D boundary conforming
