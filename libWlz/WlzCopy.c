@@ -541,6 +541,180 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
       case WLZ_LUT:
         outVal.lut = WlzCopyLUTValues(inVal.lut, &errNum);
 	break;
+      case WLZ_CMESH_2D:   /* FALLTHROUGH */
+      case WLZ_CMESH_2D5:  /* FALLTHROUGH */
+      case WLZ_CMESH_3D:
+	if(inDom.core->type != inObjType)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+	else if(inVal.core->type != WLZ_INDEXED_VALUES)
+	{
+	  errNum = WLZ_ERR_VALUES_TYPE;
+	}
+	else
+	{
+	  WlzObject	*tObj;
+
+	  tObj = WlzMakeMain(inObjType, inDom, inVal, NULL, NULL, &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    outVal.x = WlzMakeIndexedValues(tObj, inVal.x->rank, inVal.x->dim,
+					    inVal.x->vType, inVal.x->attach,
+					    &errNum);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    size_t	 sz;
+	    int		 idx;
+	    unsigned int maxEnt;
+	    WlzCMeshEntP ent;
+	    AlcVector	 *vec;
+	    WlzIndexedValues *ix,
+			     *ox;
+
+	    ix = inVal.x;
+	    ox = outVal.x;
+	    sz = WlzGreySize(ox->vType);
+	    if(outVal.x->rank > 0)
+	    {
+	      for(idx = 0; idx < ox->rank; ++idx)
+	      {
+	        sz *= ox->dim[idx];
+	      }
+	    }
+	    switch(inObjType)
+	    {
+	      case WLZ_CMESH_2D:
+		switch(outVal.x->attach)
+		{
+		  case WLZ_VALUE_ATTACH_NOD:
+		    vec = inDom.cm2->res.nod.vec;
+		    maxEnt = inDom.cm2->res.nod.maxEnt;
+		    for(idx = 0; idx < maxEnt; ++idx)
+		    {
+		      ent.v = AlcVectorItemGet(vec, idx);
+		      if(ent.n2->idx >= 0)
+		      {
+		        void	*ixp,
+				*oxp;
+		        
+			ixp = WlzIndexedValueGet(ix, ent.n2->idx);
+			oxp = WlzIndexedValueGet(ox, ent.n2->idx);
+			memcpy(oxp, ixp, sz);
+		      }
+		    }
+		    break;
+		  case WLZ_VALUE_ATTACH_ELM:
+		    vec = inDom.cm2->res.elm.vec;
+		    maxEnt = inDom.cm2->res.elm.maxEnt;
+		    for(idx = 0; idx < maxEnt; ++idx)
+		    {
+		      ent.v = AlcVectorItemGet(vec, idx);
+		      if(ent.e2->idx >= 0)
+		      {
+		        void	*ixp,
+				*oxp;
+		        
+			ixp = WlzIndexedValueGet(ix, ent.e2->idx);
+			oxp = WlzIndexedValueGet(ox, ent.e2->idx);
+			memcpy(oxp, ixp, sz);
+		      }
+		    }
+		    break;
+		  default:
+		    break;
+		}
+		break;
+	      case WLZ_CMESH_2D5:
+		switch(outVal.x->attach)
+		{
+		  case WLZ_VALUE_ATTACH_NOD:
+		    vec = inDom.cm2d5->res.nod.vec;
+		    maxEnt = inDom.cm2d5->res.nod.maxEnt;
+		    for(idx = 0; idx < maxEnt; ++idx)
+		    {
+		      ent.v = AlcVectorItemGet(vec, idx);
+		      if(ent.n2d5->idx >= 0)
+		      {
+		        void	*ixp,
+				*oxp;
+		        
+			ixp = WlzIndexedValueGet(ix, ent.n2d5->idx);
+			oxp = WlzIndexedValueGet(ox, ent.n2d5->idx);
+			memcpy(oxp, ixp, sz);
+		      }
+		    }
+		    break;
+		  case WLZ_VALUE_ATTACH_ELM:
+		    vec = inDom.cm2d5->res.elm.vec;
+		    maxEnt = inDom.cm2d5->res.elm.maxEnt;
+		    for(idx = 0; idx < maxEnt; ++idx)
+		    {
+		      ent.v = AlcVectorItemGet(vec, idx);
+		      if(ent.e2d5->idx >= 0)
+		      {
+		        void	*ixp,
+				*oxp;
+		        
+			ixp = WlzIndexedValueGet(ix, ent.e2d5->idx);
+			oxp = WlzIndexedValueGet(ox, ent.e2d5->idx);
+			memcpy(oxp, ixp, sz);
+		      }
+		    }
+		    break;
+		  default:
+		    break;
+		}
+		break;
+	      case WLZ_CMESH_3D:
+		switch(outVal.x->attach)
+		{
+		  case WLZ_VALUE_ATTACH_NOD:
+		    vec = inDom.cm3->res.nod.vec;
+		    maxEnt = inDom.cm3->res.nod.maxEnt;
+		    for(idx = 0; idx < maxEnt; ++idx)
+		    {
+		      ent.v = AlcVectorItemGet(vec, idx);
+		      if(ent.n3->idx >= 0)
+		      {
+		        void	*ixp,
+				*oxp;
+		        
+			ixp = WlzIndexedValueGet(ix, ent.n3->idx);
+			oxp = WlzIndexedValueGet(ox, ent.n3->idx);
+			memcpy(oxp, ixp, sz);
+		      }
+		    }
+		    break;
+		  case WLZ_VALUE_ATTACH_ELM:
+		    vec = inDom.cm3->res.elm.vec;
+		    maxEnt = inDom.cm3->res.elm.maxEnt;
+		    for(idx = 0; idx < maxEnt; ++idx)
+		    {
+		      ent.v = AlcVectorItemGet(vec, idx);
+		      if(ent.e3->idx >= 0)
+		      {
+		        void	*ixp,
+				*oxp;
+		        
+			ixp = WlzIndexedValueGet(ix, ent.e3->idx);
+			oxp = WlzIndexedValueGet(ox, ent.e3->idx);
+			memcpy(oxp, ixp, sz);
+		      }
+		    }
+		    break;
+		  default:
+		    break;
+		}
+		break;
+	      default:
+		break;
+	    }
+	  }
+	  (void )WlzFreeObj(tObj);
+	}
+	break;
       case WLZ_3D_WARP_TRANS:
       case WLZ_CONV_HULL:
       case WLZ_3D_POLYGON:
