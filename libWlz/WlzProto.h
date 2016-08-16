@@ -1482,6 +1482,14 @@ extern WlzObject		*WlzCMeshComputeCurvaturesFromNodNorm(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzCMeshExtrapolate.c                                                 *
+************************************************************************/
+extern WlzObject		*WlzCMeshExpValues(
+				  WlzObject *gObj,
+				  WlzUByte *unk,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzCMeshIntersect.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
@@ -2050,6 +2058,12 @@ extern WlzCMesh3D		*WlzCMeshCopy3D(
 				  size_t datSz,
 				  AlcVector **newDat,
 				  AlcVector *gvnDat,
+				  WlzErrorNum *dstErr);
+extern WlzUByte			*WlzCMeshIndexMaskFromValueRange(
+				  WlzObject *obj,
+				  double lo,
+				  double hi,
+				  int in,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
