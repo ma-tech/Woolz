@@ -4107,7 +4107,7 @@ typedef union _WlzCMeshEntP
 */
 typedef union _WlzCMeshEntPP
 {
-  void			*v;		/*!< Generic pointer. */
+  void			**v;		/*!< Generic pointer. */
   struct _WlzCMeshNod2D **n2;		/*!< 2D node pointer. */
   struct _WlzCMeshNod2D **n2d5;		/*!< 2D5 node pointer. */
   struct _WlzCMeshNod3D **n3;		/*!< 3D node pointer. */
@@ -4211,6 +4211,7 @@ typedef struct _WlzCMesh3D
 typedef union _WlzCMeshP
 {
   void		*v;
+  WlzCoreDomain *core;
   WlzCMesh2D	*m2;
   WlzCMesh2D5	*m2d5;
   WlzCMesh3D	*m3;
