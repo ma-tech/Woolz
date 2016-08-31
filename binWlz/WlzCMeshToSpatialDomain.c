@@ -67,7 +67,8 @@ WlzCMeshToSpatialDomain [-h] [-i] [-L] [-o<out obj file>] [-s#]
   </tr>
   <tr>
     <td><b>-L</b></td>
-    <td>Use kriging rather than barycentric interpolation for values./td>
+    <td>Use barycentric interpolation rather than nearest neighbour
+        for values./td>
   </tr>
   <tr> 
     <td><b>-o</b></td>
@@ -118,7 +119,6 @@ int		main(int argc, char *argv[])
 {
   int		option,
   		ok = 1,
-		interp = 0,
   		usage = 0,
 		setVal = 0;
   double	scale = 1.0;
@@ -126,6 +126,7 @@ int		main(int argc, char *argv[])
   char		*inObjFileStr = NULL,
   		*outObjFileStr = NULL;
   const char	*errMsgStr;
+  WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
@@ -145,7 +146,7 @@ int		main(int argc, char *argv[])
         setVal = 1;
 	break;
       case 'L':
-        interp = 1;
+        interp = WLZ_INTERPOLATION_LINEAR;
 	break;
       case 'o':
         outObjFileStr = optarg;
@@ -244,9 +245,7 @@ int		main(int argc, char *argv[])
     WlzObject *tObj;
 
     tObj = WlzAssignObject(
-           WlzCMeshToDomObjValues(outObj, inObj,
-	                          (interp)? WLZ_INTERPOLATION_LINEAR:
-				            WLZ_INTERPOLATION_NEAREST,
+           WlzCMeshToDomObjValues(outObj, inObj, interp,
 			          &errNum), NULL);
     WlzFreeObj(outObj);
     outObj = tObj;
@@ -282,7 +281,8 @@ int		main(int argc, char *argv[])
       "  -h  Help, prints this usage message.\n"
       "  -o  Output object.\n"
       "  -i  Set values using first indexed element value.\n"
-      "  -L  Use kriging rather than barycentric interpolation for values.\n"
+      "  -L  Use barycentric interpolation rather than nearest neighbour\n"
+      "      for values.\n"
       "  -s  Additional scale factor from the mesh to the spatial domain\n"
       "      (can not be used if setting values).\n",
       argv[0],
