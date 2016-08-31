@@ -2068,6 +2068,16 @@ extern WlzUByte			*WlzCMeshIndexMaskFromValueRange(
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
+* WlzCMeshValueTransfer.c					        *
+************************************************************************/
+extern WlzObject		*WlzCMeshValueTransfer(
+				  WlzObject *srcObj,
+				  WlzObject *tgtObj,
+				  WlzPixelV extVal,
+				  WlzInterpolationType interp,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzCompDispIncGrey.c						        *
 ************************************************************************/
 extern WlzCompoundArray		*WlzCompDispIncGrey(
@@ -3468,6 +3478,12 @@ extern int			WlzGeomVtxOnLine3D(
 				  WlzDVertex3 p0,
 				  WlzDVertex3 r0,
 				  WlzDVertex3 rD);
+extern int			WlzGeomBaryCoordsTri2D(
+				  WlzDVertex2 p0,
+				  WlzDVertex2 p1,
+                                  WlzDVertex2 p2,
+				  WlzDVertex2 pX,
+				  double *lambda);
 extern double			WlzGeomInterpolateTri2D(
 				  WlzDVertex2 p0,
 				  WlzDVertex2 p1,
