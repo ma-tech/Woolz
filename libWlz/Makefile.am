@@ -83,6 +83,7 @@ libWlz_la_SOURCES 	= \
 			  WlzCMeshSurfMap.c \
 			  WlzCMeshTransform.c \
 			  WlzCMeshUtils.c \
+			  WlzCMeshValueTransfer.c \
 			  WlzCompDispIncGrey.c \
 			  WlzCompoundArrayToScalar.c \
 			  WlzCompThresh.c \
