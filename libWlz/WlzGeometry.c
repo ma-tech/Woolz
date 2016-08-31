@@ -4461,6 +4461,49 @@ int		WlzGeomVtxOnLine3D(WlzDVertex3 p0, WlzDVertex3 r0,
 }
 
 /*!
+* \return	Non zero if barycentric coordinates valid.
+* \ingroup	WlzGeometry
+* \brief	Given the coordinates of the vertices of a 2D triangle
+* 		and a position within the triangle, this function
+* 		computes the barycentric coordinates (\f$\lambda_0\f$,
+* 		\f$\lambda_0\f$, \f$\lambda_2\f$ of the position.
+* \param	p0			First vertex of triangle.
+* \param	p1			Second vertex of triangle.
+* \param	p2			Third vertex of triangle.
+* \param	pX			Given position, which is within
+* 					(or on) the triangle.
+* \param	lambda			Given array for the three lambda
+* 					values.
+*/
+extern int	WlzGeomBaryCoordsTri2D(WlzDVertex2 p0, WlzDVertex2 p1,
+				       WlzDVertex2 p2, WlzDVertex2 pX,
+				       double *lambda)
+{
+  int		valid = 0;
+  double	del;
+  WlzDVertex2	q0,
+  		q1,
+		qX;
+  const double	eps = ALG_DBL_TOLLERANCE;
+
+  q0.vtX = p0.vtX - p2.vtX;
+  q1.vtX = p1.vtX - p2.vtX;
+  q0.vtY = p0.vtY - p2.vtY;
+  q1.vtY = p1.vtY - p2.vtY;
+  del = (q0.vtX * q1.vtY) - (q1.vtX * q0.vtY);
+  if(fabs(del) > eps)
+  {
+    qX.vtX = pX.vtX - p2.vtX;
+    qX.vtY = pX.vtY - p2.vtY;
+    lambda[0] = ((q1.vtY * qX.vtX) - (q1.vtX * qX.vtY)) / del;
+    lambda[1] = ((q0.vtX * qX.vtY) - (q0.vtY * qX.vtX)) / del;
+    lambda[2] = 1.0 - (lambda[0] + lambda[1]);
+    valid = 1;
+  }
+  return(valid);
+}
+
+/*!
 * \return	Interpolated value.
 * \ingroup	WlzGeometry
 * \brief	Given the coordinates of the vertices of a 2D triangle
@@ -4489,30 +4532,12 @@ extern double	WlzGeomInterpolateTri2D(WlzDVertex2 p0, WlzDVertex2 p1,
 					double v0, double v1, double v2,
 					WlzDVertex2 pX)
 {
-  double	
-		l0,
-		l1,
-		l2,
-		del,
-		val;
-  WlzDVertex2	q0,
-  		q1,
-		qX;
-  const double	eps = ALG_DBL_TOLLERANCE;
+  double	val;
+  double	lambda[3];
 
-  q0.vtX = p0.vtX - p2.vtX;
-  q1.vtX = p1.vtX - p2.vtX;
-  q0.vtY = p0.vtY - p2.vtY;
-  q1.vtY = p1.vtY - p2.vtY;
-  del = (q0.vtX * q1.vtY) - (q1.vtX * q0.vtY);
-  if(fabs(del) > eps)
+  if(WlzGeomBaryCoordsTri2D(p0, p1, p2, pX, lambda))
   {
-    qX.vtX = pX.vtX - p2.vtX;
-    qX.vtY = pX.vtY - p2.vtY;
-    l0 = ((q1.vtY * qX.vtX) - (q1.vtX * qX.vtY)) / del;
-    l1 = ((q0.vtX * qX.vtY) - (q0.vtY * qX.vtX)) / del;
-    l2 = 1.0 - (l0 + l1);
-    val = (l0 * v0) + (l1 * v1) + (l2 * v2);
+    val = (lambda[0] * v0) + (lambda[1] * v1) + (lambda[2] * v2);
   }
   else
   {
@@ -4747,7 +4772,7 @@ static double	WlzGeomCot2D3(WlzDVertex2 a, WlzDVertex2 b, WlzDVertex2 c)
 * \return	Non zero if barycentric coordinates valid.
 * \ingroup	WlzGeometry
 * \brief	Given the coordinates of the vertices of a 3D tetrahedron
-* 		and a position within the tetrahedron, thisfunction
+* 		and a position within the tetrahedron, this function
 * 		computes the barycentric coordinates (\f$\lambda_0\f$,
 * 		\f$\lambda_0\f$, \f$\lambda_2\f$, \f$\lambda_3\f$)
 * 		of the position.
