@@ -1401,7 +1401,7 @@ void		WlzValueCopyIntToShort(short *dst, int *src, size_t count)
 #endif
   for(idx = 0; idx < count; ++idx)
   {
-    dst[idx] = (short )src[idx];
+    dst[idx] = (short )(WLZ_CLAMP(src[idx], SHRT_MIN, SHRT_MAX));
   }
 }
 
@@ -1422,7 +1422,7 @@ void		WlzValueCopyIntToUByte(WlzUByte *dst, int *src, size_t count)
 #endif
   for(idx = 0; idx < count; ++idx)
   {
-    dst[idx] = (WlzUByte )src[idx];
+    dst[idx] = (WlzUByte )(WLZ_CLAMP(src[idx], 0, 255));
   }
 }
 
@@ -1533,7 +1533,7 @@ void		WlzValueCopyShortToUByte(WlzUByte *dst, short *src,
 #endif
   for(idx = 0; idx < count; ++idx)
   {
-    dst[idx] = (WlzUByte )src[idx];
+    dst[idx] = (WlzUByte )(WLZ_CLAMP(src[idx], 0, 255));
   }
 }
 
@@ -1733,7 +1733,10 @@ void		WlzValueCopyFloatToInt(int *dst, float *src, size_t count)
 #endif
   for(idx = 0; idx < count; ++idx)
   {
-    dst[idx] = WLZ_NINT(src[idx]);
+    float tF;
+
+    tF = WLZ_CLAMP(src[idx], INT_MIN, INT_MAX);
+    dst[idx] = WLZ_NINT(tF);
   }
 }
 
@@ -1754,7 +1757,10 @@ void		WlzValueCopyFloatToShort(short *dst, float *src, size_t count)
 #endif
   for(idx = 0; idx < count; ++idx)
   {
-    dst[idx] = (short )WLZ_NINT(src[idx]);
+    float tF;
+
+    tF = WLZ_CLAMP(src[idx], SHRT_MIN, SHRT_MAX);
+    dst[idx] = (short )WLZ_NINT(tF);
   }
 }
 
@@ -1776,7 +1782,10 @@ void		WlzValueCopyFloatToUByte(WlzUByte *dst, float *src,
 #endif
   for(idx = 0; idx < count; ++idx)
   {
-    dst[idx] = (WlzUByte )WLZ_NINT(src[idx]);
+    float tF;
+
+    tF = WLZ_CLAMP(src[idx], 0, 255);
+    dst[idx] = (WlzUByte )WLZ_NINT(tF);
   }
 }
 
@@ -1845,7 +1854,10 @@ void		WlzValueCopyDoubleToInt(int *dst, double *src, size_t count)
 #endif
   for(idx = 0; idx < count; ++idx)
   {
-    dst[idx] = WLZ_NINT(src[idx]);
+    double tD;
+
+    tD = WLZ_CLAMP(src[idx], INT_MIN, INT_MAX);
+    dst[idx] = WLZ_NINT(tD);
   }
 }
 
@@ -1866,7 +1878,10 @@ void		WlzValueCopyDoubleToShort(short *dst, double *src, size_t count)
 #endif
   for(idx = 0; idx < count; ++idx)
   {
-    dst[idx] = (short )WLZ_NINT(src[idx]);
+    double tD;
+
+    tD = WLZ_CLAMP(src[idx], SHRT_MIN, SHRT_MAX);
+    dst[idx] = (short )WLZ_NINT(tD);
   }
 }
 
@@ -1888,7 +1903,10 @@ void		WlzValueCopyDoubleToUByte(WlzUByte *dst, double *src,
 #endif
   for(idx = 0; idx < count; ++idx)
   {
-    dst[idx] = (WlzUByte )WLZ_NINT(src[idx]);
+    double tD;
+
+    tD = WLZ_CLAMP(src[idx], 0, 255);
+    dst[idx] = (WlzUByte )WLZ_NINT(tD);
   }
 }
 
@@ -1910,7 +1928,7 @@ void		WlzValueCopyDoubleToFloat(float *dst, double *src,
 #endif
   for(idx = 0; idx < count; ++idx)
   {
-    dst[idx] = (float )src[idx];
+    dst[idx] = (float )(WLZ_CLAMP(src[idx], -(FLT_MAX), FLT_MAX));
   }
 }
 
