@@ -907,7 +907,7 @@ static WlzErrorNum		WlzCMeshExpGntVector3D(
 
 	  buf[0] = wSp->kNbr.n3[1]->pos.vtX - wSp->kNbr.n3[0]->pos.vtX;
 	  buf[1] = wSp->kNbr.n3[1]->pos.vtY - wSp->kNbr.n3[0]->pos.vtY;
-	  buf[2] = wSp->kNbr.n3[1]->pos.vtY - wSp->kNbr.n3[0]->pos.vtY;
+	  buf[2] = wSp->kNbr.n3[1]->pos.vtZ - wSp->kNbr.n3[0]->pos.vtZ;
 	  gP0.v = WlzIndexedValueGet(wSp->ixv, wSp->kNbr.n3[0]->idx);
 	  gP1.v = WlzIndexedValueGet(wSp->ixv, wSp->kNbr.n3[1]->idx);
 	  gP2.dbp = &(buf[3]);
