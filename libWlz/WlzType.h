@@ -3545,6 +3545,20 @@ typedef enum _WlzCMeshNodFlags
 } WlzCMeshNodFlags;
 
 /*!
+* \struct	_WlzCMeshEntCore
+* \ingroup	WlzMesh
+* \brief	A core node/element structure containing the initial fields
+* 		common to all node and element structures.
+* 		Typedef: ::WlzCMeshEntCore
+*/
+typedef struct 	_WlzCMeshEntCore
+{
+  int		idx;                    /*!< The node/element index. */
+  unsigned int	flags;			/*!< Bitwise description of the
+  					     node/element. */
+} WlzCMeshEntCore;
+
+/*!
 * \struct       _WlzCMeshNod2D
 * \ingroup      WlzMesh
 * \brief        A node of a 2D mesh.
@@ -3552,8 +3566,10 @@ typedef enum _WlzCMeshNodFlags
 */
 typedef struct _WlzCMeshNod2D
 {
-  int           idx;                    /*!< The node index. */
-  unsigned int  flags;                  /*!< Bitwise description of node. */
+  int           idx;                    /*!< The node index from 
+  					     WlzCMeshEntCore. */
+  unsigned int  flags;                  /*!< Bitwise description of node
+  					     from WlzCMeshEntCore. */
   WlzDVertex2   pos;                    /*!< Node position. */
   struct _WlzCMeshEdgU2D *edu;          /*!< One of many edge uses which is
                                              directed from the node. A
@@ -3570,8 +3586,10 @@ typedef struct _WlzCMeshNod2D
 */
 typedef struct _WlzCMeshNod2D5
 {
-  int           idx;                    /*!< The node index. */
-  unsigned int  flags;                  /*!< Bitwise description of node. */
+  int           idx;                    /*!< The node index from
+  					     WlzCMeshEntCore. */
+  unsigned int  flags;                  /*!< Bitwise description of node
+  					     from WlzCMeshEntCore. */
   WlzDVertex3   pos;                    /*!< Node position. */
   struct _WlzCMeshEdgU2D5 *edu;         /*!< One of many edge uses which is
                                              directed from the node. A
@@ -3588,8 +3606,10 @@ typedef struct _WlzCMeshNod2D5
 */
 typedef struct _WlzCMeshNod3D
 {
-  int           idx;                    /*!< The node index. */
-  unsigned int  flags;                  /*!< Bitwise description of node. */
+  int           idx;                    /*!< The node index from
+  					     WlzCMeshEntCore. */
+  unsigned int  flags;                  /*!< Bitwise description of node
+  					     from WlzCMeshEntCore. */
   WlzDVertex3   pos;                    /*!< Node position. */
   struct _WlzCMeshEdgU3D *edu;          /*!< One of many edge uses which is
                                              directed from the node. A
@@ -3606,10 +3626,11 @@ typedef struct _WlzCMeshNod3D
 */
 typedef union _WlzCMeshNodP
 {
-  void			 *v;		/*!< Generic pointer. */
-  struct _WlzCMeshNod2D  *n2;		/*!< 2D node pointer. */
-  struct _WlzCMeshNod2D5 *n2d5;		/*!< 2D5 node pointer. */
-  struct _WlzCMeshNod3D  *n3;		/*!< 3D node pointer. */
+  void			  *v;		/*!< Generic pointer. */
+  struct _WlzCMeshEntCore *core;        /*!< Core pointer. */
+  struct _WlzCMeshNod2D   *n2;		/*!< 2D node pointer. */
+  struct _WlzCMeshNod2D5  *n2d5;	/*!< 2D5 node pointer. */
+  struct _WlzCMeshNod3D   *n3;		/*!< 3D node pointer. */
 } WlzCMeshNodP;
 
 /*!
@@ -3701,8 +3722,10 @@ typedef struct _WlzCMeshFace
 */
 typedef struct _WlzCMeshElm2D
 {
-  int           idx;                    /*!< The element index. */
-  unsigned int  flags;                  /*!< Element flags. */
+  int           idx;                    /*!< The element index from
+  					     WlzCMeshEntCore. */
+  unsigned int  flags;                  /*!< Element flags from
+  					     WlzCMeshEntCore. */
   struct _WlzCMeshEdgU2D edu[3];        /*!< Edges of the mesh element. */
   struct _WlzCMeshCellElm2D *cElm;	/*!< First cell element from which
                                              all other cell elements can be
@@ -3718,8 +3741,10 @@ typedef struct _WlzCMeshElm2D
 */
 typedef struct _WlzCMeshElm2D5
 {
-  int           idx;                     /*!< The element index. */
-  unsigned int  flags;                   /*!< Element flags. */
+  int           idx;                     /*!< The element index from
+  					      WlzCMeshEntCore. */
+  unsigned int  flags;                   /*!< Element flags from
+  					      WlzCMeshEntCore. */
   struct _WlzCMeshEdgU2D5 edu[3];        /*!< Edges of the mesh element. */
   struct _WlzCMeshCellElm2D5 *cElm;	 /*!< First cell element from which
                                               all other cell elements can be
@@ -3836,8 +3861,10 @@ typedef struct _WlzCMeshElm2D5
 */
 typedef struct _WlzCMeshElm3D
 {
-  int           idx;                    /*!< The element index. */
-  unsigned int  flags;                  /*!< Element flags. */
+  int           idx;                    /*!< The element index from
+  					     WlzCMeshEntCore. */
+  unsigned int  flags;                  /*!< Element flags from
+  					     WlzCMeshEntCore. */
   struct _WlzCMeshFace face[4];         /*!< Faces of the mesh element. */
   struct _WlzCMeshCellElm3D *cElm;	/*!< First cell element from which
                                              all other cell elements can be
@@ -3853,10 +3880,11 @@ typedef struct _WlzCMeshElm3D
 */
 typedef union _WlzCMeshElmP
 {
-  void			 *v;		/*! Generic pointer. */
-  struct _WlzCMeshElm2D  *e2;		/*!< 2D element pointer. */
-  struct _WlzCMeshElm2D5 *e2d5;		/*!< 2D5 element pointer. */
-  struct _WlzCMeshElm3D  *e3;		/*!< 3D element pointer. */
+  void			  *v;		/*!< Generic pointer. */
+  struct _WlzCMeshEntCore *core;        /*!< Core pointer. */
+  struct _WlzCMeshElm2D   *e2;		/*!< 2D element pointer. */
+  struct _WlzCMeshElm2D5  *e2d5;	/*!< 2D5 element pointer. */
+  struct _WlzCMeshElm3D   *e3;		/*!< 3D element pointer. */
 } WlzCMeshElmP;
 
 /*!
@@ -4090,13 +4118,14 @@ typedef struct _WlzCMeshRes
 */
 typedef union _WlzCMeshEntP
 {
-  void			*v;		/*!< Generic pointer. */
-  struct _WlzCMeshNod2D *n2;		/*!< 2D node pointer. */
-  struct _WlzCMeshNod2D *n2d5;		/*!< 2D5 node pointer. */
-  struct _WlzCMeshNod3D *n3;		/*!< 3D node pointer. */
-  struct _WlzCMeshElm2D	*e2;		/*!< 2D element pointer. */
-  struct _WlzCMeshElm2D	*e2d5;		/*!< 2D5 element pointer. */
-  struct _WlzCMeshElm3D	*e3;		/*!< 3D element pointer. */
+  void			  *v;		/*!< Generic pointer. */
+  struct _WlzCMeshEntCore *core;        /*!< Core pointer. */
+  struct _WlzCMeshNod2D   *n2;		/*!< 2D node pointer. */
+  struct _WlzCMeshNod2D   *n2d5;	/*!< 2D5 node pointer. */
+  struct _WlzCMeshNod3D   *n3;		/*!< 3D node pointer. */
+  struct _WlzCMeshElm2D   *e2;		/*!< 2D element pointer. */
+  struct _WlzCMeshElm2D   *e2d5;	/*!< 2D5 element pointer. */
+  struct _WlzCMeshElm3D   *e3;		/*!< 3D element pointer. */
 } WlzCMeshEntP;
 
 /*!
@@ -4107,13 +4136,14 @@ typedef union _WlzCMeshEntP
 */
 typedef union _WlzCMeshEntPP
 {
-  void			**v;		/*!< Generic pointer. */
-  struct _WlzCMeshNod2D **n2;		/*!< 2D node pointer. */
-  struct _WlzCMeshNod2D **n2d5;		/*!< 2D5 node pointer. */
-  struct _WlzCMeshNod3D **n3;		/*!< 3D node pointer. */
-  struct _WlzCMeshElm2D	**e2;		/*!< 2D element pointer. */
-  struct _WlzCMeshElm2D	**e2d5;		/*!< 2D5 element pointer. */
-  struct _WlzCMeshElm3D	**e3;		/*!< 3D element pointer. */
+  void			  **v;		/*!< Generic pointer. */
+  struct _WlzCMeshEntCore **core;       /*!< Core pointer. */
+  struct _WlzCMeshNod2D   **n2;		/*!< 2D node pointer. */
+  struct _WlzCMeshNod2D   **n2d5;	/*!< 2D5 node pointer. */
+  struct _WlzCMeshNod3D   **n3;		/*!< 3D node pointer. */
+  struct _WlzCMeshElm2D	  **e2;		/*!< 2D element pointer. */
+  struct _WlzCMeshElm2D	  **e2d5;	/*!< 2D5 element pointer. */
+  struct _WlzCMeshElm3D	  **e3;		/*!< 3D element pointer. */
 } WlzCMeshEntPP;
 
 /*!
