@@ -676,7 +676,6 @@ WlzPointValues			*WlzPointValuesFromDomObj(
   int		dim = 0;
   void		**buf = NULL;
   WlzPointValues *pvl = NULL;
-  WlzObject	*rtnObj = NULL;
   WlzGreyValueWSpace *gVWSp = NULL;
   WlzGreyType	gType = WLZ_GREY_ERROR;
   WlzVertexType vType = WLZ_VERTEX_ERROR;
