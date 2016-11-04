@@ -191,28 +191,23 @@ int main(int	argc,
       break;
 
     case 'v':
+      thresh.type = threshpixtype;
       switch( threshpixtype ){
-
       case WLZ_GREY_INT:
 	thresh.v.inv = atoi(optarg);
 	break;
-
       case WLZ_GREY_SHORT:
 	thresh.v.shv = atoi(optarg);
 	break;
-
       case WLZ_GREY_UBYTE:
 	thresh.v.ubv = atoi(optarg);
 	break;
-
       case WLZ_GREY_FLOAT:
 	thresh.v.flv = atof(optarg);
 	break;
-
       case WLZ_GREY_DOUBLE:
 	thresh.v.dbv = atof(optarg);
 	break;
-
       default:
         break;
       }
