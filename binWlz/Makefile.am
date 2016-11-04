@@ -66,17 +66,19 @@ bin_PROGRAMS		= \
 			  WlzClassifyRCC \
 			  WlzClipObjToBox \
 			  WlzClosestVertices \
+			  WlzCMeshCurvToImage \
 			  WlzCMeshDeleteUnusedNodes \
+			  WlzCMeshDispToField \
 			  WlzCMeshDistance \
 			  WlzCMeshExtrapolate \
 			  WlzCMeshFromContour \
 			  WlzCMeshGen \
 			  WlzCMeshIntersectDom \
+			  WlzCMeshSetDispFromField \
 			  WlzCMeshSurfaceMap \
 			  WlzCMeshToContour \
 			  WlzCMeshTrExpansion \
 			  WlzCMeshTrStrainTensor \
-			  WlzCMeshCurvToImage \
 			  WlzCMeshToSpatialDomain \
 			  WlzCMeshTransformVtx \
 			  WlzCMeshTransformObj \
@@ -309,9 +311,21 @@ WlzClosestVertices_SOURCES		= WlzClosestVertices.c
 WlzClosestVertices_LDADD		= $(LDADD)
 WlzClosestVertices_LDFLAGS		= $(AM_LFLAGS)
 
+WlzCMeshCurvToImage_SOURCES		= WlzCMeshCurvToImage.c
+WlzCMeshCurvToImage_LDADD		= $(LDADD)
+WlzCMeshCurvToImage_LDFLAGS		= $(AM_LFLAGS)
+
 WlzCMeshDeleteUnusedNodes_SOURCES	= WlzCMeshDeleteUnusedNodes.c
 WlzCMeshDeleteUnusedNodes_LDADD		= $(LDADD)
 WlzCMeshDeleteUnusedNodes_LDFLAGS	= $(AM_LFLAGS)
+
+WlzCMeshDispToField_SOURCES		= WlzCMeshDispToField.c
+WlzCMeshDispToField_LDADD		= $(LDADD)
+WlzCMeshDispToField_LDFLAGS		= $(AM_LFLAGS)
+
+WlzCMeshDistance_SOURCES		= WlzCMeshDistance.c
+WlzCMeshDistance_LDADD			= $(LDADD)
+WlzCMeshDistance_LDFLAGS		= $(AM_LFLAGS)
 
 WlzCMeshExtrapolate_SOURCES		= WlzCMeshExtrapolate.c
 WlzCMeshExtrapolate_LDADD		= $(LDADD)
@@ -337,13 +351,13 @@ WlzCMeshToContour_SOURCES		= WlzCMeshToContour.c
 WlzCMeshToContour_LDADD			= $(LDADD)
 WlzCMeshToContour_LDFLAGS		= $(AM_LFLAGS)
 
-WlzCMeshCurvToImage_SOURCES		= WlzCMeshCurvToImage.c
-WlzCMeshCurvToImage_LDADD		= $(LDADD)
-WlzCMeshCurvToImage_LDFLAGS		= $(AM_LFLAGS)
-
 WlzCMeshIntersectDom_SOURCES		= WlzCMeshIntersectDom.c
 WlzCMeshIntersectDom_LDADD		= $(LDADD)
 WlzCMeshIntersectDom_LDFLAGS		= $(AM_LFLAGS)
+
+WlzCMeshSetDispFromField_SOURCES	= WlzCMeshSetDispFromField.c
+WlzCMeshSetDispFromField_LDADD		= $(LDADD)
+WlzCMeshSetDispFromField_LDFLAGS	= $(AM_LFLAGS)
 
 WlzCMeshSurfaceMap_SOURCES		= WlzCMeshSurfaceMap.c
 WlzCMeshSurfaceMap_LDADD		= $(LDADD)
