@@ -1482,11 +1482,30 @@ extern WlzObject		*WlzCMeshComputeCurvaturesFromNodNorm(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzCMeshDispField.c                                                   *
+************************************************************************/
+extern WlzObject		*WlzCMeshSetDispFromField(
+                                  WlzObject *mObj,
+                                  WlzObject *dObj,
+                                  WlzDVertex3 bgd,
+                                  WlzInterpolationType itp,
+				  int abs,
+                                  WlzErrorNum *dstErr);
+extern WlzObject		*WlzCMeshDispToField(
+				  WlzObject *mObj,
+				  WlzDVertex3 bgd,
+				  WlzInterpolationType itp,
+				  int invert,
+				  int abs,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzCMeshExtrapolate.c                                                 *
 ************************************************************************/
 extern WlzObject		*WlzCMeshExpValues(
 				  WlzObject *gObj,
 				  WlzUByte *unk,
+				  WlzInterpolationType itp,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -1675,6 +1694,7 @@ extern WlzObject		*WlzCMeshToDomObjValues(
 				  WlzObject *dObj,
 				  WlzObject *mObj,
                                   WlzInterpolationType itp,
+				  int ixi,
 				  WlzErrorNum *dstErr);
 extern WlzDBox2			WlzCMeshTransformGetBBox2D(
 				  WlzObject *mObj,
@@ -2065,6 +2085,11 @@ extern WlzUByte			*WlzCMeshIndexMaskFromValueRange(
 				  double hi,
 				  int in,
 				  WlzErrorNum *dstErr);
+extern int			WlzCMeshElmUseNod3D(
+				  WlzCMeshNod3D *gNod,
+				  int *gMaxElm,
+				  int **gElmIdxAry,
+				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -2358,6 +2383,9 @@ extern WlzValues		WlzCopyValues(
 				  WlzErrorNum *dstErr);
 extern WlzPropertyList		*WlzCopyPropertyList(
 				  WlzPropertyList *gList,
+				  WlzErrorNum *dstErr);
+extern WlzIndexedValues		*WlzCopyIndexedValues(
+ 				  WlzIndexedValues *ixv,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
@@ -4646,10 +4674,6 @@ extern WlzIndexedValues		*WlzMakeIndexedValues(
 extern WlzErrorNum		WlzExtendIndexedValues(
 				  WlzIndexedValues *ixv,
 				  size_t n);
-extern WlzErrorNum		WlzIndexedValuesSet(
-				  WlzObject *obj,
-				  size_t cnt,
-				  void *val);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -5022,6 +5046,10 @@ extern void			WlzCMeshDelUnusedNodes2D5(
 				  WlzCMesh2D5 *mesh);
 extern void			WlzCMeshDelUnusedNodes2D(
 				  WlzCMesh2D *mesh);
+extern void			WlzCMeshElmMinMaxEdgLnSq3D(
+				  WlzCMeshElm3D *elm,
+				  double *dstMinSq,
+				  double *dstMaxSq);
 extern int                      WlzCMeshMatchNNod2D(
                                   WlzCMesh2D *mesh,
                                   int nNod,
@@ -6400,6 +6428,8 @@ extern WlzObject 		*WlzUnionN(
 ************************************************************************/
 extern WlzObject		*WlzValuesFromCoords(
 				  WlzObject *gObj,
+				  int radial,
+				  WlzGreyType gType,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -6432,6 +6462,10 @@ extern void			*WlzIndexedValueGet(
 extern void			*WlzIndexedValueExtGet(
 				  WlzIndexedValues *ixv,
 				  int idx);
+extern WlzErrorNum		WlzIndexedValuesSet(
+				  WlzObject *obj,
+				  size_t cnt,
+				  void *val);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -6811,7 +6845,8 @@ extern void			WlzIndexedValueBufWeight(
 				  WlzIndexedValues *ixv,
 				  double *wgt,
 				  int nIdx,
-				  int *idx);
+				  int *idx,
+				  int ixi);
 extern WlzGreyP			WlzValueSetGreyP(
 				  WlzGreyP base,
 				  WlzGreyType gType,
@@ -6832,6 +6867,7 @@ extern int			WlzValueDitherI(
 				  int p2);
 extern size_t			WlzIndexedValueSize(
 				  WlzIndexedValues *ixv,
+				  size_t *dstNDat,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
