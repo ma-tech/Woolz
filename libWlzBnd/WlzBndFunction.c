@@ -47,7 +47,7 @@ static char _WlzBndFunction_c[] = "University of Edinburgh $Id$";
 * \param	dstStr			Destination pointer for the version
 * 					string.
 */
-void		WlzGetVersion(char **dstStr)
+void		WlzGetVersion(const char **dstStr)
 {
   if(dstStr)
   {
