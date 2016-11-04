@@ -189,8 +189,8 @@ int main(
   int   argc,
   char  **argv)
 {
-  FILE		*infileDomains, *infile, *outfile;
-  FILE		*normOutfile, *derivOutfile;
+  FILE		*infileDomains = NULL, *infile = NULL, *outfile = NULL;
+  FILE		*normOutfile = NULL, *derivOutfile = NULL;
   char 		optList[] = "a:d:f:n:tThv";
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
@@ -206,7 +206,7 @@ int main(
   int		i, j, radius;
   int		rMin=-10, rMax=100, rStep=1;
   int       	adjVal;
-  double	normalisedAdjVal;
+  double	normalisedAdjVal = 0.0;
 
   /* read the argument list and check for an input file */
   infile  = stdin;
