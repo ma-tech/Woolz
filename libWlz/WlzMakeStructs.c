@@ -2783,3 +2783,28 @@ WlzIndexedValues *WlzMakeIndexedValues(WlzObject *obj,
   }
   return(ixv);
 }
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzAllocation
+* \brief	Extends the given indexed value table.
+* 		This is just a wrapper for AlcVectorExtend().
+* \param	ixv			Given indexed values.
+* \param	n			Number of values to extend to.
+*/
+WlzErrorNum			WlzExtendIndexedValues(
+				  WlzIndexedValues *ixv,
+				  size_t n)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(ixv == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(AlcVectorExtend(ixv->values, n) != ALC_ER_NONE)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
+  }
+  return(errNum);
+}
