@@ -57,6 +57,7 @@ extern "C" {
 #define	WLZ_ABS(X)	(((X)>0)?(X):(-(X)))
 #define	WLZ_NINT(X)	((int)(((X)<0)?((X)-(0.5)):((X)+(0.5))))
 #define	WLZ_SIGN(X)	(((X)<0)?-1:((X)>0)?1:0)
+
 /*!
 * \def		WLZ_SWAP(T,A,B)
 * \brief	Swaps the values of the variables A and B using the
