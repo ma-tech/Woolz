@@ -61,7 +61,6 @@ WlzObject *WlzDomainFill(
   WlzBoundList	*bndList;
   WlzValues	values;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  int		p;
 
   /* check the object pointer and type */
   if( obj == NULL ){
