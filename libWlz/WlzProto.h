@@ -2651,12 +2651,14 @@ extern WlzObject		*WlzFilterNObjValues(
 /************************************************************************
 * WlzFitPlane.c
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern WlzErrorNum		WlzFitPlaneSVD(
 				  WlzVertexType vtxType,
 				  int nVtx,
 				  WlzVertexP vtx,
 				  WlzDVertex3 *dstPinP,
 				  WlzDVertex3 *dstNrm);
+#endif /* !WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzFreeSpace.c							*
