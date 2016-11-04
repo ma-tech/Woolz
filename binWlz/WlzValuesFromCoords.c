@@ -35,8 +35,7 @@ static char _WlzValuesFromCoords_c[] = "University of Edinburgh $Id$";
 * License along with this program; if not, write to the Free
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
-* \brief	Adds integer coordinate values to the domain of the
-* 		input object.
+* \brief	Adds coordinate values to the domain of the input object.
 * \ingroup	BinWlz
 *
 * \par Binary
@@ -52,7 +51,7 @@ WlzValuesFromCoords - creates an object in which the pixel/voxel values are
 		      those of their coordinates.
 \par Synopsis
 \verbatim
-WlzValuesFromCoords [-h] [-S] [-o<output file>] [<input file>]
+WlzValuesFromCoords [-h] [-D] [-R] [-S] [-o<output file>] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -64,20 +63,32 @@ WlzValuesFromCoords [-h] [-S] [-o<output file>] [<input file>]
     <td><b>-o</b></td>
     <td>Output file name, default standard output.</td>
   </tr>
+  <tr>
+    <td><b>-D</b></td>
+    <td>Use double precision floating point values (instead of integer
+        values)</td>
+  </tr>
+  <tr>
+    <td><b>-R</b></td>
+    <td>Use a cylindrical (<b>r</b>adial) rather than Cartesian
+        coordinate system.</td>
+  </tr>
   <tr> 
     <td><b>-S</b></td>
     <td>Split the comound object into seperate files, appending
-        X, Y or Z to the body of the output file name.</td>
+        X, Y and Z (R, A and Z if radial) to the body of the output
+	file name.</td>
   </tr>
 </table>
 \par Description
 Reads a 2D or 3D spatial domain object and computes a compound
 object in which each component object has the domain of the input
 object and the values of it's pixel/voxel coordinates. When a
-compound objec is output, the components are the column (x)
+compound object is output, the components are the column (x)
 coordinates followed by line (Y) and (for 3D objects), plane
-(Z). By default the input object is read from the standard input
-and the output is writen to the standard output.
+(Z) or radial (r), angle (a), plane (z) for radial.
+By default the input object is read from the standard input
+and the output is written to the standard output.
 \par File
 \ref binWlz/WlzValuesFromCoords.c "WlzValuesFromCoords.c"
 \par See Also
@@ -97,13 +108,6 @@ and the output is writen to the standard output.
 
 #define WLZ_CFP_READLN_LEN	(1024)
 
-static WlzVertexP 		WlzMTDReadVtxArray(
-				  FILE *fP,
-				  int dim,
-				  int *dstNVtx, 
-				  WlzVertexType *dstVType,
-				  WlzErrorNum *dstErr);
-
 extern char 	*optarg;
 extern int 	optind,
 		opterr,
@@ -113,16 +117,18 @@ int		main(int argc, char *argv[])
 {
   int		ok = 1,
   		option,
+		radial = 0,
 		split = 0,
   		usage = 0;
   FILE		*fP = NULL;
   char		*inFile,
   		*outFile;
   const char	*errMsg;
+  WlzGreyType	gType = WLZ_GREY_INT;
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  static char   optList[] = "hSo:";
+  static char   optList[] = "hDRSo:";
   const char    fileDef[] = "-";
 
   opterr = 0;
@@ -134,6 +140,12 @@ int		main(int argc, char *argv[])
     {
       case 'o':
         outFile = optarg;
+	break;
+      case 'D':
+        gType = WLZ_GREY_DOUBLE;
+	break;
+      case 'R':
+        radial = 1;
 	break;
       case 'S':
         split = 1;
@@ -190,7 +202,7 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    outObj = WlzValuesFromCoords(inObj, &errNum);
+    outObj = WlzValuesFromCoords(inObj, radial, gType, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -211,6 +223,7 @@ int		main(int argc, char *argv[])
     {
       size_t	len;
       char 	*dot,
+		*dimStr,
 	      	*splitFile = NULL;
 
       len = strlen(outFile);
@@ -221,6 +234,7 @@ int		main(int argc, char *argv[])
       else
       {
 	dot = strrchr(outFile, '.');
+        dimStr = (radial)? "RAZ": "XYZ";
 	if(dot)
 	{
 	  *dot = '\0';
@@ -229,19 +243,8 @@ int		main(int argc, char *argv[])
 	{
 	  int	last;
 	  char  dim;
-
-	  switch(idx)
-	  {
-	    case 0:
-	      dim = 'X';
-	      break;
-	    case 1:
-	      dim = 'Y';
-	      break;
-	    default:
-	      dim = 'Z';
-	      break;
-	  }
+          
+	  dim = dimStr[idx];
 	  last = sprintf(splitFile, "%s%c", outFile, dim);
 	  if(dot && *(dot + 1))
 	  {
@@ -302,20 +305,26 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-h] [-S] [-o<output file>] [<input file>]\n"
+    "Usage: %s [-h] [-D] [-R] [-S] [-o<output file>] [<input file>]\n"
     "Version: %s\n"
     "Options:\n"
     "  -h  Output this usage message.\n"
     "  -o  Output file name, default is the standard output.\n"
-    "  -S  Split the comound object into seperate files, appending\n"
-    "      X, Y or Z to the body of the output file name.\n"
+    "  -D  Use double precision floating point values (instead of\n"
+    "      integer values).\n"
+    "  -R  Use a cylindrical (radial) rather than Cartesian\n"
+    "      coordinate system.\n"
+    "  -S  Split the compound object into separate files, appending\n"
+    "      X, Y and Z (R, A and Z if radial) to the body of the output\n"
+    "      file name.\n"
     "Reads a 2D or 3D spatial domain object and computes a compound\n"
     "object in which each component object has the domain of the input\n"
     "object and the values of it's pixel/voxel coordinates. When a\n"
-    "compound objec is output, the components are the column (x)\n"
+    "compound object is output, the components are the column (x)\n"
     "coordinates followed by line (Y) and (for 3D objects), plane\n"
-    "(Z). By default the input object is read from the standard input\n"
-    "and the output is writen to the standard output.\n",
+    "(Z) or radial (r), angle (a), plane (z) for radial. By default\n"
+    "the input object is read from the standard input and the output\n"
+    "is written to the standard output.\n",
     argv[0],
     WlzVersion());
   }
