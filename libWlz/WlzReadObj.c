@@ -2297,6 +2297,15 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
       tVal->tiles.v = NULL;
       errNum = WLZ_ERR_READ_INCOMPLETE;
 #endif /* WLZ_USE_MMAP */
+      if(errNum == WLZ_ERR_NONE)
+      {
+	/* Seek to the end of the object so that multiple objects can be read
+	 * from the same file. */
+        if(fseek(fP, tVal->tileOffset + (gSz * tSz), SEEK_SET) != 0)
+        {
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+      }
     }
   }
 #ifdef WLZ_DEBUG_READOBJ
