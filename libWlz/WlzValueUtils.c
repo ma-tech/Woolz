@@ -582,9 +582,9 @@ void		 WlzValueClampDoubleToFloat(double *vec, size_t count)
     {
       vec[idx] = FLT_MAX;
     }
-    else if(vec[idx] < FLT_MIN)
+    else if(vec[idx] < -(FLT_MAX))
     {
-      vec[idx] = FLT_MIN;
+      vec[idx] = -(FLT_MAX);
     }
   }
 }
@@ -999,9 +999,9 @@ void		WlzValueClampDoubleIntoFloat(float *dst, double *src,
     {
       dst[idx] = FLT_MAX;
     }
-    else if(src[idx] < FLT_MIN)
+    else if(src[idx] < -(FLT_MAX))
     {
-      dst[idx] = FLT_MIN;
+      dst[idx] = -(FLT_MAX);
     }
     else
     {
@@ -3214,10 +3214,11 @@ int             WlzValueDitherI(int p0, int p1, int p2)
 * \param	nIdx			Number of indices into the indexed
 * 					values and the number of weights.
 * \param	idx			Indices into the indexed values.
+* \param	ixi                     Index into the indexed values.
 */
 void 		WlzIndexedValueBufWeight(WlzGreyP gP, int gO,
 				         WlzIndexedValues *ixv, double *wgt,
-					 int nIdx, int *idx)
+					 int nIdx, int *idx, int ixi)
 {
   int		i;
 
@@ -3229,7 +3230,10 @@ void 		WlzIndexedValueBufWeight(WlzGreyP gP, int gO,
 
 	for(i = 0; i < nIdx; ++i)
 	{
-	  x += wgt[i] * *(WlzUByte *)WlzIndexedValueGet(ixv, idx[i]);
+	  WlzUByte *p;
+
+	  p = (WlzUByte *)WlzIndexedValueGet(ixv, idx[i]);
+	  x += wgt[i] * p[ixi];
 	}
 	*(gP.ubp + gO) = WLZ_CLAMP(x, 0, UCHAR_MAX);
       }
@@ -3240,7 +3244,10 @@ void 		WlzIndexedValueBufWeight(WlzGreyP gP, int gO,
 
 	for(i = 0; i < nIdx; ++i)
 	{
-	  x += wgt[i] * *(short *)WlzIndexedValueGet(ixv, idx[i]);
+	  short *p;
+
+	  p = (short *)WlzIndexedValueGet(ixv, idx[i]);
+	  x += wgt[i] * p[ixi];
 	}
 	*(gP.shp + gO) = WLZ_CLAMP(x, SHRT_MIN, SHRT_MAX);
       }
@@ -3251,7 +3258,10 @@ void 		WlzIndexedValueBufWeight(WlzGreyP gP, int gO,
 
 	for(i = 0; i < nIdx; ++i)
 	{
-	  x += wgt[i] * *(int *)WlzIndexedValueGet(ixv, idx[i]);
+	  int	*p;
+
+	  p = (int *)WlzIndexedValueGet(ixv, idx[i]);
+	  x += wgt[i] * p[ixi];
 	}
 	*(gP.inp + gO) = x;
       }
@@ -3262,7 +3272,10 @@ void 		WlzIndexedValueBufWeight(WlzGreyP gP, int gO,
 
 	for(i = 0; i < nIdx; ++i)
 	{
-	  x += wgt[i] * *(float *)WlzIndexedValueGet(ixv, idx[i]);
+	  float *p;
+
+	  p = (float *)WlzIndexedValueGet(ixv, idx[i]);
+	  x += wgt[i] * p[ixi];
 	}
 	*(gP.flp + gO) = x;
       }
@@ -3273,7 +3286,10 @@ void 		WlzIndexedValueBufWeight(WlzGreyP gP, int gO,
 
 	for(i = 0; i < nIdx; ++i)
 	{
-	  x += wgt[i] * *(double *)WlzIndexedValueGet(ixv, idx[i]);
+	  double *p;
+
+	  p = (double *)WlzIndexedValueGet(ixv, idx[i]);
+	  x += wgt[i] * p[ixi];
 	}
 	*(gP.dbp + gO) = x;
       }
@@ -3289,9 +3305,11 @@ void 		WlzIndexedValueBufWeight(WlzGreyP gP, int gO,
 	for(i = 0; i < nIdx; ++i)
 	{
 	  int	w;
+	  WlzUInt *p;
 
+	  p = (WlzUInt *)WlzIndexedValueGet(ixv, idx[i]);
+	  x = p[ixi];
 	  w = wgt[i];
-	  x = *(WlzUInt *)WlzIndexedValueGet(ixv, idx[i]);
 	  r += w * WLZ_RGBA_RED_GET(x);
 	  g += w * WLZ_RGBA_GREEN_GET(x);
 	  b += w * WLZ_RGBA_BLUE_GET(x);
@@ -3316,9 +3334,13 @@ void 		WlzIndexedValueBufWeight(WlzGreyP gP, int gO,
 * \brief	Computes the size of the data at each location of the indxed
 * 		values.
 * \param	ixv			Given indexed values structure.
+* \param	dstNDat			Destination pointer for the number of
+* 					data at each location of the indxed
+* 					values, may be NULL.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-size_t		WlzIndexedValueSize(WlzIndexedValues *ixv, WlzErrorNum *dstErr)
+size_t		WlzIndexedValueSize(WlzIndexedValues *ixv, size_t *dstNDat,
+				    WlzErrorNum *dstErr)
 {
   size_t	vSz = 0,
   		nDat = 0;
@@ -3374,6 +3396,10 @@ size_t		WlzIndexedValueSize(WlzIndexedValues *ixv, WlzErrorNum *dstErr)
     {
       vSz = gSz * nDat;
     }
+  }
+  if((errNum == WLZ_ERR_NONE) && dstNDat)
+  {
+    *dstNDat = nDat;
   }
   if(dstErr)
   {
