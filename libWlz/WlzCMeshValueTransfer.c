@@ -309,7 +309,7 @@ static WlzObject		*WlzCMeshValueTransferD2D(
 	    {
 	      int	i;
 	      double	iBuf[4],
-	      		vBuf[4];
+	      		vBuf[4] = {0};
 
 	      switch(gVWSp->gType)
 	      {
@@ -719,7 +719,7 @@ static WlzObject		*WlzCMeshValueTransferD3D(
 	    {
 	      int	i;
 	      double	iBuf[6],
-	      		vBuf[8];
+	      		vBuf[8] = {0};
 
 	      switch(gVWSp->gType)
 	      {
