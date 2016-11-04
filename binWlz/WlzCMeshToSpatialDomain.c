@@ -52,7 +52,7 @@ WlzCMeshToSpatialDomain - computes a new spatial domain corresponding to the
 			  conforming mesh.
 \par Synopsis
 \verbatim
-WlzCMeshToSpatialDomain [-h] [-i] [-L] [-o<out obj file>] [-s#]
+WlzCMeshToSpatialDomain [-h] [-i] [-N] [-L] [-o<out obj file>] [-s#]
                         [<input mesh file>]
 \endverbatim
 \par Options
@@ -64,6 +64,10 @@ WlzCMeshToSpatialDomain [-h] [-i] [-L] [-o<out obj file>] [-s#]
   <tr> 
     <td><b>-i</b></td>
     <td>Set values using first indexed value.</td>
+  </tr>
+  <tr>
+    <td><b>-N</b></td>
+    <td>Use nearest neighbour interpolation (default)./td>
   </tr>
   <tr>
     <td><b>-L</b></td>
@@ -130,7 +134,7 @@ int		main(int argc, char *argv[])
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
-  static char   optList[] = "hiLo:s:";
+  static char   optList[] = "hiLNo:s:";
   const double	eps = 0.000001;
   const char    inObjFileStrDef[] = "-",
   	        outObjFileStrDef[] = "-";
@@ -144,6 +148,9 @@ int		main(int argc, char *argv[])
     {
       case 'i':
         setVal = 1;
+	break;
+      case 'N':
+        interp = WLZ_INTERPOLATION_NEAREST;
 	break;
       case 'L':
         interp = WLZ_INTERPOLATION_LINEAR;
@@ -245,7 +252,7 @@ int		main(int argc, char *argv[])
     WlzObject *tObj;
 
     tObj = WlzAssignObject(
-           WlzCMeshToDomObjValues(outObj, inObj, interp,
+           WlzCMeshToDomObjValues(outObj, inObj, interp, 0,
 			          &errNum), NULL);
     WlzFreeObj(outObj);
     outObj = tObj;
@@ -272,7 +279,7 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-      "Usage: %s [-h] [-o<out obj file>] [-i] [-s #]\n"
+      "Usage: %s [-h] [-o<out obj file>] [-i] [-N] [-L] [-s #]\n"
       "                               [<input mesh file>]\n"
       "Constructs a 2D or 3D spatial domain object which covers the given\n"
       "conforming mesh.\n"
@@ -281,6 +288,7 @@ int		main(int argc, char *argv[])
       "  -h  Help, prints this usage message.\n"
       "  -o  Output object.\n"
       "  -i  Set values using first indexed element value.\n"
+      "  -N  Use nearest neighbour interpolation (default).\n"
       "  -L  Use barycentric interpolation rather than nearest neighbour\n"
       "      for values.\n"
       "  -s  Additional scale factor from the mesh to the spatial domain\n"
