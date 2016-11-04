@@ -108,6 +108,9 @@ typedef struct _WlzCMeshExpWSp
   				       SVD. */
   AlgMatrix	vMat;		  /*!< Used for computing normal vector using
   				       SVD. */
+  WlzInterpolationType itp;       /*!< Extrapolation (not interpolation) type
+                                       used to allow either nearest neighbour
+				       or linear methods. */
   WlzCMeshExpEnt *head;           /*!< Head of queue of active entities. */
   WlzCMeshExpEnt *tail;           /*!< Tail of queue of active entities. */
   WlzCMeshExpEnt *pool;		  /*!< Entities available for reuse. */
@@ -120,20 +123,24 @@ static WlzCMeshExpWSp		*WlzCMeshExpWSpInit2D(
 				  WlzCMesh2D *mesh,
 				  WlzIndexedValues *ixv,
 				  WlzUByte *unk,
+				  WlzInterpolationType itp,
 				  WlzErrorNum *dstErr);
 static WlzCMeshExpWSp		*WlzCMeshExpWSpInit3D(
 				  WlzCMesh3D *mesh,
 				  WlzIndexedValues *ixv,
 				  WlzUByte *unk,
+				  WlzInterpolationType itp,
 				  WlzErrorNum *dstErr);
 static WlzCMeshExpEnt 		*WlzCMeshExpWSpGetEnt(
 				  WlzCMeshExpWSp *wSp);
 static WlzErrorNum		WlzCMeshExpValues2D(
 				  WlzObject *gObj,
-				  WlzUByte *unk);
+				  WlzUByte *unk,
+				  WlzInterpolationType itp);
 static WlzErrorNum		WlzCMeshExpValues3D(
 				  WlzObject *gObj,
-				  WlzUByte *unk);
+				  WlzUByte *unk,
+				  WlzInterpolationType itp);
 static WlzErrorNum		WlzCMeshExpGntVector2D(
 				  WlzCMeshExpWSp *wSp,
 				  WlzCMeshExpEnt *ent);
@@ -169,8 +176,10 @@ static void			WlzCMeshExpWSpRecycleEnt(
 				  WlzCMeshExpEnt *ent);
 static void			WlzCMeshExpWSpFree(
 				  WlzCMeshExpWSp *wSp);
+#ifdef WLZ_CMESH_EXP_DEBUG 
 static void			WlzCMeshExpDebugPrintQueue(
 				  WlzCMeshExpWSp *wSp);
+#endif /* WLZ_CMESH_EXP_DEBUG */
 
 /*!
 * \return	New Woolz object sharing the domain of the given object
@@ -184,11 +193,15 @@ static void			WlzCMeshExpDebugPrintQueue(
 * 					will be modified and must have space
 * 					for at least the maximum index of the
 * 					conforming mesh.
+* \param        itp                     Method for extrapolation which must
+* 					be either WLZ_INTERPOLATION_NEAREST
+* 					or WLZ_INTERPOLATION_LINEAR.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject			*WlzCMeshExpValues(
 				  WlzObject *gObj,
 				  WlzUByte *unk,
+				  WlzInterpolationType itp,
 				  WlzErrorNum *dstErr)
 {
   WlzObject 	*rObj = NULL;
@@ -236,10 +249,10 @@ WlzObject			*WlzCMeshExpValues(
     switch(gObj->type)
     {
       case WLZ_CMESH_2D:
-	errNum = WlzCMeshExpValues2D(rObj, unk);
+	errNum = WlzCMeshExpValues2D(rObj, unk, itp);
 	break;
       case WLZ_CMESH_3D:
-	errNum = WlzCMeshExpValues3D(rObj, unk);
+	errNum = WlzCMeshExpValues3D(rObj, unk, itp);
 	break;
       default:
 	break;
@@ -264,10 +277,12 @@ WlzObject			*WlzCMeshExpValues(
 * 		place. See WlzCMeshExpValues().
 * \param	gObj			Given 2D conforming mesh object.
 * \param	unk			Array of unknown value flags.
+* \param        itp                     Method for extrapolation.
 */
 static WlzErrorNum		WlzCMeshExpValues2D(
 				  WlzObject *gObj,
-				  WlzUByte *unk)
+				  WlzUByte *unk,
+				  WlzInterpolationType itp)
 {
   WlzCMesh2D	*mesh;
   WlzIndexedValues *ixv;
@@ -284,7 +299,7 @@ static WlzErrorNum		WlzCMeshExpValues2D(
   }
   else
   {
-    wSp = WlzCMeshExpWSpInit2D(mesh, ixv, unk, &errNum);
+    wSp = WlzCMeshExpWSpInit2D(mesh, ixv, unk, itp, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -317,10 +332,12 @@ static WlzErrorNum		WlzCMeshExpValues2D(
 * 		place. See WlzCMeshExpValues().
 * \param	gObj			Given 3D conforming mesh object.
 * \param	unk			Array of unknown value flags.
+* \param        itp                     Method for extrapolation.
 */
 static WlzErrorNum		WlzCMeshExpValues3D(
 				  WlzObject *gObj,
-				  WlzUByte *unk)
+				  WlzUByte *unk,
+				  WlzInterpolationType itp)
 {
   WlzCMesh3D	*mesh;
   WlzIndexedValues *ixv;
@@ -337,7 +354,7 @@ static WlzErrorNum		WlzCMeshExpValues3D(
   }
   else
   {
-    wSp = WlzCMeshExpWSpInit3D(mesh, ixv, unk, &errNum);
+    wSp = WlzCMeshExpWSpInit3D(mesh, ixv, unk, itp, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -370,12 +387,14 @@ static WlzErrorNum		WlzCMeshExpValues3D(
 * \param	mesh			Given 2D conforming mesh.
 * \param	ixv			Values attached to the mesh.
 * \param	unk			Flags for unknowns.
+* \param        itp                     Method for extrapolation.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 static WlzCMeshExpWSp		*WlzCMeshExpWSpInit2D(
 				  WlzCMesh2D *mesh,
 				  WlzIndexedValues *ixv,
 				  WlzUByte *unk,
+				  WlzInterpolationType itp,
 				  WlzErrorNum *dstErr)
 {
   WlzCMeshExpWSp *wSp;
@@ -389,6 +408,7 @@ static WlzCMeshExpWSp		*WlzCMeshExpWSpInit2D(
   }
   else
   {
+    wSp->itp = itp;
     wSp->ixv = ixv;
     wSp->mesh.m2 = mesh;
     switch(ixv->vType)
@@ -506,12 +526,14 @@ static WlzCMeshExpWSp		*WlzCMeshExpWSpInit2D(
 * \param	mesh			Given 3D conforming mesh.
 * \param	ixv			Values attached to the mesh.
 * \param	unk			Flags for unknowns.
+* \param        itp                     Method for extrapolation.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 static WlzCMeshExpWSp		*WlzCMeshExpWSpInit3D(
 				  WlzCMesh3D *mesh,
 				  WlzIndexedValues *ixv,
 				  WlzUByte *unk,
+				  WlzInterpolationType itp,
 				  WlzErrorNum *dstErr)
 {
   WlzCMeshExpWSp *wSp;
@@ -525,6 +547,7 @@ static WlzCMeshExpWSp		*WlzCMeshExpWSpInit3D(
   }
   else
   {
+    wSp->itp = itp;
     wSp->ixv = ixv;
     wSp->mesh.m3 = mesh;
     switch(ixv->vType)
@@ -1127,7 +1150,11 @@ static WlzErrorNum		WlzCMeshExpUpdate2D(
     {
       double v;
 
-      if(wSp->nKNbr == 2)
+      if(wSp->itp == WLZ_INTERPOLATION_NEAREST)
+      {
+        v = gv;
+      }
+      else if(wSp->nKNbr == 2)
       {
 	v = gv + wSp->nVec[2] * ((del.vtX * wSp->nVec[0]) +
 				 (del.vtY * wSp->nVec[1]));
@@ -1144,7 +1171,7 @@ static WlzErrorNum		WlzCMeshExpUpdate2D(
 	uv = v;
 	wSp->pDst[uNod->idx] = pDst;
 	/* Only set the updated flag if the extrapolation is good. */
-	if(wSp->nKNbr >= 3)
+	if((wSp->itp == WLZ_INTERPOLATION_NEAREST) || (wSp->nKNbr >= 3))
 	{
 	  wSp->flags[uNod->idx] |= WLZ_CMESHEXP_FLAG_UPDATED;
 	}
@@ -1256,7 +1283,11 @@ static WlzErrorNum		WlzCMeshExpUpdate3D(
     {
       double v;
 
-      if((wSp->nKNbr == 2) || (wSp->nKNbr == 3))
+      if(wSp->itp == WLZ_INTERPOLATION_NEAREST)
+      {
+        v = gv;
+      }
+      else if((wSp->nKNbr == 2) || (wSp->nKNbr == 3))
       {
 	v = gv + wSp->nVec[2] * ((del.vtX * wSp->nVec[0]) +
 				 (del.vtY * wSp->nVec[1]) +
@@ -1275,7 +1306,7 @@ static WlzErrorNum		WlzCMeshExpUpdate3D(
 	uv = v;
 	wSp->pDst[uNod->idx] = pDst;
 	/* Only set the updated flag if the extrapolation is good. */
-	if(wSp->nKNbr >= 4)
+	if((wSp->itp == WLZ_INTERPOLATION_NEAREST) || (wSp->nKNbr >= 4))
 	{
 	  wSp->flags[uNod->idx] |= WLZ_CMESHEXP_FLAG_UPDATED;
 	}
@@ -1376,7 +1407,7 @@ static WlzErrorNum		WlzCMeshExpWSpAddNod(
 				  WlzCMeshExpWSp *wSp,
 				  WlzCMeshNodP nod)
 {
-  WlzCMeshExpEnt *nEnt;
+  WlzCMeshExpEnt *nEnt = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(wSp->pool == NULL)
@@ -1632,6 +1663,13 @@ static void 			WlzCMeshExpRmDuplicates(
   *nAry = m;
 }
 
+#ifdef WLZ_CMESH_EXP_DEBUG 
+/*!
+* \ingroup	WlzMesh
+* \brief	Prints out the mesh extrapolation queue. Only useful for
+* 		debuging.
+* \param	wSp			The mesh extrapolation workspace.
+*/
 static void			WlzCMeshExpDebugPrintQueue(
 				  WlzCMeshExpWSp *wSp)
 {
@@ -1675,3 +1713,4 @@ static void			WlzCMeshExpDebugPrintQueue(
     }
   }
 }
+#endif /* WLZ_CMESH_EXP_DEBUG */
