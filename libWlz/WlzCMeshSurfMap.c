@@ -119,7 +119,7 @@ WlzObject			*WlzCMeshCompSurfMapToDomain(
   WlzPolygonDomain *ply = NULL;
   WlzObject	*prmObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;      
-  WlzCMesh2D5	*mesh;
+  WlzCMesh2D5	*mesh = NULL;
 
   /* Check object. */
   if((mshObj == NULL) || (domObj == NULL))
