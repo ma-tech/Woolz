@@ -234,6 +234,24 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    /* Make sure that the grey type is one that's handled here. This
+     * simplifies/removes testing latter. */
+    switch(gType)
+    {
+      case WLZ_GREY_INT:    /* FALLTHROUGH */
+      case WLZ_GREY_SHORT:  /* FALLTHROUGH */
+      case WLZ_GREY_UBYTE:  /* FALLTHROUGH */
+      case WLZ_GREY_FLOAT:  /* FALLTHROUGH */
+      case WLZ_GREY_DOUBLE: /* FALLTHROUGH */
+      case WLZ_GREY_RGBA:
+	break;
+      default:
+	errNum = WLZ_ERR_GREY_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     if((dstVal.v = WlzNewValueTb(dstObj,
                                  WlzGreyTableType(WLZ_GREY_TAB_RECT,
 				                  gType, NULL),
@@ -298,6 +316,7 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
 	  lnGP.rgbp = dstGP.rgbp + (width * lnRel);
 	  break;
 	default:
+	  lnGP.v = NULL; 		    /* Just to keep compilers happy. */
 	  break;
       }
       y = ln - WLZ_NINT(view->minvals.vtY);
