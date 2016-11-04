@@ -261,7 +261,8 @@ int		WlzGeomTriangleCircumcentre(WlzDVertex2 *ccVx,
 *		\f$p\f$ is outside the triangle at one or more of 
 *		\f$\lambda_0\f$, \f$\lambda_1\f$ and \f$\lambda_2\f$ is -ve.
 *		It is inside if all are +ve and on an edge of the
-*		triangle if any are close to zero (ie < ALG_DBL_TOLLERANCE).
+*		triangle if any are close to zero
+*		(ie < 10 * ALG_DBL_TOLLERANCE).
 * \param	p0			First vertex of triangle.
 * \param	p1			Second vertex of triangle.
 * \param	p2			Third vertex of triangle.
@@ -278,7 +279,7 @@ int		 WlzGeomVxInTriangle2D(WlzDVertex2 p0, WlzDVertex2 p1,
   WlzDVertex2	q0,
   		q1,
 		qP;
-  const double	eps = ALG_DBL_TOLLERANCE;
+  const double	eps = 10.0 * ALG_DBL_TOLLERANCE;
 
   WLZ_VTX_2_SUB(q0, p0, p2);
   WLZ_VTX_2_SUB(q1, p1, p2);
@@ -331,7 +332,7 @@ int		 WlzGeomVxInTriangle3D(WlzDVertex3 v0, WlzDVertex3 v1,
   		u0,
   		u1,
 		uQ;
-  const double	eps = ALG_DBL_TOLLERANCE;
+  const double	eps = 10.0 * ALG_DBL_TOLLERANCE;
 
   WLZ_VTX_3_SUB(u0, v0, v2);
   WLZ_VTX_3_SUB(u1, v1, v2);
@@ -406,7 +407,7 @@ int		 WlzGeomVxInTriangle3D(WlzDVertex3 v0, WlzDVertex3 v1,
 *		\f$\lambda_0\f$, \f$\lambda_1\f$, \f$\lambda_2\f$ and
 *		\f$\lambda_3\f$ is -ve. It is inside if all are +ve and
 *		on an edge of the tetrahedron if any are close to
-*		zero (ie fabs(x) < ALG_DBL_TOLLERANCE).
+*		zero (ie fabs(x) < 10 * ALG_DBL_TOLLERANCE).
 *
 * 		The barycentric coordinates are computed by inverting the
 *		The tetrahedron vertices
@@ -482,7 +483,7 @@ int		 WlzGeomVxInTetrahedron(WlzDVertex3 v0, WlzDVertex3 v1,
 		vz12,
 		vz13,
 		vz23;
-  const double	eps = ALG_DBL_TOLLERANCE;
+  const double	eps = 10.0 * ALG_DBL_TOLLERANCE;
 
   vz01 =  v0.vtZ - v1.vtZ;
   vz02 =  v0.vtZ - v2.vtZ;
@@ -5358,10 +5359,10 @@ static int	WlzGeomTriangleTriangleIntersect3DA(WlzDVertex3 s[],
   		ds[3],
 		dt[3],
 		is[2],
-		it[2],
 		ps[3],
 		pt[3];
   WlzDVertex3	n[2];
+  double	it[2] = {0};
 
   isn = WlzGeomTriTriPlaneTest(dt, n + 0, d + 0, &dt0dt1, &dt0dt2, t, s);
   if(isn != 0)
