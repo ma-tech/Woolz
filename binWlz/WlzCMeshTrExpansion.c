@@ -268,7 +268,7 @@ int		main(int argc, char *argv[])
       	         WlzCMeshToDomObjValues(objD, meshExpObj,
 					(interp)? WLZ_INTERPOLATION_LINEAR:
 					          WLZ_INTERPOLATION_NEAREST,
-					&errNum), NULL);
+					0, &errNum), NULL);
 	         
       }
       if(errNum != WLZ_ERR_NONE)
