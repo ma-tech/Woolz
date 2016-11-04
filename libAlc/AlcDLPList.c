@@ -263,8 +263,8 @@ AlcErrno	AlcDLPListEntryAppend(AlcDLPList *list, AlcDLPItem *appAfter,
 
 /*!
 * \return	Next list item after the item removed, NULL on error or
-* \ingroup	AlcDLPList
 *		if last item removed.
+* \ingroup	AlcDLPList
 * \brief	Removes the item from the list, but does not free the
 *		item unless the freeItem flag is set.
 * \param	list 			The list data structure.
