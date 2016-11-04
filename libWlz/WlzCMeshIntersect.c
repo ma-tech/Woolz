@@ -1154,6 +1154,10 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 	  WLZ_VTX_3_SUB(dLim[0], dLim[0], dNrm);
 	  WLZ_VTX_3_ADD(dLim[1], dLim[1], dNrm);
 	}
+	else
+	{
+	  WLZ_VTX_3_ZERO(nrm);
+	}
 	/* If the element does not intersect the bounding box of the
 	 * spatial domain (expanded by the normal's projection scaled by
 	 * delta) then there can be no intersection. */
@@ -1167,7 +1171,7 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 	  WlzDVertex2 	p2[4], /* Positions of the 2D vertices, sorted by
 				  line then column, first is absolute,
 				  rest are relative to the first. */
-			  pos2[3]; /* Positions of the 2D vertices. */
+			pos2[3]; /* Positions of the 2D vertices. */
 	  WlzDVertex3	p3[3];
 
 	  /* Compute the coordinates of the element's nodes in the plane. */
@@ -1205,7 +1209,7 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 #endif
 	  if(fabs(d) < eps)
 	  {
-	    WlzDVertex3	q3;
+	    WlzDVertex3	q3 = {0};
 
 	    if((fabs(p2[1].vtX - p2[2].vtX) < eps) &&
 	       (fabs(p2[1].vtY - p2[2].vtY) < eps))
@@ -1268,9 +1272,9 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 		  q3.vtY = p3[0].vtY + b * (p3[2].vtY - p3[0].vtY);
 		  q3.vtZ = p3[0].vtZ + b * (p3[2].vtZ - p3[0].vtZ);
 #ifdef WLZ_CMESHINTERSECT_DEBUG
-                (void )fprintf(stderr,
-		               "WlzCMeshIntersectDom2D5 2 %g %g %g %g %g\n",
-		               p2[0].vtX, p2[0].vtY, q3.vtX, q3.vtY, q3.vtZ);
+		  (void )fprintf(stderr,
+		                 "WlzCMeshIntersectDom2D5 2 %g %g %g %g %g\n",
+		                 p2[0].vtX, p2[0].vtY, q3.vtX, q3.vtY, q3.vtZ);
 #endif
 		}  
                 if(WlzCMeshIntersectDomIsInside3D(sObj, q3, nrm, delta))
@@ -1319,17 +1323,20 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
 		WlzDVertex2	q2;
 		WlzDVertex3	q3;
 
-		/* Map position q2 in the 2D trinagle to position q3 in the 3D
-		 * triangle using linear interpolation based on barycentric
-		 * coordinates. */
+		/* Map position q2 in the 2D trinagle to position q3 in
+		 * the 3D triangle using linear interpolation based on
+		 * barycentric coordinates. */
 		q2.vtX = x2; 
 		q2.vtY = y2;
 		l[1] = d * ((p2[2].vtY * q2.vtX) - (p2[2].vtX * q2.vtY));
 		l[2] = d * ((q2.vtY * p2[1].vtX) - (q2.vtX * p2[1].vtY));
 		l[0] = 1.0 - (l[1] + l[2]);
-		q3.vtX = l[0] * p3[0].vtX + l[1] * p3[1].vtX + l[2] * p3[2].vtX;
-		q3.vtY = l[0] * p3[0].vtY + l[1] * p3[1].vtY + l[2] * p3[2].vtY;
-		q3.vtZ = l[0] * p3[0].vtZ + l[1] * p3[1].vtZ + l[2] * p3[2].vtZ;
+		q3.vtX = l[0] * p3[0].vtX + l[1] * p3[1].vtX +
+		         l[2] * p3[2].vtX;
+		q3.vtY = l[0] * p3[0].vtY + l[1] * p3[1].vtY +
+		         l[2] * p3[2].vtY;
+		q3.vtZ = l[0] * p3[0].vtZ + l[1] * p3[1].vtZ +
+		         l[2] * p3[2].vtZ;
 #ifdef WLZ_CMESHINTERSECT_DEBUG
                 (void )fprintf(stderr,
 		               "WlzCMeshIntersectDom2D5 3 %g %g %g %g %g\n",
