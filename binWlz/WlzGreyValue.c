@@ -63,6 +63,10 @@ WlzGreyValue [-b] [-v#] [-x#] [-y#] [-z#] [-h] [<in object>]
         written, default false.</td>
   </tr>
   <tr> 
+    <td><b>-c</b></td>
+    <td>If getting values get and print connected values.</td>
+  </tr>
+  <tr> 
     <td><b>-v</b></td>
     <td>Grey value to be set, default false.</td>
   </tr>
@@ -119,12 +123,14 @@ int             main(int argc, char **argv)
 {
   int		option,
 		bgdFlag = 0,
+		conFlag = 0,
 		setVal = 0,
   		ok = 1,
 		usage = 0;
   WlzDVertex3	pos;
   WlzPixelV	pix0,
   		pix1;
+  WlzGreyV  	val[8];
   WlzGreyValueWSpace *gVWSp = NULL;
   char		*outFileStr,
   		*inObjFileStr;
@@ -132,7 +138,7 @@ int             main(int argc, char **argv)
   FILE		*fP = NULL;
   WlzObject	*inObj = NULL;
   const char	*errMsg;
-  static char	optList[] = "bo:v:x:y:z:h",
+  static char	optList[] = "bco:v:x:y:z:h",
 		outFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -151,6 +157,9 @@ int             main(int argc, char **argv)
     {
       case 'b':
         bgdFlag = 1;
+	break;
+      case 'c':
+        conFlag = 1;
 	break;
       case 'o':
         outFileStr = optarg;
@@ -243,7 +252,14 @@ int             main(int argc, char **argv)
   }
   if(ok)
   {
-    WlzGreyValueGet(gVWSp, pos.vtZ, pos.vtY, pos.vtX);
+    if(setVal || (conFlag == 0))
+    {
+      WlzGreyValueGet(gVWSp, pos.vtZ, pos.vtY, pos.vtX);
+    }
+    else
+    {
+      WlzGreyValueGetCon(gVWSp, pos.vtZ, pos.vtY, pos.vtX);
+    }
     if(setVal)
     {
       errNum = WlzValueConvertPixel(&pix1, pix0, gVWSp->gType);
@@ -280,9 +296,26 @@ int             main(int argc, char **argv)
     }
     else
     {
+      val[0] = gVWSp->gVal[0];
       pix1.type = gVWSp->gType;
       pix1.v = gVWSp->gVal[0];
       errNum = WlzValueConvertPixel(&pix0, pix1, WLZ_GREY_DOUBLE);
+      if(conFlag)
+      {
+	int	idx;
+
+	for(idx = 1; idx < 4; ++idx)
+	{
+          val[idx] = gVWSp->gVal[idx];
+	}
+	if(gVWSp->objType == WLZ_3D_DOMAINOBJ)
+	{
+	  for(idx = 4; idx < 8; ++idx)
+	  {
+	    val[idx] = gVWSp->gVal[idx];
+	  }
+	}
+      }
     }
   }
   if(ok)
@@ -293,62 +326,71 @@ int             main(int argc, char **argv)
       if((fP = (strcmp(outFileStr, "-")? fopen(outFileStr, "w"):
 		                         stdout)) != NULL)
       {
+	int 	   idx,
+		   nval = 1;
 	const char *borf;
 
+	if(conFlag)
+	{
+	  nval = (gVWSp->objType == WLZ_3D_DOMAINOBJ)? 8: 4;
+	}
 	borf = (bgdFlag)? (((gVWSp->bkdFlag & 1) != 0)? " b": " f"): "";
 	errNum = WLZ_ERR_NONE;
-        switch(pix1.type)
+	for(idx = 0; (errNum == WLZ_ERR_NONE) && (idx < nval); ++idx)
 	{
-	  case WLZ_GREY_LONG:
-	    if(fprintf(fP, "%lld%s\n", pix1.v.lnv, borf) < 2)
-	    {
-	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	    }
-	    break;
-	  case WLZ_GREY_INT:
-	    if(fprintf(fP, "%d%s\n", pix1.v.inv, borf) < 2)
-	    {
-	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	    }
-	    break;
-	  case WLZ_GREY_SHORT:
-	    if(fprintf(fP, "%d%s\n", pix1.v.shv, borf) < 2)
-	    {
-	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	    }
-	    break;
-	  case WLZ_GREY_UBYTE:
-	    if(fprintf(fP, "%d%s\n", pix1.v.ubv, borf) < 2)
-	    {
-	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	    }
-	    break;
-	  case WLZ_GREY_FLOAT:
-	    if(fprintf(fP, "%g%s\n", pix1.v.flv, borf) < 2)
-	    {
-	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	    }
-	    break;
-	  case WLZ_GREY_DOUBLE:
-	    if(fprintf(fP, "%lg%s\n", pix1.v.dbv, borf) < 2)
-	    {
-	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	    }
-	    break;
-	  case WLZ_GREY_RGBA:
-	    if(fprintf(fP, "%d,%d,%d,%d%s\n",
-	               WLZ_RGBA_RED_GET(pix1.v.rgbv),
-	               WLZ_RGBA_GREEN_GET(pix1.v.rgbv),
-	               WLZ_RGBA_BLUE_GET(pix1.v.rgbv),
-	               WLZ_RGBA_ALPHA_GET(pix1.v.rgbv),
-		       borf) < 2)
-	    {
-	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
-	    }
-	    break;
-	  default:
-	    errNum = WLZ_ERR_GREY_TYPE;
-	    break;
+	  switch(pix1.type)
+	  {
+	    case WLZ_GREY_LONG:
+	      if(fprintf(fP, "%lld%s\n", val[idx].lnv, borf) < 2)
+	      {
+		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	      }
+	      break;
+	    case WLZ_GREY_INT:
+	      if(fprintf(fP, "%d%s\n", val[idx].inv, borf) < 2)
+	      {
+		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	      }
+	      break;
+	    case WLZ_GREY_SHORT:
+	      if(fprintf(fP, "%d%s\n", val[idx].shv, borf) < 2)
+	      {
+		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	      }
+	      break;
+	    case WLZ_GREY_UBYTE:
+	      if(fprintf(fP, "%d%s\n", val[idx].ubv, borf) < 2)
+	      {
+		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	      }
+	      break;
+	    case WLZ_GREY_FLOAT:
+	      if(fprintf(fP, "%g%s\n", val[idx].flv, borf) < 2)
+	      {
+		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	      }
+	      break;
+	    case WLZ_GREY_DOUBLE:
+	      if(fprintf(fP, "%lg%s\n", val[idx].dbv, borf) < 2)
+	      {
+		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	      }
+	      break;
+	    case WLZ_GREY_RGBA:
+	      if(fprintf(fP, "%d,%d,%d,%d%s\n",
+			 WLZ_RGBA_RED_GET(val[idx].rgbv),
+			 WLZ_RGBA_GREEN_GET(val[idx].rgbv),
+			 WLZ_RGBA_BLUE_GET(val[idx].rgbv),
+			 WLZ_RGBA_ALPHA_GET(val[idx].rgbv),
+			 borf) < 2)
+	      {
+		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	      }
+	      break;
+	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
+	      break;
+	  }
 	}
       }
       if(errNum != WLZ_ERR_NONE)
@@ -401,6 +443,7 @@ int             main(int argc, char **argv)
     "Options:\n"
     "  -b    Indicate background or foreground with b or f following value\n"
     "        written (set to %s).\n"
+    "  -c    If getting values get and print connected values.\n"
     "  -v#   Grey value to be set (set to %g).\n"
     "  -x#   Column position (set to %g).\n"
     "  -y#   Line position (set to %g).\n"
