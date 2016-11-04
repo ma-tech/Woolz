@@ -301,7 +301,7 @@ WlzObject	*WlzCMeshDistance2D(WlzObject *objG,
       objT = WlzCMeshToDomObj(objM, 0, 1.0, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-	objR = WlzCMeshToDomObjValues(objT, objM, interp, &errNum);
+	objR = WlzCMeshToDomObjValues(objT, objM, interp, 0, &errNum);
       }
       (void )WlzFreeObj(objT);
       (void )WlzFreeObj(objM);
@@ -430,7 +430,7 @@ WlzObject	*WlzCMeshDistance3D(WlzObject *objG,
       objT = WlzCMeshToDomObj(objM, 0, 1.0, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-	objR = WlzCMeshToDomObjValues(objT, objM, interp, &errNum);
+	objR = WlzCMeshToDomObjValues(objT, objM, interp, 0, &errNum);
       }
       (void )WlzFreeObj(objT);
       (void )WlzFreeObj(objM);
@@ -2033,8 +2033,9 @@ static WlzErrorNum WlzCMeshFMarAddSeed3D(AlcHeap  *sElmQ,
 
   /* Find any element which encloses the seed (there may be more than one
    * if the seed is on an element's edge or at a node. */
+  idN = -1;
   idM = WlzCMeshElmEnclosingPos3D(mesh, -1, seed.vtX, seed.vtY, seed.vtZ,
-  			          0, NULL);
+  			          0, &idN);
   if(idM < 0)
   {
     errNum = WLZ_ERR_DOMAIN_DATA;
