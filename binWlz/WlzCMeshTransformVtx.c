@@ -246,7 +246,8 @@ int		main(int argc, char *argv[])
 	        fopen(txFileStr, "r"): stdin)) == NULL) ||
        ((trObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL))
     {
-      if(errNum != WLZ_ERR_NONE)
+      /* If we failed to open the file then errNum won't be set, set it here.*/
+      if(errNum == WLZ_ERR_NONE)
       {
         errNum = WLZ_ERR_READ_INCOMPLETE;
       }
