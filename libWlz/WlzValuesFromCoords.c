@@ -47,9 +47,13 @@ static char _WlzValuesFromCoords_c[] = "University of Edinburgh $Id$";
 
 static WlzCompoundArray		*WlzValuesFromCoords2D(
 				  WlzObject *gObj,
+				  int radial,
+				  WlzGreyType gType,
 				  WlzErrorNum *dstErr);
 static WlzCompoundArray		*WlzValuesFromCoords3D(
 				  WlzObject *gObj,
+				  int radial,
+				  WlzGreyType gType,
 				  WlzErrorNum *dstErr);
 
 /*!
@@ -63,12 +67,20 @@ static WlzCompoundArray		*WlzValuesFromCoords3D(
 * 		component objects are those of the given object and
 * 		the values are set to the coordinate values within
 * 		the object domains. Components are ordered by column,
-* 		line, plane.
+* 		line, plane or radial distance, angle (in radians), plane.
 * \param	gObj			Given spatial domain object.
+* \param	radial			Use cylindrical coordinates if
+* 					non-zero.
+* \param	gType			Required grey type; valid types
+* 					are restricted to WLZ_GREY_INT
+* 					and WLZ_GREY_DOUBLE any other
+* 					grey type is an error.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject			*WlzValuesFromCoords(
 				  WlzObject *gObj,
+				  int radial,
+				  WlzGreyType gType,
 				  WlzErrorNum *dstErr)
 {
   WlzObject	*rObj = NULL;
@@ -83,15 +95,19 @@ WlzObject			*WlzValuesFromCoords(
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
+  else if((gType != WLZ_GREY_INT) && (gType != WLZ_GREY_DOUBLE))
+  {
+    errNum = WLZ_GREY_ERROR;
+  }
   else
   {
     switch(gObj->type)
     {
       case WLZ_2D_DOMAINOBJ:
-	cObj = WlzValuesFromCoords2D(gObj, &errNum);
+	cObj = WlzValuesFromCoords2D(gObj, radial, gType, &errNum);
         break;
       case WLZ_3D_DOMAINOBJ:
-	cObj = WlzValuesFromCoords3D(gObj, &errNum);
+	cObj = WlzValuesFromCoords3D(gObj, radial, gType, &errNum);
         break;
       default:
        break;
@@ -117,10 +133,15 @@ WlzObject			*WlzValuesFromCoords(
 * 		the object domains those of the given object and the
 * 		object values the coordinate values.
 * \param	gObj			Given spatial domain object.
+* \param	radial			Use cylindrical coordinates if
+* 					non-zero.
+* \param	gType			Required grey type.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 static WlzCompoundArray		*WlzValuesFromCoords2D(
 				  WlzObject *gObj,
+				  int radial,
+				  WlzGreyType gType,
 				  WlzErrorNum *dstErr)
 {
   int		idx;
@@ -129,9 +150,18 @@ static WlzCompoundArray		*WlzValuesFromCoords2D(
   WlzCompoundArray	*cpd;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
-  bgdV.v.inv = 0;
-  bgdV.type = WLZ_GREY_INT;
-  tt = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_INT, NULL);
+  if(gType == WLZ_GREY_INT)
+  {
+    bgdV.v.inv = 0;
+    bgdV.type = WLZ_GREY_INT;
+    tt = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_INT, NULL);
+  }
+  else /* gType == WLZ_GREY_DOUBLE */
+  {
+    bgdV.v.dbv = 0.0;
+    bgdV.type = WLZ_GREY_DOUBLE;
+    tt = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_DOUBLE, NULL);
+  }
   cpd = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 1, 2, NULL, gObj->type,
                              &errNum);
   for(idx = 0; (errNum == WLZ_ERR_NONE) && (idx < 2); ++idx)
@@ -161,16 +191,55 @@ static WlzCompoundArray		*WlzValuesFromCoords2D(
       {
 	int	kl,
 		ln;
-	int	*pX,
-		*pY;
+	WlzGreyP pX,
+		 pY;
         
 	ln = iWSp[0].linpos;
-	pX = gWSp[0].u_grintptr.inp;
-	pY = gWSp[1].u_grintptr.inp;
-	for(kl = iWSp[0].lftpos; kl <= iWSp[0].rgtpos; ++kl)
+	pX = gWSp[0].u_grintptr;
+	pY = gWSp[1].u_grintptr;
+	if(radial)
 	{
-	  *pX++ = kl;
-	  *pY++ = ln;
+	  double y,
+		 ysq;
+
+	  y = ln;
+	  ysq = y * y;
+	  for(kl = iWSp[0].lftpos; kl <= iWSp[0].rgtpos; ++kl)
+	  {
+	    double	a,
+	    		r,
+			x;
+
+	    x = kl;
+	    r = sqrt((x * x) + ysq);
+	    a = atan2(y, x);
+	    if(gType == WLZ_GREY_INT)
+	    {
+	      *(pX.inp)++ = WLZ_NINT(r);
+	      *(pY.inp)++ = WLZ_NINT(a);
+	    }
+	    else /* WLZ_GREY_DOUBLE */
+	    {
+	      *(pX.dbp)++ = r;
+	      *(pY.dbp)++ = a;
+	    }
+	  }
+	}
+	else
+	{
+	  if(gType == WLZ_GREY_INT)
+	  {
+	    for(kl = iWSp[0].lftpos; kl <= iWSp[0].rgtpos; ++kl)
+	    {
+	      *(pX.inp)++ = kl;
+	      *(pY.inp)++ = ln;
+	    }
+	  }
+	  else /* WLZ_GREY_DOUBLE */
+	  {
+	    *(pX.dbp)++ = kl;
+	    *(pY.dbp)++ = ln;
+	  }
 	}
       }
       if(errNum == WLZ_ERR_EOO)
@@ -200,10 +269,15 @@ static WlzCompoundArray		*WlzValuesFromCoords2D(
 * 		the object domains those of the given object and the
 * 		object values the coordinate values.
 * \param	gObj			Given spatial domain object.
+* \param	radial			Use cylindrical coordinates if
+* 					non-zero.
+* \param	gType			Required grey type.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 static WlzCompoundArray		*WlzValuesFromCoords3D(
 				  WlzObject *gObj,
+				  int radial,
+				  WlzGreyType gType,
 				  WlzErrorNum *dstErr)
 {
   WlzDomain 	dom;
@@ -212,8 +286,16 @@ static WlzCompoundArray		*WlzValuesFromCoords3D(
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 
   dom = gObj->domain;
-  bgdV.v.inv = 0;
-  bgdV.type = WLZ_GREY_INT;
+  if(gType == WLZ_GREY_INT)
+  {
+    bgdV.v.inv = 0;
+    bgdV.type = WLZ_GREY_INT;
+  }
+  else /* gType == WLZ_GREY_DOUBLE */
+  {
+    bgdV.v.dbv = 0;
+    bgdV.type = WLZ_GREY_DOUBLE;
+  }
   cpd = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1,
                              1, 3, NULL, gObj->type, &errNum);
   if(errNum == WLZ_ERR_NONE)
@@ -239,52 +321,79 @@ static WlzCompoundArray		*WlzValuesFromCoords3D(
   {
     int		pln;
 
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for(pln = dom.p->plane1; pln <= dom.p->lastpl; ++pln)
     {
       int	idx;
-      WlzValues val;
-      WlzObject	*obj2;
-      WlzCompoundArray *cpd2 = NULL;
 
-      val.core = NULL;
-      idx = pln - dom.p->plane1;
-      obj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-			 gObj->domain.p->domains[idx], val,
-			 NULL, NULL, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
-        cpd2 = WlzValuesFromCoords2D(obj2, &errNum);
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	cpd->o[0]->values.vox->values[idx] = WlzAssignValues(
-				  cpd2->o[0]->values, NULL);
-	cpd->o[1]->values.vox->values[idx] = WlzAssignValues(
-				  cpd2->o[1]->values, NULL);
-      }
-      (void )WlzFreeObj((WlzObject *)cpd2);
-      if(errNum == WLZ_ERR_NONE)
-      {
-	WlzObjectType tt;
+	WlzValues val;
+	WlzObject *obj2;
+	WlzCompoundArray *cpd2 = NULL;
+        WlzErrorNum errNum2 = WLZ_ERR_NONE;
 
-	tt = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_INT, NULL);
-	val.v = WlzNewValueTb(obj2, tt, bgdV, &errNum);
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	WlzPixelV plnV;
+	val.core = NULL;
+	idx = pln - dom.p->plane1;
+	obj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+			   gObj->domain.p->domains[idx], val,
+			   NULL, NULL, &errNum2);
+	if(errNum2 == WLZ_ERR_NONE)
+	{
+	  cpd2 = WlzValuesFromCoords2D(obj2, radial, gType, &errNum2);
+	}
+	if(errNum2 == WLZ_ERR_NONE)
+	{
+	  cpd->o[0]->values.vox->values[idx] = WlzAssignValues(
+				    cpd2->o[0]->values, NULL);
+	  cpd->o[1]->values.vox->values[idx] = WlzAssignValues(
+				    cpd2->o[1]->values, NULL);
+	}
+	(void )WlzFreeObj((WlzObject *)cpd2);
+	if(errNum2 == WLZ_ERR_NONE)
+	{
+	  WlzObjectType tt;
 
-	plnV.type = WLZ_GREY_INT;
-	plnV.v.inv = pln;
-        obj2->values = WlzAssignValues(val, NULL);
-        errNum = WlzGreySetValue(obj2, plnV);
+	  tt = WlzGreyTableType(WLZ_GREY_TAB_RECT, gType, NULL);
+	  val.v = WlzNewValueTb(obj2, tt, bgdV, &errNum2);
+	}
+	if(errNum2 == WLZ_ERR_NONE)
+	{
+	  WlzPixelV plnV;
+
+	  if(gType == WLZ_GREY_INT)
+	  {
+	    plnV.type = WLZ_GREY_INT;
+	    plnV.v.inv = pln;
+	  }
+	  else
+	  {
+	    plnV.type = WLZ_GREY_DOUBLE;
+	    plnV.v.dbv = pln;
+	  }
+	  obj2->values = WlzAssignValues(val, NULL);
+	  errNum2 = WlzGreySetValue(obj2, plnV);
+	}
+	if(errNum2 == WLZ_ERR_NONE)
+	{
+	  cpd->o[2]->values.vox->values[idx] = WlzAssignValues(
+				  obj2->values, NULL);
+	}
+	(void )WlzFreeObj(obj2);
+#ifdef _OPENMP
+#pragma omp critical
+	{
+#endif
+	  if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
+	  {
+	    errNum = errNum2;
+	  }
+#ifdef _OPENMP
+	}
+#endif
       }
-      if(errNum == WLZ_ERR_NONE)
-      {
-        cpd->o[2]->values.vox->values[idx] = WlzAssignValues(
-				obj2->values, NULL);
-      }
-      (void )WlzFreeObj(obj2);
     }
   }
   if(errNum != WLZ_ERR_NONE)
