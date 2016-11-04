@@ -55,13 +55,18 @@ static char _WlzCMeshExtrapolate_c[] = "University of Edinburgh $Id$";
 WlzCMeshExtrapolate - Extrapolates values within a conforming mesh.
 \par Synopsis
 \verbatim
-WlzCMeshExtrapolate [-h] [-o<output object>] [-u<low>,<high>] [<input object>]
+WlzCMeshExtrapolate [-h] [-N] [-o<output object>] [-u<low>,<high>]
+                    [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr> 
+    <td><b>-N</b></td>
+    <td>Use nearest neighbour rather than linear extrapolation.</td>
   </tr>
   <tr> 
     <td><b>-o</b></td>
@@ -101,6 +106,7 @@ int		main(int argc, char *argv[])
   		ok = 1,
   		usage = 0;
   double	uvRange[2] = {NAN};
+  WlzInterpolationType interp = WLZ_INTERPOLATION_LINEAR;
   FILE		*fP = NULL;
   char		*inObjStr,
   		*outObjStr;
@@ -109,7 +115,7 @@ int		main(int argc, char *argv[])
   WlzUByte	*unk = NULL;
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
-  static char   optList[] = "ho:u:";
+  static char   optList[] = "hNo:u:";
   const char    inObjStrDef[] = "-",
   	        outObjStrDef[] = "-";
 
@@ -120,6 +126,9 @@ int		main(int argc, char *argv[])
   {
     switch(option)
     {
+      case 'N':
+        interp = WLZ_INTERPOLATION_NEAREST;
+	break;
       case 'o':
         outObjStr = optarg;
 	break;
@@ -185,7 +194,7 @@ int		main(int argc, char *argv[])
     				          1, &errNum);
     if(errNum == WLZ_ERR_NONE)
     {
-      outObj = WlzCMeshExpValues(inObj, unk, &errNum);
+      outObj = WlzCMeshExpValues(inObj, unk, interp, &errNum);
     }
     if(errNum != WLZ_ERR_NONE)
     {
@@ -228,7 +237,7 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     fprintf(stderr,
-            "Usage: %s [-h] [-o<output object>] [-u<low>,<high>]\n"
+            "Usage: %s [-h] [-N] [-o<output object>] [-u<low>,<high>]\n"
 	    "\t\t[<input object>]\n"
             "Creates a new conforming mesh object that has all values known\n"
 	    "using the given mesh and it's values to extrapolate unknown\n"
@@ -236,6 +245,7 @@ int		main(int argc, char *argv[])
 	    "Version: %s\n"
 	    "Options:\n"
 	    "  -h  Help, prints this usage message.\n"
+            "  -N  Use nearest neighbour rather than linear extrapolation.\n"
 	    "  -o  Output file.\n"
 	    "  -u  Unknown value range (default is NaN).\n",
 	    argv[0],
