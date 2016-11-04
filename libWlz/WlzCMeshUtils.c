@@ -3082,6 +3082,92 @@ WlzDBox3	WlzCMeshElmBBox3D(WlzCMeshElm3D *elm)
 }
 
 /*!
+* \return	Number of elements in array.
+* \ingroup	WlzMesh
+* \brief	Finds the elements which use the given node and returns
+* 		their indices in an array. The indices are unique and in
+* 		acending order. The array will be resized as needed.
+* \param	gNod			Given node.
+* \param	gMaxElm			Maximum space currently allocated
+* 					in the array.
+* \param	gElmIdxAry		Pointer to array of ints, which may
+* 					be NULL or a valid array for maxElm
+* 					ints which can be reallocated as
+* 					needed by AlcRealloc().
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int				WlzCMeshElmUseNod3D(
+				  WlzCMeshNod3D *gNod,
+				  int *gMaxElm,
+				  int **gElmIdxAry,
+				  WlzErrorNum *dstErr)
+{
+  int		nEdu = 0,
+  		mElm = 0,
+  		nElm = 0;
+  int		*elmIdxAry = NULL;
+  WlzCMeshEdgU3D *edu0,
+                 *edu1;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const int	alcStep = 256;
+
+  if(gMaxElm && *gMaxElm && *gElmIdxAry)
+  {
+    mElm = *gMaxElm;
+    elmIdxAry = *gElmIdxAry;
+  }
+  /* Collect element indices. */
+  edu0 = edu1 = gNod->edu;
+  do
+  {
+    if(nEdu >= mElm)
+    {
+      mElm += alcStep;
+      if((elmIdxAry = (int *)
+                      AlcRealloc(elmIdxAry, mElm * sizeof(int))) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+	break;
+      }
+    }
+    elmIdxAry[nEdu++] = edu1->face->elm->idx;
+    edu1 = edu1->nnxt;
+  } while(edu0 != edu1);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idN;
+
+    /* Sort element indices. */
+    (void )AlgHeapSort(elmIdxAry, nEdu, sizeof(int), AlgHeapSortCmpIFn);
+    /* Squeeze out duplicates. */
+    for(idN = 1; idN < nEdu; ++idN)
+    {
+      if(elmIdxAry[idN] != elmIdxAry[nElm])
+      {
+        elmIdxAry[++nElm] = elmIdxAry[idN];
+      }
+    }
+    if(gMaxElm)
+    {
+      *gMaxElm = mElm;
+    }
+    *gElmIdxAry = elmIdxAry;
+  }
+  else
+  {
+    (void )AlcFree(elmIdxAry);
+    *gElmIdxAry = NULL;
+    nElm = 0;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(nElm);
+}
+		
+
+/*!
 * \ingroup      WlzMesh
 * \brief        Filters the geometry of the verticies in a 2D mesh using
 *               the given input and output buffers for the mesh node
