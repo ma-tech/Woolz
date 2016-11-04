@@ -5,7 +5,7 @@ static char _WlzCompound_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
 * \file         binWlz/WlzCompound.c
-* \author       Richard Baldock
+* \author       Richard Baldock, Bill Hill
 * \date         March 1999
 * \version      $Id$
 * \par
@@ -49,11 +49,21 @@ static char _WlzCompound_c[] = "University of Edinburgh $Id$";
 WlzCompound - Create a Woolx compounf object.
 \par Synopsis
 \verbatim
-WlzCompound [-n <num objects>] [-h]
+WlzCompound [-t #] [-o <output file>] [-n <num objects>] [-h] [-v]
 
 \endverbatim
 \par Options
 <table width="500" border="0">
+  <tr>
+    <td><b>-t</b></td>
+    <td>Type of compound array, either 1 or 2 (default) for
+        WLZ_COMPOUND_ARR_1 (all objects same type) or
+	WLZ_COMPOUND_ARR_2 (object may be different type)</td>
+  </tr>
+  <tr>
+    <td><b>-o</b></td>
+    <td>Output object.</td>
+  </tr>
   <tr>
     <td><b>-n</b></td>
     <td>Maximum number of objects, default 1024.</td>
@@ -71,17 +81,19 @@ Reads woolz objects from standard input and writes a compound
  object to standard out.
 
 \par Description
-Create a woolz compound object from a given input stream. Only
- objects of the same type as the first object read in are included
- and the compound object will be of type WLZ_COMPOUND_ARR_2.
+Create a woolz compound object from a given input stream.
+Only objects of the same type as the first object read in are included
+and the compound object will be of type WLZ_COMPOUND_ARR_2 unless
+WLZ_COMPOUND_ARR_1 is specified.
 
 \par Examples
 \verbatim
 #
-# read up to 150 woolz objects in the current directory
-# and create a compound object 
+# read the object tiled.wlz then up to 149 woolz objects matching the
+# pattern (dom*.wlz) in the current directory and creates a compound
+# object (compound.wlz)
 #
-cat *.wlz | WlzCompound -n 150 > compound_obj.wlz
+cat dom*.wlz | WlzCompound -o compound.wlz -n 150 tiled.wlz -
 
 \endverbatim
 
@@ -93,126 +105,289 @@ cat *.wlz | WlzCompound -n 150 > compound_obj.wlz
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <Wlz.h>
 
-/* externals required by getopt  - not in ANSI C standard */
+/* Externals required by getopt  - not in ANSI C standard */
 #ifdef __STDC__ /* [ */
 extern int      getopt(int argc, char * const *argv, const char *optstring);
- 
-extern int 	optind, opterr, optopt;
+
+extern int      optind, opterr, optopt;
 extern char     *optarg;
 #endif /* __STDC__ ] */
 
-static void usage(char *proc_str)
+static WlzErrorNum ReadFile(int nmax, int *n, WlzObjectType *type,
+			    WlzObject **objs, FILE *fP)
 {
-  fprintf(stderr,
-	  "Usage:\t%s [-h] [-n#]\n"
-	  "\tGenerate a woolz compound object from the given\n"
-	  "\tinput objects. Objects are read from stdin and written\n"
-	  "\tto stdout.\n"
-	  "Version: %s\n"
-	  "Options:\n"
-	  "\t  -h        Help - prints this usage message\n"
-	  "\t  -n#       Maximum number of objects -default=1024\n",
-	  proc_str,
-	  WlzVersion());
-  return;
+  int		nObj = 0;
+  WlzObject	*o;
+  WlzErrorNum 	errNum = WLZ_ERR_NONE;
+
+  while((errNum == WLZ_ERR_NONE) &&
+	(*n < nmax) &&
+	((o = WlzAssignObject(
+	      WlzReadObj(fP, &errNum), NULL)) != NULL))
+  {
+    ++nObj;
+    if((*type == -1) &&
+       (o->type == WLZ_2D_DOMAINOBJ || o->type == WLZ_3D_DOMAINOBJ))
+    {
+      *type = o->type;
+    }
+    if((o->type == *type) || (o->type == WLZ_EMPTY_OBJ))
+    {
+      objs[*n] = WlzAssignObject(o, NULL);
+      ++*n;
+    }
+    (void )WlzFreeObj(o);
+  }
+  /* Demand that files have at least on object in them. */
+  if((nObj > 0) && ((errNum == WLZ_ERR_EOO) || (errNum == WLZ_ERR_READ_EOF)))
+  {
+    errNum = WLZ_ERR_NONE;
+  }
+  return(errNum);
 }
- 
+
 int main(int	argc,
 	 char	**argv)
 {
 
-  WlzObject	*obj1, *obj, **objlist;
-  WlzCompoundArray	*cobj;
+  int 		n = 0,
+		ok = 1,
+		usage = 0,
+  		nmax = 1024,
+		verbose = 0;
+  WlzObject	**objlist = NULL;
+  WlzCompoundArray *cobj = NULL;
   WlzObjectType	type = (WlzObjectType) -1;
-  int 		n, nmax;
-  FILE		*inFile;
-  char 		optList[] = "n:h";
+  WlzObjectType	cpdType = WLZ_COMPOUND_ARR_2;
+  char		*outFileStr;
   int		option;
   const char	*errMsg;
+  static char	defFileStr[] = "-";
+  static char	optList[] = "n:o:t:hv";
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-    
-  /* read the argument list and check for an input file */
   opterr = 0;
-  nmax = 1024;
-  while( (option = getopt(argc, argv, optList)) != EOF ){
-    switch( option ){
+  outFileStr = defFileStr;
+  /* read the argument list and check for an input file */
+  while((usage == 0) && ((option = getopt(argc, argv, optList)) != EOF))
+  {
+    switch( option )
+    {
+      case 'n':
+	if((sscanf(optarg, "%i", &nmax) != 1) || (nmax < 1)) 
+	{
+	  (void )fprintf(stderr, "%s: nmax = %d is invalid\n", argv[0], nmax);
+	  usage = 1;
+	}
+	break;
+      case 'o':
+	outFileStr = optarg;
+	break;
+      case 't':
+	{
+	  int	t;
 
-    case 'n':
-      nmax = atoi(optarg);
-      if( nmax < 1 ){
-	fprintf(stderr, "%s: nmax = %d is invalid\n", argv[0], nmax);
-	usage(argv[0]);
-	return( 1 );
-      }
-      break;
-
-    case 'h':
-    default:
-      usage(argv[0]);
-      return( 1 );
-
+	  if((sscanf(optarg, "%d", &t) != 1) || ((t != 1) && (t != 2)))
+	  {
+	    usage = 1;
+	  }
+	  else
+	  {
+	    cpdType = (t == 1)? WLZ_COMPOUND_ARR_1: WLZ_COMPOUND_ARR_2;
+	  }
+	}
+	break;
+      case 'v':
+	verbose = 1;
+	break;
+      case 'h':
+      default:
+	usage = 1;
+	break;
     }
   }
-
-  /* reading from stdin */
-  inFile = stdin;
-
+  ok = !usage;
   /* allocate space for the object pointers */
-  if( (objlist = (WlzObject **)
-       AlcMalloc(sizeof(WlzObject *) * nmax)) == NULL ){
-    (void )fprintf(stderr, "%s: memory allocation failed.\n",
-    		   argv[0]);
-    return( 1 );
+  if(ok) 
+  {
+    if((objlist = (WlzObject **)
+	          AlcMalloc(sizeof(WlzObject *) * nmax)) == NULL )
+    {
+      (void )fprintf(stderr, "%s: memory allocation failed.\n", argv[0]);
+      ok = 0;
+    }
   }
-
   /* read objects accumulating compatible types */
-  n = 0;
-  while( ((obj = WlzAssignObject(
-                 WlzReadObj(inFile, NULL), NULL)) != NULL) && (n < nmax) ) {
+  if(ok)
+  {
+    int		idx,
+    		haveRead = 0;
 
-    if( type == -1 &&
-	(obj->type == WLZ_2D_DOMAINOBJ || obj->type == WLZ_3D_DOMAINOBJ) ){
-      type = obj->type;
+    idx = optind;
+    for(idx = optind; ok && (idx < argc); ++idx)
+    {
+      char	*fName;
+
+      if(((fName = argv[idx]) != NULL) && (*fName != '\0'))
+      {
+	int	isNamedFile;
+	FILE	*fP = NULL;
+
+	haveRead = 1;
+	isNamedFile = strcmp(fName, "-");
+	if(verbose)
+	{
+	  (void )fprintf(stderr, "%s: Reading object(s) from %s\n",
+	                 argv[0], fName);
+	}
+        if(isNamedFile)
+	{
+	  if((fP = fopen(fName, "r")) == NULL)
+	  {
+	    ok = 0;
+	    (void )fprintf(stderr,
+	                   "%s: failed to read object from file %s.\n",
+			   argv[0], (isNamedFile)? fName: "stdin");
+	  }
+	}
+	else
+	{
+	  fP = stdin;
+	}
+	if(ok)
+	{
+	  if((errNum = ReadFile(nmax, &n, &type, objlist, fP)) != WLZ_ERR_NONE)
+	  {
+	    (void )fprintf(stderr,
+	                   "%s: failed to read object from file %s\n",
+			   argv[0], fName);
+	  }
+	}
+	if(isNamedFile)
+	{
+	  (void )fclose(fP);
+	}
+      }
     }
-
-    if( obj->type == type || obj->type == WLZ_EMPTY_OBJ ){
-      objlist[n++] = WlzAssignObject(obj, NULL);
+    if(ok && (haveRead == 0) )
+    {
+      if((errNum = ReadFile(nmax, &n, &type, objlist, stdin)) != WLZ_ERR_NONE)
+      {
+        (void )fprintf(stderr,
+	               "%s: Failed to read object from stdin.\n",
+		       argv[0]);
+      }
     }
-    (void )WlzFreeObj( obj );
   }
-
-  if( type == WLZ_EMPTY_OBJ ){
-    return( 0 );
+  if(ok)
+  {
+    if(n < 1)
+    {
+      (void )fprintf(stderr,
+		 "%s: Refusing to create a compound object with no objects.\n",
+		 argv[0]);
+    }
   }
-
-  if( (cobj = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_2,
-				   3, n, objlist, WLZ_NULL,
-				   &errNum)) == NULL ){
-    (void )WlzStringFromErrorNum(errNum, &errMsg);
-    (void )fprintf(stderr, "%s: failed to create compon object (%s).\n",
-    		   argv[0], errMsg);
-    return(1);
-  }
-  else {
-    obj1 = (WlzObject *) cobj;
-    if((errNum = WlzWriteObj(stdout, obj1)) != WLZ_ERR_NONE) {
+  /* Create compound object. */
+  if(ok)
+  {
+    if(verbose)
+    {
+      (void )fprintf(stderr, "%s: Creating compound object.\n", argv[0]);
+    }
+    if((cobj = WlzMakeCompoundArray(cpdType, 3, n, objlist,
+		     (cpdType == WLZ_COMPOUND_ARR_1)? type: WLZ_NULL,
+		     &errNum)) == NULL )
+    {
+      ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsg);
-      (void )fprintf(stderr, "%s: failed to write compound object (%s).\n",
-      		     argv[0], errMsg);
+      (void )fprintf(stderr, "%s: failed to create compound object (%s).\n",
+		     argv[0], errMsg);
     }
   }
+  /* Write compound object. */
+  if(ok)
+  {
+    int		isNamedFile;
+    FILE	*fP = NULL;
 
-  /* freespace so purify can check for leaks */
-  WlzFreeObj(obj1);
-  while( n-- ){
-    WlzFreeObj(objlist[n]);
+    if(verbose)
+    {
+      (void )fprintf(stderr, "%s: Writing compound object to file %s.\n",
+      		     argv[0], outFileStr);
+    }
+    isNamedFile = strcmp(outFileStr, "-");
+    if(isNamedFile)
+    {
+      if((fP = fopen(outFileStr, "w")) == NULL)
+      {
+        errNum = WLZ_ERR_FILE_OPEN;
+      }
+    }
+    else
+    {
+      fP = stdout;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzWriteObj(fP, (WlzObject *)cobj);
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsg);
+      (void )fprintf(stderr, "%s: Failed to write compound object (%s).\n",
+		     argv[0], errMsg);
+    }
+    if(isNamedFile && fP)
+    {
+      (void )fclose(fP);
+    }
   }
-  AlcFree((void *) objlist);
+  if(objlist)
+  {
+    int	i;
 
-  return( 0 );
+    for(i = 0; i < n; ++i)
+    {
+      (void )WlzFreeObj(objlist[i]);
+    }
+    AlcFree(objlist);
+  }
+  (void )WlzFreeObj((WlzObject *)cobj);
+  if(usage)
+  {
+    (void )fprintf(stderr,
+	"Usage:\t%s [-h] [-n#]\n"
+	"Generates a woolz compound object from the given input objects.\n"
+	"Only objects of the same type as the first object read in are\n"
+	"included and the compound object will be of type\n"
+	"WLZ_COMPOUND_ARR_2 unless WLZ_COMPOUND_ARR_1 is specified.\n"
+	"Objects are read from stdin and written to stdout unless\n"
+	"filenames are given on the command line. Tiled objects must\n"
+	"always be read from a named file.\n"
+	"Version: %s\n"
+	"Example:\n"
+	"  cat dom*.wlz | %s -o compound.wlz -n 150 tiled.wlz -\n"
+	"Reads the object tiled.wlz then up to 149 woolz objects matching\n"
+	"the pattern (dom*.wlz) in the current directory and creates a\n"
+	"compound object (compound.wlz).\n"
+	"Options:\n"
+	"\t  -h        Help - prints this usage message\n"
+	"\t  -o        Output object.\n"
+	"\t  -t        Type of compound array, either 1 or 2 (default) for\n"
+	"\t            WLZ_COMPOUND_ARR_1 (all objects same type) or\n"
+	"\t            WLZ_COMPOUND_ARR_2 (object may be different type).\n"
+	"\t  -n#       Maximum number of objects -default=1024\n"
+	"\t  -v        Verbose output to stderr.\n",
+	argv[0],
+	WlzVersion(),
+	argv[0]);
+  }
+  return(!ok);
 }
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
