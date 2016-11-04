@@ -52,6 +52,7 @@ AC_DISABLE_SHARED
 CP="cp"
 RM="rm -f"
 RMRF="rm -rf"
+SIMD=''
 CDEF_ARCH=""
 USE_CTAGS=1
 USE_ETAGS=0
@@ -242,7 +243,11 @@ AS_IF([test "x$enable_optimise" = "xyes"], [
 	  CFLAGS="${CFLAGS} -fPIC -O2 -fomit-frame-pointer"
 	  ;;
 	x86_64|amd64)
-          CFLAGS="${CFLAGS} -fPIC -O3 -msse3"
+	  if test "x$SIMD" = "x"
+	  then
+	    SIMD="-msse3"
+	  fi
+          CFLAGS="${CFLAGS} -fPIC -O3"
 	  ;;
         *)
           CFLAGS="${CFLAGS} -fPIC -O2"
@@ -253,31 +258,13 @@ AS_IF([test "x$enable_optimise" = "xyes"], [
       if test "$CC" = "icc"
       then
 	CFLAGS="${CFLAGS} -fPIC -O3 -ip"
-      else
-	# AIX CC
-	if test "`uname`" = "AIX"
-	then
-	  CFLAGS="${CFLAGS} -O3"
-	fi
-	# SGI CC
-	if test "`uname`" = "IRIX" || test "`uname`" = "IRIX64"
-	then
-	  CFLAGS="${CFLAGS} -Ofast"
-	  LDDFLAGS="${LDFLAGS} -IPA"
-	fi
-	# HP-UX CC
-	if test "`uname`" = "HP-UX"
-	then
-	  CFLAGS="${CFLAGS} -fast"
-	fi
-	# Sun CC
-	if test "`uname`" = "SunOS"
-	then
-	  CFLAGS="${CFLAGS} -fast"
-	fi
       fi
     fi
     ])
+
+AC_ARG_ENABLE(avx2,
+  [AC_HELP_STRING([--enable-avx2],[enable AVX2 SIMD optimizations])],
+  SIMD='-mavx2')
 
 AC_ARG_ENABLE(openmp,
   [  --enable-openmp	  build with openmp flags set])
@@ -442,6 +429,9 @@ case $host in
     LIBS="-lregex $LIBS"
     ;;
 esac
+
+AS_IF([ test "$CC" = "gcc" -a "x$enable_optimise" = "xyes" ],
+      CFLAGS="$CFLAGS $SIMD")
 
 AC_OUTPUT
 
