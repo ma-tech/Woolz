@@ -153,7 +153,7 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
 	  WlzCMeshP meshP;
 	  AlcVector *newVec = NULL;
 
-	  datSz = WlzIndexedValueSize(val.x, NULL);
+	  datSz = WlzIndexedValueSize(val.x, NULL, NULL);
 	  /* Although the 2D conforming mesh union member is used all that
 	   * really matters is that the pointer is passed. */
 	  meshP.m2 = inObj->domain.cm2;
@@ -841,6 +841,87 @@ WlzPropertyList	*WlzCopyPropertyList(WlzPropertyList *gList,
     *dstErr = errNum;
   }
   return(nList);
+}
+
+/*!
+* \return	Copied indexed values.
+* \ingroup	WlzAllocation
+* \brief	Copies the given indexed values.
+* \param	inV			Given indexed values.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzIndexedValues	*WlzCopyIndexedValues(WlzIndexedValues *inV,
+					WlzErrorNum *dstErr)
+{
+
+  size_t	vSz = 0, 
+  		nDat = 0;
+  WlzIndexedValues *outV = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(inV == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if(inV->type != WLZ_INDEXED_VALUES)
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else
+  {
+    vSz = WlzIndexedValueSize(inV, &nDat, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(((outV = (WlzIndexedValues *)
+                AlcCalloc(1, sizeof(WlzIndexedValues))) == NULL) ||
+       ((outV->values = AlcVectorNew(vSz * nDat, vSz,
+                                     inV->values->blkSz, NULL)) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else if((inV->rank > 0) &&
+            ((outV->dim = (int *)AlcMalloc(inV->rank * sizeof(int))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idx;
+    size_t	blkByteCnt;
+
+    outV->type = WLZ_INDEXED_VALUES;
+    outV->rank = inV->rank;
+    outV->vType = inV->vType;
+    outV->attach = inV->attach;
+    blkByteCnt = inV->values->elmSz * inV->values->blkSz;
+    for(idx = 0; idx < outV->rank; ++idx)
+    {   
+      outV->dim[idx] = inV->dim[idx];
+    }
+    if((outV->values = AlcVectorNew(AlcVectorCount(inV->values),
+    				    inV->values->elmSz, inV->values->blkSz,
+				    NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    for(idx = 0; idx < outV->values->blkUse; ++idx)
+    {
+      (void )memcpy(outV->values->blocks[idx], inV->values->blocks[idx],
+		    blkByteCnt);
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeIndexedValues(outV);
+    outV = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(outV);
 }
 
 /*!
