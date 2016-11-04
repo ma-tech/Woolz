@@ -747,8 +747,7 @@ void		WlzGreyValueGetDir(WlzGreyValueWSpace *gVWSp,
 	valP = gVWSp->values.vox->values + pln0;
 	/* check for non-NULL domain and valuetable
 	   pointers until empty obj consistently implemented */
-	/*if(domP && valP)*/
-	if(domP && valP && (*domP).core && (*valP).core)
+	if((*domP).core && (*valP).core)
 	{
 	  gVWSp->plane = plane;
 	  gVWSp->iDom2D = (*domP).i;
@@ -1380,7 +1379,7 @@ static void	WlzGreyValueGet3D1(WlzGreyValueWSpace *gVWSp,
       valP = gVWSp->values.vox->values + plRel;
       /* Check for non-NULL domain and valuetable pointers until empty
        * obj consistently implemented. */
-      if(domP && valP && (*domP).core && (*valP).core)
+      if((*domP).core && (*valP).core)
       {
 	gVWSp->plane = plane;
 	gVWSp->iDom2D = (*domP).i;
@@ -1519,6 +1518,7 @@ static void	WlzGreyValueGet3DCon(WlzGreyValueWSpace *gVWSp,
 				   int plane, int line, int kol)
 {
   int		tI0,
+		pln,
   		planeOff,
 		planeRel,
 		savePlane = 0;
@@ -1531,28 +1531,28 @@ static void	WlzGreyValueGet3DCon(WlzGreyValueWSpace *gVWSp,
   WlzGreyP	saveGPtr[4];
   WlzGreyV	saveGVal[4];
 
-  planeOff = 0;
-  while(planeOff < 2)
+  for(planeOff = 0; planeOff < 2; ++planeOff)
   {
+    pln = plane + planeOff;
     planeSet[planeOff] = 0;
+    planeRel = pln - gVWSp->domain.p->plane1;
 #ifdef WLZ_FAST_CODE
-    if((unsigned int )(plane - gVWSp->domain.p->plane1 - 1) <=
-       (unsigned int )(gVWSp->domain.p->lastpl - gVWSp->domain.p->plane1 - 2))
+    if((unsigned int )planeRel <=
+       (unsigned int )(gVWSp->domain.p->lastpl - gVWSp->domain.p->plane1))
 #else
-    if((plane > gVWSp->domain.p->plane1) && (plane < gVWSp->domain.p->lastpl))
+    if((pln > gVWSp->domain.p->plane1) && (pln < gVWSp->domain.p->lastpl))
 #endif
     {
-      if(plane == gVWSp->plane)
+      if(pln == gVWSp->plane)
       {
 	WlzGreyValueGet2DCon(gVWSp, line, kol);
 	planeSet[planeOff] = 1;
       }
       else
       {
-	planeRel = plane - gVWSp->domain.p->plane1;
 	domP = gVWSp->domain.p->domains + planeRel;
 	valP = gVWSp->values.vox->values + planeRel;
-	if(domP && valP)
+	if((*domP).core && (*valP).core)
 	{
           if(planeSet[0])
 	  {
@@ -1561,49 +1561,53 @@ static void	WlzGreyValueGet3DCon(WlzGreyValueWSpace *gVWSp,
 	    saveValues2D = gVWSp->values2D;
 	    saveGTabType2D = gVWSp->gTabType2D;
 	  }
-	  gVWSp->plane = plane;
+	  gVWSp->plane = pln;
 	  gVWSp->iDom2D = (*domP).i;
 	  gVWSp->values2D = (*valP);
 	  gVWSp->gTabType2D = gVWSp->gTabTypes3D[planeRel];
-	  WlzGreyValueGet2D1(gVWSp, line, kol);
+	  WlzGreyValueGet2DCon(gVWSp, line, kol);
 	  planeSet[planeOff] = 1;
 	}
       }
-    }
-    if(planeOff == 0)
-    {
-      if(planeSet[0])
+      if(planeOff == 0)
       {
-	tI0 = 4;
-	while(--tI0 >= 0)
+	for(tI0 = 0; tI0 < 4; ++tI0)
 	{
 	  saveGPtr[tI0] = gVWSp->gPtr[tI0];
 	  saveGVal[tI0] = gVWSp->gVal[tI0];
 	}
       }
-      else
-      {
-        WlzGreyValueSetBkdPN(saveGVal, saveGPtr,
-			     gVWSp->gType, gVWSp->gBkd, 4);
-      }
     }
-    ++plane;
-    ++planeOff;
   }
-  if(planeSet[0] && planeSet[1])
+  if(planeSet[1])
+  {
+    for(tI0 = 0; tI0 < 4; ++tI0)
+    {
+      gVWSp->gPtr[tI0 + 4] = gVWSp->gPtr[tI0];
+      gVWSp->gVal[tI0 + 4] = gVWSp->gVal[tI0];
+    }
+  }
+  else
+  {
+    WlzGreyValueSetBkdPN(&(gVWSp->gVal[4]), &(gVWSp->gPtr[4]),
+                         gVWSp->gType, gVWSp->gBkd, 4);
+  }
+  if(planeSet[0])
   {
     gVWSp->plane = savePlane;
     gVWSp->iDom2D = saveIDom2D;
     gVWSp->values2D = saveValues2D;
     gVWSp->gTabType2D = saveGTabType2D;
+    for(tI0 = 0; tI0 < 4; ++tI0)
+    {
+      gVWSp->gPtr[tI0] = saveGPtr[tI0];
+      gVWSp->gVal[tI0] = saveGVal[tI0];
+    }
   }
-  tI0 = 4;
-  while(--tI0 >= 0)
+  else
   {
-    gVWSp->gPtr[tI0 + 4] = gVWSp->gPtr[tI0];
-    gVWSp->gPtr[tI0] = saveGPtr[tI0];
-    gVWSp->gVal[tI0 + 4] = gVWSp->gVal[tI0];
-    gVWSp->gVal[tI0] = saveGVal[tI0];
+    WlzGreyValueSetBkdPN(gVWSp->gVal, gVWSp->gPtr,
+                         gVWSp->gType, gVWSp->gBkd, 4);
   }
 }
 
@@ -1635,7 +1639,7 @@ static void	WlzGreyValueGet3DConTiled(WlzGreyValueWSpace *gVWSp,
     pl = plane + idP;
     plRel = pl - gVWSp->domain.p->plane1;
 #ifdef WLZ_FAST_CODE
-    if((unsigned int )plRel >=
+    if((unsigned int )plRel <=
        (unsigned int )(gVWSp->domain.p->lastpl - gVWSp->domain.p->plane1))
 #else
     if((plRel >= 0) && (pl <= gVWSp->domain.p->lastpl))
@@ -1664,7 +1668,7 @@ static void	WlzGreyValueGet3DConTiled(WlzGreyValueWSpace *gVWSp,
 #endif
 	  {
 #ifdef WLZ_FAST_CODE
-	    if((unsigned int )(iDom->kol1 - kol - 1) <=
+	    if((unsigned int )(kol - iDom->kol1 + 1) <=
 	       (unsigned int )(iDom->lastkl - iDom->kol1 + 1))
 #else
 	    if((kol + 1 >= iDom->kol1) && (kol <= iDom->lastkl))
