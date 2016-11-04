@@ -630,6 +630,27 @@ WlzObject	*WlzScalarMulAdd(WlzObject *iObj, WlzPixelV m, WlzPixelV a,
   {
     switch(iObj->type)
     {
+      case WLZ_COMPOUND_ARR_1:
+        {
+	  int	idN;
+          WlzCompoundArray *cpd,
+	                   *rCpd;
+
+	  cpd = (WlzCompoundArray *)iObj;
+	  rCpd = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 1, cpd->n,
+	                             NULL, WLZ_NULL, &errNum);
+	  rObj = (WlzObject *)rCpd;
+	  for(idN = 0; (errNum == WLZ_ERR_NONE) && (idN < cpd->n); ++idN)
+	  {
+	    rCpd->o[idN] = WlzScalarMulAdd(cpd->o[idN], m, a, rGType, &errNum);
+	  }
+	  if(errNum != WLZ_ERR_NONE)
+	  {
+	    WlzFreeObj(rObj);
+	    rObj = NULL;
+	  }
+	}
+	break;
       case WLZ_2D_DOMAINOBJ:
         rObj = WlzScalarMulAdd2D(iObj, m, a, rGType, &errNum);
 	break;
