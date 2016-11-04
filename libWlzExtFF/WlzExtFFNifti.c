@@ -55,13 +55,15 @@ static void			WlzEffNiftiCopyToObj1D(
 				  int nDT,
 				  int nVPP,
 				  int nBPP,
-				  int nV,
-				  int idx);
+				  int nV);
 static char 			*WlzEffNiftiInfoToStr(
 				  nifti_image *nim,
 				  WlzErrorNum *dstErr);
 static int 			WlzEffNiftiFromWlzGType(
 				  WlzGreyType wGType,
+				  WlzErrorNum *dstErr);
+static WlzObject 		*WlzEffNiftiToObjND(
+				  nifti_image *nim,
 				  WlzErrorNum *dstErr);
 static WlzObject 		*WlzEffNiftiToObj3D(
 				  nifti_image *nim,
@@ -165,7 +167,15 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
     else
     {
       /* Fix dimensions if daft. */
-      if((nim->ndim == 4) && (nim->dim[0] == 4))
+      if((nim->ndim == 5) && (nim->dim[0] == 5))
+      {
+        if(nim->dim[4] < 2)
+	{
+	  nim->ndim = 4;
+	  nim->dim[0] = 4;
+	}
+      }
+      else if((nim->ndim == 4) && (nim->dim[0] == 4))
       {
         if(nim->dim[4] < 2)
 	{
@@ -193,6 +203,9 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
 	break;
       case 3:
         obj = WlzEffNiftiToObj3D(nim, &errNum);
+	break;
+      case 4:
+        obj = WlzEffNiftiToObjND(nim, &errNum);
 	break;
       default:
 	errNum = WLZ_ERR_OBJECT_TYPE;
@@ -284,24 +297,22 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
          (((nim->ndim == 2) && ((sTrType == WLZ_TRANSFORM_EMPTY) ||
 	                        (sTrType == WLZ_TRANSFORM_2D_TRANS) ||
 	                        (sTrType == WLZ_TRANSFORM_2D_AFFINE))) ||
-          ((nim->ndim == 3) && ((sTrType == WLZ_TRANSFORM_EMPTY) ||
-	                        (sTrType == WLZ_TRANSFORM_3D_TRANS) ||
-	                        (sTrType == WLZ_TRANSFORM_3D_AFFINE)))))
+          (((nim->ndim == 3) || (nim->ndim == 4)) &&
+	   ((sTrType == WLZ_TRANSFORM_EMPTY) ||
+	    (sTrType == WLZ_TRANSFORM_3D_TRANS) ||
+	    (sTrType == WLZ_TRANSFORM_3D_AFFINE)))))
       {
         /* Shift the 2 or 3D object(s). */
 	int	  idN;
-	WlzIVertex3 sft;
 	WlzObject *nObj;
+	WlzIVertex3 sft = {0};
 
-	sft.vtX = 0;
-	sft.vtY = 0;
 	if(sTrType != WLZ_TRANSFORM_EMPTY)
 	{
 	  if(nim->ndim == 2)
 	  {
 	    sft.vtX = sTr->mat[0][2];
 	    sft.vtY = sTr->mat[1][2];
-	    sft.vtZ = 0;
 	  }
 	  else /* nim->ndim == 3 */
 	  {
@@ -428,7 +439,14 @@ WlzObject	*WlzEffReadObjNifti(const char *gvnFileName,
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      obj->plist = WlzAssignPropertyList(pLst, NULL);
+      if(obj->type == WLZ_COMPOUND_ARR_1)
+      {
+        ((WlzCompoundArray *)obj)->plist = WlzAssignPropertyList(pLst, NULL);
+      }
+      else
+      {
+        obj->plist = WlzAssignPropertyList(pLst, NULL);
+      }
     }
     else
     {
@@ -881,6 +899,89 @@ static WlzObject *WlzEffNiftiToObj3D(nifti_image *nim,
 /*!
 * \return	New Woolz object or NULL on error.
 * \ingroup	WlzExtFF
+* \brief	Creates a compound object of 3D domain objects with values
+* 		from the given NIfTI image knowing that the NIfTI image is
+* 		nD (with N >= 4).
+* 		The q and s forms transforms of the NIfTI image are not
+* 		applied and neither is the pixel value scaling.
+* \param	nim			NIfTI image.
+* \param	dstErr			Destination error code, may be NULL.
+*/
+static WlzObject *WlzEffNiftiToObjND(nifti_image *nim,
+				     WlzErrorNum *dstErr)
+{
+  int		nCn = 1,
+		nTm = 1,
+  		nVPP = 1;
+  WlzIVertex3	sz;
+  WlzPixelV	bgdV;
+  WlzGreyType	wGType;
+  WlzCompoundArray *cpd = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  bgdV.type = WLZ_GREY_INT;
+  bgdV.v.inv = 0;
+  errNum = WlzEffNiftiToWlzType(nim, &nVPP, &wGType);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nTm = nim->dim[4];
+    nCn = nim->dim[5];
+    sz.vtX = nim->dim[1];
+    sz.vtY = nim->dim[2];
+    sz.vtZ = nim->dim[3];
+    errNum = WlzValueConvertPixel(&bgdV, bgdV, wGType);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    cpd = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 1, nCn * nTm * nVPP,
+			       NULL, WLZ_3D_DOMAINOBJ, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idC,
+    		idV,
+		idT;
+    WlzGreyP	nGP;
+
+    nGP.v = nim->data;
+    for(idC = 0; idC < nCn; ++idC)
+    {
+      for(idT = 0; idT < nTm; ++idT)
+      {
+	for(idV = 0; idV < nVPP ; ++idV)
+	{
+	  int	idP;
+
+	  idP = (idC * nTm * nVPP) + idV;
+	  cpd->o[idP] = WlzAssignObject(
+			WlzEffNiftiCopyToObj3D(nGP, nim->datatype, nim->nbyper,
+					       wGType, nVPP, bgdV, sz, idP,
+					       &errNum), NULL);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    cpd->o[idP]->domain.p->voxel_size[0] = nim->pixdim[1];
+	    cpd->o[idP]->domain.p->voxel_size[1] = nim->pixdim[2];
+	    cpd->o[idP]->domain.p->voxel_size[2] = nim->pixdim[3];
+	  }
+	}
+      }
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeObj((WlzObject *)cpd);
+    cpd = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return((WlzObject *)cpd);
+}
+
+/*!
+* \return	New Woolz object or NULL on error.
+* \ingroup	WlzExtFF
 * \brief	Copies data from the NIfTI image for the given channel
 * 		to a new Woolz object.
 * \param	nGP			NIfTI data pointer.
@@ -895,18 +996,20 @@ static WlzObject *WlzEffNiftiToObj3D(nifti_image *nim,
 * \param	idx			Index of the channel.
 * \param	dstErr			Destination error code, may be NULL.
 */
-static WlzObject *WlzEffNiftiCopyToObj2D(WlzGreyP nGP, int nDT,
-					 int nBPP, WlzGreyP wGP,
+static WlzObject *WlzEffNiftiCopyToObj2D(WlzGreyP nGP, int nDT, int nBPP,
+                                         WlzGreyP wGP,
 					 WlzGreyType wGType, int nVPP,
 					 WlzPixelV bgdV, WlzIVertex2 sz,
 					 int idx, WlzErrorNum *dstErr)
 {
   int		idY;
-  size_t	wBPP;
+  size_t	nBPC,
+  		wBPP;
   WlzObject	*obj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   wBPP = WlzGreySize(wGType);
+  nBPC = nBPP * sz.vtX * sz.vtY;
   obj = WlzMakeRect(0, sz.vtY - 1, 0, sz.vtX - 1,
                     wGType, wGP.inp, bgdV, NULL, NULL, &errNum);
   if(errNum == WLZ_ERR_NONE)
@@ -918,9 +1021,9 @@ static WlzObject *WlzEffNiftiCopyToObj2D(WlzGreyP nGP, int nDT,
       		wGP2;
 
       offY = idY * sz.vtX;
-      nGP2.ubp = (WlzUByte *)(nGP.v) + nBPP * offY;
+      nGP2.ubp = (WlzUByte *)(nGP.v) + (idx * nBPC) + (nBPP * offY);
       wGP2.ubp = wGP.ubp + wBPP * offY;
-      WlzEffNiftiCopyToObj1D(wGP2, nGP2, nDT, nVPP, nBPP, sz.vtX, idx);
+      WlzEffNiftiCopyToObj1D(wGP2, nGP2, nDT, nVPP, nBPP, sz.vtX);
     }
   }
   if((errNum != WLZ_ERR_NONE) && (obj != NULL))
@@ -957,16 +1060,22 @@ static WlzObject *WlzEffNiftiCopyToObj3D(WlzGreyP nGP, int nDT, int nBPP,
 					 WlzPixelV bgdV, WlzIVertex3 sz,
 					 int idx, WlzErrorNum *dstErr)
 {
-  int		idZ;
-  size_t	wBPP;
+  size_t	nBPC,
+  		wBPP;
   WlzObject	*obj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   wBPP = WlzGreySize(wGType);
+  nBPC = nBPP * sz.vtX * sz.vtY * sz.vtZ;
   obj = WlzMakeCuboid(0, sz.vtZ - 1, 0, sz.vtY - 1, 0, sz.vtX - 1,
                       wGType, bgdV, NULL, NULL, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
+    int		idZ;
+
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for(idZ = 0; idZ < sz.vtZ; ++idZ)
     {
       int	idY;
@@ -982,9 +1091,9 @@ static WlzObject *WlzEffNiftiCopyToObj3D(WlzGreyP nGP, int nDT, int nBPP,
 		  wGP2;
 
         offY = idY * sz.vtX;
-	nGP2.ubp = (WlzUByte *)(nGP.v) + nBPP * (offZ + offY);
+	nGP2.ubp = (WlzUByte *)(nGP.v) + (idx * nBPC) + (nBPP * (offZ + offY));
 	wGP2.ubp = wGP.ubp + wBPP * offY;
-	WlzEffNiftiCopyToObj1D(wGP2, nGP2, nDT, nVPP, nBPP, sz.vtX, idx);
+	WlzEffNiftiCopyToObj1D(wGP2, nGP2, nDT, nVPP, nBPP, sz.vtX);
       }
     }
   }
@@ -1006,12 +1115,10 @@ static WlzObject *WlzEffNiftiCopyToObj3D(WlzGreyP nGP, int nDT, int nBPP,
 * \param	nBPP			Number of bytes per pixel in the
 * 					NIfTI image.
 * \param	nV			Number of (Woolz) values to set.
-* \param	idx			Index of the basic (Woolz grey) value
-* 					with each NIfTI pixel.
 */
 static void	WlzEffNiftiCopyToObj1D(WlzGreyP wGP, WlzGreyP nGP,
 				       int nDT, int nVPP, int nBPP,
-				       int nV, int idx)
+				       int nV)
 {
   int		idW;
 
@@ -1031,7 +1138,6 @@ static void	WlzEffNiftiCopyToObj1D(WlzGreyP wGP, WlzGreyP nGP,
       break;
     case NIFTI_TYPE_COMPLEX64: 	/* Complex float, convert to 2 x float
 				   objects. */
-      nGP.flp += idx;
       for(idW = 0; idW < nV; ++idW)
       {
         *(wGP.flp + idW) = *(nGP.flp + (nVPP * idW));
@@ -1086,7 +1192,6 @@ static void	WlzEffNiftiCopyToObj1D(WlzGreyP wGP, WlzGreyP nGP,
       break;
     case NIFTI_TYPE_COMPLEX128:	/* Complex double, convert to 2 x double
                                        objects. */
-      nGP.dbp += idx;
       for(idW = 0; idW < nV; ++idW)
       {
         *(wGP.dbp + idW) = *(nGP.dbp + (nVPP * idW));
