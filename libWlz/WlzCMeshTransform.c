@@ -198,21 +198,24 @@ static WlzErrorNum 		WlzCMeshInterpolateNod2DKrig(
 				  int kolL,
 				  int kolR,
 				  WlzCMesh2D *mesh,
-				  WlzIndexedValues *ixv);
+				  WlzIndexedValues *ixv,
+				  int ixi);
 static WlzErrorNum 		WlzCMeshInterpolateElm2DNearest(
 				  WlzGreyP dst,
 				  int ln,
 				  int kolL,
 				  int kolR,
 				  WlzCMesh2D *mesh,
-				  WlzIndexedValues *ixv);
+				  WlzIndexedValues *ixv,
+				  int ixi);
 static WlzErrorNum 		WlzCMeshInterpolateElm2DLinear(
 				  WlzGreyP dst,
 				  int ln,
 				  int kolL,
 				  int kolR,
 				  WlzCMesh2D *mesh,
-				  WlzIndexedValues *ixv);
+				  WlzIndexedValues *ixv,
+				  int ixi);
 static WlzErrorNum 		WlzCMeshInterpolateElm3DLinear(
 				  WlzGreyP dst,
 				  int pl,
@@ -220,21 +223,24 @@ static WlzErrorNum 		WlzCMeshInterpolateElm3DLinear(
 				  int kolL,
 				  int kolR,
 				  WlzCMesh3D *mesh,
-				  WlzIndexedValues *ixv);
+				  WlzIndexedValues *ixv,
+				  int ixi);
 static WlzErrorNum 		WlzCMeshInterpolateNod2DNearest(
 				  WlzGreyP dst,
 				  int ln,
 				  int kolL,
 				  int kolR,
 				  WlzCMesh2D *mesh,
-				  WlzIndexedValues *ixv);
+				  WlzIndexedValues *ixv,
+				  int ixi);
 static WlzErrorNum 		WlzCMeshInterpolateNod2DLinear(
 				  WlzGreyP dst,
 				  int ln,
 				  int kolL,
 				  int kolR,
 				  WlzCMesh2D *mesh,
-				  WlzIndexedValues *ixv);
+				  WlzIndexedValues *ixv,
+				  int ixi);
 static WlzErrorNum 		WlzCMeshInterpolateNod3DNearest(
 				  WlzGreyP dst,
 				  int pl,
@@ -242,7 +248,8 @@ static WlzErrorNum 		WlzCMeshInterpolateNod3DNearest(
 				  int kolL,
 				  int kolR,
 				  WlzCMesh3D *mesh,
-				  WlzIndexedValues *ixv);
+				  WlzIndexedValues *ixv,
+				  int ixi);
 static WlzErrorNum 		WlzCMeshInterpolateNod3DLinear(
 				  WlzGreyP dst,
 				  int pl,
@@ -250,7 +257,8 @@ static WlzErrorNum 		WlzCMeshInterpolateNod3DLinear(
 				  int kolL,
 				  int kolR,
 				  WlzCMesh3D *mesh,
-				  WlzIndexedValues *ixv);
+				  WlzIndexedValues *ixv,
+				  int ixi);
 static WlzErrorNum 		WlzCMeshInterpolateElm3DNearest(
 				  WlzGreyP dst,
 				  int pl,
@@ -258,7 +266,8 @@ static WlzErrorNum 		WlzCMeshInterpolateElm3DNearest(
 				  int kolL,
 				  int kolR,
 				  WlzCMesh3D *mesh,
-				  WlzIndexedValues *ixv);
+				  WlzIndexedValues *ixv,
+				  int ixi);
 static int			WlzCMeshScanTriElm2D(
 				  WlzCMeshScanWSp2D *mSWSp,
 				  int trans,
@@ -377,16 +386,13 @@ static WlzObject 		*WlzCMeshToDomObjValues2D(
 				  WlzObject *dObj,
 				  WlzObject *mObj,
                                   WlzInterpolationType itp,
+				  int ixi,
 				  WlzErrorNum *dstErr);
 static WlzObject 		*WlzCMeshToDomObjValues3D(
 				  WlzObject *dObj,
 				  WlzObject *mObj,
                                   WlzInterpolationType itp,
-				  WlzErrorNum *dstErr);
-static WlzObject 		*WlzCMeshToDomObjValues3D(
-				  WlzObject *dObj,
-				  WlzObject *mObj,
-                                  WlzInterpolationType itp,
+				  int ixi,
 				  WlzErrorNum *dstErr);
 static WlzObject 		*WlzCMeshExpansion2D(
 				  WlzObject *cObj,
@@ -1636,10 +1642,11 @@ WlzObject       *WlzCMeshToDomObj(WlzObject *mObj, int trans, double scale,
 * \param	dObj			Given domain object.
 * \param	mObj			Given mesh object.
 * \param	itp			Interpolation method.
+* \param	ixi			Index into the indexed values.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject	*WlzCMeshToDomObjValues(WlzObject *dObj, WlzObject *mObj,
-                                        WlzInterpolationType itp,
+                                        WlzInterpolationType itp, int ixi,
 					WlzErrorNum *dstErr)
 {
   WlzObject	*rObj = NULL;
@@ -1657,13 +1664,32 @@ WlzObject	*WlzCMeshToDomObjValues(WlzObject *dObj, WlzObject *mObj,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
+  else if((mObj->values.core->type != WLZ_INDEXED_VALUES) ||
+          (mObj->values.x->rank < 0))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else
+  {
+    int		i,
+    		nv = 1;
+
+    for(i = 0; i < mObj->values.x->rank; ++i)
+    {
+      nv *= mObj->values.x->dim[i];
+    }
+    if(ixi >= nv)
+    {
+      errNum = WLZ_ERR_VALUES_TYPE;
+    }
+  }
   if((dObj->type == WLZ_2D_DOMAINOBJ) && (mObj->type == WLZ_CMESH_2D))
   {
-    rObj = WlzCMeshToDomObjValues2D(dObj, mObj, itp, &errNum);
+    rObj = WlzCMeshToDomObjValues2D(dObj, mObj, itp, ixi, &errNum);
   }
   else if((dObj->type == WLZ_3D_DOMAINOBJ) && (mObj->type == WLZ_CMESH_3D))
   {
-    rObj = WlzCMeshToDomObjValues3D(dObj, mObj, itp, &errNum);
+    rObj = WlzCMeshToDomObjValues3D(dObj, mObj, itp, ixi, &errNum);
   }
   else
   {
@@ -1909,10 +1935,11 @@ static WlzObject *WlzCMeshToDomObj3D(WlzObject *mObj, int trans,
 * 					WLZ_CMESH_2D object with valid indexed
 * 					values..
 * \param	itp			Interpolation method.
+* \param	ixi			Index into the indexed values.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 static WlzObject *WlzCMeshToDomObjValues2D(WlzObject *dObj, WlzObject *mObj,
-                                        WlzInterpolationType itp,
+                                        WlzInterpolationType itp, int ixi,
 					WlzErrorNum *dstErr)
 {
   WlzValues	rVal;
@@ -1980,18 +2007,18 @@ static WlzObject *WlzCMeshToDomObjValues2D(WlzObject *dObj, WlzObject *mObj,
 	    case WLZ_INTERPOLATION_NEAREST:
 	      errNum = WlzCMeshInterpolateNod2DNearest(gWsp.u_grintptr,
 	      				iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
-					mesh, ixv);
+					mesh, ixv, ixi);
 	      break;
 	    case WLZ_INTERPOLATION_LINEAR: /* FALLTHROUGH */
 	    case WLZ_INTERPOLATION_BARYCENTRIC:
 	      errNum = WlzCMeshInterpolateNod2DLinear(gWsp.u_grintptr, 
 				     iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
-				     mesh, ixv);
+				     mesh, ixv, ixi);
 	      break;
 	    case WLZ_INTERPOLATION_KRIG:
 	      errNum = WlzCMeshInterpolateNod2DKrig(gWsp.u_grintptr, 
 				    iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
-				    mesh, ixv);
+				    mesh, ixv, ixi);
 	      break;
 	    default:
 	      errNum = WLZ_ERR_PARAM_TYPE;
@@ -2004,12 +2031,12 @@ static WlzObject *WlzCMeshToDomObjValues2D(WlzObject *dObj, WlzObject *mObj,
 	    case WLZ_INTERPOLATION_NEAREST:
 	      errNum = WlzCMeshInterpolateElm2DNearest(gWsp.u_grintptr,
 	      				iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
-					mesh, ixv);
+					mesh, ixv, ixi);
 	      break;
 	    case WLZ_INTERPOLATION_LINEAR:
 	      errNum = WlzCMeshInterpolateElm2DLinear(gWsp.u_grintptr,
 	      				iWsp.linpos, iWsp.lftpos, iWsp.rgtpos,
-					mesh, ixv);
+					mesh, ixv, ixi);
 	      break;
 	    default:
 	      errNum = WLZ_ERR_PARAM_TYPE;
@@ -2062,10 +2089,11 @@ static WlzObject *WlzCMeshToDomObjValues2D(WlzObject *dObj, WlzObject *mObj,
 * 					WLZ_CMESH_3D object with valid indexed
 * 					values..
 * \param	itp			Interpolation method.
+* \param	ixi			Index into the indexed values.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 static WlzObject *WlzCMeshToDomObjValues3D(WlzObject *dObj, WlzObject *mObj,
-                                        WlzInterpolationType itp,
+                                        WlzInterpolationType itp, int ixi,
 					WlzErrorNum *dstErr)
 {
   WlzValues	rVal;
@@ -2150,17 +2178,14 @@ static WlzObject *WlzCMeshToDomObjValues3D(WlzObject *dObj, WlzObject *mObj,
 		  errNum = WlzCMeshInterpolateNod3DNearest(gWsp.u_grintptr,
 		  			plnPos, iWsp.linpos,
 					iWsp.lftpos, iWsp.rgtpos,
-					mesh, ixv);
+					mesh, ixv, ixi);
 		  break;
 	        case WLZ_INTERPOLATION_LINEAR: /* FALLTHROUGH */
 	        case WLZ_INTERPOLATION_BARYCENTRIC:
 		  errNum = WlzCMeshInterpolateNod3DLinear(gWsp.u_grintptr, 
 					plnPos, iWsp.linpos,
 					iWsp.lftpos, iWsp.rgtpos,
-					mesh, ixv);
-		  break;
-		case WLZ_INTERPOLATION_KRIG:
-		  errNum = WLZ_ERR_UNIMPLEMENTED; /* TODO */
+					mesh, ixv, ixi);
 		  break;
 		default:
 		  errNum = WLZ_ERR_PARAM_TYPE;
@@ -2174,13 +2199,13 @@ static WlzObject *WlzCMeshToDomObjValues3D(WlzObject *dObj, WlzObject *mObj,
 		  errNum = WlzCMeshInterpolateElm3DNearest(gWsp.u_grintptr, 
 					plnPos, iWsp.linpos,
 					iWsp.lftpos, iWsp.rgtpos,
-					mesh, ixv);
+					mesh, ixv, ixi);
 		  break;
 	        case WLZ_INTERPOLATION_LINEAR:
                   errNum = WlzCMeshInterpolateElm3DLinear(gWsp.u_grintptr,
 		  			plnPos, iWsp.linpos,
 					iWsp.lftpos, iWsp.rgtpos,
-					mesh, ixv);
+					mesh, ixv, ixi);
 		  break;
 		default:
 		  errNum = WLZ_ERR_PARAM_TYPE;
@@ -2236,11 +2261,12 @@ static WlzObject *WlzCMeshToDomObjValues3D(WlzObject *dObj, WlzObject *mObj,
 * 						the interval.
 * \param	mesh				The mesh.
 * \param	ixv				The indexed values.
+* \param	ixi			Index into the indexed values.
 */
 static WlzErrorNum WlzCMeshInterpolateNod2DKrig(WlzGreyP dst,
                                           int ln, int kolL, int kolR,
 					  WlzCMesh2D *mesh,
-					  WlzIndexedValues *ixv)
+					  WlzIndexedValues *ixv, int ixi)
 {
   int		kl,
 		idI,
@@ -2344,7 +2370,7 @@ static WlzErrorNum WlzCMeshInterpolateNod2DKrig(WlzGreyP dst,
       {
 	WlzKrigOWeightsSolve(modelSV, posSV, wSp, WLZ_MESH_TOLERANCE);
 	/* posSV now contains the weights. */
-	WlzIndexedValueBufWeight(dst, idI, ixv, posSV, nNbr1, nbrIdxBuf);
+	WlzIndexedValueBufWeight(dst, idI, ixv, posSV, nNbr1, nbrIdxBuf, ixi);
       }
       nNbr0 = nNbr1;
     }
@@ -2376,11 +2402,12 @@ static WlzErrorNum WlzCMeshInterpolateNod2DKrig(WlzGreyP dst,
 * 						the interval.
 * \param	mesh				The mesh.
 * \param	ixv				The indexed values.
+* \param	ixi				Index into the indexed values.
 */
 static WlzErrorNum WlzCMeshInterpolateNod2DNearest(WlzGreyP dst,
 					int ln, int kolL, int kolR,
 					WlzCMesh2D *mesh,
-					WlzIndexedValues *ixv)
+					WlzIndexedValues *ixv, int ixi)
 {
   int		kl,
   		idE,
@@ -2434,25 +2461,33 @@ static WlzErrorNum WlzCMeshInterpolateNod2DNearest(WlzGreyP dst,
     /* Set value. */
     if(nNod)
     {
+      WlzGreyP v;
+
       switch(ixv->vType)
       {
 	case WLZ_GREY_LONG:
-	  *(dst.lnp + idI) = *(WlzLong *)WlzIndexedValueGet(ixv, nNod->idx);
+	  v.lnp = (WlzLong *)WlzIndexedValueGet(ixv, nNod->idx);
+	  *(dst.lnp + idI) = v.lnp[ixi];
 	  break;
 	case WLZ_GREY_INT:
-	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, nNod->idx);
+	  v.inp = (int *)WlzIndexedValueGet(ixv, nNod->idx);
+	  *(dst.inp + idI) = v.inp[ixi];
 	  break;
 	case WLZ_GREY_SHORT:
-	  *(dst.shp + idI) = *(short *)WlzIndexedValueGet(ixv, nNod->idx);
+	  v.shp = (short *)WlzIndexedValueGet(ixv, nNod->idx);
+	  *(dst.shp + idI) = v.shp[ixi];
 	  break;
 	case WLZ_GREY_UBYTE:
-	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, nNod->idx);
+	  v.ubp = (WlzUByte *)WlzIndexedValueGet(ixv, nNod->idx);
+	  *(dst.ubp + idI) = v.ubp[ixi];
 	  break;
 	case WLZ_GREY_FLOAT:
-	  *(dst.flp + idI) = *(float *)WlzIndexedValueGet(ixv, nNod->idx);
+	  v.flp = (float *)WlzIndexedValueGet(ixv, nNod->idx);
+	  *(dst.flp + idI) = v.flp[ixi];
 	  break;
 	case WLZ_GREY_DOUBLE:
-	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, nNod->idx);
+	  v.dbp = (double *)WlzIndexedValueGet(ixv, nNod->idx);
+	  *(dst.dbp + idI) = v.dbp[ixi];
 	  break;
 	default:
 	  errNum = WLZ_ERR_GREY_TYPE;
@@ -2479,11 +2514,12 @@ static WlzErrorNum WlzCMeshInterpolateNod2DNearest(WlzGreyP dst,
 * 						the interval.
 * \param	mesh				The mesh.
 * \param	ixv				The indexed values.
+* \param	ixi				Index into the indexed values.
 */
 static WlzErrorNum WlzCMeshInterpolateNod2DLinear(WlzGreyP dst,
 					int ln, int kolL, int kolR,
 					WlzCMesh2D *mesh,
-					WlzIndexedValues *ixv)
+					WlzIndexedValues *ixv, int ixi)
 {
   int		kl,
   		idE,
@@ -2501,7 +2537,8 @@ static WlzErrorNum WlzCMeshInterpolateNod2DLinear(WlzGreyP dst,
     if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE, pos.vtX, pos.vtY, 0, 
                                         &idN)) >= 0)
     {
-      double d[4];
+      int	idC;
+      double    d[4];
       WlzCMeshElm2D *elm;
       WlzCMeshNod2D *nod[3];
 
@@ -2512,52 +2549,75 @@ static WlzErrorNum WlzCMeshInterpolateNod2DLinear(WlzGreyP dst,
       switch(ixv->vType)
       {
 	case WLZ_GREY_LONG:
-	  d[0] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[0]->idx);
-	  d[1] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[1]->idx);
-	  d[2] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  for(idC = 0; idC < 3; ++idC)
+	  {
+	    WlzLong *x;
+
+	    x = (WlzLong *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	    d[idC] = x[ixi];
+	  }
 	  d[3] = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
 			nod[2]->pos, d[0], d[1], d[2], pos);
-	  *(dst.lnp + idI) = WLZ_NINT(d[3]);
+	  dst.lnp[idI] = WLZ_NINT(d[3]);
 	  break;
 	case WLZ_GREY_INT:
-	  d[0] = *(int *)WlzIndexedValueGet(ixv, nod[0]->idx);
-	  d[1] = *(int *)WlzIndexedValueGet(ixv, nod[1]->idx);
-	  d[2] = *(int *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  for(idC = 0; idC < 3; ++idC)
+	  {
+	    int	 *x;
+
+	    x = (int *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	    d[idC] = x[ixi];
+	  }
 	  d[3] = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
 			nod[2]->pos, d[0], d[1], d[2], pos);
-	  *(dst.inp + idI) = WLZ_NINT(d[3]);
+	  dst.inp[idI] = WLZ_NINT(d[3]);
 	  break;
 	case WLZ_GREY_SHORT:
-	  d[0] = *(short *)WlzIndexedValueGet(ixv, nod[0]->idx);
-	  d[1] = *(short *)WlzIndexedValueGet(ixv, nod[1]->idx);
-	  d[2] = *(short *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  for(idC = 0; idC < 3; ++idC)
+	  {
+	    short *x;
+
+	    x = (short *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	    d[idC] = x[ixi];
+	  }
 	  d[3] = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
 			nod[2]->pos, d[0], d[1], d[2], pos);
-	  *(dst.shp + idI) = WLZ_NINT(d[3]);
+	  dst.shp[idI] = WLZ_NINT(d[3]);
 	  break;
 	case WLZ_GREY_UBYTE:
-	  d[0] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[0]->idx);
-	  d[1] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[1]->idx);
-	  d[2] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  for(idC = 0; idC < 3; ++idC)
+	  {
+	    WlzUByte *x;
+
+	    x = (WlzUByte *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	    d[idC] = x[ixi];
+	  }
 	  d[3] = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
 			nod[2]->pos, d[0], d[1], d[2], pos);
-	  *(dst.ubp + idI) = WLZ_NINT(d[3]);
+	  dst.ubp[idI] = WLZ_NINT(d[3]);
 	  break;
 	case WLZ_GREY_FLOAT:
-	  d[0] = *(float *)WlzIndexedValueGet(ixv, nod[0]->idx);
-	  d[1] = *(float *)WlzIndexedValueGet(ixv, nod[1]->idx);
-	  d[2] = *(float *)WlzIndexedValueGet(ixv, nod[2]->idx);
+	  for(idC = 0; idC < 3; ++idC)
+	  {
+	    float *x;
+
+	    x = (float *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	    d[idC] = x[ixi];
+	  }
 	  d[3] = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
 			nod[2]->pos, d[0], d[1], d[2], pos);
-	  *(dst.flp + idI) = d[3];
+	  dst.flp[idI] = d[3];
 	  break;
 	case WLZ_GREY_DOUBLE:
-	  *(dst.dbp + idI) = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
-			nod[2]->pos,
-			*(double *)WlzIndexedValueGet(ixv, nod[0]->idx),
-			*(double *)WlzIndexedValueGet(ixv, nod[1]->idx),
-			*(double *)WlzIndexedValueGet(ixv, nod[2]->idx),
-			pos);
+	  for(idC = 0; idC < 3; ++idC)
+	  {
+	    double *x;
+
+	    x = (double *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	    d[idC] = x[ixi];
+	  }
+	  dst.dbp[idI] = WlzGeomInterpolateTri2D(nod[0]->pos, nod[1]->pos,
+			nod[2]->pos, d[0], d[1], d[2], pos);
 	  break;
 	default:
 	  errNum = WLZ_ERR_GREY_TYPE;
@@ -2566,28 +2626,35 @@ static WlzErrorNum WlzCMeshInterpolateNod2DLinear(WlzGreyP dst,
     }
     else if(idN >= 0)
     {
+      WlzGreyP x;
       WlzCMeshNod2D *nod;
 
       nod = (WlzCMeshNod2D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
       switch(ixv->vType)
       {
 	case WLZ_GREY_LONG:
-	  *(dst.lnp + idI) = *(WlzLong *)WlzIndexedValueGet(ixv, nod->idx);
+	  x.lnp = (WlzLong *)WlzIndexedValueGet(ixv, nod->idx);
+	  *(dst.lnp + idI) = x.lnp[ixi];
 	  break;
 	case WLZ_GREY_INT:
-	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, nod->idx);
+	  x.inp = (int *)WlzIndexedValueGet(ixv, nod->idx);
+	  *(dst.inp + idI) = x.inp[ixi];
 	  break;
 	case WLZ_GREY_SHORT:
-	  *(dst.shp + idI) = *(short *)WlzIndexedValueGet(ixv, nod->idx);
+	  x.shp = (short *)WlzIndexedValueGet(ixv, nod->idx);
+	  *(dst.shp + idI) = x.shp[ixi];
 	  break;
 	case WLZ_GREY_UBYTE:
-	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, nod->idx);
+	  x.ubp = (WlzUByte *)WlzIndexedValueGet(ixv, nod->idx);
+	  *(dst.ubp + idI) = x.ubp[ixi];
 	  break;
 	case WLZ_GREY_FLOAT:
-	  *(dst.flp + idI) = *(float *)WlzIndexedValueGet(ixv, nod->idx);
+	  x.flp = (float *)WlzIndexedValueGet(ixv, nod->idx);
+	  *(dst.flp + idI) = x.flp[ixi];
 	  break;
 	case WLZ_GREY_DOUBLE:
-	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, nod->idx);
+	  x.dbp = (double *)WlzIndexedValueGet(ixv, nod->idx);
+	  *(dst.dbp + idI) = x.dbp[ixi];
 	  break;
 	default:
 	  errNum = WLZ_ERR_GREY_TYPE;
@@ -2614,11 +2681,12 @@ static WlzErrorNum WlzCMeshInterpolateNod2DLinear(WlzGreyP dst,
 * 						the interval.
 * \param	mesh				The mesh.
 * \param	ixv				The indexed values.
+* \param	ixi				Index into the indexed values.
 */
 static WlzErrorNum WlzCMeshInterpolateElm2DNearest(WlzGreyP dst,
 					int ln, int kolL, int kolR,
 					WlzCMesh2D *mesh,
-					WlzIndexedValues *ixv)
+					WlzIndexedValues *ixv, int ixi)
 {
   int		kl,
   		idE,
@@ -2635,28 +2703,35 @@ static WlzErrorNum WlzCMeshInterpolateElm2DNearest(WlzGreyP dst,
     if((idE = WlzCMeshElmEnclosingPos2D(mesh, idE, pos.vtX, pos.vtY,
     					0, NULL)) >= 0)
     {
+      WlzGreyP	x;
       WlzCMeshElm2D *elm;
 
       elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       switch(ixv->vType)
       {
 	case WLZ_GREY_LONG:
-	  *(dst.lnp + idI) = *(WlzLong *)WlzIndexedValueGet(ixv, elm->idx);
+	  x.lnp = (WlzLong *)WlzIndexedValueGet(ixv, elm->idx);
+	  *(dst.lnp + idI) = x.lnp[ixi];
 	  break;
 	case WLZ_GREY_INT:
-	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, elm->idx);
+	  x.inp = (int *)WlzIndexedValueGet(ixv, elm->idx);
+	  *(dst.inp + idI) = x.inp[ixi];
 	  break;
 	case WLZ_GREY_SHORT:
-	  *(dst.ubp + idI) = *(short *)WlzIndexedValueGet(ixv, elm->idx);
+	  x.shp = (short *)WlzIndexedValueGet(ixv, elm->idx);
+	  *(dst.ubp + idI) = x.shp[ixi];
 	  break;
 	case WLZ_GREY_UBYTE:
-	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, elm->idx);
+	  x.ubp = (WlzUByte *)WlzIndexedValueGet(ixv, elm->idx);
+	  *(dst.ubp + idI) = x.ubp[ixi];
 	  break;
 	case WLZ_GREY_FLOAT:
-	  *(dst.flp + idI) = *(float *)WlzIndexedValueGet(ixv, elm->idx);
+	  x.flp = (float *)WlzIndexedValueGet(ixv, elm->idx);
+	  *(dst.flp + idI) = x.flp[ixi];
 	  break;
 	case WLZ_GREY_DOUBLE:
-	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, elm->idx);
+	  x.dbp = (double *)WlzIndexedValueGet(ixv, elm->idx);
+	  *(dst.dbp + idI) = x.dbp[ixi];
 	  break;
 	default:
 	  errNum = WLZ_ERR_GREY_TYPE;
@@ -2683,11 +2758,12 @@ static WlzErrorNum WlzCMeshInterpolateElm2DNearest(WlzGreyP dst,
 * 						the interval.
 * \param	mesh				The mesh.
 * \param	ixv				The indexed values.
+* \param	ixi				Index into the indexed values.
 */
 static WlzErrorNum WlzCMeshInterpolateElm2DLinear(WlzGreyP dst,
 					int ln, int kolL, int kolR,
 					WlzCMesh2D *mesh,
-					WlzIndexedValues *ixv)
+					WlzIndexedValues *ixv, int ixi)
 {
   int		kl,
   		idE,
@@ -2762,25 +2838,33 @@ static WlzErrorNum WlzCMeshInterpolateElm2DLinear(WlzGreyP dst,
         /* Interpolate values. */
 	if(setElmIdx >= 0)
 	{
+	  WlzGreyP 	x;
+
 	  switch(ixv->vType)
 	  {
 	    case WLZ_GREY_LONG:
-	      v = *(WlzLong *)WlzIndexedValueGet(ixv, setElmIdx);
+	      x.lnp = (WlzLong *)WlzIndexedValueGet(ixv, setElmIdx);
+	      v = x.lnp[ixi];
 	      break;
 	    case WLZ_GREY_INT:
-	      v = *(int *)WlzIndexedValueGet(ixv, setElmIdx);
+	      x.inp = (int *)WlzIndexedValueGet(ixv, setElmIdx);
+	      v = x.inp[ixi];
 	      break;
 	    case WLZ_GREY_SHORT:
-	      v = *(short *)WlzIndexedValueGet(ixv, setElmIdx);
+	      x.shp = (short *)WlzIndexedValueGet(ixv, setElmIdx);
+	      v = x.shp[ixi];
 	      break;
 	    case WLZ_GREY_UBYTE:
-	      v = *(WlzUByte *)WlzIndexedValueGet(ixv, setElmIdx);
+	      x.ubp = (WlzUByte *)WlzIndexedValueGet(ixv, setElmIdx);
+	      v = x.ubp[ixi];
 	      break;
 	    case WLZ_GREY_FLOAT:
-	      v = *(float *)WlzIndexedValueGet(ixv, setElmIdx);
+	      x.flp = (float *)WlzIndexedValueGet(ixv, setElmIdx);
+	      v = x.flp[ixi];
 	      break;
 	    case WLZ_GREY_DOUBLE:
-	      v = *(double *)WlzIndexedValueGet(ixv, setElmIdx);
+	      x.dbp = (double *)WlzIndexedValueGet(ixv, setElmIdx);
+	      v = x.dbp[ixi];
 	      break;
 	    default:
 	      errNum = WLZ_ERR_GREY_TYPE;
@@ -2794,25 +2878,33 @@ static WlzErrorNum WlzCMeshInterpolateElm2DLinear(WlzGreyP dst,
 
 	  for(idE = 0; idE < nE; ++idE)
 	  {
+	    WlzGreyP 	x;
+
 	    switch(ixv->vType)
 	    {
 	      case WLZ_GREY_LONG:
-		v = *(WlzLong *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		x.lnp = (WlzLong *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		v = x.lnp[ixi];
 		break;
 	      case WLZ_GREY_INT:
-		v = *(int *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		x.inp = (int *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		v = x.inp[ixi];
 		break;
 	      case WLZ_GREY_SHORT:
-		v = *(short *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		x.shp = (short *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		v = x.shp[ixi];
 		break;
 	      case WLZ_GREY_UBYTE:
-		v = *(WlzUByte *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		x.ubp = (WlzUByte *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		v = x.ubp[ixi];
 		break;
 	      case WLZ_GREY_FLOAT:
-		v = *(float *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		x.flp = (float *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		v = x.flp[ixi];
 		break;
 	      case WLZ_GREY_DOUBLE:
-		v = *(double *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		x.dbp = (double *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		v = x.dbp[ixi];
 		break;
 	      default:
 		errNum = WLZ_ERR_GREY_TYPE;
@@ -2826,23 +2918,22 @@ static WlzErrorNum WlzCMeshInterpolateElm2DLinear(WlzGreyP dst,
 	switch(ixv->vType)
 	{
 	  case WLZ_GREY_LONG:
-	    *(dst.lnp + idI) = WLZ_NINT(v);
+	    dst.lnp[idI] = WLZ_NINT(v);
 	    break;
 	  case WLZ_GREY_INT:
-	    *(dst.inp + idI) = WLZ_NINT(v);
-				WlzIndexedValueGet(ixv, setElmIdx);
+	    dst.inp[idI] = WLZ_NINT(v);
 	    break;
 	  case WLZ_GREY_SHORT:
-	    *(dst.ubp + idI) = WLZ_NINT(v);
+	    dst.ubp[idI] = WLZ_NINT(v);
 	    break;
 	  case WLZ_GREY_UBYTE:
-	    *(dst.ubp + idI) = WLZ_NINT(v);
+	    dst.ubp[idI] = WLZ_NINT(v);
 	    break;
 	  case WLZ_GREY_FLOAT:
-	    *(dst.flp + idI) = v;
+	    dst.flp[idI] = v;
 	    break;
 	  case WLZ_GREY_DOUBLE:
-	    *(dst.dbp + idI) = v;
+	    dst.dbp[idI] = v;
 	    break;
 	  default:
 	    errNum = WLZ_ERR_GREY_TYPE;
@@ -2874,11 +2965,13 @@ static WlzErrorNum WlzCMeshInterpolateElm2DLinear(WlzGreyP dst,
 * 						the interval.
 * \param	mesh				The mesh.
 * \param	ixv				The indexed values.
+* \param	ixi				Index into the indexed values.
 */
 static WlzErrorNum WlzCMeshInterpolateElm3DLinear(WlzGreyP dst,
 					int pl, int ln, int kolL, int kolR,
 					WlzCMesh3D *mesh,
-					WlzIndexedValues *ixv)
+					WlzIndexedValues *ixv,
+					int ixi)
 {
   int		kl,
   		idE,
@@ -2960,25 +3053,33 @@ static WlzErrorNum WlzCMeshInterpolateElm3DLinear(WlzGreyP dst,
         /* Interpolate values. */
 	if(setElmIdx >= 0)
 	{
+	  WlzGreyP x;
+
 	  switch(ixv->vType)
 	  {
 	    case WLZ_GREY_LONG:
-	      v = *(WlzLong *)WlzIndexedValueGet(ixv, setElmIdx);
+	      x.lnp = (WlzLong *)WlzIndexedValueGet(ixv, setElmIdx);
+	      v = x.lnp[ixi];
 	      break;
 	    case WLZ_GREY_INT:
-	      v = *(int *)WlzIndexedValueGet(ixv, setElmIdx);
+	      x.inp = (int *)WlzIndexedValueGet(ixv, setElmIdx);
+	      v = x.inp[ixi];
 	      break;
 	    case WLZ_GREY_SHORT:
-	      v = *(short *)WlzIndexedValueGet(ixv, setElmIdx);
+	      x.shp = (short *)WlzIndexedValueGet(ixv, setElmIdx);
+	      v = x.shp[ixi];
 	      break;
 	    case WLZ_GREY_UBYTE:
-	      v = *(WlzUByte *)WlzIndexedValueGet(ixv, setElmIdx);
+	      x.ubp = (WlzUByte *)WlzIndexedValueGet(ixv, setElmIdx);
+	      v = x.ubp[ixi];
 	      break;
 	    case WLZ_GREY_FLOAT:
-	      v = *(float *)WlzIndexedValueGet(ixv, setElmIdx);
+	      x.flp = (float *)WlzIndexedValueGet(ixv, setElmIdx);
+	      v = x.flp[ixi];
 	      break;
 	    case WLZ_GREY_DOUBLE:
-	      v = *(double *)WlzIndexedValueGet(ixv, setElmIdx);
+	      x.dbp = (double *)WlzIndexedValueGet(ixv, setElmIdx);
+	      v = x.dbp[ixi];
 	      break;
 	    default:
 	      errNum = WLZ_ERR_GREY_TYPE;
@@ -2992,25 +3093,33 @@ static WlzErrorNum WlzCMeshInterpolateElm3DLinear(WlzGreyP dst,
 
 	  for(idE = 0; idE < nE; ++idE)
 	  {
+	    WlzGreyP x;
+
 	    switch(ixv->vType)
 	    {
 	      case WLZ_GREY_LONG:
-		v = *(WlzLong *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		x.lnp = (WlzLong *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		v = x.lnp[ixi];
 		break;
 	      case WLZ_GREY_INT:
-		v = *(int *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		x.inp = (int *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		v = x.inp[ixi];
 		break;
 	      case WLZ_GREY_SHORT:
-		v = *(short *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		x.shp = (short *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		v = x.shp[ixi];
 		break;
 	      case WLZ_GREY_UBYTE:
-		v = *(WlzUByte *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		x.ubp = (WlzUByte *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		v = x.ubp[ixi];
 		break;
 	      case WLZ_GREY_FLOAT:
-		v = *(float *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		x.flp = (float *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		v = x.flp[ixi];
 		break;
 	      case WLZ_GREY_DOUBLE:
-		v = *(double *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		x.dbp = (double *)WlzIndexedValueGet(ixv, nbrIdxBuf[idE]);
+		v = x.dbp[ixi];
 		break;
 	      default:
 		errNum = WLZ_ERR_GREY_TYPE;
@@ -3024,22 +3133,22 @@ static WlzErrorNum WlzCMeshInterpolateElm3DLinear(WlzGreyP dst,
 	switch(ixv->vType)
 	{
 	  case WLZ_GREY_LONG:
-	    *(dst.lnp + idI) = WLZ_NINT(v);
+	    dst.lnp[idI] = WLZ_NINT(v);
 	    break;
 	  case WLZ_GREY_INT:
-	    *(dst.inp + idI) = WLZ_NINT(v);
+	    dst.inp[idI] = WLZ_NINT(v);
 	    break;
 	  case WLZ_GREY_SHORT:
-	    *(dst.ubp + idI) = WLZ_NINT(v);
+	    dst.ubp[idI] = WLZ_NINT(v);
 	    break;
 	  case WLZ_GREY_UBYTE:
-	    *(dst.ubp + idI) = WLZ_NINT(v);
+	    dst.ubp[idI] = WLZ_NINT(v);
 	    break;
 	  case WLZ_GREY_FLOAT:
-	    *(dst.flp + idI) = v;
+	    dst.flp[idI] = v;
 	    break;
 	  case WLZ_GREY_DOUBLE:
-	    *(dst.dbp + idI) = v;
+	    dst.dbp[idI] = v;
 	    break;
 	  default:
 	    errNum = WLZ_ERR_GREY_TYPE;
@@ -3071,11 +3180,13 @@ static WlzErrorNum WlzCMeshInterpolateElm3DLinear(WlzGreyP dst,
 * 						the interval.
 * \param	mesh				The mesh.
 * \param	ixv				The indexed values.
+* \param	ixi				Index into the indexed values.
 */
 static WlzErrorNum WlzCMeshInterpolateNod3DNearest(WlzGreyP dst,
 					int pl, int ln, int kolL, int kolR,
 					WlzCMesh3D *mesh,
-					WlzIndexedValues *ixv)
+					WlzIndexedValues *ixv,
+					int ixi)
 {
   int		kl,
   		idE,
@@ -3131,25 +3242,33 @@ static WlzErrorNum WlzCMeshInterpolateNod3DNearest(WlzGreyP dst,
     /* Set value. */
     if(nNod)
     {
+      WlzGreyP	x;
+
       switch(ixv->vType)
       {
 	case WLZ_GREY_LONG:
-	  *(dst.lnp + idI) = *(WlzLong *)WlzIndexedValueGet(ixv, nNod->idx);
+	  x.lnp = (WlzLong *)WlzIndexedValueGet(ixv, nNod->idx);
+	  dst.lnp[idI] = x.lnp[ixi];
 	  break;
 	case WLZ_GREY_INT:
-	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, nNod->idx);
+	  x.inp = (int *)WlzIndexedValueGet(ixv, nNod->idx);
+	  dst.inp[idI] = x.inp[ixi];
 	  break;
 	case WLZ_GREY_SHORT:
-	  *(dst.shp + idI) = *(short *)WlzIndexedValueGet(ixv, nNod->idx);
+	  x.shp = (short *)WlzIndexedValueGet(ixv, nNod->idx);
+	  dst.shp[idI] = x.shp[ixi];
 	  break;
 	case WLZ_GREY_UBYTE:
-	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, nNod->idx);
+	  x.ubp = (WlzUByte *)WlzIndexedValueGet(ixv, nNod->idx);
+	  dst.ubp[idI] = x.ubp[ixi];
 	  break;
 	case WLZ_GREY_FLOAT:
-	  *(dst.flp + idI) = *(float *)WlzIndexedValueGet(ixv, nNod->idx);
+	  x.flp = (float *)WlzIndexedValueGet(ixv, nNod->idx);
+	  dst.flp[idI] = x.flp[ixi];
 	  break;
 	case WLZ_GREY_DOUBLE:
-	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, nNod->idx);
+	  x.dbp = (double *)WlzIndexedValueGet(ixv, nNod->idx);
+	  dst.dbp[idI] = x.dbp[ixi];
 	  break;
 	default:
 	  errNum = WLZ_ERR_GREY_TYPE;
@@ -3178,11 +3297,13 @@ static WlzErrorNum WlzCMeshInterpolateNod3DNearest(WlzGreyP dst,
 * 						the interval.
 * \param	mesh				The mesh.
 * \param	ixv				The indexed values.
+* \param	ixi				Index into the indexed values.
 */
 static WlzErrorNum WlzCMeshInterpolateNod3DLinear(WlzGreyP dst,
 					int pl, int ln, int kolL, int kolR,
 					WlzCMesh3D *mesh,
-					WlzIndexedValues *ixv)
+					WlzIndexedValues *ixv,
+					int ixi)
 {
   int		kl,
   		idE,
@@ -3201,7 +3322,8 @@ static WlzErrorNum WlzCMeshInterpolateNod3DLinear(WlzGreyP dst,
     if((idE = WlzCMeshElmEnclosingPos3D(mesh, idE, pos.vtX, pos.vtY, pos.vtZ,
     					0, &idN)) >= 0)
     {
-      double d[5];
+      int 	idC;
+      double 	d[5];
       WlzCMeshElm3D *elm;
       WlzCMeshNod3D *nod[4];
 
@@ -3213,63 +3335,81 @@ static WlzErrorNum WlzCMeshInterpolateNod3DLinear(WlzGreyP dst,
       switch(ixv->vType)
       {
 	case WLZ_GREY_LONG:
-	  d[0] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[0]->idx);
-	  d[1] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[1]->idx);
-	  d[2] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[2]->idx);
-	  d[3] = *(WlzLong *)WlzIndexedValueGet(ixv, nod[3]->idx);
+	  for(idC = 0; idC < 4; ++idC)
+	  {
+            WlzLong 	*x;
+
+	    x = (WlzLong *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	    d[idC] = x[ixi];
+	  }
 	  d[4] = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
 			nod[2]->pos, nod[3]->pos,
 			d[0], d[1], d[2], d[3], pos);
-	  *(dst.lnp + idI) = WLZ_NINT(d[4]);
+	  dst.lnp[idI] = WLZ_NINT(d[4]);
 	  break;
 	case WLZ_GREY_INT:
-	  d[0] = *(int *)WlzIndexedValueGet(ixv, nod[0]->idx);
-	  d[1] = *(int *)WlzIndexedValueGet(ixv, nod[1]->idx);
-	  d[2] = *(int *)WlzIndexedValueGet(ixv, nod[2]->idx);
-	  d[3] = *(int *)WlzIndexedValueGet(ixv, nod[3]->idx);
+	  for(idC = 0; idC < 4; ++idC)
+	  {
+            int 	*x;
+
+	    x = (int *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	    d[idC] = x[ixi];
+	  }
 	  d[4] = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
 			nod[2]->pos, nod[3]->pos,
 			d[0], d[1], d[2], d[3], pos);
-	  *(dst.inp + idI) = WLZ_NINT(d[4]);
+	  dst.inp[idI] = WLZ_NINT(d[4]);
 	  break;
 	case WLZ_GREY_SHORT:
-	  d[0] = *(short *)WlzIndexedValueGet(ixv, nod[0]->idx);
-	  d[1] = *(short *)WlzIndexedValueGet(ixv, nod[1]->idx);
-	  d[2] = *(short *)WlzIndexedValueGet(ixv, nod[2]->idx);
-	  d[3] = *(short *)WlzIndexedValueGet(ixv, nod[3]->idx);
+	  for(idC = 0; idC < 4; ++idC)
+	  {
+            short 	*x;
+
+	    x = (short *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	    d[idC] = x[ixi];
+	  }
 	  d[4] = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
 			nod[2]->pos, nod[3]->pos,
 			d[0], d[1], d[2], d[3], pos);
-	  *(dst.shp + idI) = WLZ_NINT(d[4]);
+	  dst.shp[idI] = WLZ_NINT(d[4]);
 	  break;
 	case WLZ_GREY_UBYTE:
-	  d[0] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[0]->idx);
-	  d[1] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[1]->idx);
-	  d[2] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[2]->idx);
-	  d[3] = *(WlzUByte *)WlzIndexedValueGet(ixv, nod[3]->idx);
+	  for(idC = 0; idC < 4; ++idC)
+	  {
+            WlzUByte 	*x;
+
+	    x = (WlzUByte *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	    d[idC] = x[ixi];
+	  }
 	  d[4] = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
 			nod[2]->pos, nod[3]->pos,
 			d[0], d[1], d[2], d[3], pos);
-	  *(dst.ubp + idI) = WLZ_NINT(d[4]);
+	  dst.ubp[idI] = WLZ_NINT(d[4]);
 	  break;
 	case WLZ_GREY_FLOAT:
-	  d[0] = *(float *)WlzIndexedValueGet(ixv, nod[0]->idx);
-	  d[1] = *(float *)WlzIndexedValueGet(ixv, nod[1]->idx);
-	  d[2] = *(float *)WlzIndexedValueGet(ixv, nod[2]->idx);
-	  d[3] = *(float *)WlzIndexedValueGet(ixv, nod[3]->idx);
+	  for(idC = 0; idC < 4; ++idC)
+	  {
+            float 	*x;
+
+	    x = (float *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	    d[idC] = x[ixi];
+	  }
 	  d[4] = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
 			nod[2]->pos, nod[3]->pos,
 			d[0], d[1], d[2], d[3], pos);
-	  *(dst.flp + idI) = d[4];
+	  dst.flp[idI] = d[4];
 	  break;
 	case WLZ_GREY_DOUBLE:
-	  *(dst.dbp + idI) = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
-			nod[2]->pos, nod[3]->pos,
-			*(double *)WlzIndexedValueGet(ixv, nod[0]->idx),
-			*(double *)WlzIndexedValueGet(ixv, nod[1]->idx),
-			*(double *)WlzIndexedValueGet(ixv, nod[2]->idx),
-			*(double *)WlzIndexedValueGet(ixv, nod[3]->idx),
-			pos);
+	  for(idC = 0; idC < 4; ++idC)
+	  {
+            double 	*x;
+
+	    x = (double *)WlzIndexedValueGet(ixv, nod[idC]->idx);
+	    d[idC] = x[ixi];
+	  }
+	  dst.dbp[idI] = WlzGeomInterpolateTet3D(nod[0]->pos, nod[1]->pos,
+			     nod[2]->pos, nod[3]->pos,
+			     d[0], d[1], d[2], d[3], pos);
 	  break;
 	default:
 	  errNum = WLZ_ERR_GREY_TYPE;
@@ -3283,23 +3423,31 @@ static WlzErrorNum WlzCMeshInterpolateNod3DLinear(WlzGreyP dst,
       nod = (WlzCMeshNod3D *)AlcVectorItemGet(mesh->res.nod.vec, idN);
       switch(ixv->vType)
       {
+	WlzGreyP x;
+
 	case WLZ_GREY_LONG:
-	  *(dst.lnp + idI) = *(WlzLong *)WlzIndexedValueGet(ixv, nod->idx);
+	  x.lnp = (WlzLong *)WlzIndexedValueGet(ixv, nod->idx);
+	  dst.lnp[idI] = x.lnp[ixi];
 	  break;
 	case WLZ_GREY_INT:
-	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, nod->idx);
+	  x.inp = (int *)WlzIndexedValueGet(ixv, nod->idx);
+	  dst.inp[idI] = x.inp[ixi];
 	  break;
 	case WLZ_GREY_SHORT:
-	  *(dst.shp + idI) = *(short *)WlzIndexedValueGet(ixv, nod->idx);
+	  x.shp = (short *)WlzIndexedValueGet(ixv, nod->idx);
+	  dst.shp[idI] = x.shp[ixi];
 	  break;
 	case WLZ_GREY_UBYTE:
-	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, nod->idx);
+	  x.ubp = (WlzUByte *)WlzIndexedValueGet(ixv, nod->idx);
+	  dst.ubp[idI] = x.ubp[ixi];
 	  break;
 	case WLZ_GREY_FLOAT:
-	  *(dst.flp + idI) = *(float *)WlzIndexedValueGet(ixv, nod->idx);
+	  x.flp = (float *)WlzIndexedValueGet(ixv, nod->idx);
+	  dst.flp[idI] = x.flp[ixi];
 	  break;
 	case WLZ_GREY_DOUBLE:
-	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, nod->idx);
+	  x.dbp = (double *)WlzIndexedValueGet(ixv, nod->idx);
+	  dst.dbp[idI] = x.dbp[ixi];
 	  break;
 	default:
 	  errNum = WLZ_ERR_GREY_TYPE;
@@ -3328,11 +3476,13 @@ static WlzErrorNum WlzCMeshInterpolateNod3DLinear(WlzGreyP dst,
 * 						the interval.
 * \param	mesh				The mesh.
 * \param	ixv				The indexed values.
+* \param	ixi				Index into the indexed values.
 */
 static WlzErrorNum WlzCMeshInterpolateElm3DNearest(WlzGreyP dst,
 					int pl, int ln, int kolL, int kolR,
 					WlzCMesh3D *mesh,
-					WlzIndexedValues *ixv)
+					WlzIndexedValues *ixv,
+					int ixi)
 {
   int		kl,
   		idE,
@@ -3350,28 +3500,35 @@ static WlzErrorNum WlzCMeshInterpolateElm3DNearest(WlzGreyP dst,
     if((idE = WlzCMeshElmEnclosingPos3D(mesh, idE, pos.vtX, pos.vtY, pos.vtZ,
     					0, NULL)) >= 0)
     {
+      WlzGreyP	x;
       WlzCMeshElm3D *elm;
 
       elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
       switch(ixv->vType)
       {
 	case WLZ_GREY_LONG:
-	  *(dst.lnp + idI) = *(WlzLong *)WlzIndexedValueGet(ixv, elm->idx);
+	  x.lnp = (WlzLong *)WlzIndexedValueGet(ixv, elm->idx);
+	  dst.lnp[idI] = x.lnp[ixi];
 	  break;
 	case WLZ_GREY_INT:
-	  *(dst.inp + idI) = *(int *)WlzIndexedValueGet(ixv, elm->idx);
+	  x.inp = (int *)WlzIndexedValueGet(ixv, elm->idx);
+	  dst.inp[idI] = x.inp[ixi];
 	  break;
 	case WLZ_GREY_SHORT:
-	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, elm->idx);
+	  x.shp = (short *)WlzIndexedValueGet(ixv, elm->idx);
+	  dst.shp[idI] = x.shp[ixi];
 	  break;
 	case WLZ_GREY_UBYTE:
-	  *(dst.ubp + idI) = *(WlzUByte *)WlzIndexedValueGet(ixv, elm->idx);
+	  x.ubp = (WlzUByte *)WlzIndexedValueGet(ixv, elm->idx);
+	  dst.ubp[idI] = x.ubp[ixi];
 	  break;
 	case WLZ_GREY_FLOAT:
-	  *(dst.flp + idI) = *(float *)WlzIndexedValueGet(ixv, elm->idx);
+	  x.flp = (float *)WlzIndexedValueGet(ixv, elm->idx);
+	  dst.flp[idI] = x.flp[ixi];
 	  break;
 	case WLZ_GREY_DOUBLE:
-	  *(dst.dbp + idI) = *(double *)WlzIndexedValueGet(ixv, elm->idx);
+	  x.dbp = (double *)WlzIndexedValueGet(ixv, elm->idx);
+	  dst.dbp[idI] = x.dbp[ixi];
 	  break;
 	default:
 	  errNum = WLZ_ERR_GREY_TYPE;
@@ -5801,7 +5958,7 @@ static WlzCMesh2D *WlzCMeshTransformCMesh2D(WlzCMesh2D *sMesh,
 	  errNum = WLZ_ERR_DOMAIN_DATA;
 	  break;
 	}
-	if(sE.idx > 0)
+	if(sE.idx >= 0)
 	{
 	  if((sE.idx != tLastElmIdx) ||
 	     ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
@@ -5891,7 +6048,7 @@ static WlzCMesh2D5 *WlzCMeshTransformCMesh2D5(WlzCMesh2D5 *sMesh,
 	  errNum = WLZ_ERR_DOMAIN_DATA;
 	  break;
 	}
-	if(sE.idx > 0)
+	if(sE.idx >= 0)
 	{
 	  if((sE.idx != tLastElmIdx) ||
 	     ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
@@ -5987,7 +6144,7 @@ static WlzCMesh3D *WlzCMeshTransformCMesh3D(WlzCMesh3D *sMesh,
 	  errNum = WLZ_ERR_DOMAIN_DATA;
 	  break;
 	}
-	if(sE.idx > 0)
+	if(sE.idx >= 0)
 	{
 	  if((sE.idx != tLastElmIdx) ||
 	     ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
