@@ -3676,6 +3676,67 @@ double 		WlzCMeshElmMinEdgLnSq2D(WlzCMeshElm2D *elm)
 }
 
 /*!
+* \ingroup	WlzMesh
+* \brief	Computes the square of the minimum and maximum edge length for
+*		the given element.
+* \param	elm			Given element, must be valid.
+* \param	dstMinSq		Destination pointer for minimum squared
+* 					edge length, may be NULL.
+* \param	dstMaxSq		Destination pointer for maximum squared
+* 					edge length, may be NULL.
+*/
+void 		WlzCMeshElmMinMaxEdgLnSq3D(WlzCMeshElm3D *elm,
+                                           double *dstMinSq, double *dstMaxSq)
+{
+  int		idx;
+  double	lenSq,
+  		minLenSq,
+		maxLenSq;
+  WlzDVertex3	p0;
+  WlzCMeshNod3D *nodBuf[4];
+  const int	nodTbl[6][2] =
+                {
+		  {0, 1},
+		  {0, 2},
+		  {0, 3},
+		  {1, 2},
+		  {1, 3},
+		  {2, 3}
+		};
+
+  /* Collect the nodes of the element. */
+  nodBuf[0] = WLZ_CMESH_ELM3D_GET_NODE_0(elm);
+  nodBuf[1] = WLZ_CMESH_ELM3D_GET_NODE_1(elm);
+  nodBuf[2] = WLZ_CMESH_ELM3D_GET_NODE_2(elm);
+  nodBuf[3] = WLZ_CMESH_ELM3D_GET_NODE_3(elm);
+  /* Compute and compare edge lengths. */
+  WLZ_VTX_3_SUB(p0, nodBuf[nodTbl[0][0]]->pos, nodBuf[nodTbl[0][1]]->pos);
+  minLenSq = maxLenSq = WLZ_VTX_3_SQRLEN(p0);
+  for(idx = 1; idx < 6; ++idx)
+  {
+    WLZ_VTX_3_SUB(p0,
+		  nodBuf[nodTbl[idx][0]]->pos, nodBuf[nodTbl[idx][1]]->pos);
+    lenSq = WLZ_VTX_3_SQRLEN(p0);
+    if(lenSq < minLenSq)
+    {
+      minLenSq = lenSq;
+    }
+    else if(lenSq > maxLenSq)
+    {
+      maxLenSq = lenSq;
+    }
+  }
+  if(dstMinSq)
+  {
+    *dstMinSq = minLenSq;
+  }
+  if(dstMinSq)
+  {
+    *dstMaxSq = maxLenSq;
+  }
+}
+
+/*!
 * \return	Square of the minimum edge length for the element,
 *		this will be negative for invalid elements.
 * \ingroup	WlzMesh
@@ -4226,7 +4287,8 @@ static double 	WlzCMeshCompGridBSz2D5(int nN, double nPC, WlzDVertex3 mSz)
 {
   double	bSz;
 
-  bSz = pow(fabs((nPC * mSz.vtX * mSz.vtY * mSz.vtZ)/(nN + 1.0)), 1.0 / 3.0);
+  bSz = pow(fabs((nPC * mSz.vtX * mSz.vtY * mSz.vtZ)/(nN + 1.0)),
+            1.0 / 3.0);
   return(bSz);
 }
 
@@ -4246,7 +4308,8 @@ static double 	WlzCMeshCompGridBSz3D(int nN, double nPC, WlzDVertex3 mSz)
 {
   double	bSz;
 
-  bSz = pow(fabs((nPC * mSz.vtX * mSz.vtY * mSz.vtZ)/(nN + 1.0)), 1.0 / 3.0);
+  bSz = pow(fabs((nPC * mSz.vtX * mSz.vtY * mSz.vtZ)/(nN + 1.0)),
+            1.0 / 3.0);
   return(bSz);
 }
 
