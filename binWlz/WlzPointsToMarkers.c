@@ -103,13 +103,6 @@ the points in the points object read from the file in.wlz.
 
 #define WLZ_CFP_READLN_LEN	(1024)
 
-static WlzVertexP 		WlzMTDReadVtxArray(
-				  FILE *fP,
-				  int dim,
-				  int *dstNVtx, 
-				  WlzVertexType *dstVType,
-				  WlzErrorNum *dstErr);
-
 extern char 	*optarg;
 extern int 	optind,
 		opterr,
