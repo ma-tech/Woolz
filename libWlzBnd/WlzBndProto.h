@@ -134,7 +134,7 @@ extern WlzBasisFnTransform 	*WlzBndBasisFnTrFromCPts3(
 * WlzBndFunction.c
 ************************************************************************/
 extern void			WlzGetVersion(
-				  char **dstStr);
+				  const char **dstStr);
 extern WlzDVertex3		WlzGetVoxelSize(
 				  WlzObject *obj,
 				  WlzErrorNum *dstErr);
