@@ -273,7 +273,7 @@ static WlzObject *WlzIntRescaleObj2D(
     WlzGreyWSpace	gwsp;
     WlzPixelV 		backgrnd;
     WlzGreyValueWSpace	*gVWSp = NULL;
-    WlzGreyType		gtype;
+    WlzGreyType		gtype = WLZ_GREY_ERROR;
 
     backgrnd = WlzGetBackground(obj, NULL);
     if((values.v = WlzNewValueTb(rtnObj, obj->values.v->type,
