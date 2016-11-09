@@ -65,14 +65,10 @@ AlgError	AlgConvolve(int sizeArrayCnv, double *arrayCnv,
 {
   int		pCnt,
   		kCnt0,
-		kCnt1;
-  double	cnv,
-  		dat0,
-		dat1;
-  double	*cP,
-  		*kP,
-		*dP0,
-		*dP1;
+		kCnt1,
+		halfArrayKrn;
+  double	dat0,
+  		dat1;
   AlgError	errCode = ALG_ERR_NONE;
 
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
@@ -81,10 +77,10 @@ AlgError	AlgConvolve(int sizeArrayCnv, double *arrayCnv,
 	   sizeArrayKrn, (unsigned long )arrayKrn,
 	   sizeArrayDat, (unsigned long )arrayDat,
 	   (int )pad));
+  halfArrayKrn = sizeArrayKrn / 2;
   if((sizeArrayCnv <= 0) || (arrayCnv == NULL) ||
      (sizeArrayKrn <= 0) || ((sizeArrayKrn % 2) != 1) || (arrayKrn == NULL) ||
-     (sizeArrayDat <= 0) || (arrayDat == NULL) ||
-     (sizeArrayCnv < sizeArrayKrn) || (sizeArrayCnv < sizeArrayDat))
+     (sizeArrayDat <= 0) || (arrayDat == NULL))
   {
     errCode = ALG_ERR_FUNC;
   }
@@ -98,8 +94,8 @@ AlgError	AlgConvolve(int sizeArrayCnv, double *arrayCnv,
       case ALG_PAD_ZERO:
         break;
       case ALG_PAD_END:
-	dat0 = *arrayDat;
-	dat1 = *(arrayDat + sizeArrayDat - 1);
+	dat0 = arrayDat[0];
+	dat1 = arrayDat[sizeArrayDat - 1];
         break;
       default:
         errCode = ALG_ERR_FUNC;
@@ -110,77 +106,65 @@ AlgError	AlgConvolve(int sizeArrayCnv, double *arrayCnv,
   {
     /* Pad leading data with zeros or first data value and convolve with the
      * kernel until the whole of the kernel is within the data. */
-    cP = arrayCnv;
-    pCnt = sizeArrayKrn / 2;
-    while(pCnt > 0)
+    int		idp;
+
+    for(idp = 0; idp < halfArrayKrn; ++idp)
     {
-      cnv = 0.0;
+      int	idk;
+      double	cnv = 0.0;
+
+      pCnt = halfArrayKrn - idp;
       if(pad == ALG_PAD_END)
       {
-        kP = arrayKrn;
-	kCnt0 = pCnt;
-	while(kCnt0-- > 0)
+	for(idk = 0; idk < pCnt; ++idk)
 	{
-	  cnv += *kP++ * dat0;
+	  cnv += arrayKrn[idk] * dat0;;
 	}
       }
-      else
-      {
-        kP = arrayKrn + pCnt; 
-      }
-      dP0 = arrayDat;
       kCnt0 = sizeArrayKrn - pCnt;
-      cnv += *kP * *dP0;
-      while(--kCnt0 > 0)
+      for(idk = 0; idk < kCnt0; ++idk)
       {
-        cnv += *++kP * *++dP0;
+        cnv += arrayKrn[pCnt + idk] * arrayDat[idk];
       }
-      *cP++ = cnv;
-      --pCnt;
+      arrayCnv[idp] = cnv;
     }
     /* Between leading and trailing padding regions just convolue the data
      * with the kernel. */
-    dP0 = arrayDat;
-    cP = arrayCnv + sizeArrayKrn / 2;
-    pCnt = sizeArrayDat - (sizeArrayKrn - 1);
-    while(pCnt-- > 0)
+    pCnt = sizeArrayDat - sizeArrayKrn + 1;
+    for(idp = 0; idp < pCnt; ++idp)
     {
-      kP = arrayKrn;
-      dP1 = dP0++;
-      kCnt0 = sizeArrayKrn;
-      cnv = *kP * *dP1;
-      while(--kCnt0 > 0)
+      int	idk;
+      double	cnv = 0.0;
+
+      for(idk = 0; idk < sizeArrayKrn; ++idk)
       {
-	cnv += *++kP * *++dP1;
+        cnv += arrayKrn[idk] * arrayDat[idp + idk];
       }
-      *cP++ = cnv;
+      arrayCnv[halfArrayKrn + idp] = cnv;
     }
     /* Pad trailing data with zeros or last data value and convolve with the
      * kernel until the whole of the kernel is outside the data. */
-    dP0 = arrayDat + sizeArrayDat - sizeArrayKrn + 1;
-    cP = arrayCnv + sizeArrayDat - (sizeArrayKrn / 2);
-    pCnt = sizeArrayKrn / 2;
-    kCnt0 = sizeArrayKrn - 1;
-    while(pCnt-- > 0)
+    for(idp = 0; idp < halfArrayKrn; ++idp)
     {
-      kP = arrayKrn; 
-      kCnt1 = kCnt0;
-      dP1 = dP0++;
-      cnv = *kP * *dP1;
-      while(--kCnt1 > 0)
+      int	idk,
+      		idt;
+      double	cnv = 0.0;
+
+      kCnt0 = sizeArrayKrn - idp - 1;
+      idt = idp + sizeArrayDat - sizeArrayKrn + 1;
+      for(idk = 0; idk < kCnt0; ++idk)
       {
-        cnv += *++kP * *++dP1;
+        cnv += arrayKrn[idk] * arrayDat[idt + idk];
       }
       if(pad == ALG_PAD_END)
       {
 	kCnt1 = sizeArrayKrn - kCnt0;
-	while(kCnt1-- > 0)
+	for(idk = 0; idk < kCnt1; ++idk)
 	{
-	  cnv += *++kP * dat1;
+	  cnv += arrayKrn[kCnt0 + idk] * dat1;
 	}
       }
-      *cP++ = cnv;
-      --kCnt0;
+      arrayCnv[sizeArrayDat - halfArrayKrn + idp] = cnv;
     }
   }
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1),
@@ -188,4 +172,3 @@ AlgError	AlgConvolve(int sizeArrayCnv, double *arrayCnv,
 	   (int )errCode));
   return(errCode);
 }
-
