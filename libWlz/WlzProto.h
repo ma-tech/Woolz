@@ -5821,6 +5821,27 @@ extern WlzObject 		*WlzScalarFn(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzSepFilter.c
+************************************************************************/
+extern WlzObject   		*WlzSepFilter(WlzObject *inObj,
+                                  WlzIVertex3 cBufSz,
+                                  double *cBuf[],
+                                  WlzIVertex3 direc,
+                                  WlzGreyType gType,
+				  AlgPadType pad,
+				  double padVal,
+                                  WlzErrorNum *dstErr);
+extern WlzObject		*WlzGaussFilter(
+				  WlzObject *inObj,
+				  WlzDVertex3 sigma,
+				  WlzIVertex3 order,
+				  WlzIVertex3 direc,
+				  WlzGreyType gType,
+				  AlgPadType pad,
+				  double padVal,
+				  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzSepTrans.c
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
