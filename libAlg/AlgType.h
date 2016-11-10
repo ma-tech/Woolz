@@ -226,7 +226,8 @@ typedef enum _AlgPadType
 {
   ALG_PAD_NONE,              	/*!< No padding, same as padding with zeros. */
   ALG_PAD_ZERO,                 /*!< Pad data with zeros. */
-  ALG_PAD_END                   /*!< Pad data with first/last data values. */
+  ALG_PAD_END,                  /*!< Pad data with first/last data values. */
+  ALG_PAD_VALUE			/*!< Pad data with given value. */
 } AlgPadType;
 
 /*!

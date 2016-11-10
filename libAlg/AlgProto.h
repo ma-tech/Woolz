@@ -114,14 +114,24 @@ extern ComplexD 		AlgCPow(
 			          double pow);
 
 /* From AlgConvolve.c */
-extern AlgError 		AlgConvolve(
+extern AlgError 		AlgConvolveD(
 				  int sizeArrayCnv,
 				  double *arrayCnv,
 				  int sizeArrayKrn,
 				  double *arrayKrn,
     	   	   		  int sizeArrayDat, 
 				  double *arrayDat,
-    				  AlgPadType pad);
+    				  AlgPadType pad,
+				  double padVal);
+extern AlgError 		AlgConvolveF(
+				  int sizeArrayCnv,
+				  float *arrayCnv,
+				  int sizeArrayKrn,
+				  float *arrayKrn,
+    	   	   		  int sizeArrayDat, 
+				  float *arrayDat,
+    				  AlgPadType pad,
+				  float padVal);
 
 /* From AlgCrossCorr.c */
 extern AlgError        		AlgCrossCorrelate2D(

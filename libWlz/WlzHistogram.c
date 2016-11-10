@@ -1196,10 +1196,10 @@ WlzErrorNum     WlzHistogramConvolve(WlzObject *histObj,
       {
 	WlzValueCopyIntToDouble(datBuf, histDom->binValues.inp,
 				histDom->nBins);
-        algErr = AlgConvolve(histDom->nBins, cnvBuf, 
-			     krnSz, krn,
-			     histDom->nBins, datBuf,
-			     ALG_PAD_END);
+        algErr = AlgConvolveD(histDom->nBins, cnvBuf, 
+			      krnSz, krn,
+			      histDom->nBins, datBuf,
+			      ALG_PAD_END, 0.0);
         if(algErr == ALG_ERR_NONE)
 	{
 	  WlzValueCopyDoubleToInt(histDom->binValues.inp, cnvBuf,
@@ -1212,9 +1212,9 @@ WlzErrorNum     WlzHistogramConvolve(WlzObject *histObj,
       }
       else
       {
-        algErr = AlgConvolve(histDom->nBins, cnvBuf,
-			     histDom->nBins, histDom->binValues.dbp,
-			     krnSz, krn, ALG_PAD_END);
+        algErr = AlgConvolveD(histDom->nBins, cnvBuf,
+			      histDom->nBins, histDom->binValues.dbp,
+			      krnSz, krn, ALG_PAD_END, 0.0);
         if(algErr == ALG_ERR_NONE)
 	{
 	  WlzValueCopyDoubleToDouble(histDom->binValues.dbp, cnvBuf,

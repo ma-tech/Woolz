@@ -35,7 +35,7 @@ static char _AlgTstConvolve1_c[] = "University of Edinburgh $Id$";
 * License along with this program; if not, write to the Free
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
-* \brief	Simple test for AlgConvolve().
+* \brief	Simple test for AlgConvolveD().
 * \ingroup	binAlgTst
 */
 #include <stdio.h>
@@ -65,7 +65,7 @@ int             main(int argc, char *argv[])
   dat[0] = 2.0;
   dat[13] = 2.0;
   dat[24] = 2.0;
-  errCode = AlgConvolve(25, cnv, 5, krn, 25, dat, pad);
+  errCode = AlgConvolveD(25, cnv, 5, krn, 25, dat, pad, 0.0);
   if(errCode == ALG_ERR_NONE)
   {
     for(idx = 0; idx < datSz; ++idx)
@@ -75,7 +75,7 @@ int             main(int argc, char *argv[])
   }     
   else  
   {     
-    (void )printf("AlgConvolve() returned error code %d\n", (int )errCode);
+    (void )printf("AlgConvolveD() returned error code %d\n", (int )errCode);
   }     
   return((int )errCode);
 }
