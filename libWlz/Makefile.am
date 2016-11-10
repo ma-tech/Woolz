@@ -217,6 +217,7 @@ libWlz_la_SOURCES 	= \
 			  WlzScalarBinaryOp.c \
 			  WlzScalarFeatures.c \
 			  WlzScalarFn.c \
+			  WlzSepFilter.c \
 			  WlzSepTrans.c \
 			  WlzSeqPar.c \
 			  WlzShadeCorrect.c \

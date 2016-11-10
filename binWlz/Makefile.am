@@ -198,6 +198,7 @@ bin_PROGRAMS		= \
 			  WlzScalarFnObj \
 			  WlzScalarScale \
 			  WlzSelect1InN \
+			  WlzSepFilterObj \
 			  WlzSetBackground \
 			  WlzSetVoxelSize \
 			  WlzShadeCorrect \
@@ -838,6 +839,10 @@ WlzScalarScale_LDFLAGS			= $(AM_LFLAGS)
 WlzSelect1InN_SOURCES			= WlzSelect1InN.c
 WlzSelect1InN_LDADD			= $(LDADD)
 WlzSelect1InN_LDFLAGS			= $(AM_LFLAGS)
+
+WlzSepFilterObj_SOURCES			= WlzSepFilterObj.c
+WlzSepFilterObj_LDADD			= $(LDADD)
+WlzSepFilterObj_LDFLAGS			= $(AM_LFLAGS)
 
 WlzSetBackground_SOURCES		= WlzSetBackground.c
 WlzSetBackground_LDADD			= $(LDADD)
