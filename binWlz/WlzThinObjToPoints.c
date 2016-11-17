@@ -50,10 +50,15 @@ WlzThinObjToPoints - computes points by thinning spatial domain object.
 \par Synopsis
 \verbatim
 WlzThinObjToPoints [-G] [-g[<start>][,<inc>]] [-o<output object>]
-                   [-h] [-T] [-x] [<input object>]
+                   [-h] [-T] [-D #,#[#]] [-x] [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
+  <tr>
+    <td><b>-D</b></td>
+    <td>Dither the points by applying a random offset. Supplied values
+        are the maximum dither displacement.</td>
+  </tr>
   <tr> 
     <td><b>-G</b></td>
     <td>Use given object grey values if the object has them.</td>
@@ -129,6 +134,7 @@ int		main(int argc, char *argv[])
   int		ok = 1,
   		option,
 		usage = 0,
+		dither = 0,
 		timeFlg = 0,
 		gStart = 0,
 		gInc = 1,
@@ -137,12 +143,13 @@ int		main(int argc, char *argv[])
   char		*inFileStr,
 		*outFileStr;
   FILE		*fP = NULL;
+  WlzDVertex3	ditherVal = {0.0, 0.0, 0.0};
   WlzObject	*inObj = NULL,
 		*outObj = NULL;
   struct timeval times[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "hGTxg:o:";
+  static char	optList[] = "hGTxD:g:o:";
   const char    fileStrDef[] = "-";
 
   /* Parse the argument list and check for input files. */
@@ -153,6 +160,14 @@ int		main(int argc, char *argv[])
   {
     switch(option)
     {
+      case 'D':
+        dither = 1;
+	if(sscanf(optarg, "%lg,%lg,%lg",
+	          &(ditherVal.vtX), &(ditherVal.vtY), &(ditherVal.vtZ)) < 2)
+        {
+	  usage = 1;
+	}
+	break;
       case 'G':
 	useGrey = 1;
 	break;
@@ -291,6 +306,20 @@ int		main(int argc, char *argv[])
 	}
       }
     }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(dither)
+      {
+	WlzDomain dtrDom;
+
+	dtrDom.pts = WlzPointsDither(outObj->domain.pts, ditherVal, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  (void )WlzFreeDomain(outObj->domain);
+	  outObj->domain = WlzAssignDomain(dtrDom, NULL);
+	}
+      }
+    }
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -333,11 +362,13 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-G] [-g[<start>][,<inc>]]\n"
+    "Usage: %s [-G] [-g[<start>][,<inc>]] [[-D#,#[,#]]\n"
     "\t\t[-o<output file>] [-T] [-x] [-h] [<input object file>]\n"
     "Version: %s\n"
     "Options:\n"
     "  -G  Use given object grey values if the object has them.\n"
+    "  -D  Dither the points by applying a random offset. Supplied values\n"
+    "      are the maximum dither displacement.\n"
     "  -g  The initial and increment grey values.\n"
     "  -o  Output file.\n"
     "  -T  Report elapsed time.\n"
