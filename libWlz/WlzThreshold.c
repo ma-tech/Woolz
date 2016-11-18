@@ -636,15 +636,15 @@ static WlzObject *WlzThreshold2D(WlzObject	*obj,
 	    switch(highlow)
 	    {
 	      case WLZ_THRESH_LOW:
-		WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,flp,
+		WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_f,flp,
 				     <,colno,over);
 		break;
 	      case WLZ_THRESH_HIGH:
-		WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,flp,
+		WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_f,flp,
 				     >=,colno,over);
 		break;
 	      case WLZ_THRESH_EQUAL:
-		WLZ_THRESH_ADD_ITV_FE_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,
+		WLZ_THRESH_ADD_ITV_FE_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_f,
 				        flp, eps_f,colno,over);
 		break;
 	    }
@@ -653,15 +653,15 @@ static WlzObject *WlzThreshold2D(WlzObject	*obj,
 	    switch(highlow)
 	    {
 	      case WLZ_THRESH_LOW:
-		WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,dbp,
+		WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_d,dbp,
 				     <,colno,over);
 		break;
 	      case WLZ_THRESH_HIGH:
-		WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,dbp,
+		WLZ_THRESH_ADD_ITV_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_d,dbp,
 				     >=,colno,over);
 		break;
 	      case WLZ_THRESH_EQUAL:
-		WLZ_THRESH_ADD_ITV_FE_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_i,
+		WLZ_THRESH_ADD_ITV_FE_1(nints,nl1,nll,nk1,nkl,g,iwsp,thresh_d,
 		                        dbp, eps_d,colno,over);
 		break;
 	    }
@@ -801,15 +801,15 @@ static WlzObject *WlzThreshold2D(WlzObject	*obj,
 	      switch(highlow)
 	      {
 		case WLZ_THRESH_LOW:
-		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,flp,
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_f,flp,
                                        <,colno,over);
 		  break;
 		case WLZ_THRESH_HIGH:
-		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,flp,
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_f,flp,
                                        >=,colno,over);
 		  break;
 		case WLZ_THRESH_EQUAL:
-		  WLZ_THRESH_ADD_ITV_FE_2(nints,nk1,g,itvl,iwsp,thresh_i,flp,
+		  WLZ_THRESH_ADD_ITV_FE_2(nints,nk1,g,itvl,iwsp,thresh_f,flp,
 					  eps_f,colno,over);
 		  break;
 	      }
@@ -818,15 +818,15 @@ static WlzObject *WlzThreshold2D(WlzObject	*obj,
 	      switch(highlow)
 	      {
 		case WLZ_THRESH_LOW:
-		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,dbp,
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_d,dbp,
                                        <,colno,over);
 		  break;
 		case WLZ_THRESH_HIGH:
-		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_i,dbp,
+		  WLZ_THRESH_ADD_ITV_2(nints,nk1,g,itvl,iwsp,thresh_d,dbp,
                                        >=,colno,over);
 		  break;
 		case WLZ_THRESH_EQUAL:
-		  WLZ_THRESH_ADD_ITV_FE_2(nints,nk1,g,itvl,iwsp,thresh_i,dbp,
+		  WLZ_THRESH_ADD_ITV_FE_2(nints,nk1,g,itvl,iwsp,thresh_d,dbp,
 					  eps_d,colno,over);
 		  break;
 	      }
