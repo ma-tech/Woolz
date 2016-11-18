@@ -4,7 +4,7 @@
 static char _WlzCMeshExtrapolate_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzCMeshExtrapolate.c
+* \file         binWlz/WlzCMeshExtrapolate.c
 * \author       Bill Hill
 * \date         July 2016
 * \version      $Id$

@@ -4,7 +4,7 @@
 static char _WlzCMeshValueTransfer_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzCMeshValueTransfer.c
+* \file         libWlz/WlzCMeshValueTransfer.c
 * \author       Bill Hill
 * \date         August 2016
 * \version      $Id$
