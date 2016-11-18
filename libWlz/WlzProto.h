@@ -5823,6 +5823,7 @@ extern WlzObject 		*WlzScalarFn(
 /************************************************************************
 * WlzSepFilter.c
 ************************************************************************/
+#ifndef WLZ_EXT_BIND
 extern WlzObject   		*WlzSepFilter(WlzObject *inObj,
                                   WlzIVertex3 cBufSz,
                                   double *cBuf[],
@@ -5840,6 +5841,7 @@ extern WlzObject		*WlzGaussFilter(
 				  AlgPadType pad,
 				  double padVal,
 				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzSepTrans.c
