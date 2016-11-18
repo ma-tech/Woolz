@@ -20,7 +20,11 @@ export MA=/opt/MouseAtlas
 
 # The default build; optimised, using openmp and external file formats.
 # This requires jpeg, nifti and tiff libraries.
-./configure --prefix=$MA --enable-optimise --enable-openmp --enable-extff --with-nifti=$MA --with-jpeg=$MA --with-tiff=$MA --enable-test
+./configure --prefix=$MA --enable-optimise --enable-openmp --enable-extff --with-nifti=$MA --with-jpeg=$MA --with-tiff=$MA --with-pic --enable-static --disable-shared
+
+# A more optimised build suitable for compilers and x86_64 processors 
+# developed after 2013, again this requires jpeg, nifti and tiff libraries.
+#./configure --prefix=$MA --enable-optimise --enable-openmp --enable-avx2 --enable-lto --enable-extff --with-nifti=$MA --with-jpeg=$MA --with-tiff=$MA --with-pic --enable-static --disable-shared
 
 # Build the core Woolz code unoptimised with debug support.
 # This requires only standard system libraries.
