@@ -2372,7 +2372,7 @@ static WlzErrorNum WlzObjFactsIndexedValues(WlzObjFactsData *fData,
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      if(val.core->type != WLZ_INDEXED_VALUES)
+      if(val.core->type != (WlzObjectType )WLZ_INDEXED_VALUES)
       {
         errNum = WLZ_ERR_VALUES_TYPE;
       }
@@ -2953,7 +2953,7 @@ static WlzErrorNum WlzObjFactsPointsValues(WlzObjFactsData *fData,
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      if(pts->type != WLZ_POINT_VALUES)
+      if(pts->type != (WlzObjectType )WLZ_POINT_VALUES)
       {
         errNum = WLZ_ERR_VALUES_TYPE;
       }

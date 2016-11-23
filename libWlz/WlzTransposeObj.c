@@ -198,7 +198,7 @@ WlzObject *WlzTransposeObj(
 
   /* now attach a grey-table */
   if((errNum == WLZ_ERR_NONE) && obj->values.core ){
-    WlzObjectType tt;
+    WlzGreyTableType tt;
     WlzGreyType	gt;
 
     gt = WlzGreyTableTypeToGreyType(obj->values.core->type, &errNum);

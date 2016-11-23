@@ -767,7 +767,7 @@ WlzErrorNum	WlzFreeIndexedValues(WlzIndexedValues *ixv)
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if(ixv->type != WLZ_INDEXED_VALUES)
+  else if(ixv->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
@@ -797,7 +797,7 @@ WlzErrorNum	WlzFreePointValues(WlzPointValues *pv)
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if(pv->type != WLZ_POINT_VALUES)
+  else if(pv->type != (WlzObjectType )WLZ_POINT_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }

@@ -111,11 +111,12 @@ typedef enum _WlzGreyType
 *               a single type. This macro achieves this with the
 *               addition of array type.
 * \par
-* AR:		Array type, 0 for scalar values, 1 for an array.
+* AR:		Array type, 0 for scalar values, 1 for any array
+* 		type.
 * TT:		Table type.
 * GT:		Grey type.
 */
-#define WLZ_GREY_TABLE_TYPE(AR,TT,GT)    ((100*(AR))+(10*(TT))+(GT))
+#define WLZ_GREY_TABLE_TYPE(AR,TT,GT)    ((100*(!!(AR)))+(10*(TT))+(GT))
 
 /*!
 * \def		WLZ_GREY_TABLE_TO_GREY_TYPE
@@ -3138,9 +3139,14 @@ typedef struct _WlzIndexedValues
 * \brief        A  tiled value table for both 2 an 3D domain objects.
 *               Typedef: ::WlzTiledValues.
 *
+* 		Individual pixel/voxel values may contain a single
+* 		(scalar) value of a multidimensional array of values.
+* 		When an array of values is used the values are held
+* 		contiguously.
+* 		
 * 		The grey values are stored in square or cubic tiles
 * 		with tileSz being the number of values in each tile
-* 		irespective of the grey value type. An index to the
+* 		irrespective of the grey value type. An index to the
 * 		tiles is stored as a simple one dimensional array.
 *
 * 		To access a grey value at some position \f$(x,y,z)\f$
@@ -3205,6 +3211,21 @@ typedef struct _WlzTiledValues
   int		plane1;			/*!< First plane. */
   int		lastpl;			/*!< Last plane. */
   WlzPixelV     bckgrnd;		/*!< Background value. */
+  int           vRank;                  /*!< The rank of the individual values.
+                                             Here the rank for a scalar is 0,
+                                             for a 1D array it is 1 and for
+                                             and for individual values that
+                                             are nD arrays the rank is n.
+					     The rank will only ever be > 0
+					     when the grey table type is
+					     composed using rank > 0. */
+  int           *vDim;                  /*!< The dimensions of individual
+                                             values. The dimensions are a
+					     1D array with the number of
+					     entries equal to the rank.
+					     A dimension array is only
+					     allocated if the rank > 0,
+					     for rank == 0 dim is NULL. */
   size_t	tileSz;		        /*!< The number of values in each
   					     tile which may be less than
 					     the number of bytes. */

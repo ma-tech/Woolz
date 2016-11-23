@@ -1367,7 +1367,7 @@ WlzGMModel	*WlzCMeshToGMModel(WlzObject *mObj, double disp,
     {
       errNum = WLZ_ERR_VALUES_NULL;
     }
-    else if(mObj->values.core->type != WLZ_INDEXED_VALUES)
+    else if(mObj->values.core->type != (WlzObjectType )WLZ_INDEXED_VALUES)
     {
       errNum = WLZ_ERR_VALUES_TYPE;
     }

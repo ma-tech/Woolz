@@ -134,7 +134,7 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
       case WLZ_CMESH_3D:
 	if(inObj->values.core != NULL)
 	{
-	  if(inObj->values.core->type != WLZ_INDEXED_VALUES)
+	  if(inObj->values.core->type != (WlzObjectType )WLZ_INDEXED_VALUES)
 	  {
 	    errNum = WLZ_ERR_VALUES_TYPE;
 	  }
@@ -548,7 +548,7 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
-	else if((inVal.core->type != WLZ_INDEXED_VALUES) ||
+	else if((inVal.core->type != (WlzObjectType )WLZ_INDEXED_VALUES) ||
 	        ((inVal.x->attach != WLZ_VALUE_ATTACH_NOD) &&
 		 (inVal.x->attach != WLZ_VALUE_ATTACH_ELM)))
 	{
@@ -865,7 +865,7 @@ WlzIndexedValues	*WlzCopyIndexedValues(WlzIndexedValues *inV,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if(inV->type != WLZ_INDEXED_VALUES)
+  else if(inV->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
@@ -1043,8 +1043,8 @@ WlzErrorNum	WlzCopyObjectGreyValues(WlzObject *dObj, WlzObject *sObj)
 */
 static WlzErrorNum WlzCopyObjectGreyValues2D(WlzObject *dObj, WlzObject *sObj)
 {
-  WlzObjectType dGTType = WLZ_NULL,
-  		sGTType = WLZ_NULL;
+  WlzGreyTableType dGTType = WLZ_NULL,
+  		   sGTType = WLZ_NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   dGTType = WlzGreyTableTypeToTableType(dObj->values.core->type, &errNum);

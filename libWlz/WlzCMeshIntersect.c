@@ -123,7 +123,7 @@ WlzObject	*WlzCMeshIntersect(WlzObject *obj0, WlzObject *obj1,
 	  {
 	    errNum = WLZ_ERR_VALUES_NULL;
 	  }
-	  else if(obj0->values.core->type != WLZ_INDEXED_VALUES)
+	  else if(obj0->values.core->type != (WlzObjectType )WLZ_INDEXED_VALUES)
 	  {
 	    errNum = WLZ_ERR_VALUES_TYPE;
 	  }
@@ -156,7 +156,8 @@ WlzObject	*WlzCMeshIntersect(WlzObject *obj0, WlzObject *obj1,
 	  {
 	    errNum = WLZ_ERR_VALUES_NULL;
 	  }
-	  else if(obj0->values.core->type != WLZ_INDEXED_VALUES)
+	  else if(obj0->values.core->type != (WlzObjectType )
+	                                     WLZ_INDEXED_VALUES)
 	  {
 	    errNum = WLZ_ERR_VALUES_TYPE;
 	  }
@@ -1061,7 +1062,7 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if(ixv->type != WLZ_INDEXED_VALUES)
+  else if(ixv->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }

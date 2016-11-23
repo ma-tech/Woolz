@@ -504,7 +504,7 @@ void		WlzGreyValueGet(WlzGreyValueWSpace *gVWSp,
 	  line = vtx3.vtY;
 	  plane = vtx3.vtZ;
 	}
-	if(gVWSp->gTabType == WLZ_GREY_TAB_TILED)
+	if(gVWSp->gTabType == (WlzObjectType )WLZ_GREY_TAB_TILED)
 	{
 	  WlzGreyValueGet3DTiled(gVWSp,
 			     WLZ_NINT(plane), WLZ_NINT(line), WLZ_NINT(kol));
@@ -561,7 +561,7 @@ void		WlzGreyValueGetCon(WlzGreyValueWSpace *gVWSp,
 	  WlzGreyValueGet2DCon(gVWSp, line, kol);
 	  break;
 	case WLZ_3D_DOMAINOBJ:
-	  if(gVWSp->gTabType == WLZ_GREY_TAB_TILED)
+	  if(gVWSp->gTabType == (WlzObjectType )WLZ_GREY_TAB_TILED)
 	  {
 	    WlzGreyValueGet3DConTiled(gVWSp, plane, line, kol);
 	  }
@@ -729,7 +729,7 @@ void		WlzGreyValueGetDir(WlzGreyValueWSpace *gVWSp,
      (plane <= gVWSp->domain.p->lastpl))
 #endif
   {
-    if(gVWSp->gTabType == WLZ_GREY_TAB_TILED)
+    if(gVWSp->gTabType == (WlzObjectType )WLZ_GREY_TAB_TILED)
     {
       WlzGreyValueGet(gVWSp, plane, line, kol);
       valSet = 1;
@@ -1819,7 +1819,7 @@ static void	WlzGreyValueGetTransCon(WlzGreyValueWSpace *gVWSp,
 	    vtx3.vtY = line + idY;
 	    vtx3.vtZ = plane + idZ;
 	    vtx3 = WlzAffineTransformVertexD3(gVWSp->invTrans, vtx3, NULL);
-	    if(gVWSp->gTabType == WLZ_GREY_TAB_TILED)
+	    if(gVWSp->gTabType == (WlzObjectType )WLZ_GREY_TAB_TILED)
 	    {
 	      WlzGreyValueGet3DTiled(gVWSp,
 			 (int )(vtx3.vtZ), (int )(vtx3.vtY), (int )(vtx3.vtX));

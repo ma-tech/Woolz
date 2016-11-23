@@ -6376,6 +6376,7 @@ extern WlzObject 		*WlzThreshold(
 #ifndef WLZ_EXT_BIND
 extern WlzTiledValues		*WlzMakeTiledValues(
 				  int dim,
+				  int vRank,
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzFreeTiledValues(
 				  WlzTiledValues *tVal);

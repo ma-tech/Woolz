@@ -746,7 +746,7 @@ WlzErrorNum    	WlzBasisFnSetCMesh2D(WlzObject *mObj,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if(ixv->type != WLZ_INDEXED_VALUES)
+  else if(ixv->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
@@ -943,7 +943,7 @@ WlzErrorNum    	WlzBasisFnSetCMesh3D(WlzObject *mObj,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if(ixv->type != WLZ_INDEXED_VALUES)
+  else if(ixv->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }

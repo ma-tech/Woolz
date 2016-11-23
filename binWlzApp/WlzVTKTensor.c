@@ -195,7 +195,7 @@ int		main(int argc, char *argv[])
 	  {
 	    errNum = WLZ_ERR_DOMAIN_TYPE;
 	  }
-	  if(inObj->values.core->type != WLZ_INDEXED_VALUES)
+	  if(inObj->values.core->type != (WlzObjectType )WLZ_INDEXED_VALUES)
 	  {
 	    errNum = WLZ_ERR_VALUES_TYPE;
 	  }
@@ -213,7 +213,7 @@ int		main(int argc, char *argv[])
 	  {
 	    errNum = WLZ_ERR_DOMAIN_TYPE;
 	  }
-	  else if(inObj->values.core->type != WLZ_POINT_VALUES)
+	  else if(inObj->values.core->type != (WlzObjectType )WLZ_POINT_VALUES)
 	  {
 	    errNum = WLZ_ERR_VALUES_TYPE;
 	  }

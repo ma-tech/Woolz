@@ -344,7 +344,7 @@ static WlzObject *WlzCMeshDGTensor3D(WlzObject *cObj, int invert,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((cIxv = cObj->values.x)->type != WLZ_INDEXED_VALUES)
+  else if((cIxv = cObj->values.x)->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
@@ -465,7 +465,7 @@ static WlzObject *WlzCMeshDGTensorAtPts3D(WlzObject *cObj, int invert,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((ixv = cObj->values.x)->type != WLZ_INDEXED_VALUES)
+  else if((ixv = cObj->values.x)->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }

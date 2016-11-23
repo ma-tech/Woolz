@@ -480,7 +480,7 @@ WlzObject	*WlzCMeshTransformInvert(WlzObject *gObj, WlzErrorNum *dstErr)
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if(gObj->values.core->type != WLZ_INDEXED_VALUES)
+  else if(gObj->values.core->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
@@ -1664,7 +1664,7 @@ WlzObject	*WlzCMeshToDomObjValues(WlzObject *dObj, WlzObject *mObj,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if((mObj->values.core->type != WLZ_INDEXED_VALUES) ||
+  else if((mObj->values.core->type != (WlzObjectType )WLZ_INDEXED_VALUES) ||
           (mObj->values.x->rank < 0))
   {
     errNum = WLZ_ERR_VALUES_TYPE;
@@ -4413,7 +4413,7 @@ static WlzCMeshScanWSp2D *WlzCMeshScanWSpInit2D(WlzObject *mObj,
   {
     if((ixv = mObj->values.x) != NULL)
     {
-      if(ixv->type != WLZ_INDEXED_VALUES)
+      if(ixv->type != (WlzObjectType )WLZ_INDEXED_VALUES)
       {
         errNum = WLZ_ERR_VALUES_TYPE;
       }
@@ -4600,7 +4600,7 @@ static WlzCMeshScanWSp3D *WlzCMeshScanWSpInit3D(WlzObject *mObj, int trans,
   {
     if((ixv = mObj->values.x) != NULL)
     {
-      if(ixv->type != WLZ_INDEXED_VALUES)
+      if(ixv->type != (WlzObjectType )WLZ_INDEXED_VALUES)
       {
         errNum = WLZ_ERR_VALUES_TYPE;
       }
@@ -5609,7 +5609,7 @@ WlzObject 	*WlzCMeshTransformObj(WlzObject *srcObj,
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if(mIxv->type != WLZ_INDEXED_VALUES)
+  else if(mIxv->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
@@ -8478,7 +8478,7 @@ WlzErrorNum	WlzCMeshAffineProduct(WlzObject *trM, WlzAffineTransform *trA,
   {
     errNum = WLZ_ERR_TRANSFORM_NULL;
   }
-  else if(trM->values.core->type != WLZ_INDEXED_VALUES)
+  else if(trM->values.core->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_TRANSFORM_TYPE;
   }
@@ -9301,7 +9301,8 @@ static WlzObject *WlzCMeshProduct2D(WlzObject *tr0, WlzObject *tr1,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((ixv0->type != WLZ_INDEXED_VALUES) || ( ixv0->type != ixv1->type))
+  else if((ixv0->type != (WlzObjectType )WLZ_INDEXED_VALUES) ||
+          ( ixv0->type != ixv1->type))
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
@@ -9525,7 +9526,8 @@ static WlzObject *WlzCMeshProduct3D(WlzObject *tr0, WlzObject *tr1,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((ixv0->type != WLZ_INDEXED_VALUES) || ( ixv0->type != ixv1->type))
+  else if((ixv0->type != (WlzObjectType )WLZ_INDEXED_VALUES) ||
+          ( ixv0->type != ixv1->type))
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }

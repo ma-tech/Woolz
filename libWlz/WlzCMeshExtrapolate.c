@@ -223,7 +223,7 @@ WlzObject			*WlzCMeshExpValues(
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if(gObj->values.core->type != WLZ_INDEXED_VALUES)
+  else if(gObj->values.core->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
@@ -293,7 +293,7 @@ static WlzErrorNum		WlzCMeshExpValues2D(
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((ixv = gObj->values.x)->type != WLZ_INDEXED_VALUES)
+  else if((ixv = gObj->values.x)->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
@@ -348,7 +348,7 @@ static WlzErrorNum		WlzCMeshExpValues3D(
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((ixv = gObj->values.x)->type != WLZ_INDEXED_VALUES)
+  else if((ixv = gObj->values.x)->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }

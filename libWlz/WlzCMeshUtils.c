@@ -5820,7 +5820,7 @@ WlzErrorNum	WlzCMeshValuesNormalise3D(WlzObject *cObj,
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((ixv = cObj->values.x)->type != WLZ_INDEXED_VALUES)
+  else if((ixv = cObj->values.x)->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
@@ -6494,7 +6494,7 @@ WlzUByte			*WlzCMeshIndexMaskFromValueRange(
   {
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
-  else if((ixv = obj->values.x)->type != WLZ_INDEXED_VALUES)
+  else if((ixv = obj->values.x)->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
