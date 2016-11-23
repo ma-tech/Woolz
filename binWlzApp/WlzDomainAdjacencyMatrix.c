@@ -195,7 +195,7 @@ int main(
   int		option;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
   int		verboseFlg=0, tickFlg=0;
-  int		normaliseFlg=0, derivFlg=0, TSVFlg=0;
+  int		normaliseFlg=0; /* derivFlg=0, TSVFlg=0; */
   char		separatorChar=',';
   WlzObject	**domains;
   int		numDomains;
@@ -237,7 +237,7 @@ int main(
       break;
 
     case 'd':
-      derivFlg = 1;
+      /* derivFlg = 1; */
       if((derivOutfile = fopen(optarg, "r")) == NULL){
 	fprintf(stderr, "%s: can't open output file for derivative values %s\n", argv[0], optarg);
 	usage(argv[0]);
@@ -267,7 +267,7 @@ int main(
       break;
 
     case 'T':
-      TSVFlg = 1;
+      /* TSVFlg = 1; */
       separatorChar = '\t';
       break;
 
