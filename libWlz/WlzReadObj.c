@@ -2155,7 +2155,14 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
 				      int dim, WlzObjectType type,
 				      int map)
 {
-  int		vRank;
+  int		vRank,
+  		kol1,
+		lastkl,
+		line1,
+		lastln,
+		plane1,
+		lastpl;
+  WlzPixelV	bgd;
   WlzGreyType	gType;
   size_t	vSz = 1;
   WlzTiledValues *tVal = NULL;
@@ -2177,29 +2184,43 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    tVal = WlzMakeTiledValues(dim, vRank, &errNum); // HACK TODO
+    kol1 = getword(fP);
+    lastkl = getword(fP);
+    line1 = getword(fP);
+    lastln = getword(fP);
+    plane1 = getword(fP);
+    lastpl = getword(fP);
+    errNum = WlzReadPixelV(fP, &bgd, 1);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(vRank > 0)
+    {
+      vRank = getword(fP);
+    }
+    tVal = WlzMakeTiledValues(dim, vRank, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
     tVal->type = type;
     tVal->dim = dim;
-    tVal->kol1 = getword(fP);
-    tVal->lastkl = getword(fP);
-    tVal->line1 = getword(fP);
-    tVal->lastln = getword(fP);
-    tVal->plane1 = getword(fP);
-    tVal->lastpl = getword(fP);
-    errNum = WlzReadPixelV(fP, &(tVal->bckgrnd), 1);
-  }
-  if((errNum == WLZ_ERR_NONE) && vRank)
-  {
-    int		idx;
-
-    tVal->vRank = getword(fP);
-    for(idx = 0; idx < tVal->vRank; ++idx)
+    tVal->kol1 = kol1;
+    tVal->lastkl = lastkl;
+    tVal->line1 = line1;
+    tVal->lastln = lastln;
+    tVal->plane1 = plane1;
+    tVal->lastpl = lastpl;
+    tVal->bckgrnd = bgd;
+    tVal->vRank = vRank;
+    if(vRank > 0)
     {
-      tVal->vDim[idx] = getword(fP);
-      vSz *= tVal->vDim[idx];
+      int		idx;
+
+      for(idx = 0; idx < tVal->vRank; ++idx)
+      {
+	tVal->vDim[idx] = getword(fP);
+	vSz *= tVal->vDim[idx];
+      }
     }
   }
   if(errNum == WLZ_ERR_NONE)
@@ -2260,30 +2281,7 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
 
     gSz = WlzGreySize(gType);
     tSz = tVal->numTiles * tVal->tileSz;
-    if(map == 0)
-    {
-      tVal->fd = -1;
-      if((tVal->tiles.v = AlcMalloc(gSz * tSz * vSz)) == NULL)
-      {
-	errNum = WLZ_ERR_MEM_ALLOC;
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	if(fseek(fP, tVal->tileOffset, SEEK_SET) != 0)
-	{
-	  errNum = WLZ_ERR_READ_INCOMPLETE;
-	}
-      }
-      if(errNum == WLZ_ERR_NONE)
-      {
-	/* The tiles are stored using native byte ordering. */
-	if(fread(tVal->tiles.v, gSz, tSz * vSz, fP) != tSz)
-	{
-	  errNum = WLZ_ERR_READ_INCOMPLETE;
-	}
-      }
-    }
-    else
+    if(map)
     {
 #ifdef WLZ_USE_MMAP
       /* For mmap to work the file must have been opened either with
@@ -2305,21 +2303,45 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
 	}
 	if(tVal->tiles.v == MAP_FAILED)
 	{
-	  tVal->fd = -1;
 	  tVal->tiles.v = NULL;
-	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	  if(tVal->fd >= 0)
+	  {
+	    (void )close(tVal->fd);
+	    tVal->fd = -1;
+	  }
+	}
+	else
+	{
+	  if(fseek(fP, tVal->tileOffset + (gSz * tSz * vSz), SEEK_SET) != 0)
+	  {
+	    errNum = WLZ_ERR_READ_INCOMPLETE;
+	  }
 	}
       }
 #else /* WLZ_USE_MMAP */
       tVal->tiles.v = NULL;
-      errNum = WLZ_ERR_READ_INCOMPLETE;
 #endif /* WLZ_USE_MMAP */
+    }
+    if((errNum == WLZ_ERR_NONE) && (tVal->fd < 0))
+    {
+      /* Have either failed to mmap the tiles or we're not using mmap
+       * so just malloc space and read them. */
+      if((tVal->tiles.v = AlcMalloc(gSz * tSz * vSz)) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
       if(errNum == WLZ_ERR_NONE)
       {
-	/* Seek to the end of the object so that multiple objects can be read
-	 * from the same file. */
-        if(fseek(fP, tVal->tileOffset + (gSz * tSz * vSz), SEEK_SET) != 0)
-        {
+	if(fseek(fP, tVal->tileOffset, SEEK_SET) != 0)
+	{
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	/* The tiles are stored using native byte ordering. */
+	if(fread(tVal->tiles.v, gSz, tSz * vSz, fP) != tSz)
+	{
 	  errNum = WLZ_ERR_READ_INCOMPLETE;
 	}
       }
