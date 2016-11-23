@@ -81,14 +81,18 @@ static void usage(char *proc_str);
 static WlzErrorNum ReadBibFile(FILE *inFile, char *inFileStr, WlzThreeDViewStruct  *wlzViewStr
 );
 
+#ifdef WLZ_UNUSED_CODE
 static WlzErrorNum WriteBibFile(FILE *inFile,    char *inFileStr,  char *inFileStrw, char *inFileStrSec,
 WlzThreeDViewStruct  *wlzViewStr  );
+#endif /* WLZ_UNUSED_CODE */
 
+#ifdef WLZ_UNUSED_CODE
 static WlzErrorNum WlzTrack3DVertical( WlzVertex sip, 
                                 WlzVertex *sip1p,
                                 WlzThreeDViewStruct  *wlzViewStri,  
 			        WlzThreeDViewStruct  *wlzViewStrip1,
 				int UpOrDown);
+#endif /* WLZ_UNUSED_CODE */
 				
 static WlzErrorNum WlzGetCorssPoint( WlzVertex sip,
                                 WlzVertex nStraghtline,
@@ -122,12 +126,12 @@ int main(int	argc,
   int           cycleI, cycleNext;
   double           ntnm,nfnm,nsnm;
   int           numOf2DWlzFiles = 0, numOfBibFiles = 0;
-  int           ok, usage1, idx;
+  int           ok, /* usage1, */ idx;
   double        deltaZ;
   double        sx=0,sy=0,sz=0, fx=0,fy=100,fz=0, tx=100,ty=0,tz=0;
   double        Sx=0,Sy=0,Sz=60, Fx=0,Fy=100,Fz=60, Tx=100,Ty=0,Tz=60;
   double        lengthTS;
-  char         *inFileStr, *inFileStr1, *outFileStr;
+  /* char         *inFileStr, *inFileStr1, *outFileStr; */
   char         *inFileStrw=NULL, *outputWlzFilesDir=NULL;
   char          TwoDImageFilesNameList[700][120];
   char          TwoDImagePureFilesNameList[700][120];
@@ -151,7 +155,8 @@ int main(int	argc,
   double        cutVal[3];
 
   /* read the argument list and check for an input file */
-  static char	optList[] = "i:I:w:o:d:s:S:f:F:t:T:M:n:r:R:L:B:h",opterr = 0;
+  static char	optList[] = "i:I:w:o:d:s:S:f:F:t:T:M:n:r:R:L:B:h";
+ /*  opterr = 0; */
   ok = 1;
  
    while( (option = getopt(argc, argv, optList)) != EOF )
@@ -162,13 +167,13 @@ int main(int	argc,
              usage(argv[0]);
 	     return(0);
         case 'i':
-	    inFileStr  = optarg;
 	    /*
+	    inFileStr  = optarg;
 	    outFileStr = optarg;
 	    */
 	    break;
         case 'I':
-	    inFileStr1 = optarg;
+	    /* inFileStr1 = optarg; */
 	    break;
         case 'L':
 	    List2DImageFilesStr = optarg;
@@ -212,7 +217,7 @@ int main(int	argc,
 	  	}
 	  	if((cutStr[0] == NULL) && (cutStr[1] == NULL) && (cutStr[2] == NULL)   )
 	  	{
-	    		usage1 = 1;
+	    		/* usage1 = 1; */
 	    		ok = 0;
 	  	}
 	  	else
@@ -223,7 +228,7 @@ int main(int	argc,
 	      			if(cutStr[idx] && (sscanf(cutStr[idx], "%lg",
 					 cutVal + idx) != 1))
 	      			{
-					usage1 = 1;
+					/* usage1 = 1; */
 					ok = 0;
 	      			}
 	      			++idx;
@@ -269,7 +274,7 @@ int main(int	argc,
 	}
 	break;
         case 'o':
-	    outFileStr = optarg;
+	    /* outFileStr = optarg; */
 	    break;
         case 'd':
 	    outputWlzFilesDir = optarg;
@@ -318,7 +323,7 @@ int main(int	argc,
     for(m=0; m<numOf2DWlzFiles; m++)
     {
        for(i=0; i<sizeof(TwoDImageFilesNameList[m]); i++){
-          if( TwoDImageFilesNameList[m][i] == (char) NULL )
+          if( TwoDImageFilesNameList[m][i] == '\0' )
            break; 
           if( TwoDImageFilesNameList[m][i] == '/' )
             k = i; 	   
@@ -330,8 +335,8 @@ int main(int	argc,
          TwoDImagePureFilesNameList[m][j-k] = TwoDImageFilesNameList[m][j];
          warpedFilesNameList[m][j-k]        = TwoDImageFilesNameList[m][j];
        }
-       TwoDImagePureFilesNameList[m][j-k] = ( char ) NULL;
-       warpedFilesNameList[m][j-k]        = ( char ) NULL;
+       TwoDImagePureFilesNameList[m][j-k] = '\0';
+       warpedFilesNameList[m][j-k]        = '\0';
          
        /* extract directory */
        if(m == 0)
@@ -340,7 +345,7 @@ int main(int	argc,
 	  {
 	     TwoDImageFilesDir[j] = TwoDImageFilesNameList[m][j];
 	  }
-	     TwoDImageFilesDir[j] = ( char ) NULL;
+	     TwoDImageFilesDir[j] = '\0';
 	     printf("I_DIR  %s\n",TwoDImageFilesDir );
        }
        printf("%s\n", TwoDImagePureFilesNameList[m]);   
@@ -912,6 +917,7 @@ static WlzErrorNum ReadBibFile(FILE *inFile, char *inFileStr, WlzThreeDViewStruc
 }
 
 
+#ifdef WLZ_UNUSED_CODE
 /*!
 * - Function:   WlzEffWriteMeshTransform3DWithoutDisplacementVTK
 * - Returns:    none 
@@ -1045,7 +1051,9 @@ static WlzErrorNum WriteBibFile(FILE *outFile, char *outFileStr,  char *inFileSt
    outFile = NULL;
    return errNum;
 }
+#endif /* WLZ_UNUSED_CODE */
 
+#ifdef WLZ_UNUSED_CODE
 /*!
 * - Function:   WlzTrack3DVertical
 * - Returns:    WlzVetex 
@@ -1189,6 +1197,7 @@ static WlzErrorNum WlzTrack3DVertical( WlzVertex sip,
 
    return errNum;
 }
+#endif /* WLZ_UNUSED_CODE */
 
 
 /*!

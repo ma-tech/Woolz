@@ -100,7 +100,7 @@ int main(int	argc,
   */
     /*		WARP                     = 1 */
   /* int                  basisFnPolyOrder = 3; */
-  int                  Inumber, num;
+  int                  Inumber; /* num; */
   int                  globalCycle;
   /* int                  binObjFlag; */
   int                  centorOfMass = 1;
@@ -111,8 +111,8 @@ int main(int	argc,
   /* double        mass = 0.0; */
   /* char          under ='_'; */
   /* char                ctemp; */
-  char                *inFileStr, *inFileStr1,  *outFileStr; /* *inFileStr3, */
-  char                *inFileStrw, *outputBibFilesDir; /* , inFileStrSec[100]; */
+  /* char                *inFileStr, *inFileStr1, *outFileStr, *inFileStr3; */
+  char                *inFileStrw; /* *outputBibFilesDir, inFileStrSec[100] */
   char                TwoDImageFilesNameList[1000][120];
   char                TwoDImagePureFilesNameList[1000][70];
   char                PureBibFilesNameList[700][70];
@@ -132,9 +132,9 @@ int main(int	argc,
   /* WlzObjectType        wtp = WLZ_3D_DOMAINOBJ; */
 
   /* read the argument list and check for an input file */
-  static char	optList[] = "i:I:f:w:o:d:z:M:m:n:r:R:L:B:h",
+  static char	optList[] = "i:I:f:w:o:d:z:M:m:n:r:R:L:B:h";
 
-  opterr = 0;
+  /* opterr = 0; */
  
    while( (option = getopt(argc, argv, optList)) != EOF )
    {
@@ -144,13 +144,13 @@ int main(int	argc,
              usage(argv[0]);
 	     return(0);
         case 'i':
-	    inFileStr  = optarg;
 	    /*
+	    inFileStr  = optarg;
 	    outFileStr = optarg;
 	    */
 	    break;
         case 'I':
-	    inFileStr1 = optarg;
+	    /* inFileStr1 = optarg; */
 	    break;
         case 'L':
 	    List2DImageFilesStr = optarg;
@@ -162,17 +162,19 @@ int main(int	argc,
 	    inFileStrw = optarg;
 	    break;
         case 'n':
+	 /*
 	 if(sscanf(optarg, "%d", &num) != 1)
 	    {
 	      printf("read error");
 	      exit(1);
 	    }
+	    */
 	    break;
         case 'o':
-	    outFileStr = optarg;
+	    /* outFileStr = optarg; */
 	    break;
         case 'd':
-	    outputBibFilesDir = optarg;
+	    /* outputBibFilesDir = optarg; */
 	    break;
         default:
               return(0);
@@ -208,7 +210,7 @@ int main(int	argc,
     for(m=0; m<numOf2DWlzFiles; m++)
     {
        for(i=0; i<sizeof(TwoDImageFilesNameList[m]); i++){
-          if( TwoDImageFilesNameList[m][i] == (char  )NULL )
+          if( TwoDImageFilesNameList[m][i] == '\0' )
            break; 
           if( TwoDImageFilesNameList[m][i] == '/' )
             k = i; 	   
@@ -220,8 +222,8 @@ int main(int	argc,
          TwoDImagePureFilesNameList[m][j-k] = TwoDImageFilesNameList[m][j];
          PureBibFilesNameList[m][j-k]       = TwoDImageFilesNameList[m][j];
        }
-       TwoDImagePureFilesNameList[m][j-k] = (char ) NULL;
-       PureBibFilesNameList[m][j-k]       = (char ) NULL;
+       TwoDImagePureFilesNameList[m][j-k] = '\0';
+       PureBibFilesNameList[m][j-k]       = '\0';
        PureBibFilesNameList[m][j-k-3]     = 'b';
        PureBibFilesNameList[m][j-k-2]     = 'i';
        PureBibFilesNameList[m][j-k-1]     = 'b';
@@ -233,7 +235,7 @@ int main(int	argc,
 	  {
 	     TwoDImageFilesDir[j] = TwoDImageFilesNameList[m][j];
 	  }
-	     TwoDImageFilesDir[j] = (char ) NULL;
+	     TwoDImageFilesDir[j] = '\0';
 	     printf("I_DIR  %s\n",TwoDImageFilesDir );
        }
        printf("%s\n", TwoDImagePureFilesNameList[m]);   
@@ -265,7 +267,7 @@ int main(int	argc,
     for(m=0; m<numOfSampleBibFiles; m++)
     {
        for(i=0; i<sizeof(SampleBibFilesNameList[m]); i++){
-          if( SampleBibFilesNameList[m][i] == (char ) NULL )
+          if( SampleBibFilesNameList[m][i] == '\0' )
            break; 
           if( SampleBibFilesNameList[m][i] == '/' )
             k = i; 	   
@@ -276,7 +278,7 @@ int main(int	argc,
        {
          SampleBibPureFilesName[m][j-k] = SampleBibFilesNameList[m][j];
        }
-        SampleBibPureFilesName[m][j-k] = (char ) NULL;
+        SampleBibPureFilesName[m][j-k] = '\0';
        /* extract directory */
        if(m == 0)
        {
@@ -284,7 +286,7 @@ int main(int	argc,
 	  {
 	     SampleBibFilesDir[j] = SampleBibFilesNameList[m][j];
 	  }
-	     SampleBibFilesDir[j] = (char) NULL;
+	     SampleBibFilesDir[j] = '\0';
 	     printf("B_DIR  %s\n",SampleBibFilesDir);
        }
 
