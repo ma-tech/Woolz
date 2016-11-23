@@ -1215,6 +1215,26 @@ static WlzErrorNum WlzObjFactsTiledTab(WlzObjFactsData *fData,
     }
     if(errNum == WLZ_ERR_NONE)
     {
+      errNum = WlzObjFactsAppend(fData, "Value rank: %d.\n",
+				 val.t->vRank);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      (void )WlzObjFactsAppend(fData, "Value dim: %p.\n", val.t->vDim);
+      if(val.t->vRank > 0)
+      {
+        int	idx;
+
+        ++(fData->indent);
+	for(idx = 0; idx < val.t->vRank; ++idx)
+	{
+	  (void )WlzObjFactsAppend(fData, "%d\n", val.t->vDim[idx]);
+	}
+        --(fData->indent);
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
       errNum = WlzObjFactsAppend(fData, "Values column bounds: %d %d\n",
 				 val.t->kol1, val.t->lastkl);
     }
