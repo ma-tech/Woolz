@@ -548,7 +548,7 @@ WlzErrorNum     WlzIndexedValuesSet(WlzObject *obj, size_t cnt, void *val)
   {
     errNum = WLZ_ERR_VALUES_NULL;
   }
-  else if(ixv->type != WLZ_INDEXED_VALUES)
+  else if(ixv->type != (WlzObjectType )WLZ_INDEXED_VALUES)
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
