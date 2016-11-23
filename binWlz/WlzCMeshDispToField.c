@@ -222,7 +222,7 @@ int		main(int argc, char *argv[])
       ok = 0;
       (void )fprintf(stderr,
 		     "%s: failed to read object from file %s\n",
-		     *argv, inMeshObj);
+		     *argv, inMeshStr);
     }
     if(fP && strcmp(inMeshStr, "-"))
     {
