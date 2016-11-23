@@ -75,9 +75,12 @@ static WlzObject  		*WlzMakeTiledValuesObj3D(
 * \brief	Allocates a new tiled value table, but without allocating
 * 		any indices or tiles.
 * \param	dim			Dimension.
+* \param	vRank			Rank of the individual values,
+* 					zero for scalar values, one for
+* 					vector values etc....
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzTiledValues	*WlzMakeTiledValues(int dim, WlzErrorNum *dstErr)
+WlzTiledValues	*WlzMakeTiledValues(int dim, int vRank, WlzErrorNum *dstErr)
 {
   WlzTiledValues *tVal = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
@@ -90,15 +93,31 @@ WlzTiledValues	*WlzMakeTiledValues(int dim, WlzErrorNum *dstErr)
                    AlcCalloc(sizeof(WlzTiledValues), 1)) == NULL) ||
           ((tVal->nIdx = (int *)AlcCalloc(sizeof(int), dim)) == NULL))
   {
-    AlcFree(tVal);
-    tVal = NULL;
     errNum = WLZ_ERR_MEM_ALLOC;
   }
-  else
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(vRank > 0)
+    {
+      if((tVal->vDim = (int *)AlcCalloc(sizeof(int), vRank)) == NULL)
+      {
+	errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
   {
     tVal->fd = -1;
-    tVal->type = WLZ_VALUETABLE_TILED_INT;
+    tVal->type = WLZ_GREY_TABLE_TYPE(vRank, WLZ_GREY_TAB_TILED, WLZ_GREY_INT);
     tVal->dim = dim;
+    tVal->vRank = vRank;
+  }
+  else if(tVal)
+  {
+    AlcFree(tVal);
+    AlcFree(tVal->nIdx);
+    AlcFree(tVal->vDim);
+    tVal = NULL;
   }
   if(dstErr)
   {
@@ -197,7 +216,7 @@ WlzTiledValues	*WlzNewTiledValues(WlzTiledValues *gVal, WlzPixelV bgdV,
   }
   else
   {
-    rVal = WlzMakeTiledValues(gVal->dim, &errNum);
+    rVal = WlzMakeTiledValues(gVal->dim, 0, &errNum); // HACK TODO
     if(errNum == WLZ_ERR_NONE)
     {
       int   i;
@@ -914,7 +933,7 @@ static WlzObject  *WlzMakeTiledValuesObj2D(WlzObject *gObj, size_t tileSz,
   /* Create a new tiled values data structure. */
   if(errNum == WLZ_ERR_NONE)
   {
-    tVal = WlzMakeTiledValues(2, &errNum);
+    tVal = WlzMakeTiledValues(2, 0, &errNum); // HACK TODO
   }
   /* Set up the fields of the tiled values data structure. */
   if(errNum == WLZ_ERR_NONE)
@@ -1135,7 +1154,7 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
   /* Create a new tiled values data structure. */
   if(errNum == WLZ_ERR_NONE)
   {
-    tVal = WlzMakeTiledValues(3, &errNum);
+    tVal = WlzMakeTiledValues(3, 0, &errNum); // HACK TODO
   }
   /* Set up the fields of the tiled values data structure. */
   if(errNum == WLZ_ERR_NONE)
