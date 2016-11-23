@@ -3361,7 +3361,7 @@ static WlzErrorNum WlzWriteTiledValueTable(FILE *fP, WlzObject *obj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    if(tVal->vDim > 0)
+    if(tVal->vRank > 0)
     {
       int	idx;
 
