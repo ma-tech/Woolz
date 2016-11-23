@@ -216,7 +216,7 @@ WlzTiledValues	*WlzNewTiledValues(WlzTiledValues *gVal, WlzPixelV bgdV,
   }
   else
   {
-    rVal = WlzMakeTiledValues(gVal->dim, 0, &errNum); // HACK TODO
+    rVal = WlzMakeTiledValues(gVal->dim, gVal->vRank, &errNum);
     if(errNum == WLZ_ERR_NONE)
     {
       int   i;
@@ -238,6 +238,11 @@ WlzTiledValues	*WlzNewTiledValues(WlzTiledValues *gVal, WlzPixelV bgdV,
       rVal->tiles.v    = gVal->tiles.v;
       rVal->indices    = gVal->indices;
       rVal->bckgrnd    = bgdV;
+      rVal->vRank      = gVal->vRank;
+      for(i = 0; i < gVal->vRank; ++i)
+      {
+	rVal->vDim[i] = gVal->vDim[i];
+      }
       for(i = 0; i < gVal->dim; ++i)
       {
 	rVal->nIdx[i] = gVal->nIdx[i];
@@ -933,7 +938,7 @@ static WlzObject  *WlzMakeTiledValuesObj2D(WlzObject *gObj, size_t tileSz,
   /* Create a new tiled values data structure. */
   if(errNum == WLZ_ERR_NONE)
   {
-    tVal = WlzMakeTiledValues(2, 0, &errNum); // HACK TODO
+    tVal = WlzMakeTiledValues(2, 0, &errNum);
   }
   /* Set up the fields of the tiled values data structure. */
   if(errNum == WLZ_ERR_NONE)
@@ -1154,7 +1159,7 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
   /* Create a new tiled values data structure. */
   if(errNum == WLZ_ERR_NONE)
   {
-    tVal = WlzMakeTiledValues(3, 0, &errNum); // HACK TODO
+    tVal = WlzMakeTiledValues(3, 0, &errNum);
   }
   /* Set up the fields of the tiled values data structure. */
   if(errNum == WLZ_ERR_NONE)
