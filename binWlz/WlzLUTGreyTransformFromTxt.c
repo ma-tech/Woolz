@@ -52,7 +52,7 @@ Creates a grey LUT transform from text input to form a grey LUT transform object
 Current version assumes index values from 0-255.
 \par Synopsis
 \verbatim
-WlzLUTGreyTransformFromTxt [-f] [-o<output file>] [-h] [<LUT text file>]
+WlzLUTGreyTransformFromTxt [-o<output file>] [-h] [<LUT text file>]
 
 \endverbatim
 \par Options
@@ -60,10 +60,6 @@ WlzLUTGreyTransformFromTxt [-f] [-o<output file>] [-h] [<LUT text file>]
   <tr>
     <td><b>-h</b></td>
     <td>Help, prints a usage message.</td>
-  </tr>
-  <tr>
-    <td><b>-f</b></td>
-    <td>Fills gaps with linear interpolation.</td>
   </tr>
   <tr>
     <td><b>-o</b></td>
@@ -134,7 +130,6 @@ int             main(int argc, char **argv)
   int		option,
 		ok = 1,
 		usage = 0;
-  int		fillFlg = 0;
   LUTEntry	LUTEntries[256];
   int		LUTEntryCount;
   int		entryIdx, index;
@@ -145,7 +140,7 @@ int             main(int argc, char **argv)
   const char	*errMsg;
   char 		*outFileStr;
   char		*inFileStr;
-  static char	optList[] = "fho:",
+  static char	optList[] = "ho:",
 		outFileStrDef[] = "-",
   		inFileStrDef[] = "-";
 
@@ -157,14 +152,9 @@ int             main(int argc, char **argv)
   {
     switch(option)
     {
-    case 'f':
-      fillFlg = 1;
-      break;
-
     case 'o':
       outFileStr = optarg;
       break;
-
     case 'h':
     default:
       usage = 1;
@@ -299,9 +289,10 @@ int             main(int argc, char **argv)
     (void )fprintf(stderr,
     "Usage: %s%s",
     *argv,
-    " [-f] [-o<output object>] [-h]\n" 
+    " [-o<output object>] [-h]\n" 
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
+    "  -o  Output object.\n"
     "Reads the LUT values from a text file or from standard input. Assumes\n"
     "value-pairs (index, value) and in this version a LUT will be created\n"
     "with 0 <= index <= 255. If the \"-f\" flag is used then values wil be\n"
