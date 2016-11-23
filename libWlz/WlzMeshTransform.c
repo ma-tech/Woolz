@@ -1162,7 +1162,7 @@ static WlzErrorNum WlzMeshTransformValues2D(WlzObject *dstObj,
   {
     WlzObjectType tType;
 
-    tType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, newGreyType, NULL);
+    tType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, newGreyType, NULL);
     newValues.v = WlzNewValueTb(dstObj, tType, bkdV, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)

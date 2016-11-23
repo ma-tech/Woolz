@@ -200,7 +200,7 @@ static WlzCompoundArray *WlzCompDispIncGrey3D(WlzObject *obj0, WlzObject *obj1,
   objs[0] = objs[1] = objs[2] = NULL;
   bgd.type = WLZ_GREY_INT;
   bgd.v.inv = 0;
-  gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, &errNum);
+  gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, &errNum);
   for(idN = 0; idN < 3; ++idN)
   {
     values.vox = WlzNewValuesVox(obj0, gTT, bgd, &errNum);

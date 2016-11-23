@@ -246,7 +246,7 @@ WlzObject *WlzGetProjectionFromObject(
 	pixval.type = WLZ_GREY_UBYTE;
 	pixval.v.ubv = (WlzUByte )0;
 	if((values.v = WlzNewValueTb(rtnObj,
-				     WlzGreyTableType(WLZ_GREY_TAB_RECT,
+				     WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT,
 						      dstGType, NULL),
 				     pixval, &errNum)) != NULL){
 	  rtnObj->values = WlzAssignValues(values, &errNum);

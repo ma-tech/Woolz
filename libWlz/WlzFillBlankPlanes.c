@@ -142,7 +142,7 @@ WlzErrorNum WlzFillBlankPlanes(
       if( valuess ){
 	gType = WlzGreyTableTypeToGreyType(
 	  valuess[p - planedmn->plane1].core->type, NULL);
-	valTbType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
+	valTbType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, gType, NULL);
       }
     }
   }

@@ -168,8 +168,8 @@ WlzCompoundArray *WlzRGBAToCompound(
     WlzObjectType	type;
     WlzPixelV	oldBck, newBck;
 
-    type = WlzGreyTableType(
-      WlzGreyTableTypeToTableType(obj->values.core->type, &errNum),
+    type = WlzGreyValueTableType(
+      0, WlzGreyTableTypeToTableType(obj->values.core->type, &errNum),
       WLZ_GREY_UBYTE, &errNum);
     oldBck = WlzGetBackground(obj, &errNum);
 
@@ -429,7 +429,8 @@ static WlzObject *WlzCompoundToRGBA2D(WlzCompoundArray *cObj,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Add an RGBA valuetable, extract background for each channel */
-    vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_RGBA, &errNum);
+    vType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_RGBA,
+                                  &errNum);
     b[0] = b[1] = b[2] = b[3] = 255;
     for(i=0; (errNum == WLZ_ERR_NONE) && (i < numObjs); i++)
     {
@@ -752,8 +753,8 @@ WlzObject *WlzRGBAToModulus(
     WlzObjectType	type;
     WlzPixelV	oldBck, newBck;
 
-    type = WlzGreyTableType(
-      WlzGreyTableTypeToTableType(obj->values.core->type, &errNum),
+    type = WlzGreyValueTableType(
+      0, WlzGreyTableTypeToTableType(obj->values.core->type, &errNum),
       WLZ_GREY_SHORT, &errNum);
     oldBck = WlzGetBackground(obj, &errNum);
     newBck.type = WLZ_GREY_SHORT;
@@ -939,7 +940,7 @@ WlzObject *WlzIndexToRGBA(
 	}
 	else {
 	  oldpixtype =
-	    WlzGreyTableTypeToGreyType(obj->values.core->type, NULL);
+	    WlzGreyTableTypeToGreyType(obj->values.core->type, &errNum);
 	  if( oldpixtype == WLZ_GREY_RGBA ){
 	    return WlzMakeMain(obj->type, obj->domain, obj->values,
 			       NULL, NULL, dstErr);
@@ -973,7 +974,8 @@ WlzObject *WlzIndexToRGBA(
 					      &errNum);
   }
   if( errNum == WLZ_ERR_NONE ){
-    newvtbltype = WlzGreyTableType(newvtbltype, WLZ_GREY_RGBA, &errNum);
+    newvtbltype = WlzGreyValueTableType(0, newvtbltype, WLZ_GREY_RGBA,
+    				        &errNum);
   }
 
   /* get the background  - note background now carries its own type */
@@ -1311,8 +1313,8 @@ WlzObject *WlzRGBAToChannel(
   /* now extract data */
   if( errNum == WLZ_ERR_NONE ){
 
-    type = WlzGreyTableType(
-      WlzGreyTableTypeToTableType(obj->values.core->type, &errNum),
+    type = WlzGreyValueTableType(
+      0, WlzGreyTableTypeToTableType(obj->values.core->type, &errNum),
       WLZ_GREY_UBYTE, &errNum);
     oldBck = WlzGetBackground(obj, &errNum);
     newBck.type = WLZ_GREY_UBYTE;

@@ -176,7 +176,7 @@ static WlzObject *WlzScalarFn2D(WlzObject *sObj, WlzFnType fn,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    dVType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, dGType, &errNum);
+    dVType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, dGType, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {

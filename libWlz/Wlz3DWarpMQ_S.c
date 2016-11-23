@@ -3170,8 +3170,9 @@ WlzErrorNum static WlzMeshTransformValues3D(       WlzObject *dstObj,
     /*  this works both for 2D and 3D object  */
     /* newGreyType = WlzGreyTableTypeToGreyType(srcObj->values.v->type,
     					     &errNum); */
-    newGreyType = WlzGreyTableTypeToGreyType(srcObj->values.vox->values->core->type,
-    					     &errNum);
+    newGreyType = WlzGreyTableTypeToGreyType(
+    				srcObj->values.vox->values->core->type,
+    				&errNum);
    }
   
   if((errNum == WLZ_ERR_NONE) && (bkdV.type != newGreyType))

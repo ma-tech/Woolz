@@ -551,6 +551,12 @@ WlzObject			*WlzCMeshDispToField(
   {
     errNum = WLZ_ERR_PARAM_DATA;
   }
+  else if((mObj->values.core->type != WLZ_INDEXED_VALUES) ||
+          ((mObj->values.x->attach != WLZ_VALUE_ATTACH_NOD) &&
+	   (mObj->values.x->attach != WLZ_VALUE_ATTACH_ELM)))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
   else
   {
     switch(mObj->type)

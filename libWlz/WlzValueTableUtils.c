@@ -48,128 +48,63 @@ static char _WlzValueTableUtils_c[] = "University of Edinburgh $Id$";
 * \return	Type of grey table.
 * \ingroup	WlzValuesUtils
 * \brief	Computes a grey table type from table and grey types.
+* 		This function is equivalent to the macro WLZ_GREY_TABLE_TYPE
+* 		but with range checks.
+* \param	rank			Grey array rank,
+* 					0 for a pixel/voxel value table or
+* 					1 for value arrays.
 * \param	tableType		The basic table type.
 * \param	greyType		The grey type.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObjectType	WlzGreyTableType(WlzObjectType tableType,
-			         WlzGreyType greyType,
-				 WlzErrorNum *dstErr)
+WlzObjectType			WlzGreyValueTableType(
+				  int rank,
+				  WlzGreyTableType tableType,
+			          WlzGreyType greyType,
+				  WlzErrorNum *dstErr)
 {
   WlzObjectType gTabType = WLZ_NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  switch(tableType)
+  if((rank < 0) || (rank > 1))
   {
-    case WLZ_GREY_TAB_RAGR:
-      switch(greyType)
-      {
-        case WLZ_GREY_INT:
-	  gTabType = WLZ_VALUETABLE_RAGR_INT;
-	  break;
-        case WLZ_GREY_SHORT:
-	  gTabType = WLZ_VALUETABLE_RAGR_SHORT;
-	  break;
-        case WLZ_GREY_UBYTE:
-	  gTabType = WLZ_VALUETABLE_RAGR_UBYTE;
-	  break;
-        case WLZ_GREY_FLOAT:
-	  gTabType = WLZ_VALUETABLE_RAGR_FLOAT;
-	  break;
-        case WLZ_GREY_DOUBLE:
-	  gTabType = WLZ_VALUETABLE_RAGR_DOUBLE;
-	  break;
-        case WLZ_GREY_RGBA:
-	  gTabType = WLZ_VALUETABLE_RAGR_RGBA;
-	  break;
-        default:
-	  errNum = WLZ_ERR_GREY_TYPE;
-	  break;
-      }
-      break;
-    case WLZ_GREY_TAB_RECT:
-      switch(greyType)
-      {
-        case WLZ_GREY_INT:
-	  gTabType = WLZ_VALUETABLE_RECT_INT;
-	  break;
-        case WLZ_GREY_SHORT:
-	  gTabType = WLZ_VALUETABLE_RECT_SHORT;
-	  break;
-        case WLZ_GREY_UBYTE:
-	  gTabType = WLZ_VALUETABLE_RECT_UBYTE;
-	  break;
-        case WLZ_GREY_FLOAT:
-	  gTabType = WLZ_VALUETABLE_RECT_FLOAT;
-	  break;
-        case WLZ_GREY_DOUBLE:
-	  gTabType = WLZ_VALUETABLE_RECT_DOUBLE;
-	  break;
-        case WLZ_GREY_RGBA:
-	  gTabType = WLZ_VALUETABLE_RECT_RGBA;
-	  break;
-        default:
-	  errNum = WLZ_ERR_GREY_TYPE;
-	  break;
-      }
-      break;
-    case WLZ_GREY_TAB_INTL:
-      switch(greyType)
-      {
-        case WLZ_GREY_INT:
-	  gTabType = WLZ_VALUETABLE_INTL_INT;
-	  break;
-        case WLZ_GREY_SHORT:
-	  gTabType = WLZ_VALUETABLE_INTL_SHORT;
-	  break;
-        case WLZ_GREY_UBYTE:
-	  gTabType = WLZ_VALUETABLE_INTL_UBYTE;
-	  break;
-        case WLZ_GREY_FLOAT:
-	  gTabType = WLZ_VALUETABLE_INTL_FLOAT;
-	  break;
-        case WLZ_GREY_DOUBLE:
-	  gTabType = WLZ_VALUETABLE_INTL_DOUBLE;
-	  break;
-        case WLZ_GREY_RGBA:
-	  gTabType = WLZ_VALUETABLE_INTL_RGBA;
-	  break;
-        default:
-	  errNum = WLZ_ERR_GREY_TYPE;
-	  break;
-      }
-      break;
-    case WLZ_GREY_TAB_TILED:
-      switch(greyType)
-      {
-        case WLZ_GREY_INT:
-	  gTabType = WLZ_VALUETABLE_TILED_INT;
-	  break;
-        case WLZ_GREY_SHORT:
-	  gTabType = WLZ_VALUETABLE_TILED_SHORT;
-	  break;
-        case WLZ_GREY_UBYTE:
-	  gTabType = WLZ_VALUETABLE_TILED_UBYTE;
-	  break;
-        case WLZ_GREY_FLOAT:
-	  gTabType = WLZ_VALUETABLE_TILED_FLOAT;
-	  break;
-        case WLZ_GREY_DOUBLE:
-	  gTabType = WLZ_VALUETABLE_TILED_DOUBLE;
-	  break;
-        case WLZ_GREY_RGBA:
-	  gTabType = WLZ_VALUETABLE_TILED_RGBA;
-	  break;
-        default:
-	  errNum = WLZ_ERR_GREY_TYPE;
-	  break;
-      }
-      break;
-    default:
-      errNum = WLZ_ERR_VALUES_TYPE;
-      break;
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
-
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(tableType)
+    {
+      case WLZ_GREY_TAB_RAGR: /* FALLTHROUGH */
+      case WLZ_GREY_TAB_RECT: /* FALLTHROUGH */
+      case WLZ_GREY_TAB_INTL: /* FALLTHROUGH */
+      case WLZ_GREY_TAB_TILED:
+	break;
+      default:
+	errNum = WLZ_ERR_VALUES_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(greyType)
+    {
+      case WLZ_GREY_INT:
+      case WLZ_GREY_SHORT:
+      case WLZ_GREY_UBYTE:
+      case WLZ_GREY_FLOAT:
+      case WLZ_GREY_DOUBLE:
+      case WLZ_GREY_RGBA:
+      case WLZ_GREY_BIT:
+        break;
+      default: 
+        errNum = WLZ_ERR_GREY_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    gTabType = WLZ_GREY_TABLE_TYPE(rank, tableType, greyType);
+  }
   if(dstErr)
   {
     *dstErr = errNum;
@@ -178,61 +113,64 @@ WlzObjectType	WlzGreyTableType(WlzObjectType tableType,
 }
 
 /*!
-* \return	Type of grey value.
+* \return	Type of grey value. The return value will be WLZ_GREY_ERROR
+* 		on error.
 * \ingroup	WlzValuesUtils
 * \brief	Computes the type of grey from a grey table type.
+* 		This function is equivalent to the macro
+* 		WLZ_GREY_TABLE_TO_GREY_TYPE but with range checks.
 * \param	gTabType		The basic table type.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzGreyType	WlzGreyTableTypeToGreyType(WlzObjectType gTabType,
 				           WlzErrorNum *dstErr)
 {
-  WlzGreyType	greyType = WLZ_GREY_ERROR;
+  int		rank;
+  WlzGreyType	greyType;
+  WlzGreyTableType tabType;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  switch(gTabType)
+  greyType = WLZ_GREY_TABLE_TO_GREY_TYPE(gTabType);
+  switch(greyType)
   {
-    case WLZ_VALUETABLE_RAGR_INT:   /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RECT_INT:   /* FALLTHROUGH */
-    case WLZ_VALUETABLE_INTL_INT:   /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_INT:
-      greyType = WLZ_GREY_INT;
-      break;
-    case WLZ_VALUETABLE_RAGR_SHORT: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RECT_SHORT: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_INTL_SHORT: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_SHORT:
-      greyType = WLZ_GREY_SHORT;
-      break;
-    case WLZ_VALUETABLE_RAGR_UBYTE: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RECT_UBYTE: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_INTL_UBYTE: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_UBYTE:
-      greyType = WLZ_GREY_UBYTE;
-      break;
-    case WLZ_VALUETABLE_RAGR_FLOAT: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RECT_FLOAT: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_INTL_FLOAT: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_FLOAT:
-      greyType = WLZ_GREY_FLOAT;
-      break;
-    case WLZ_VALUETABLE_RAGR_DOUBLE: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RECT_DOUBLE: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_INTL_DOUBLE: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_DOUBLE:
-      greyType = WLZ_GREY_DOUBLE;
-      break;
-    case WLZ_VALUETABLE_RAGR_RGBA: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RECT_RGBA: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_INTL_RGBA: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_RGBA:
-      greyType = WLZ_GREY_RGBA;
+    case WLZ_GREY_INT:    /* FALLTHROUGH */
+    case WLZ_GREY_SHORT:  /* FALLTHROUGH */
+    case WLZ_GREY_UBYTE:  /* FALLTHROUGH */
+    case WLZ_GREY_FLOAT:  /* FALLTHROUGH */
+    case WLZ_GREY_DOUBLE: /* FALLTHROUGH */
+    case WLZ_GREY_RGBA:
       break;
     default:
       errNum = WLZ_ERR_GREY_TYPE;
       break;
   }
-
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rank = WLZ_GREY_TABLE_TO_RANK(gTabType);
+    if((rank < 0) || (rank > 1))
+    {
+      errNum = WLZ_ERR_VALUES_TYPE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    tabType = WLZ_GREY_TABLE_TO_TABLE_TYPE(gTabType);
+    switch(tabType)
+    {
+      case WLZ_GREY_TAB_RAGR: /* FALLTHROUGH */
+      case WLZ_GREY_TAB_RECT: /* FALLTHROUGH */
+      case WLZ_GREY_TAB_INTL: /* FALLTHROUGH */
+      case WLZ_GREY_TAB_TILED:
+        break;
+      default:
+	errNum = WLZ_ERR_VALUES_TYPE;
+	break;
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    greyType = WLZ_GREY_ERROR;
+  }
   if(dstErr)
   {
     *dstErr = errNum;
@@ -241,62 +179,132 @@ WlzGreyType	WlzGreyTableTypeToGreyType(WlzObjectType gTabType,
 }
 
 /*!
-* \return	Type of grey value.
+* \return	Type of grey value. The return value may not be set on
+* 		error.
 * \ingroup	WlzValuesUtils
 * \brief	Computes the type of table from a  grey table type.
+* 		This function is equivalent to the macro
+* 		WLZ_GREY_TABLE_TO_TABLE_TYPE but with range checks.
 * \param	gTabType		The basic table type.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObjectType WlzGreyTableTypeToTableType(WlzObjectType gTabType,
-				 	  WlzErrorNum *dstErr)
+WlzGreyTableType 		WlzGreyTableTypeToTableType(
+				  WlzObjectType gTabType,
+				  WlzErrorNum *dstErr)
 {
-  WlzObjectType	tableType = WLZ_NULL;
+  int		rank;
+  WlzGreyType   greyType;
+  WlzGreyTableType tabType = WLZ_GREY_TAB_RAGR;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  switch(gTabType)
+  tabType = WLZ_GREY_TABLE_TO_TABLE_TYPE(gTabType);
+  switch(tabType)
   {
-    case WLZ_VALUETABLE_RAGR_INT:    /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RAGR_SHORT:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RAGR_UBYTE:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RAGR_FLOAT:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RAGR_DOUBLE: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RAGR_RGBA:
-      tableType = WLZ_GREY_TAB_RAGR;
-      break;
-    case WLZ_VALUETABLE_RECT_INT:    /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RECT_SHORT:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RECT_UBYTE:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RECT_FLOAT:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_RECT_DOUBLE  /* FALLTHROUGH */:
-    case WLZ_VALUETABLE_RECT_RGBA:
-      tableType = WLZ_GREY_TAB_RECT;
-      break;
-    case WLZ_VALUETABLE_INTL_INT:    /* FALLTHROUGH */
-    case WLZ_VALUETABLE_INTL_SHORT:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_INTL_UBYTE:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_INTL_FLOAT:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_INTL_DOUBLE: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_INTL_RGBA:
-      tableType = WLZ_GREY_TAB_INTL;
-      break;
-    case WLZ_VALUETABLE_TILED_INT:    /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_SHORT:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_UBYTE:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_FLOAT:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_DOUBLE: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_RGBA:
-      tableType = WLZ_GREY_TAB_TILED;
+    case WLZ_GREY_TAB_RAGR: /* FALLTHROUGH */
+    case WLZ_GREY_TAB_RECT: /* FALLTHROUGH */
+    case WLZ_GREY_TAB_INTL: /* FALLTHROUGH */
+    case WLZ_GREY_TAB_TILED:
       break;
     default:
-      errNum = WLZ_ERR_OBJECT_TYPE;
+      errNum = WLZ_ERR_VALUES_TYPE;
       break;
   }
-
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rank = WLZ_GREY_TABLE_TO_RANK(gTabType);
+    if((rank < 0) || (rank > 1))
+    {
+      errNum = WLZ_ERR_VALUES_TYPE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    greyType = WLZ_GREY_TABLE_TO_GREY_TYPE(gTabType);
+    switch(greyType)
+    {
+      case WLZ_GREY_INT:    /* FALLTHROUGH */
+      case WLZ_GREY_SHORT:  /* FALLTHROUGH */
+      case WLZ_GREY_UBYTE:  /* FALLTHROUGH */
+      case WLZ_GREY_FLOAT:  /* FALLTHROUGH */
+      case WLZ_GREY_DOUBLE: /* FALLTHROUGH */
+      case WLZ_GREY_RGBA:
+        break;
+      default:
+	errNum = WLZ_ERR_GREY_TYPE;
+	break;
+    }
+  }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(tableType);
+  return(tabType);
+}
+
+/*!
+* \return	Grey value rank. The return value will be -1 on error.
+* \ingroup	WlzValuesUtils
+* \brief	Computes the rank from a  grey table type.
+* 		This function is equivalent to the macro
+* 		WLZ_GREY_TABLE_TO_RANK but with range checks.
+* \param	gTabType		The basic table type.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int				WlzGreyTableTypeToRank(
+				  WlzObjectType gTabType,
+				  WlzErrorNum *dstErr)
+{
+  int		rank = -1;
+  WlzGreyType	greyType;
+  WlzGreyTableType tabType;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  rank = WLZ_GREY_TABLE_TO_RANK(gTabType);
+  if((rank < 0) || (rank > 1))
+  {
+    errNum = WLZ_ERR_VALUES_TYPE;
+  }
+  else
+  {
+    tabType = WLZ_GREY_TABLE_TO_TABLE_TYPE(gTabType);
+    switch(tabType)
+    {
+      case WLZ_GREY_TAB_RAGR: /* FALLTHROUGH */
+      case WLZ_GREY_TAB_RECT: /* FALLTHROUGH */
+      case WLZ_GREY_TAB_INTL: /* FALLTHROUGH */
+      case WLZ_GREY_TAB_TILED:
+	break;
+      default:
+	errNum = WLZ_ERR_VALUES_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    greyType = WLZ_GREY_TABLE_TO_GREY_TYPE(gTabType);
+    switch(greyType)
+    {
+      case WLZ_GREY_INT:    /* FALLTHROUGH */
+      case WLZ_GREY_SHORT:  /* FALLTHROUGH */
+      case WLZ_GREY_UBYTE:  /* FALLTHROUGH */
+      case WLZ_GREY_FLOAT:  /* FALLTHROUGH */
+      case WLZ_GREY_DOUBLE: /* FALLTHROUGH */
+      case WLZ_GREY_RGBA:
+        break;
+      default:
+	errNum = WLZ_ERR_GREY_TYPE;
+	break;
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    rank = -1;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rank);
 }
 
 /*!
@@ -306,22 +314,16 @@ WlzObjectType WlzGreyTableTypeToTableType(WlzObjectType gTabType,
 * \brief	Determines whether the grey table type is tiled.
 * \param	gTabType		The basic table type.
 */
-WlzObjectType	WlzGreyTableIsTiled(WlzObjectType gTabType)
+WlzGreyTableType		WlzGreyTableIsTiled(
+				  WlzObjectType gTabType)
 {
-  WlzObjectType	is = (WlzObjectType )0;
+  WlzGreyTableType tabType;
+  WlzObjectType	is = (WlzGreyTableType )0;
 
-  switch(gTabType)
+  tabType = WLZ_GREY_TABLE_TO_TABLE_TYPE(gTabType);
+  if(tabType == WLZ_GREY_TAB_TILED)
   {
-    case WLZ_VALUETABLE_TILED_INT:    /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_SHORT:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_UBYTE:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_FLOAT:  /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_DOUBLE: /* FALLTHROUGH */
-    case WLZ_VALUETABLE_TILED_RGBA:
-      is = WLZ_GREY_TAB_TILED;
-      break;
-    default:
-      break;
+    is = WLZ_GREY_TAB_TILED;
   }
   return(is);
 }
@@ -605,7 +607,7 @@ WlzErrorNum     WlzIndexedValuesSet(WlzObject *obj, size_t cnt, void *val)
 	      }
 	      break;
 	    default:
-	      errNum = WLZ_ERR_VALUES_DATA;
+	      errNum = WLZ_ERR_VALUES_TYPE;
 	      break;
 	  }
 	}
@@ -661,7 +663,7 @@ WlzErrorNum     WlzIndexedValuesSet(WlzObject *obj, size_t cnt, void *val)
 	      }
 	      break;
 	    default:
-	      errNum = WLZ_ERR_VALUES_DATA;
+	      errNum = WLZ_ERR_VALUES_TYPE;
 	      break;
 	  }
 	}
@@ -717,7 +719,7 @@ WlzErrorNum     WlzIndexedValuesSet(WlzObject *obj, size_t cnt, void *val)
 	      }
 	      break;
 	    default:
-	      errNum = WLZ_ERR_VALUES_DATA;
+	      errNum = WLZ_ERR_VALUES_TYPE;
 	      break;
 	  }
 	}

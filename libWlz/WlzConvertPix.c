@@ -135,7 +135,7 @@ WlzObject *WlzConvertPix(
 					      &errNum);
   }
   if( errNum == WLZ_ERR_NONE ){
-    newvtbltype = WlzGreyTableType(newvtbltype, newpixtype, &errNum);
+    newvtbltype = WlzGreyValueTableType(0, newvtbltype, newpixtype, &errNum);
   }
 
   /* get the background  - note background now carries its own type */

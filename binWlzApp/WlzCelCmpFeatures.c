@@ -1661,7 +1661,8 @@ static WlzObject *WlzCelCmpColorise(WlzObject *gObj,
   {
     /* Green */
     objA[1] = WlzAssignObject(gObj, NULL);
-    gTType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_UBYTE, &errNum);
+    gTType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_UBYTE,
+    				   &errNum);
   }
   /* Create clump array object. */
   if(errNum == WLZ_ERR_NONE)

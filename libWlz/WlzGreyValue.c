@@ -267,8 +267,8 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
 	  {
 	    gVWSp->gTabType = WLZ_GREY_TAB_TILED;
 	    gVWSp->gTabType2D = WLZ_GREY_TAB_TILED;
-	    gVWSp->gType = WlzGreyTableTypeToGreyType(obj->values.core->type,
-		                                      NULL);
+	    gVWSp->gType = WlzGreyTableTypeToGreyType(
+	        obj->values.core->type, &errNum);
 	    gVWSp->plane = obj->domain.p->plane1;
 	    gVWSp->iDom2D = (*(obj->domain.p->domains)).i;
 	    gVWSp->gBkd = obj->values.t->bckgrnd.v;
@@ -305,8 +305,8 @@ WlzGreyValueWSpace *WlzGreyValueMakeWSp(WlzObject *obj,
 		if(((*planeValues).core) &&
 		   ((*planeValues).core->type != WLZ_EMPTY_OBJ))
 		{
-		  gType0 = WlzGreyTableTypeToGreyType((*planeValues).core->type,
-		                                      &errNum);
+		  gType0 = WlzGreyTableTypeToGreyType(
+		      (*planeValues).core->type, &errNum);
 		  if(errNum == WLZ_ERR_NONE)
 		  {
 		    gTabType0 = WlzGreyTableTypeToTableType((*planeValues).

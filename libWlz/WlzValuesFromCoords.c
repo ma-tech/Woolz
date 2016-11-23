@@ -154,13 +154,13 @@ static WlzCompoundArray		*WlzValuesFromCoords2D(
   {
     bgdV.v.inv = 0;
     bgdV.type = WLZ_GREY_INT;
-    tt = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_INT, NULL);
+    tt = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_INT, NULL);
   }
   else /* gType == WLZ_GREY_DOUBLE */
   {
     bgdV.v.dbv = 0.0;
     bgdV.type = WLZ_GREY_DOUBLE;
-    tt = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_DOUBLE, NULL);
+    tt = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_DOUBLE, NULL);
   }
   cpd = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 1, 2, NULL, gObj->type,
                              &errNum);
@@ -356,7 +356,7 @@ static WlzCompoundArray		*WlzValuesFromCoords3D(
 	{
 	  WlzObjectType tt;
 
-	  tt = WlzGreyTableType(WLZ_GREY_TAB_RECT, gType, NULL);
+	  tt = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, gType, NULL);
 	  val.v = WlzNewValueTb(obj2, tt, bgdV, &errNum2);
 	}
 	if(errNum2 == WLZ_ERR_NONE)

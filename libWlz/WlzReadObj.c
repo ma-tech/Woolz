@@ -1505,11 +1505,11 @@ static WlzErrorNum WlzReadGreyValues(FILE *fp, WlzObjectType type,
   switch( obj->domain.core->type ){
 
   case WLZ_INTERVALDOMAIN_INTVL:
-    type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gtype, &errNum);
+    type = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, gtype, &errNum);
     break;
 
   case WLZ_INTERVALDOMAIN_RECT:
-    type = WlzGreyTableType(WLZ_GREY_TAB_RECT, gtype, &errNum);
+    type = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, gtype, &errNum);
     break;
 
   default:
@@ -1918,7 +1918,7 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
     return( WLZ_ERR_DOMAIN_NULL );
   }
 
-  bgd.type = WlzGreyTableTypeToGreyType( type, NULL );
+  bgd.type = WlzGreyTableTypeToGreyType(type, &errNum);
   bgd.v.inv = 0;
   if((vtb.r = WlzMakeRectValueTb(type, idmn->line1, idmn->lastln,
 				 idmn->kol1, idmn->lastkl-idmn->kol1 + 1,
@@ -1928,7 +1928,7 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
   num = vtb.r->width * (vtb.r->lastln - vtb.r->line1 + 1);
 
   /* test on pixel type to read background */
-  switch( WlzGreyTableTypeToGreyType( type, NULL ) ){
+  switch( WlzGreyTableTypeToGreyType(type, &errNum) ){
   case WLZ_GREY_INT:
     vtb.r->bckgrnd.v.inv = getword(fp);
     values.inp = (int *) AlcMalloc(num*sizeof(int));
@@ -1966,7 +1966,7 @@ static WlzErrorNum WlzReadRectVtb(FILE 		*fp,
   vtb.r->values = values;
   obj->values = WlzAssignValues(vtb, NULL);
 
-  switch( WlzGreyTableTypeToGreyType( type, NULL ) ) {
+  switch( WlzGreyTableTypeToGreyType(type, &errNum) ) {
 
   case WLZ_GREY_INT:
     switch (packing) {

@@ -541,7 +541,7 @@ static WlzObject *WlzNMSuppress2D(WlzObject *grdM,
     /* Make destination object with WLZ_GREY_UBYTE greys. */
     zeroV.type = WLZ_GREY_UBYTE;
     zeroV.v.inv = 0;
-    tmpVal.v = WlzNewValueTb(grdM, WlzGreyTableType(WLZ_GREY_TAB_RAGR,
+    tmpVal.v = WlzNewValueTb(grdM, WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR,
 						    WLZ_GREY_UBYTE, NULL),
 			     zeroV, &errNum);
     if(errNum == WLZ_ERR_NONE)

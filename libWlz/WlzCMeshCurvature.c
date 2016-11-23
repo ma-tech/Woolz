@@ -311,7 +311,8 @@ WlzObject	*WlzCMeshCurvToImage(WlzObject *inObj, double scale,
     iScale = 1.0 / scale;
     bgd.type = WLZ_GREY_DOUBLE;
     bgd.v.dbv = 0.0;
-    gTabType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
+    gTabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE,
+    				     NULL);
     val.v = WlzNewValueTb(domObj, gTabType, bgd, &errNum);
   }
   /* Make 2D the domain object for return with WLZ_GREY_DOUBLE values that

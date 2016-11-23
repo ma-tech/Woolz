@@ -350,7 +350,7 @@ int		main(int argc, char *argv[])
 	int	p;
         WlzObjectType	vtt;
 
-	vtt = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
+	vtt = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, gType, NULL);
         for(p = dom.p->plane1; p <= dom.p->lastpl; ++p)
 	{
 	  int	q;
@@ -932,7 +932,7 @@ static WlzObject		*WlzGetXYPlane(
 	WlzIntervalWSpace iWSp;
 
 	gt = WlzGreyTableTypeToGreyType(val3.core->type, NULL);
-	vtt = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gt, NULL);
+	vtt = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, gt, NULL);
         val2.v = WlzNewValueTb(obj2, vtt, val3.t->bckgrnd, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{

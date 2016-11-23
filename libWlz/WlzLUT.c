@@ -809,7 +809,7 @@ WlzObject	*WlzLUTTransformObj(WlzObject *gObj, WlzObject *tObj,
       WlzObjectType rTabType;
 
       rVal.core = NULL;
-      rTabType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, rGType, NULL);
+      rTabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, rGType, NULL);
       if(errNum == WLZ_ERR_NONE)
       {
 	if(gObj->type == WLZ_2D_DOMAINOBJ)

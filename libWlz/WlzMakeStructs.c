@@ -501,7 +501,7 @@ value table only
 *
 * \return       Pointer to a ragged rectangle values table.
 * \param    type	Values structure type. Must be a correct type as given
-by WlzGreyTableType() with table_type = WLZ_GREY_TAB_RAGR.
+by WlzGreyValueTableType() with table_type = WLZ_GREY_TAB_RAGR.
 * \param    l1	First line.
 * \param    ll	Last line.
 * \param    k1	First column.
@@ -567,7 +567,7 @@ WlzMakeValueTb(WlzObjectType	type,
 
   /* check the grey type and set the background */
   if( errNum == WLZ_ERR_NONE ){
-    switch( WlzGreyTableTypeToGreyType(type, NULL) ){
+    switch( WlzGreyTableTypeToGreyType(type, &errNum) ){
 
     case WLZ_GREY_INT:
     case WLZ_GREY_SHORT:
@@ -576,7 +576,7 @@ WlzMakeValueTb(WlzObjectType	type,
     case WLZ_GREY_DOUBLE:
     case WLZ_GREY_RGBA:
       WlzValueConvertPixel(&(vtb->bckgrnd), backgrnd,
-			   WlzGreyTableTypeToGreyType(type, NULL));
+			   WlzGreyTableTypeToGreyType(type, &errNum));
       break;
 
     default:
@@ -685,7 +685,7 @@ using AlcFreePointerPush().
 *
 * \return       Pointer to a rectangular value table.
 * \param    type	Value table type. Must be a valid table type e.g.
-as returned by WlzGreyTableType() with table_type = WLZ_GREY_TAB_RECT.
+as returned by WlzGreyValueTableType() with table_type = WLZ_GREY_TAB_RECT.
 * \param    line1	First line
 * \param    lastln	Last line.
 * \param    kol1	First column
@@ -749,7 +749,7 @@ WlzMakeRectValueTb(WlzObjectType	type,
 
   /* check grey type and set the background */
   if( errNum == WLZ_ERR_NONE ){
-    switch( WlzGreyTableTypeToGreyType(type, NULL) ){
+    switch( WlzGreyTableTypeToGreyType(type, &errNum) ){
 
     case WLZ_GREY_INT:
     case WLZ_GREY_SHORT:
@@ -758,7 +758,7 @@ WlzMakeRectValueTb(WlzObjectType	type,
     case WLZ_GREY_DOUBLE:
     case WLZ_GREY_RGBA:
       WlzValueConvertPixel(&(vtb->bckgrnd), backgrnd,
-			   WlzGreyTableTypeToGreyType(type, NULL));
+			   WlzGreyTableTypeToGreyType(type, &errNum));
       break;
 
     default:
@@ -1532,8 +1532,8 @@ WlzObject *WlzMakeRect(int 			line1,
   if((errNum == WLZ_ERR_NONE) &&
      (pixeltype != WLZ_GREY_ERROR) &&
      ((values.r = 
-       WlzMakeRectValueTb(WlzGreyTableType(WLZ_GREY_TAB_RECT, pixeltype,
-					   NULL),
+       WlzMakeRectValueTb(WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT,
+       						pixeltype, NULL),
 			  line1, lastln, kol1, lastkl - kol1 + 1,
 			  backgrnd, grey_values, &errNum)) == NULL)){
     WlzFreeDomain(domain);
@@ -1860,7 +1860,7 @@ WlzObject	*WlzMakeCuboid(int plane1, int lastpl,
     if(val.core != NULL)
     {
       val2DP = val.vox->values;
-      tbType = WlzGreyTableType(WLZ_GREY_TAB_RECT, pixType, &errNum);
+      tbType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, pixType, &errNum);
     }
     while((errNum == WLZ_ERR_NONE) && (pPos <= lastpl))
     {
@@ -2152,16 +2152,18 @@ WlzObject *WlzNewGrey(WlzObject *iobj,
 
     case WLZ_INTERVALDOMAIN_INTVL:
       vtype =
-	WlzGreyTableType(
-	  WLZ_GREY_TAB_RAGR, 
-	  WlzGreyTableTypeToGreyType(iobj->values.core->type, NULL), NULL);
+	WlzGreyValueTableType(
+	  0, WLZ_GREY_TAB_RAGR, 
+	  WlzGreyTableTypeToGreyType(iobj->values.core->type, &errNum),
+	  NULL);
       break;
 
     case WLZ_INTERVALDOMAIN_RECT:
       vtype = 
-	WlzGreyTableType(
-	  WLZ_GREY_TAB_RECT, 
-	  WlzGreyTableTypeToGreyType(iobj->values.core->type, NULL), NULL);
+	WlzGreyValueTableType(
+	  0, WLZ_GREY_TAB_RECT, 
+	  WlzGreyTableTypeToGreyType(iobj->values.core->type, &errNum),
+	  NULL);
       break;
 
     default:
@@ -2343,7 +2345,7 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 	  }
 	  if (iwsp.intrmn == 0) {
 	    WlzMakeValueLine(v.v, iwsp.linpos, k1, iwsp.rgtpos, g.inp);
-	    switch( WlzGreyTableTypeToGreyType(type, NULL) ){
+	    switch( WlzGreyTableTypeToGreyType(type, &errNum) ){
 
 	    case WLZ_GREY_INT:
 	      g.inp += iwsp.rgtpos - k1 +1;
@@ -2397,7 +2399,7 @@ WlzRagRValues *WlzNewValueTb(WlzObject		*obj,
 	break;
       }
 
-      switch( WlzGreyTableTypeToGreyType(type, NULL) ){
+      switch( WlzGreyTableTypeToGreyType(type, &errNum) ){
 
       case WLZ_GREY_INT:
 	v.r->values.inp  =

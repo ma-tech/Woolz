@@ -123,7 +123,7 @@ WlzMakeIntervalValues(WlzObjectType	type,
     vil = (WlzValueIntervalLine *) (v.i + 1);
     val = (WlzValueLine *) (vil + idom->lastln - idom->line1 + 1);
     v.i->bckgrnd = bckgrnd;
-    switch( WlzGreyTableTypeToGreyType(type, NULL) ){
+    switch( WlzGreyTableTypeToGreyType(type, &errNum) ){
 
     case WLZ_GREY_INT:
       g.inp = (int *) AlcCalloc(WlzArea(obj, NULL), sizeof(int));
@@ -197,7 +197,7 @@ WlzMakeIntervalValues(WlzObjectType	type,
       vil->nintvs++;
       val->vkol1 = iwsp.lftpos - v.i->kol1;
       val->vlastkl = iwsp.rgtpos - v.i->kol1;
-      switch( WlzGreyTableTypeToGreyType(type, NULL) ){
+      switch( WlzGreyTableTypeToGreyType(type, &errNum) ){
 
       case WLZ_GREY_INT:
 	val->values.inp = g.inp;

@@ -636,7 +636,7 @@ int             main(int argc, char **argv)
       val.core = NULL;
       if(gV.type != WLZ_GREY_ERROR)
       {
-	vTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gV.type, NULL);
+	vTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, gV.type, NULL);
 	if(inObj->type == WLZ_2D_DOMAINOBJ)
 	{
 	  val.v = WlzNewValueTb(obj0, vTT, bV, &errNum);

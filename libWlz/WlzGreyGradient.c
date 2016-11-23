@@ -248,7 +248,7 @@ static WlzObject *WlzGreyMagnitude2D3(WlzObject *srcObj0, WlzObject *srcObj1,
   {
     (void )WlzValueConvertPixel(&dstBgd, *(bgdA + 0), dstGType);
     dstVal.v = WlzNewValueTb(*(iObjA + 0),
-    			     WlzGreyTableType(WLZ_GREY_TAB_RAGR,
+    			     WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR,
 			     dstGType, NULL),
 			     dstBgd, &errNum);
     if(errNum == WLZ_ERR_NONE)

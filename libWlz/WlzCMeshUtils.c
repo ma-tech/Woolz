@@ -5828,7 +5828,7 @@ WlzErrorNum	WlzCMeshValuesNormalise3D(WlzObject *cObj,
   {
     if((ixv->rank < 0) || ((ixv->rank > 0) && (ixv->dim[0] < 1)))
     {
-      errNum = WLZ_ERR_VALUES_DATA;
+      errNum = WLZ_ERR_VALUES_TYPE;
     }
     else
     {
@@ -5845,7 +5845,7 @@ WlzErrorNum	WlzCMeshValuesNormalise3D(WlzObject *cObj,
 	{
 	  if(ixv->dim[idX] < 1)
 	  {
-	    errNum = WLZ_ERR_VALUES_DATA;
+	    errNum = WLZ_ERR_VALUES_TYPE;
 	    break;
 	  }
 	  nVal *= ixv->dim[idX];
@@ -5882,7 +5882,7 @@ WlzErrorNum	WlzCMeshValuesNormalise3D(WlzObject *cObj,
       case WLZ_VALUE_ATTACH_ELM:
 	break;
       default:
-	errNum = WLZ_ERR_VALUES_DATA;
+	errNum = WLZ_ERR_VALUES_TYPE;
 	break;
     }
   }
@@ -6518,7 +6518,7 @@ WlzUByte			*WlzCMeshIndexMaskFromValueRange(
 		 obj->domain.cm3->res.elm.maxEnt;
         break;
       default:
-	errNum = WLZ_ERR_VALUES_DATA;
+	errNum = WLZ_ERR_VALUES_TYPE;
 	break;
     }
   }

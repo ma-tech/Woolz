@@ -143,7 +143,7 @@ WlzObject *WlzSepTrans(
     width  = obj->domain.i->lastkl - obj->domain.i->kol1 + 1;
     height = obj->domain.i->lastln - obj->domain.i->line1 + 1;
     stwspc.inbuf.type = WlzGreyTableTypeToGreyType(obj->values.core->type,
-						   NULL);
+						   &errNum);
     stwspc.bckgrnd = WlzGetBackground(obj, NULL);
 
     switch( stwspc.inbuf.type ){

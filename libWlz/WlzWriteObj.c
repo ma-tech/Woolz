@@ -3207,7 +3207,7 @@ static WlzErrorNum WlzWriteIndexedValues(FILE *fP, WlzObject *obj)
 	      nValues = mesh.m2->res.elm.numEnt;
 	      break;
 	    default:
-	      errNum = WLZ_ERR_VALUES_DATA;
+	      errNum = WLZ_ERR_VALUES_TYPE;
 	      break;
 	  }
 	  break;
@@ -3222,7 +3222,7 @@ static WlzErrorNum WlzWriteIndexedValues(FILE *fP, WlzObject *obj)
 	      nValues = mesh.m2d5->res.elm.numEnt;
 	      break;
 	    default:
-	      errNum = WLZ_ERR_VALUES_DATA;
+	      errNum = WLZ_ERR_VALUES_TYPE;
 	      break;
 	  }
 	  break;
@@ -3237,7 +3237,7 @@ static WlzErrorNum WlzWriteIndexedValues(FILE *fP, WlzObject *obj)
 	      nValues = mesh.m3->res.elm.numEnt;
 	      break;
 	    default:
-	      errNum = WLZ_ERR_VALUES_DATA;
+	      errNum = WLZ_ERR_VALUES_TYPE;
 	      break;
 	  }
 	  break;

@@ -548,7 +548,9 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
-	else if(inVal.core->type != WLZ_INDEXED_VALUES)
+	else if((inVal.core->type != WLZ_INDEXED_VALUES) ||
+	        ((inVal.x->attach != WLZ_VALUE_ATTACH_NOD) &&
+		 (inVal.x->attach != WLZ_VALUE_ATTACH_ELM)))
 	{
 	  errNum = WLZ_ERR_VALUES_TYPE;
 	}

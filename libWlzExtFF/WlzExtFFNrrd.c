@@ -318,7 +318,7 @@ static WlzErrorNum WlzEffWriteImgNrrd(FILE *fP, WlzObject *obj)
       bV.type = fV.type = WLZ_GREY_UBYTE;
       bV.v.ubv = 0;
       fV.v.ubv = 255;
-      gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_UBYTE, NULL);
+      gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_UBYTE, NULL);
       nObj = WlzNewObjectValues(obj, gTT, bV, 1, fV, &errNum);
     }
     switch(obj->type)

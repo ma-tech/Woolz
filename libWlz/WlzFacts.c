@@ -2476,7 +2476,7 @@ static WlzErrorNum WlzObjFactsIndexedValues(WlzObjFactsData *fData,
 		}
 		break;
 	      default:
-	        errNum = WLZ_ERR_VALUES_DATA;
+	        errNum = WLZ_ERR_VALUES_TYPE;
 		break;
 	    }
 	    break;
@@ -2513,7 +2513,7 @@ static WlzErrorNum WlzObjFactsIndexedValues(WlzObjFactsData *fData,
 		}
 		break;
 	      default:
-	        errNum = WLZ_ERR_VALUES_DATA;
+	        errNum = WLZ_ERR_VALUES_TYPE;
 		break;
 	    }
 	    break;
@@ -2550,7 +2550,7 @@ static WlzErrorNum WlzObjFactsIndexedValues(WlzObjFactsData *fData,
 		}
 		break;
 	      default:
-	        errNum = WLZ_ERR_VALUES_DATA;
+	        errNum = WLZ_ERR_VALUES_TYPE;
 		break;
 	    }
 	    break;

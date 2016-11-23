@@ -192,7 +192,7 @@ static WlzObject *WlzCompoundArrayToScalar2D(WlzCompoundArray *cpd,
   bgd.type = WLZ_GREY_DOUBLE;
   bgd.v.dbv = 0.0;
   values.core = NULL;
-  gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, &errNum);
+  gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     values.v = WlzNewValueTb(iObj, gTT, bgd, &errNum);
@@ -274,7 +274,7 @@ static WlzObject *WlzCompoundArrayToScalar3D(WlzCompoundArray *cpd,
   bgd.type = WLZ_GREY_DOUBLE;
   bgd.v.dbv = 0.0;
   values.core = NULL;
-  gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, &errNum);
+  gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     values.vox = WlzNewValuesVox(iObj, gTT, bgd, &errNum);

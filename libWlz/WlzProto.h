@@ -6461,17 +6461,21 @@ extern WlzObject		*WlzValuesFromCoords(
 * WlzValueTableUtils.c							*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
-extern WlzObjectType 		WlzGreyTableType(
-				  WlzObjectType table_type,
-				  WlzGreyType grey_type,
+extern WlzObjectType 		WlzGreyValueTableType(
+				  int rank,
+				  WlzGreyTableType tableType,
+				  WlzGreyType greyType,
 				  WlzErrorNum *dstErr);
 extern WlzGreyType 		WlzGreyTableTypeToGreyType(
 				  WlzObjectType objType,
 				  WlzErrorNum *dstErr);
-extern WlzObjectType 		WlzGreyTableTypeToTableType(
+extern WlzGreyTableType		WlzGreyTableTypeToTableType(
 				  WlzObjectType objType,
 				  WlzErrorNum *dstErr);
-extern WlzObjectType		WlzGreyTableIsTiled(
+extern int			WlzGreyTableTypeToRank(
+				  WlzObjectType gTabType,
+				  WlzErrorNum *dstErr);
+extern WlzGreyTableType		WlzGreyTableIsTiled(
 				  WlzObjectType gTabType);
 #endif /* WLZ_EXT_BIND */
 extern WlzGreyType		WlzGreyTypeFromObj(

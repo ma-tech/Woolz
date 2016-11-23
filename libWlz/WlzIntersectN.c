@@ -480,7 +480,7 @@ firstfinished:
       					     &errNum);
     }
     if(errNum == WLZ_ERR_NONE) {
-      type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, grey_type, &errNum);
+      type = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, grey_type, &errNum);
     }
     if((errNum != WLZ_ERR_NONE) ||
        (values.v = WlzNewValueTb(obj, type, backg, &errNum)) == NULL ){

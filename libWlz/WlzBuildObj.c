@@ -511,7 +511,7 @@ static WlzObject *WlzBuildObj2(WlzObject *cObj,
   {
     WlzObjectType gTT;
 
-    gTT = WlzGreyTableType(WLZ_GREY_TAB_RECT, gType, NULL);
+    gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, gType, NULL);
     bVal.r = WlzMakeRectValueTb(gTT, bDom.i->line1, bDom.i->lastln,
 			        bDom.i->kol1, sz.vtX, bgdV, bufP.inp, &errNum);
   }
@@ -537,7 +537,7 @@ static WlzObject *WlzBuildObj2(WlzObject *cObj,
       {
 	WlzObjectType gTT;
 
-	gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
+	gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, gType, NULL);
 	nVal.v = WlzNewValueTb(nObj, gTT, bgdV, &errNum);
       }
       if(errNum == WLZ_ERR_NONE)

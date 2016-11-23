@@ -162,7 +162,7 @@ WlzObject	*WlzIndexObjFromCompound(WlzCompoundArray *cObj,
       bgV.v.inv = 0;     
       bgV.type = WLZ_GREY_INT;
     }
-    gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, bgV.type, NULL);
+    gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, bgV.type, NULL);
     if(gObjType == WLZ_2D_DOMAINOBJ)
     {
       val.v = WlzNewValueTb(uObj, gTT, bgV, &errNum);

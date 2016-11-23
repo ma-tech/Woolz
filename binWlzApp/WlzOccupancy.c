@@ -142,10 +142,14 @@ WlzObject *WlzAddValuesTable(
   else {
     switch( obj->type ){
     case WLZ_2D_DOMAINOBJ:
-      type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gtype, NULL);
-      values.v = WlzNewValueTb(obj, type, bckgrnd, &errNum);
-      rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, obj->domain, values,
-			   NULL, NULL, &errNum);
+      type = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, gtype, &errNum);
+      if(errNum == WLZ_ERR_NONE) {
+        values.v = WlzNewValueTb(obj, type, bckgrnd, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE) {
+	rtnObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, obj->domain, values,
+			     NULL, NULL, &errNum);
+      }
       break;
 
     case WLZ_3D_DOMAINOBJ:
@@ -157,7 +161,8 @@ WlzObject *WlzAddValuesTable(
 			   NULL, NULL, &errNum);
       domains = rtnObj->domain.p->domains;
       valuess = rtnObj->values.vox->values;
-      type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, &errNum);
+      type = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT,
+                                   &errNum);
       for(p=0;
 	  p < (rtnObj->domain.p->lastpl - rtnObj->domain.p->plane1 + 1);
 	  p++, domains++, valuess++){

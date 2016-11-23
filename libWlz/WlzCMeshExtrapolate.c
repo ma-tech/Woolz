@@ -445,7 +445,7 @@ static WlzCMeshExpWSp		*WlzCMeshExpWSpInit2D(
 	errNum = WLZ_ERR_UNIMPLEMENTED;
 	break;
       default:
-	errNum = WLZ_ERR_VALUES_DATA;
+	errNum = WLZ_ERR_VALUES_TYPE;
 	break;
     }
   }

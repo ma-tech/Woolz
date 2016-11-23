@@ -286,7 +286,7 @@ static WlzObject *WlzIntRescaleObj2D(
       if(errNum == WLZ_ERR_NONE) {
 	gVWSp = WlzGreyValueMakeWSp(obj, &errNum);
 	if(errNum == WLZ_ERR_NONE) {
-	  gtype = WlzGreyTableTypeToGreyType(obj->values.v->type, NULL);
+	  gtype = WlzGreyTableTypeToGreyType(obj->values.v->type, &errNum);
 	}
 	while((errNum == WLZ_ERR_NONE) &&
 	      (errNum = WlzNextGreyInterval(&iwsp)) == WLZ_ERR_NONE)

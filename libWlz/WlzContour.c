@@ -2488,7 +2488,8 @@ WlzContour 	*WlzContourRBFBndObj3D(WlzObject *gObj,
   {
     bgdV.type = WLZ_GREY_FLOAT;
     bgdV.v.flv = FLT_MAX;
-    gTType = WlzGreyTableType(WLZ_GREY_TAB_INTL, WLZ_GREY_FLOAT, &errNum);
+    gTType = WlzGreyValueTableType(0, WLZ_GREY_TAB_INTL, WLZ_GREY_FLOAT,
+    				   &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {

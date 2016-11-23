@@ -318,7 +318,7 @@ WlzObject			*WlzSetBackGroundNewObj(
   else if(gObj->values.core == NULL)
   {
     /* Given object has NULL values so create a new value table. */
-    tType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, bgdV.type, &errNum);
+    tType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, bgdV.type, &errNum);
     if(errNum == WLZ_ERR_NONE)
     {
       rObj = WlzNewObjectValues(gObj, tType, bgdV, 1, bgdV, &errNum);

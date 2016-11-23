@@ -218,7 +218,7 @@ int main(int	argc,
       (void )WlzValueConvertPixel(&greyVal, greyVal, bckgrnd.type);
     }
   }
-  type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, greyVal.type, NULL);
+  type = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, greyVal.type, NULL);
 
   /* read objects and set value if possible */
   while(((obj = WlzAssignObject(WlzReadObj(inFile, NULL), NULL)) != NULL) &&

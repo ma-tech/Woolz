@@ -930,7 +930,7 @@ static WlzObject  *WlzMakeTiledValuesObj2D(WlzObject *gObj, size_t tileSz,
 
     dom.core = NULL;
     val.core = NULL;
-    tVal->type = WlzGreyTableType(WLZ_GREY_TAB_TILED, gType, NULL);
+    tVal->type = WlzGreyValueTableType(0, WLZ_GREY_TAB_TILED, gType, NULL);
     tVal->dim = 2;
     tVal->kol1 = gObj->domain.i->kol1;
     tVal->lastkl = gObj->domain.i->lastkl;
@@ -983,7 +983,8 @@ static WlzObject  *WlzMakeTiledValuesObj2D(WlzObject *gObj, size_t tileSz,
 
       bkg.v.inv = -1;
       bkg.type = WLZ_GREY_INT;
-      tabType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
+      tabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT,
+                                      NULL);
       val.v = WlzNewValueTb(scl, tabType, bkg, &errNum);
     }
     if(errNum == WLZ_ERR_NONE)
@@ -1150,7 +1151,7 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
 
     dom.core = NULL;
     val.core = NULL;
-    tVal->type = WlzGreyTableType(WLZ_GREY_TAB_TILED, gType, NULL);
+    tVal->type = WlzGreyValueTableType(0, WLZ_GREY_TAB_TILED, gType, NULL);
     tVal->dim = 3;
     tVal->kol1 = gObj->domain.p->kol1;
     tVal->lastkl = gObj->domain.p->lastkl;
@@ -1208,7 +1209,8 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
 
       bkg.v.inv = -1;
       bkg.type = WLZ_GREY_INT;
-      tabType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
+      tabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT,
+                                      NULL);
       val.vox = WlzNewValuesVox(scl, tabType, bkg, &errNum);
     }
     if(errNum == WLZ_ERR_NONE)

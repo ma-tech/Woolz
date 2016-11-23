@@ -1175,7 +1175,7 @@ static WlzErrorNum WlzAffineTransformValues2(WlzObject *newObj,
   {
     WlzObjectType newGTT;
 
-    newGTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, newGreyType, NULL);
+    newGTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, newGreyType, NULL);
     newValues.v = WlzNewValueTb(newObj, newGTT, bkdV, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -1519,8 +1519,8 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  tVal.v = WlzNewValueTb(tObj0,
-	  		         WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType,
-				 		  NULL),
+	  		         WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR,
+				 		       gType, NULL),
 				 bkdV, &errNum);
 	}
 	if(errNum == WLZ_ERR_NONE)

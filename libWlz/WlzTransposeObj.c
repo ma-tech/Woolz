@@ -201,13 +201,13 @@ WlzObject *WlzTransposeObj(
     WlzObjectType tt;
     WlzGreyType	gt;
 
-    gt = WlzGreyTableTypeToGreyType(obj->values.core->type, NULL);
-    tt = WlzGreyTableTypeToTableType(obj->values.core->type, NULL);
+    gt = WlzGreyTableTypeToGreyType(obj->values.core->type, &errNum);
+    tt = WlzGreyTableTypeToTableType(obj->values.core->type, &errNum);
     if(tt == WLZ_GREY_TAB_TILED)
     {
       tt = WLZ_GREY_TAB_RAGR;
     }
-    if((values.v = WlzNewValueTb(nobj, WlzGreyTableType(tt, gt, NULL),
+    if((values.v = WlzNewValueTb(nobj, WlzGreyValueTableType(0, tt, gt, NULL),
 				 WlzGetBackground(obj,
 				                  NULL), &errNum)) != NULL){
       nobj->values = WlzAssignValues(values, NULL);
@@ -451,30 +451,36 @@ static WlzObject *WlzTransposeRectObj(
       width = obj->domain.i->lastln - obj->domain.i->line1 + 1;
       height = obj->domain.i->lastkl - obj->domain.i->kol1 + 1;
 
-      switch( WlzGreyTableTypeToGreyType(obj->values.core->type, NULL) ){
+      switch(WlzGreyTableTypeToGreyType(obj->values.core->type, &errNum)){
       case WLZ_GREY_INT:
 	size = sizeof(int);
-	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_INT, NULL);
+	newtype = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_INT, 
+	                                &errNum);
 	break;
       case WLZ_GREY_SHORT:
 	size = sizeof(short);
-	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_SHORT, NULL);
+	newtype = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_SHORT, 
+	                                &errNum);
 	break;
       case WLZ_GREY_UBYTE:
 	size = sizeof(WlzUByte);
-	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_UBYTE, NULL);
+	newtype = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_UBYTE, 
+	                                &errNum);
 	break;
       case WLZ_GREY_FLOAT:
 	size = sizeof(float);
-	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_FLOAT, NULL);
+	newtype = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_FLOAT, 
+	                                &errNum);
 	break;
       case WLZ_GREY_DOUBLE:
 	size = sizeof(double);
-	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_DOUBLE, NULL);
+	newtype = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_DOUBLE, 
+	                                &errNum);
 	break;
       case WLZ_GREY_RGBA:
 	size = sizeof(WlzUInt);
-	newtype = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_RGBA, NULL);
+	newtype = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_RGBA, 
+	                                &errNum);
 	break;
       default:
         break;

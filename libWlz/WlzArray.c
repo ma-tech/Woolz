@@ -2465,8 +2465,9 @@ static WlzObject	*WlzFromArrayGrey3D(void ***arrayP,
 				      arraySize.vtX - 1, &errNum);
       if( errNum == WLZ_ERR_NONE )
       {
-	tVal0.r = WlzMakeRectValueTb(WlzGreyTableType(WLZ_GREY_TAB_RECT,
-						      dstGreyType, NULL),
+	tVal0.r = WlzMakeRectValueTb(WlzGreyValueTableType(0,
+						WLZ_GREY_TAB_RECT,
+						dstGreyType, NULL),
 				     arrayOrigin.vtY,
 				     arrayOrigin.vtY + arraySize.vtY - 1,
 				     arrayOrigin.vtX,
@@ -3011,7 +3012,7 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    gTabType = WlzGreyTableType(WLZ_GREY_TAB_RECT, gType, &errNum);
+    gTabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, gType, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {

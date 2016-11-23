@@ -463,7 +463,7 @@ int             main(int argc, char *argv[])
 	oMax.type = WLZ_GREY_UBYTE;
 	oMax.v.ubv = 255;
 	tmpVal.v = WlzNewValueTb(dbgObj,
-				 WlzGreyTableType(WLZ_GREY_TAB_RAGR,
+				 WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR,
 				                  WLZ_GREY_UBYTE, NULL),
 	                         oMax, &errNum);
         if(errNum == WLZ_ERR_NONE)

@@ -361,7 +361,7 @@ WlzObject *Wlz3DViewTransformObj(
     
     /* explicit intialisation to satisfy strict ANSI on SGI */
     bckgrnd = WlzGetBackground(srcObj, &errNum);
-    valueTbType = WlzGreyTableType(WLZ_GREY_TAB_RAGR,
+    valueTbType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR,
 				   bckgrnd.type, NULL);
 
     /* make a voxel table */

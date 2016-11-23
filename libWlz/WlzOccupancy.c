@@ -307,7 +307,7 @@ WlzObject	*WlzDomainOccupancy(WlzObject *gObj, WlzErrorNum *dstErr)
 
     zeroV.v.ubv = 0;
     zeroV.type = gV.type = WLZ_GREY_UBYTE;
-    tType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_UBYTE, NULL);
+    tType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_UBYTE, NULL);
     switch(gObj->type)
     {
       case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
@@ -335,13 +335,15 @@ WlzObject	*WlzDomainOccupancy(WlzObject *gObj, WlzErrorNum *dstErr)
 	  {
 	    zeroV.v.inv = 0;
 	    zeroV.type = gV.type = WLZ_GREY_INT;
-	    tType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
+	    tType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT,
+	                                  NULL);
 	  }
 	  else if(cObj->n > 255)
 	  {
 	    zeroV.v.shv = 0;
 	    zeroV.type = gV.type = WLZ_GREY_SHORT;
-	    tType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_SHORT, NULL);
+	    tType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_SHORT,
+	    				  NULL);
 	  }
 	  uObj = WlzUnionN(cObj->n, cObj->o, 0, &errNum);
 	  if(errNum == WLZ_ERR_NONE)

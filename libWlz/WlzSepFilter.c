@@ -565,7 +565,7 @@ static WlzObject		*WlzSepFilterX(WlzObject *inObj,
   		
   zV.v.dbv = 0.0;
   zV.type = WLZ_GREY_DOUBLE;
-  rGTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
+  rGTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
   if(dim == 3)
   {
     WlzPlaneDomain *pDom;
@@ -731,7 +731,7 @@ static WlzObject		*WlzSepFilterY(WlzObject *inObj,
   		
   zV.v.dbv = 0.0;
   zV.type = WLZ_GREY_DOUBLE;
-  rGTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
+  rGTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
   if(dim == 3)
   {
     WlzPlaneDomain *pDom;
@@ -932,7 +932,7 @@ static WlzObject		*WlzSepFilterZ(WlzObject *inObj,
   		
   zV.v.dbv = 0.0;
   zV.type = WLZ_GREY_DOUBLE;
-  rGTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
+  rGTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
   rnObj = WlzNewObjectValues(inObj, rGTT, zV, 1, zV, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {

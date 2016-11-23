@@ -202,22 +202,26 @@ WlzErrorNum	WlzNObjGreyStats(WlzObject *gObj,
 
       bgdV.type = WLZ_GREY_DOUBLE;
       bgdV.v.dbv = 0.0;
-      gTType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
-      if(dstMinObj != NULL)
+      gTType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE,
+                                     &errNum);
+      if(errNum == WLZ_ERR_NONE)
       {
-	minObj = WlzNewObjectValues(isnObj, gTType, bgdV, 0, bgdV, &errNum);
-      }
-      if((errNum == WLZ_ERR_NONE) && (dstMaxObj != NULL))
-      {
-	maxObj = WlzNewObjectValues(isnObj, gTType, bgdV, 0, bgdV, &errNum);
-      }
-      if((errNum == WLZ_ERR_NONE) && (dstSumObj != NULL))
-      {
-	sumObj = WlzNewObjectValues(isnObj, gTType, bgdV, 0, bgdV, &errNum);
-      }
-      if((errNum == WLZ_ERR_NONE) && (dstSSqObj != NULL))
-      {
-	sSqObj = WlzNewObjectValues(isnObj, gTType, bgdV, 0, bgdV, &errNum);
+	if(dstMinObj != NULL)
+	{
+	  minObj = WlzNewObjectValues(isnObj, gTType, bgdV, 0, bgdV, &errNum);
+	}
+	if((errNum == WLZ_ERR_NONE) && (dstMaxObj != NULL))
+	{
+	  maxObj = WlzNewObjectValues(isnObj, gTType, bgdV, 0, bgdV, &errNum);
+	}
+	if((errNum == WLZ_ERR_NONE) && (dstSumObj != NULL))
+	{
+	  sumObj = WlzNewObjectValues(isnObj, gTType, bgdV, 0, bgdV, &errNum);
+	}
+	if((errNum == WLZ_ERR_NONE) && (dstSSqObj != NULL))
+	{
+	  sSqObj = WlzNewObjectValues(isnObj, gTType, bgdV, 0, bgdV, &errNum);
+	}
       }
     }
     (void )WlzFreeObj(isnObj);

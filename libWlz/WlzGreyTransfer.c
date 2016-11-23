@@ -143,7 +143,7 @@ WlzObject			*WlzGreyTransfer(
 		}
 		if(errNum == WLZ_ERR_NONE)
 		{
-		  gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
+		  gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, gType, NULL);
 		  if(rObj->type == WLZ_2D_DOMAINOBJ)
 		  {
 		    newVal.v = WlzNewValueTb(rObj, gTT, bgdV, &errNum);

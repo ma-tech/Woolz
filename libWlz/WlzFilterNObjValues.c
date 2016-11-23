@@ -268,7 +268,7 @@ static WlzObject *WlzFilterNObjValues2DCb(WlzObject *rObj, WlzGreyType gType,
   pos.vtZ = 0;
   bgdV.v.inv = 0;
   bgdV.type = WLZ_GREY_INT;
-  gTblType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
+  gTblType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, gType, NULL);
   if((vBuf.v = WlzFilterNObjMakeVBuf(gType, nObj)) == NULL)
   {
     errNum = WLZ_ERR_MEM_ALLOC;
@@ -367,7 +367,7 @@ static WlzObject *WlzFilterNObjValues3DCb(WlzObject *rObj, WlzGreyType gType,
 
   bgdV.v.inv = 0;
   bgdV.type = WLZ_GREY_INT;
-  gTblType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
+  gTblType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, gType, NULL);
   if((vBuf.v = WlzFilterNObjMakeVBuf(gType, nObj)) == NULL)
   {
     errNum = WLZ_ERR_MEM_ALLOC;

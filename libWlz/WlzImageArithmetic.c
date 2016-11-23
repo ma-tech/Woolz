@@ -799,7 +799,7 @@ static WlzErrorNum WlzImageArithmetic2D(WlzObject *obj0, WlzObject *obj1,
     {
       case 0:
 	tVal.v = WlzNewValueTb(obj2,
-			       WlzGreyTableType(WLZ_GREY_TAB_RAGR,
+			       WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR,
 						gType[2], NULL),
 			       bgd[2], &errNum);
         break;

@@ -387,7 +387,7 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
   }
   if( errNum == WLZ_ERR_NONE ){
     values.v = WlzNewValueTb(newobj,
-			     WlzGreyTableType(WLZ_GREY_TAB_RECT,
+			     WlzGreyValueTableType(WLZ_GREY_TAB_RECT,
 					      grey_type, NULL),
 			     pixval, &errNum);
   }
@@ -398,7 +398,7 @@ static WlzObject *WlzGetMaskedSectionFrom3DDomObj(
     pixval.type = WLZ_GREY_UBYTE;
     pixval.v.ubv = (WlzUByte) 0;
     values.v = WlzNewValueTb(newobj,
-			     WlzGreyTableType(WLZ_GREY_TAB_RECT,
+			     WlzGreyValueTableType(WLZ_GREY_TAB_RECT,
 					      grey_type, NULL),
 			     pixval, &errNum);
     mask = WlzMakeMain(WLZ_2D_DOMAINOBJ, domain, values, NULL, NULL,
@@ -778,7 +778,7 @@ static WlzObject *WlzGetSectionFrom3DDomObj(
   }
   if( errNum == WLZ_ERR_NONE ){
     values.v = WlzNewValueTb(newobj,
-			     WlzGreyTableType(WLZ_GREY_TAB_RECT,
+			     WlzGreyValueTableType(WLZ_GREY_TAB_RECT,
 					      grey_type, NULL),
 			     pixval, &errNum);
   }

@@ -807,7 +807,8 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
   backgroundPix = WlzGetBackground(srcObj, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    greyType = WlzGreyTableTypeToGreyType(srcObj->values.core->type, &errNum);
+    greyType = WlzGreyTableTypeToGreyType(srcObj->values.core->type,
+                                          &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1072,7 +1073,8 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
   backgroundPix = WlzGetBackground(srcObj, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    greyType = WlzGreyTableTypeToGreyType(srcObj->values.core->type, &errNum);
+    greyType = WlzGreyTableTypeToGreyType(srcObj->values.core->type,
+                                          &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1448,7 +1450,8 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
   backgroundPix = WlzGetBackground(srcObj, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    greyType = WlzGreyTableTypeToGreyType(srcObj->values.core->type, &errNum);
+    greyType = WlzGreyTableTypeToGreyType(srcObj->values.core->type,
+                                          &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1805,7 +1808,8 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
   backgroundPix = WlzGetBackground(srcObj, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    greyType = WlzGreyTableTypeToGreyType(srcObj->values.core->type, &errNum);
+    greyType = WlzGreyTableTypeToGreyType(srcObj->values.core->type,
+    					  &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2261,7 +2265,8 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
   backgroundPix = WlzGetBackground(srcObj, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    greyType = WlzGreyTableTypeToGreyType(srcObj->values.core->type, &errNum);
+    greyType = WlzGreyTableTypeToGreyType(srcObj->values.core->type,
+    					  &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2821,33 +2826,33 @@ static WlzValues WlzSampleObjConstructRectValues(void **dstValues,
     {
       case WLZ_GREY_INT:
         bCount *= sizeof(int);
-	gTabType = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_INT,
-				    &errNum);
+	gTabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_INT,
+				         &errNum);
         break;
       case WLZ_GREY_SHORT:
         bCount *= sizeof(short);
-	gTabType = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_SHORT,
-				    &errNum);
+	gTabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_SHORT,
+				         &errNum);
         break;
       case WLZ_GREY_UBYTE:
         bCount *= sizeof(char);
-	gTabType = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_UBYTE,
-				    &errNum);
+	gTabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_UBYTE,
+				         &errNum);
         break;
       case WLZ_GREY_FLOAT:
 	bCount *= sizeof(float);
-	gTabType = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_FLOAT,
-				    &errNum);
+	gTabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_FLOAT,
+				         &errNum);
         break;
       case WLZ_GREY_DOUBLE:
 	bCount *= sizeof(double);
-	gTabType = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_DOUBLE,
-			            &errNum);
+	gTabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_DOUBLE,
+			                 &errNum);
         break;
       case WLZ_GREY_RGBA:
 	bCount *= sizeof(WlzUInt);
-	gTabType = WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_RGBA,
-			            &errNum);
+	gTabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_RGBA,
+			                 &errNum);
         break;
       default:
         errNum = WLZ_ERR_GREY_TYPE;

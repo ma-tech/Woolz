@@ -1659,7 +1659,11 @@ WlzObject	*WlzLBTMakeNodeIndexObj2D(WlzLBTDomain2D *lDom,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    iValTblType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
+    iValTblType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT,
+    				        &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     iBkg.type = WLZ_GREY_INT;
     iBkg.v.ubv = 0;
     tVal.v = WlzNewValueTb(iObj, iValTblType, iBkg, &errNum);
@@ -1744,7 +1748,11 @@ WlzObject	*WlzLBTMakeNodeIndexObj3D(WlzLBTDomain3D *lDom,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    iValTblType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
+    iValTblType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT,
+    					&errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     iBkg.type = WLZ_GREY_INT;
     iBkg.v.ubv = 0;
     tVal.vox = WlzNewValuesVox(iObj, iValTblType, iBkg, &errNum);

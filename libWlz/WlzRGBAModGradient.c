@@ -83,7 +83,7 @@ extern WlzObject *WlzRGBAModGradient(
   else {
     switch( obj->type ){
     case WLZ_2D_DOMAINOBJ:
-      if(WlzGreyTableTypeToGreyType(obj->values.core->type, NULL)
+      if(WlzGreyTableTypeToGreyType(obj->values.core->type, &errNum)
 	 != WLZ_GREY_RGBA){
 	return WlzGreyModGradient(obj, width, dstErr);
       }
@@ -115,8 +115,8 @@ extern WlzObject *WlzRGBAModGradient(
     bckgrnd.type = WLZ_GREY_SHORT;
     bckgrnd.v.shv = 0.0;
     if((values.v = WlzNewValueTb(obj,
-				 WlzGreyTableType(WLZ_GREY_TAB_RAGR,
-						  WLZ_GREY_SHORT, NULL),
+				 WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR,
+						       WLZ_GREY_SHORT, NULL),
 				 bckgrnd, &errNum)) != NULL){
       rtnObj = WlzMakeMain(obj->type, obj->domain, values,
 			   NULL, NULL, &errNum);

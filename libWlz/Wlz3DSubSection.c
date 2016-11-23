@@ -253,7 +253,7 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
   if(errNum == WLZ_ERR_NONE)
   {
     if((dstVal.v = WlzNewValueTb(dstObj,
-                                 WlzGreyTableType(WLZ_GREY_TAB_RECT,
+                                 WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT,
 				                  gType, NULL),
 				 bgd, &errNum)))
     {
@@ -606,7 +606,7 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
 
     pixval = WlzGetBackground(obj, &errNum);
     if((values.v = WlzNewValueTb(newObj,
-	    WlzGreyTableType(WLZ_GREY_TAB_RECT,
+	    WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT,
 	                     WlzGreyTypeFromObj(obj, NULL), NULL),
 	    pixval, &errNum)))
     {
@@ -621,7 +621,7 @@ static WlzObject *WlzGetSubSectionFrom3DDomObj(
     pixval.type = WLZ_GREY_UBYTE;
     pixval.v.ubv = (WlzUByte )0;
     if((values.v = WlzNewValueTb(newObj,
-	    WlzGreyTableType(WLZ_GREY_TAB_RECT, WLZ_GREY_UBYTE, NULL),
+	    WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, WLZ_GREY_UBYTE, NULL),
 	    pixval, &errNum)))
     {
       mask = WlzMakeMain(WLZ_2D_DOMAINOBJ, newObj->domain, values, NULL, NULL,

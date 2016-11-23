@@ -398,10 +398,10 @@ WlzObject *WlzUnionN(
     /* construct an empty "ragged-rectangle" greytable
        with appropriate grey-type */
     if( errNum == WLZ_ERR_NONE ){
-      backg = WlzGetBackground(objs[0], NULL);
+      backg = WlzGetBackground(objs[0], &errNum);
       grey_type = WlzGreyTableTypeToGreyType(objs[0]->values.core->type,
-					     NULL);
-      type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, grey_type, NULL);
+					     &errNum);
+      type = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, grey_type, NULL);
       if( (values.v = WlzNewValueTb(obj, type, backg, &errNum)) == NULL ){
 	WlzFreeObj( obj );
 	AlcFree((void *) locbuffs);

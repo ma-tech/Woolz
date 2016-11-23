@@ -133,11 +133,15 @@ WlzObject 			*WlzDomainFill3D(
     WlzValues	val;
     WlzObjectType tType;
 
-    tType = WlzGreyTableType(WLZ_GREY_TAB_INTL, WLZ_GREY_UBYTE, NULL);
-    val.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
-				  shlObj->domain.p->plane1,
-				  shlObj->domain.p->lastpl,
-				  zeroV, NULL, &errNum);
+    tType = WlzGreyValueTableType(0, WLZ_GREY_TAB_INTL, WLZ_GREY_UBYTE,
+    				  &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      val.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+				    shlObj->domain.p->plane1,
+				    shlObj->domain.p->lastpl,
+				    zeroV, NULL, &errNum);
+    }
     if(errNum == WLZ_ERR_NONE)
     {
       int	p;

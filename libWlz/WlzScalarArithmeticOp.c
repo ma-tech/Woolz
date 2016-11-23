@@ -412,13 +412,13 @@ WlzObject *WlzScalarBinaryOp2(
 	break;
       }
       old_bckgrnd = WlzGetBackground(o1, NULL);
-      switch( WlzGreyTableTypeToGreyType(o1->values.core->type, NULL) ){
+      switch( WlzGreyTableTypeToGreyType(o1->values.core->type, &errNum) ){
       case WLZ_GREY_INT:   /* FALLTHROUGH */
       case WLZ_GREY_SHORT: /* FALLTHROUGH */
       case WLZ_GREY_FLOAT: /* FALLTHROUGH */
       case WLZ_GREY_DOUBLE:
 	new_grey_type = WlzGreyTableTypeToGreyType(o1->values.core->type,
-						   NULL);
+						   &errNum);
 	new_bckgrnd = old_bckgrnd;
 	break;	
       case WLZ_GREY_UBYTE:
@@ -432,7 +432,7 @@ WlzObject *WlzScalarBinaryOp2(
       }
       if(errNum == WLZ_ERR_NONE){
 	values.v = WlzNewValueTb(tmp3,
-				 WlzGreyTableType(WLZ_GREY_TAB_RAGR,
+				 WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR,
 						  new_grey_type, NULL),
 				 new_bckgrnd, &errNum);
 	tmp3->values = WlzAssignValues( values, NULL );
@@ -487,8 +487,9 @@ WlzObject *WlzScalarBinaryOp2(
 		             tmp3->domain.p->domains[p-tmp3->domain.p->plane1],
 		             values2d, NULL, NULL, &errNum)) != NULL){
 	      values2d.v = WlzNewValueTb(
-		tmp2d, WlzGreyTableType(WLZ_GREY_TAB_RAGR, new_grey_type,
-					NULL), new_bckgrnd, &errNum);
+		  tmp2d, WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR,
+		                               new_grey_type, NULL),
+	          new_bckgrnd, &errNum);
 	      WlzFreeObj( tmp2d );
 	    }
 	  }
@@ -698,7 +699,7 @@ static WlzObject *WlzScalarMulAdd2D(WlzObject *iObj, WlzPixelV m, WlzPixelV a,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    rVType = WlzGreyTableType(rVType, rGType, &errNum);
+    rVType = WlzGreyValueTableType(0, rVType, rGType, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -772,7 +773,7 @@ static WlzObject *WlzScalarMulAdd3D(WlzObject *iObj, WlzPixelV m, WlzPixelV a,
   bgdV = WlzGetBackground(iObj, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
-    rVType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, rGType, &errNum);
+    rVType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, rGType, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {

@@ -1094,8 +1094,12 @@ WlzObject	*WlzCMeshIntersectDom2D5(WlzObject *sObj, WlzObject *cObj,
       val.core = NULL;
       v0.type = WLZ_GREY_UBYTE;
       v0.v.ubv = 0;
-      gTType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_UBYTE, NULL);
-      val.v = WlzNewValueTb(tObj[1], gTType, v0, &errNum);
+      gTType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_UBYTE, 
+                                     &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        val.v = WlzNewValueTb(tObj[1], gTType, v0, &errNum);
+      }
       if(errNum == WLZ_ERR_NONE)
       {
         fObj = WlzAssignObject(

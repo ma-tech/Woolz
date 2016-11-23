@@ -104,6 +104,70 @@ typedef enum _WlzGreyType
 } WlzGreyType;
 
 /*!
+* \def		WLZ_GREY_TABLE_TYPE
+* \ingroup	WlzType
+* \brief	For historical reasons a pixel/voxel value table
+*               encodes both the grey type and the table type in
+*               a single type. This macro achieves this with the
+*               addition of array type.
+* \par
+* AR:		Array type, 0 for scalar values, 1 for an array.
+* TT:		Table type.
+* GT:		Grey type.
+*/
+#define WLZ_GREY_TABLE_TYPE(AR,TT,GT)    ((100*(AR))+(10*(TT))+(GT))
+
+/*!
+* \def		WLZ_GREY_TABLE_TO_GREY_TYPE
+* \ingroup	WlzType
+* \brief	Grey type encoded in grey table type. See
+* 		WLZ_GREY_TABLE_TYPE.
+* \par
+* GTT:		Grey table type.
+*/
+#define WLZ_GREY_TABLE_TO_GREY_TYPE(GTT)  ((GTT)%10)
+
+/*!
+* \def		WLZ_GREY_TABLE_TO_TABLE_TYPE
+* \ingroup	WlzType
+* \brief	Table type encoded in grey table type. See
+* 		WLZ_GREY_TABLE_TYPE.
+* \par
+* GTT:		Grey table type.
+*/
+#define WLZ_GREY_TABLE_TO_TABLE_TYPE(GTT) (((GTT)%100)/10)
+
+/*!
+* \def		WLZ_GREY_TABLE_TO_RANK
+* \ingroup	WlzType
+* \brief	Rank encoded in grey table type. See
+* 		WLZ_GREY_TABLE_TYPE.
+* \par
+* GTT:		Grey table type.
+*/
+#define WLZ_GREY_TABLE_TO_RANK(GTT)       ((GTT)/100)
+
+/*!
+* \enum		_WlzGreyTableType
+* \ingroup	WlzType
+* \brief	Woolz pixel/voxel value table types.
+*/
+typedef enum	_WlzGreyTableType
+{
+  WLZ_GREY_TAB_RAGR		= 0,	/*!< Base ragged rectangle grey value
+  					     table. */
+  WLZ_GREY_TAB_RECT		= 1,	/*!< Base rectangular grey value
+  					     table. */
+  WLZ_GREY_TAB_INTL		= 2,	/*!< Base interval grey value table. */
+  WLZ_POINT_VALUES              = 3,    /*!< Values defined at points. */
+  WLZ_INDEXED_VALUES		= 4,	/*!< Indexed value table. */
+  WLZ_FEAT_TAB_RAGR		= 5,	/*!< Base ragged rectangle feature
+  					     table. */
+  WLZ_FEAT_TAB_RECT 		= 6,	/*!< Base rectangular feature table. */
+  WLZ_GREY_TAB_TILED		= 7     /*!< Tiled grey value table. */
+} WlzGreyTableType;
+
+/*!
 * \enum		_WlzObjectType
 * \ingroup	WlzType
 * \brief	The Woolz object types.
@@ -111,11 +175,17 @@ typedef enum _WlzGreyType
 *		historical reasons but, with the execption of WLZ_NULL,
 *		the numerical value should never be used explicitly.
 *
-*		The base grey table types are used to form explicit
-*		grey table types which include the grey type. The functions
-*		for extracting and synthesising these types should be
-*		used: These are WlzGreyTableType(),
-*		WlzGreyTableTypeToGreyType() and
+*		For historical reasons the base grey table types are used
+*		to form explicit grey table types which include the grey type.
+*		The functions or macros for extracting and synthesising these
+*		types should be used. These are:
+*               WLZ_GREY_TABLE_TYPE,
+*               WLZ_GREY_TABLE_TO_GREY_TYPE,
+*               WLZ_GREY_TABLE_TO_TABLE_TYPE,
+*               WLZ_GREY_TABLE_TO_RANK,
+*		WlzGreyTableType(),
+*		WlzGreyTableTypeToGreyType(),
+*		WlzGreyTableTypeToRank(),
 *		WlzGreyTableTypeToTableType().
 *		Typedef: ::WlzObjectType.
 */
@@ -208,101 +278,137 @@ typedef enum _WlzObjectType
   /**********************************************************************
   * Value table types.
   **********************************************************************/
-  WLZ_GREY_TAB_RAGR		= 0,	/*!< Base ragged rectangle grey value
-  					     table. */
-  WLZ_GREY_TAB_RECT		= 1,	/*!< Base rectangular grey value
-  					     table. */
-  WLZ_GREY_TAB_INTL		= 2,	/*!< Base interval grey value table. */
-  WLZ_POINT_VALUES              = 3,    /*!< Values defined at points. */
-  WLZ_INDEXED_VALUES		= 4,	/*!< Indexed value table. */
-  WLZ_FEAT_TAB_RAGR		= 5,	/*!< Base ragged rectangle feature
-  					     table. */
-  WLZ_FEAT_TAB_RECT 		= 6,	/*!< Base rectangular feature table. */
-  WLZ_GREY_TAB_TILED		= 7,    /*!< Tiled grey value table. */
-  WLZ_VALUETABLE_RAGR_INT	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_INT),
+  WLZ_VALUETABLE_RAGR_INT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT),
   					/*!< Ragged rectangle int value
 					     table. */
-  WLZ_VALUETABLE_RAGR_SHORT	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_SHORT),
+  WLZ_VALUETABLE_RAGR_SHORT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RAGR, WLZ_GREY_SHORT),
   					/*!< Ragged rectangle short value
 					     table. */
-  WLZ_VALUETABLE_RAGR_UBYTE	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_UBYTE),
+  WLZ_VALUETABLE_RAGR_UBYTE	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RAGR, WLZ_GREY_UBYTE),
   					/*!< Ragged rectangle unsigned byte
 					     value table. */
-  WLZ_VALUETABLE_RAGR_FLOAT	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_FLOAT),
+  WLZ_VALUETABLE_RAGR_FLOAT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RAGR, WLZ_GREY_FLOAT),
   					/*!< Ragged rectangle single precision
 					     floating point value table. */
-  WLZ_VALUETABLE_RAGR_DOUBLE	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_DOUBLE),
+  WLZ_VALUETABLE_RAGR_DOUBLE	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE),
   					/*!< Ragged rectangle double precision
 					     floating point value table. */
-  WLZ_VALUETABLE_RAGR_BIT	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_BIT),
+  WLZ_VALUETABLE_RAGR_BIT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RAGR, WLZ_GREY_BIT),
   					/*!< Ragged rectangle single bit (packed
 					     in unsigned bytes) value table. */
-  WLZ_VALUETABLE_RAGR_RGBA	= ((10 * WLZ_GREY_TAB_RAGR) + WLZ_GREY_RGBA),
+  WLZ_VALUETABLE_RAGR_RGBA	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RAGR, WLZ_GREY_RGBA),
   					/*!< Ragged rectangle red, green, blue,
 					     alpha value table. */
-  WLZ_VALUETABLE_RECT_INT	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_INT),
-  					/*!< Rectangular int value
-					     table. */
-  WLZ_VALUETABLE_RECT_SHORT	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_SHORT),
-  					/*!< Rectangular short value
-					     table. */
-  WLZ_VALUETABLE_RECT_UBYTE	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_UBYTE),
+  WLZ_VALUETABLE_RECT_INT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RECT, WLZ_GREY_INT),
+  					/*!< Rectangular int value table. */
+  WLZ_VALUETABLE_RECT_SHORT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RECT, WLZ_GREY_SHORT),
+  					/*!< Rectangular short value table. */
+  WLZ_VALUETABLE_RECT_UBYTE	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RECT, WLZ_GREY_UBYTE),
   					/*!< Rectangular unsigned byte value
 					     table. */
-  WLZ_VALUETABLE_RECT_FLOAT	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_FLOAT),
+  WLZ_VALUETABLE_RECT_FLOAT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RECT, WLZ_GREY_FLOAT),
   					/*!< Rectangular single precision
 					     floating point value table. */
-  WLZ_VALUETABLE_RECT_DOUBLE	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_DOUBLE),
+  WLZ_VALUETABLE_RECT_DOUBLE	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RECT, WLZ_GREY_DOUBLE),
   					/*!< Rectangular double precision
 					     floating point value table. */
-  WLZ_VALUETABLE_RECT_BIT	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_BIT),
+  WLZ_VALUETABLE_RECT_BIT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RECT, WLZ_GREY_BIT),
   					/*!< Rectangular single bit (packed in
 					     unsigned bytes) value table. */
-  WLZ_VALUETABLE_RECT_RGBA	= ((10 * WLZ_GREY_TAB_RECT) + WLZ_GREY_RGBA),
+  WLZ_VALUETABLE_RECT_RGBA	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_RECT, WLZ_GREY_RGBA),
   					/*!< Rectangular red, green, blue,
 					     alpha value table.  */ 
-  WLZ_VALUETABLE_INTL_INT	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_INT),
-  					/*!< Interval coded int value
-					     table. */
-  WLZ_VALUETABLE_INTL_SHORT	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_SHORT),
+  WLZ_VALUETABLE_INTL_INT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_INTL, WLZ_GREY_INT),
+  					/*!< Interval coded int value table. */
+  WLZ_VALUETABLE_INTL_SHORT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_INTL, WLZ_GREY_SHORT),
   					/*!< Interval coded short value
 					     table. */
-  WLZ_VALUETABLE_INTL_UBYTE	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_UBYTE),
+  WLZ_VALUETABLE_INTL_UBYTE	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_INTL, WLZ_GREY_UBYTE),
   					/*!< Interval coded unsigned byte value
 					     table. */
-  WLZ_VALUETABLE_INTL_FLOAT	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_FLOAT),
+  WLZ_VALUETABLE_INTL_FLOAT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_INTL, WLZ_GREY_FLOAT),
   					/*!< Interval coded single precision
 					     floating point value table. */
-  WLZ_VALUETABLE_INTL_DOUBLE	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_DOUBLE),
+  WLZ_VALUETABLE_INTL_DOUBLE	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_INTL, WLZ_GREY_DOUBLE),
   					/*!< Interval coded double precision
 					     floating point value table. */
-  WLZ_VALUETABLE_INTL_BIT	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_BIT),
+  WLZ_VALUETABLE_INTL_BIT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_INTL, WLZ_GREY_BIT),
   					/*!< Interval coded single bit (packed
 					     unsigned bytes) value table. */
-  WLZ_VALUETABLE_INTL_RGBA	= ((10 * WLZ_GREY_TAB_INTL) + WLZ_GREY_RGBA),
+  WLZ_VALUETABLE_INTL_RGBA	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_INTL, WLZ_GREY_RGBA),
   					/*!< Interval coded red, green, blue,
 					     alpha value table.  */
-  WLZ_VALUETABLE_TILED_INT	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_INT),
-  					/*!< Tiled int value
-					     table. */
-  WLZ_VALUETABLE_TILED_SHORT	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_SHORT),
-  					/*!< Tiled short value
-					     table. */
-  WLZ_VALUETABLE_TILED_UBYTE	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_UBYTE),
+  WLZ_VALUETABLE_TILED_INT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_TILED, WLZ_GREY_INT),
+  					/*!< Tiled int value table. */
+  WLZ_VALUETABLE_TILED_SHORT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_TILED, WLZ_GREY_SHORT),
+  					/*!< Tiled short value table. */
+  WLZ_VALUETABLE_TILED_UBYTE	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_TILED, WLZ_GREY_UBYTE),
   					/*!< Tiled unsigned byte value
 					     table. */
-  WLZ_VALUETABLE_TILED_FLOAT	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_FLOAT),
+  WLZ_VALUETABLE_TILED_FLOAT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_TILED, WLZ_GREY_FLOAT),
   					/*!< Tiled single precision
 					     floating point value table. */
-  WLZ_VALUETABLE_TILED_DOUBLE	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_DOUBLE),
+  WLZ_VALUETABLE_TILED_DOUBLE	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_TILED, WLZ_GREY_DOUBLE),
   					/*!< Tiled double precision
 					     floating point value table. */
-  WLZ_VALUETABLE_TILED_BIT	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_BIT),
+  WLZ_VALUETABLE_TILED_BIT	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_TILED, WLZ_GREY_BIT),
   					/*!< Tiled single bit (packed
 					     unsigned bytes) value table. */
-  WLZ_VALUETABLE_TILED_RGBA	= ((10 * WLZ_GREY_TAB_TILED) + WLZ_GREY_RGBA),
-  					/*!< Tiled red, green, blue,
+  WLZ_VALUETABLE_TILED_RGBA	= WLZ_GREY_TABLE_TYPE(
+                                    0, WLZ_GREY_TAB_TILED, WLZ_GREY_RGBA),
+  					/*!< Tiled red, green, blue, table. */
+  WLZ_VALUETABLE_TILED_ARY_INT	= WLZ_GREY_TABLE_TYPE(
+                                    1, WLZ_GREY_TAB_TILED, WLZ_GREY_INT),
+  					/*!< Tiled int value table. */
+  WLZ_VALUETABLE_TILED_ARY_SHORT = WLZ_GREY_TABLE_TYPE(
+                                    1, WLZ_GREY_TAB_TILED, WLZ_GREY_SHORT),
+  					/*!< Tiled short value table. */
+  WLZ_VALUETABLE_TILED_ARY_UBYTE = WLZ_GREY_TABLE_TYPE(
+                                    1, WLZ_GREY_TAB_TILED, WLZ_GREY_UBYTE),
+  					/*!< Tiled unsigned byte value
 					     table. */
+  WLZ_VALUETABLE_TILED_ARY_FLOAT = WLZ_GREY_TABLE_TYPE(
+                                    1, WLZ_GREY_TAB_TILED, WLZ_GREY_FLOAT),
+  					/*!< Tiled single precision
+					     floating point value table. */
+  WLZ_VALUETABLE_TILED_ARY_DOUBLE = WLZ_GREY_TABLE_TYPE(
+                                    1, WLZ_GREY_TAB_TILED, WLZ_GREY_DOUBLE),
+  					/*!< Tiled double precision
+					     floating point value table. */
+  WLZ_VALUETABLE_TILED_ARY_BIT	= WLZ_GREY_TABLE_TYPE(
+                                    1, WLZ_GREY_TAB_TILED, WLZ_GREY_BIT),
+  					/*!< Tiled single bit (packed
+					     unsigned bytes) value table. */
+  WLZ_VALUETABLE_TILED_ARY_RGBA	= WLZ_GREY_TABLE_TYPE(
+                                    1, WLZ_GREY_TAB_TILED, WLZ_GREY_RGBA),
+  					/*!< Tiled red, green, blue, table. */
   WLZ_FEATVALUETABLE_RAGR	= 50,	/*!< Ragged rectangle features
   					     value table. */
   WLZ_FEATVALUETABLE_RECT	= 60,	/*!< Rectangular features
@@ -2990,7 +3096,7 @@ typedef enum _WlzValueAttach
 {
   WLZ_VALUE_ATTACH_NONE,                /*!< No attachment. */
   WLZ_VALUE_ATTACH_NOD,                 /*!< Attached to mesh nodes. */
-  WLZ_VALUE_ATTACH_ELM                  /*!< Attached to mesh elements. */
+  WLZ_VALUE_ATTACH_ELM                 /*!< Attached to mesh elements. */
 } WlzValueAttach;
 
 /*!

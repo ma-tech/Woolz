@@ -287,7 +287,7 @@ static double			WlzInteriorityPrv(
 
       bgd.v.inv = 0;
       bgd.type = WLZ_GREY_INT;
-      gtt = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
+      gtt = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
       isv = WlzNewObjectValues(isn, gtt, bgd, 0, bgd, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {

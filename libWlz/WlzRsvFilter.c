@@ -953,7 +953,8 @@ static WlzObject *WlzRsvFilterObj2DX(WlzObject *srcObj, WlzRsvFilter *ftr,
   /* Make destination object with it's own values but a shared domain. */
   if(errNum == WLZ_ERR_NONE)
   {
-    dstVal.v = WlzNewValueTb(srcObj, WlzGreyTableType(vType, dstGType, NULL),
+    dstVal.v = WlzNewValueTb(srcObj, WlzGreyValueTableType(0, vType, dstGType,
+    							   NULL),
     			     bgdPix, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -1127,7 +1128,8 @@ static WlzObject *WlzRsvFilterObj2DY(WlzObject *srcObj, WlzRsvFilter *ftr,
   /* Make destination object with it's own values but a shared domain. */
   if(errNum == WLZ_ERR_NONE)
   {
-    dstVal.v = WlzNewValueTb(srcObj, WlzGreyTableType(vType, dstGType, NULL),
+    dstVal.v = WlzNewValueTb(srcObj, WlzGreyValueTableType(0, vType,
+    							   dstGType, NULL),
     			     bgdPix, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -1495,8 +1497,8 @@ static WlzObject *WlzRsvFilterObj3DZ(WlzObject *srcObj, WlzRsvFilter *ftr,
       }
       if(errNum == WLZ_ERR_NONE)
       {
-        dstValTbType2D = WlzGreyTableType(WLZ_GREY_TAB_RAGR, dstGType,
-					  &errNum);
+        dstValTbType2D = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, dstGType,
+					       &errNum);
 
       }
       /* Make buffers. */

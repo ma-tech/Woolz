@@ -185,7 +185,7 @@ static WlzObject *WlzGreyNewIncValues2D(WlzObject *in, int *val,
   bgd.type = WLZ_GREY_INT;
   bgd.v.inv = 0;
   values.core = NULL;
-  gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, &errNum);
+  gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {
     values.v = WlzNewValueTb(in, gTT, bgd, &errNum);
@@ -240,7 +240,7 @@ static WlzObject *WlzGreyNewIncValues3D(WlzObject *in, int *val,
   bgd.type = WLZ_GREY_INT;
   bgd.v.inv = 0;
   values.core = NULL;
-  gTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, &errNum);
+  gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, &errNum);
   values.vox = WlzNewValuesVox(in, gTT, bgd, &errNum);
   if(errNum == WLZ_ERR_NONE)
   {

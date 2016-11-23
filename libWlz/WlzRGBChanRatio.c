@@ -303,7 +303,7 @@ static WlzObject *WlzRGBChanRatio2D(WlzObject *rgbObj,
 
   bgdV.type = WLZ_GREY_FLOAT;
   bgdV.v.flv = 0.0f;
-  vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_FLOAT, NULL);
+  vType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_FLOAT, NULL);
   values.v = WlzNewValueTb(rgbObj, vType, bgdV, &errNum);
   (void )WlzAssignValues(values, NULL);
   if(errNum == WLZ_ERR_NONE)

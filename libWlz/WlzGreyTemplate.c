@@ -98,7 +98,7 @@ WlzObject *WlzGreyTemplate(
         bckgrnd = WlzGetBackground(obj, &errNum);
       }
       if(errNum == WLZ_ERR_NONE) {
-        gtype = WlzGreyTableTypeToGreyType(obj->values.core->type, NULL);
+        gtype = WlzGreyTableTypeToGreyType(obj->values.core->type, &errNum);
       }
       break;
 
@@ -163,7 +163,7 @@ WlzObject *WlzGreyTemplate(
   /* attach a value table to the template and set to the template value,
      note the background is set to the input object or zero if empty */
   if( errNum == WLZ_ERR_NONE ){
-    type = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gtype, NULL);
+    type = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, gtype, NULL);
     if((values.v = WlzNewValueTb(rtnObj, type, bckgrnd, &errNum)) != NULL){
       rtnObj->values = WlzAssignValues(values, NULL);
       errNum = WlzGreySetValue(rtnObj, tmplVal);
@@ -450,10 +450,11 @@ static WlzObject *WlzGreyTemplate3d(
 				objDoms[p - obj->domain.p->plane1],
 				objVals[p - obj->domain.p->plane1],
 				NULL, NULL, NULL);
-	  gtype = WlzGreyTableTypeToGreyType(tmpObj->values.core->type, NULL);
+	  gtype = WlzGreyTableTypeToGreyType(tmpObj->values.core->type,
+	  				     &errNum);
 	}
 	else {
-	  tmpObj = WlzMakeEmpty(NULL);
+	  tmpObj = WlzMakeEmpty(&errNum);
 	}
 	tmpObj = WlzAssignObject(tmpObj, NULL);
 	values.core = NULL;
@@ -474,7 +475,8 @@ static WlzObject *WlzGreyTemplate3d(
     valuess = rtnObj->values.vox->values;
     for(p=pdom->plane1; p <= pdom->lastpl; p++, domains++, valuess++){
       if((*domains).core &&
-	 (WlzGreyTableTypeToGreyType((*valuess).core->type, NULL) != gtype)){
+	 (WlzGreyTableTypeToGreyType(
+	     (*valuess).core->type, &errNum) != gtype)){
 	obj1 = WlzAssignObject(
 	  WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains, *valuess,
 		      NULL, NULL, NULL), NULL);

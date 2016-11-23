@@ -540,7 +540,7 @@ static WlzObject *WlzCMeshTransformInvert2D(WlzObject *gObj,
        (gIxv->dim[0] < 2) ||
        (gIxv->vType != WLZ_GREY_DOUBLE))
     {
-      errNum = WLZ_ERR_VALUES_DATA;
+      errNum = WLZ_ERR_VALUES_TYPE;
     }
   }
   if(((errNum == WLZ_ERR_NONE) &&
@@ -700,7 +700,7 @@ static WlzObject *WlzCMeshTransformInvert2D5(WlzObject *gObj,
        (gIxv->dim[0] < 3) ||
        (gIxv->vType != WLZ_GREY_DOUBLE))
     {
-      errNum = WLZ_ERR_VALUES_DATA;
+      errNum = WLZ_ERR_VALUES_TYPE;
     }
   }
   if(((errNum == WLZ_ERR_NONE) &&
@@ -862,7 +862,7 @@ static WlzObject *WlzCMeshTransformInvert3D(WlzObject *gObj,
        (gIxv->dim[0] < 3) ||
        (gIxv->vType != WLZ_GREY_DOUBLE))
     {
-      errNum = WLZ_ERR_VALUES_DATA;
+      errNum = WLZ_ERR_VALUES_TYPE;
     }
   }
   if(((errNum == WLZ_ERR_NONE) &&
@@ -1982,7 +1982,7 @@ static WlzObject *WlzCMeshToDomObjValues2D(WlzObject *dObj, WlzObject *mObj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    rVTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, bgd.type, NULL);
+    rVTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, bgd.type, NULL);
     rVal.v = WlzNewValueTb(dObj, rVTT, bgd, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -2136,7 +2136,7 @@ static WlzObject *WlzCMeshToDomObjValues3D(WlzObject *dObj, WlzObject *mObj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    rVTT = WlzGreyTableType(WLZ_GREY_TAB_RAGR, bgd.type, NULL);
+    rVTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, bgd.type, NULL);
     rVal.vox = WlzNewValuesVox(dObj, rVTT, bgd, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
@@ -5616,7 +5616,7 @@ WlzObject 	*WlzCMeshTransformObj(WlzObject *srcObj,
   else if((mIxv->rank != 1) || (mIxv->vType != WLZ_GREY_DOUBLE) ||
 	  (mIxv->attach != WLZ_VALUE_ATTACH_NOD))
   {
-    errNum = WLZ_ERR_VALUES_DATA;
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   else
   {
@@ -6546,7 +6546,7 @@ static WlzObject *WlzCMeshTransformObjV3D(WlzObject *srcObj,
   /* Make a voxel value table for the new domain. */
   if(errNum == WLZ_ERR_NONE)
   {
-    gTType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, gType, NULL);
+    gTType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, gType, NULL);
     dstValues.vox = WlzNewValuesVox(dstObj, gTType, bgdV, &errNum);
   }
   /* Scan through the sorted intervals again setting object values. */
@@ -8069,7 +8069,7 @@ static WlzErrorNum WlzScaleCMeshValueNodOrElem(WlzObject *obj, double scale,
 	    }
 	    break;
 	  default:
-	    errNum = WLZ_ERR_VALUES_DATA;
+	    errNum = WLZ_ERR_VALUES_TYPE;
 	    break;
 	}
 	break;
@@ -8107,7 +8107,7 @@ static WlzErrorNum WlzScaleCMeshValueNodOrElem(WlzObject *obj, double scale,
 	    }
 	    break;
 	  default:
-	    errNum = WLZ_ERR_VALUES_DATA;
+	    errNum = WLZ_ERR_VALUES_TYPE;
 	    break;
 	}
 	break;
@@ -8145,7 +8145,7 @@ static WlzErrorNum WlzScaleCMeshValueNodOrElem(WlzObject *obj, double scale,
 	    }
 	    break;
 	  default:
-	    errNum = WLZ_ERR_VALUES_DATA;
+	    errNum = WLZ_ERR_VALUES_TYPE;
 	    break;
 	}
 	break;
@@ -8567,7 +8567,7 @@ static WlzErrorNum WlzCMeshAffineProduct2D(WlzObject *trM,
      (ixv->dim[0] < 2) ||
      (ixv->vType != WLZ_GREY_DOUBLE))
   {
-    errNum = WLZ_ERR_VALUES_DATA;
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   else
   {
@@ -8661,7 +8661,7 @@ static WlzErrorNum WlzCMeshAffineProduct2D5(WlzObject *trM,
      (ixv->dim[0] < 3) ||
      (ixv->vType != WLZ_GREY_DOUBLE))
   {
-    errNum = WLZ_ERR_VALUES_DATA;
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   else
   {
@@ -8758,7 +8758,7 @@ static WlzErrorNum WlzCMeshAffineProduct3D(WlzObject *trM,
      (ixv->dim[0] < 3) ||
      (ixv->vType != WLZ_GREY_DOUBLE))
   {
-    errNum = WLZ_ERR_VALUES_DATA;
+    errNum = WLZ_ERR_VALUES_TYPE;
   }
   else
   {

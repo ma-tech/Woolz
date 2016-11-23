@@ -462,7 +462,7 @@ static WlzCompoundArray *WlzBasisFnTransformObjPrv(WlzObject *inObj,
   valuesX.core = NULL;
   valuesY.core = NULL;  
   /* Create value tables for the two objects */
-  vType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_FLOAT, NULL);
+  vType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_FLOAT, NULL);
   backgrnd.type = WLZ_GREY_FLOAT;
   backgrnd.v.inv = 0;
   if((valuesX.v = WlzNewValueTb(inObj, vType, backgrnd, &errNum)) != 0)

@@ -354,7 +354,7 @@ WlzObject 	*WlzDistanceTransform(WlzObject *forObj, WlzObject *refObj,
   /* Create new values for the computed distances. */
   if(errNum == WLZ_ERR_NONE)
   {
-    dstGType = WlzGreyTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
+    dstGType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
     if(dim == 2)
     {
       dstVal.v = WlzNewValueTb(sForObj, dstGType, bgdV, &errNum);
