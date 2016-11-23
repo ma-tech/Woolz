@@ -3188,7 +3188,7 @@ static WlzErrorNum WlzWriteIndexedValues(FILE *fP, WlzObject *obj)
   else
   {
     ixv = obj->values.x;
-    if(ixv->type != WLZ_INDEXED_VALUES)
+    if(ixv->type != (WlzObjectType )WLZ_INDEXED_VALUES)
     {
       errNum = WLZ_ERR_VALUES_TYPE;
     }
@@ -3334,6 +3334,7 @@ static WlzErrorNum WlzWriteTiledValueTable(FILE *fP, WlzObject *obj,
 					   int writeTiles)
 {
   long		tMrk;
+  size_t	vSz = 1;
   WlzGreyType   gType;
   WlzTiledValues *tVal = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -3357,6 +3358,20 @@ static WlzErrorNum WlzWriteTiledValueTable(FILE *fP, WlzObject *obj,
     putword(tVal->plane1, fP);
     putword(tVal->lastpl, fP);
     errNum = WlzWritePixelV(fP, &(tVal->bckgrnd), 1);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(tVal->vDim > 0)
+    {
+      int	idx;
+
+      (void )putword(tVal->vRank, fP);
+      for(idx = 0; idx < tVal->vRank; ++idx)
+      {
+	vSz *= tVal->vDim[idx];
+	(void )putword(tVal->vDim[idx], fP);
+      }
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -3401,7 +3416,7 @@ static WlzErrorNum WlzWriteTiledValueTable(FILE *fP, WlzObject *obj,
     tSz = tVal->numTiles * tVal->tileSz;
     if(tVal->tiles.v != NULL)
     {
-      if(fwrite(tVal->tiles.v, gSz, tSz, fP) != tSz)
+      if(fwrite(tVal->tiles.v, gSz, tSz * vSz, fP) != tSz)
       {
         errNum = WLZ_ERR_WRITE_INCOMPLETE;
       }
@@ -3410,7 +3425,7 @@ static WlzErrorNum WlzWriteTiledValueTable(FILE *fP, WlzObject *obj,
     {
       /* No tile data so reserve tile space in the file by seeking
        * to the end of the tiles and writing a byte. */
-      if((fseek(fP, (gSz * tSz) - 1, SEEK_CUR) != 0) ||
+      if((fseek(fP, (gSz * tSz * vSz) - 1, SEEK_CUR) != 0) ||
          (fwrite("", 1, 1, fP) != 1))
       {
 	errNum = WLZ_ERR_WRITE_INCOMPLETE;
@@ -3750,7 +3765,7 @@ static WlzErrorNum      WlzWritePointValues(FILE *fP, WlzObject *obj)
 
     pDom = obj->domain.pts;
     pVal = obj->values.pts;
-    if(pVal->type != WLZ_POINT_VALUES)
+    if(pVal->type != (WlzObjectType )WLZ_POINT_VALUES)
     {
       errNum = WLZ_ERR_VALUES_TYPE;
     }

@@ -2155,11 +2155,17 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
 				      int dim, WlzObjectType type,
 				      int map)
 {
+  int		vRank;
   WlzGreyType	gType;
+  size_t	vSz = 1;
   WlzTiledValues *tVal = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   gType = WlzGreyTableTypeToGreyType(type, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    vRank = WlzGreyTableTypeToRank(type, &errNum);
+  }
   if(errNum == WLZ_ERR_NONE)
   {
     int		tDim;
@@ -2171,7 +2177,7 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    tVal = WlzMakeTiledValues(dim, &errNum);
+    tVal = WlzMakeTiledValues(dim, vRank, &errNum); // HACK TODO
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2184,6 +2190,17 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
     tVal->plane1 = getword(fP);
     tVal->lastpl = getword(fP);
     errNum = WlzReadPixelV(fP, &(tVal->bckgrnd), 1);
+  }
+  if((errNum == WLZ_ERR_NONE) && vRank)
+  {
+    int		idx;
+
+    tVal->vRank = getword(fP);
+    for(idx = 0; idx < tVal->vRank; ++idx)
+    {
+      tVal->vDim[idx] = getword(fP);
+      vSz *= tVal->vDim[idx];
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -2246,7 +2263,7 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
     if(map == 0)
     {
       tVal->fd = -1;
-      if((tVal->tiles.v = AlcMalloc(tSz * gSz)) == NULL)
+      if((tVal->tiles.v = AlcMalloc(gSz * tSz * vSz)) == NULL)
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
@@ -2260,7 +2277,7 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
       if(errNum == WLZ_ERR_NONE)
       {
 	/* The tiles are stored using native byte ordering. */
-	if(fread(tVal->tiles.v, gSz, tSz, fP) != tSz)
+	if(fread(tVal->tiles.v, gSz, tSz * vSz, fP) != tSz)
 	{
 	  errNum = WLZ_ERR_READ_INCOMPLETE;
 	}
@@ -2277,12 +2294,12 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
       }
       else
       {
-	tVal->tiles.v = mmap(NULL, tSz * gSz, PROT_READ | PROT_WRITE,
+	tVal->tiles.v = mmap(NULL, gSz * tSz * vSz, PROT_READ | PROT_WRITE,
 			     MAP_SHARED | MAP_FILE |MAP_NORESERVE,
 			     tVal->fd, tVal->tileOffset);
 	if(tVal->tiles.v == MAP_FAILED)
 	{
-	  tVal->tiles.v = mmap(NULL, tSz * gSz, PROT_READ,
+	  tVal->tiles.v = mmap(NULL, gSz * tSz * vSz, PROT_READ,
 			       MAP_PRIVATE | MAP_FILE |MAP_NORESERVE,
 			       tVal->fd, tVal->tileOffset);
 	}
@@ -2301,7 +2318,7 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
       {
 	/* Seek to the end of the object so that multiple objects can be read
 	 * from the same file. */
-        if(fseek(fP, tVal->tileOffset + (gSz * tSz), SEEK_SET) != 0)
+        if(fseek(fP, tVal->tileOffset + (gSz * tSz * vSz), SEEK_SET) != 0)
         {
 	  errNum = WLZ_ERR_READ_INCOMPLETE;
 	}
@@ -2336,6 +2353,25 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
                    tVal->lastpl);
     (void )fprintf(stderr, "WlzReadTiledValues() tVal->bckgrnd.type = %d\n",
                    (int )(tVal->bckgrnd.type));
+    (void )fprintf(stderr, "WlzReadTiledValues() tVal->vDim = %d\n",
+                   tVal->vDim);
+    {
+      int	idx;
+
+      (void )fprintf(stderr, "WlzReadTiledValues() tVal->vRank =");
+      if(tVal->vRank <= 0)
+      {
+        (void )fprintf(stderr, " NULL\n");
+      }
+      else
+      {
+	for(idx = 0; idx < tVal->vRank; ++idx)
+	{
+	  (void )fprintf(stderr, " %d", tVal->vDim[idx]);
+	}
+        (void )fprintf(stderr, "\n");
+      }
+    }
     (void )fprintf(stderr, "WlzReadTiledValues() tVal->tileSz = %ld\n",
                    (long )(tVal->tileSz));
     (void )fprintf(stderr, "WlzReadTiledValues() tVal->tileWidth = %ld\n",
