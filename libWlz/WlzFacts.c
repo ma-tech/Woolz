@@ -1250,6 +1250,31 @@ static WlzErrorNum WlzObjFactsTiledTab(WlzObjFactsData *fData,
     }
     if(errNum == WLZ_ERR_NONE)
     {
+      errNum = WlzObjFactsAppend(fData, "Values value rank: %d\n",
+				 val.t->vRank);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Values value dimension: %p\n",
+      				 val.t->vDim);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(val.t->vRank > 0)
+      {
+	int	idx;
+
+	++(fData->indent);
+	for(idx = 0; idx < val.t->vRank; ++idx)
+	{
+	  (void )WlzObjFactsAppend(fData, " %d", val.t->vDim[idx]);
+	}
+        errNum = WlzObjFactsAppend(fData, "\n");
+        --(fData->indent);
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
       errNum = WlzObjFactsAppend(fData, "Values tile size: %ld\n",
 				 (WlzLong )(val.t->tileSz));
     }
