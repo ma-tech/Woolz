@@ -2119,12 +2119,18 @@ static WlzErrorNum WlzReadDomObjValues3D(FILE *fP, WlzObject *obj)
       case WLZ_VOXELVALUETABLE_GREY:
         errNum = WlzReadVoxelValues(fP, obj);
 	break;
-      case WLZ_VALUETABLE_TILED_INT:    /* FALLTHROUGH */
-      case WLZ_VALUETABLE_TILED_SHORT:  /* FALLTHROUGH */
-      case WLZ_VALUETABLE_TILED_UBYTE:  /* FALLTHROUGH */
-      case WLZ_VALUETABLE_TILED_FLOAT:  /* FALLTHROUGH */
-      case WLZ_VALUETABLE_TILED_DOUBLE: /* FALLTHROUGH */
-      case WLZ_VALUETABLE_TILED_RGBA:
+      case WLZ_VALUETABLE_TILED_INT:        /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_SHORT:      /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_UBYTE:      /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_FLOAT:      /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_DOUBLE:     /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_RGBA:       /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_ARY_INT:    /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_ARY_SHORT:  /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_ARY_UBYTE:  /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_ARY_FLOAT:  /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_ARY_DOUBLE: /* FALLTHROUGH */
+      case WLZ_VALUETABLE_TILED_ARY_RGBA:
         errNum = WlzReadTiledValues(fP, obj, 3, type, 1);
 	break;
       default:
