@@ -2954,16 +2954,24 @@ WlzObject *WlzFromBArray1D(
 *					objects.
 * \param	gType			The grey type of the given data and the
 *					resulting object.
+* \param	vpe			Values per pixel/voxel, 1 for
+* 					scalar values.
 * \param	gDat			The 1D array of data.
 * \param	noCopy			If non-zero then the data are not
 * 					copied but are used in place. Use
-* 					with caution.
+* 					with caution. This is never done
+* 					with non-scalar data.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject	*WlzFromArray1D(WlzObjectType oType,
-				WlzIVertex3 sz, WlzIVertex3 org,
-				WlzGreyType gType, WlzGreyP gDat,
-				int noCopy, WlzErrorNum *dstErr)
+WlzObject			*WlzFromArray1D(
+				  WlzObjectType oType,
+				  WlzIVertex3 sz,
+				  WlzIVertex3 org,
+				  WlzGreyType gType,
+				  unsigned int vpe,
+				  WlzGreyP gDat,
+				  int noCopy,
+				  WlzErrorNum *dstErr)
 {
   int		idP;
   size_t	gSz2;
@@ -3012,7 +3020,16 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    gTabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, gType, &errNum);
+    if(vpe == 1)
+    {
+      gTabType = WlzGreyValueTableType(0, WLZ_GREY_TAB_RECT, gType, &errNum);
+    }
+    else
+    {
+      /* Not scalar values - tiled value tables are the only compatible
+       * value table for non-scalar values. */
+      gTabType = WlzGreyValueTableType(1, WLZ_GREY_TAB_TILED, gType, &errNum);
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -3026,6 +3043,13 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
+	  obj = WlzMakeRect(org.vtY, org.vtY + sz.vtY - 1,
+	  		    org.vtX, org.vtX + sz.vtX - 1,
+			    WLZ_GREY_ERROR, NULL, bgdV, NULL, NULL, &errNum);
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  dom = obj->domain;
 	  if(noCopy)
 	  {
 	    cDat.v = gDat.v;
@@ -3044,28 +3068,77 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  dom.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
-					org.vtY, org.vtY + sz.vtY - 1,
-					org.vtX, org.vtX + sz.vtX - 1,
-					&errNum);
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  val.r = WlzMakeRectValueTb(gTabType, 
-				     org.vtY, org.vtY + sz.vtY - 1,
-				     org.vtX, sz.vtX,
-				     bgdV, cDat.v,
-				     &errNum);
-	  if((val.r != NULL) && (noCopy == 0))
+	  if(vpe == 1)
 	  {
-	    val.r->freeptr = AlcFreeStackPush(val.r->freeptr,
-	                             cDat.v, NULL);
+	    val.r = WlzMakeRectValueTb(gTabType, 
+				       org.vtY, org.vtY + sz.vtY - 1,
+				       org.vtX, sz.vtX,
+				       bgdV, cDat.v,
+				       &errNum);
+	    if((val.r != NULL) && (noCopy == 0))
+	    {
+	      val.r->freeptr = AlcFreeStackPush(val.r->freeptr,
+				       cDat.v, NULL);
+	    }
 	  }
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  obj = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom, val, NULL, NULL,
-			    &errNum);
+	  else if(vpe > 1)
+	  {
+	    /* Not scalar values (vpe > 1) */
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      WlzObject *tmpObj;
+
+	      tmpObj = WlzMakeTiledValuesFromObj(obj,
+	       				WLZ_TILEDVALUES_TILE_SIZE,
+					0, gType, 1, &vpe, bgdV, &errNum);
+	      (void )WlzFreeObj(obj);
+	      obj = tmpObj;
+	      if(obj)
+	      {
+	        val = obj->values;
+	      }
+	    }
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    val.t->vDim[0] = vpe;
+	    errNum = WlzMakeTiledValuesTiles(val.t);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    int		idY;
+
+	    for(idY = 0; idY < sz.vtY; ++idY)
+	    {
+	      WlzGreyP srcP;
+
+	      switch(gType)
+	      {
+		case WLZ_GREY_INT:
+		  srcP.inp = gDat.inp + (idY * sz.vtX);
+		  break;
+		case WLZ_GREY_SHORT:
+		  srcP.shp = gDat.shp + (idY * sz.vtX);
+		  break;
+		case WLZ_GREY_UBYTE:
+		  srcP.ubp = gDat.ubp + (idY * sz.vtX);
+		  break;
+		case WLZ_GREY_FLOAT:
+		  srcP.flp = gDat.flp + (idY * sz.vtX);
+		  break;
+		case WLZ_GREY_DOUBLE:
+		  srcP.dbp = gDat.dbp + (idY * sz.vtX);
+		  break;
+		case WLZ_GREY_RGBA:
+		  srcP.rgbp = gDat.rgbp + (idY * sz.vtX);
+		  break;
+		default:
+		  /* Handled above. */
+		  break;
+	      }
+	      WlzTiledValuesCopyLine(val.t, srcP, 0, idY, 0, sz.vtX - 1);
+	    }
+	  }
 	}
 	/* Clean up for 2D on error. */
 	if(obj == NULL)
@@ -3085,86 +3158,160 @@ WlzObject	*WlzFromArray1D(WlzObjectType oType,
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  dom.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
-	  			      org.vtZ, org.vtZ + sz.vtZ - 1,
-	  			      org.vtY, org.vtY + sz.vtY - 1,
-				      org.vtX, org.vtX + sz.vtX - 1,
-				      &errNum);
+	  obj = WlzMakeCuboid(org.vtZ, org.vtZ + sz.vtZ - 1,
+	                      org.vtY, org.vtY + sz.vtY - 1,
+			      org.vtX, org.vtX + sz.vtX - 1,
+			      WLZ_GREY_ERROR, bgdV, NULL, NULL, &errNum);
 	}
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  val.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
-	  				 org.vtZ, org.vtZ + sz.vtZ - 1,
-					 bgdV, NULL, &errNum);
-	}
-	idP = 0;
-	while((errNum == WLZ_ERR_NONE) && (idP < sz.vtZ))
-	{
-	  WlzDomain *dom2;
-	  WlzValues *val2;
-
-	  dom2 = dom.p->domains + idP;
-	  val2 = val.vox->values + idP;
-	  (*dom2).i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_RECT,
-				org.vtY, org.vtY + sz.vtY - 1,
-				org.vtX, org.vtX + sz.vtX - 1,
-				&errNum);
-	  if(errNum == WLZ_ERR_NONE)
+	  dom = obj->domain;
+	  if(vpe == 1)
 	  {
-	    WlzGreyP	src;
+	    /* Scalar values. */
+	    val.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+					   org.vtZ, org.vtZ + sz.vtZ - 1,
+					   bgdV, NULL, &errNum);
+	    idP = 0;
+	    while((errNum == WLZ_ERR_NONE) && (idP < sz.vtZ))
+	    {
+	      WlzDomain *dom2;
+	      WlzValues *val2;
 
-	    src.ubp = gDat.ubp + (gSz2 * idP);
-	    (void )WlzAssignDomain(*(dom2), NULL);
-	    if(noCopy)
-	    {
-	     cDat = src;
-	    }
-	    else
-	    {
-	      if((cDat.v = AlcMalloc(gSz2)) == NULL)
+	      dom2 = dom.p->domains + idP;
+	      val2 = val.vox->values + idP;
+	      if(errNum == WLZ_ERR_NONE)
 	      {
-		errNum = WLZ_ERR_MEM_ALLOC;
+		WlzGreyP	src;
+
+		src.ubp = gDat.ubp + (gSz2 * idP);
+		(void )WlzAssignDomain(*(dom2), NULL);
+		if(noCopy)
+		{
+		 cDat = src;
+		}
+		else
+		{
+		  if((cDat.v = AlcMalloc(gSz2)) == NULL)
+		  {
+		    errNum = WLZ_ERR_MEM_ALLOC;
+		  }
+		  else
+		  {
+		    (void )memcpy(cDat.v, src.v, gSz2);
+		  }
+		}
 	      }
-	      else
+	      if(errNum == WLZ_ERR_NONE)
 	      {
-		(void )memcpy(cDat.v, src.v, gSz2);
+		(*val2).r = WlzMakeRectValueTb(gTabType, 
+				    org.vtY, org.vtY + sz.vtY - 1,
+				    org.vtX, sz.vtX,
+				    bgdV, cDat.inp,
+				    &errNum);
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  (void )WlzAssignValues((*val2), NULL);
+		  if(noCopy == 0)
+		  {
+		    (*val2).r->freeptr = AlcFreeStackPush((*val2).r->freeptr,
+				    cDat.v, NULL);
+		    cDat.v = NULL;
+		  }
+		}
 	      }
+	      ++idP;
 	    }
-	  }
-	  if(errNum == WLZ_ERR_NONE)
-	  {
-	    (*val2).r = WlzMakeRectValueTb(gTabType, 
-				org.vtY, org.vtY + sz.vtY - 1,
-				org.vtX, sz.vtX,
-				bgdV, cDat.inp,
-				&errNum);
 	    if(errNum == WLZ_ERR_NONE)
 	    {
-	      (void )WlzAssignValues((*val2), NULL);
+	      obj = WlzMakeMain(oType, dom, val, NULL, NULL, &errNum);
+	    }
+	    /* Clean up for 3D on error. */
+	    if(obj == NULL)
+	    {
 	      if(noCopy == 0)
 	      {
-		(*val2).r->freeptr = AlcFreeStackPush((*val2).r->freeptr,
-				cDat.v, NULL);
-		cDat.v = NULL;
+		AlcFree(cDat.v);
 	      }
+	      (void )WlzFreeVoxelValueTb(val.vox);
+	      (void )WlzFreePlaneDomain(dom.p);
 	    }
 	  }
-	  ++idP;
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  obj = WlzMakeMain(oType, dom, val, NULL, NULL,
-			    &errNum);
-	}
-	/* Clean up for 3D on error. */
-	if(obj == NULL)
-	{
-	  if(noCopy == 0)
+	  else if(vpe > 1)
 	  {
-	    AlcFree(cDat.v);
+	    /* Not scalar values (vpe > 1) */
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      WlzObject	*tmpObj;
+
+	      tmpObj = WlzMakeTiledValuesFromObj(obj,
+	      				WLZ_TILEDVALUES_TILE_SIZE,
+					0, gType, 1, &vpe, bgdV, &errNum);
+	      (void )WlzFreeObj(obj);
+	      obj = tmpObj;
+	      if(obj)
+	      {
+		val = obj->values;
+	      }
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      val.t->vDim[0] = vpe;
+	      errNum = WlzMakeTiledValuesTiles(val.t);
+	    }
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      size_t	idZ,
+	      		plnSz;
+
+	      /* Copy the 1D array to the tiles a line at a time. */
+	      plnSz = sz.vtY * sz.vtX;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+	      for(idZ = 0; idZ < sz.vtZ; ++idZ)
+	      {
+		int	idY;
+
+		for(idY = 0; idY < sz.vtY; ++idY)
+		{
+		  WlzGreyP srcP;
+
+		  switch(gType)
+		  {
+		    case WLZ_GREY_INT:
+		      srcP.inp = gDat.inp + (idZ * plnSz) + (idY * sz.vtX);
+		      break;
+		    case WLZ_GREY_SHORT:
+		      srcP.shp = gDat.shp + (idZ * plnSz) + (idY * sz.vtX);
+		      break;
+		    case WLZ_GREY_UBYTE:
+		      srcP.ubp = gDat.ubp + (idZ * plnSz) + (idY * sz.vtX);
+		      break;
+		    case WLZ_GREY_FLOAT:
+		      srcP.flp = gDat.flp + (idZ * plnSz) + (idY * sz.vtX);
+		      break;
+		    case WLZ_GREY_DOUBLE:
+		      srcP.dbp = gDat.dbp + (idZ * plnSz) + (idY * sz.vtX);
+		      break;
+                    case WLZ_GREY_RGBA:
+		      srcP.rgbp = gDat.rgbp + (idZ * plnSz) + (idY * sz.vtX);
+		      break;
+		    default:
+		      /* Handled above. */
+		      break;
+		  }
+		  WlzTiledValuesCopyLine(val.t, srcP, idZ, idY,
+		  			 0, sz.vtX - 1);
+		}
+	      }
+	    }
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      (void )WlzFreeObj(obj);
+	      obj = NULL;
+	    }
 	  }
-	  (void )WlzFreeVoxelValueTb(val.vox);
-	  (void )WlzFreePlaneDomain(dom.p);
 	}
 	break;
       default:
@@ -3510,7 +3657,7 @@ int		main(int argc, char *argv[])
 	}
       }
     }
-    obj = WlzFromArray1D(oType, sz, org, WLZ_GREY_UBYTE, arrayP,
+    obj = WlzFromArray1D(oType, sz, org, WLZ_GREY_UBYTE, 1, arrayP,
                          noCopy, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
