@@ -128,7 +128,7 @@ int		main(int argc, char *argv[])
 		*outFileStr;
   int		iBuf[4];
   const char	*errMsg;
-  const size_t	tlSz = 4096;
+  const size_t	tlSz = WLZ_TILEDVALUES_TILE_SIZE;
   static char	optList[] = "chb:g:o:s:",
   		inFileStrDef[] = "-",
 		outFileStrDef[] = "-";
@@ -344,8 +344,8 @@ int		main(int argc, char *argv[])
 	domObj->domain.p->voxel_size[1] = voxSz.vtY;
 	domObj->domain.p->voxel_size[2] = voxSz.vtZ;
       }
-      outObj = WlzMakeTiledValuesFromObj(domObj, tlSz, copy, gType, bgdV,
-      					 &errNum);
+      outObj = WlzMakeTiledValuesFromObj(domObj, tlSz, copy,
+                                         gType, 0, NULL, bgdV, &errNum);
     }
     if(errNum != WLZ_ERR_NONE)
     {
