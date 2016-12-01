@@ -82,7 +82,7 @@ int		main(int argc, char *argv[])
   		*secFileStr;
   struct timeval times[3];
   const char	*errMsg;
-  const size_t	tlSz = 4096;
+  const size_t	tlSz = WLZ_TILEDVALUES_TILE_SIZE;
   static char	optList[] = "hsto:S:",
   		inFileStrDef[] = "-";
 
@@ -188,7 +188,8 @@ int		main(int argc, char *argv[])
     {
       gettimeofday(times + 0, NULL); 
     }
-    tlObj = WlzMakeTiledValuesFromObj(inObj, tlSz, 1, gType, bgdV, &errNum);
+    tlObj = WlzMakeTiledValuesFromObj(inObj, tlSz, 1,
+                                      gType, 0, NULL, bgdV, &errNum);
     if(timer)
     {
       gettimeofday(times + 1, NULL); 
