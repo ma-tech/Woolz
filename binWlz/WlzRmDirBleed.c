@@ -303,8 +303,9 @@ int		main(int argc, char *argv[])
     {
       inVal = inObj->values;
       outObj = WlzAssignObject(
-               WlzMakeTiledValuesFromObj(inObj, inVal.t->tileSz, 0, gType,
-					 inVal.t->bckgrnd, &errNum), NULL);
+               WlzMakeTiledValuesFromObj(inObj, inVal.t->tileSz, 0,
+	                                 gType, 0, NULL, inVal.t->bckgrnd,
+					 &errNum), NULL);
       if(errNum == WLZ_ERR_NONE)
       {
 	if((fP = fopen(outFileStr, "w")) == NULL)
