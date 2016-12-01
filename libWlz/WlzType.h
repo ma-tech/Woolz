@@ -3243,6 +3243,15 @@ typedef struct _WlzTiledValues
 } WlzTiledValues;
 
 /*!
+* \def		WLZ_TILEDVALUES_TILE_SIZE
+* \ingroup	WlzType
+* \brief	The default number of pixels/voxels in a tiled value
+* 		table tile. Chosen so that tiles will occupy an integer
+* 		number of disk block,
+*/
+#define WLZ_TILEDVALUES_TILE_SIZE	(4096)
+
+/*!
 * \struct	_WlzLUTValues
 * \ingroup	WlzType
 * \brief	Look up table values.
