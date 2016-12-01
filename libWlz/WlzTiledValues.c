@@ -59,6 +59,8 @@ static WlzObject  		*WlzMakeTiledValuesObj2D(
 				  size_t tileSz,
 				  int setTiles,
 				  WlzGreyType gType,
+				  unsigned int vRank,
+				  unsigned int *vDim,
 				  WlzPixelV bgdV,
 				  WlzErrorNum *dstErr);
 static WlzObject  		*WlzMakeTiledValuesObj3D(
@@ -66,6 +68,8 @@ static WlzObject  		*WlzMakeTiledValuesObj3D(
 				  size_t tileSz,
 				  int setTiles,
 				  WlzGreyType gType,
+				  unsigned int vRank,
+				  unsigned int *vDim,
 				  WlzPixelV bgdV,
 				  WlzErrorNum *dstErr);
 
@@ -80,7 +84,10 @@ static WlzObject  		*WlzMakeTiledValuesObj3D(
 * 					vector values etc....
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzTiledValues	*WlzMakeTiledValues(int dim, int vRank, WlzErrorNum *dstErr)
+WlzTiledValues			*WlzMakeTiledValues(
+				  int dim,
+				  int vRank,
+				  WlzErrorNum *dstErr)
 {
   WlzTiledValues *tVal = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
@@ -132,7 +139,8 @@ WlzTiledValues	*WlzMakeTiledValues(int dim, int vRank, WlzErrorNum *dstErr)
 * \brief	Frees a tiled value table.
 * \param	tVal			The tiled value table to free.
 */
-WlzErrorNum	WlzFreeTiledValues(WlzTiledValues *tVal)
+WlzErrorNum			WlzFreeTiledValues(
+				  WlzTiledValues *tVal)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -163,6 +171,10 @@ WlzErrorNum	WlzFreeTiledValues(WlzTiledValues *tVal)
       else
       {
 	AlcFree(tVal->indices);
+        if(tVal->vRank > 0)
+	{
+	  AlcFree(tVal->vDim);
+	}
 	if(tVal->tiles.v)
 	{
 #ifdef WLZ_USE_MMAP
@@ -204,8 +216,10 @@ WlzErrorNum	WlzFreeTiledValues(WlzTiledValues *tVal)
 * \param	bgdV			Background value for the new values.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzTiledValues	*WlzNewTiledValues(WlzTiledValues *gVal, WlzPixelV bgdV,
-				   WlzErrorNum *dstErr)
+WlzTiledValues			*WlzNewTiledValues(
+				  WlzTiledValues *gVal,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr)
 {
   WlzTiledValues *rVal = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -281,12 +295,24 @@ WlzTiledValues	*WlzNewTiledValues(WlzTiledValues *gVal, WlzPixelV bgdV,
 * \param	copyValues		Non zero if the grey values should
 * 					be copied to the tiled object.
 * \param	gType			Required grey type for values table.
+* \param	vRank			Rank of the individual values,
+* 					zero for scalar values, one for
+* 					vector values etc....
+* \param	vDim			Array of size vRank with individual
+* 					value dimensions, not used if vRank
+* 					is zero.
 * \param	bgdV			required background value.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzObject	*WlzMakeTiledValuesFromObj(WlzObject *gObj, size_t tileSz,
-			        int copyValues, WlzGreyType gType,
-				WlzPixelV bgdV, WlzErrorNum *dstErr)
+WlzObject			*WlzMakeTiledValuesFromObj(
+				  WlzObject *gObj,
+				  size_t tileSz,
+			          int copyValues,
+				  WlzGreyType gType,
+				  unsigned int vRank,
+				  unsigned int *vDim,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr)
 {
   WlzObject	*rObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -301,11 +327,11 @@ WlzObject	*WlzMakeTiledValuesFromObj(WlzObject *gObj, size_t tileSz,
     {
       case WLZ_2D_DOMAINOBJ:
 	rObj = WlzMakeTiledValuesObj2D(gObj, tileSz, copyValues, gType,
-				       bgdV, &errNum);
+				       vRank, vDim, bgdV, &errNum);
         break;
       case WLZ_3D_DOMAINOBJ:
 	rObj = WlzMakeTiledValuesObj3D(gObj, tileSz, copyValues, gType,
-				       bgdV, &errNum);
+				       vRank, vDim, bgdV, &errNum);
         break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
@@ -322,17 +348,38 @@ WlzObject	*WlzMakeTiledValuesFromObj(WlzObject *gObj, size_t tileSz,
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzAllocation
-* \brief	Allocates tiles for the tiles values and sets background value
+* \brief	Allocates tiles without a memory mapped file for the tiles
+*  		values and sets background value
 * 		within the tiles.
 * \param	tVal			Given tiled values.
 */
-WlzErrorNum	WlzMakeTiledValuesTiles(WlzTiledValues *tVal)
+WlzErrorNum			WlzMakeTiledValuesTiles(
+				  WlzTiledValues *tVal)
 {
-  size_t	gSz;
+  size_t	gSz,
+  		vSz = 1;
   WlzGreyType	gType;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   gType = WlzGreyTableTypeToGreyType(tVal->type, &errNum);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		rank;
+
+    /* Check grey table type and value rank are compatible. */
+    rank = WlzGreyTableTypeToRank(tVal->type, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if((rank && (tVal->vRank < 1)) || ((rank == 0) && (tVal->vRank >= 1)))
+      {
+        errNum = WLZ_ERR_VALUES_TYPE;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE) 
+    {
+      vSz = WlzTiledValuesValPerElm(tVal);
+    }
+  }
   if(errNum == WLZ_ERR_NONE)
   {
     gSz = WlzGreySize(gType);
@@ -341,7 +388,7 @@ WlzErrorNum	WlzMakeTiledValuesTiles(WlzTiledValues *tVal)
   {
     tVal->fd = -1;
     if((tVal->tiles.v = AlcMalloc(tVal->numTiles *
-                                  tVal->tileSz * gSz)) == NULL)
+                                  tVal->tileSz * gSz * vSz)) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -349,7 +396,7 @@ WlzErrorNum	WlzMakeTiledValuesTiles(WlzTiledValues *tVal)
   if(errNum == WLZ_ERR_NONE)
   {
     WlzValueSetGrey(tVal->tiles, 0, tVal->bckgrnd.v, tVal->bckgrnd.type,
-                    tVal->numTiles * tVal->tileSz);
+                    tVal->numTiles * tVal->tileSz * vSz);
   }
   return(errNum);
 }
@@ -371,7 +418,9 @@ WlzErrorNum	WlzMakeTiledValuesTiles(WlzTiledValues *tVal)
 * \param	tv			The given tiled values.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-int		WlzTiledValuesMode(WlzTiledValues *tv, WlzErrorNum *dstErr)
+int				WlzTiledValuesMode(
+				  WlzTiledValues *tv,
+				  WlzErrorNum *dstErr)
 {
   int		flags = WLZ_IOFLAGS_NONE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -433,8 +482,9 @@ int		WlzTiledValuesMode(WlzTiledValues *tv, WlzErrorNum *dstErr)
 * \param	tVal			Given tiled values.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-WlzTiledValueBuffer *WlzMakeTiledValueBuffer(WlzTiledValues *tVal,
-				WlzErrorNum *dstErr)
+WlzTiledValueBuffer 		*WlzMakeTiledValueBuffer(
+				  WlzTiledValues *tVal,
+				  WlzErrorNum *dstErr)
 {
   int		mode = WLZ_IOFLAGS_NONE,
   		lnWidth = 0;
@@ -493,7 +543,8 @@ WlzTiledValueBuffer *WlzMakeTiledValueBuffer(WlzTiledValues *tVal,
 * 		buffer.
 * \param	tBuf			Given tiled values, may be NULL.
 */
-void		WlzFreeTiledValueBuffer(WlzTiledValueBuffer *tBuf)
+void				WlzFreeTiledValueBuffer(
+				  WlzTiledValueBuffer *tBuf)
 {
   if(tBuf)
   {
@@ -509,8 +560,9 @@ void		WlzFreeTiledValueBuffer(WlzTiledValueBuffer *tBuf)
 * \param	tvb			Given tiled values buffer.
 * \param	tv			Given tiled values table.
 */
-void		WlzTiledValueBufferFlush(WlzTiledValueBuffer *tvb,
-				WlzTiledValues *tv)
+void				WlzTiledValueBufferFlush(
+				  WlzTiledValueBuffer *tvb,
+				  WlzTiledValues *tv)
 {
   if(tvb->valid && ((tvb->mode & WLZ_IOFLAGS_WRITE) != 0))
   {
@@ -541,19 +593,6 @@ void		WlzTiledValueBufferFlush(WlzTiledValueBuffer *tvb,
 	}
 	switch(tvb->gtype)
 	{
-	  case WLZ_GREY_LONG:
-	    {
-	      WlzLong *bp,
-		      *tp;
-
-	      tp = tv->tiles.lnp + (ii * tv->tileSz) + io;
-	      bp = tvb->lnbuf.lnp + kol;
-	      for(i = 0; i < itc; ++i)
-	      {
-		*tp++ = *bp++;
-	      }
-	    }
-	    break;
 	  case WLZ_GREY_INT:
 	    {
 	      int	 *bp,
@@ -692,30 +731,6 @@ void		WlzTiledValueBufferFill(WlzTiledValueBuffer *tvb,
       ii = *(tv->indices + tvb->li + ti[0]);
       switch(tvb->gtype)
       {
-	case WLZ_GREY_LONG:
-	  {
-	    WlzLong *bp;
-
-	    bp = tvb->lnbuf.lnp + kol;
-	    if(ii < 0)
-	    {
-	      for(i = 0; i < itc; ++i)
-	      {
-	        *bp++ = tv->bckgrnd.v.lnv;
-	      }
-	    }
-	    else
-	    {
-	      WlzLong *tp;
-
-	      tp = tv->tiles.lnp + (ii * tv->tileSz) + io;
-	      for(i = 0; i < itc; ++i)
-	      {
-		*bp++ = *tp++;
-	      }
-	    }
-	  }
-	  break;
 	case WLZ_GREY_INT:
 	  {
 	    int *bp;
@@ -888,12 +903,24 @@ void		WlzTiledValueBufferFill(WlzTiledValueBuffer *tvb,
 * \param	setTiles		Flag which must be set for the tiles
 * 					to be allocated and their values set.
 * \param	gType			Required grey type for values table.
+* \param	vRank			Rank of the individual values,
+* 					zero for scalar values, one for
+* 					vector values etc....
+* \param	vDim			Array of size vRank with individual
+* 					value dimensions, not used if vRank
+* 					is zero.
 * \param	bgdV			required background value.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static WlzObject  *WlzMakeTiledValuesObj2D(WlzObject *gObj, size_t tileSz,
-				int setTiles, WlzGreyType gType,
-				WlzPixelV bgdV, WlzErrorNum *dstErr)
+static WlzObject  		*WlzMakeTiledValuesObj2D(
+				  WlzObject *gObj,
+				  size_t tileSz,
+				  int setTiles,
+				  WlzGreyType gType,
+				  unsigned int vRank,
+				  unsigned int *vDim,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr)
 {
   size_t	width;
   WlzObject	*tObj = NULL;
@@ -938,11 +965,12 @@ static WlzObject  *WlzMakeTiledValuesObj2D(WlzObject *gObj, size_t tileSz,
   /* Create a new tiled values data structure. */
   if(errNum == WLZ_ERR_NONE)
   {
-    tVal = WlzMakeTiledValues(2, 0, &errNum);
+    tVal = WlzMakeTiledValues(2, vRank, &errNum);
   }
   /* Set up the fields of the tiled values data structure. */
   if(errNum == WLZ_ERR_NONE)
   {
+    int       i;
     WlzObject *dil = NULL,
 	      *idx = NULL,
 	      *scl = NULL,
@@ -954,12 +982,18 @@ static WlzObject  *WlzMakeTiledValuesObj2D(WlzObject *gObj, size_t tileSz,
 
     dom.core = NULL;
     val.core = NULL;
-    tVal->type = WlzGreyValueTableType(0, WLZ_GREY_TAB_TILED, gType, NULL);
+    tVal->type = WlzGreyValueTableType((vRank > 0)? 1: 0,
+                                       WLZ_GREY_TAB_TILED, gType, NULL);
     tVal->dim = 2;
     tVal->kol1 = gObj->domain.i->kol1;
     tVal->lastkl = gObj->domain.i->lastkl;
     tVal->line1 = gObj->domain.i->line1;
     tVal->lastln = gObj->domain.i->lastln;
+    tVal->vRank = vRank;
+    for(i = 0; i < vRank; ++ i)
+    {
+      tVal->vDim[i] = vDim[i];
+    }
     tVal->bckgrnd = bgdV;
     tVal->tileSz = tileSz;
     tVal->tileWidth = width;
@@ -1109,12 +1143,24 @@ static WlzObject  *WlzMakeTiledValuesObj2D(WlzObject *gObj, size_t tileSz,
 * \param	setTiles		Flag which must be set for the tiles
 * 					to be allocated and their values set.
 * \param	gType			Required grey type for values table.
+* \param	vRank			Rank of the individual values,
+* 					zero for scalar values, one for
+* 					vector values etc....
+* \param	vDim			Array of size vRank with individual
+* 					value dimensions, not used if vRank
+* 					is zero.
 * \param	bgdV			required background value.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
-static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
-				           int setTiles, WlzGreyType gType,
-					   WlzPixelV bgdV, WlzErrorNum *dstErr)
+static WlzObject  		*WlzMakeTiledValuesObj3D(
+				  WlzObject *gObj,
+				  size_t tileSz,
+				  int setTiles,
+				  WlzGreyType gType,
+				  unsigned int vRank,
+				  unsigned int *vDim,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr)
 {
   size_t	width;
   WlzObject	*tObj = NULL;
@@ -1159,11 +1205,12 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
   /* Create a new tiled values data structure. */
   if(errNum == WLZ_ERR_NONE)
   {
-    tVal = WlzMakeTiledValues(3, 0, &errNum);
+    tVal = WlzMakeTiledValues(3, vRank, &errNum);
   }
   /* Set up the fields of the tiled values data structure. */
   if(errNum == WLZ_ERR_NONE)
   {
+    int       i;
     WlzObject *dil = NULL,
 	      *idx = NULL,
 	      *scl = NULL,
@@ -1175,7 +1222,8 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
 
     dom.core = NULL;
     val.core = NULL;
-    tVal->type = WlzGreyValueTableType(0, WLZ_GREY_TAB_TILED, gType, NULL);
+    tVal->type = WlzGreyValueTableType((vRank > 0)? 1: 0,
+                                       WLZ_GREY_TAB_TILED, gType, NULL);
     tVal->dim = 3;
     tVal->kol1 = gObj->domain.p->kol1;
     tVal->lastkl = gObj->domain.p->lastkl;
@@ -1183,6 +1231,11 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
     tVal->lastln = gObj->domain.p->lastln;
     tVal->plane1 = gObj->domain.p->plane1;
     tVal->lastpl = gObj->domain.p->lastpl;
+    tVal->vRank = vRank;
+    for(i = 0; i < vRank; ++ i)
+    {
+      tVal->vDim[i] = vDim[i];
+    }
     tVal->bckgrnd = bgdV;
     tVal->tileSz = tileSz;
     tVal->tileWidth = width;
@@ -1246,6 +1299,7 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
     (void )WlzFreeObj(str);
     (void )WlzFreeObj(dil);
     (void )WlzFreeObj(scl);
+    (void )WlzFreeAffineTransform(tr);
     if(idx == NULL)
     {
       (void )WlzFreeVoxelValueTb(val.vox);
@@ -1279,6 +1333,7 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
       tVal->nIdx[1] = sz.vtY;
       tVal->nIdx[2] = sz.vtZ;
       tVal->indices = **idxArray;
+      AlcFree(*idxArray);
       AlcFree(idxArray);
     }
     (void )WlzFreeObj(idx);
@@ -1320,4 +1375,119 @@ static WlzObject  *WlzMakeTiledValuesObj3D(WlzObject *gObj, size_t tileSz,
     *dstErr = errNum;
   }
   return(tObj);
+}
+
+/*!
+* \ingroup	WlzValuesUtils
+* \brief	Copies a single line of grey values to a tiled value
+* 		table. This is done within the valid tiles which may
+* 		lie outside of an object's domain, so care should be used
+* 		when calling this function.
+* 		All the given coordinate values are with respect to the
+* 		tiled value table's origin.
+* \param	tv			Given tiled value table which must
+* 					be valid.
+* \param	gP			Source grey pointer to grey values
+* 					of the same type as the tiled value
+* 					table.
+* \param	pl			Plane coordinate.
+* \param	ln			Line coordinate.
+* \param	kl1			First column coordinate.
+* \param	lkl			Last column coordinate.
+*/
+void				WlzTiledValuesCopyLine(
+				  WlzTiledValues *tv,
+				  WlzGreyP gP,
+				  int pl,
+				  int ln,
+				  int kl1,
+				  int lkl)
+{
+  int		kl;
+  size_t	tyi,
+  		tyo;
+  WlzGreyType	gType;
+  WlzIVertex3	mx,
+  		ti,
+		to;
+
+  /* Make line coordinates relatrive to the tiled value table. */
+  mx.vtX = tv->lastkl - tv->kol1;
+  mx.vtY = tv->lastln - tv->line1;
+  gType = WLZ_GREY_TABLE_TO_GREY_TYPE(tv->type);
+  if(tv->dim < 3)
+  {
+    pl = 0;
+    mx.vtZ = 0;
+  }
+  else
+  {
+    mx.vtZ = tv->lastpl - tv->plane1;
+  }
+  /* Check for intersection. */
+  if((pl  >= 0) && (pl  <=  mx.vtZ) &&
+     (ln  >= 0) && (ln  <=  mx.vtY) &&
+     (lkl >= 0) && (kl1 <=  mx.vtX))
+  {
+    int		ix,
+    		vpe;
+
+    ix = 0;
+    lkl = ALG_MIN(lkl, mx.vtX);
+    kl1 = ALG_MAX(kl1, 0);
+    /* Compute values per element, tile offsets and tile indices. */
+    vpe = WlzTiledValuesValPerElm(tv);
+    to.vtY = ln % tv->tileWidth;
+    ti.vtY = ln / tv->tileWidth;
+    to.vtZ = pl % tv->tileWidth;
+    ti.vtZ = pl / tv->tileWidth;
+    tyo = ((to.vtZ * tv->tileWidth) + to.vtY) * tv->tileWidth;
+    tyi = ((ti.vtZ * tv->nIdx[1]) + ti.vtY) * tv->nIdx[0];
+    kl = kl1;
+    while(kl <= lkl)
+    {
+      int	io,
+      		cnt;
+      size_t	ii;
+
+      to.vtX = kl % tv->tileWidth;
+      ti.vtX = kl / tv->tileWidth;
+      io = tyo + to.vtX;
+      ii = tyi + ti.vtX;
+      cnt = tv->tileWidth - to.vtX;
+      if((ii >= 0) && (ii < tv->numTiles))
+      {
+	size_t	off;
+
+        ii = tv->indices[ii];
+	off = ((ii * tv->tileSz) + io) * vpe;
+	WlzValueCopyGreyToGrey(tv->tiles, off, gType, gP, ix,
+	                       gType, cnt * vpe);
+      }
+      ix += cnt;
+      kl += cnt;
+    }
+  }
+}
+
+/*!
+* \return	Number of values per pixel/voxel.
+* \ingroup	WlzValuesUtils
+* \brief	Computes the number of values per pixel/voxel for a
+* 		tiled value table.
+* \param	tVal			Given tiled value table which must
+* 					be valid with respect to it's value
+* 					rank and value dimension.
+*/
+int				WlzTiledValuesValPerElm(
+				  WlzTiledValues *tVal)
+{
+  int		idx,
+  		vpe = 1;
+
+  for(idx = 0; idx < tVal->vRank; ++idx)
+  {
+    vpe *= tVal->vDim[idx];
+  }
+  return(vpe);
 }
