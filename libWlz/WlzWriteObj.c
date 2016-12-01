@@ -3416,7 +3416,10 @@ static WlzErrorNum WlzWriteTiledValueTable(FILE *fP, WlzObject *obj,
     tSz = tVal->numTiles * tVal->tileSz;
     if(tVal->tiles.v != NULL)
     {
-      if(fwrite(tVal->tiles.v, gSz, tSz * vSz, fP) != tSz)
+      size_t	n;
+
+      n = tSz * vSz;
+      if(fwrite(tVal->tiles.v, gSz, n, fP) != n)
       {
         errNum = WLZ_ERR_WRITE_INCOMPLETE;
       }
