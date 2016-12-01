@@ -97,13 +97,16 @@ WlzObject	*WlzEffReadObjNrrd(FILE *fP, WlzErrorNum *dstErr)
     errNum = WlzEffHeadReadNrrd(&header, fP);
     if(errNum == WLZ_ERR_NONE)
     {
-      if((header.dimension == 2) || (header.dimension == 3))
+      switch(header.dimension)
       {
-        obj = WlzEffReadImgNrrd(fP, &header, &errNum);
-      }
-      else
-      {
-        errNum = WLZ_ERR_READ_INCOMPLETE;
+        case 2: /* FALLTHROUGH */
+	case 3: /* FALLTHROUGH */
+	case 4:
+	  obj = WlzEffReadImgNrrd(fP, &header, &errNum);
+	  break;
+        default:
+          errNum = WLZ_ERR_READ_INCOMPLETE;
+	  break;
       }
     }
     AlcFree(header.space);
@@ -684,7 +687,10 @@ static WlzErrorNum WlzEffHeadReadNrrd(WlzEffNrrdHeader *header, FILE *fP)
 	    }
 	    else
 	    {
-	      for(i = 0; i < header->dimension; ++i)
+	      int	n;
+
+	      n = (header->dimension > 3)? 3: header->dimension;
+	      for(i = 0; i < n; ++i)
 	      {
 	        if(((dscS = strtok(NULL, " ,()\n\r")) == NULL) ||
 		   (sscanf(dscS, "%lg", &(header->origin[i])) != 1))
@@ -823,6 +829,7 @@ static WlzErrorNum WlzEffHeadReadNrrd(WlzEffNrrdHeader *header, FILE *fP)
 static WlzObject *WlzEffReadImgNrrd(FILE *fP, WlzEffNrrdHeader *header,
 				    WlzErrorNum *dstErr)
 {
+  int		vLen = 1;
   size_t	nData = 0,
   		nrrdSz = 0,
   		wlzSz = 0;
@@ -838,13 +845,30 @@ static WlzObject *WlzEffReadImgNrrd(FILE *fP, WlzEffNrrdHeader *header,
    * their size and the appropriate Woolz grey type. */
   buf.v = NULL;
   if((header->version < 1) ||
-     (header->dimension < 2) || (header->dimension > 3) ||
      (header->encoding == WLZEFF_NRRD_ENCODE_UNSUP) ||
      (header->dataType == WLZEFF_NRRD_TYPE_UNSUP))
   {
     errNum = WLZ_ERR_READ_INCOMPLETE;
   }
   else
+  {
+    switch(header->dimension)
+    {
+      case 2: /* FALLTHROUGH */
+      case 3:
+        break;
+      case 4:
+	if(strncmp("vector", header->kinds, 6) != 0)
+	{
+	  errNum = WLZ_ERR_READ_INCOMPLETE;
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_READ_INCOMPLETE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
   {
     int		i;
 
@@ -1066,16 +1090,43 @@ static WlzObject *WlzEffReadImgNrrd(FILE *fP, WlzEffNrrdHeader *header,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Create a Woolz object with values allocated. */
-    objType = (header->dimension == 2)? WLZ_2D_DOMAINOBJ: WLZ_3D_DOMAINOBJ;
-    WLZ_VTX_3_SET(objSz,
-                  header->sizes[0],
-		  header->sizes[1],
-		  header->sizes[2]);
-    WLZ_VTX_3_SET(objOrg,
-                  ALG_NINT(header->origin[0]),
-                  ALG_NINT(header->origin[1]),
-		  ALG_NINT(header->origin[2]));
-    obj = WlzFromArray1D(objType, objSz, objOrg, gType, buf, 0, &errNum);
+    switch(header->dimension)
+    {
+      case 2:
+        objType = WLZ_2D_DOMAINOBJ;
+	WLZ_VTX_3_SET(objSz,
+		      header->sizes[0],
+		      header->sizes[1],
+		      0);
+	WLZ_VTX_3_SET(objOrg,
+		      ALG_NINT(header->origin[0]),
+		      ALG_NINT(header->origin[1]),
+		      0);
+	break;
+      case 3:
+        objType = WLZ_3D_DOMAINOBJ;
+	WLZ_VTX_3_SET(objSz, header->sizes[0], header->sizes[1],
+	              header->sizes[2]);
+	WLZ_VTX_3_SET(objOrg,
+		      ALG_NINT(header->origin[0]),
+		      ALG_NINT(header->origin[1]),
+		      ALG_NINT(header->origin[2]));
+	break;
+      case 4:
+        objType = WLZ_3D_DOMAINOBJ;
+	vLen = header->sizes[0];
+	WLZ_VTX_3_SET(objSz, header->sizes[1], header->sizes[2],
+	              header->sizes[3]);
+	WLZ_VTX_3_SET(objOrg,
+		      ALG_NINT(header->origin[1]),
+		      ALG_NINT(header->origin[2]),
+		      ALG_NINT(header->origin[3]));
+	break;
+      default:
+        /* Handled on entry. */
+	break;
+    }
+    obj = WlzFromArray1D(objType, objSz, objOrg, gType, vLen, buf, 0, &errNum);
   }
   AlcFree(buf.v);
   if(errNum == WLZ_ERR_NONE)
