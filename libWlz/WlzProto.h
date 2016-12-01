@@ -873,6 +873,7 @@ extern WlzObject		*WlzFromArray1D(
 				  WlzIVertex3 sz,
 				  WlzIVertex3 org,
 				  WlzGreyType gType,
+				  unsigned int vpe,
 				  WlzGreyP gDat,
 				  int noCopy,
 				  WlzErrorNum *dstErr);
@@ -6391,6 +6392,8 @@ extern WlzObject		*WlzMakeTiledValuesFromObj(
 				  size_t tileSz,
 				  int copyValues,
 				  WlzGreyType gType,
+				  unsigned int vRank,
+				  unsigned int *vDim,
 				  WlzPixelV bgdV,
 				  WlzErrorNum *dstErr);
 extern WlzTiledValueBuffer	*WlzMakeTiledValueBuffer(
@@ -6399,11 +6402,20 @@ extern WlzTiledValueBuffer	*WlzMakeTiledValueBuffer(
 extern int			WlzTiledValuesMode(
 				  WlzTiledValues *tv,
 				  WlzErrorNum *dstErr);
+extern int			WlzTiledValuesValPerElm(
+				  WlzTiledValues *tVal);
 extern void			WlzFreeTiledValueBuffer(
 				  WlzTiledValueBuffer *tBuf);
 extern void			WlzTiledValueBufferFlush(
 				  WlzTiledValueBuffer *tvb,
 				  WlzTiledValues *tv);
+extern void			WlzTiledValuesCopyLine(
+				  WlzTiledValues *tVal,
+				  WlzGreyP gP,
+				  int pn,
+				  int ln,
+				  int kl1,
+				  int lkl);
 extern void			WlzTiledValueBufferFill(
 				  WlzTiledValueBuffer *tvb,
 				  WlzTiledValues *tv);
