@@ -3951,6 +3951,17 @@ extern WlzObject 		*WlzImageArithmetic(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzImageBlend.c							*
+************************************************************************/
+extern WlzErrorNum		WlzImageBlendObjToBufRGBA(
+				  WlzUByte *buffer,
+				  WlzObject *obj,
+				  WlzIVertex2 bufOrg,
+				  WlzIVertex2 bufSz,
+				  WlzUInt useAlpha,
+				  WlzUInt color);
+
+/************************************************************************
 * WlzIndexObj.c
 ************************************************************************/
 extern WlzObject		*WlzIndexObjFromCompound(
