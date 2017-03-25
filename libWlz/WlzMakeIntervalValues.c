@@ -173,7 +173,12 @@ WlzMakeIntervalValues(WlzObjectType	type,
     v.i->kol1 = idom->kol1;
     v.i->width = idom->lastkl - idom->kol1 + 1;
     v.i->vil = vil;
-    v.i->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      v.i->linkcount = 0;
+    }
     v.i->original_table.core = NULL;
     vil--;
     if((errNum = WlzInitRasterScan(obj, &iwsp,

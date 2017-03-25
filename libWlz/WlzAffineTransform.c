@@ -783,6 +783,101 @@ WlzContour	*WlzAffineTransformContour(WlzContour *srcCtr,
 
 /*!
 * \ingroup	WlzTransform
+* \return				Transformed points or
+*					NULL on error.
+* \brief	Transforms the given contour.
+* \param	srcPts		 	Given points.
+* \param	tr			Given affine transform.
+* \param	newPtsFlg		Make a new points domain if non-zero,
+*					otherwise transform the given
+*					points in place.
+* \param	dstErr			Destination pointer for error
+*					number.
+*/
+WlzPoints	*WlzAffineTransformPoints(WlzPoints *srcPts,
+					  WlzAffineTransform *tr,
+					  int newPtsFlg,
+					  WlzErrorNum *dstErr)
+{
+  WlzPoints 	*dstPts = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(newPtsFlg)
+  {
+    dstPts = WlzMakePoints(srcPts->type, srcPts->nPoints, srcPts->points,
+                           srcPts->nPoints, &errNum);
+  }
+  else
+  {
+    dstPts = srcPts;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idx;
+
+    switch(dstPts->type)
+    {
+      case WLZ_POINTS_2I:
+	for(idx = 0; idx < dstPts->nPoints; ++idx)
+	{
+	  WlzIVertex2 *pnt;
+
+	  pnt = dstPts->points.i2 + idx;
+	  *pnt = WlzAffineTransformVertexI2(tr, *pnt, NULL);
+	}
+	break;
+      case WLZ_POINTS_2D:
+	for(idx = 0; idx < dstPts->nPoints; ++idx)
+	{
+	  WlzDVertex2 *pnt;
+
+	  pnt = dstPts->points.d2 + idx;
+	  *pnt = WlzAffineTransformVertexD2(tr, *pnt, NULL);
+	}
+	break;
+      case WLZ_POINTS_3I:
+	for(idx = 0; idx < dstPts->nPoints; ++idx)
+	{
+	  WlzIVertex3 *pnt;
+
+	  pnt = dstPts->points.i3 + idx;
+	  *pnt = WlzAffineTransformVertexI3(tr, *pnt, NULL);
+	}
+	break;
+      case WLZ_POINTS_3D:
+	for(idx = 0; idx < dstPts->nPoints; ++idx)
+	{
+	  WlzDVertex3 *pnt;
+
+	  pnt = dstPts->points.d3 + idx;
+	  *pnt = WlzAffineTransformVertexD3(tr, *pnt, NULL);
+	}
+	break;
+      default:
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(newPtsFlg)
+    {
+      WlzDomain dom;
+
+      dom.pts = dstPts;
+      (void )WlzFreeDomain(dom);
+    }
+    dstPts = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstPts);
+}
+
+/*!
+* \ingroup	WlzTransform
 * \return				Transformed model or
 *					NULL on error.
 * \brief	Transforms the given geometric model.
@@ -3239,6 +3334,7 @@ WlzObject	*WlzAffineTransformObjCb(WlzObject *srcObj,
       case WLZ_CMESH_2D:
       case WLZ_CMESH_2D5:
       case WLZ_CMESH_3D:
+      case WLZ_POINTS:
       case WLZ_TRANS_OBJ:
       case WLZ_AFFINE_TRANS:
 	if(srcObj->domain.core == NULL)
@@ -3284,6 +3380,10 @@ WlzObject	*WlzAffineTransformObjCb(WlzObject *srcObj,
 	      dstDom.cm3 = WlzAffineTransformCMesh3D(srcObj->domain.cm3,
 	      					     trans, &errNum);
 	      srcValues = srcObj->values;
+	      break;
+	    case WLZ_POINTS:
+	      dstDom.pts = WlzAffineTransformPoints(srcObj->domain.pts, trans,
+	                                            1, &errNum);
 	      break;
 	    default:
 	      errNum = WLZ_ERR_OBJECT_TYPE;

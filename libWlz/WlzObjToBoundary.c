@@ -128,7 +128,12 @@ WlzObject *WlzObjToBoundary(
   WlzErrorNum		errNum=WLZ_ERR_NONE;
 
   uhole.type = WLZ_BOUNDLIST_HOLE;
-  uhole.linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+  {
+    uhole.linkcount = 0;
+  }
   uhole.freeptr = NULL;
   uhole.up = NULL;
   uhole.next = NULL;
@@ -557,7 +562,12 @@ WlzObject *WlzObjToBoundary(
    * Also remember that makemain() increments the "idom" linkcount.
    */
   if( errNum == WLZ_ERR_NONE ){
-    (bi+1)->lb->linkcount=0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      (bi+1)->lb->linkcount=0;
+    }
     domain.b = (bi+1)->lb;
     values.core = NULL;
     bobj = WlzMakeMain(WLZ_BOUNDLIST, domain, values, NULL, NULL, &errNum);
@@ -634,7 +644,12 @@ static int nextunprocessed(WlzBoundInterval *bi,
        */
       bl = (WlzBoundList *)AlcCalloc(sizeof(WlzBoundList), 1);
       bl->type = WLZ_BOUNDLIST_PIECE;
-      bl->linkcount = 1;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+      {
+        bl->linkcount = 1;
+      }
       bnd_link(bl,(bi-1)->rb);
       bi->lb = bl;
       bp->bi = bi;
@@ -651,7 +666,12 @@ static int nextunprocessed(WlzBoundInterval *bi,
        */
       bl = (WlzBoundList *) AlcCalloc(sizeof(WlzBoundList),1);
       bl->type = WLZ_BOUNDLIST_HOLE;
-      bl->linkcount = 1;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+      {
+        bl->linkcount = 1;
+      }
       bnd_link(bl,bi->lb);
       bi->rb = bl;
       bp->bi = bi;

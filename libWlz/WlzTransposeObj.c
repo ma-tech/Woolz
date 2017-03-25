@@ -158,7 +158,12 @@ WlzObject *WlzTransposeObj(
       case WLZ_RECTANGLE_DOMAIN_INT:
 	domain.r = (WlzIRect *) AlcMalloc(sizeof(WlzIRect));
 	domain.r->type = WLZ_RECTANGLE_DOMAIN_INT;
-	domain.r->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+	{
+	  domain.r->linkcount = 0;
+	}
 	domain.r->freeptr = NULL;
 	for(i=0; i < 4; i++){
 	  domain.r->irk[i] = obj->domain.r->irl[i];
@@ -171,7 +176,12 @@ WlzObject *WlzTransposeObj(
       case WLZ_RECTANGLE_DOMAIN_FLOAT:
 	domain.fr = (WlzFRect *) AlcMalloc(sizeof(WlzFRect));
 	domain.fr->type = WLZ_RECTANGLE_DOMAIN_FLOAT;
-	domain.fr->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+	{
+	  domain.fr->linkcount = 0;
+	}
 	domain.fr->freeptr = NULL;
 	for(i=0; i < 4; i++){
 	  domain.fr->frk[i] = obj->domain.fr->frl[i];

@@ -157,7 +157,12 @@ WlzMakeCompoundArray(WlzObjectType	type,
     if (type == WLZ_COMPOUND_ARR_1){
       co->otype = otype;
     }
-    co->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      co->linkcount = 0;
+    }
   }
 
   if( dstErr ){

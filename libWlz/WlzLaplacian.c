@@ -146,7 +146,12 @@ WlzObject	*WlzLaplacian(WlzObject *srcObj, int kSize,
   if(errNum == WLZ_ERR_NONE)
   {
     tmpObj = srcObj;
-    lConv.linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      lConv.linkcount = 0;
+    }
     lConv.xsize = kSize;
     lConv.ysize = kSize;
     lConv.cv = NULL;

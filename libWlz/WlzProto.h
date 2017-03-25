@@ -530,6 +530,11 @@ extern WlzGMModel      		*WlzAffineTransformGMModel(
 extern WlzErrorNum		WlzAffineTransformGMShell(
 				  WlzGMShell *shell,
 				  WlzAffineTransform *tr);
+extern WlzPoints		*WlzAffineTransformPoints(
+				  WlzPoints *srcPts,
+				  WlzAffineTransform *tr,
+				  int newPtsFlg,
+				  WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
 extern WlzErrorNum	     	WlzAffineTransformPrimGet(
 				  WlzAffineTransform *tr,

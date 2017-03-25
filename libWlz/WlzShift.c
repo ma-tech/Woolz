@@ -499,7 +499,12 @@ WlzValues	 WlzShiftValues(WlzObjectType inObjType, WlzValues inVal,
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 	        outVal.i->type = inVal.i->type;
-		outVal.i->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+		{
+		  outVal.i->linkcount = 0;
+		}
 		outVal.i->freeptr = NULL;
 		outVal.i->original_table = WlzAssignValues(inVal, NULL);
 		outVal.i->line1 = inVal.i->line1 + yShift;

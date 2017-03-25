@@ -114,7 +114,12 @@ WlzObject	*WlzSobel(WlzObject *srcObj, int hFlag, int vFlag,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    sConv.linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      sConv.linkcount = 0;
+    }
     sConv.xsize = 3;
     sConv.ysize = 3;
     sConv.cv = NULL;

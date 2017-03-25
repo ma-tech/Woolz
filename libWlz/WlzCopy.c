@@ -475,12 +475,17 @@ WlzValues	 WlzCopyValues(WlzObjectType inObjType, WlzValues inVal,
 	    (void )WlzFreeObj(tObj1);
 	  }
 	  (void )WlzFreeObj(tObj0);
-	  if(outVal.core && (outVal.core->linkcount == 1))
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
 	  {
-	    /* The linkcount is 1 but returned objects, values, etc should
-	     * have a linkcount of 0 unless they are used more than once.
-	     */
-	    outVal.core->linkcount = 0;
+	    if(outVal.core && (outVal.core->linkcount == 1))
+	    {
+	      /* The linkcount is 1 but returned objects, values, etc should
+	       * have a linkcount of 0 unless they are used more than once.
+	       */
+	      outVal.core->linkcount = 0;
+	    }
 	  }
 	}
 	break;

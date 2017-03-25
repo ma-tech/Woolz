@@ -124,7 +124,12 @@ WlzIntervalDomain *WlzMakeIntervalDomain(WlzObjectType type,
     idom->kol1 = k1;
     idom->lastkl = kl;
     idom->freeptr = NULL;
-    idom->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      idom->linkcount = 0;
+    }
   }
 
   if( dstErr ){
@@ -207,7 +212,12 @@ WlzMakePlaneDomain(WlzObjectType type,
     planedm->kol1 = k1;
     planedm->lastkl = kl;
     planedm->freeptr = NULL;
-    planedm->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      planedm->linkcount = 0;
+    }
     planedm->voxel_size[0] = 1.0;
     planedm->voxel_size[1] = 1.0;
     planedm->voxel_size[2] = 1.0;
@@ -431,7 +441,12 @@ WlzMakeMain(WlzObjectType 	type,
     case WLZ_RECTANGLE:
     case WLZ_TRANS_OBJ:
       obj->type = type;
-      obj->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+      {
+        obj->linkcount = 0;
+      }
       obj->domain = WlzAssignDomain(domain, &errNum);
       if( errNum == WLZ_ERR_NONE ){
 	obj->values = WlzAssignValues(values, &errNum);
@@ -587,7 +602,12 @@ WlzMakeValueTb(WlzObjectType	type,
   }
   if( errNum == WLZ_ERR_NONE ){
     vtb->freeptr = NULL;
-    vtb->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      vtb->linkcount = 0;
+    }
     vtb->vtblines = (WlzValueLine *) (vtb + 1);
     vtb->original_table.core = NULL;
   }
@@ -661,7 +681,12 @@ WlzMakeVoxelValueTb(WlzObjectType	type,
       voxtab->bckgrnd = backgrnd;
       voxtab->freeptr = NULL;
       voxtab->original_table.core = NULL;
-      voxtab->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+      {
+        voxtab->linkcount = 0;
+      }
       voxtab->values = (WlzValues *) (voxtab + 1);
       for(p=0; p < nplanes; p++){
 	voxtab->values[p].core = NULL;
@@ -739,7 +764,12 @@ WlzMakeRectValueTb(WlzObjectType	type,
     else {
       vtb->type = type;
       vtb->freeptr = NULL;
-      vtb->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+      {
+        vtb->linkcount = 0;
+      }
       vtb->line1 = line1;
       vtb->lastln = lastln;
       vtb->kol1 = kol1;
@@ -1374,7 +1404,12 @@ WlzMakePolygonDomain(WlzObjectType	type,
       p->type = type;
       p->nvertices = n;
       p->maxvertices = maxv;
-      p->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+      {
+        p->linkcount = 0;
+      }
       if( copy == 0 ){
 	p->vtx = vertices;
       } 
@@ -1435,7 +1470,12 @@ WlzMakeBoundList(WlzObjectType		type,
     }
     else {
       blist->type = type;
-      blist->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+      {
+	blist->linkcount = 0;
+      }
       blist->freeptr = NULL;
       blist->up = NULL;
       blist->next = NULL;

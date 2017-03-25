@@ -3002,7 +3002,12 @@ static WlzIRect *WlzReadRect(FILE *fp, WlzErrorNum *dstErr)
 	  break;
 	}
 	ir->type = type;
-	ir->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+	{
+	  ir->linkcount = 0;
+	}
 	ir->freeptr = NULL;
 	for(i=0; i < 4; i++){
 	  ir->irk[i] = getword(fp);
@@ -3019,7 +3024,12 @@ static WlzIRect *WlzReadRect(FILE *fp, WlzErrorNum *dstErr)
 	  break;
 	}
 	fr->type = type;
-	fr->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+	{
+	  fr->linkcount = 0;
+	}
 	fr->freeptr = NULL;
 	for(i=0; i < 4; i++){
 	  fr->frk[i] = getfloat(fp);
@@ -3274,7 +3284,12 @@ static WlzAffineTransform *WlzReadAffineTransform(FILE *fp,
   else if((trans = WlzMakeAffineTransform(type, &errNum)) != NULL){
 
     /* set linkcount and freeptr */
-    trans->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      trans->linkcount = 0;
+    }
     trans->freeptr   = NULL;
 
     /* This code has been commented out rather than removed, just incase
@@ -3349,7 +3364,12 @@ static WlzWarpTrans *WlzReadWarpTrans(FILE *fp, WlzErrorNum *dstErr)
   }
   else {
     obj->type = type;
-    obj->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      obj->linkcount = 0;
+    }
 
     obj->nelts = getword(fp);
     obj->nodes = getword(fp);
@@ -3464,7 +3484,12 @@ static WlzFMatchObj *WlzReadFMatchObj(FILE *fp,
   }
   else {
     obj->type = WLZ_FMATCHOBJ;
-    obj->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      obj->linkcount = 0;
+    }
 
     obj->nopts = getword(fp);
     if( feof(fp) != 0 ){
@@ -3529,7 +3554,12 @@ static Wlz3DWarpTrans *WlzRead3DWarpTrans(FILE *fp, WlzErrorNum *dstErr)
   }
   else {
     obj->type = WLZ_3D_WARP_TRANS;
-    obj->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      obj->linkcount = 0;
+    }
     obj->iteration = getword(fp);
     obj->currentplane = getword(fp);
     obj->maxdisp = getfloat(fp);
@@ -3546,7 +3576,12 @@ static Wlz3DWarpTrans *WlzRead3DWarpTrans(FILE *fp, WlzErrorNum *dstErr)
       obj = NULL;
     }
     else {
-      obj->pdom->linkcount = 1;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+      {
+        obj->pdom->linkcount = 1;
+      }
       nplanes = obj->pdom->lastln - obj->pdom->line1 + 1;
       if( (obj->intptdoms = (WlzFMatchObj **)
 	   AlcMalloc(sizeof(WlzFMatchObj *) * nplanes)) == NULL ){
@@ -3559,7 +3594,12 @@ static Wlz3DWarpTrans *WlzRead3DWarpTrans(FILE *fp, WlzErrorNum *dstErr)
 	intdoms = obj->intptdoms;
 	for(i=obj->pdom->plane1; i<=obj->pdom->lastpl; i++, intdoms++){
 	  if( (*intdoms = WlzReadFMatchObj(fp, &errNum)) ){
-	    (*intdoms)->linkcount = 1;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+	    {
+	      (*intdoms)->linkcount = 1;
+	    }
 	  }
 	  else if( errNum != WLZ_ERR_EOO ){
 	    WlzFree3DWarpTrans(obj);
@@ -4017,7 +4057,12 @@ WlzMeshTransform *WlzReadMeshTransform2D(FILE *fp,
   else
   {
     obj->type = WLZ_TRANSFORM_2D_MESH;
-    obj->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      obj->linkcount = 0;
+    }
 
     obj->nElem = getword(fp);
     obj->nNodes = getword(fp);
