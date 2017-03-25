@@ -1645,31 +1645,45 @@ extern WlzCompoundArray		*WlzCMeshTransformManyObjAsIdx(
 extern WlzErrorNum		WlzCMeshTransformVtxAry2I(
 				  WlzObject *mObj,
 				  int sizeArrayVtx,
-				  WlzIVertex2 *arrayVtx);
+				  WlzIVertex2 *arrayVtx,
+				  int sizeArrayInside,
+				  WlzUByte *arrayInside);
 extern WlzErrorNum		WlzCMeshTransformVtxAry3I(
 				  WlzObject *mObj,
 				  int sizeArrayVtx,
-				  WlzIVertex3 *arrayVtx);
+				  WlzIVertex3 *arrayVtx,
+				  int sizeArrayInside,
+				  WlzUByte *arrayInside);
 extern WlzErrorNum		WlzCMeshTransformVtxAry2F(
 				  WlzObject *mObj,
 				  int sizeArrayVtx,
-				  WlzFVertex2 *arrayVtx);
+				  WlzFVertex2 *arrayVtx,
+				  int sizeArrayInside,
+				  WlzUByte *arrayInside);
 extern WlzErrorNum		WlzCMeshTransformVtxAry3F(
 				  WlzObject *mObj,
 				  int sizeArrayVtx,
-				  WlzFVertex3 *arrayVtx);
+				  WlzFVertex3 *arrayVtx,
+				  int sizeArrayInside,
+				  WlzUByte *arrayInside);
 extern WlzErrorNum		WlzCMeshTransformVtxAry2D(
 				  WlzObject *mObj,
 				  int sizeArrayVtx,
-				  WlzDVertex2 *arrayVtx);
+				  WlzDVertex2 *arrayVtx,
+				  int sizeArrayInside,
+				  WlzUByte *arrayInside);
 extern WlzErrorNum		WlzCMeshTransformVtxAry2D5(
 				  WlzObject *mObj,
 				  int sizeArrayVtx,
-				  WlzDVertex3 *arrayVtx);
+				  WlzDVertex3 *arrayVtx,
+				  int sizeArrayInside,
+				  WlzUByte *arrayInside);
 extern WlzErrorNum		WlzCMeshTransformVtxAry3D(
 				  WlzObject *mObj,
 				  int sizeArrayVtx,
-				  WlzDVertex3 *arrayVtx);
+				  WlzDVertex3 *arrayVtx,
+				  int sizeArrayInside,
+				  WlzUByte *arrayInside);
 extern WlzErrorNum		WlzScaleCMeshValue(
                                   double scale,
                                   WlzObject *obj);
