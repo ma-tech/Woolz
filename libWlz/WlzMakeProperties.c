@@ -104,7 +104,12 @@ WlzSimpleProperty *WlzMakeSimpleProperty(int size, WlzErrorNum *dstErr)
   else
   {
     p->type = WLZ_PROPERTY_SIMPLE;
-    p->linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      p->linkcount = 0;
+    }
     p->size = size;
     if((p->prop = AlcMalloc(size)) == NULL)
     {
