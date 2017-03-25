@@ -61,21 +61,19 @@ WlzObject	*WlzAssignObject(WlzObject *obj, WlzErrorNum *dstErr)
 
   if(obj)
   {
-    if(obj->linkcount < 0)
-    {
-      errNum = WLZ_ERR_LINKCOUNT_DATA;
-    }
-    else
-    {
-      rtnObj = obj;
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)
+#endif
+    {
+      if(obj->linkcount < 0)
       {
-#endif
-        obj->linkcount++;
-#ifdef _OPENMP
+	errNum = WLZ_ERR_LINKCOUNT_DATA;
       }
-#endif
+      else
+      {
+	rtnObj = obj;
+	obj->linkcount++;
+      }
     }
   }
 #ifdef WLZ_NO_NULL
@@ -106,21 +104,19 @@ WlzDomain 	WlzAssignDomain(WlzDomain domain, WlzErrorNum *dstErr)
   rtnDomain.core = NULL;
   if(domain.core)
   {
-    if(domain.core->linkcount < 0)
-    {
-      errNum = WLZ_ERR_LINKCOUNT_DATA;
-    }
-    else
-    {
-      rtnDomain = domain;
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)
+#endif
+    {
+      if(domain.core->linkcount < 0)
       {
-#endif
-        domain.core->linkcount++;
-#ifdef _OPENMP
+	errNum = WLZ_ERR_LINKCOUNT_DATA;
       }
-#endif
+      else
+      {
+	rtnDomain = domain;
+	domain.core->linkcount++;
+      }
     }
   }
 #ifdef WLZ_NO_NULL
@@ -151,21 +147,21 @@ WlzValues 	WlzAssignValues(WlzValues values, WlzErrorNum	*dstErr)
   rtnValues.core = NULL;
   if(values.core)
   {
-    if(values.core->linkcount < 0)
-    {
-      errNum = WLZ_ERR_LINKCOUNT_DATA;
-    }
-    else
-    {
-      rtnValues = values;
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)
+#endif
+    {
+      if(values.core->linkcount < 0)
       {
-#endif
-        values.core->linkcount++;
-#ifdef _OPENMP
+	errNum = WLZ_ERR_LINKCOUNT_DATA;
       }
-#endif
+      else
+      {
+	rtnValues = values;
+	{
+	  values.core->linkcount++;
+	}
+      }
     }
   }
 #ifdef WLZ_NO_NULL
@@ -197,21 +193,19 @@ WlzProperty WlzAssignProperty(WlzProperty property, WlzErrorNum *dstErr)
   rtnProp.core = NULL;
   if(property.core)
   {
-    if(property.core->linkcount < 0)
-    {
-      errNum = WLZ_ERR_LINKCOUNT_DATA;
-    }
-    else
-    {
-      rtnProp = property;
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)
+#endif
+    {
+      if(property.core->linkcount < 0)
       {
-#endif
-        property.core->linkcount++;
-#ifdef _OPENMP
+	errNum = WLZ_ERR_LINKCOUNT_DATA;
       }
-#endif
+      else
+      {
+	rtnProp = property;
+	property.core->linkcount++;
+      }
     }
   }
 #ifdef WLZ_NO_NULL
@@ -242,21 +236,21 @@ WlzPropertyList *WlzAssignPropertyList(WlzPropertyList *pList,
 
   if(pList)
   {
-    if(pList->linkcount < 0)
-    {
-      errNum = WLZ_ERR_LINKCOUNT_DATA;
-    }
-    else
-    {
-      rtnPList = pList;
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)
+#endif
+    {
+      if(pList->linkcount < 0)
       {
-#endif
-        pList->linkcount++;
-#ifdef _OPENMP
+	errNum = WLZ_ERR_LINKCOUNT_DATA;
       }
-#endif
+      else
+      {
+	rtnPList = pList;
+	{
+	  pList->linkcount++;
+	}
+      }
     }
   }
 #ifdef WLZ_NO_NULL
@@ -289,21 +283,21 @@ WlzAffineTransform *WlzAssignAffineTransform(
 
   if(trans)
   {
-    if(trans->linkcount < 0)
-    {
-      errNum = WLZ_ERR_LINKCOUNT_DATA;
-    }
-    else
-    {
-      rtnTrans = trans;
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)
+#endif
+    {
+      if(trans->linkcount < 0)
       {
-#endif
-        ++(trans->linkcount);
-#ifdef _OPENMP
+	errNum = WLZ_ERR_LINKCOUNT_DATA;
       }
-#endif
+      else
+      {
+	rtnTrans = trans;
+	{
+	  ++(trans->linkcount);
+	}
+      }
     }
   }
 #ifdef WLZ_NO_NULL
@@ -335,21 +329,21 @@ WlzTransform 	WlzAssignTransform(WlzTransform t, WlzErrorNum *dstErr)
   tR.core = NULL;
   if(t.core)
   {
-    if(t.core->linkcount < 0)
-    {
-      errNum = WLZ_ERR_LINKCOUNT_DATA;
-    }
-    else
-    {
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)
+#endif
+    {
+      if(t.core->linkcount < 0)
       {
-#endif
-        ++(t.core->linkcount);
-#ifdef _OPENMP
+	errNum = WLZ_ERR_LINKCOUNT_DATA;
       }
-#endif
-      tR = t;
+      else
+      {
+	{
+	  ++(t.core->linkcount);
+	}
+	tR = t;
+      }
     }
   }
   if(dstErr)
@@ -376,21 +370,21 @@ WlzThreeDViewStruct *WlzAssign3DViewStruct(
 
   if( viewStr )
   {
-    if(viewStr->linkcount < 0)
-    {
-      errNum = WLZ_ERR_LINKCOUNT_DATA;
-    }
-    else
-    {
-      rtnViewStr = viewStr;
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)
+#endif
+    {
+      if(viewStr->linkcount < 0)
       {
-#endif
-        ++(viewStr->linkcount);
-#ifdef _OPENMP
+	errNum = WLZ_ERR_LINKCOUNT_DATA;
       }
-#endif
+      else
+      {
+	rtnViewStr = viewStr;
+	{
+	  ++(viewStr->linkcount);
+	}
+      }
     }
   }
 #ifdef WLZ_NO_NULL
@@ -421,21 +415,21 @@ WlzBoundList 	*WlzAssignBoundList(WlzBoundList *blist, WlzErrorNum *dstErr)
 
   if(blist)
   {
-    if(blist->linkcount < 0)
-    {
-      errNum = WLZ_ERR_LINKCOUNT_DATA;
-    }
-    else
-    {
-      rtnBlist = blist;
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)
+#endif
+    {
+      if(blist->linkcount < 0)
       {
-#endif
-        ++(blist->linkcount);
-#ifdef _OPENMP
+	errNum = WLZ_ERR_LINKCOUNT_DATA;
       }
-#endif
+      else
+      {
+	rtnBlist = blist;
+	{
+	  ++(blist->linkcount);
+	}
+      }
     }
   }
 #ifdef WLZ_NO_NULL
@@ -468,21 +462,21 @@ WlzPolygonDomain *WlzAssignPolygonDomain(
 
   if(poly)
   {
-    if(poly->linkcount < 0)
-    {
-      errNum = WLZ_ERR_LINKCOUNT_DATA;
-    }
-    else
-    {
-      rtnPoly = poly;
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)
+#endif
+    {
+      if(poly->linkcount < 0)
       {
-#endif
-	++(poly->linkcount);
-#ifdef _OPENMP
+	errNum = WLZ_ERR_LINKCOUNT_DATA;
       }
-#endif
+      else
+      {
+	rtnPoly = poly;
+	{
+	  ++(poly->linkcount);
+	}
+      }
     }
   }
 #ifdef WLZ_NO_NULL
@@ -513,21 +507,21 @@ WlzGMModel 	*WlzAssignGMModel(WlzGMModel *model, WlzErrorNum *dstErr)
 
   if(model)
   {
-    if(model->linkcount < 0)
-    {
-      errNum = WLZ_ERR_LINKCOUNT_DATA;
-    }
-    else
-    {
-      rtnModel = model;
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)
+#endif
+    {
+      if(model->linkcount < 0)
       {
-#endif
-      ++(model->linkcount);
-#ifdef _OPENMP
+	errNum = WLZ_ERR_LINKCOUNT_DATA;
       }
-#endif
+      else
+      {
+	rtnModel = model;
+	{
+	  ++(model->linkcount);
+	}
+      }
     }
   }
   if(dstErr)
@@ -550,28 +544,24 @@ int		WlzUnlink(int *linkcount, WlzErrorNum *dstErr)
   int		canFree = 0;
   WlzErrorNum	errNum = WLZ_ERR_PARAM_NULL;
 
-  if(linkcount)
-  {
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)
+#endif
+  if(linkcount)
+  {
+    if(*linkcount < 0)
     {
-#endif
-      if(*linkcount < 0)
-      {
-	errNum = WLZ_ERR_LINKCOUNT_DATA;
-      }
-      else
-      {
-	errNum = WLZ_ERR_NONE;
-	  if(--*linkcount <= 0)
-	  {
-	    *linkcount = -1;
-	    canFree = 1;
-	  }
-      }
-#ifdef _OPENMP
+      errNum = WLZ_ERR_LINKCOUNT_DATA;
     }
-#endif
+    else
+    {
+      errNum = WLZ_ERR_NONE;
+      if(--*linkcount <= 0)
+      {
+	*linkcount = -1;
+	canFree = 1;
+      }
+    }
   }
   if(dstErr)
   {
