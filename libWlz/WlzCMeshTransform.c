@@ -360,6 +360,12 @@ static WlzObject 		*WlzCMeshTransformObjV3D(
 				  WlzObject *mObj,
 				  WlzInterpolationType interp,
 				  WlzErrorNum *dstErr);
+static WlzPoints		*WlzCMeshTransformPoints(
+				  WlzPoints *srcPts,
+				  WlzObject *mObj,
+				  int newPtsFlg,
+				  WlzUByte *inside,
+				  WlzErrorNum *dstErr);
 static WlzContour		*WlzCMeshTransformContour(
 				  WlzContour *srcCtr,
 				  WlzObject *mObj,
@@ -540,7 +546,7 @@ static WlzObject *WlzCMeshTransformInvert2D(WlzObject *gObj,
        (gIxv->dim[0] < 2) ||
        (gIxv->vType != WLZ_GREY_DOUBLE))
     {
-      errNum = WLZ_ERR_VALUES_TYPE;
+      errNum = WLZ_ERR_VALUES_DATA;
     }
   }
   if(((errNum == WLZ_ERR_NONE) &&
@@ -700,7 +706,7 @@ static WlzObject *WlzCMeshTransformInvert2D5(WlzObject *gObj,
        (gIxv->dim[0] < 3) ||
        (gIxv->vType != WLZ_GREY_DOUBLE))
     {
-      errNum = WLZ_ERR_VALUES_TYPE;
+      errNum = WLZ_ERR_VALUES_DATA;
     }
   }
   if(((errNum == WLZ_ERR_NONE) &&
@@ -862,7 +868,7 @@ static WlzObject *WlzCMeshTransformInvert3D(WlzObject *gObj,
        (gIxv->dim[0] < 3) ||
        (gIxv->vType != WLZ_GREY_DOUBLE))
     {
-      errNum = WLZ_ERR_VALUES_TYPE;
+      errNum = WLZ_ERR_VALUES_DATA;
     }
   }
   if(((errNum == WLZ_ERR_NONE) &&
@@ -1104,13 +1110,21 @@ WlzObject	*WlzCMeshTransformFromObj(WlzObject *srcObj,
 *		array in place and using the given conforming mesh
 *		transform. If a vertex is outside the mest it is
 *		displaced using the displacement of the closest node
-*		in the mesh.
+*		in the mesh and these vertices may be flagged using
+*		an array of byte masks if provided. Vertices flagged
+*		outside the mesh may be removed using WlzVerticesSqueeze2I().
 * \param	mObj			The mesh transform object.
 * \param	nVtx			Number of vertices in the array.
 * \param	vtx			Array of vertices.
+* \param	nInside			Number of inside markers (must
+* 					be zero or >= the number of vertices).
+* \param	inside			Inside byte flags set to zero or one;
+* 					zero when vertices are inside the mesh,
+* 					otherwise one.
 */
 WlzErrorNum	WlzCMeshTransformVtxAry2I(WlzObject *mObj,
-					 int nVtx, WlzIVertex2 *vtx)
+					 int nVtx, WlzIVertex2 *vtx,
+					 int nInside, WlzUByte *inside)
 {
   int		idN,
   		lastElmIdx,
@@ -1122,39 +1136,56 @@ WlzErrorNum	WlzCMeshTransformVtxAry2I(WlzObject *mObj,
   WlzCMeshScanElm2D sE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   
-  nearNod = -1;
-  lastElmIdx = -1;
-  mesh = mObj->domain.cm2;
-  ixv = mObj->values.x;
-  for(idN = 0; idN < nVtx; ++idN)
+  if(mObj == NULL)
   {
-    if(((sE.idx = WlzCMeshElmEnclosingPos2D(mesh, lastElmIdx,
-			(double )(vtx[idN].vtX), (double )(vtx[idN].vtY),
-		        0, &nearNod)) < 0) && (nearNod < 0))
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(((nVtx > 0) && (vtx == NULL)) || ((nInside > 0) && (inside == NULL)))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if((nVtx < 0) || ((nInside > 0) && (nInside < nVtx)))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    nearNod = -1;
+    lastElmIdx = -1;
+    mesh = mObj->domain.cm2;
+    ixv = mObj->values.x;
+    for(idN = 0; idN < nVtx; ++idN)
     {
-      errNum = WLZ_ERR_DOMAIN_DATA;
-      break;
-    }
-    if(sE.idx > 0)
-    {
-      if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+      if(((sE.idx = WlzCMeshElmEnclosingPos2D(mesh, lastElmIdx,
+			  (double )(vtx[idN].vtX), (double )(vtx[idN].vtY),
+			  0, &nearNod)) < 0) && (nearNod < 0))
       {
-	WlzCMeshUpdateScanElm2D(mObj, &sE, 1);
-	lastElmIdx = sE.idx;
+	errNum = WLZ_ERR_DOMAIN_DATA;
+	break;
       }
-      tVtx.vtX = (sE.trX[0] * vtx[idN].vtX) +
-		 (sE.trX[1] * vtx[idN].vtY) + sE.trX[2];
-      tVtx.vtY = (sE.trY[0] * vtx[idN].vtX) +
-		 (sE.trY[1] * vtx[idN].vtY) + sE.trY[2];
+      if(sE.idx > 0)
+      {
+        inside[idN] = 1;
+	if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+	{
+	  WlzCMeshUpdateScanElm2D(mObj, &sE, 1);
+	  lastElmIdx = sE.idx;
+	}
+	tVtx.vtX = (sE.trX[0] * vtx[idN].vtX) +
+		   (sE.trX[1] * vtx[idN].vtY) + sE.trX[2];
+	tVtx.vtY = (sE.trY[0] * vtx[idN].vtX) +
+		   (sE.trY[1] * vtx[idN].vtY) + sE.trY[2];
+      }
+      else
+      {
+	inside[idN] = 0;
+	dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
+	tVtx.vtX = vtx[idN].vtX + dsp[0];
+	tVtx.vtY = vtx[idN].vtY + dsp[1];
+      }
+      vtx[idN].vtX = WLZ_NINT(tVtx.vtX);
+      vtx[idN].vtY = WLZ_NINT(tVtx.vtY);
     }
-    else
-    {
-      dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
-      tVtx.vtX = vtx[idN].vtX + dsp[0];
-      tVtx.vtY = vtx[idN].vtY + dsp[1];
-    }
-    vtx[idN].vtX = WLZ_NINT(tVtx.vtX);
-    vtx[idN].vtY = WLZ_NINT(tVtx.vtY);
   }
   return(errNum);
 }
@@ -1166,13 +1197,21 @@ WlzErrorNum	WlzCMeshTransformVtxAry2I(WlzObject *mObj,
 *		array in place and using the given conforming mesh
 *		transform. If a vertex is outside the mest it is
 *		displaced using the displacement of the closest node
-*		in the mesh.
+*		in the mesh and these vertices may be flagged using
+*		an array of byte masks if provided. Vertices flagged
+*		outside the mesh may be removed using WlzVerticesSqueeze3I().
 * \param	mObj			The mesh transform object.
 * \param	nVtx			Number of vertices in the array.
 * \param	vtx			Array of vertices.
+* \param	nInside			Number of inside markers (must
+* 					be zero or >= the number of vertices).
+* \param	inside			Inside byte flags set to zero or one;
+* 					zero when vertices are inside the mesh,
+* 					otherwise one.
 */
 WlzErrorNum	WlzCMeshTransformVtxAry3I(WlzObject *mObj,
-					 int nVtx, WlzIVertex3 *vtx)
+					 int nVtx, WlzIVertex3 *vtx,
+					 int nInside, WlzUByte *inside)
 {
   int		idN,
   		lastElmIdx,
@@ -1184,44 +1223,61 @@ WlzErrorNum	WlzCMeshTransformVtxAry3I(WlzObject *mObj,
   WlzCMeshScanElm3D sE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   
-  nearNod = -1;
-  lastElmIdx = -1;
-  mesh = mObj->domain.cm3;
-  ixv = mObj->values.x;
-  for(idN = 0; idN < nVtx; ++idN)
+  if(mObj == NULL)
   {
-    if(((sE.idx = WlzCMeshElmEnclosingPos3D(mesh, lastElmIdx,
-			(double )(vtx[idN].vtX), (double )(vtx[idN].vtY),
-		        (double )(vtx[idN].vtZ), 0,
-			&nearNod)) < 0) && (nearNod < 0))
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(((nVtx > 0) && (vtx == NULL)) || ((nInside > 0) && (inside == NULL)))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if((nVtx < 0) || ((nInside > 0) && (nInside < nVtx)))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    nearNod = -1;
+    lastElmIdx = -1;
+    mesh = mObj->domain.cm3;
+    ixv = mObj->values.x;
+    for(idN = 0; idN < nVtx; ++idN)
     {
-      errNum = WLZ_ERR_DOMAIN_DATA;
-      break;
-    }
-    if(sE.idx > 0)
-    {
-      if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+      if(((sE.idx = WlzCMeshElmEnclosingPos3D(mesh, lastElmIdx,
+			  (double )(vtx[idN].vtX), (double )(vtx[idN].vtY),
+			  (double )(vtx[idN].vtZ), 0,
+			  &nearNod)) < 0) && (nearNod < 0))
       {
-	WlzCMeshUpdateScanElm3D(mObj, &sE, 1);
-	lastElmIdx = sE.idx;
+	errNum = WLZ_ERR_DOMAIN_DATA;
+	break;
       }
-      tVtx.vtX = (sE.tr[ 0] * vtx[idN].vtX) + (sE.tr[ 1] * vtx[idN].vtY) +
-		 (sE.tr[ 2] * vtx[idN].vtZ) +  sE.tr[ 3];
-      tVtx.vtY = (sE.tr[ 4] * vtx[idN].vtX) + (sE.tr[ 5] * vtx[idN].vtY) +
-		 (sE.tr[ 6] * vtx[idN].vtZ) +  sE.tr[ 7];
-      tVtx.vtZ = (sE.tr[ 8] * vtx[idN].vtX) + (sE.tr[ 9] * vtx[idN].vtY) +
-		 (sE.tr[10] * vtx[idN].vtZ) +  sE.tr[11];
+      if(sE.idx > 0)
+      {
+        inside[idN] = 1;
+	if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+	{
+	  WlzCMeshUpdateScanElm3D(mObj, &sE, 1);
+	  lastElmIdx = sE.idx;
+	}
+	tVtx.vtX = (sE.tr[ 0] * vtx[idN].vtX) + (sE.tr[ 1] * vtx[idN].vtY) +
+		   (sE.tr[ 2] * vtx[idN].vtZ) +  sE.tr[ 3];
+	tVtx.vtY = (sE.tr[ 4] * vtx[idN].vtX) + (sE.tr[ 5] * vtx[idN].vtY) +
+		   (sE.tr[ 6] * vtx[idN].vtZ) +  sE.tr[ 7];
+	tVtx.vtZ = (sE.tr[ 8] * vtx[idN].vtX) + (sE.tr[ 9] * vtx[idN].vtY) +
+		   (sE.tr[10] * vtx[idN].vtZ) +  sE.tr[11];
+      }
+      else
+      {
+        inside[idN] = 0;
+	dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
+	tVtx.vtX = vtx[idN].vtX + dsp[0];
+	tVtx.vtY = vtx[idN].vtY + dsp[1];
+	tVtx.vtZ = vtx[idN].vtY + dsp[2];
+      }
+      vtx[idN].vtX = WLZ_NINT(tVtx.vtX);
+      vtx[idN].vtY = WLZ_NINT(tVtx.vtY);
+      vtx[idN].vtZ = WLZ_NINT(tVtx.vtZ);
     }
-    else
-    {
-      dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
-      tVtx.vtX = vtx[idN].vtX + dsp[0];
-      tVtx.vtY = vtx[idN].vtY + dsp[1];
-      tVtx.vtZ = vtx[idN].vtY + dsp[2];
-    }
-    vtx[idN].vtX = WLZ_NINT(tVtx.vtX);
-    vtx[idN].vtY = WLZ_NINT(tVtx.vtY);
-    vtx[idN].vtZ = WLZ_NINT(tVtx.vtZ);
   }
   return(errNum);
 }
@@ -1233,15 +1289,21 @@ WlzErrorNum	WlzCMeshTransformVtxAry3I(WlzObject *mObj,
 *		array in place and using the given conforming mesh
 *		transform. If a vertex is outside the mest it is
 *		displaced using the displacement of the closest node
-*		in the mesh.
+*		in the mesh and these vertices may be flagged using
+*		an array of byte masks if provided. Vertices flagged
+*		outside the mesh may be removed using WlzVerticesSqueeze2F().
 * \param	mObj			The mesh transform object.
-* 					vertices in the array after
-* 					transformation. Must not be NULL.
 * \param	nVtx			Number of vertices in the array.
 * \param	vtx			Array of vertices.
+* \param	nInside			Number of inside markers (must
+* 					be zero or >= the number of vertices).
+* \param	inside			Inside byte flags set to zero or one;
+* 					zero when vertices are inside the mesh,
+* 					otherwise one.
 */
 WlzErrorNum	WlzCMeshTransformVtxAry2F(WlzObject *mObj,
-					 int nVtx, WlzFVertex2 *vtx)
+					 int nVtx, WlzFVertex2 *vtx,
+					 int nInside, WlzUByte *inside)
 {
   int		idN,
   		lastElmIdx,
@@ -1253,39 +1315,56 @@ WlzErrorNum	WlzCMeshTransformVtxAry2F(WlzObject *mObj,
   WlzCMeshScanElm2D sE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   
-  nearNod = -1;
-  lastElmIdx = -1;
-  mesh = mObj->domain.cm2;
-  ixv = mObj->values.x;
-  for(idN = 0; idN < nVtx; ++idN)
+  if(mObj == NULL)
   {
-    if(((sE.idx = WlzCMeshElmEnclosingPos2D(mesh, lastElmIdx,
-    			vtx[idN].vtX, vtx[idN].vtY,
-			0, &nearNod)) < 0) && (nearNod < 0))
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(((nVtx > 0) && (vtx == NULL)) || ((nInside > 0) && (inside == NULL)))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if((nVtx < 0) || ((nInside > 0) && (nInside < nVtx)))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    nearNod = -1;
+    lastElmIdx = -1;
+    mesh = mObj->domain.cm2;
+    ixv = mObj->values.x;
+    for(idN = 0; idN < nVtx; ++idN)
     {
-      errNum = WLZ_ERR_DOMAIN_DATA;
-      break;
-    }
-    if(sE.idx > 0)
-    {
-      if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+      if(((sE.idx = WlzCMeshElmEnclosingPos2D(mesh, lastElmIdx,
+			  vtx[idN].vtX, vtx[idN].vtY,
+			  0, &nearNod)) < 0) && (nearNod < 0))
       {
-	WlzCMeshUpdateScanElm2D(mObj, &sE, 1);
-	lastElmIdx = sE.idx;
+	errNum = WLZ_ERR_DOMAIN_DATA;
+	break;
       }
-      tVtx.vtX = (sE.trX[0] * vtx[idN].vtX) +
-		 (sE.trX[1] * vtx[idN].vtY) + sE.trX[2];
-      tVtx.vtY = (sE.trY[0] * vtx[idN].vtX) +
-		 (sE.trY[1] * vtx[idN].vtY) + sE.trY[2];
+      if(sE.idx > 0)
+      {
+        inside[idN] = 1;
+	if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+	{
+	  WlzCMeshUpdateScanElm2D(mObj, &sE, 1);
+	  lastElmIdx = sE.idx;
+	}
+	tVtx.vtX = (sE.trX[0] * vtx[idN].vtX) +
+		   (sE.trX[1] * vtx[idN].vtY) + sE.trX[2];
+	tVtx.vtY = (sE.trY[0] * vtx[idN].vtX) +
+		   (sE.trY[1] * vtx[idN].vtY) + sE.trY[2];
+      }
+      else
+      {
+        inside[idN] = 0;
+	dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
+	tVtx.vtX = vtx[idN].vtX + dsp[0];
+	tVtx.vtY = vtx[idN].vtY + dsp[1];
+      }
+      vtx[idN].vtX = (float )(tVtx.vtX);
+      vtx[idN].vtY = (float )(tVtx.vtY);
     }
-    else
-    {
-      dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
-      tVtx.vtX = vtx[idN].vtX + dsp[0];
-      tVtx.vtY = vtx[idN].vtY + dsp[1];
-    }
-    vtx[idN].vtX = (float )(tVtx.vtX);
-    vtx[idN].vtY = (float )(tVtx.vtY);
   }
   return(errNum);
 }
@@ -1297,15 +1376,21 @@ WlzErrorNum	WlzCMeshTransformVtxAry2F(WlzObject *mObj,
 *		array in place and using the given conforming mesh
 *		transform. If a vertex is outside the mest it is
 *		displaced using the displacement of the closest node
-*		in the mesh.
+*		in the mesh and these vertices may be flagged using
+*		an array of byte masks if provided. Vertices flagged
+*		outside the mesh may be removed using WlzVerticesSqueeze3F().
 * \param	mObj			The mesh transform object.
-* 					vertices in the array after
-* 					transformation. Must not be NULL.
 * \param	nVtx			Number of vertices in the array.
 * \param	vtx			Array of vertices.
+* \param	nInside			Number of inside markers (must
+* 					be zero or >= the number of vertices).
+* \param	inside			Inside byte flags set to zero or one;
+* 					zero when vertices are inside the mesh,
+* 					otherwise one.
 */
 WlzErrorNum	WlzCMeshTransformVtxAry3F(WlzObject *mObj,
-					 int nVtx, WlzFVertex3 *vtx)
+					 int nVtx, WlzFVertex3 *vtx,
+					 int nInside, WlzUByte *inside)
 {
   int		idN,
   		lastElmIdx,
@@ -1317,43 +1402,60 @@ WlzErrorNum	WlzCMeshTransformVtxAry3F(WlzObject *mObj,
   WlzCMeshScanElm3D sE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   
-  nearNod = -1;
-  lastElmIdx = -1;
-  mesh = mObj->domain.cm3;
-  ixv = mObj->values.x;
-  for(idN = 0; idN < nVtx; ++idN)
+  if(mObj == NULL)
   {
-    if(((sE.idx = WlzCMeshElmEnclosingPos3D(mesh, lastElmIdx,
-    			vtx[idN].vtX, vtx[idN].vtY, vtx[idN].vtZ,
-			0, &nearNod)) < 0) && (nearNod < 0))
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(((nVtx > 0) && (vtx == NULL)) || ((nInside > 0) && (inside == NULL)))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if((nVtx < 0) || ((nInside > 0) && (nInside < nVtx)))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    nearNod = -1;
+    lastElmIdx = -1;
+    mesh = mObj->domain.cm3;
+    ixv = mObj->values.x;
+    for(idN = 0; idN < nVtx; ++idN)
     {
-      errNum = WLZ_ERR_DOMAIN_DATA;
-      break;
-    }
-    if(sE.idx > 0)
-    {
-      if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+      if(((sE.idx = WlzCMeshElmEnclosingPos3D(mesh, lastElmIdx,
+			  vtx[idN].vtX, vtx[idN].vtY, vtx[idN].vtZ,
+			  0, &nearNod)) < 0) && (nearNod < 0))
       {
-	WlzCMeshUpdateScanElm3D(mObj, &sE, 1);
-	lastElmIdx = sE.idx;
+	errNum = WLZ_ERR_DOMAIN_DATA;
+	break;
       }
-      tVtx.vtX = (sE.tr[ 0] * vtx[idN].vtX) + (sE.tr[ 1] * vtx[idN].vtY) +
-		 (sE.tr[ 2] * vtx[idN].vtZ) +  sE.tr[ 3];
-      tVtx.vtY = (sE.tr[ 4] * vtx[idN].vtX) + (sE.tr[ 5] * vtx[idN].vtY) +
-		 (sE.tr[ 6] * vtx[idN].vtZ) +  sE.tr[ 7];
-      tVtx.vtZ = (sE.tr[ 8] * vtx[idN].vtX) + (sE.tr[ 9] * vtx[idN].vtY) +
-		 (sE.tr[10] * vtx[idN].vtZ) +  sE.tr[11];
+      if(sE.idx > 0)
+      {
+        inside[idN] = 1;
+	if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+	{
+	  WlzCMeshUpdateScanElm3D(mObj, &sE, 1);
+	  lastElmIdx = sE.idx;
+	}
+	tVtx.vtX = (sE.tr[ 0] * vtx[idN].vtX) + (sE.tr[ 1] * vtx[idN].vtY) +
+		   (sE.tr[ 2] * vtx[idN].vtZ) +  sE.tr[ 3];
+	tVtx.vtY = (sE.tr[ 4] * vtx[idN].vtX) + (sE.tr[ 5] * vtx[idN].vtY) +
+		   (sE.tr[ 6] * vtx[idN].vtZ) +  sE.tr[ 7];
+	tVtx.vtZ = (sE.tr[ 8] * vtx[idN].vtX) + (sE.tr[ 9] * vtx[idN].vtY) +
+		   (sE.tr[10] * vtx[idN].vtZ) +  sE.tr[11];
+      }
+      else
+      {
+        inside[idN] = 0;
+	dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
+	tVtx.vtX = vtx[idN].vtX + dsp[0];
+	tVtx.vtY = vtx[idN].vtY + dsp[1];
+	tVtx.vtZ = vtx[idN].vtZ + dsp[2];
+      }
+      vtx[idN].vtX = (float )(tVtx.vtX);
+      vtx[idN].vtY = (float )(tVtx.vtY);
+      vtx[idN].vtZ = (float )(tVtx.vtZ);
     }
-    else
-    {
-      dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
-      tVtx.vtX = vtx[idN].vtX + dsp[0];
-      tVtx.vtY = vtx[idN].vtY + dsp[1];
-      tVtx.vtZ = vtx[idN].vtZ + dsp[2];
-    }
-    vtx[idN].vtX = (float )(tVtx.vtX);
-    vtx[idN].vtY = (float )(tVtx.vtY);
-    vtx[idN].vtZ = (float )(tVtx.vtZ);
   }
   return(errNum);
 }
@@ -1365,13 +1467,21 @@ WlzErrorNum	WlzCMeshTransformVtxAry3F(WlzObject *mObj,
 *		array in place and using the given conforming mesh
 *		transform. If a vertex is outside the mest it is
 *		displaced using the displacement of the closest node
-*		in the mesh.
+*		in the mesh and these vertices may be flagged using
+*		an array of byte masks if provided. Vertices flagged
+*		outside the mesh may be removed using WlzVerticesSqueeze2D().
 * \param	mObj			The mesh transform object.
 * \param	nVtx			Number of vertices in the array.
 * \param	vtx			Array of vertices.
+* \param	nInside			Number of inside markers (must
+* 					be zero or >= the number of vertices).
+* \param	inside			Inside byte flags set to zero or one;
+* 					zero when vertices are inside the mesh,
+* 					otherwise one.
 */
 WlzErrorNum	WlzCMeshTransformVtxAry2D(WlzObject *mObj,
-					 int nVtx, WlzDVertex2 *vtx)
+					 int nVtx, WlzDVertex2 *vtx,
+					 int nInside, WlzUByte *inside)
 {
   int		idN,
 		nearNod,
@@ -1383,42 +1493,78 @@ WlzErrorNum	WlzCMeshTransformVtxAry2D(WlzObject *mObj,
   WlzCMeshScanElm2D sE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   
-  nearNod = -1;
-  lastElmIdx = -1;
-  mesh = mObj->domain.cm2;
-  ixv = mObj->values.x;
-  for(idN = 0; idN < nVtx; ++idN)
+  if(mObj == NULL)
   {
-    if(((sE.idx = WlzCMeshElmEnclosingPos2D(mesh, lastElmIdx,
-    			vtx[idN].vtX, vtx[idN].vtY,
-			0, &nearNod)) < 0) && (nearNod < 0))
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(((nVtx > 0) && (vtx == NULL)) || ((nInside > 0) && (inside == NULL)))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if((nVtx < 0) || ((nInside > 0) && (nInside < nVtx)))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    nearNod = -1;
+    lastElmIdx = -1;
+    mesh = mObj->domain.cm2;
+    ixv = mObj->values.x;
+    for(idN = 0; idN < nVtx; ++idN)
     {
-      errNum = WLZ_ERR_DOMAIN_DATA;
-      break;
-    }
-    if(sE.idx > 0)
-    {
-      if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+      if(((sE.idx = WlzCMeshElmEnclosingPos2D(mesh, lastElmIdx,
+			  vtx[idN].vtX, vtx[idN].vtY,
+			  0, &nearNod)) < 0) && (nearNod < 0))
       {
-	WlzCMeshUpdateScanElm2D(mObj, &sE, 1);
-	lastElmIdx = sE.idx;
+	errNum = WLZ_ERR_DOMAIN_DATA;
+	break;
       }
-      tVtx.vtX = (sE.trX[0] * vtx[idN].vtX) +
-		 (sE.trX[1] * vtx[idN].vtY) + sE.trX[2];
-      tVtx.vtY = (sE.trY[0] * vtx[idN].vtX) +
-		 (sE.trY[1] * vtx[idN].vtY) + sE.trY[2];
+      if(sE.idx > 0)
+      {
+        inside[idN] = 1;
+	if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+	{
+	  WlzCMeshUpdateScanElm2D(mObj, &sE, 1);
+	  lastElmIdx = sE.idx;
+	}
+	tVtx.vtX = (sE.trX[0] * vtx[idN].vtX) +
+		   (sE.trX[1] * vtx[idN].vtY) + sE.trX[2];
+	tVtx.vtY = (sE.trY[0] * vtx[idN].vtX) +
+		   (sE.trY[1] * vtx[idN].vtY) + sE.trY[2];
+      }
+      else
+      {
+        inside[idN] = 0;
+	dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
+	tVtx.vtX = vtx[idN].vtX + dsp[0];
+	tVtx.vtY = vtx[idN].vtY + dsp[1];
+      }
+      vtx[idN] = tVtx;
     }
-    else
-    {
-      dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
-      tVtx.vtX = vtx[idN].vtX + dsp[0];
-      tVtx.vtY = vtx[idN].vtY + dsp[1];
-    }
-    vtx[idN] = tVtx;
   }
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzTransform
+* \brief	Transforms the vertices in the given double vertex
+*		array in place and using the given conforming mesh
+*		transform. If a vertex is outside the mest it is
+*		displaced using the displacement of the closest node
+*		in the mesh and these vertices may be flagged using
+*		an array of byte masks if provided. Vertices flagged
+*		outside the mesh may be removed using WlzVerticesSqueeze2D().
+* \param	mObj			The mesh transform object.
+* \param	nVtx			Number of vertices in the array.
+* \param	vtx			Array of vertices.
+* \param	nInside			Number of inside markers (must
+* 					be zero or >= the number of vertices).
+* \param	inside			Inside byte flags set to zero or one;
+* 					zero when vertices are inside the mesh,
+* 					otherwise one.
+*/
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzTransform
@@ -1432,7 +1578,8 @@ WlzErrorNum	WlzCMeshTransformVtxAry2D(WlzObject *mObj,
 * \param	vtx			Array of vertices.
 */
 WlzErrorNum	WlzCMeshTransformVtxAry2D5(WlzObject *mObj,
-					   int nVtx, WlzDVertex3 *vtx)
+					   int nVtx, WlzDVertex3 *vtx,
+					   int nInside, WlzUByte *inside)
 {
   int		idN,
 		nearNod,
@@ -1444,41 +1591,58 @@ WlzErrorNum	WlzCMeshTransformVtxAry2D5(WlzObject *mObj,
   WlzCMeshScanElm3D sE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   
-  nearNod = -1;
-  lastElmIdx = -1;
-  mesh = mObj->domain.cm2d5;
-  ixv = mObj->values.x;
-  for(idN = 0; idN < nVtx; ++idN)
+  if(mObj == NULL)
   {
-    if(((sE.idx = WlzCMeshElmEnclosingPos2D5(mesh, lastElmIdx,
-    			vtx[idN].vtX, vtx[idN].vtY, vtx[idN].vtZ,
-			0, &nearNod)) < 0) && (nearNod < 0))
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(((nVtx > 0) && (vtx == NULL)) || ((nInside > 0) && (inside == NULL)))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if((nVtx < 0) || ((nInside > 0) && (nInside < nVtx)))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    nearNod = -1;
+    lastElmIdx = -1;
+    mesh = mObj->domain.cm2d5;
+    ixv = mObj->values.x;
+    for(idN = 0; idN < nVtx; ++idN)
     {
-      errNum = WLZ_ERR_DOMAIN_DATA;
-      break;
-    }
-    if(sE.idx > 0)
-    {
-      if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+      if(((sE.idx = WlzCMeshElmEnclosingPos2D5(mesh, lastElmIdx,
+			  vtx[idN].vtX, vtx[idN].vtY, vtx[idN].vtZ,
+			  0, &nearNod)) < 0) && (nearNod < 0))
       {
-	WlzCMeshUpdateScanElm2D5(mObj, &sE, 1);
-	lastElmIdx = sE.idx;
+	errNum = WLZ_ERR_DOMAIN_DATA;
+	break;
       }
-      tVtx.vtX = (sE.tr[ 0] * vtx[idN].vtX) + (sE.tr[ 1] * vtx[idN].vtY) +
-		 (sE.tr[ 2] * vtx[idN].vtZ) +  sE.tr[ 3];
-      tVtx.vtY = (sE.tr[ 4] * vtx[idN].vtX) + (sE.tr[ 5] * vtx[idN].vtY) +
-		 (sE.tr[ 6] * vtx[idN].vtZ) +  sE.tr[ 7];
-      tVtx.vtZ = (sE.tr[ 8] * vtx[idN].vtX) + (sE.tr[ 9] * vtx[idN].vtY) +
-		 (sE.tr[10] * vtx[idN].vtZ) +  sE.tr[11];
+      if(sE.idx > 0)
+      {
+        inside[idN] = 1;
+	if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+	{
+	  WlzCMeshUpdateScanElm2D5(mObj, &sE, 1);
+	  lastElmIdx = sE.idx;
+	}
+	tVtx.vtX = (sE.tr[ 0] * vtx[idN].vtX) + (sE.tr[ 1] * vtx[idN].vtY) +
+		   (sE.tr[ 2] * vtx[idN].vtZ) +  sE.tr[ 3];
+	tVtx.vtY = (sE.tr[ 4] * vtx[idN].vtX) + (sE.tr[ 5] * vtx[idN].vtY) +
+		   (sE.tr[ 6] * vtx[idN].vtZ) +  sE.tr[ 7];
+	tVtx.vtZ = (sE.tr[ 8] * vtx[idN].vtX) + (sE.tr[ 9] * vtx[idN].vtY) +
+		   (sE.tr[10] * vtx[idN].vtZ) +  sE.tr[11];
+      }
+      else
+      {
+        inside[idN] = 0;
+	dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
+	tVtx.vtX = vtx[idN].vtX + dsp[0];
+	tVtx.vtY = vtx[idN].vtY + dsp[1];
+	tVtx.vtZ = vtx[idN].vtZ + dsp[2];
+      }
+      vtx[idN] = tVtx;
     }
-    else
-    {
-      dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
-      tVtx.vtX = vtx[idN].vtX + dsp[0];
-      tVtx.vtY = vtx[idN].vtY + dsp[1];
-      tVtx.vtZ = vtx[idN].vtZ + dsp[2];
-    }
-    vtx[idN] = tVtx;
   }
   return(errNum);
 }
@@ -1490,13 +1654,21 @@ WlzErrorNum	WlzCMeshTransformVtxAry2D5(WlzObject *mObj,
 *		array in place and using the given conforming mesh
 *		transform. If a vertex is outside the mest it is
 *		displaced using the displacement of the closest node
-*		in the mesh.
+*		in the mesh and these vertices may be flagged using
+*		an array of byte masks if provided. Vertices flagged
+*		outside the mesh may be removed using WlzVerticesSqueeze3D().
 * \param	mObj			The mesh transform object.
 * \param	nVtx			Number of vertices in the array.
 * \param	vtx			Array of vertices.
+* \param	nInside			Number of inside markers (must
+* 					be zero or >= the number of vertices).
+* \param	inside			Inside byte flags set to zero or one;
+* 					zero when vertices are inside the mesh,
+* 					otherwise one.
 */
 WlzErrorNum	WlzCMeshTransformVtxAry3D(WlzObject *mObj,
-					 int nVtx, WlzDVertex3 *vtx)
+					 int nVtx, WlzDVertex3 *vtx,
+					 int nInside, WlzUByte *inside)
 {
   int		idN,
 		nearNod,
@@ -1508,41 +1680,58 @@ WlzErrorNum	WlzCMeshTransformVtxAry3D(WlzObject *mObj,
   WlzCMeshScanElm3D sE;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   
-  nearNod = -1;
-  lastElmIdx = -1;
-  mesh = mObj->domain.cm3;
-  ixv = mObj->values.x;
-  for(idN = 0; idN < nVtx; ++idN)
+  if(mObj == NULL)
   {
-    if(((sE.idx = WlzCMeshElmEnclosingPos3D(mesh, lastElmIdx,
-    			vtx[idN].vtX, vtx[idN].vtY, vtx[idN].vtZ,
-			0, &nearNod)) < 0) && (nearNod < 0))
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(((nVtx > 0) && (vtx == NULL)) || ((nInside > 0) && (inside == NULL)))
+  {
+    errNum = WLZ_ERR_PARAM_NULL;
+  }
+  else if((nVtx < 0) || ((nInside > 0) && (nInside < nVtx)))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    nearNod = -1;
+    lastElmIdx = -1;
+    mesh = mObj->domain.cm3;
+    ixv = mObj->values.x;
+    for(idN = 0; idN < nVtx; ++idN)
     {
-      errNum = WLZ_ERR_DOMAIN_DATA;
-      break;
-    }
-    if(sE.idx > 0)
-    {
-      if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+      if(((sE.idx = WlzCMeshElmEnclosingPos3D(mesh, lastElmIdx,
+			  vtx[idN].vtX, vtx[idN].vtY, vtx[idN].vtZ,
+			  0, &nearNod)) < 0) && (nearNod < 0))
       {
-	WlzCMeshUpdateScanElm3D(mObj, &sE, 1);
-	lastElmIdx = sE.idx;
+	errNum = WLZ_ERR_DOMAIN_DATA;
+	break;
       }
-      tVtx.vtX = (sE.tr[ 0] * vtx[idN].vtX) + (sE.tr[ 1] * vtx[idN].vtY) +
-		 (sE.tr[ 2] * vtx[idN].vtZ) +  sE.tr[ 3];
-      tVtx.vtY = (sE.tr[ 4] * vtx[idN].vtX) + (sE.tr[ 5] * vtx[idN].vtY) +
-		 (sE.tr[ 6] * vtx[idN].vtZ) +  sE.tr[ 7];
-      tVtx.vtZ = (sE.tr[ 8] * vtx[idN].vtX) + (sE.tr[ 9] * vtx[idN].vtY) +
-		 (sE.tr[10] * vtx[idN].vtZ) +  sE.tr[11];
+      if(sE.idx > 0)
+      {
+        inside[idN] = 1;
+	if((sE.idx != lastElmIdx) || ((sE.flags & WLZ_CMESH_SCANELM_FWD) == 0))
+	{
+	  WlzCMeshUpdateScanElm3D(mObj, &sE, 1);
+	  lastElmIdx = sE.idx;
+	}
+	tVtx.vtX = (sE.tr[ 0] * vtx[idN].vtX) + (sE.tr[ 1] * vtx[idN].vtY) +
+		   (sE.tr[ 2] * vtx[idN].vtZ) +  sE.tr[ 3];
+	tVtx.vtY = (sE.tr[ 4] * vtx[idN].vtX) + (sE.tr[ 5] * vtx[idN].vtY) +
+		   (sE.tr[ 6] * vtx[idN].vtZ) +  sE.tr[ 7];
+	tVtx.vtZ = (sE.tr[ 8] * vtx[idN].vtX) + (sE.tr[ 9] * vtx[idN].vtY) +
+		   (sE.tr[10] * vtx[idN].vtZ) +  sE.tr[11];
+      }
+      else
+      {
+        inside[idN] = 0;
+	dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
+	tVtx.vtX = vtx[idN].vtX + dsp[0];
+	tVtx.vtY = vtx[idN].vtY + dsp[1];
+	tVtx.vtZ = vtx[idN].vtZ + dsp[2];
+      }
+      vtx[idN] = tVtx;
     }
-    else
-    {
-      dsp = (double *)WlzIndexedValueGet(ixv, nearNod);
-      tVtx.vtX = vtx[idN].vtX + dsp[0];
-      tVtx.vtY = vtx[idN].vtY + dsp[1];
-      tVtx.vtZ = vtx[idN].vtZ + dsp[2];
-    }
-    vtx[idN] = tVtx;
   }
   return(errNum);
 }
@@ -5587,7 +5776,8 @@ WlzObject 	*WlzCMeshTransformObj(WlzObject *srcObj,
 				     WlzErrorNum *dstErr)
 {
   WlzPixelV	bgdV;
-  WlzDomain	dstDom;
+  WlzDomain	srcDom,
+  		dstDom;
   WlzValues	srcValues,
   		dstValues;
   WlzIndexedValues *mIxv;
@@ -5601,7 +5791,8 @@ WlzObject 	*WlzCMeshTransformObj(WlzObject *srcObj,
   {
     errNum = WLZ_ERR_OBJECT_NULL;
   }
-  else if((srcObj->domain.core == NULL) || (mObj->domain.core == NULL))
+  else if(((srcDom = srcObj->domain).core == NULL) ||
+          (mObj->domain.core == NULL))
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
@@ -5616,7 +5807,7 @@ WlzObject 	*WlzCMeshTransformObj(WlzObject *srcObj,
   else if((mIxv->rank != 1) || (mIxv->vType != WLZ_GREY_DOUBLE) ||
 	  (mIxv->attach != WLZ_VALUE_ATTACH_NOD))
   {
-    errNum = WLZ_ERR_VALUES_TYPE;
+    errNum = WLZ_ERR_VALUES_DATA;
   }
   else
   {
@@ -5702,6 +5893,94 @@ WlzObject 	*WlzCMeshTransformObj(WlzObject *srcObj,
 	  }
 	}
 	break;
+      case WLZ_POINTS:
+        if(srcObj->domain.core == NULL)
+	{
+	  errNum = WLZ_ERR_DOMAIN_NULL;
+	}
+	else
+	{
+	  size_t   nPts = srcDom.pts->nPoints;
+          WlzUByte *inside = NULL;
+
+	  srcDom.pts = srcObj->domain.pts;
+	  srcValues.pts = srcObj->values.pts;
+	  if((inside = (WlzUByte*)AlcMalloc(sizeof(WlzUByte) * nPts)) == NULL)
+	  {
+	    errNum = WLZ_ERR_MEM_ALLOC;
+	  }
+	  else
+	  {
+	    dstDom.pts = WlzCMeshTransformPoints(srcDom.pts, mObj, 1,
+						 inside, &errNum);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    size_t	sz = 0;
+
+	    switch(dstDom.pts->type)
+	    {
+	      case WLZ_POINTS_2I:
+	        sz = sizeof(WlzIVertex2);
+		break;
+	      case WLZ_POINTS_2D:
+	        sz = sizeof(WlzDVertex2);
+		break;
+	      case WLZ_POINTS_3I:
+	        sz = sizeof(WlzIVertex3);
+		break;
+	      case WLZ_POINTS_3D:
+	        sz = sizeof(WlzDVertex3);
+		break;
+	      default:
+	        errNum = WLZ_ERR_DOMAIN_DATA;
+		break;
+	    }
+	    dstDom.pts->nPoints = WlzValueSqueeze(srcDom.pts->nPoints,
+	    				dstDom.pts->points.v, sz, inside,
+					&errNum);
+	  }
+	  if((errNum == WLZ_ERR_NONE) && (srcValues.pts != NULL))
+	  {
+	    int		*dim;
+
+	    dim = srcValues.pts->dim;
+	    dstValues.pts = WlzMakePointValues(srcDom.pts->nPoints,
+				      srcValues.pts->rank, dim,
+				      srcValues.pts->vType, &errNum);
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      size_t 	bpv = 1;
+
+	      if(srcValues.pts->rank > 0)
+	      {
+	        int	i;
+
+	        bpv = dim[0];
+		for(i = 0; i < srcValues.pts->rank; ++i)
+		{
+		  bpv *= dim[i];
+		}
+	      }
+	      (void )memcpy(dstValues.pts->values.v, srcValues.pts->values.v,
+	      		    bpv * srcDom.pts->nPoints);
+	      WlzValueSqueeze(srcDom.pts->nPoints, dstValues.pts->values.v,
+	                      bpv, inside, &errNum);
+	    }
+	  }
+	  AlcFree(inside);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    dstObj = WlzMakeMain(srcObj->type, dstDom,  srcValues,
+				   NULL, NULL, &errNum);
+				 
+	  }
+	  if((errNum != WLZ_ERR_NONE) && dstDom.core)
+	  {
+	    (void )WlzFreeDomain(dstDom);
+	  }
+	}
+        break;
       case WLZ_CONTOUR:
         if(srcObj->domain.core == NULL)
 	{
@@ -5710,17 +5989,17 @@ WlzObject 	*WlzCMeshTransformObj(WlzObject *srcObj,
 	else
 	{
 	  dstDom.ctr = WlzCMeshTransformContour(srcObj->domain.ctr,
-	                                         mObj, 1, &errNum);
-	}
-	if(errNum == WLZ_ERR_NONE)
-	{
-	  dstObj = WlzMakeMain(srcObj->type, dstDom,  srcValues,
-				 NULL, NULL, &errNum);
-	                       
-	}
-	if((errNum != WLZ_ERR_NONE) && dstDom.core)
-	{
-	  (void )WlzFreeDomain(dstDom);
+					        mObj, 1, &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    dstObj = WlzMakeMain(srcObj->type, dstDom,  srcValues,
+				   NULL, NULL, &errNum);
+				 
+	  }
+	  if((errNum != WLZ_ERR_NONE) && dstDom.core)
+	  {
+	    (void )WlzFreeDomain(dstDom);
+	  }
 	}
 	break;
       case WLZ_2D_POLYGON: /* FALLTHROUGH */
@@ -6290,16 +6569,19 @@ static WlzPolygonDomain *WlzCMeshTransformPoly(WlzPolygonDomain *srcPoly,
     switch(srcPoly->type)
     {
       case WLZ_POLYGON_INT:
-        errNum = WlzCMeshTransformVtxAry2I(mObj, dstPoly->nvertices,
-					   dstPoly->vtx);
+        errNum = WlzCMeshTransformVtxAry2I(mObj,
+			dstPoly->nvertices, dstPoly->vtx,
+			0, NULL);
         break;
       case WLZ_POLYGON_FLOAT:
-        errNum = WlzCMeshTransformVtxAry2F(mObj, dstPoly->nvertices,
-					   (WlzFVertex2 *)(dstPoly->vtx));
+        errNum = WlzCMeshTransformVtxAry2F(mObj,
+			dstPoly->nvertices, (WlzFVertex2 *)(dstPoly->vtx),
+			0, NULL);
         break;
       case WLZ_POLYGON_DOUBLE:
-        errNum = WlzCMeshTransformVtxAry2D(mObj, dstPoly->nvertices,
-					   (WlzDVertex2 *)(dstPoly->vtx));
+        errNum = WlzCMeshTransformVtxAry2D(mObj,
+			dstPoly->nvertices, (WlzDVertex2 *)(dstPoly->vtx),
+			0, NULL);
         break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -6406,6 +6688,87 @@ static WlzContour	*WlzCMeshTransformContour(WlzContour *srcCtr,
 }
 
 /*!
+* \return	Transformed points or NULL on error.
+* \ingroup	WlzTransform
+* \brief	Applies a conforming mesh transform to the given points
+* 		object.
+* \param	srcPts			Given points.
+* \param	trObj			Given conforming mesh transform.
+* \param	newPtsFlg		Make a new points object if non-zero,
+* 					otherwise transform the given
+* 					points object is done in place.
+* \param	inside			Inside byte flags set to zero or one;
+* 					zero when vertices are inside the mesh,
+* 					otherwise one.
+*/
+static WlzPoints	*WlzCMeshTransformPoints(WlzPoints *srcPts,
+					WlzObject *trObj, int newPtsFlg,
+					WlzUByte *inside, WlzErrorNum *dstErr)
+{
+  WlzPoints	*dstPts = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(srcPts == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    if(newPtsFlg)
+    {
+      dstPts = WlzMakePoints(srcPts->type, srcPts->nPoints, srcPts->points,
+                             srcPts->nPoints, &errNum);
+    }
+    else
+    {
+      dstPts = srcPts;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(dstPts->type)
+    {
+      case WLZ_POINTS_2I:
+        errNum = WlzCMeshTransformVtxAry2I(trObj,
+					   dstPts->nPoints, dstPts->points.i2,
+					   dstPts->nPoints, inside);
+        break;
+      case WLZ_POINTS_2D:
+        errNum = WlzCMeshTransformVtxAry2D(trObj,
+					   dstPts->nPoints, dstPts->points.d2,
+				           dstPts->nPoints, inside);
+        break;
+      case WLZ_POINTS_3I:
+        errNum = WlzCMeshTransformVtxAry3I(trObj,
+				           dstPts->nPoints, dstPts->points.i3,
+					   dstPts->nPoints, inside);
+        break;
+      case WLZ_POINTS_3D:
+        errNum = WlzCMeshTransformVtxAry3D(trObj,
+					   dstPts->nPoints, dstPts->points.d3,
+					   dstPts->nPoints, inside);
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+        break;
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    WlzDomain	dom;
+
+    dom.pts = dstPts;
+    (void )WlzFreeDomain(dom);
+    dstPts = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dstPts);
+}
+
+/*!
 * \return	Transformed model or NULL on error.
 * \ingroup	WlzTransform
 * \brief	Applies a conforming mesh transform to the given 2
@@ -6458,20 +6821,24 @@ static WlzGMModel	*WlzCMeshTransformGMModel(WlzGMModel *srcM,
           switch(dstM->type)
           {
             case WLZ_GMMOD_2I:
-	      errNum2 = WlzCMeshTransformVtxAry2I(trObj, 1,
-	                                          &(elmP.vertexG2I->vtx));
+	      errNum2 = WlzCMeshTransformVtxAry2I(trObj,
+	      			1, &(elmP.vertexG2I->vtx),
+				0, NULL);
               break;
             case WLZ_GMMOD_2D:
-	      errNum2 = WlzCMeshTransformVtxAry2D(trObj, 1,
-	                                          &(elmP.vertexG2D->vtx));
+	      errNum2 = WlzCMeshTransformVtxAry2D(trObj,
+	      			1, &(elmP.vertexG2D->vtx),
+				0, NULL);
               break;
             case WLZ_GMMOD_3I:
-	      errNum2 = WlzCMeshTransformVtxAry3I(trObj, 1,
-	                                          &(elmP.vertexG3I->vtx));
+	      errNum2 = WlzCMeshTransformVtxAry3I(trObj,
+	      			1, &(elmP.vertexG3I->vtx),
+				0, NULL);
               break;
             case WLZ_GMMOD_3D:
-	      errNum2 = WlzCMeshTransformVtxAry3D(trObj, 1,
-	                                          &(elmP.vertexG3D->vtx));
+	      errNum2 = WlzCMeshTransformVtxAry3D(trObj,
+	      			1, &(elmP.vertexG3D->vtx),
+				0, NULL);
               break;
             default:
               errNum2 = WLZ_ERR_DOMAIN_TYPE;
@@ -8069,7 +8436,7 @@ static WlzErrorNum WlzScaleCMeshValueNodOrElem(WlzObject *obj, double scale,
 	    }
 	    break;
 	  default:
-	    errNum = WLZ_ERR_VALUES_TYPE;
+	    errNum = WLZ_ERR_VALUES_DATA;
 	    break;
 	}
 	break;
@@ -8107,7 +8474,7 @@ static WlzErrorNum WlzScaleCMeshValueNodOrElem(WlzObject *obj, double scale,
 	    }
 	    break;
 	  default:
-	    errNum = WLZ_ERR_VALUES_TYPE;
+	    errNum = WLZ_ERR_VALUES_DATA;
 	    break;
 	}
 	break;
@@ -8145,7 +8512,7 @@ static WlzErrorNum WlzScaleCMeshValueNodOrElem(WlzObject *obj, double scale,
 	    }
 	    break;
 	  default:
-	    errNum = WLZ_ERR_VALUES_TYPE;
+	    errNum = WLZ_ERR_VALUES_DATA;
 	    break;
 	}
 	break;
@@ -8567,7 +8934,7 @@ static WlzErrorNum WlzCMeshAffineProduct2D(WlzObject *trM,
      (ixv->dim[0] < 2) ||
      (ixv->vType != WLZ_GREY_DOUBLE))
   {
-    errNum = WLZ_ERR_VALUES_TYPE;
+    errNum = WLZ_ERR_VALUES_DATA;
   }
   else
   {
@@ -8661,7 +9028,7 @@ static WlzErrorNum WlzCMeshAffineProduct2D5(WlzObject *trM,
      (ixv->dim[0] < 3) ||
      (ixv->vType != WLZ_GREY_DOUBLE))
   {
-    errNum = WLZ_ERR_VALUES_TYPE;
+    errNum = WLZ_ERR_VALUES_DATA;
   }
   else
   {
@@ -8758,7 +9125,7 @@ static WlzErrorNum WlzCMeshAffineProduct3D(WlzObject *trM,
      (ixv->dim[0] < 3) ||
      (ixv->vType != WLZ_GREY_DOUBLE))
   {
-    errNum = WLZ_ERR_VALUES_TYPE;
+    errNum = WLZ_ERR_VALUES_DATA;
   }
   else
   {
@@ -9302,7 +9669,7 @@ static WlzObject *WlzCMeshProduct2D(WlzObject *tr0, WlzObject *tr1,
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
   else if((ixv0->type != (WlzObjectType )WLZ_INDEXED_VALUES) ||
-          ( ixv0->type != ixv1->type))
+          (ixv0->type != ixv1->type))
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
@@ -9527,7 +9894,7 @@ static WlzObject *WlzCMeshProduct3D(WlzObject *tr0, WlzObject *tr1,
     errNum = WLZ_ERR_DOMAIN_TYPE;
   }
   else if((ixv0->type != (WlzObjectType )WLZ_INDEXED_VALUES) ||
-          ( ixv0->type != ixv1->type))
+          (ixv0->type != ixv1->type))
   {
     errNum = WLZ_ERR_VALUES_TYPE;
   }
@@ -10012,4 +10379,3 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
   }
   return(eObj);
 }
-
