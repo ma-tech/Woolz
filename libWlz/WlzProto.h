@@ -6538,6 +6538,12 @@ extern WlzErrorNum		WlzIndexedValuesSet(
 				  WlzObject *obj,
 				  size_t cnt,
 				  void *val);
+extern size_t			WlzValueSqueeze(
+				  size_t n,
+				  void *val,
+				  size_t sz,
+				  WlzUByte *keep,
+				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************

@@ -3407,3 +3407,68 @@ size_t		WlzIndexedValueSize(WlzIndexedValues *ixv, size_t *dstNDat,
   }
   return(vSz);
 }
+
+/*!
+* \return	Number of values remaining.
+* \ingroup	WlzValueUtils
+* \brief	Squeezes out values from an array by replacing those
+* 		that are to be removed so that the values remain contiguous.
+* \param	n			Number of values in the array.
+* \param	val			Array of values.
+* \param	sz			Size of an element in the array.
+* \param	keep			Array of byte values. Values are kept
+* 					when the keep value (with the
+* 					corresponding index) is non zero.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+size_t				WlzValueSqueeze(
+				  size_t n,
+				  void *val,
+				  size_t sz,
+				  WlzUByte *keep,
+				  WlzErrorNum *dstErr)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(n < 0)
+  {
+    n = 0;
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else if(n > 0)
+  {
+    if((val == NULL) || (keep == NULL))
+    {
+      errNum = WLZ_ERR_PARAM_NULL;
+    }
+    else
+    {
+      size_t	i,
+      		cnt = 0;
+      WlzUByte	*v0,
+		*v1;
+
+      keep;
+      v0 = v1 = (WlzUByte *)val;
+      for(i = 0; i < n; ++i)
+      {
+	WlzUByte k;
+
+        if(keep[i])
+	{
+	  ++cnt;
+	  memcpy(v0, v1, sz);
+	  v0 += sz;
+	}
+	v1 += sz;
+	++k;
+      }
+      n = cnt;
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(n);
+}
