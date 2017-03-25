@@ -574,7 +574,7 @@ static WlzErrorNum WlzCMeshTransVtxEncAndTrans(WlzObject *trObj, int dim,
     }
     if(trObj->values.core)
     {
-      errNum = WlzCMeshTransformVtxAry2D(trObj, nV, v.d2);
+      errNum = WlzCMeshTransformVtxAry2D(trObj, nV, v.d2, 0, NULL);
     }
   }
   else /* dim == 3 */
@@ -599,11 +599,11 @@ static WlzErrorNum WlzCMeshTransVtxEncAndTrans(WlzObject *trObj, int dim,
     {
       if(trObj->domain.core->type == WLZ_CMESH_2D5)
       {
-        errNum = WlzCMeshTransformVtxAry2D5(trObj, nV, v.d3);
+        errNum = WlzCMeshTransformVtxAry2D5(trObj, nV, v.d3, 0, NULL);
       }
       else /* WLZ_CMESH_3D */
       {
-        errNum = WlzCMeshTransformVtxAry3D(trObj, nV, v.d3);
+        errNum = WlzCMeshTransformVtxAry3D(trObj, nV, v.d3, 0, NULL);
       }
     }
   }
