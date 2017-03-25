@@ -45,6 +45,8 @@ static char _WlzSepFilter_c[] = "University of Edinburgh $Id$";
 #include <float.h>
 #include <Wlz.h>
 
+#undef _OPENMP
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -979,8 +981,8 @@ static WlzObject		*WlzSepFilterZ(WlzObject *inObj,
       for(idx = bBox.xMin; idx <= bBox.xMax; ++idx)
       {
 	int 	z0,
-	      z1,
-	      idz;
+	      	z1,
+	      	idz;
 	WlzUByte in = 0;
 
 	for(idz = bBox.zMin; idz <= bBox.zMax + 1; ++idz)
