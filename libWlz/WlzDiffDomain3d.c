@@ -121,7 +121,12 @@ WlzObject *WlzDiffDomain3d(
   if( errNum == WLZ_ERR_NONE ){
     oldpdom2 = obj2->domain.p;
     o1.type = o2.type = WLZ_2D_DOMAINOBJ;
-    o1.linkcount = o2.linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+    {
+      o1.linkcount = o2.linkcount = 0;
+    }
     o1.values.core = o2.values.core = NULL;
     o1.plist = o2.plist = NULL;
     o1.assoc = o2.assoc = NULL;
