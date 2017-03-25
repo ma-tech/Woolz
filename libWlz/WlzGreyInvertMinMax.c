@@ -264,7 +264,12 @@ static WlzErrorNum WlzGreyInvertMinMax3d(WlzObject	*obj,
   
   /* set up the temporary object */
   o.type = WLZ_2D_DOMAINOBJ;
-  o.linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+  {
+    o.linkcount = 0;
+  }
   o.plist = NULL;
   o.assoc = NULL;
     
