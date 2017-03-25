@@ -1712,7 +1712,12 @@ static WlzErrorNum WlzWriteVoxelValueTable(FILE *fP, WlzObject *obj)
 	  values = voxtab->values;
 	  domains = planedm->domains;
 	  tempobj.type = WLZ_2D_DOMAINOBJ;
-	  tempobj.linkcount = 0;
+#ifdef _OPENMP
+#pragma omp critical (WlzLinkcount)
+#endif
+	  {
+	    tempobj.linkcount = 0;
+	  }
 	  tempobj.plist = NULL;
 	  tempobj.assoc = NULL;
 	  for(i=0; (i < nplanes) && (errNum == WLZ_ERR_NONE);
