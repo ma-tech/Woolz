@@ -109,6 +109,7 @@ bin_PROGRAMS		= \
 			  WlzDilation \
 			  WlzDistanceMetric \
 			  WlzDistanceTransform \
+			  WlzDitherPoints \
 			  WlzDomain \
 			  WlzDomainFill \
 			  WlzErosion \
@@ -483,6 +484,10 @@ WlzDistanceMetric_LDFLAGS		= $(AM_LFLAGS)
 WlzDistanceTransform_SOURCES		= WlzDistanceTransform.c
 WlzDistanceTransform_LDADD		= $(LDADD)
 WlzDistanceTransform_LDFLAGS		= $(AM_LFLAGS)
+
+WlzDitherPoints_SOURCES			= WlzDitherPoints.c
+WlzDitherPoints_LDADD			= $(LDADD)
+WlzDitherPoints_LDFLAGS			= $(AM_LFLAGS)
 
 WlzDomain_SOURCES			= WlzDomain.c
 WlzDomain_LDADD				= $(LDADD)
