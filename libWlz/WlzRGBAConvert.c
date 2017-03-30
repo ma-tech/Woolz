@@ -863,17 +863,20 @@ static WlzObject *WlzRGBAToModulus3D(WlzObject *obj, WlzErrorNum *dstErr)
         (void )WlzFreeObj(gObj2);
         (void )WlzFreeObj(rObj2);
       }
-#ifdef _OPENMP
-#pragma omp critical
+      if(errNum2 != WLZ_ERR_NONE)
       {
-#endif
-        if(errNum2 != WLZ_ERR_NONE)
-        {
-          errNum = errNum2;
-        }
 #ifdef _OPENMP
-      }
+#pragma omp critical (WlzRGBAToModulus3D)
+	{
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = errNum2;
+	  }
+	}
+#else
+	errNum = errNum2;
 #endif
+      }
     }
   }
   if(errNum != WLZ_ERR_NONE)

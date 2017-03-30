@@ -700,17 +700,20 @@ WlzObject	*WlzCutObjToValBox3D(WlzObject *sObj, WlzIBox3 cutBox,
 		  }
 		  (void )WlzFreeObj(sObj2D);
 		  (void )WlzFreeObj(dObj2D);
-#ifdef _OPENMP
-#pragma omp critical
+                  if(errNum2 != WLZ_ERR_NONE)
 		  {
-#endif
-		    if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
-		    {
-		      errNum = errNum2;
-		    }
 #ifdef _OPENMP
-		  }
+#pragma omp critical (WlzCutObjToValBox3D)
+		    {
+		      if(errNum == WLZ_ERR_NONE)
+		      {
+			errNum = errNum2;
+		      }
+		    }
+#else
+		    errNum = errNum2;
 #endif
+		  }
 		}
 	      }
 	    }

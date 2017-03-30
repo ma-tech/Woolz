@@ -175,18 +175,18 @@ WlzObject 			*WlzDomainFill3D(
 	      shlObj->values.vox->values[p] = WlzAssignValues(val2, NULL);
 	    }
 	    (void )WlzFreeObj(shlObj2);
-	    if(errNum2 == WLZ_ERR_NONE)
+	    if(errNum2 != WLZ_ERR_NONE)
 	    {
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzDomainFill3D)
 	      {
-#endif
-		if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
+		if(errNum == WLZ_ERR_NONE)
 		{
 		  errNum = errNum2;
 		}
-#ifdef _OPENMP
 	      }
+#else
+	      errNum = errNum2;
 #endif
 	    }
 	  }
@@ -263,15 +263,15 @@ WlzObject 			*WlzDomainFill3D(
 	  else
 	  {
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzDomainFill3D)
 	    {
-#endif
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 		errNum = errNum2;
 	      }
-#ifdef _OPENMP
 	    }
+#else
+	    errNum = errNum2;
 #endif
 	  }
 	  (void )WlzFreeObj(iObj2);
@@ -453,16 +453,17 @@ WlzObject 			*WlzDomainFill3D(
 	    }
 	    else
 	    {
+
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzDomainFill3D)
 	      {
-#endif
 		if(errNum == WLZ_ERR_NONE)
 		{
 		  errNum = errNum2;
 		}
-#ifdef _OPENMP
 	      }
+#else
+	      errNum = errNum2;
 #endif
 	    }
 	    (void )WlzFreeObj(fObj2);

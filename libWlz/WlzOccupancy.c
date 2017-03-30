@@ -196,39 +196,42 @@ WlzErrorNum	Wlz3DSectionOcc(WlzObject *obj, WlzThreeDViewStruct *vs,
 	  for(idN = 0; idN < cObj->n; ++idN)
 	  {
 	    WlzThreeDViewStruct *vs1;
-	    WlzErrorNum errNum1 = WLZ_ERR_NONE;
+	    WlzErrorNum errNum2 = WLZ_ERR_NONE;
 
 	    if(errNum == WLZ_ERR_NONE)
 	    {
 	      vs1 = WlzMake3DViewStructCopy(vs, &errNum);
-	      if(errNum1 == WLZ_ERR_NONE)
+	      if(errNum2 == WLZ_ERR_NONE)
 	      {
-		errNum1 = WlzInit3DViewStruct(vs1, cObj->o[idN]);
+		errNum2 = WlzInit3DViewStruct(vs1, cObj->o[idN]);
 	      }
-	      if(errNum1 == WLZ_ERR_NONE)
+	      if(errNum2 == WLZ_ERR_NONE)
 	      {
 		obj2D = WlzAssignObject(
 			WlzGetSubSectionFromObject(cObj->o[idN], NULL,
 						   vs1, interp,
-						   NULL, &errNum1), NULL);
+						   NULL, &errNum2), NULL);
 	      }
 	      (void )WlzFree3DViewStruct(vs1);
-	      if(errNum1 == WLZ_ERR_NONE)
+	      if(errNum2 == WLZ_ERR_NONE)
 	      {
-		occ[idP] += (WlzIsEmpty(obj2D, &errNum1))? 0: 1;
+		occ[idP] += (WlzIsEmpty(obj2D, &errNum2))? 0: 1;
 	      }
 	    }
-#ifdef _OPENMP
-#pragma omp critical
+	    if(errNum2 != WLZ_ERR_NONE)
 	    {
-#endif
-	      if((errNum == WLZ_ERR_NONE) && (errNum1 != WLZ_ERR_NONE))
-	      {
-		errNum = errNum1;
-	      }
 #ifdef _OPENMP
-	    }
+#pragma omp critical (Wlz3DSectionOcc)
+	      {
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  errNum = errNum2;
+		}
+	      }
+#else
+	      errNum = errNum2;
 #endif
+	    }
 	  }
 	}
       }

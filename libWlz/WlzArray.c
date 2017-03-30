@@ -1098,18 +1098,22 @@ static WlzErrorNum WlzToArrayBit3D(WlzUByte ****dstP, WlzObject *obj,
 	  {
 	    errNum2 = WlzToArrayBit2D(dstP2, obj2, sz2, og2);
 	  }
-#ifdef _OPENMP
-#pragma omp critical
+	  if(errNum2 != WLZ_ERR_NONE)
 	  {
-#endif
-	    if(errNum2 != WLZ_ERR_NONE)
-	    {
-	      errNum = errNum2;
-	    }
+
 #ifdef _OPENMP
-	  }
-	  WlzFreeObj(obj2);
+#pragma omp critical (WlzToArrayBit3D)
+	    {
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		errNum = errNum2;
+	      }
+	    }
+#else
+	    errNum = errNum2;
 #endif
+	  }
+	  (void )WlzFreeObj(obj2);
 	}
       }
     }

@@ -609,15 +609,15 @@ WlzObject 			*WlzObjToConvexHull(
 		     (errNum2 != WLZ_ERR_DEGENERATE))
 		  {
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzObjToConvexHull)
 		    {
-#endif
 		      if(errNum == WLZ_ERR_NONE)
 		      {
 		        errNum = errNum2;
 		      }
-#ifdef _OPENMP
 		    }
+#else
+		    errNum = errNum2;
 #endif
 		  }
 		  (void )WlzFreeObj(obj2D);

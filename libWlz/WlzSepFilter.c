@@ -457,8 +457,10 @@ WlzObject			*WlzSepFilter(WlzObject *inObj,
   if(errNum == WLZ_ERR_NONE)
   {
     vSz = ALG_MAX3(vBufSz.vtX, vBufSz.vtY, vBufSz.vtZ);
-    if(((iBuf = (double **)AlcMalloc(sizeof(double *) * 2 * nThr)) == NULL) ||
-       ((vBuf = (double *)AlcMalloc(sizeof(double) * 2 * nThr * vSz)) == NULL))
+    if(((iBuf = (double **)
+                AlcMalloc(sizeof(double *) * 2 * nThr * vSz)) == NULL) ||
+       ((vBuf = (double *)
+                AlcMalloc(sizeof(double)   * 2 * nThr * vSz)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -662,15 +664,15 @@ static WlzObject		*WlzSepFilterX(WlzObject *inObj,
 	  if(errNum2 != WLZ_ERR_NONE)
 	  {
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzSepFilterX)
 	    {
-#endif
 	      if(errNum == WLZ_ERR_NONE)
 	      {
 		errNum = errNum2;
 	      }
-#ifdef _OPENMP
 	    }
+#else
+	    errNum = errNum2;
 #endif
 	  }
 	}
@@ -868,15 +870,15 @@ static WlzObject		*WlzSepFilterY(WlzObject *inObj,
 	  if(errNum2 != WLZ_ERR_NONE)
 	  {
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzSepFilterY)
 	    {
-#endif
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-	        errNum = errNum2;
+		errNum = errNum2;
 	      }
-#ifdef _OPENMP
 	    }
+#else
+	    errNum = errNum2;
 #endif
 	  }
 	}

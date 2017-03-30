@@ -197,17 +197,20 @@ WlzObject			*WlzLabel3D(
 	    }
 	  }
 	}
+	if(errNum2 == WLZ_ERR_NONE)
+	{
 #ifdef _OPENMP
-#pragma omp critical
-        {
-#endif
-	  if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
+#pragma omp critical (WlzLabel3D)
 	  {
-	    errNum = errNum2;
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = errNum2;
+	    }
 	  }
-#ifdef _OPENMP
-	}
+#else
+	  errNum = errNum2;
 #endif
+	}
       }
     }
   }
@@ -345,7 +348,7 @@ WlzObject			*WlzLabel3D(
 		       WlzHasIntersection(fObjQ, fObjP, &errNum2))
 		    {
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzLabel3D)
 		      {
 #endif
 			AlcUFTreeUnion(uft, cNFrgTbl[q] + fQ, cNFrgTbl[p] + fP);
@@ -358,17 +361,20 @@ WlzObject			*WlzLabel3D(
 		(void )WlzFreeObj(fObjP);
 	      }
 	    }
-#ifdef _OPENMP
-#pragma omp critical
+	    if(errNum2 != WLZ_ERR_NONE)
 	    {
-#endif
-	      if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
-	      {
-		errNum = errNum2;
-	      }
 #ifdef _OPENMP
-	    }
+#pragma omp critical (WlzLabel3D)
+	      {
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  errNum = errNum2;
+		}
+	      }
+#else
+	      errNum = errNum2;
 #endif
+	    }
 	  }
 	}
       }
@@ -562,16 +568,17 @@ WlzObject			*WlzLabel3D(
 	  }
 	  if(errNum2 != WLZ_ERR_NONE)
 	  {
+
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzLabel3D)
 	    {
-#endif
-	      if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
+	      if(errNum == WLZ_ERR_NONE)
 	      {
 		errNum = errNum2;
 	      }
-#ifdef _OPENMP
 	    }
+#else
+	    errNum = errNum2;
 #endif
 	  }
 	}

@@ -6844,17 +6844,20 @@ static WlzGMModel	*WlzCMeshTransformGMModel(WlzGMModel *srcM,
               errNum2 = WLZ_ERR_DOMAIN_TYPE;
               break;
           }
+	  if(errNum2 != WLZ_ERR_NONE)
+	  {
 #ifdef _OPENMP
-#pragma omp critical
-          {
+#pragma omp critical (WlzCMeshTransformGMModel)
+	    {
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		errNum = errNum2;
+	      }
+	    }
+#else
+	    errNum = errNum2;
 #endif
-            if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
-            {
-              errNum = errNum2;
-            }
-#ifdef _OPENMP
-          }
-#endif
+	  }
         }
       }
     }

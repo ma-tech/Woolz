@@ -158,12 +158,15 @@ double				*WlzInteriorityN(
 	if(errNum2 != WLZ_ERR_NONE)
 	{
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzInteriorityN)
 	  {
-#endif
-            errNum = errNum2;
-#ifdef _OPENMP
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = errNum2;
+	    }
 	  }
+#else
+	  errNum = errNum2;
 #endif
 	}
       }

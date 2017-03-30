@@ -382,17 +382,20 @@ static WlzCompoundArray		*WlzValuesFromCoords3D(
 				  obj2->values, NULL);
 	}
 	(void )WlzFreeObj(obj2);
-#ifdef _OPENMP
-#pragma omp critical
+	if(errNum2 != WLZ_ERR_NONE)
 	{
-#endif
-	  if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
-	  {
-	    errNum = errNum2;
-	  }
 #ifdef _OPENMP
-	}
+#pragma omp critical (WlzValuesFromCoords3D)
+	  {
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = errNum2;
+	    }
+	  }
+#else
+	  errNum = errNum2;
 #endif
+	}
       }
     }
   }

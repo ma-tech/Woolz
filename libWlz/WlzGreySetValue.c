@@ -96,8 +96,9 @@ WlzErrorNum WlzGreySetValue(
       else if( obj->values.core->type != WLZ_VOXELVALUETABLE_GREY ){
 	errNum = WLZ_ERR_VALUES_TYPE;
       }
-      else {
-	/* set range of each plane if non-empty - indicated by NULL */
+      else
+      {
+	/* Set range of each plane if non-empty - indicated by NULL */
 	domains = obj->domain.p->domains;
 	values = obj->values.vox->values;
 	nplanes = obj->domain.p->lastpl - obj->domain.p->plane1 + 1;
@@ -110,36 +111,36 @@ WlzErrorNum WlzGreySetValue(
 	  {
 	    WlzDomain    *doms;
 	    WlzValues    *vals;
-	    WlzErrorNum  errNum2D = WLZ_ERR_NONE;
+	    WlzErrorNum  errNum2 = WLZ_ERR_NONE;
 
 	    doms = domains + i;
 	    vals = values + i;
 	    if(((*doms).core != NULL) && ((*vals).core != NULL))
 	    {
-	      WlzObject *obj2D = NULL;
+	      WlzObject *obj2D;
 
-	      if((obj2D = WlzAssignObject(
+	      obj2D = WlzAssignObject(
 		      WlzMakeMain(WLZ_2D_DOMAINOBJ, *doms, *vals,
-			NULL, NULL,
-			&errNum2D), NULL)) != NULL)
+			NULL, NULL, &errNum2), NULL);
+	      if(errNum2 == WLZ_ERR_NONE)
 	      {
-		errNum2D = WlzGreySetValue(obj2D, val);
-	        (void )WlzFreeObj(obj2D);
+		errNum2 = WlzGreySetValue(obj2D, val);
 	      }
-#ifdef _OPENMP
+	      (void )WlzFreeObj(obj2D);
+	      if(errNum2 != WLZ_ERR_NONE)
 	      {
-		if(errNum2D != WLZ_ERR_NONE)
+#ifdef _OPENMP
+#pragma omp critical (WlzGreySetValue)
 		{
-#pragma omp critical
+		  if(errNum == WLZ_ERR_NONE)
 		  {
-		    if(errNum == WLZ_ERR_NONE)
-		    {
-		      errNum = errNum2D;
-		    }
+		    errNum = errNum2;
 		  }
 		}
-	      }
+#else
+		errNum = errNum2;
 #endif
+	      }
 	    }
 	  }
 	}

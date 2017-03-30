@@ -319,31 +319,31 @@ int		WlzGreyStats(WlzObject *srcObj,
 			sum2D,
 			sumSq2D;
 	      WlzObject	*obj2D = NULL;
-	      WlzErrorNum errNum2D = WLZ_ERR_NONE;
+	      WlzErrorNum errNum2 = WLZ_ERR_NONE;
 
 	      if(tiled)
 	      {
 	        pln = srcObj->domain.p->plane1 + pIdx;
 		obj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom[pIdx],
-				    srcObj->values, NULL, NULL, &errNum2D);
+				    srcObj->values, NULL, NULL, &errNum2);
 	      }
 	      else
 	      {
 	        obj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, dom[pIdx], val[pIdx],
-				    NULL, NULL, &errNum2D);
+				    NULL, NULL, &errNum2);
 	      }
-	      if(errNum2D == WLZ_ERR_NONE)
+	      if(errNum2 == WLZ_ERR_NONE)
 	      {
 		area2D = WlzGreyStats2D(obj2D, pln, &gType,
 					&min2D, &max2D, &sum2D, &sumSq2D,
-					&errNum2D);
+					&errNum2);
 	      }
 	      WlzFreeObj(obj2D);
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzGreyStats)
 	      {
 #endif
-		if(errNum2D == WLZ_ERR_NONE)
+		if(errNum2 == WLZ_ERR_NONE)
 		{
 		  if(area == 0)
 		  {
@@ -366,7 +366,7 @@ int		WlzGreyStats(WlzObject *srcObj,
 		{
 		  if(errNum == WLZ_ERR_NONE)
 		  {
-		    errNum = errNum2D;
+		    errNum = errNum2;
 		  }
 		}
 #ifdef _OPENMP

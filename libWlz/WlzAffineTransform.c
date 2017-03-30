@@ -962,17 +962,20 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
 	      errNum2 = WLZ_ERR_DOMAIN_TYPE;
 	      break;
 	  }
-#ifdef _OPENMP
-#pragma omp critical
+	  if(errNum2 != WLZ_ERR_NONE)
 	  {
-#endif
-	    if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
-	    {
-	      errNum = errNum2;
-	    }
 #ifdef _OPENMP
-	  }
+#pragma omp critical (WlzAffineTransformGMModel)
+	    {
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		errNum = errNum2;
+	      }
+	    }
+#else
+	    errNum = errNum2;
 #endif
+	  }
 	}
       }
     }
@@ -1020,17 +1023,20 @@ WlzGMModel	*WlzAffineTransformGMModel(WlzGMModel *srcM,
 	      errNum2 = WLZ_ERR_DOMAIN_TYPE;
 	      break;
 	  }
-#ifdef _OPENMP
-#pragma omp critical
+	  if(errNum2 != WLZ_ERR_NONE)
 	  {
-#endif
-	    if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
-	    {
-	      errNum = errNum2;
-	    }
 #ifdef _OPENMP
-	  }
+#pragma omp critical (WlzAffineTransformGMModel)
+	    {
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		errNum = errNum2;
+	      }
+	    }
+#else
+	    errNum = errNum2;
 #endif
+	  }
 	}
       }
     }

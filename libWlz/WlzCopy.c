@@ -1164,7 +1164,7 @@ static WlzErrorNum WlzCopyObjectGreyValuesAny3D(WlzObject *dObj,
     {
       WlzDomain	*dDom2D,
 		*sDom2D;
-      WlzErrorNum errNum2D = WLZ_ERR_NONE;
+      WlzErrorNum errNum2 = WLZ_ERR_NONE;
 
       if(((dDom2D = dPDom->domains + idP - dPDom->plane1) != NULL) &&
 	 ((sDom2D = sPDom->domains + idP - sPDom->plane1) != NULL) &&
@@ -1177,31 +1177,34 @@ static WlzErrorNum WlzCopyObjectGreyValuesAny3D(WlzObject *dObj,
   		*sGVWSp = NULL;
 	
 	if(((dObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *dDom2D, nullVal,
-				 NULL, NULL, &errNum2D)) != NULL) &&
+				 NULL, NULL, &errNum2)) != NULL) &&
 	   ((sObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *sDom2D, nullVal,
-				 NULL, NULL, &errNum2D)) != NULL) &&
-	   ((dGVWSp = WlzGreyValueMakeWSp(dObj, &errNum2D)) != NULL) &&
-	   ((sGVWSp = WlzGreyValueMakeWSp(sObj, &errNum2D)) != NULL))
+				 NULL, NULL, &errNum2)) != NULL) &&
+	   ((dGVWSp = WlzGreyValueMakeWSp(dObj, &errNum2)) != NULL) &&
+	   ((sGVWSp = WlzGreyValueMakeWSp(sObj, &errNum2)) != NULL))
 	{
-	  errNum2D = WlzCopyObjectGreyValuesGVWSp2D(dObj2D, dGVWSp,
-						    sObj2D, sGVWSp, idP);
+	  errNum2 = WlzCopyObjectGreyValuesGVWSp2D(dObj2D, dGVWSp,
+						   sObj2D, sGVWSp, idP);
 	}
 	WlzGreyValueFreeWSp(dGVWSp);
 	WlzGreyValueFreeWSp(sGVWSp);
 	(void )WlzFreeObj(dObj2D);
 	(void )WlzFreeObj(sObj2D);
       }
-#ifdef _OPENMP
-#pragma omp critical
+      if(errNum2 != WLZ_ERR_NONE)
       {
-#endif
-	if(errNum2D != WLZ_ERR_NONE)
-	{
-	  errNum = errNum2D;
-	}
 #ifdef _OPENMP
-      }
+#pragma omp critical (WlzCopyObjectGreyValuesAny3D)
+	{
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = errNum2;
+	  }
+	}
+#else
+	errNum = errNum2;
 #endif
+      }
     }
   }
   return(errNum);
@@ -1318,7 +1321,7 @@ static WlzErrorNum WlzCopyObjectGreyValuesScan3D(WlzObject *dObj,
 		*sDom2D;
       WlzValues *dVal2D,
       		*sVal2D;
-      WlzErrorNum errNum2D = WLZ_ERR_NONE;
+      WlzErrorNum errNum2 = WLZ_ERR_NONE;
 
       if(((dDom2D = dPDom->domains + idP - dPDom->plane1) != NULL) &&
 	 ((sDom2D = sPDom->domains + idP - sPDom->plane1) != NULL) &&
@@ -1329,18 +1332,18 @@ static WlzErrorNum WlzCopyObjectGreyValuesScan3D(WlzObject *dObj,
 		  *sObj2D = NULL;
 	
 	if(((dObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *dDom2D, *dVal2D,
-				 NULL, NULL, &errNum2D)) != NULL) &&
+				 NULL, NULL, &errNum2)) != NULL) &&
 	   ((sObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *sDom2D, *sVal2D,
-				 NULL, NULL, &errNum2D)) != NULL))
+				 NULL, NULL, &errNum2)) != NULL))
 	{
-	  errNum2D = WlzCopyObjectGreyValuesScan2D(dObj2D, sObj2D);
+	  errNum2 = WlzCopyObjectGreyValuesScan2D(dObj2D, sObj2D);
 	}
 	(void )WlzFreeObj(dObj2D);
 	(void )WlzFreeObj(sObj2D);
       }
-      if(errNum2D != WLZ_ERR_NONE)
+      if(errNum2 != WLZ_ERR_NONE)
       {
-        errNum = errNum2D;
+        errNum = errNum2;
       }
     }
   }

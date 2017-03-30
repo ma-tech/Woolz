@@ -162,7 +162,7 @@ static WlzErrorNum WlzGreyIncValuesInDomain3D(WlzObject *gObj, WlzObject *dObj)
       {
 	WlzDomain    *doms;
 	WlzValues    *vals;
-	WlzErrorNum  errNum2D = WLZ_ERR_NONE;
+	WlzErrorNum  errNum2 = WLZ_ERR_NONE;
 
 	doms = dPD->domains + p - dPD->plane1;
 	vals = gVV->values + p - gPD->plane1;;
@@ -172,23 +172,23 @@ static WlzErrorNum WlzGreyIncValuesInDomain3D(WlzObject *gObj, WlzObject *dObj)
 
 	  if((obj2D = WlzAssignObject(
 		      WlzMakeMain(WLZ_2D_DOMAINOBJ, *doms, *vals, NULL, NULL,
-		                  &errNum2D), NULL)) != NULL)
+		                  &errNum2), NULL)) != NULL)
 	  {
-	    errNum2D = WlzGreyIncValues2D(obj2D);
+	    errNum2 = WlzGreyIncValues2D(obj2D);
 	    (void )WlzFreeObj(obj2D);
 	  }
-	    if(errNum2D != WLZ_ERR_NONE)
+	  if(errNum2 != WLZ_ERR_NONE)
 	  {
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzGreyIncValuesInDomain3D)
 	    {
-#endif
 	      if(errNum == WLZ_ERR_NONE)
 	      {
-		errNum = errNum2D;
+		errNum = errNum2;
 	      }
-#ifdef _OPENMP
 	    }
+#else
+	    errNum = errNum2;
 #endif
 	  }
 	}
@@ -798,7 +798,7 @@ static WlzObject *WlzScalarMulAdd3D(WlzObject *iObj, WlzPixelV m, WlzPixelV a,
 #endif
     for(idP = plMin; idP <= plMax; ++idP)
     {
-      WlzErrorNum errNum2D = WLZ_ERR_NONE;
+      WlzErrorNum errNum2 = WLZ_ERR_NONE;
 
       if(errNum == WLZ_ERR_NONE)
       {
@@ -818,11 +818,11 @@ static WlzObject *WlzScalarMulAdd3D(WlzObject *iObj, WlzPixelV m, WlzPixelV a,
 		    *rObj2D = NULL;
 	  
 	  if((iObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, *iDom2D, *iVal2D,
-				   NULL, NULL, &errNum2D)) != NULL)
+				   NULL, NULL, &errNum2)) != NULL)
 	  {
-	    rObj2D = WlzScalarMulAdd2D(iObj2D, m, a, rGType, &errNum2D);
+	    rObj2D = WlzScalarMulAdd2D(iObj2D, m, a, rGType, &errNum2);
 	  }
-	  if(errNum2D == WLZ_ERR_NONE)
+	  if(errNum2 == WLZ_ERR_NONE)
 	  {
 	    *rVal2D = WlzAssignValues(rObj2D->values, NULL);
 	  }
@@ -830,18 +830,18 @@ static WlzObject *WlzScalarMulAdd3D(WlzObject *iObj, WlzPixelV m, WlzPixelV a,
 	  (void )WlzFreeObj(rObj2D);
 	}
       }
-      if(errNum2D != WLZ_ERR_NONE)
+      if(errNum2 != WLZ_ERR_NONE)
       {
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzScalarMulAdd3D)
 	{
-#endif
 	  if(errNum == WLZ_ERR_NONE)
 	  {
-	    errNum = errNum2D;
+	    errNum = errNum2;
 	  }
-#ifdef _OPENMP
 	}
+#else
+	errNum = errNum2;
 #endif
       }
     }

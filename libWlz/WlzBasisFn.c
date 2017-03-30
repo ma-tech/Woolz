@@ -2960,7 +2960,7 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
       {
 	if(errNum == WLZ_ERR_NONE)
 	{
-	  WlzErrorNum	errNum1 = WLZ_ERR_NONE;
+	  WlzErrorNum	errNum2 = WLZ_ERR_NONE;
 
 	  if(newBasisFn->distMap[idN] == NULL)
 	  {
@@ -2968,26 +2968,29 @@ WlzBasisFn *WlzBasisFnIMQ3DFromCPts(int nPts, WlzDVertex3 *dPts,
 					   AlcMalloc(sizeof(double) *
 						     maxNod)) == NULL)
 	    {
-	      errNum1 = WLZ_ERR_MEM_ALLOC;
+	      errNum2 = WLZ_ERR_MEM_ALLOC;
 	    }
 	    else
 	    {
-	      errNum1 = WlzCMeshFMarNodes3D(newBasisFn->mesh.m3,
+	      errNum2 = WlzCMeshFMarNodes3D(newBasisFn->mesh.m3,
 					    newBasisFn->distMap[idN],
 					    1, dPts + idN);
 	    }
 	  }
+	  if(errNum2 != WLZ_ERR_NONE)
+	  {
 #ifdef _OPENMP
-#pragma omp critical
-          {
-#endif
-            if((errNum == WLZ_ERR_NONE) && (errNum1 != WLZ_ERR_NONE))
+#pragma omp critical (WlzBasisFnIMQ3DFromCPts)
 	    {
-	      errNum = errNum1;
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		errNum = errNum2;
+	      }
 	    }
-#ifdef _OPENMP
-	  }
+#else
+	    errNum = errNum2;
 #endif
+          }
 	}
       }
     }

@@ -846,15 +846,15 @@ struct timeval	times[3];
 	if(errNum2 != WLZ_ERR_NONE)
 	{
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzProjectObjToPlane)
 	  {
-#endif
 	    if(errNum == WLZ_ERR_NONE)
 	    {
 	      errNum = errNum2;
 	    }
-#ifdef _OPENMP
 	  }
+#else
+          errNum = errNum2;
 #endif
 	}
       }

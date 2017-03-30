@@ -201,7 +201,7 @@ WlzObject			*WlzGreyTransfer(
 		    WlzValues  val;
 		    WlzObject  *rIObj2D = NULL,
 			       *sIObj2D = NULL;
-		    WlzErrorNum errNum2D = WLZ_ERR_NONE;
+		    WlzErrorNum errNum2 = WLZ_ERR_NONE;
 
 		    pln = p + rIObj->domain.p->plane1;
 		    dom = rIObj->domain.p->domains[p];
@@ -210,33 +210,36 @@ WlzObject			*WlzGreyTransfer(
 			  rObj->values.vox->values[pln -
 						   rObj->values.vox->plane1];
 		    rIObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-					  dom, val, NULL, NULL, &errNum2D);
-		    if(errNum2D == WLZ_ERR_NONE)
+					  dom, val, NULL, NULL, &errNum2);
+		    if(errNum2 == WLZ_ERR_NONE)
 		    {
 		      val = (sTiled)?
 			    sObj->values:
 			    sObj->values.vox->values[pln -
 						     sObj->values.vox->plane1];
 		      sIObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-					    dom, val, NULL, NULL, &errNum2D);
+					    dom, val, NULL, NULL, &errNum2);
 		    }
-		    if(errNum2D == WLZ_ERR_NONE)
+		    if(errNum2 == WLZ_ERR_NONE)
 		    {
-		      errNum2D = WlzGreyTransfer2D(rIObj2D, sIObj2D);
+		      errNum2 = WlzGreyTransfer2D(rIObj2D, sIObj2D);
 		    }
 		    (void )WlzFreeObj(rIObj2D);
 		    (void )WlzFreeObj(sIObj2D);
-#ifdef _OPENMP
-#pragma omp critical
+                    if(errNum2 != WLZ_ERR_NONE)
 		    {
-#endif
-		      if((errNum == WLZ_ERR_NONE) && (errNum2D != WLZ_ERR_NONE))
-		      {
-			errNum = errNum2D;
-		      }
 #ifdef _OPENMP
-		    }
+#pragma omp critical (WlzGreyTransfer)
+		      {
+			if(errNum == WLZ_ERR_NONE)
+			{
+			  errNum = errNum2;
+			}
+		      }
+#else
+	              errNum = errNum2;
 #endif
+		    }
 		  }
 		}
 	      }

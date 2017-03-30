@@ -1010,7 +1010,7 @@ static WlzObject *WlzThreshold3D(WlzObject	*obj,
 			*nvalues = NULL;
 	WlzObject	*gObj2D = NULL,
 			*tObj2D = NULL;
-	WlzErrorNum 	errNum2D = WLZ_ERR_NONE;
+	WlzErrorNum 	errNum2 = WLZ_ERR_NONE;
 
 	pln = pdom->plane1 + p;
 	domains = pdom->domains + p;
@@ -1028,13 +1028,13 @@ static WlzObject *WlzThreshold3D(WlzObject	*obj,
 	  gObj2D = WlzAssignObject(
 	           WlzMakeMain(WLZ_2D_DOMAINOBJ, *domains,
 		               (tiled)? obj->values: *values,
-			       NULL, NULL, &errNum2D), NULL);
+			       NULL, NULL, &errNum2), NULL);
 	  if(gObj2D)
 	  {
 	    if(gObj2D->domain.i != NULL)
 	    {
 	      tObj2D = WlzThreshold2D(gObj2D, threshV, highlow, pln,
-	                              &errNum2D);
+	                              &errNum2);
 	      if((tObj2D != NULL) && (tObj2D->type == WLZ_2D_DOMAINOBJ))
 	      {
 		*ndomains = WlzAssignDomain(tObj2D->domain, NULL);
@@ -1048,17 +1048,21 @@ static WlzObject *WlzThreshold3D(WlzObject	*obj,
 	    (void )WlzFreeObj(gObj2D);
 	  }
         }
+	if(errNum2 != WLZ_ERR_NONE)
+	{
+
 #ifdef _OPENMP
-#pragma omp critical
-        {
-#endif
-          if((errNum == WLZ_ERR_NONE) && (errNum2D != WLZ_ERR_NONE))
+#pragma omp critical (WlzThreshold3D)
 	  {
-	    errNum = errNum2D;
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = errNum2;
+	    }
 	  }
-#ifdef _OPENMP
-	}
+#else
+	  errNum = errNum2;
 #endif
+	}
       }
     }
   }

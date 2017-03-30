@@ -699,12 +699,12 @@ WlzObject			*WlzCMeshDispToField(
 			  break;
 			default:
 #ifdef _OPENMP
-#pragma omp critical
+#pragma omp critical (WlzCMeshDispToField)
 			  {
-#endif
-			  errNum = WLZ_ERR_GREY_TYPE;
-#ifdef _OPENMP
+			    errNum = WLZ_ERR_GREY_TYPE;
 			  }
+#else
+                          errNum = WLZ_ERR_GREY_TYPE;
 #endif
 			  break;
 		      }
@@ -756,17 +756,20 @@ WlzObject			*WlzCMeshDispToField(
 		  }
 		  errNum2 = WlzSetBackground(rCpd->o[idC], bgdV);
 		}
-#ifdef _OPENMP
-#pragma omp critical
+		if(errNum2 != WLZ_ERR_NONE)
 		{
-#endif
-		  if((errNum == WLZ_ERR_NONE) && (errNum2 != WLZ_ERR_NONE))
-		  {
-		    errNum = errNum2;
-		  }
 #ifdef _OPENMP
-		}
+#pragma omp critical (WlzCMeshDispToField)
+		  {
+		    if(errNum == WLZ_ERR_NONE)
+		    {
+		      errNum = errNum2;
+		    }
+		  }
+#else
+		  errNum = errNum2;
 #endif
+		}
 	      }
 	    }
 	  }
