@@ -39,6 +39,7 @@ static char _WlzImageBlend_c[] = "University of Edinburgh $Id$";
 * \ingroup	WlzValueFilters
 */
 
+#include <string.h>
 #include <sys/time.h>
 #include <stdio.h>
 #include <Wlz.h>
@@ -48,6 +49,7 @@ static char _WlzImageBlend_c[] = "University of Edinburgh $Id$";
 #ifndef restrict
 #define restrict
 #endif
+
 
 static void			WlzImageBlendItvToBufRGB(
 				  WlzUByte *buffer,
@@ -70,7 +72,7 @@ static void			WlzImageBlendItvToBufRGBA(
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzValueFilters
-* \brief	Blends the give 2D object's domain into the given buffer
+* \brief	Blends the given 2D object's domain into the given buffer
 * 		using Porter Duff source over destination. Object values
 * 		are ignored.
 * \param	buffer		Given buffer with either 3 or (when
@@ -104,13 +106,14 @@ WlzErrorNum			WlzImageBlendObjToBufRGBA(
     WlzIntervalWSpace iWSp;
 
     if((errNum = WlzInitRasterScan(obj, &iWSp,
-                                   WLZ_RASTERDIR_ILIC)) == WLZ_ERR_NONE)
+				   WLZ_RASTERDIR_ILIC)) == WLZ_ERR_NONE)
     {
       while((errNum = WlzNextInterval(&iWSp)) == WLZ_ERR_NONE)
       {
 	int	bs1,
-		lin,
+		len,
 		lft,
+		lin,
 		rgt;
 
 	/* Make all coordinates relative to the buffer. */
@@ -119,9 +122,11 @@ WlzErrorNum			WlzImageBlendObjToBufRGBA(
 	lft = iWSp.lftpos - bufOrg.vtX;
 	rgt = iWSp.rgtpos - bufOrg.vtX;
 #ifdef WLZ_FAST_CODE
-	if(((unsigned int )lin < bufSz.vtY) && (lft < bufSz.vtX) && (rgt > 0))
+	if(((unsigned int )lin < bufSz.vtY) && (lft < bufSz.vtX) &&
+	   (rgt > 0))
 #else
-	if((lin > 0) && (lin < bufSz.vtY) && (lft < bufSz.vtX) && (rgt > 0))
+	if((lin > 0) && (lin < bufSz.vtY) && (lft < bufSz.vtX) &&
+	   (rgt > 0))
 #endif
 	{
 	  if(lft < 0)
@@ -146,13 +151,25 @@ WlzErrorNum			WlzImageBlendObjToBufRGBA(
       }
       if(errNum == WLZ_ERR_EOO)
       {
-        errNum = WLZ_ERR_NONE;
+	errNum = WLZ_ERR_NONE;
       }
     }
   }
   return(errNum);
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValueFilters
+* \brief	Blends the given interval into the given buffer
+* 		using Porter Duff source over destination.
+* \param	buffer		Given buffer with 3 bytes (r,g,b) per pixel.
+* \param	obj		Given object to blend into the buffer.
+* \param	bufOrg		Position of the buffer origin.
+* \param	bufSz		Size of the buffer.
+* \param	useAlpha	Use alpha channel if non-zero.
+* \param	color		Colour to blend within the object's domain.
+*/
 static void			WlzImageBlendItvToBufRGB(
 				  WlzUByte *buffer,
 				  WlzUInt iLin,
@@ -194,6 +211,18 @@ static void			WlzImageBlendItvToBufRGB(
   }
 }
 
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValueFilters
+* \brief	Blends the given interval into the given buffer
+* 		using Porter Duff source over destination.
+* \param	buffer		Given buffer with 4 bytes (r,g,b,a) per pixel.
+* \param	obj		Given object to blend into the buffer.
+* \param	bufOrg		Position of the buffer origin.
+* \param	bufSz		Size of the buffer.
+* \param	useAlpha	Use alpha channel if non-zero.
+* \param	color		Colour to blend within the object's domain.
+*/
 static void			WlzImageBlendItvToBufRGBA(
 				  WlzUByte *buffer,
 				  WlzUInt iLin,
@@ -239,10 +268,12 @@ static void			WlzImageBlendItvToBufRGBA(
 
 #ifdef WLZ_IMAGEBLEND_TEST
 
+#ifdef __STDC__ /* [ */
+extern int      getopt(int argc, char * const *argv, const char *optstring);
+
+extern int      optind, opterr, optopt;
 extern char     *optarg;
-extern int      optind,
-                opterr,
-                optopt;
+#endif /* __STDC__ ] */
 
 
 static int			WlzImageBlendReadObj(
