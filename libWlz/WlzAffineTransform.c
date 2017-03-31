@@ -51,6 +51,10 @@ static char _WlzAffineTransform_c[] = "University of Edinburgh $Id$";
 
 #include <Wlz.h>
 
+#ifdef _OPENMP
+#define WLZ_VALUE_OMP_CHUNKSZ 1024    /* To avoid parallelising small loops. */
+#endif
+
 static int			WlzAffineTransformIsTranslate2(
 				  WlzAffineTransform *trans,
 				  WlzObject *obj,
@@ -576,21 +580,12 @@ static WlzPolygonDomain *WlzAffineTransformPoly2(WlzPolygonDomain *srcPoly,
                                                  WlzAffineTransform *trans,
                                                  WlzErrorNum *dstErr)
 {
-  int           count;
   double        cx,
                 cy,
-                dx,
-                dy,
                 sx,
                 sy,
                 tx,
                 ty;
-  WlzIVertex2   *srcVtxI,
-                *dstVtxI;
-  WlzFVertex2   *srcVtxF,
-                *dstVtxF;
-  WlzDVertex2   *srcVtxD,
-                *dstVtxD;
   WlzPolygonDomain *dstPoly = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
@@ -621,46 +616,69 @@ static WlzPolygonDomain *WlzAffineTransformPoly2(WlzPolygonDomain *srcPoly,
     switch(srcPoly->type)
     {
       case WLZ_POLYGON_INT:
-        srcVtxI = srcPoly->vtx;
-        dstVtxI = dstPoly->vtx;
-        count = srcPoly->nvertices;
-        while(count-- > 0)
-        {
-          dx = (cx * srcVtxI->vtX) + (sx * srcVtxI->vtY) + tx;
-          dy = (sy * srcVtxI->vtX) + (cy * srcVtxI->vtY) + ty;
-          dstVtxI->vtX = WLZ_NINT(dx);
-          dstVtxI->vtY = WLZ_NINT(dy);
-          ++srcVtxI;
-          ++dstVtxI;
-        }
+	{
+	  int		idx;
+	  WlzIVertex2   *srcVtxI,
+			*dstVtxI;
+
+	  srcVtxI = srcPoly->vtx;
+	  dstVtxI = dstPoly->vtx;
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+	  for(idx = 0; idx < srcPoly->nvertices; ++idx)
+	  {
+	    double dx,
+		   dy;
+
+	    dx = (cx * srcVtxI[idx].vtX) + 
+		 (sx * srcVtxI[idx].vtY) + tx;
+	    dy = (sy * srcVtxI[idx].vtX) + 
+		 (cy * srcVtxI[idx].vtY) + ty;
+	    dstVtxI[idx].vtX = WLZ_NINT(dx);
+	    dstVtxI[idx].vtY = WLZ_NINT(dy);
+	  }
+	}
         break;
       case WLZ_POLYGON_FLOAT:
-        srcVtxF = (WlzFVertex2 *)(srcPoly->vtx);
-        dstVtxF = (WlzFVertex2 *)(dstPoly->vtx);
-        count = srcPoly->nvertices;
-        while(count-- > 0)
-        {
-          dstVtxF->vtX = (float)
-	                 ((cx * srcVtxF->vtX) + (sx * srcVtxF->vtY) + tx);
-          dstVtxF->vtY = (float )
-	                 ((sy * srcVtxF->vtX) + (cy * srcVtxF->vtY) + ty);
-          ++srcVtxF;
-          ++dstVtxF;
-        }
+	{
+	  int		idx;
+	  WlzFVertex2   *srcVtxF,
+			*dstVtxF;
+
+	  srcVtxF = (WlzFVertex2 *)(srcPoly->vtx);
+	  dstVtxF = (WlzFVertex2 *)(dstPoly->vtx);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+	  for(idx = 0; idx < srcPoly->nvertices; ++idx)
+	  {
+	    dstVtxF[idx].vtX = (cx * srcVtxF[idx].vtX) + 
+			       (sx * srcVtxF[idx].vtY) + tx;
+	    dstVtxF[idx].vtY = (sy * srcVtxF[idx].vtX) +
+			       (cy * srcVtxF[idx].vtY) + ty;
+	  }
+	}
         break;
       case WLZ_POLYGON_DOUBLE:
-        srcVtxD = (WlzDVertex2 *)(srcPoly->vtx);
-        dstVtxD = (WlzDVertex2 *)(dstPoly->vtx);
-        count = srcPoly->nvertices;
-        while(count-- > 0)
-        {
-          dstVtxD->vtX = (float )((cx * srcVtxD->vtX) + (sx * srcVtxD->vtY) +
-	                          tx);
-          dstVtxD->vtY = (float )((sy * srcVtxD->vtX) + (cy * srcVtxD->vtY) +
-	                          ty);
-          ++srcVtxD;
-          ++dstVtxD;
-        }
+	{
+	  int		idx;
+	  WlzDVertex2   *srcVtxD,
+	  		*dstVtxD;
+
+	  srcVtxD = (WlzDVertex2 *)(srcPoly->vtx);
+	  dstVtxD = (WlzDVertex2 *)(dstPoly->vtx);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
+	  for(idx = 0; idx < srcPoly->nvertices; ++idx)
+	  {
+	    dstVtxD[idx].vtX = (cx * srcVtxD[idx].vtX) + 
+			       (sx * srcVtxD[idx].vtY) + tx;
+	    dstVtxD[idx].vtY = (sy * srcVtxD[idx].vtX) +
+			       (cy * srcVtxD[idx].vtY) + ty;
+	  }
+	}
         break;
       default:
         break;
@@ -818,6 +836,9 @@ WlzPoints	*WlzAffineTransformPoints(WlzPoints *srcPts,
     switch(dstPts->type)
     {
       case WLZ_POINTS_2I:
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
 	for(idx = 0; idx < dstPts->nPoints; ++idx)
 	{
 	  WlzIVertex2 *pnt;
@@ -827,6 +848,9 @@ WlzPoints	*WlzAffineTransformPoints(WlzPoints *srcPts,
 	}
 	break;
       case WLZ_POINTS_2D:
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
 	for(idx = 0; idx < dstPts->nPoints; ++idx)
 	{
 	  WlzDVertex2 *pnt;
@@ -836,6 +860,9 @@ WlzPoints	*WlzAffineTransformPoints(WlzPoints *srcPts,
 	}
 	break;
       case WLZ_POINTS_3I:
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
 	for(idx = 0; idx < dstPts->nPoints; ++idx)
 	{
 	  WlzIVertex3 *pnt;
@@ -845,6 +872,9 @@ WlzPoints	*WlzAffineTransformPoints(WlzPoints *srcPts,
 	}
 	break;
       case WLZ_POINTS_3D:
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_VALUE_OMP_CHUNKSZ)
+#endif
 	for(idx = 0; idx < dstPts->nPoints; ++idx)
 	{
 	  WlzDVertex3 *pnt;
