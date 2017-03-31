@@ -104,13 +104,12 @@ WlzErrorNum WlzSetBackground(WlzObject	*obj,
 
   }
    
-
-  (void )WlzValueConvertPixel(
-    &bgd, bgd,
-    WlzGreyTableTypeToGreyType(obj->values.core->type, &errNum));
   switch( obj->type ){
 
   case WLZ_2D_DOMAINOBJ:
+    (void )WlzValueConvertPixel(
+				&bgd, bgd,
+				WlzGreyTableTypeToGreyType(obj->values.core->type, &errNum));
     switch( WlzGreyTableTypeToTableType(obj->values.core->type, &errNum) ){
 
     case WLZ_GREY_TAB_RAGR:

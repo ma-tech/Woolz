@@ -49,13 +49,17 @@ static char _WlzGreySetValue_c[] = "University of Edinburgh $Id$";
 WlzGreySetValue - sets the grey values of the object to a specified value.
 \par Synopsis
 \verbatim
-WlzGreySetValue [-c #,#,#] [-g#] [-h] [<input mask> [<input obj>]]
+WlzGreySetValue [-c #,#,#] [-C #,#,#,#] [-g#] [-h] [<input mask> [<input obj>]]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-c</b></td>
-    <td>New colour value r,g,b - default 0,0,0.</td>
+    <td>New colour value r,g,b - default 0,0,0, alpha=255.</td>
+  </tr>
+  <tr> 
+    <td><b>-C</b></td>
+    <td>New colour value r,g,b,a - default 0,0,0,255.</td>
   </tr>
   <tr> 
     <td><b>-g</b></td>
@@ -106,13 +110,14 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   (void )fprintf(stderr,
-	  "Usage:\t%s [-c#,#,#] [-g#] [-h]\n"
+	  "Usage:\t%s [-c#,#,#] [-C#,#,#,#] [-g#] [-h]\n"
 	  "\t  [<input mask> [<input obj>]]\n"
 	  "\tSet the grey values of the object to the input value.\n"
 	  "\tA valuetable will be attached if required.\n"
 	  "Version: %s\n"
 	  "Options:\n"
-	  "\t  -c#,#,#   the new colour value r,g,b - default 0,0,0\n"
+	  "\t  -c#,#,#   the new colour value r,g,b - default 0,0,0, a=255\n"
+	  "\t  -C#,#,#,# the new colour value r,g,b,a - default 0,0,0,255\n"
 	  "\t  -g#       the new grey value - default 0\n"
 	  "\t  -h        help - prints this usage message\n",
 	  proc_str,
@@ -128,7 +133,7 @@ int main(int	argc,
   WlzDomain	*domains;
   WlzValues	values, *valuess;
   FILE		*inFile;
-  char 		optList[] = "c:g:h";
+  char 		optList[] = "c:C:g:h";
   int		igv,
 		pCnt,
   		option;
@@ -136,7 +141,7 @@ int main(int	argc,
   WlzPixelV	bckgrnd;
   WlzObjectType	type;
   int		p, colFlg=0;
-  int		red=0, green=0, blue=0;
+  int		red=0, green=0, blue=0, alpha=255;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
     
@@ -155,6 +160,17 @@ int main(int	argc,
 	return 1;
       }
       WLZ_RGBA_RGBA_SET(greyVal.v.rgbv, red, green, blue, 255);
+      greyVal.type = WLZ_GREY_RGBA;
+      colFlg = 1;
+      break;
+
+    case 'C':
+      if(sscanf(optarg, "%d,%d,%d,%d", &red, &green, &blue, &alpha) != 4)
+      {
+        usage(argv[0]);
+	return 1;
+      }
+      WLZ_RGBA_RGBA_SET(greyVal.v.rgbv, red, green, blue, alpha);
       greyVal.type = WLZ_GREY_RGBA;
       colFlg = 1;
       break;

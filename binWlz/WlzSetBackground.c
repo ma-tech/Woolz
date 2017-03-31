@@ -51,7 +51,7 @@ WlzSetBackground - sets the background value of a domain object with
                    grey values.
 \par Synopsis
 \verbatim
-WlzSetBackground [-f] [-h] [-v] [-b#] [<input file>]
+WlzSetBackground [-f] [-h] [-v] [-b#] [-C#,#,#,#] [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -70,6 +70,10 @@ WlzSetBackground [-f] [-h] [-v] [-b#] [<input file>]
   <tr> 
     <td><b>-b</b></td>
     <td>Background value, default 0.</td>
+  </tr>
+  <tr> 
+    <td><b>-C</b></td>
+    <td>Colour background value, default 0,0,0,255.</td>
   </tr>
 </table>
 \par Description
@@ -108,14 +112,15 @@ extern char     *optarg;
 static void usage(char *proc_str)
 {
   fprintf(stderr,
-	  "Usage:\t%s [-b#] [-f] [-h] [-v] [<input file>]\n"
+	  "Usage:\t%s [-b#] [-C#,#,#,#] [-f] [-h] [-v] [<input file>]\n"
 	  "\tSet the background of a grey-level woolz object\n"
 	  "\twriting the new object to standard output.\n"
 	  "\tThe background value is converted to the grey type\n"
 	  "\tof the input object\n"
 	  "Version: %s\n"
 	  "Options:\n"
-	  "\t  -b#       required background value, default 0\n"
+	  "\t  -b#       new background value, default 0\n"
+	  "\t  -C#,#,#,# new colour background value r,g,b,a, default 0,o,0,255\n"
 	  "\t  -f        force new object (probably only useful for tests)\n"
 	  "\t  -h        help - prints this usage message\n"
 	  "\t  -v        verbose operation\n",
@@ -130,10 +135,11 @@ int main(int	argc,
 
   WlzObject	*obj;
   FILE		*inFile;
-  char 		optList[] = "b:fhv";
+  char 		optList[] = "b:C:fhv";
   int		forceNew = 0,
   		option;
   WlzPixelV	bckgrnd;
+  int		red=0, green=0, blue=0, alpha=255;
   int		verboseFlg=0;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsg;
@@ -145,19 +151,30 @@ int main(int	argc,
   
   while( (option = getopt(argc, argv, optList)) != EOF ){
     switch( option ){
-      case 'b':
-	bckgrnd.v.dbv = atof(optarg);
-	break;
-      case 'f':
-	forceNew = 1;
-	break;
-      case 'v':
-	verboseFlg = 1;
-	break;
-      case 'h':
-      default:
-	usage(argv[0]);
-	return 1;
+    case 'b':
+      bckgrnd.v.dbv = atof(optarg);
+      break;
+
+    case 'C':
+      if(sscanf(optarg, "%d,%d,%d,%d", &red, &green, &blue, &alpha) != 4)
+	{
+	  usage(argv[0]);
+	  return 1;
+	}
+      WLZ_RGBA_RGBA_SET(bckgrnd.v.rgbv, red, green, blue, alpha);
+      bckgrnd.type = WLZ_GREY_RGBA;
+      break;
+
+    case 'f':
+      forceNew = 1;
+      break;
+    case 'v':
+      verboseFlg = 1;
+      break;
+    case 'h':
+    default:
+      usage(argv[0]);
+      return 1;
     }
   }
 

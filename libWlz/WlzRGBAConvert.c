@@ -282,12 +282,62 @@ static WlzCompoundArray *WlzRGBAToCompound3D(
   WlzRGBAColorSpace	colSpc,
   WlzErrorNum	*dstErr)
 {
-  WlzErrorNum		errNum = WLZ_ERR_UNIMPLEMENTED;
-  
+  WlzCompoundArray	*cobj=NULL;
+  WlzPlaneDomain	*pdom;
+  WlzVoxelValues	*voxtab,
+  			*nvoxtab = NULL;
+  WlzObject             *obj1, *objs[4];
+  WlzErrorNum		errNum=WLZ_ERR_NONE;
+  int                   i, p, pln;
+  WlzValues             vals;
+
+  /* Assume all checks done and a valid object */
+  /* generate a compound object with a 3D object for each channel */
+  pdom = obj->domain.p;
+  voxtab = obj->values.vox;
+  for( i=0; i < 4; i++){
+      nvoxtab = WlzMakeVoxelValueTb(voxtab->type, voxtab->plane1,
+				    voxtab->lastpl, voxtab->bckgrnd,
+				    NULL, &errNum);
+      if( errNum == WLZ_ERR_NONE ){
+	nvoxtab->bckgrnd.type = WLZ_GREY_UBYTE;
+	if( i == 0 ) {nvoxtab->bckgrnd.v.ubv = WLZ_RGBA_RED_GET(voxtab->bckgrnd.v.rgbv);}
+	else if( i == 1 ) {nvoxtab->bckgrnd.v.ubv = WLZ_RGBA_GREEN_GET(voxtab->bckgrnd.v.rgbv);}
+	else if( i == 2 ) {nvoxtab->bckgrnd.v.ubv = WLZ_RGBA_BLUE_GET(voxtab->bckgrnd.v.rgbv);}
+	else {nvoxtab->bckgrnd.v.ubv = WLZ_RGBA_ALPHA_GET(voxtab->bckgrnd.v.rgbv);}
+
+	vals.vox = nvoxtab;
+	objs[i] = WlzMakeMain(WLZ_3D_DOMAINOBJ, obj->domain, vals, NULL, obj, &errNum);
+      }
+      else {
+	objs[i] = NULL;
+      }
+  }
+
+  /* loop through each plane assigning plane to each channel object */
+  for( p=0, pln=pdom->plane1; pln <= pdom->lastpl; p++, pln++ ){
+    obj1 = WlzAssignObject(
+	    WlzMakeMain(WLZ_2D_DOMAINOBJ, *(pdom->domains+p),*(voxtab->values+p),NULL, NULL, &errNum), NULL);
+    cobj = WlzRGBAToCompound(obj1, colSpc, &errNum);
+    for(i=0; i < 4; i++){
+      objs[i]->domain.p->domains[p] = WlzAssignDomain(cobj->o[i]->domain, &errNum);
+      objs[i]->values.vox->values[p] = WlzAssignValues(cobj->o[i]->values, &errNum);
+    }
+    WlzFreeObj((WlzObject *) cobj);
+    WlzFreeObj(obj1);
+  }
+
+  /* create compound object for return */
+  cobj = NULL;
+  if( errNum == WLZ_ERR_NONE ){
+    cobj = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 3, 4, &(objs[0]),
+				 obj->type, &errNum);
+  }
+
   if( dstErr ){
     *dstErr = errNum;
   }
-  return NULL;
+  return cobj;
 }
 
 /*!
