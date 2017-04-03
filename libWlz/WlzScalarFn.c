@@ -245,14 +245,10 @@ static WlzObject *WlzScalarFn2D(WlzObject *sObj, WlzFnType fn,
 static WlzObject *WlzScalarFn3D(WlzObject *sObj, WlzFnType fn,
 			        WlzErrorNum *dstErr)
 {
-  int		idx,
-  		off;
   WlzPixelV	sBgd,
   		dBgd;
   WlzValues	dVal;
-  WlzObject     *sObj2D,
-		*dObj2D,
-  		*dObj = NULL;
+  WlzObject     *dObj = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   if(errNum == WLZ_ERR_NONE)
@@ -272,24 +268,55 @@ static WlzObject *WlzScalarFn3D(WlzObject *sObj, WlzFnType fn,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    for(idx = sObj->domain.p->plane1; idx <= sObj->domain.p->lastpl; ++idx)
+    int		idx,
+    		plane1,
+		lastpl;
+    WlzDomain	*doms;
+    WlzValues	*dVals,
+    		*sVals;
+    WlzErrorNum	errNum2 = WLZ_ERR_NONE;
+
+    doms = sObj->domain.p->domains;
+    sVals = sObj->values.vox->values;
+    dVals = dVal.vox->values;
+    plane1 = sObj->domain.p->plane1;
+    lastpl = sObj->domain.p->lastpl;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(idx = plane1; idx <= lastpl; ++idx)
     {
+      int	off;
+      WlzObject	*sObj2D,
+      		*dObj2D = NULL;
+
       off = idx - sObj->domain.p->plane1;
-      dObj2D = NULL;
-      sObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-      		           *(sObj->domain.p->domains + off),
-			   *(sObj->values.vox->values + off),
-			   NULL, NULL, &errNum);
-      if(errNum == WLZ_ERR_NONE)
+      sObj2D = WlzMakeMain(WLZ_2D_DOMAINOBJ, doms[off], sVals[off],
+			   NULL, NULL, &errNum2);
+      if(errNum2 == WLZ_ERR_NONE)
       {
-        dObj2D = WlzScalarFn2D(sObj2D, fn, &errNum);
+        dObj2D = WlzScalarFn2D(sObj2D, fn, &errNum2);
       }
       WlzFreeObj(sObj2D);
-      if(errNum == WLZ_ERR_NONE)
+      if(errNum2 == WLZ_ERR_NONE)
       {
-        *(dVal.vox->values + off) = WlzAssignValues(dObj2D->values, NULL);
+        dVals[off] = WlzAssignValues(dObj2D->values, NULL);
       }
       WlzFreeObj(dObj2D);
+      if(errNum2 != WLZ_ERR_NONE)
+      {
+#ifdef _OPENMP
+#pragma omp critical (WlzScalarFn3D)
+        {
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = errNum2;
+	  }
+	}
+#else
+        errNum = errNum2;
+#endif
+      }
     }
   }
   if(errNum == WLZ_ERR_NONE)
