@@ -5862,6 +5862,7 @@ extern WlzObject   		*WlzSepFilter(WlzObject *inObj,
                                   WlzGreyType gType,
 				  AlgPadType pad,
 				  double padVal,
+				  int sep,
                                   WlzErrorNum *dstErr);
 extern WlzObject		*WlzGaussFilter(
 				  WlzObject *inObj,
@@ -5871,6 +5872,7 @@ extern WlzObject		*WlzGaussFilter(
 				  WlzGreyType gType,
 				  AlgPadType pad,
 				  double padVal,
+				  int sep,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 

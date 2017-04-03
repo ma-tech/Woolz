@@ -45,8 +45,6 @@ static char _WlzSepFilter_c[] = "University of Edinburgh $Id$";
 #include <float.h>
 #include <Wlz.h>
 
-#undef _OPENMP
-
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -105,6 +103,20 @@ static WlzObject		*WlzSepFilterZ(WlzObject *inObj,
 * \param	pad			Type of padding.
 * \param	padVal			Padding value, only used when
 * 					pad == ALG_PAD_VALUE.
+* \param	sep			If non zero each directional filter
+* 					operation is applied to the input
+* 					object rather than the output of the
+* 					previous directional filter. The
+* 					method by which the separate filter
+* 					passes are combined is determined
+* 					by the given value with the valid
+* 					operations:
+* 					<ul>
+* 					  <li>1 - compound object</li>
+* 					  <li>2 - sum of values</li>
+* 					  <li>3 - square root of the of sum
+* 					          of the squared values</li>
+* 				        </ul>
 * \param	dstErr			Destination error pointer may be NULL.
 */
 WlzObject			*WlzGaussFilter(
@@ -115,6 +127,7 @@ WlzObject			*WlzGaussFilter(
 				  WlzGreyType gType,
 				  AlgPadType pad,
 				  double padVal,
+				  int sep,
 				  WlzErrorNum *dstErr)
 {
   int		dim = 0;
@@ -324,7 +337,7 @@ WlzObject			*WlzGaussFilter(
   if(errNum == WLZ_ERR_NONE)
   {
     rnObj = WlzSepFilter(inObj, cBufSz, cBuf, direc, gType, pad, padVal,
-    			 &errNum);
+    			 sep, &errNum);
   }
   AlcFree(cBuf[0]);
   if(errNum != WLZ_ERR_NONE)
@@ -361,6 +374,20 @@ WlzObject			*WlzGaussFilter(
 * \param	pad			Type of padding.
 * \param	padVal			Padding value, only used when
 * 					pad == ALG_PAD_VALUE.
+* \param	sep			If non zero each directional filter
+* 					operation is applied to the input
+* 					object rather than the output of the
+* 					previous directional filter. The
+* 					method by which the separate filter
+* 					passes are combined is determined
+* 					by the given value with the valid
+* 					operations:
+* 					<ul>
+* 					  <li>1 - compound object</li>
+* 					  <li>2 - sum of values</li>
+* 					  <li>3 - square root of the of sum
+* 					          of the squared values</li>
+* 				        </ul>
 * \param	dstErr			Destination error pointer may be NULL.
 */
 WlzObject			*WlzSepFilter(WlzObject *inObj,
@@ -370,6 +397,7 @@ WlzObject			*WlzSepFilter(WlzObject *inObj,
 				  WlzGreyType gType,
 				  AlgPadType pad,
 				  double padVal,
+				  int sep,
 				  WlzErrorNum *dstErr)
 {
   int		dim = 0,
@@ -478,42 +506,285 @@ WlzObject			*WlzSepFilter(WlzObject *inObj,
   }
   if(errNum == WLZ_ERR_NONE)
   {
+    WlzObject *tObj[3] = {NULL};
+
     /* Convolve the object values. */
     if(direc.vtX)
     {
-      rnObj = WlzSepFilterX(inObj, dim, nThr,
+      tObj[0] = WlzSepFilterX(inObj, dim, nThr,
 			    iBuf, rBuf, cBufSz.vtX, cBuf[0],
 			    pad, padVal, &errNum);
     }
     if((errNum == WLZ_ERR_NONE) && direc.vtY)
     {
-      WlzObject *tObj;
+      WlzObject *iObj;
 
-      tObj = WlzSepFilterY((rnObj)? rnObj: inObj, dim, nThr,
-                            iBuf, rBuf, cBufSz.vtY, cBuf[1],
-			    pad, padVal, &errNum);
-      (void )WlzFreeObj(rnObj);
-      rnObj = tObj;
+      if(sep)
+      {
+        iObj = inObj;
+      }
+      else
+      {
+	if(direc.vtX)
+	{
+	  iObj = tObj[0];
+	}
+	else
+	{
+	  iObj = inObj;
+	}
+      }
+      tObj[1] = WlzSepFilterY(iObj, dim, nThr,
+                              iBuf, rBuf, cBufSz.vtY, cBuf[1],
+			      pad, padVal, &errNum);
+      if(!sep)
+      {
+	(void )WlzFreeObj(tObj[0]);
+	tObj[0] = NULL;
+      }
     }
     if((errNum == WLZ_ERR_NONE) && (dim == 3) && direc.vtZ)
     {
-      WlzObject *tObj;
+      WlzObject *iObj;
 
-      tObj = WlzSepFilterZ((rnObj)? rnObj: inObj, bBox, nThr,
-                            iBuf, rBuf, cBufSz.vtZ, cBuf[2],
-			    pad, padVal, &errNum);
-      (void )WlzFreeObj(rnObj);
-      rnObj = tObj;
+      if(sep)
+      {
+        iObj = inObj;
+      }
+      else
+      {
+	if(direc.vtY)
+	{
+	  iObj = tObj[1];
+	}
+	else if(direc.vtX)
+	{
+	  iObj = tObj[0];
+	}
+	else
+	{
+	  iObj = inObj;
+	}
+      }
+      tObj[2] = WlzSepFilterZ(iObj, bBox, nThr,
+			      iBuf, rBuf, cBufSz.vtZ, cBuf[2],
+			      pad, padVal, &errNum);
+      if(!sep)
+      {
+	(void )WlzFreeObj(tObj[0]);
+	(void )WlzFreeObj(tObj[1]);
+	tObj[1] = tObj[0] = NULL;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(sep)
+      {
+	switch(sep)
+	{
+	  case 1: /* Compound object. */
+	    {
+	      WlzCompoundArray *cObj;
+
+	      cObj = WlzMakeCompoundArray(WLZ_COMPOUND_ARR_1, 3, dim,
+	                                  tObj, inObj->type, &errNum);
+	      if(errNum == WLZ_ERR_NONE)
+	      {
+		tObj[2] = tObj[1] = tObj[0] = NULL;
+	        rnObj = (WlzObject *)cObj;
+	      }
+	    }
+	    break;
+	  case 2: /* Sum of values. */
+	    {
+	      int	i = 0,
+	      		nS = 0;
+	      WlzObject	*sObj[4] = {NULL};
+
+	      for(i = 0; i < dim; ++i)
+	      {
+		if(tObj[i])
+		{
+		  sObj[nS++] = tObj[i];
+		}
+	      }
+	      switch(nS)
+	      {
+	        case 1:
+		  rnObj = sObj[0];
+		  break;
+		case 2:
+		  rnObj = WlzImageArithmetic(sObj[0], sObj[1], WLZ_BO_ADD,
+		                              0, &errNum);
+		  (void )WlzFreeObj(sObj[0]);
+		  (void )WlzFreeObj(sObj[1]);
+		case 3:
+		  sObj[3] = WlzImageArithmetic(sObj[0], sObj[1], WLZ_BO_ADD,
+		                               0, &errNum);
+	          if(errNum == WLZ_ERR_NONE)
+		  {
+		    rnObj = WlzImageArithmetic(sObj[2], sObj[3], WLZ_BO_ADD,
+		                                0, &errNum);
+		  }
+		  for(i = 0; i < 4; ++i)  
+		  {
+		    (void )WlzFreeObj(sObj[i]);
+		  }
+	        default:
+		  break;
+	      }
+	    }
+	    break;
+	  case 3: /* Square root of the sum of the squared values. */
+	    {
+	      int	i = 0,
+	      		nS = 0;
+	      WlzObject	*sObj[5] = {NULL};
+
+	      for(i = 0; i < dim; ++i)
+	      {
+		if(tObj[i])
+		{
+		  sObj[nS++] = tObj[i];
+		}
+	      }
+	      switch(nS)
+	      {
+	        case 1:
+		  rnObj = sObj[0];
+		  break;
+		case 2:
+		  for(i = 0; (errNum == WLZ_ERR_NONE) && (i < 2); ++i)
+		  {
+		    sObj[3] = WlzScalarFn(sObj[i], WLZ_FN_SCALAR_SQR, &errNum);
+		    (void )WlzFreeObj(sObj[i]);
+		    sObj[i] = sObj[3];
+		    sObj[3] = NULL;
+		  }
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    sObj[3] = WlzImageArithmetic(sObj[0], sObj[1], WLZ_BO_ADD,
+		                                 1, &errNum);
+		  }
+		  (void )WlzFreeObj(sObj[0]);
+		  (void )WlzFreeObj(sObj[1]);
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    rnObj = WlzScalarFn(sObj[3], WLZ_FN_SCALAR_SQRT, &errNum);
+		  }
+		  (void )WlzFreeObj(sObj[3]);
+		  break;
+		case 3:
+		  for(i = 0; (errNum == WLZ_ERR_NONE) && (i < 3); ++i)
+		  {
+		    sObj[3] = WlzScalarFn(sObj[i], WLZ_FN_SCALAR_SQR, &errNum);
+		    (void )WlzFreeObj(sObj[i]);
+		    sObj[i] = sObj[3];
+		    sObj[3] = NULL;
+		  }
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    sObj[3] = WlzImageArithmetic(sObj[0], sObj[1], WLZ_BO_ADD,
+		                                 0, &errNum);
+		  }
+		  (void )WlzFreeObj(sObj[0]);
+		  (void )WlzFreeObj(sObj[1]);
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    sObj[4] = WlzImageArithmetic(sObj[2], sObj[3], WLZ_BO_ADD,
+		                                 0, &errNum);
+		  }
+		  (void )WlzFreeObj(sObj[2]);
+		  (void )WlzFreeObj(sObj[3]);
+		  if(errNum == WLZ_ERR_NONE)
+		  {
+		    rnObj = WlzScalarFn(sObj[4], WLZ_FN_SCALAR_SQRT, &errNum);
+		  }
+		  (void )WlzFreeObj(sObj[4]);
+		  break;
+	        default:
+		  break;
+	      }
+	    }
+	    break;
+	}
+	tObj[2] = tObj[1] = tObj[0] = NULL;
+      }
+      else
+      {
+	if(tObj[2])
+	{
+	  rnObj = tObj[2];
+	  tObj[2] = NULL;
+	}
+	else if(tObj[1])
+	{
+	  rnObj = tObj[1];
+	  tObj[1] = NULL;
+	}
+	else
+	{
+	  rnObj = tObj[0];
+	  tObj[0] = NULL;
+	}
+      }
+      (void )WlzFreeObj(tObj[0]);     
+      (void )WlzFreeObj(tObj[1]);     
+      (void )WlzFreeObj(tObj[2]);
     }
   }
   if((errNum == WLZ_ERR_NONE) && (rnObj != NULL) && (gType != WLZ_GREY_DOUBLE))
   {
-    WlzObject *tObj;
-
     /* Convert object values to the required grey type. */
-    tObj = WlzConvertPix((rnObj)? rnObj: inObj, gType, &errNum);
-    (void )WlzFreeObj(rnObj);
-    rnObj = tObj;
+    switch(rnObj->type)
+    {
+      case WLZ_COMPOUND_ARR_1: /* FALLTHROUGH */
+      case WLZ_COMPOUND_ARR_2:
+	{
+	  int	i;
+	  WlzCompoundArray *cObj;
+
+	  cObj = (WlzCompoundArray *)rnObj;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+	  for(i = 0; i < cObj->n; ++i)
+	  {
+	    if(cObj->o[i])
+	    {
+	      WlzObject *tObj;
+	      WlzErrorNum errNum2 = WLZ_ERR_NONE;
+
+	      tObj = WlzConvertPix(cObj->o[i], gType, &errNum2);
+	      (void )WlzFreeObj(cObj->o[i]);
+	      cObj->o[i] = WlzAssignObject(tObj, NULL);
+#ifdef _OPENMP
+#pragma omp critical (WlzSepFilter)
+#endif
+	      {
+		if(errNum2 != WLZ_ERR_NONE)
+		{
+		  errNum = errNum2;
+		}
+	      }
+	    }
+	  }
+	}
+        break;
+      case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
+      case WLZ_3D_DOMAINOBJ:
+	{
+	  WlzObject *tObj;
+
+	  tObj = WlzConvertPix((rnObj)? rnObj: inObj, gType, &errNum);
+	  (void )WlzFreeObj(rnObj);
+	  rnObj = tObj;
+	}
+	break;
+      default:
+        errNum = WLZ_ERR_OBJECT_TYPE;
+	break;
+    }
   }
   if(errNum != WLZ_ERR_NONE)
   {

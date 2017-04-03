@@ -52,7 +52,7 @@ WlzSepFilterObj - seperable spatial convolution filter for domain objects
 \par Synopsis
 \verbatim
 WlzSepFilterObj - [-h] [-v] [-o<output object>] [-m#,#,#] [-n#,#,#]
-                  [-g <t>] [-t <flags>] [-P <p>] [-p#] [-G]
+                  [-g <t>] [-t <flags>] [-P <p>] [-p#] [-G] [-S a|c|s]
 		  [<input object>]
 \endverbatim
 \par Options
@@ -106,6 +106,14 @@ WlzSepFilterObj - [-h] [-v] [-o<output object>] [-m#,#,#] [-n#,#,#]
     <td><b>-G</b></td>
     <td>Use Gaussian filter, default.</td>
   </tr>
+  <tr>
+    <td><b>-S</b></td>
+    <td>Use the input object for each of the directional filters rather
+        than the output of the previous directional filter. The seperate
+	filter outputs are then combined to form a compound object (<b>c</b>),
+	the sum (<b>a</b>) or the square root of the sum of the squared
+	values of the filter passes (<b>s</b>).</td>
+  </tr>
 </table>
 \par Description
 Applies a seperable filter to a Woolz domain object with grey values.
@@ -147,6 +155,7 @@ int             main(int argc, char **argv)
 {
   int		option,
 		ok = 1,
+		sep = 0,
 		usage = 0,
 		verbose = 0;
   double	padVal = 0.0;
@@ -162,7 +171,7 @@ int             main(int argc, char **argv)
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   char 		*outFileStr,
   		*inObjFileStr;
-  static char	optList[] = "Ghvg:o:m:n:P:p:t:",
+  static char	optList[] = "Ghvg:o:m:n:P:p:t:S:",
 		defFile[] = "-";
 
   opterr = 0;
@@ -280,6 +289,30 @@ int             main(int argc, char **argv)
 	  }
 	}
 	break;
+      case 'S':
+	if(!optarg || (strlen(optarg) > 1))
+	{
+	  usage = 1;
+	}
+	else
+	{
+	  switch(*optarg)
+	  {
+	    case 'c':
+	      sep = 1;
+	      break;
+	    case 'a':
+	      sep = 2;
+	      break;
+	    case 's':
+	      sep = 3;
+	      break;
+	    default:
+	      usage = 1;
+	      break;
+	  }
+	}
+        break;
       default:
         usage = 1;
 	break;
@@ -357,18 +390,19 @@ int             main(int argc, char **argv)
 		     "  action   = (%d, %d, %d)\n"
 		     "  gType    = %d\n"
 		     "  pad      = %d\n"
-		     "  padVal   = %lg\n",
+		     "  padVal   = %lg\n"
+		     "  sep      = %d\n",
 		     *argv,
 		     param[0].vtX, param[0].vtY, param[0].vtZ,
 		     param[1].vtX, param[1].vtY, param[1].vtZ,
 		     order.vtX, order.vtY, order.vtZ,
 		     action.vtX, action.vtY, action.vtZ,
-		     gType, pad, padVal);
+		     gType, pad, padVal, sep);
       gettimeofday(times + 0, NULL);
     }
     outObj = WlzAssignObject(
 	     WlzGaussFilter(inObj, param[0], order, action, gType,
-	     		    pad, padVal, &errNum),
+	     		    pad, padVal, sep, &errNum),
 	     NULL);
     if(verbose)
     {
@@ -422,7 +456,8 @@ int             main(int argc, char **argv)
     "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-o<output object>] [-m#,#,#] [-n#,#,#]\n"
-    "\t[-g <t>] [-t <flags>] [-P <p>] [-p#] [-G] [-v] [<input object>]\n"
+    "\t[-g <t>] [-t <flags>] [-P <p>] [-p#] [-G]\n"
+    "\t[-S a|c|s] [-v] [<input object>]\n"
     "Version: ",
     WlzVersion(),
     "\n"
@@ -443,6 +478,11 @@ int             main(int argc, char **argv)
     "      value and zero padding.\n"
     "  -p  Used to supply given padding value, default 0.0.\n"
     "  -G  Use a Gaussain filter (default).\n"
+    "  -S  Use the input object for each of the directional filters rather\n"
+    "      than the output of the previous directional filter. The seperate\n"
+    "      filter outputs are then combined to form a compound object (c),\n"
+    "      the sum (a) or the square root of the sum of the squared values\n"
+    "      of the filter passes (s).\n"
     "  -t  Filter directions, eg x filter along lines and x, y filter\n"
     "      along lines then through columns.\n"
     "  -v  Verbose output with parameter values and execution time.\n"
