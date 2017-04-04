@@ -1014,7 +1014,7 @@ static WlzObject *WlzTstDistCreateC(int dim,
 
     dom.core = NULL;
     val.core = NULL;
-    gTT = WlzGreyValueTableType(WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
+    gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_DOUBLE, NULL);
     if(dim == 2)
     {
       val.v = WlzNewValueTb(oC, gTT, bgdV, &errNum);
