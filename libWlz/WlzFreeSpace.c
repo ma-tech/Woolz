@@ -335,6 +335,7 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
       	      ("WlzFreeObj %p WLZ_EMPTY_OBJ\n",
 	       obj));
+      errNum = WlzFreePropertyList(obj->plist);
       break;
 
     default:
