@@ -292,6 +292,7 @@ int             		main(
 	else if(valid)
 	{
 	  char		*txt;
+	  float		alpha;
 	  WlzUInt	col[4];
 	  WlzEffITKSnapSegRecord *lab;
 
@@ -302,9 +303,9 @@ int             		main(
 	  {
 	    errNum = WLZ_ERR_READ_INCOMPLETE;
 	  }
-	  else if(sscanf(lnBuf, "%d %d %d %d %d %d %d",
+	  else if(sscanf(lnBuf, "%d %d %d %d %f %d %d",
 	                 &(lab->idx),
-			 &(col[0]), &(col[1]), &(col[2]), &(col[3]),
+			 &(col[0]), &(col[1]), &(col[2]), &alpha,
 			 &(lab->vis), &(lab->lmv)) != 7)
 	  {
 	    errNum = WLZ_ERR_READ_INCOMPLETE;
@@ -314,8 +315,9 @@ int             		main(
 	    char	*s0,
 	    		*s1;
 
+	    col[3] = WLZ_NINT(alpha * 255.0);
 	    WLZ_RGBA_RGBA_SET(lab->colour,
-	                      col[0], col[1], col[2], col[3] * 255);
+	                      col[0], col[1], col[2], col[3]);
 	    if(((s0 = strchr(lnBuf, '"')) == NULL) ||
 	       ((s1 = strchr(s0 + 1, '"')) == NULL))
 	    {
@@ -566,6 +568,7 @@ int             		main(
 	"a compound object which is written via a pipe to WlzExplode.\n"
 	"WlzExplode creates seperate Woolz domain files, each with the file\n"
 	"body of the label description text.\n");
+    AlcFree(fmtStr);
   }
   return(!ok);
 }
