@@ -60,7 +60,7 @@ static char _WlzIndexObj_c[] = "University of Edinburgh $Id$";
 * 		overlap then higher index objects will overwrite lower
 * 		index objects within their intersection.
 * 		All objects of the compound array must either be of
-* 		type WLZ_EMPTY, WLZ_2D_DOMAINOBJ or WLZ_2D_DOMAINOBJ
+* 		type WLZ_EMPTY, WLZ_2D_DOMAINOBJ or WLZ_3D_DOMAINOBJ
 * 		and at least one must be non empty. Any NULL pointer
 * 		in the compound array will be treated as an empty object.
 * 		This function can be considered the inverse of
