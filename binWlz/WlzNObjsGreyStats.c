@@ -85,6 +85,8 @@ of the compound object will have the same domain (which is the intersection
 of the input object domains) and values for the simple statistics. The
 statistics generated are min value, max value, sum of values and
 sum of squares of values.
+The objects will have their name properties set to:
+min, max, sum, ssq, mean and dev as appropriate.
 
 \par Examples
 \verbatim
@@ -426,7 +428,9 @@ int		main(int argc, char *argv[])
     "object. Each object of the compound object will have the same domain\n"
     "(which is the intersection of the input object domains) and values for\n"
     "the simple statistics. The statistics generated are min value, max\n"
-    "value, sum of values and sum of squares of values.\n"
+    "value, sum of values and sum of squares of values. The objects\n"
+    "will have their name properties set to: min, max, sum, ssq, mean and\n"
+    "dev as appropriate.\n"
     "Example:\n"
     "  cat obj1.wlz obj2.wlz obj3.wlz | %s -s -m obj4.wlz >out.wlz\n"
     "Creates a compound object with four component objects, the domains of\n"

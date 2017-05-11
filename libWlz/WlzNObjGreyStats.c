@@ -87,6 +87,8 @@ static WlzErrorNum		WlzNObjGreyStats2D1(
 * 		values for the minimum, maximum, sum and sum of squares
 * 		of the given grey values at each pixel/voxel within
 * 		the intersection domain.
+* 		Returned objects will have name properties set to: min,
+* 		max, sum, ssq, mean and stddev as appropriate.
 * \param	gObj			Given object.
 * \param	mean			Compute mean not sum if non-zero.
 * \param	stddev			Compute standard deviation not sum of
@@ -296,6 +298,63 @@ WlzErrorNum	WlzNObjGreyStats(WlzObject *gObj,
       {
         (void )WlzFreeObj(sumObj);
 	sumObj = tObj;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int	idJ;
+      WlzObject	*objs[4] = {NULL};
+      char 	*str[4];
+
+      if(minObj)
+      {
+        objs[0] = minObj;
+	str[0] = "min";
+      }
+      if(maxObj)
+      {
+        objs[1] = maxObj;
+	str[1] = "max";
+      }
+      if(sumObj)
+      {
+        objs[2] = sumObj;
+	str[2] = (mean)? "mean": "sum";
+      }
+      if(sSqObj)
+      {
+        objs[3] = sSqObj;
+	str[3] = (stddev)? "stddev": "ssq";
+      }
+      for(idJ = 0; (idJ < 4) && (errNum == WLZ_ERR_NONE); ++idJ)
+      {
+        WlzProperty prop;
+	WlzObject *obj;
+        
+	if((obj = objs[idJ]) != NULL)
+	{
+	  prop.name = WlzMakeNameProperty(str[idJ], &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    WlzPropertyList *pList = NULL;
+
+	    if(((pList = WlzMakePropertyList(NULL)) == NULL) ||
+	       (AlcDLPListEntryAppend(pList->list, NULL,
+			      (void *)(prop.core),
+			      WlzFreePropertyListEntry) != ALC_ER_NONE))
+	    {
+	      if(prop.core)
+	      {
+	        (void )WlzFreeProperty(prop);
+	      }
+	      errNum = WLZ_ERR_MEM_ALLOC;
+	    }
+	    else
+	    {
+	      obj->plist = WlzAssignPropertyList(pList, &errNum);
+	    }
+	  }
+	}
       }
     }
     if(errNum != WLZ_ERR_NONE)
