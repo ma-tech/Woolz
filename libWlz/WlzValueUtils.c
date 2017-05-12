@@ -3448,7 +3448,6 @@ size_t				WlzValueSqueeze(
       WlzUByte	*v0,
 		*v1;
 
-      keep;
       v0 = v1 = (WlzUByte *)val;
       for(i = 0; i < n; ++i)
       {
