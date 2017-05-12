@@ -237,8 +237,11 @@ static WlzCompoundArray		*WlzValuesFromCoords2D(
 	  }
 	  else /* WLZ_GREY_DOUBLE */
 	  {
-	    *(pX.dbp)++ = kl;
-	    *(pY.dbp)++ = ln;
+	    for(kl = iWSp[0].lftpos; kl <= iWSp[0].rgtpos; ++kl)
+	    {
+	      *(pX.dbp)++ = kl;
+	      *(pY.dbp)++ = ln;
+	    }
 	  }
 	}
       }
