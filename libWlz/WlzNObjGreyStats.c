@@ -443,59 +443,79 @@ static WlzErrorNum WlzNObjGreyStats3D(int nObj, WlzObject **aObj,
     gObj = aObj[idN];
     gPDom = gObj->domain.p;
     gPlnCnt = gPDom->lastpl - gPDom->plane1 + 1;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for(idP = 0; idP < gPlnCnt; ++idP)
     {
-      int	idT;
-
-      idT = gPDom->plane1 + idP - tPDom->plane1;
-      if((idT >= 0) && (idT < tPlnCnt) && ((gPDom->domains[idP]).core != NULL))
+      if(errNum == WLZ_ERR_NONE)
       {
-	WlzObject *gObj2 = NULL,
-		  *minObj2 = NULL,
-		  *maxObj2 = NULL,
-		  *sumObj2 = NULL,
-		  *sSqObj2 = NULL;
+	int	idT;
+	WlzErrorNum errNum2 = WLZ_ERR_NONE;
 
-        gObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-			    gPDom->domains[idP],
-			    gObj->values.vox->values[idP],
-			    NULL, NULL, &errNum);
-        if((errNum == WLZ_ERR_NONE) && (minObj != NULL))
+	idT = gPDom->plane1 + idP - tPDom->plane1;
+	if((idT >= 0) && (idT < tPlnCnt) &&
+	   ((gPDom->domains[idP]).core != NULL))
 	{
-	  minObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-	  		        minObj->domain.p->domains[idT], 
-	  		        minObj->values.vox->values[idT], 
-			        NULL, NULL, &errNum);
-	}
-        if((errNum == WLZ_ERR_NONE) && (maxObj != NULL))
-	{
-	  maxObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-	  		        maxObj->domain.p->domains[idT], 
-	  		        maxObj->values.vox->values[idT], 
-			        NULL, NULL, &errNum);
-	}
-        if((errNum == WLZ_ERR_NONE) && (sumObj != NULL))
-	{
-	  sumObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-	  		        sumObj->domain.p->domains[idT], 
-	  		        sumObj->values.vox->values[idT], 
-			        NULL, NULL, &errNum);
-	}
-        if((errNum == WLZ_ERR_NONE) && (sSqObj != NULL))
-	{
-	  sSqObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
-	  		        sSqObj->domain.p->domains[idT], 
-	  		        sSqObj->values.vox->values[idT], 
-			        NULL, NULL, &errNum);
-	}
-        if(errNum == WLZ_ERR_NONE)
-	{
-	  int		first;
+	  WlzObject *gObj2 = NULL,
+		    *minObj2 = NULL,
+		    *maxObj2 = NULL,
+		    *sumObj2 = NULL,
+		    *sSqObj2 = NULL;
 
-	  first = (idN == 0);
-	  errNum =  WlzNObjGreyStats2D(first, 1, &gObj2,
-				      minObj2, maxObj2,
-				      sumObj2, sSqObj2);
+	  gObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+			      gPDom->domains[idP],
+			      gObj->values.vox->values[idP],
+			      NULL, NULL, &errNum2);
+	  if((errNum2 == WLZ_ERR_NONE) && (minObj != NULL))
+	  {
+	    minObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+				  minObj->domain.p->domains[idT], 
+				  minObj->values.vox->values[idT], 
+				  NULL, NULL, &errNum2);
+	  }
+	  if((errNum2 == WLZ_ERR_NONE) && (maxObj != NULL))
+	  {
+	    maxObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+				  maxObj->domain.p->domains[idT], 
+				  maxObj->values.vox->values[idT], 
+				  NULL, NULL, &errNum2);
+	  }
+	  if((errNum2 == WLZ_ERR_NONE) && (sumObj != NULL))
+	  {
+	    sumObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+				  sumObj->domain.p->domains[idT], 
+				  sumObj->values.vox->values[idT], 
+				  NULL, NULL, &errNum2);
+	  }
+	  if((errNum2 == WLZ_ERR_NONE) && (sSqObj != NULL))
+	  {
+	    sSqObj2 = WlzMakeMain(WLZ_2D_DOMAINOBJ,
+				  sSqObj->domain.p->domains[idT], 
+				  sSqObj->values.vox->values[idT], 
+				  NULL, NULL, &errNum2);
+	  }
+	  if(errNum2 == WLZ_ERR_NONE)
+	  {
+	    int		first;
+
+	    first = (idN == 0);
+	    errNum2 =  WlzNObjGreyStats2D(first, 1, &gObj2,
+					minObj2, maxObj2,
+					sumObj2, sSqObj2);
+	  }
+	}
+	if(errNum2 != WLZ_ERR_NONE)
+	{
+#ifdef _OPENMP
+#pragma omp critical (WlzNObjGreyStats3D)
+#endif
+	  {
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = errNum2;
+	    }
+	  }
 	}
       }
     }
