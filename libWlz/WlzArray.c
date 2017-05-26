@@ -3284,29 +3284,34 @@ WlzObject			*WlzFromArray1D(
 		  switch(gType)
 		  {
 		    case WLZ_GREY_INT:
-		      srcP.inp = gDat.inp + (idZ * plnSz) + (idY * sz.vtX);
+		      srcP.inp = gDat.inp + 
+		                vpe * ((idZ * plnSz) + (idY * sz.vtX));
 		      break;
 		    case WLZ_GREY_SHORT:
-		      srcP.shp = gDat.shp + (idZ * plnSz) + (idY * sz.vtX);
+		      srcP.shp = gDat.shp + 
+		                 vpe * ((idZ * plnSz) + (idY * sz.vtX));
 		      break;
 		    case WLZ_GREY_UBYTE:
-		      srcP.ubp = gDat.ubp + (idZ * plnSz) + (idY * sz.vtX);
+		      srcP.ubp = gDat.ubp + 
+		                 vpe * ((idZ * plnSz) + (idY * sz.vtX));
 		      break;
 		    case WLZ_GREY_FLOAT:
-		      srcP.flp = gDat.flp + (idZ * plnSz) + (idY * sz.vtX);
+		      srcP.flp = gDat.flp + 
+		                 vpe * ((idZ * plnSz) + (idY * sz.vtX));
 		      break;
 		    case WLZ_GREY_DOUBLE:
-		      srcP.dbp = gDat.dbp + (idZ * plnSz) + (idY * sz.vtX);
+		      srcP.dbp = gDat.dbp + 
+		                 vpe * ((idZ * plnSz) + (idY * sz.vtX));
 		      break;
                     case WLZ_GREY_RGBA:
-		      srcP.rgbp = gDat.rgbp + (idZ * plnSz) + (idY * sz.vtX);
+		      srcP.rgbp = gDat.rgbp + 
+		                  vpe * ((idZ * plnSz) + (idY * sz.vtX));
 		      break;
 		    default:
 		      /* Handled above. */
 		      break;
 		  }
-		  WlzTiledValuesCopyLine(val.t, srcP, idZ, idY,
-		  			 0, sz.vtX - 1);
+		  WlzTiledValuesCopyLine(val.t, srcP, idZ, idY, 0, sz.vtX - 1);
 		}
 	      }
 	    }

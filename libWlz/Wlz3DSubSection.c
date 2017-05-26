@@ -406,6 +406,7 @@ static WlzObject	*WlzGetSubSectionFrom3DTiledValueObj(
 		      ((tOff.vtZ * tv->tileWidth + tOff.vtY) *
 		       tv->tileWidth) + tOff.vtX;
 #endif
+		off *= tv->vpe;
 		switch(gType)
 		{
 	          case WLZ_GREY_INT:
