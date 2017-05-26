@@ -4079,6 +4079,11 @@ extern WlzErrorNum 		WlzInitLineScan(
 				  WlzRasterDir raster,
 				  int scale,
 				  int firstline);
+extern int			WlzIWSpIntersection(
+				  WlzInterval *dstItv,
+				  WlzIntervalWSpace *iWSp0,
+				  WlzIntervalWSpace *iWSp1,
+				  int *dstIsn);
 
 /************************************************************************
 * WlzIntRescaleObj.c							*
@@ -5423,6 +5428,7 @@ extern void			*WlzPointValueGet(
 extern WlzPoints		*WlzPointsFromDomObj(
 				  WlzObject *gvnObj,
 				  double dMin,
+				  int useFloatingPoint,
 				  int voxelScaling,
 				  int useGrey,
 				  double gMin,
@@ -6363,6 +6369,27 @@ extern WlzObject		*WlzCbThreshold(
 /************************************************************************
 * WlzTensor.c								*
 ************************************************************************/
+extern WlzObject		*WlzDGTensorFeatures(
+				  WlzObject *mObj,
+				  unsigned int features,
+				  int points,
+				  double dMin,
+				  WlzDVertex3 dither,
+				  WlzDVertex3 smooth,
+				  int voxScaling,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzDGTensorPDFeature(
+				  WlzObject *mObj,
+				  WlzDomain fDom,
+				  WlzDGTensorFeatureType feat,
+				  WlzDVertex3 smooth,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzDGTensorSDFeature(
+				  WlzObject *mObj,
+				  WlzDomain fDom,
+				  WlzDGTensorFeatureType feat,
+				  WlzDVertex3 smooth,
+				  WlzErrorNum *dstErr);
 extern WlzObject       		*WlzCMeshDGTensor(
 				  WlzObject *cObj,
 				  int invert,
@@ -6382,6 +6409,17 @@ extern WlzObject       		*WlzCMeshStrainTensorAtPts(
 				  int invert,
 				  WlzDVertex3 sd,
 				  int dither,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzTensorSmooth(
+				  WlzObject *obj,
+				  WlzDVertex3 smooth);
+extern WlzErrorNum		WlzTensorSetComponent(
+				  WlzObject *tObj,
+				  WlzObject *fObj,
+				  int cpt);
+extern WlzObject		*WlzTensorGetComponent(
+				  WlzObject *tObj,
+				  int cpt,
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
@@ -6423,6 +6461,24 @@ extern WlzObject		*WlzMakeTiledValuesFromObj(
 				  WlzObject *gObj,
 				  size_t tileSz,
 				  int copyValues,
+				  WlzGreyType gType,
+				  unsigned int vRank,
+				  unsigned int *vDim,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzMakeTiledValuesObj2D(
+				  WlzObject *gObj,
+				  size_t tileSz,
+				  int setTiles,
+				  WlzGreyType gType,
+				  unsigned int vRank,
+				  unsigned int *vDim,
+				  WlzPixelV bgdV,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzMakeTiledValuesObj3D(
+ 				  WlzObject *gObj,
+				  size_t tileSz,
+				  int setTiles,
 				  WlzGreyType gType,
 				  unsigned int vRank,
 				  unsigned int *vDim,
@@ -6935,6 +6991,11 @@ extern WlzErrorNum 		WlzValueConvertPixel(
 				  WlzPixelV *dstPix,
 				  WlzPixelV srcPix,
 				  WlzGreyType dstType);
+extern WlzErrorNum		WlzGreyValueFromGreyP(
+				  WlzGreyV *gV,
+				  WlzGreyP gP,
+				  size_t n,
+				  WlzGreyType gType);
 extern int			WlzValueMedianInt(
 				  int *vec,
 				  size_t count);
