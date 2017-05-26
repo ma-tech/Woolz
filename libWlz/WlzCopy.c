@@ -1376,10 +1376,15 @@ static WlzErrorNum WlzCopyObjectGreyValuesGVWSp2D(
 {
   int		lnMin,
 		lnMax;
+  unsigned int	vpe;
   WlzIntervalWSpace dIWSp,
   		sIWSp;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
+  vpe = (WlzGreyTableIsTiled(dGVWSp->values.core->type))?
+        dGVWSp->values.t->vpe: 1;
+  vpe = (WlzGreyTableIsTiled(sGVWSp->values.core->type))?
+        ALG_MIN(sGVWSp->values.t->vpe, vpe): vpe;
   lnMin = ALG_MAX(dObj->domain.i->line1, sObj->domain.i->line1);
   lnMax = ALG_MIN(dObj->domain.i->lastln, sObj->domain.i->lastln);
   if(lnMin <= lnMax)
@@ -1389,86 +1394,43 @@ static WlzErrorNum WlzCopyObjectGreyValuesGVWSp2D(
        (errNum = WlzInitRasterScan(sObj, &sIWSp,
 				   WLZ_RASTERDIR_ILIC) == WLZ_ERR_NONE))
     {
-      do
+      if((errNum = WlzNextInterval(&sIWSp)) == WLZ_ERR_NONE)
       {
-	errNum = WlzNextInterval(&dIWSp);
-      } while((errNum == WLZ_ERR_NONE) && (dIWSp.linpos < lnMin));
+        do
+	{
+	  errNum = WlzNextInterval(&dIWSp);
+	} while((errNum == WLZ_ERR_NONE) && (dIWSp.linpos < lnMin));
+      }
       while((errNum == WLZ_ERR_NONE) && (dIWSp.linpos <= lnMax))
       {
-	while((errNum == WLZ_ERR_NONE) && (sIWSp.linpos < dIWSp.linpos))
+	while((errNum == WLZ_ERR_NONE) &&
+	      (sIWSp.linpos == dIWSp.linpos))
 	{
-	  errNum = WlzNextInterval(&sIWSp);
+          int		idK,
+	  		isS;
+	  WlzInterval	itv;
+
+	  isS = WlzIWSpIntersection(&itv, &dIWSp, &sIWSp, NULL);
+	  for(idK = itv.ileft; idK <= itv.iright; ++idK)
+	  {
+	    WlzGreyValueGet(dGVWSp, pln, dIWSp.linpos, idK);
+	    WlzGreyValueGet(sGVWSp, pln, dIWSp.linpos, idK);
+	    WlzValueCopyGreyToGrey(dGVWSp->gPtr[0], 0, dGVWSp->gType,
+	                           sGVWSp->gPtr[0], 0, sGVWSp->gType,
+				   vpe);
+	  }
+	  errNum = WlzNextInterval((isS)? &sIWSp: &dIWSp);
 	}
-	while((errNum == WLZ_ERR_NONE) && (sIWSp.linpos == dIWSp.linpos))
+	if(errNum == WLZ_ERR_NONE)
 	{
-	  int		t0,
-	  		t1;
-
-	  /* Classify the possible intersections. Here s (source), d
-	   * (destination) and o (overlap) are used in comment strings
-	   * to represent the six possible interval intersection cases. */
-	  if(sIWSp.rgtpos < dIWSp.lftpos)                       /* ssss dddd */
-	  {
-	    t0 = 1;
-	  }
-	  else if(sIWSp.lftpos > dIWSp.rgtpos)                  /* dddd ssss */
-	  {
-	    t0 = 0;
-	  }
-	  else
-	  {
-	    int		idK;
-	    WlzInterval itv;
-
-            t0 = sIWSp.lftpos >= dIWSp.lftpos;
-	    t1 = sIWSp.rgtpos <= dIWSp.rgtpos;
-	    if((t0 != 0) && (t1 != 0))                     /* dooood || oooo */
-	    {
-	      itv.ileft = sIWSp.lftpos;
-	      itv.iright = sIWSp.rgtpos;
-	    }
-	    else if((t0 == 0) && (t1 == 0))                        /* soooos */
-	    {
-	      itv.ileft = dIWSp.lftpos;
-	      itv.iright = dIWSp.rgtpos;
-	    }
-	    else
-	    {
-	      if(t0 == 0)                                           /* soood */
-	      {
-	        itv.ileft = dIWSp.lftpos;
-		itv.iright = sIWSp.rgtpos;
-	      }
-	      else                                                  /* dooos */
-	      {
-	        itv.ileft = sIWSp.lftpos;
-		itv.iright = dIWSp.rgtpos;
-	      }
-	      t0 = !t0;
-	    }
-	    if(errNum == WLZ_ERR_NONE)
-	    {
-	      for(idK = itv.ileft; idK <= itv.iright; ++idK)
-	      {
-		WlzGreyValueGet(dGVWSp, pln, dIWSp.linpos, idK);
-		WlzGreyValueGet(sGVWSp, pln, dIWSp.linpos, idK);
-		WlzValueCopyGreyToGrey(dGVWSp->gPtr[0], 0, dGVWSp->gType,
-				       sGVWSp->gPtr[0], 0, sGVWSp->gType, 1);
-	      }
-	    }
-	  }
-	  if(t0 == 0)
-	  {
-	    errNum = WlzNextInterval(&dIWSp);
-	  }
-	  else
+	  if(sIWSp.linpos < dIWSp.linpos)
 	  {
 	    errNum = WlzNextInterval(&sIWSp);
 	  }
-	}
-	while((errNum == WLZ_ERR_NONE) && (dIWSp.linpos < sIWSp.linpos))
-	{
-	  errNum = WlzNextInterval(&dIWSp);
+	  else if(dIWSp.linpos < sIWSp.linpos)
+	  {
+	    errNum = WlzNextInterval(&dIWSp);
+	  }
 	}
       }
       if(errNum == WLZ_ERR_EOO)
