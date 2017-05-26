@@ -441,3 +441,104 @@ WlzErrorNum 	WlzInitLineScan(WlzObject *obj, WlzIntervalWSpace *iwsp,
   }
   return(errNum);
 }
+
+/* Classify the possible intersections. Here s (source), d
+ *            * (destination) and o (overlap) are used in comment
+ *            strings
+ *                       * to represent the six possible interval
+ *                       intersection cases. */
+
+/*!
+* \return	Value indicating which interval workspace should be advanced:
+* 		0 for first, 1 for second.
+* \ingroup	WlzDomainOps
+* \brief	Classifies the possible intersections between the intervals
+* 		of the two given interval workspaces.
+*
+* 		There are six possible cases which are returned as an
+* 		intersection code. The destination interval pointer will
+* 		have it's values set to cover the intersection where it
+* 		exists. Given first interval F, second interval S and
+* 		overlaps between the two intervals represented by O and
+* 		gaps by - then the intersection codes returned are:
+* 		<table border="1">
+    		  <tr><td>Code</td> <td>Intersection</td></tr>
+  		  <tr><td>0</td><td><tt>S-F</tt></td></tr>
+  		  <tr><td>1</td><td><tt>F-S</tt></td></tr>
+  		  <tr><td>2</td><td><tt>FOF</tt> or <tt>O</tt></td></tr>
+  		  <tr><td>3</td><td><tt>SOS</tt></td></tr>
+  		  <tr><td>4</td><td><tt>SOF</tt></td></tr>
+  		  <tr><td>5</td><td><tt>FOS</tt></td></tr>
+		</table>
+* \param	dstItv			Destination pointer for the interval
+* 					values, must be valid.
+* \param	iWSp0			First interval workspace, must be
+* 					valid. 
+* \param	iWSp1			Second interval workspace, must be
+* 					valid.
+* \param	dstIsn			Destination pointer for the
+* 					intersection code, may be NULL.
+*/
+int				WlzIWSpIntersection(
+				  WlzInterval *dstItv,
+				  WlzIntervalWSpace *iWSp0,
+				  WlzIntervalWSpace *iWSp1,
+				  int *dstIsn)
+{
+  int           t0 = 0,
+		t1 = 0,
+		isn = 0;
+  WlzInterval 	itv = {0};
+
+  if((iWSp1->linpos < iWSp0->linpos) ||
+     (iWSp1->rgtpos < iWSp0->lftpos))                                 /* S F */
+  {
+    t0 = 1;
+    isn = 0;
+  }
+  else if((iWSp1->linpos > iWSp0->linpos) ||
+          (iWSp1->lftpos > iWSp0->rgtpos))                            /* F S */
+  {
+    t0 = 0;
+    isn = 1;
+  }
+  else
+  {
+    t0 = iWSp1->lftpos >= iWSp0->lftpos;
+    t1 = iWSp1->rgtpos <= iWSp0->rgtpos;
+    if((t0 != 0) && (t1 != 0))                                   /* FOF || O */
+    {
+      isn = 2;
+      itv.ileft = iWSp1->lftpos;
+      itv.iright = iWSp1->rgtpos;
+    }
+    else if((t0 == 0) && (t1 == 0))                                   /* SOS */
+    {
+      isn = 3;
+      itv.ileft = iWSp0->lftpos;
+      itv.iright = iWSp0->rgtpos;
+    }
+    else
+    {
+      if(t0 == 0)                                                     /* SOF */
+      {
+	isn = 4;
+	itv.ileft = iWSp0->lftpos;
+	itv.iright = iWSp1->rgtpos;
+      }
+      else                                                            /* FOS */
+      {
+	isn = 5;
+	itv.ileft = iWSp1->lftpos;
+	itv.iright = iWSp0->rgtpos;
+      }
+      t0 = !t0;
+    }
+  }
+  *dstItv = itv;
+  if(dstIsn)
+  {
+    *dstIsn = isn;
+  }
+  return(t0);
+}
