@@ -3471,3 +3471,73 @@ size_t				WlzValueSqueeze(
   }
   return(n);
 }
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzValueUtils
+* \brief	Sets Woolz grey values using the given Woolz grey pointer
+* 		as the source of contiguous values.
+* \param	gV			Destination pointer for grey value(s).
+* \param	gP			Source grep value pointer.
+* \param	n			Number of values to be set.
+* \param	gType			Grey type.
+*/
+WlzErrorNum			WlzGreyValueFromGreyP(
+				  WlzGreyV *gV,
+				  WlzGreyP gP,
+				  size_t n,
+				  WlzGreyType gType)
+{
+  size_t	i;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(gType)
+  {
+    case WLZ_GREY_LONG:
+      for(i = 0; i < n; ++i)
+      {
+        gV[i].lnv = gP.lnp[i];
+      }
+      break;
+    case WLZ_GREY_INT:
+      for(i = 0; i < n; ++i)
+      {
+        gV[i].inv = gP.inp[i];
+      }
+      break;
+    case WLZ_GREY_SHORT:
+      for(i = 0; i < n; ++i)
+      {
+        gV[i].shv = gP.shp[i];
+      }
+      break;
+    case WLZ_GREY_UBYTE:
+      for(i = 0; i < n; ++i)
+      {
+        gV[i].ubv = gP.ubp[i];
+      }
+      break;
+    case WLZ_GREY_FLOAT:
+      for(i = 0; i < n; ++i)
+      {
+        gV[i].flv = gP.flp[i];
+      }
+      break;
+    case WLZ_GREY_DOUBLE:
+      for(i = 0; i < n; ++i)
+      {
+        gV[i].dbv = gP.dbp[i];
+      }
+      break;
+    case WLZ_GREY_RGBA:
+      for(i = 0; i < n; ++i)
+      {
+        gV[i].rgbv = gP.rgbp[i];
+      }
+      break;
+    default:
+      errNum = WLZ_ERR_GREY_TYPE;
+      break;
+  }
+  return(errNum);
+}
