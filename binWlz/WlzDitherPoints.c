@@ -40,12 +40,12 @@ static char _WlzDitherPoints_c[] = "University of Edinburgh $Id$";
 * \ingroup	BinWlz
 *
 * \par Binary
-* \ref wlzpointstomarkers "WlzDitherPoints"
+* \ref wlzditherpoints "WlzDitherPoints"
 */
 
 /*!
 \ingroup BinWlz
-\defgroup wlzpointstomarkers  WlzDitherPoints
+\defgroup wlzditherpoints  WlzDitherPoints
 \par Name
 WlzDitherPoints - dithers point positions.
 \par Synopsis
@@ -83,7 +83,6 @@ The inpup points are read from in.wlz and the output points written to out.wlz.
 \ref binWlz/WlzDitherPoints.c "WlzDitherPoints.c"
 \par See Also
 \ref BinWlz "WlzIntro(1)"
-\ref WlzDitherPoints "WlzDitherPoints.c(1)"
 \ref WlzPointsDither "WlzPointsDither(3)"
 */
 
