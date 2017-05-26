@@ -226,8 +226,13 @@ void		*WlzPointValueGet(WlzPointValues *pts, int idx)
  		\f]
 * \param	gvnObj			Given spatial domain object.
 * \param	dMin			Given minimum distance (if less than
-* 					1.0 then will be set to 1.0)..
-* \param	voxelScaling		Use voxel scaling if non-zero.
+* 					1.0 then will be set to 1.0).
+* \param	useFloatingPoint	If non-zero (or voxelScaling is set)
+* 					the the points will always have
+* 					double (rather than int) point
+* 					positions.
+* \param	voxelScaling		Use voxel scaling if non-zero (voxel
+* 					scaling implies floating point).
 * \param	useGrey			Use grey values.
 * \param	gMin			Minimum grey value.
 * \param	gMax			Maximum grey value.
@@ -237,6 +242,7 @@ void		*WlzPointValueGet(WlzPointValues *pts, int idx)
 WlzPoints			*WlzPointsFromDomObj(
 				  WlzObject *gvnObj,
 				  double dMin,
+				  int useFloatingPoint,
 				  int voxelScaling,
 				  int useGrey,
 				  double gMin,
@@ -261,6 +267,10 @@ WlzPoints			*WlzPointsFromDomObj(
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const double  eps = 1.0e-06;
 
+  if(voxelScaling)
+  {
+    useFloatingPoint = 1;
+  }
   voxSz.vtX = voxSz.vtY = voxSz.vtZ = 1.0;
   if(gvnObj == NULL)
   {
@@ -602,7 +612,7 @@ WlzPoints			*WlzPointsFromDomObj(
     }
     else 
     {
-      if(voxelScaling)
+      if(useFloatingPoint)
       {
         pntType = WLZ_POINTS_3D;
       }
@@ -641,10 +651,21 @@ WlzPoints			*WlzPointsFromDomObj(
       }
       else
       {
-	for(i = 0; i < vecIdx; ++i)
+	if(useFloatingPoint)
 	{
-	  p.v = AlcVectorItemGet(vec, i);
-	  pts->points.i3[i] = *(p.i3);
+	  for(i = 0; i < vecIdx; ++i)
+	  {
+	    p.v = AlcVectorItemGet(vec, i);
+	    pts->points.d3[i] = *(p.d3);
+	  }
+	}
+	else
+	{
+	  for(i = 0; i < vecIdx; ++i)
+	  {
+	    p.v = AlcVectorItemGet(vec, i);
+	    pts->points.i3[i] = *(p.i3);
+	  }
 	}
       }
     }
