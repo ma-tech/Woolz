@@ -291,7 +291,7 @@ int		main(int argc, char *argv[])
     {
       gettimeofday(times + 0, NULL);
     }
-    outDom.pts = WlzPointsFromDomObj(inObj, dMin, voxelScaling,
+    outDom.pts = WlzPointsFromDomObj(inObj, dMin, 0, voxelScaling,
                                      useGrey, gMin, gMax, gGam, &errNum);
     if((errNum == WLZ_ERR_NONE) && dither)
     {
