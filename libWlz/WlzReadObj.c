@@ -2228,6 +2228,7 @@ static WlzErrorNum WlzReadTiledValues(FILE *fP, WlzObject *obj,
 	vSz *= tVal->vDim[idx];
       }
     }
+    tVal->vpe = WlzTiledValuesValPerElm(tVal);
   }
   if(errNum == WLZ_ERR_NONE)
   {
