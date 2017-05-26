@@ -91,8 +91,9 @@ WlzGreyValue [-b] [-v#] [-x#] [-y#] [-z#] [-h] [<in object>]
 Either sets or gets a grey value within the given objects values.
 If the -v flag is given the objects value is set and the modified
 object is written to the output file, but if the flag is not set
-then the grey value is written out in ascii form with a new line
-character.
+then the grey value (or multiple grey values for an object with
+non-scalar values) is written out in ascii form with a new line
+character. Only scalar values can currently be set.
 \par Examples
 \verbatim
 WlzGreyValue -x 100 -y 100 toucan.wlz
@@ -127,10 +128,12 @@ int             main(int argc, char **argv)
 		setVal = 0,
   		ok = 1,
 		usage = 0;
+  unsigned int	nElm = 1,
+  		vpe = 1;
   WlzDVertex3	pos;
   WlzPixelV	pix0,
   		pix1;
-  WlzGreyV  	val[8];
+  WlzGreyV  	*val = NULL;
   WlzGreyValueWSpace *gVWSp = NULL;
   char		*outFileStr,
   		*inObjFileStr;
@@ -260,6 +263,43 @@ int             main(int argc, char **argv)
     {
       WlzGreyValueGetCon(gVWSp, pos.vtZ, pos.vtY, pos.vtX);
     }
+    if(conFlag)
+    {
+      switch(gVWSp->objType)
+      {
+	case WLZ_2D_DOMAINOBJ:
+	  nElm = 4;
+	  break;
+	case WLZ_3D_DOMAINOBJ:
+	  nElm = 8;
+	  break;
+	default:
+	  errNum = WLZ_ERR_OBJECT_TYPE;
+	  break;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(WlzGreyTableIsTiled(gVWSp->values.core->type))
+      {
+	vpe = gVWSp->values.t->vpe;
+      }
+      if((val = (WlzGreyV *)AlcCalloc(vpe * nElm, sizeof(WlzGreyV))) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsg);
+      (void )fprintf(stderr,
+		     "%s: Failed to allocate value buffer (%s).\n",
+		     *argv, errMsg);
+    }
+  }
+  if(ok)
+  {
     if(setVal)
     {
       errNum = WlzValueConvertPixel(&pix1, pix0, gVWSp->gType);
@@ -296,100 +336,129 @@ int             main(int argc, char **argv)
     }
     else
     {
-      val[0] = gVWSp->gVal[0];
-      pix1.type = gVWSp->gType;
-      pix1.v = gVWSp->gVal[0];
-      errNum = WlzValueConvertPixel(&pix0, pix1, WLZ_GREY_DOUBLE);
-      if(conFlag)
-      {
-	int	idx;
+      int	idE,
+      		idN;
 
-	for(idx = 1; idx < 4; ++idx)
+      /* Get values into buffer using background value where neeeded. */
+      idN = 0;
+      for(idE = 0; idE < nElm; ++idE)
+      {
+	int	idV;
+
+	if(gVWSp->bkdFlag & (1 << idE))
 	{
-          val[idx] = gVWSp->gVal[idx];
-	}
-	if(gVWSp->objType == WLZ_3D_DOMAINOBJ)
-	{
-	  for(idx = 4; idx < 8; ++idx)
+	  val[idN++] = gVWSp->gVal[idE];
+	  for(idV = 1; idV < vpe; ++idV)
 	  {
-	    val[idx] = gVWSp->gVal[idx];
+	    val[idN++] = gVWSp->gVal[idE];
 	  }
+	}
+	else
+	{
+	  (void )WlzGreyValueFromGreyP(val + idN, gVWSp->gPtr[idE],
+	                               vpe, gVWSp->gType);
+	  idN += vpe;
 	}
       }
     }
   }
   if(ok)
   {
-    errNum = WLZ_ERR_WRITE_EOF;
     if(setVal == 0)
     {
       if((fP = (strcmp(outFileStr, "-")? fopen(outFileStr, "w"):
 		                         stdout)) != NULL)
       {
-	int 	   idx,
-		   nval = 1;
-	const char *borf;
+	int 	idE,
+		idN;
+	char 	bc =  ' ';
 
-	if(conFlag)
+	idN = 0;
+	for(idE = 0; idE < nElm; ++idE)
 	{
-	  nval = (gVWSp->objType == WLZ_3D_DOMAINOBJ)? 8: 4;
-	}
-	borf = (bgdFlag)? (((gVWSp->bkdFlag & 1) != 0)? " b": " f"): "";
-	errNum = WLZ_ERR_NONE;
-	for(idx = 0; (errNum == WLZ_ERR_NONE) && (idx < nval); ++idx)
-	{
-	  switch(pix1.type)
+	  int	idV;
+
+	  if(bgdFlag)
+	  {
+	    bc = ((gVWSp->bkdFlag & (1 << idE)) != 0)? 'b': 'f';
+	  }
+	  switch(gVWSp->gType)
 	  {
 	    case WLZ_GREY_LONG:
-	      if(fprintf(fP, "%lld%s\n", val[idx].lnv, borf) < 2)
+	      for(idV = 1; idV < vpe; ++idV)
 	      {
-		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	        (void )fprintf(fP, "%lld ", val[idN++].lnv);
 	      }
+	      (void )fprintf(fP, "%lld", val[idN++].lnv);
 	      break;
 	    case WLZ_GREY_INT:
-	      if(fprintf(fP, "%d%s\n", val[idx].inv, borf) < 2)
+	      for(idV = 1; idV < vpe; ++idV)
 	      {
-		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	        (void )fprintf(fP, "%d ", val[idN++].inv);
 	      }
+	      (void )fprintf(fP, "%d", val[idN++].inv);
 	      break;
 	    case WLZ_GREY_SHORT:
-	      if(fprintf(fP, "%d%s\n", val[idx].shv, borf) < 2)
+	      for(idV = 1; idV < vpe; ++idV)
 	      {
-		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	        (void )fprintf(fP, "%d ", val[idN++].shv);
 	      }
+	      (void )fprintf(fP, "%d", val[idN++].shv);
 	      break;
 	    case WLZ_GREY_UBYTE:
-	      if(fprintf(fP, "%d%s\n", val[idx].ubv, borf) < 2)
+	      for(idV = 1; idV < vpe; ++idV)
 	      {
-		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	        (void )fprintf(fP, "%d ", val[idN++].ubv);
 	      }
+	      (void )fprintf(fP, "%d", val[idN++].ubv);
 	      break;
 	    case WLZ_GREY_FLOAT:
-	      if(fprintf(fP, "%g%s\n", val[idx].flv, borf) < 2)
+	      for(idV = 1; idV < vpe; ++idV)
 	      {
-		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	        (void )fprintf(fP, "%g ", val[idN++].flv);
 	      }
+	      (void )fprintf(fP, "%g", val[idN++].flv);
 	      break;
 	    case WLZ_GREY_DOUBLE:
-	      if(fprintf(fP, "%lg%s\n", val[idx].dbv, borf) < 2)
+	      for(idV = 1; idV < vpe; ++idV)
 	      {
-		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	        (void )fprintf(fP, "%lg ", val[idN++].dbv);
 	      }
+	      (void )fprintf(fP, "%lg", val[idN++].dbv);
 	      break;
 	    case WLZ_GREY_RGBA:
-	      if(fprintf(fP, "%d,%d,%d,%d%s\n",
-			 WLZ_RGBA_RED_GET(val[idx].rgbv),
-			 WLZ_RGBA_GREEN_GET(val[idx].rgbv),
-			 WLZ_RGBA_BLUE_GET(val[idx].rgbv),
-			 WLZ_RGBA_ALPHA_GET(val[idx].rgbv),
-			 borf) < 2)
+	      for(idV = 1; idV < vpe; ++idV)
 	      {
-		errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	        (void )fprintf(fP, "%d,%d,%d,%d ",
+			WLZ_RGBA_RED_GET(val[idN].rgbv),
+			WLZ_RGBA_GREEN_GET(val[idN].rgbv),
+			WLZ_RGBA_BLUE_GET(val[idN].rgbv),
+			WLZ_RGBA_ALPHA_GET(val[idN].rgbv));
+	        ++idN;
 	      }
+	      (void )fprintf(fP, "%d,%d,%d,%d",
+			 WLZ_RGBA_RED_GET(val[idN].rgbv),
+			 WLZ_RGBA_GREEN_GET(val[idN].rgbv),
+			 WLZ_RGBA_BLUE_GET(val[idN].rgbv),
+			 WLZ_RGBA_ALPHA_GET(val[idN].rgbv));
+	      ++idN;
 	      break;
 	    default:
 	      errNum = WLZ_ERR_GREY_TYPE;
 	      break;
+	  }
+	  if(bgdFlag)
+	  {
+	    (void )fprintf(fP, " %c\n", bc);
+	  }
+	  else
+	  {
+	    (void )fprintf(fP, "\n");
+	  }
+	  if(feof(fP))
+	  {
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	    break;
 	  }
 	}
       }
@@ -421,6 +490,7 @@ int             main(int argc, char **argv)
       fclose(fP);
     }
   }
+  AlcFree(val);
   if(gVWSp)
   {
     WlzGreyValueFreeWSp(gVWSp);
@@ -437,8 +507,9 @@ int             main(int argc, char **argv)
     "Either sets or gets a grey value within th given objects values.\n"
     "If the -v flag is given the objects value is set and the modified\n"
     "object is written to the output file, but if the flag is not set\n"
-    "then the grey value is written out in ascii form with a new line\n"
-    "character.\n"
+    "then the grey value (or multiple grey values for an object with\n"
+    "non-scalar values) is written out in ascii form with a new line\n"
+    "character. Only scalar values can currently be set.\n"
     "Version: %s\n"
     "Options:\n"
     "  -b    Indicate background or foreground with b or f following value\n"
