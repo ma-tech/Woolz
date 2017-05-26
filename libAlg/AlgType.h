@@ -64,6 +64,14 @@ extern "C" {
 #define	ALG_MININD3(X,Y,Z) \
                         (((X)<(Y))?(((X)<(Z))?(0):(3)):(((Y)<(Z))?(1):(3)))
 
+/* Determinannts on 2x2 and 3x3 matrices as an ordered 1D array. */
+#define ALG_DETERMINANT_4(M) \
+		((((M)[0])*((M)[3]))-(((M)[1])*((M)[2])))
+#define ALG_DETERMINANT_9(M) \
+		((((M)[0])*((M)[4])*((M)[8]))-(((M)[0])*((M)[5])*((M)[7]))+ \
+		 (((M)[1])*((M)[5])*((M)[6]))-(((M)[1])*((M)[3])*((M)[8]))+ \
+		 (((M)[2])*((M)[3])*((M)[7]))-(((M)[2])*((M)[4])*((M)[6])))
+
 /* Standard math constants */
 #define	ALG_M_E		(2.7182818284590452354)
 #define	ALG_M_LOG2E	(1.4426950408889634074)
