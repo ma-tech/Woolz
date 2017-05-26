@@ -1141,6 +1141,30 @@ typedef enum _WlzScalarFeatureType
 } WlzScalarFeatureType;
 
 /*!
+* \enum		_WlzDGTensorFeatureType
+* \ingroup	WlzFeatures
+* \brief	Features of Jacobian deformation gradient tensors.
+*/
+typedef enum _WlzDGTensorFeatureType
+{
+  WLZ_DGTENSOR_FEATURE_NONE	= 0,	/*!< No feature, null case. */
+  WLZ_DGTENSOR_FEATURE_DETJAC	= 1,	/*!< Determinant of Jacobian tensor. */
+  WLZ_DGTENSOR_FEATURE_DIRVEC	= 2, 	/*!< Direction vectors. */
+  WLZ_DGTENSOR_FEATURE_STRVAL	= 3, 	/*!< Stretch values. */
+  WLZ_DGTENSOR_FEATURE_LIMIT    = 4  	/*!< Not a feature but used to
+                                             itterate through the features,
+					     keep it the largest value. */
+} WlzDGTensorFeatureType;
+
+/*!
+* \def		WLZ_DGTENSOR_FEATURE_MASK
+* \ingroup	WlzFeatures
+* \brief	Bit mask generator for features of Jacobian deformation
+* 		gradient tensors.
+*/
+#define WLZ_DGTENSOR_FEATURE_MASK(F)	(((F)>0)?(1<<((F)-1)):(0))
+
+/*!
 * \enum		_WlzVertexType
 * \ingroup	WlzType
 * \brief	2D and 3D vertex types.
@@ -3211,7 +3235,7 @@ typedef struct _WlzTiledValues
   int		plane1;			/*!< First plane. */
   int		lastpl;			/*!< Last plane. */
   WlzPixelV     bckgrnd;		/*!< Background value. */
-  int           vRank;                  /*!< The rank of the individual values.
+  unsigned int  vRank;                  /*!< The rank of the individual values.
                                              Here the rank for a scalar is 0,
                                              for a 1D array it is 1 and for
                                              and for individual values that
@@ -3219,14 +3243,22 @@ typedef struct _WlzTiledValues
 					     The rank will only ever be > 0
 					     when the grey table type is
 					     composed using rank > 0. */
-  int           *vDim;                  /*!< The dimensions of individual
+  unsigned int  *vDim;                  /*!< The dimensions of individual
                                              values. The dimensions are a
 					     1D array with the number of
 					     entries equal to the rank.
 					     A dimension array is only
 					     allocated if the rank > 0,
 					     for rank == 0 dim is NULL. */
-  size_t	tileSz;		        /*!< The number of values in each
+  unsigned int	vpe;			/*!< Values per element which has the
+  					     value
+			       \f$ \prod_i^\textrm{vRank}{\textrm{vDim}[i]} \f$
+					     as compulted by
+					     WlzTiledValuesValPerElm()
+					     (value 1 when vRank = 0) 
+					     is included since it is frequently
+					     used. */
+  size_t	tileSz;		        /*!< The number of elements in each
   					     tile which may be less than
 					     the number of bytes. */
   size_t        tileWidth;              /*!< Width of the tiles (\f$w\f$). */
