@@ -74,10 +74,44 @@ extern "C" {
 */
 #define WLZ_CLAMP(V,N,X) (((V)<(N))?(N):((V)>(X))?(X):(V))
 
+/*!
+* \def		WLZ_CLAMP_DOUBLE_TO_GREYP(U,V,G)
+* \brief	Clamps a single double value from V setting U such that
+* 		U >= MIN and U <= MAX where MIN and MAX are the minimum
+* 		and maximum values for the grey type G. The only valid
+* 		types for G are: WLZ_GREY_UBYTE, WLZ_GREY_SHORT,
+* 		WLZ_GREY_INT, WLZ_GREY_FLOAT, and WLZ_GREY_DOUBLE; there
+* 		is no check that G is none of these types.
+*/
+#define WLZ_CLAMP_DOUBLE_TO_GREYP(U,V,G) \
+		{\
+		  switch((G))\
+		  {\
+		    case WLZ_GREY_UBYTE:\
+		      (U).inp[0]=WLZ_CLAMP((V),0,255);\
+		      break;\
+		    case WLZ_GREY_SHORT:\
+		      (U).shp[0]=WLZ_CLAMP((V),SHRT_MIN,SHRT_MAX);\
+		      break;\
+		    case WLZ_GREY_INT:\
+		      (U).inp[0]=WLZ_CLAMP((V),-FLT_MAX,FLT_MAX);\
+		      break;\
+		    case WLZ_GREY_FLOAT:\
+		      (U).flp[0]=WLZ_CLAMP((V),-FLT_MAX,FLT_MAX);\
+		      break;\
+		    case WLZ_GREY_DOUBLE:\
+		      (U).dbp[0]=(V);\
+		      break;\
+		    default:\
+		      break;\
+		  }\
+		}\
+
 /************************************************************************
 * Math constants.							*
 ************************************************************************/
-#define	WLZ_M_E		(2.7182818284590452354)
+#define	WLZ_M_E		(2.7182818284590452354)0
+#define	WLZ_M_LOG2E	(1.4426950408889634074)
 #define	WLZ_M_LOG2E	(1.4426950408889634074)
 #define	WLZ_M_LOG10E	(0.43429448190325182765)
 #define	WLZ_M_LN2	(0.69314718055994530942)
