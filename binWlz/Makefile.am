@@ -105,6 +105,7 @@ bin_PROGRAMS		= \
 			  WlzCreateSpecialSE \
 			  WlzCrossCorValue \
 			  WlzCutObjToBox \
+			  WlzDefGrdTensorFeatures \
 			  WlzDiffDomain \
 			  WlzDilation \
 			  WlzDistanceMetric \
@@ -210,6 +211,7 @@ bin_PROGRAMS		= \
 			  WlzStripProperties \
 			  WlzStructDilation \
 			  WlzStructErosion \
+			  WlzTensorComponent \
 			  WlzTiledObjFromDomain \
 			  WlzThreshold \
 			  WlzThinObjToPoints \
@@ -468,6 +470,10 @@ WlzCrossCorValue_LDFLAGS		= $(AM_LFLAGS)
 WlzCutObjToBox_SOURCES			= WlzCutObjToBox.c
 WlzCutObjToBox_LDADD			= $(LDADD)
 WlzCutObjToBox_LDFLAGS			= $(AM_LFLAGS)
+
+WlzDefGrdTensorFeatures_SOURCES		= WlzDefGrdTensorFeatures.c
+WlzDefGrdTensorFeatures_LDADD		= $(LDADD)
+WlzDefGrdTensorFeatures_LDFLAGS		= $(AM_LFLAGS)
 
 WlzDiffDomain_SOURCES			= WlzDiffDomain.c
 WlzDiffDomain_LDADD			= $(LDADD)
@@ -888,6 +894,10 @@ WlzStructDilation_LDFLAGS		= $(AM_LFLAGS)
 WlzStructErosion_SOURCES		= WlzStructErosion.c
 WlzStructErosion_LDADD			= $(LDADD)
 WlzStructErosion_LDFLAGS		= $(AM_LFLAGS)
+
+WlzTensorComponent_SOURCES		= WlzTensorComponent.c
+WlzTensorComponent_LDADD		= $(LDADD)
+WlzTensorComponent_LDFLAGS		= $(AM_LFLAGS)
 
 WlzTransformProduct_SOURCES		= WlzTransformProduct.c
 WlzTransformProduct_LDADD		= $(LDADD)
