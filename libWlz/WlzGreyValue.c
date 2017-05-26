@@ -465,7 +465,11 @@ void		WlzGreyValueFreeWSp(WlzGreyValueWSpace *gVWSp)
 * \ingroup	WlzAccess
 * \brief	Gets a single grey value/pointer for the given point
 *		from the object with which the given work space was
-*               initialised.
+*               initialised. When the object has a non-scalar value
+*               table then only the first value will be returned,
+*               however when the value is not background all values
+*               can be accessed via the grey pointer.
+*
 * \param	gVWSp			Grey value work space.
 * \param	plane			Plane (z) coordinate of point.
 * \param	line			Line (y) coordinate of point.
@@ -532,6 +536,10 @@ void		WlzGreyValueGet(WlzGreyValueWSpace *gVWSp,
                   (p + 1, k, l),      (p + 1, k + 1, l),
                   (p + 1, k, l + 1),  (p + 1, k + 1, l + 1).
 *		\endverbatim
+*               When the object has a non-scalar value table then only
+*               the first value will be returned, however when the value
+*               is not background all values can be accessed via the grey
+*               pointer.
 * \param	gVWSp			Grey value work space.
 * \param	plane			Plane (z) coordinate of point.
 * \param	line			Line (y) coordinate of point.
@@ -1077,7 +1085,7 @@ static void	WlzGreyValueComputeGreyPTiled2D(WlzGreyP *baseGVP,
 	tOff.vtY = rPos.vtY % tVal->tileWidth;
 	off = (tOff.vtY * tVal->tileWidth) + tOff.vtX;
 	(*baseGVP).v = tVal->tiles.v;
-	*offset = (idx * tVal->tileSz) + off;
+	*offset = ((idx * tVal->tileSz) + off) * tVal->vpe;
       }
     }
   }
@@ -1151,7 +1159,7 @@ static void	WlzGreyValueComputeGreyPTiled3D(WlzGreyP *baseGVP,
 	  off = ((tOff.vtZ * tVal->tileWidth + tOff.vtY) * tVal->tileWidth) +
 	        tOff.vtX;
 	  (*baseGVP).v = tVal->tiles.v;
-	  *offset = (idx * tVal->tileSz) + off;
+	  *offset = ((idx * tVal->tileSz) + off) * tVal->vpe;
 	}
       }
     }
@@ -1749,7 +1757,8 @@ static void	WlzGreyValueGet3DConTiled(WlzGreyValueWSpace *gVWSp,
             rPos.vtX = kol - tVal->kol1 + idK;
 	    tIdx.vtX = tIdx.vtY + (rPos.vtX / tVal->tileWidth);
             tOff.vtX = tOff.vtY + (rPos.vtX % tVal->tileWidth);
-            offset = *(tVal->indices + tIdx.vtX) * tVal->tileSz + tOff.vtX;
+            offset = (*(tVal->indices + tIdx.vtX) * tVal->tileSz +
+	              tOff.vtX) * tVal->vpe;
 	    WlzGreyValueSetGreyP(gVWSp->gVal + idV, gVWSp->gPtr + idV,
 	                         gVWSp->gType, tVal->tiles, offset);
 	  }
