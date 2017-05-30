@@ -1108,10 +1108,10 @@ static WlzErrorNum		WlzTensorGetComponentValues3D(
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   pDom = rObj->domain.p;
+  tiled = WlzGreyTableIsTiled(tObj->values.core->type);
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-  tiled = WlzGreyTableIsTiled(tObj->values.core->type);
   for(pln = pDom->plane1; pln <= pDom->lastpl; ++pln)
   {
     if(errNum == WLZ_ERR_NONE)
