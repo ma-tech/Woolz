@@ -725,7 +725,6 @@ WlzObject			*WlzTensorGetComponent(
 * \param	cpt		The component index which must be in the range
 * 				[0-(v - 1)] where v is the values per element
 * 				of the first object.
-* \param	dstErr		Destination error pointer, may be NULL.
 */
 WlzErrorNum			WlzTensorSetComponent(
 				  WlzObject *tObj,
