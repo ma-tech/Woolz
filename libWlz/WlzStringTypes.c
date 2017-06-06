@@ -551,12 +551,13 @@ const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
         break;
       default:
         /* Other values are a composite of the table and grey type. */
-	valType = WlzGreyTableTypeToTableType(obj->values.core->type, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  switch(obj->type)
 	  {
 	    case WLZ_2D_DOMAINOBJ:
+	      valType = WlzGreyTableTypeToTableType(obj->values.core->type,
+	                                            &errNum);
 	      switch(valType)
 	      {
 		case WLZ_GREY_TAB_RAGR:
@@ -607,6 +608,7 @@ const char	*WlzStringFromObjValuesType(WlzObject *obj, WlzErrorNum *dstErr)
 	      oValTypeStr = WlzStringFromObjType(obj->values.obj, &errNum);
 	      break;
 	    case WLZ_POINTS:
+	      valType = obj->values.core->type;
 	      switch(valType)                
 	      {
 		case WLZ_POINT_VALUES:
