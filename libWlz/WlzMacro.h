@@ -76,31 +76,32 @@ extern "C" {
 
 /*!
 * \def		WLZ_CLAMP_DOUBLE_TO_GREYP(U,V,G)
-* \brief	Clamps a single double value from V setting U such that
-* 		U >= MIN and U <= MAX where MIN and MAX are the minimum
-* 		and maximum values for the grey type G. The only valid
-* 		types for G are: WLZ_GREY_UBYTE, WLZ_GREY_SHORT,
-* 		WLZ_GREY_INT, WLZ_GREY_FLOAT, and WLZ_GREY_DOUBLE; there
-* 		is no check that G is none of these types.
+* \brief	Clamps a single double value from V setting U offset by
+* 		F such that U >= MIN and U <= MAX where MIN and MAX are
+* 		the minimum and maximum values for the grey type G.
+* 		The only valid types for G are: WLZ_GREY_UBYTE,
+* 		WLZ_GREY_SHORT, WLZ_GREY_INT, WLZ_GREY_FLOAT, and
+* 		WLZ_GREY_DOUBLE; there is no check that G is none of
+* 		these types.
 */
-#define WLZ_CLAMP_DOUBLE_TO_GREYP(U,V,G) \
+#define WLZ_CLAMP_DOUBLE_TO_GREYP(U,F,V,G) \
 		{\
 		  switch((G))\
 		  {\
 		    case WLZ_GREY_UBYTE:\
-		      (U).inp[0]=WLZ_CLAMP((V),0,255);\
+		      (U).inp[(F)]=WLZ_CLAMP((V),0,255);\
 		      break;\
 		    case WLZ_GREY_SHORT:\
-		      (U).shp[0]=WLZ_CLAMP((V),SHRT_MIN,SHRT_MAX);\
+		      (U).shp[(F)]=WLZ_CLAMP((V),SHRT_MIN,SHRT_MAX);\
 		      break;\
 		    case WLZ_GREY_INT:\
-		      (U).inp[0]=WLZ_CLAMP((V),-FLT_MAX,FLT_MAX);\
+		      (U).inp[(F)]=WLZ_CLAMP((V),-FLT_MAX,FLT_MAX);\
 		      break;\
 		    case WLZ_GREY_FLOAT:\
-		      (U).flp[0]=WLZ_CLAMP((V),-FLT_MAX,FLT_MAX);\
+		      (U).flp[(F)]=WLZ_CLAMP((V),-FLT_MAX,FLT_MAX);\
 		      break;\
 		    case WLZ_GREY_DOUBLE:\
-		      (U).dbp[0]=(V);\
+		      (U).dbp[(F)]=(V);\
 		      break;\
 		    default:\
 		      break;\
@@ -192,6 +193,15 @@ extern "C" {
 		(S).vtX = WLZ_SIGN((X).vtX), \
 		(S).vtY = WLZ_SIGN((X).vtY), \
 		(S).vtZ = WLZ_SIGN((X).vtZ)
+/* WLZ_VTX_2_COPY: Copy values of Wlz[DFI]Vertex2 */
+#define WLZ_VTX_2_COPY(D,S) \
+		(D).vtX = (S).vtX, \
+		(D).vtY = (S).vtY
+/* WLZ_VTX_3_COPY: Copy values of Wlz[DFI]Vertex3 */
+#define WLZ_VTX_3_COPY(D,S) \
+		(D).vtX = (S).vtX, \
+		(D).vtY = (S).vtY, \
+		(D).vtZ = (S).vtZ
 /* WLZ_VTX_2_SET: Set Wlz[DFI]Vertex2 */
 #define WLZ_VTX_2_SET(U,X,Y) \
 		(U).vtX = (X), \
