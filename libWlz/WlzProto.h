@@ -4524,6 +4524,9 @@ extern WlzProperty 		WlzGetProperty(
 extern WlzErrorNum              WlzRemoveProperty(
                                   AlcDLPList *plist,
 				  WlzProperty prop);
+extern WlzNameProperty		*WlzPropertyListContainsName(
+				  WlzPropertyList *plist,
+				  char *name);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -5442,6 +5445,7 @@ extern WlzPointValues		*WlzPointValuesFromDomObj(
 extern WlzPoints		*WlzPointsDither(
 				  WlzPoints *gPts,
 				  WlzDVertex3 dSz,
+				  WlzObject *resObj,
 				  WlzErrorNum *dstErr);
 extern WlzObject 		*WlzPointsToMarkers(
 				  WlzPoints *pts,
@@ -6213,6 +6217,11 @@ extern char			*WlzStringToLower(
 				  char *str);
 extern char                     *WlzStringUnescape(
                                   char *str);
+extern char			*WlzStringCopyReplace(
+				  char *inS,
+				  const char *matchS,
+				  char replace,
+				  int inPlace);
 
 #endif /* WLZ_EXT_BIND */
 
@@ -6382,7 +6391,6 @@ extern WlzObject		*WlzDGTensorPDFeature(
 				  WlzObject *mObj,
 				  WlzDomain fDom,
 				  WlzDGTensorFeatureType feat,
-				  WlzDVertex3 smooth,
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzDGTensorSDFeature(
 				  WlzObject *mObj,
