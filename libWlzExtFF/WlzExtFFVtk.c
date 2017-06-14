@@ -40,6 +40,7 @@ static char _WlzExtFFVtk_c[] = "University of Edinburgh $Id$";
 * \ingroup	WlzExtFF
 */
 
+#include <errno.h>
 #include <Wlz.h>
 #include <WlzExtFF.h>
 #include <string.h>
@@ -66,9 +67,6 @@ static WlzErrorNum 		WlzEffWriteCMesh3DVtk(
 static WlzErrorNum		WlzEffHeadReadVtk(
 				  WlzEffVtkHeader *header,
 				  FILE *fP);
-static WlzErrorNum 		WlzEffWritePointsVtk(
-				  FILE *fP,
-				  WlzObject *obj);
 static WlzObject		*WlzEffReadCMeshVtk(
 				  FILE *fP,
 				  WlzEffVtkHeader *header,
@@ -179,7 +177,7 @@ WlzErrorNum	WlzEffWriteObjVtk(FILE *fP, WlzObject *obj)
         errNum = WlzEffWriteCMesh3DVtk(fP, obj->domain.cm3);
         break;
       case WLZ_POINTS:
-        errNum = WlzEffWritePointsVtk(fP, obj);
+        errNum = WlzEffWritePointsVtk(fP, obj, 0);
 	break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
@@ -612,8 +610,10 @@ static WlzErrorNum WlzEffWriteCMesh2DVtk(FILE *fP, WlzCMesh2D *mesh)
 *		polydata format, but without polygons.
 * \param	fP			Output file stream.
 * \param	model			Given points object.
+* \param        onlyDom			Only write the points domain if
+* 					non-zero.
 */
-static WlzErrorNum WlzEffWritePointsVtk(FILE *fP, WlzObject *obj)
+WlzErrorNum 	WlzEffWritePointsVtk(FILE *fP, WlzObject *obj, int onlyDom)
 {
 
   WlzPoints	 *pdm;
@@ -719,6 +719,71 @@ static WlzErrorNum WlzEffWritePointsVtk(FILE *fP, WlzObject *obj)
     }
   }
   /* Output point values if they exist. */
+  if((errNum == WLZ_ERR_NONE) && (onlyDom == 0) &&
+     ((pvl = obj->values.pts) != NULL))
+  {
+    if(pvl->rank == 0)
+    {
+      errNum = WlzEffWritePointsVtkScalarValues(fP, obj);
+    }
+    else
+    {
+      errNum = WlzEffWritePointsVtkFieldValues(fP, obj);
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the point scalar values of the given object to the given
+* 		file. It is assumed that the points domain has already been
+* 		written by WlzEffWritePointsVtk().
+* \param	fP			Output file stream.
+* \param	obj			Object vith points values for output.
+*/
+WlzErrorNum			WlzEffWritePointsVtkScalarValues(
+				  FILE *fP, 
+				  WlzObject *obj)
+{
+  WlzPoints	 *pdm;
+  WlzPointValues *pvl;
+  char		 *dStr = "scalars",
+  		 *nStr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((pdm = obj->domain.pts) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(pdm->type)
+    {
+      case WLZ_POINTS_2I: /* FALLTHROUGH */
+      case WLZ_POINTS_2D: /* FALLTHROUGH */
+      case WLZ_POINTS_3I: /* FALLTHROUGH */
+      case WLZ_POINTS_3D:
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && obj->plist)
+  {
+    WlzNameProperty *np;
+
+    if((np = WlzPropertyListContainsName(obj->plist, NULL)) != NULL)
+    {
+      dStr = np->name;
+    }
+    if((nStr = WlzStringCopyReplace(dStr, " \t\n", '_', 0)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
   if((errNum == WLZ_ERR_NONE) && ((pvl = obj->values.pts) != NULL))
   {
     if(pvl->rank == 0)
@@ -746,9 +811,9 @@ static WlzErrorNum WlzEffWritePointsVtk(FILE *fP, WlzObject *obj)
       {
 	if(fprintf(fP,
 		   "POINT_DATA %d\n"
-		   "SCALARS fromwlz %s\n"
+		   "SCALARS %s %s\n"
 		   "LOOKUP_TABLE default\n",
-		   pdm->nPoints, gStr) <= 0)
+		   pdm->nPoints, nStr, gStr) <= 0)
 	{
 	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	}
@@ -809,12 +874,204 @@ static WlzErrorNum WlzEffWritePointsVtk(FILE *fP, WlzObject *obj)
 	      }
 	      break;
 	    default:
+	      errNum = WLZ_ERR_GREY_TYPE;
 	      break;
 	  }
 	}
       }
     }
   }
+  AlcFree(nStr);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error number.
+* \ingroup	WlzExtFF
+* \brief	Writes the point field values of the given object to the given
+* 		file. It is assumed that the points domain has already been
+* 		written by WlzEffWritePointsVtk().
+*
+* 		The VTK file specification does not include an appropriate
+* 		data type for arbitrary dimensional fields so here one is
+* 		defined for point data:
+* 		\verbatim
+	POINT_DATA <n>
+	FIELD <field name> <data type> <rank> [<dim_0>,[...]]
+		\endverbatim
+*		with the following:
+*		<ul>
+*		<li>n - Number of points.
+*		<li>field name - Non-whitespace ASCII string naming the field.
+*		<li>rank - Rank of the field, 0 for scalar data, 1 for vector
+*		           data, ....
+*		<li>dim0 - Comma seperated dimensions of the field.
+*		</ul>
+*
+*		Example for a rank two (3x3) tensor:
+*		\verbatim
+	POINT_DATA 2
+	FIELD my_tensor float 2 3,3
+	1.019 -0.002 0.079  0.003 1.055  0.012 0.002   0.0085 1.019
+	1.012 -0.008 0.015 -0.023 1.013 -0.018 7.9e-05 0.0961 1.005
+		\endverbatim
+* \param	fP			Output file stream.
+* \param	obj			Object vith points values for output.
+*/
+WlzErrorNum			WlzEffWritePointsVtkFieldValues(
+				  FILE *fP, 
+				  WlzObject *obj)
+{
+  WlzPoints	 *pdm;
+  WlzPointValues *pvl;
+  char		 *dStr = "field",
+  		 *nStr = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if((pdm = obj->domain.pts) == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(pdm->type)
+    {
+      case WLZ_POINTS_2I: /* FALLTHROUGH */
+      case WLZ_POINTS_2D: /* FALLTHROUGH */
+      case WLZ_POINTS_3I: /* FALLTHROUGH */
+      case WLZ_POINTS_3D:
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && obj->plist)
+  {
+    WlzNameProperty *np;
+
+    if((np = WlzPropertyListContainsName(obj->plist, NULL)) != NULL)
+    {
+      dStr = np->name;
+    }
+    if((nStr = WlzStringCopyReplace(dStr, " \t\n", '_', 0)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  if((errNum == WLZ_ERR_NONE) && ((pvl = obj->values.pts) != NULL))
+  {
+    if(pvl->rank >= 0)
+    {
+      int	 vpe = 1,
+      		 unsup = 1;
+      const char *gStr;
+
+      switch(pvl->vType)
+      {
+        case WLZ_GREY_UBYTE:
+	  unsup = 0;
+	  gStr = "char";
+	  break;
+        case WLZ_GREY_INT:   /* FALLTHROUGH */
+	case WLZ_GREY_SHORT: /* FALLTHROUGH */
+	case WLZ_GREY_FLOAT: /* FALLTHROUGH */
+	case WLZ_GREY_DOUBLE:
+	  unsup = 0;
+	  gStr = "float";
+	  break;
+	default:
+	  break;
+      }
+      if(unsup == 0)
+      {
+	if(fprintf(fP,
+		   "POINT_DATA %d\n"
+		   "FIELD %s %s %d ",
+		   pdm->nPoints, nStr, gStr, pvl->rank) <= 0)
+	{
+	  errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	}
+	else if(pvl->rank >= 0)
+	{
+	  int	i,
+	  	penult;
+
+	  penult = pvl->rank - 1;
+	  for(i = 0; i < penult; ++i)
+	  {
+	    vpe *= pvl->dim[i];
+	    (void )fprintf(fP, "%d,", pvl->dim[i]);
+	  }
+	  vpe *= pvl->dim[i];
+	  if(fprintf(fP, "%d\n", pvl->dim[i]) <= 0)
+	  {
+	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	  }
+	}
+	if(errNum == WLZ_ERR_NONE)
+	{
+          int		i;
+	  size_t	cnt = 0;
+	  WlzGreyP	p;
+
+	  for(i = 0; i < pdm->nPoints; ++i)
+	  {
+	    int		j;
+
+	    switch(pvl->vType)
+	    {
+	      case WLZ_GREY_UBYTE:
+		p.ubp = pvl->values.ubp + cnt;
+		for(j = 0; j < vpe; ++j)
+		{
+		  (void )fprintf(fP, " %d", p.ubp[j]);
+		}
+		break;
+	      case WLZ_GREY_INT:
+		p.inp = pvl->values.inp + cnt;
+		for(j = 0; j < vpe; ++j)
+		{
+		  (void )fprintf(fP, " %d", p.inp[j]);
+		}
+		break;
+	      case WLZ_GREY_SHORT:
+		p.shp = pvl->values.shp + cnt;
+		for(j = 0; j < vpe; ++j)
+		{
+		  (void )fprintf(fP, " %d", p.shp[j]);
+		}
+		break;
+	      case WLZ_GREY_FLOAT:
+		p.flp = pvl->values.flp + cnt;
+		for(j = 0; j < vpe; ++j)
+		{
+		  (void )fprintf(fP, " %g", p.flp[j]);
+		}
+		break;
+	      case WLZ_GREY_DOUBLE:
+		p.dbp = pvl->values.dbp + cnt;
+		for(j = 0; j < vpe; ++j)
+		{
+		  (void )fprintf(fP, " %lg", p.dbp[j]);
+		}
+		break;
+	      default:
+		errNum = WLZ_ERR_GREY_TYPE;
+		break;
+	    }
+	    cnt += vpe;
+	    if(fprintf(fP, "\n") <= 0)
+	    {
+	      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+	      break;
+	    }
+	  }
+        }
+      }
+    }
+  }
+  AlcFree(nStr);
   return(errNum);
 }
 

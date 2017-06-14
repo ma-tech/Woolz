@@ -280,7 +280,16 @@ extern WlzObject 		*WlzEffReadObjVtk(
 extern WlzErrorNum 		WlzEffWriteObjVtk(
 				  FILE *fP,
 				  WlzObject *obj);
-
+extern WlzErrorNum		WlzEffWritePointsVtk(
+				  FILE *fP,
+				  WlzObject *obj,
+				  int onlyDom);
+extern WlzErrorNum		WlzEffWritePointsVtkScalarValues(
+				  FILE *fP,
+				  WlzObject *obj);
+extern WlzErrorNum		WlzEffWritePointsVtkFieldValues(
+				  FILE *fP, 
+				  WlzObject *obj);
 /* From WlzExtFFSlc.c */
 extern WlzObject 		*WlzEffReadObjSlc(
 				  FILE *fP,
