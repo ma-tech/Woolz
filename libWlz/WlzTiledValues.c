@@ -86,7 +86,8 @@ WlzTiledValues			*WlzMakeTiledValues(
   {
     if(vRank > 0)
     {
-      if((tVal->vDim = (int *)AlcCalloc(sizeof(int), vRank)) == NULL)
+      if((tVal->vDim = (unsigned int *)
+                       AlcCalloc(sizeof(unsigned int), vRank)) == NULL)
       {
 	errNum = WLZ_ERR_MEM_ALLOC;
       }
