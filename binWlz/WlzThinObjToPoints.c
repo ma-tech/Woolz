@@ -312,7 +312,8 @@ int		main(int argc, char *argv[])
       {
 	WlzDomain dtrDom;
 
-	dtrDom.pts = WlzPointsDither(outObj->domain.pts, ditherVal, &errNum);
+	dtrDom.pts = WlzPointsDither(outObj->domain.pts, ditherVal, 
+	                             inObj, &errNum);
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  (void )WlzFreeDomain(outObj->domain);

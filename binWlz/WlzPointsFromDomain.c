@@ -297,7 +297,7 @@ int		main(int argc, char *argv[])
     {
       WlzPoints	*pts;
 
-      pts = WlzPointsDither(outDom.pts, ditherSz, &errNum);
+      pts = WlzPointsDither(outDom.pts, ditherSz, inObj, &errNum);
       (void )WlzFreeDomain(outDom);
       outDom.pts = pts;
     }
