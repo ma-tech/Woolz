@@ -50,35 +50,43 @@ static char _WlzDitherPoints_c[] = "University of Edinburgh $Id$";
 WlzDitherPoints - dithers point positions.
 \par Synopsis
 \verbatim
-WlzDitherPoints [-h] [-o<output file>] [-D #,#[#]] [<input file>]
+WlzDitherPoints [-h] [-o<output file>] [-D #,#[#]] [-r <res obj>]
+                [<input file>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr> 
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
-  </tr>
-  <tr> 
+  </tr> <tr> 
     <td><b>-o</b></td>
     <td>Output file name, default standard output.</td>
-  </tr>
-  <tr> 
+  </tr> <tr> 
     <td><b>-D</b></td>
     <td>Dither the points by applying a random offset. Supplied values
         are the maximum dither displacement. Default value is (1,1,1).</td>
+  </tr> <tr> 
+    <td><b>-r</b></td>
+    <td>Restriction object.</td>
   </tr>
 </table>
 \par Description
 Reads a 2D or 3D points object from either a given file or the
 standard input (default). The vertices of the points are then
 converted to floating point, dithered and output.
+A restriction object may be given to restrict all dithered point
+positions to within it's domain, but if given this must be a spatial
+domain object of the appropriate dimension. Restriction assumes voxel
+spacing of (1, 1, 1) and may not be appropriate.
+When reading from the standard input the input object is read before
+an optional restriction object.
 \par Examples
 \verbatim
 WlzDitherPoints -o out.wlz -D 1,1,1 in.wlz
 \endverbatim
 Creates a new points file where the point vertices are double precision and
 dithered by up to a voxel in each direction.
-The inpup points are read from in.wlz and the output points written to out.wlz.
+The input points are read from in.wlz and the output points written to out.wlz.
 \par File
 \ref binWlz/WlzDitherPoints.c "WlzDitherPoints.c"
 \par See Also
@@ -108,14 +116,16 @@ int		main(int argc, char *argv[])
   		option,
 		usage = 0;
   char		*inFileStr,
-		*outFileStr;
+		*outFileStr,
+		*resFileStr = NULL;
   FILE		*fP = NULL;
   WlzDVertex3	ditherSz = {1.0, 1.0, 1.0};
   WlzObject	*inObj = NULL,
-		*outObj = NULL;
+		*outObj = NULL,
+		*resObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "ho:D:t:";
+  static char	optList[] = "ho:D:r:";
   const char    fileStrDef[] = "-";
 
   /* Parse the argument list and check for input files. */
@@ -135,6 +145,9 @@ int		main(int argc, char *argv[])
 	break;
       case 'o':
 	outFileStr = optarg;
+	break;
+      case 'r':
+        resFileStr = optarg;
 	break;
       case 'h':
       default:
@@ -161,8 +174,7 @@ int		main(int argc, char *argv[])
   /* Read the input object. */
   if(ok)
   {
-    if((inFileStr == NULL) ||
-       (*inFileStr == '\0') ||
+    if((*inFileStr == '\0') ||
        ((fP = (strcmp(inFileStr, "-")?
               fopen(inFileStr, "r"): stdin)) == NULL) ||
        ((inObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL))
@@ -177,11 +189,29 @@ int		main(int argc, char *argv[])
       (void )fclose(fP); fP = NULL;
     }
   }
+  /* Read restriction object if required. */
+  if(ok && resFileStr)
+  {
+    if((*resFileStr == '\0') ||
+       ((fP = (strcmp(resFileStr, "-")?
+              fopen(resFileStr, "r"): stdin)) == NULL) ||
+       ((resObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL))
+    {
+      ok = 0;
+      (void )fprintf(stderr,
+                     "%s: Failed to read restriction object from file %s.\n",
+                     argv[0], resFileStr);
+    }
+    if(fP && strcmp(inFileStr, "-"))
+    {
+      (void )fclose(fP); fP = NULL;
+    }
+  }
   if(ok)
   {
     WlzDomain dDom;
 
-    dDom.pts = WlzPointsDither(inObj->domain.pts, ditherSz, &errNum);
+    dDom.pts = WlzPointsDither(inObj->domain.pts, ditherSz, resObj, &errNum);
     if(errNum == WLZ_ERR_NONE)
     {
       outObj = WlzMakeMain(inObj->type, dDom, inObj->values, inObj->plist,
@@ -225,20 +255,29 @@ int		main(int argc, char *argv[])
     (void )fclose(fP); fP = NULL;
   }
   (void )WlzFreeObj(inObj);
+  (void )WlzFreeObj(resObj);
   (void )WlzFreeObj(outObj);
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-D#,#[,#]] [-o <output file>] [-h] [<input file>]\n"
+    "Usage: %s [-D#,#[,#]] [-o <output file>] [-r <res obj>] [-h]\n"
+    "\t\t[<input file>]\n"
     "Dithers point positions. A 2D or 3D points object is read either from\n"
     "a given file or the standard input (default). The vertices of the\n"
     "points are then converted to floating point, dithered and output\n"
     "either to the given file or the standard output (default).\n"
+    "A restriction object may be given to restrict all dithered point\n"
+    "positions to within it's domain, but if given this must be a spatial\n"
+    "domain object of the appropriate dimension. Restriction assumes voxel\n"
+    "spacing of (1, 1, 1) and may not be appropriate.\n"
+    "When reading from the standard input the input object is read before\n"
+    "an optional restriction object.\n"
     "Version: %s\n"
     "Options:\n"
     "  -D  Dither the points by applying a random offset. Supplied values\n"
     "      are the maximum dither displacement. Default value (1, 1, 1).\n"
     "  -o  Output object file.\n"
+    "  -r  Restriction object.\n"
     "  -h  Help - prints this usage message\n"
     "By default all files are read from the standard input and written to\n"
     "the standard output.\n"
