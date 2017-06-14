@@ -178,15 +178,15 @@ AlgError	AlgMatrixRSTDiag(AlgMatrix aMat, double *dVec, double *oVec)
 	  }
 	}
       }
-	dVec[id0] = aAry[id0][id0];
-	/* Reset the row and column id3 of aMat to the values of the identity#
-	 * matrix ready for the next itteration. */
-	aAry[id0][id0] = 1.0;
-	for(id3 = 0; id3 <= id1; ++id3)
-	{
-	  aAry[id3][id0] = aAry[id0][id3] = 0.0;
-	}
+      dVec[id0] = aAry[id0][id0];
+      /* Reset the row and column id3 of aMat to the values of the identity
+       * matrix ready for the next itteration. */
+      aAry[id0][id0] = 1.0;
+      for(id3 = 0; id3 <= id1; ++id3)
+      {
+	aAry[id3][id0] = aAry[id0][id3] = 0.0;
       }
     }
-    return(errCode);
+  }
+  return(errCode);
 }
