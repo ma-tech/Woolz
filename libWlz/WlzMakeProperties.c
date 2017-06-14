@@ -912,3 +912,40 @@ void 		WlzFreePropertyListEntry(void *prop)
     }
   }
 }
+
+/*!
+* \return	Pointer to the name property in the given property list
+* 		which contains matches the given name string or NULL if
+* 		there is no matching name property,
+* \ingroup	WlzProperty
+* \brief	Finds the name property with the given name string in the
+* 		given property list.
+* \param	plist			Given property list.
+* \param	name			Name string to be matched, or if
+* 					NULL the first name property found.
+*/
+WlzNameProperty			*WlzPropertyListContainsName(
+				  WlzPropertyList *plist,
+				  char *name)
+{
+  AlcDLPItem *item;
+  WlzNameProperty *prop = NULL;
+
+  if(plist && plist->list && ((item = plist->list->head) != NULL))
+  {
+    do
+    {
+      WlzNameProperty *p;
+
+      if(item->entry && ((p = (WlzNameProperty *)(item->entry)) != NULL) &&
+         (p->type == WLZ_PROPERTY_NAME) && 
+	 ((name == NULL) || (strcmp(p->name, name) == 0)))
+      {
+        prop = p;
+	break;
+      }
+      item = item->next;
+    } while(item && (item != plist->list->head));
+  }
+  return(prop);
+}
