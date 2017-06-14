@@ -309,3 +309,53 @@ char 				*WlzStringUnescape(
   }
   return(str);
 }
+
+/*!
+* \return	New string (or given string if done in place) or NULL on error.
+* \ingroup	WlzString
+* \brief	Optionally copies the given string then replaces all instances
+* 		of characters in the match string with the replacement
+* 		character.
+* \param	inS			The given string.
+* \param	matchS			String with characters to match in
+* 					the given string.
+* \param	rep			Replacement character.
+* \param	inPlace			Do the replacement in the given string
+* 					rather than a copy if non-zero.
+*/
+char				*WlzStringCopyReplace(
+				  char *inS,
+				  const char *matchS,
+				  char rep,
+				  int inPlace)
+{
+  char 		*rtnS = NULL;
+
+  if(inS && matchS)
+  {
+    rtnS = (inPlace)? inS: AlcStrDup(inS);
+  }
+  if(rtnS)
+  {
+    char	*rS;
+
+    rS = rtnS;
+    while(*rS)
+    {
+      const char *mS;
+
+      mS = matchS;
+      while(*mS)
+      {
+	if(*mS == *rS)
+	{
+	  *rS = rep;
+	  break;
+	}
+        ++mS;
+      }
+      ++rS;
+    }
+  }
+  return(rtnS);
+}
