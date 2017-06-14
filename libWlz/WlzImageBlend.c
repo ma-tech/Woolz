@@ -111,7 +111,6 @@ WlzErrorNum			WlzImageBlendObjToBufRGBA(
       while((errNum = WlzNextInterval(&iWSp)) == WLZ_ERR_NONE)
       {
 	int	bs1,
-		len,
 		lft,
 		lin,
 		rgt;
