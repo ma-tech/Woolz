@@ -41,36 +41,74 @@ static char _WlzTensor_c[] = "University of Edinburgh $Id$";
 #include <stdio.h>
 #include <Wlz.h>
 
-static WlzErrorNum		WlzDGTensorSDFeatDetJac(
-				  WlzGreyValueWSpace *dGVWSp,
-				  WlzGreyValueWSpace *sGVWSp,
-				  int pln,
-				  int lin,
-				  int lft,
-				  int rgt);
+#ifdef _OPENMP
+#define WLZ_TENSOR_OMP_CHUNKSZ 4096   /* To avoid parallelising small loops. */
+#endif
+
 static WlzErrorNum		WlzTensorGetComponentValues2D(
 				  WlzObject *rObj,
 				  WlzObject *tObj,
 				  int cpt,
 				  int pln);
-static WlzErrorNum		WlzTensorGetComponentValues3D(
+static WlzErrorNum		WlzTensorSetComponentValues2D(
+				  WlzObject *fObj,
+				  WlzObject *tObj,
+				  int cpt,
+				  int pln);
+static WlzErrorNum		WlzTensorComponentValues3D(
 				  WlzObject *rObj,
 				  WlzObject *tObj,
-				  int cpt);
-static void			WlzDGTensorSDFeatDirVec(
+				  int cpt,
+				  int set);
+static void			WlzDGTensorSDFeatDirVecItv(
 				  WlzGreyValueWSpace *dGVWSp,
 				  WlzGreyValueWSpace *sGVWSp,
+				  AlgMatrix cgt,
 				  int pln,
 				  int lin,
 				  int lft,
 				  int rgt);
-static void			WlzDGTensorSDFeatStrVal(
+static void			WlzDGTensorSDFeatDetJacItv(
 				  WlzGreyValueWSpace *dGVWSp,
 				  WlzGreyValueWSpace *sGVWSp,
+				  AlgMatrix cgt,
 				  int pln,
 				  int lin,
 				  int lft,
 				  int rgt);
+static void			WlzDGTensorSDFeatStrValItv(
+				  WlzGreyValueWSpace *dGVWSp,
+				  WlzGreyValueWSpace *sGVWSp,
+				  AlgMatrix cgt,
+				  int pln,
+				  int lin,
+				  int lft,
+				  int rgt);
+static void			WlzDGTensorSDFeatDetJacPnt(
+				  WlzPointValues *dPV,
+				  WlzGreyP sGP,
+				  WlzGreyType dGType,
+				  WlzGreyType sGType,
+				  AlgMatrix cgt,
+				  int idP);
+static void			WlzDGTensorSDFeatDirVecPnt(
+				  WlzPointValues *dPV,
+				  WlzGreyP sGP,
+				  WlzGreyType dGType,
+				  WlzGreyType sGType,
+				  AlgMatrix cgt,
+				  int idP);
+static void			WlzDGTensorSDFeatStrValPnt(
+				  WlzPointValues *dPV,
+				  WlzGreyP sGP,
+				  WlzGreyType dGType,
+				  WlzGreyType sGType,
+				  AlgMatrix cgt,
+				  int idP);
+static void			WlzDGTensorToRCauchyGreen(
+				  AlgMatrix cg,
+				  WlzGreyP gP,
+				  WlzGreyType gT);
 static WlzObject		*WlzCMeshDGTensor3D(
 				  WlzObject *cObj,
 				  int invert,
@@ -115,9 +153,10 @@ static void			WlzCMeshElmSetDGTensor3D(
 * 				within this range (no dithering if values are
 * 				zero). The dithering is always done in unit
 * 				voxel space.
-* \param	smooth		If values are > 0.0 apply a Gaussian smoothing
-* 				filter with these sigma values to the feature
-* 				values.
+* \param	smooth		If smoothing values are > 0.0 apply a Gaussian
+* 				smoothing filter with these sigma values to
+* 				spatial field feature values. There is no
+* 				smoothing of point feature values.
 * \param	voxScaling	Use voxel size for points objects if non zero.
 * \param	dstErr		Destination error pointer, may be NULL.
 */
@@ -214,7 +253,7 @@ WlzObject			*WlzDGTensorFeatures(
       {
         WlzPoints *pts;             
 
-	pts = WlzPointsDither(fDom.pts, dither, &errNum);
+	pts = WlzPointsDither(fDom.pts, dither, mObj, &errNum);
 	(void )WlzFreeDomain(fDom);
 	fDom.pts = pts;
       }
@@ -255,7 +294,7 @@ WlzObject			*WlzDGTensorFeatures(
 	else /* rObjType == WLZ_POINTS */
 	{
 	  cpd->o[idx] = WlzAssignObject(
-                WlzDGTensorPDFeature(mObj, fDom, feat, smooth, &errNum),
+                WlzDGTensorPDFeature(mObj, fDom, feat, &errNum),
 		NULL);
 	}
 	++idx;
@@ -276,6 +315,9 @@ WlzObject			*WlzDGTensorFeatures(
     voxSz.vtX = mObj->domain.p->voxel_size[0];
     voxSz.vtY = mObj->domain.p->voxel_size[1];
     voxSz.vtZ = mObj->domain.p->voxel_size[2];
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_TENSOR_OMP_CHUNKSZ)
+#endif
     for(idP = 0; idP < nPoints; ++idP)
     {
       pts[idP].vtX *= voxSz.vtX;
@@ -397,9 +439,16 @@ WlzObject			*WlzDGTensorSDFeature(
       {
         WlzDomain *dDom2D,
 	          *sDom2D;
+	AlgMatrix cgt;
         WlzErrorNum errNum2 = WLZ_ERR_NONE;
 
-	if(((dDom2D = dPDom->domains + idP - dPDom->plane1) != NULL) &&
+	cgt.core = NULL;
+	if((cgt.rect = AlgMatrixRectNew(3, 3, NULL)) == NULL)
+	{
+	  errNum2 = WLZ_ERR_MEM_ALLOC;
+	}
+	if((errNum2 == WLZ_ERR_NONE) &&
+	   ((dDom2D = dPDom->domains + idP - dPDom->plane1) != NULL) &&
 	   ((sDom2D = sPDom->domains + idP - sPDom->plane1) != NULL) &&
 	   ((*dDom2D).core != NULL) &&
 	   ((*sDom2D).core != NULL))
@@ -452,15 +501,15 @@ WlzObject			*WlzDGTensorSDFeature(
 		    switch(feat)
 		    {
 		      case WLZ_DGTENSOR_FEATURE_DETJAC:
-		        (void )WlzDGTensorSDFeatDetJac(dGVWSp, sGVWSp,
+		        WlzDGTensorSDFeatDetJacItv(dGVWSp, sGVWSp, cgt,
 				idP, dIWSp.linpos, itv.ileft, itv.iright);
 		        break;
 		      case WLZ_DGTENSOR_FEATURE_DIRVEC:
-		        WlzDGTensorSDFeatDirVec(dGVWSp, sGVWSp,
+		        WlzDGTensorSDFeatDirVecItv(dGVWSp, sGVWSp, cgt,
 				idP, dIWSp.linpos, itv.ileft, itv.iright);
 		        break;
 		      case WLZ_DGTENSOR_FEATURE_STRVAL:
-		        WlzDGTensorSDFeatStrVal(dGVWSp, sGVWSp,
+		        WlzDGTensorSDFeatStrValItv(dGVWSp, sGVWSp, cgt,
 				idP, dIWSp.linpos, itv.ileft, itv.iright);
 		        break;
 		      default:
@@ -506,6 +555,7 @@ WlzObject			*WlzDGTensorSDFeature(
 	    }
 	  }
 	}
+        AlgMatrixFree(cgt);
       }
     }
   }
@@ -580,22 +630,228 @@ WlzObject			*WlzDGTensorSDFeature(
 * 				deformation gradient tensor.
 * \param	fDom		Given 3D points domain (WlzPoints).
 * \param	feat		Required feature.
-* \param	smooth		If values are > 0.0 apply a Gaussian smoothing
-* 				filter with these sigma values to the feature
-* 				values.
 * \param	dstErr		Destination error pointer, may be NULL.
 */
 WlzObject			*WlzDGTensorPDFeature(
 				  WlzObject *mObj,
 				  WlzDomain fDom,
 				  WlzDGTensorFeatureType feat,
-				  WlzDVertex3 smooth,
 				  WlzErrorNum *dstErr)
 {
+  int		vRank,
+  		nThr = 1;
+  int  		vDim[2];
+  char		*pName = NULL;
   WlzObject	*rObj = NULL;
-  WlzErrorNum	errNum = WLZ_ERR_UNIMPLEMENTED;
+  AlgMatrix 	*cgtAry = NULL;
+  WlzGreyValueWSpace **sGVWSpAry = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  /* HACK TODO */
+  /* Create values for the feature. */
+  switch(feat)
+  {
+    case WLZ_DGTENSOR_FEATURE_DETJAC:
+      vRank = 0;
+      vDim[0] = 0;
+      pName = "jacobian";
+      break;
+    case WLZ_DGTENSOR_FEATURE_DIRVEC:
+      vRank = 2;
+      vDim[0] = 3;
+      vDim[1] = 3;
+      pName = "direction vectors";
+      break;
+    case WLZ_DGTENSOR_FEATURE_STRVAL:
+      vRank = 1;
+      vDim[0] = 3;
+      pName = "stretch values";
+      break;
+    default:
+      errNum = WLZ_ERR_PARAM_DATA;
+      break;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+#ifdef _OPENMP
+#pragma omp parallel
+    {
+#pragma omp master
+      {
+	nThr = omp_get_num_threads();
+      }
+    }
+#endif
+    if(((cgtAry = (AlgMatrix *)
+                  AlcCalloc(nThr, sizeof(AlgMatrix))) == NULL) ||
+       ((sGVWSpAry = (WlzGreyValueWSpace **)
+                     AlcCalloc(nThr, sizeof(WlzGreyValueWSpace *))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    else
+    {
+      int 	idT;
+
+      for(idT = 0; idT < nThr; ++idT)
+      {
+        if(((sGVWSpAry[idT] = WlzGreyValueMakeWSp(mObj, NULL)) == NULL) ||
+	   ((cgtAry[idT].rect = AlgMatrixRectNew(3, 3, NULL)) == NULL))
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzValues fVal;
+
+    fVal.pts = WlzMakePointValues(fDom.pts->nPoints,
+				  vRank, vDim, WLZ_GREY_DOUBLE,
+				  &errNum);
+    if(errNum == WLZ_ERR_NONE) 
+    {
+      rObj = WlzMakeMain(WLZ_POINTS, fDom, fVal, NULL, NULL, &errNum);
+    }
+  }
+  /* Compute feature values throughout the domain. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		idP;
+    WlzPointValues *dPV;
+
+    dPV = rObj->values.pts;
+    if(errNum == WLZ_ERR_NONE)
+    {
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+      for(idP = 0; idP < fDom.pts->maxPoints; ++idP)
+      {
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  int	      idT = 0;
+	  WlzDVertex3 p;
+	  AlgMatrix   cgt;
+	  WlzGreyValueWSpace *gVWSp;
+	  WlzErrorNum errNum2 = WLZ_ERR_NONE;
+
+#ifdef _OPENMP
+	  idT = omp_get_thread_num();
+#endif
+	  cgt = cgtAry[idT];
+	  gVWSp = sGVWSpAry[idT];
+	  /* Get point location. */
+	  p = fDom.pts->points.d3[idP];
+	  /* Set grey pointer for point location. */
+          WlzGreyValueGet(gVWSp, p.vtZ, p.vtY, p.vtX);
+	  if(errNum2 == WLZ_ERR_NONE)
+	  {
+	    switch(feat)
+	    {
+	      case WLZ_DGTENSOR_FEATURE_DETJAC:
+		WlzDGTensorSDFeatDetJacPnt(dPV, gVWSp->gPtr[0],
+					   dPV->vType, gVWSp->gType,
+					   cgt, idP);
+		break;
+	      case WLZ_DGTENSOR_FEATURE_DIRVEC:
+		WlzDGTensorSDFeatDirVecPnt(dPV, gVWSp->gPtr[0],
+					   dPV->vType, gVWSp->gType,
+					   cgt, idP);
+		break;
+	      case WLZ_DGTENSOR_FEATURE_STRVAL:
+		WlzDGTensorSDFeatStrValPnt(dPV, gVWSp->gPtr[0], 
+					   dPV->vType, gVWSp->gType,
+					   cgt, idP);
+		break;
+	      default:
+		/* Already checked for. */
+		break;
+
+	    }
+	  }
+	  if(errNum2 != WLZ_ERR_NONE)
+	  {
+#ifdef _OPENMP
+#pragma omp critical (WlzDGTensorPDFeature)
+#endif
+	    if(errNum == WLZ_ERR_NONE)
+	    {
+	      errNum = errNum2;
+	    }
+	  }
+	}
+      }
+    }
+  }
+  /* Set object name property. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzProperty      prop = {0};
+    WlzPropertyList *pList = NULL;
+
+    if((pList = WlzMakePropertyList(NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      prop.name = WlzMakeNameProperty(pName, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(AlcDLPListEntryAppend(pList->list, NULL, (void *)(prop.core),
+                               WlzFreePropertyListEntry) != ALC_ER_NONE)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      rObj->plist = WlzAssignPropertyList(pList, &errNum);
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      if(pList->list == NULL)
+      {
+	WlzFreeProperty(prop);
+      }
+      else
+      {
+	(void )WlzFreeProperty(prop);
+	(void )WlzFreePropertyList(pList);
+      }
+    }
+  }
+  if(sGVWSpAry || cgtAry)
+  {
+    int       idT;
+
+    if(sGVWSpAry)
+    {
+      for(idT = 0; idT < nThr; ++idT)
+      {
+        WlzGreyValueFreeWSp(sGVWSpAry[idT]);
+      }
+    }
+    if(cgtAry)
+    {
+      int	idT;
+
+      for(idT = 0; idT < nThr; ++idT)
+      {
+        AlgMatrixFree(cgtAry[idT]);
+      }
+    }
+    AlcFree(cgtAry);
+    AlcFree(sGVWSpAry);
+  }
+  /* Clear up on error. */
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeObj(rObj);
+    rObj = NULL;
+  }
   if(dstErr)
   {
     *dstErr = errNum;
@@ -618,8 +874,62 @@ WlzErrorNum			WlzTensorSmooth(
 				  WlzDVertex3 smooth)
 {
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const double	eps = 1.0e-06;
 
-  /* HACK TODO */
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(obj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if((obj->type != WLZ_2D_DOMAINOBJ) &&
+          (obj->type != WLZ_3D_DOMAINOBJ))
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if((smooth.vtX > eps) && (smooth.vtY > eps) && (smooth.vtZ > eps))
+  {
+    WlzGreyType	gType;
+
+
+    gType = WlzGreyTypeFromObj(obj, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int	idV,
+      		vpe = 1;
+
+      if(WlzGreyTableIsTiled(obj->values.core->type))
+      {
+        vpe = obj->values.t->vpe;
+      }
+      for(idV = 0; idV < vpe; ++idV)
+      {
+	WlzObject *rObj0 = NULL,
+		  *rObj1 = NULL;
+	WlzIVertex3 order = {0, 0, 0},
+		    direction = {1, 1, 1};
+
+        rObj0 = WlzTensorGetComponent(obj, idV, &errNum);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  rObj1 = WlzGaussFilter(rObj0, smooth, order, direction, gType,
+				 ALG_PAD_END, 0.0, 0, &errNum);
+	}
+	(void )WlzFreeObj(rObj0);
+	if(errNum == WLZ_ERR_NONE)
+	{
+	  errNum = WlzTensorSetComponent(obj, rObj1, idV);
+	}
+	(void )WlzFreeObj(rObj1);
+      }
+    }
+  }
   return(errNum);
 }
 
@@ -668,8 +978,7 @@ WlzObject			*WlzTensorGetComponent(
     int		tIsTiled;
 
     tIsTiled = WlzGreyTableIsTiled(tObj->values.core->type);
-    if((cpt < 0) ||
-       ((cpt > 0) && (!tIsTiled || (cpt > tObj->values.t->vpe))))
+    if((cpt < 0) || ((cpt > 0) && (!tIsTiled || (cpt > tObj->values.t->vpe))))
     {
       errNum = WLZ_ERR_PARAM_DATA;
     }
@@ -698,7 +1007,7 @@ WlzObject			*WlzTensorGetComponent(
     }
     else /* tObj->type == WLZ_3D_DOMAINOBJ */
     {
-      errNum = WlzTensorGetComponentValues3D(rObj, tObj, cpt);
+      errNum = WlzTensorComponentValues3D(rObj, tObj, cpt, 0);
     }
   }
   if(errNum != WLZ_ERR_NONE)
@@ -733,7 +1042,47 @@ WlzErrorNum			WlzTensorSetComponent(
 {
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
-  /* HACK TODO */
+  if((tObj == NULL) || (fObj == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((tObj->type != fObj->type) ||
+          ((tObj->type != WLZ_2D_DOMAINOBJ) &&
+           (tObj->type != WLZ_3D_DOMAINOBJ)))
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if((tObj->domain.core == NULL) ||
+          (fObj->domain.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((tObj->values.core == NULL) ||
+          (fObj->values.core == NULL))
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else
+  {
+    int		tIsTiled;
+
+    tIsTiled = WlzGreyTableIsTiled(tObj->values.core->type);
+    if((cpt < 0) || ((cpt > 0) && (!tIsTiled || (cpt > tObj->values.t->vpe))))
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(tObj->type == WLZ_2D_DOMAINOBJ)
+    {
+      errNum = WlzTensorSetComponentValues2D(fObj, tObj, cpt, 0);
+    }
+    else /* tObj->type == WLZ_3D_DOMAINOBJ */
+    {
+      errNum = WlzTensorComponentValues3D(fObj, tObj, cpt, 1);
+    }
+  }
   return(errNum);
 }
 
@@ -993,7 +1342,6 @@ WlzObject	*WlzCMeshStrainTensorAtPts(WlzObject *cObj, int invert,
   return(tObj);
 }
 
-
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzFeatures
@@ -1083,11 +1431,77 @@ static WlzErrorNum		WlzTensorGetComponentValues2D(
 /*!
 * \return	Woolz error code.
 * \ingroup	WlzFeatures
-* \brief	Extracts the required component value from a (possibly)
-* 		tensor valued 3D (possibly) tiled value object into a
-* 		non-tiled value object. This function assumes all given
-* 		parameters are valid and that the domains of the two
-* 		objects are identical.
+* \brief	Sets values of the required component in a (possibly)
+* 		tensor valued (possibly) 2 or 3D tiled value object
+* 		from a non-tiled value object. This function assumes that
+* 		all the given parameters are valid and that the domains
+* 		of the two objects are identical.
+* \param	rObj		Non-tiled value 2D object with values to be
+* 				transfered to the (possibly) tensor valued
+* 				(possibly) tiled object.
+* \param	tObj		Given (possibly) tensor valued source object.
+* 				It is acceptable for this object to either have
+* 				either 2D values of a 3D tiled value table.
+* \param	cpt		Component index, known to be in range.
+* \param	pln		If the source object is 3D then this is
+* 				the current plane value, otherwise it is
+* 				not used.
+*/
+static WlzErrorNum		WlzTensorSetComponentValues2D(
+				  WlzObject *rObj,
+				  WlzObject *tObj,
+				  int cpt,
+				  int pln)
+{
+  WlzIntervalWSpace iWSp;
+  WlzGreyWSpace	    gWSp;
+  WlzGreyValueWSpace *tGVWSp = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(((tGVWSp = WlzGreyValueMakeWSp(tObj, &errNum)) != NULL) &&
+     ((errNum = WlzInitGreyScan(rObj, &iWSp, &gWSp)) == WLZ_ERR_NONE))
+  {
+    WlzGreyType rGType,
+		tGType;
+
+    rGType = gWSp.pixeltype;
+    tGType = tGVWSp->gType;
+    while((errNum == WLZ_ERR_NONE) &&
+          ((errNum = WlzNextGreyInterval(&iWSp)) == WLZ_ERR_NONE))
+    
+    {
+      int	idK;
+      WlzGreyP	rP;
+
+      rP = gWSp.u_grintptr;
+      for(idK = iWSp.lftpos; idK <= iWSp.rgtpos; ++idK)
+      {
+	int	 idI;
+	WlzGreyP tP;
+
+        idI = idK - iWSp.lftpos;
+        WlzGreyValueGet(tGVWSp, pln, iWSp.linpos, idK);
+	tP = tGVWSp->gPtr[0];
+	WlzValueCopyGreyToGrey(tP, cpt, tGType, rP, idI, rGType, 1);
+      }
+    }
+    if(errNum == WLZ_ERR_EOO)
+    {
+      errNum = WLZ_ERR_NONE;
+    }
+  }
+  WlzGreyValueFreeWSp(tGVWSp);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzFeatures
+* \brief	Extracts or sets the required component values from/to a
+* 		(possibly) tensor valued 3D (possibly) tiled value object
+* 		into/from a non-tiled value object. This function assumes
+* 		that all the given parameters are valid and that the domains
+* 		of the two objects are identical.
 * \param	rObj		Non-tiled value 3D object, already allocated
 * 				with appropriate grey value type and background
 * 				set.
@@ -1095,11 +1509,14 @@ static WlzErrorNum		WlzTensorGetComponentValues2D(
 * 				is acceptable for this object to either have
 * 				either a 3D voxel or 3D tiled value table.
 * \param	cpt		Component index, known to be in range.
+* \param	set		Set tiled values rather than get them if
+* 				non-zero.
 */
-static WlzErrorNum		WlzTensorGetComponentValues3D(
+static WlzErrorNum		WlzTensorComponentValues3D(
 				  WlzObject *rObj,
 				  WlzObject *tObj,
-				  int cpt)
+				  int cpt,
+				  int set)
 {
   int		pln,
   		tiled;
@@ -1148,14 +1565,16 @@ static WlzErrorNum		WlzTensorGetComponentValues3D(
       }
       if(errNum2 == WLZ_ERR_NONE)
       {
-        errNum2 = WlzTensorGetComponentValues2D(rObj2, tObj2, cpt, pln);
+	errNum2 = (set)?
+	          WlzTensorSetComponentValues2D(rObj2, tObj2, cpt, pln):
+		  WlzTensorGetComponentValues2D(rObj2, tObj2, cpt, pln);
       }
       (void )WlzFreeObj(rObj2);
       (void )WlzFreeObj(tObj2);
       if(errNum2 != WLZ_ERR_NONE)
       {
 #ifdef _OPENMP
-#pragma omp critical (WlzTensorGetComponentValues3D)
+#pragma omp critical (WlzTensorComponentValues3D)
 #endif
         if(errNum == WLZ_ERR_NONE)
 	{
@@ -1168,7 +1587,40 @@ static WlzErrorNum		WlzTensorGetComponentValues3D(
 }
 
 /*!
-* \return	Woolz error code.
+* \ingroup	WlzFeatures
+* \brief	Computes the Right Cauchy-Green tensor from the deformation
+* 		tensor.
+* \param	cg			Matrix in which to place the Right
+* 					Cauchy-Green tensor values.
+* \param	gP 			Grey pointer for the deformation tensor
+* 					values.
+* \param	gT			Grey type o the values.
+*/
+static void			WlzDGTensorToRCauchyGreen(
+				  AlgMatrix cg,
+				  WlzGreyP gP,
+				  WlzGreyType gT)
+{
+  WlzGreyP	m;
+  double	f[9];
+
+  /* Get deformation gradient matrix values into f. */
+  m.dbp = f;
+  WlzValueCopyGreyToGrey(m, 0, WLZ_GREY_DOUBLE, gP, 0, gT, 9);
+  /* Use deformation gradient values to compute the right Cauchy-Green
+   * tensor ( C = F^T F ). */
+  cg.rect->array[0][0] = f[0] * f[0] + f[3] * f[3] + f[6] * f[6];
+  cg.rect->array[0][1] = f[0] * f[1] + f[3] * f[4] + f[6] * f[7];
+  cg.rect->array[0][2] = f[0] * f[2] + f[3] * f[5] + f[6] * f[8];
+  cg.rect->array[1][0] = f[1] * f[0] + f[4] * f[3] + f[7] * f[6];
+  cg.rect->array[1][1] = f[1] * f[1] + f[4] * f[4] + f[7] * f[7];
+  cg.rect->array[1][2] = f[1] * f[2] + f[4] * f[5] + f[7] * f[8];
+  cg.rect->array[2][0] = f[2] * f[0] + f[5] * f[3] + f[8] * f[6];
+  cg.rect->array[2][1] = f[2] * f[1] + f[5] * f[4] + f[8] * f[7];
+  cg.rect->array[2][2] = f[2] * f[2] + f[5] * f[5] + f[8] * f[8];
+}
+
+/*!
 * \ingroup      WlzFeatures
 * \brief	Computes the determinant of the Jacobian matrix values in
 * 		the source, the determinants are placed in the destination.
@@ -1177,105 +1629,292 @@ static WlzErrorNum		WlzTensorGetComponentValues3D(
 * 		WLZ_GREY_UBYTE, WLZ_GREY_FLOAT or  WLZ_GREY_DOUBLE.
 * \param	dGVWSp			Destination grey value workspace.
 * \param	sGVWSp			Source grey value workspace.
+* \param	cgt			Working matrix for right Cauchy-Green
+* 					tensor.
 * \param	pln			The current plane.
 * \param	lin			The current line.
 * \param        lft			Left start of interval.
 * \param	rgt			Right end of interval.
 */
-static WlzErrorNum		WlzDGTensorSDFeatDetJac(
+static void			WlzDGTensorSDFeatDetJacItv(
 				  WlzGreyValueWSpace *dGVWSp,
 				  WlzGreyValueWSpace *sGVWSp,
+				  AlgMatrix cgt,
 				  int pln,
 				  int lin,
 				  int lft,
 				  int rgt)
 {
   int		idK;
-  WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   for(idK = lft; idK <= rgt; ++idK)
   {
     double	v = 0.0;
-    WlzGreyP	d,
-	  	s;
+    WlzGreyP	d;
 
     WlzGreyValueGet(dGVWSp, pln, lin, idK);
     WlzGreyValueGet(sGVWSp, pln, lin, idK);
+    WlzDGTensorToRCauchyGreen(cgt, sGVWSp->gPtr[0], sGVWSp->gType);
+    (void )AlgMatrixLUDetermRaw(cgt.rect->array, 3, &v);
     d = dGVWSp->gPtr[0];
-    s = sGVWSp->gPtr[0];
-    switch(sGVWSp->gType)
-    {
-      case WLZ_GREY_INT:
-	v = ALG_DETERMINANT_9(s.inp);
-	break;
-      case WLZ_GREY_SHORT:
-	v = ALG_DETERMINANT_9(s.shp);
-	break;
-      case WLZ_GREY_UBYTE:
-	v = ALG_DETERMINANT_9(s.ubp);
-	break;
-      case WLZ_GREY_FLOAT:
-	v = ALG_DETERMINANT_9(s.flp);
-	break;
-      case WLZ_GREY_DOUBLE:
-	v = ALG_DETERMINANT_9(s.dbp);
-	break;
-      default:
-	errNum = WLZ_ERR_GREY_TYPE;
-        break;
-    }
-    WLZ_CLAMP_DOUBLE_TO_GREYP(d, v, dGVWSp->gType);
+    v = (v < 0.0)? 0.0: sqrt(v);
+    WLZ_CLAMP_DOUBLE_TO_GREYP(d, 0, v, dGVWSp->gType);
   }
-  return(errNum);
+}
+
+/*!
+* \ingroup      WlzFeatures
+* \brief	Computes the determinant of the Jacobian matrix value in
+* 		the source, the determinant is placed in the destination.
+* 		The returned Woolz error code will be WLZ_ERR_NONE unless
+* 		the grey type is not one of WLZ_GREY_INT, WLZ_GREY_SHORT,
+* 		WLZ_GREY_UBYTE, WLZ_GREY_FLOAT or  WLZ_GREY_DOUBLE.
+* \param	dPV			Destination point value.
+* \param	sGP			Deformation gradient values.
+* \param	dGType			Destination grey type.
+* \param	sGType			Source grey type.
+* \param	cgt			Working matrix for right Cauchy-Green
+* 					tensor.
+* \param	idP			Current point index.
+*/
+static void			WlzDGTensorSDFeatDetJacPnt(
+				  WlzPointValues *dPV,
+				  WlzGreyP sGP,
+				  WlzGreyType dGType,
+				  WlzGreyType sGType,
+				  AlgMatrix cgt,
+				  int idP)
+{
+  double	v = 0.0;
+
+  WlzDGTensorToRCauchyGreen(cgt, sGP, sGType);
+  (void )AlgMatrixLUDetermRaw(cgt.rect->array, 3, &v);
+  v = (v < 0.0)? 0.0: sqrt(v);
+  WLZ_CLAMP_DOUBLE_TO_GREYP(dPV->values, idP, v, dGType);
 }
 
 /*!
 * \ingroup      WlzFeatures
 * \brief	Computes the principle direction vectors of the Jacobian
-* 		matrix values in the source, the vecors are placed in
-* 		the destination.
+* 		matrix values in the source, the vectors are placed in
+* 		the destination as a matrix of three column vectors each
+* 		with three values.
 * \param	dGVWSp			Destination grey value workspace.
 * \param	sGVWSp			Source grey value workspace.
+* \param	cgt			Working matrix for right Cauchy-Green
+* 					tensor.
 * \param	pln			The current plane.
 * \param	lin			The current line.
 * \param        lft			Left start of interval.
 * \param	rgt			Right end of interval.
 */
-static void			WlzDGTensorSDFeatDirVec(
+static void			WlzDGTensorSDFeatDirVecItv(
 				  WlzGreyValueWSpace *dGVWSp,
 				  WlzGreyValueWSpace *sGVWSp,
+				  AlgMatrix cgt,
 				  int pln,
 				  int lin,
 				  int lft,
 				  int rgt)
 {
-  WlzErrorNum   errNum = WLZ_ERR_NONE; /* HACK TODO */
+  int		idK;
+  double	v[3];
 
-  errNum = WLZ_ERR_UNIMPLEMENTED; /* HACK TODO */
+  for(idK = lft; idK <= rgt; ++idK)
+  {
+    int		i,
+		j,
+		k;
+    WlzGreyP	d;
+
+    WlzGreyValueGet(sGVWSp, pln, lin, idK);
+    WlzGreyValueGet(dGVWSp, pln, lin, idK);
+    d = dGVWSp->gPtr[0];
+    WlzDGTensorToRCauchyGreen(cgt, sGVWSp->gPtr[0], sGVWSp->gType);
+    (void )AlgMatrixRSEigen(cgt, v, 1);
+    switch(dGVWSp->gType)
+    {
+      case WLZ_GREY_FLOAT:
+	for(j = k = 0; j < 3; ++j)
+	{
+	  for(i = 0; i < 3; ++i)
+	  {
+	    d.flp[k++] = WLZ_CLAMP(cgt.rect->array[j][i], -FLT_MAX, FLT_MAX);
+	  }
+	}
+	break;
+      case WLZ_GREY_DOUBLE:
+	for(j = k = 0; j < 3; ++j)
+	{
+	  for(i = 0; i < 3; ++i)
+	  {
+	    d.dbp[k++] = cgt.rect->array[j][i];
+	  }
+	}
+	break;
+      default:
+        break;
+    }
+  }
+}
+
+/*!
+* \ingroup      WlzFeatures
+* \brief	Computes the principle direction vectors of the Jacobian
+* 		matrix values in the source, the vectors are placed in
+* 		the destination as a matrix of three column vectors each
+* 		with three values.
+* \param	dPV			Destination point value.
+* \param	sGP			Deformation gradient values.
+* \param	dGType			Destination grey type.
+* \param	sGType			Source grey type.
+* \param	cgt			Working matrix for right Cauchy-Green
+* 					tensor.
+* \param	idP			Current point index.
+*/
+static void			WlzDGTensorSDFeatDirVecPnt(
+				  WlzPointValues *dPV,
+				  WlzGreyP sGP,
+				  WlzGreyType dGType,
+				  WlzGreyType sGType,
+				  AlgMatrix cgt,
+				  int idP)
+{
+  int		i,
+	      	j,
+	      	k;
+  double	v[3];
+  WlzGreyP	d;
+
+  WlzDGTensorToRCauchyGreen(cgt, sGP, sGType);
+  (void )AlgMatrixRSEigen(cgt, v, 1);
+  switch(dPV->vType)
+  {
+    case WLZ_GREY_FLOAT:
+      d.flp = dPV->values.flp + (9 * idP);
+      for(j = k = 0; j < 3; ++j)
+      {
+	for(i = 0; i < 3; ++i)
+	{
+	  d.flp[k++] = WLZ_CLAMP(cgt.rect->array[j][i], -FLT_MAX, FLT_MAX);
+	}
+      }
+      break;
+    case WLZ_GREY_DOUBLE:
+      d.dbp = dPV->values.dbp + (9 * idP);
+      for(j = k = 0; j < 3; ++j)
+      {
+	for(i = 0; i < 3; ++i)
+	{
+	  d.dbp[k++] = cgt.rect->array[j][i];
+	}
+      }
+      break;
+    default:
+      break;
+  }
 }
 
 /*!
 * \ingroup      WlzFeatures
 * \brief	Computes the stretch values of the Jacobian matrix values in
-* 		the source, the stretch values are placed in the destination.
+* 		the source, the stretch values are placed in the destination
+* 		as a vector of three values.
+* 		Integral values (int, short or ubyte) are not allowed and are
+* 		considered an error.
 * \param	dGVWSp			Destination grey value workspace.
 * \param	sGVWSp			Source grey value workspace.
+* \param	cgt			Working matrix for right Cauchy-Green
+* 					tensor.
 * \param	pln			The current plane.
 * \param	lin			The current line.
 * \param        lft			Left start of interval.
 * \param	rgt			Right end of interval.
 */
-static void			WlzDGTensorSDFeatStrVal(
+static void			WlzDGTensorSDFeatStrValItv(
 				  WlzGreyValueWSpace *dGVWSp,
 				  WlzGreyValueWSpace *sGVWSp,
+				  AlgMatrix cgt,
 				  int pln,
 				  int lin,
 				  int lft,
 				  int rgt)
 {
-  WlzErrorNum   errNum = WLZ_ERR_NONE; /* HACK TODO */
+  int		idK;
+  double	v[3];
 
-  errNum = WLZ_ERR_UNIMPLEMENTED; /* HACK TODO */
+  for(idK = lft; idK <= rgt; ++idK)
+  {
+    WlzGreyP	d;
+
+    WlzGreyValueGet(sGVWSp, pln, lin, idK);
+    WlzGreyValueGet(dGVWSp, pln, lin, idK);
+    d = dGVWSp->gPtr[0];
+    WlzDGTensorToRCauchyGreen(cgt, sGVWSp->gPtr[0], sGVWSp->gType);
+    (void )AlgMatrixRSEigen(cgt, v, 0);
+    switch(dGVWSp->gType)
+    {
+      case WLZ_GREY_FLOAT:
+	d.flp[0] = WLZ_CLAMP(v[0], -FLT_MAX, FLT_MAX);
+	d.flp[1] = WLZ_CLAMP(v[1], -FLT_MAX, FLT_MAX);
+	d.flp[2] = WLZ_CLAMP(v[2], -FLT_MAX, FLT_MAX);
+	break;
+      case WLZ_GREY_DOUBLE:
+	d.dbp[0] = v[0];
+	d.dbp[1] = v[1];
+	d.dbp[2] = v[2];
+	break;
+      default:
+        break;
+    }
+  }
+}
+
+/*!
+* \ingroup      WlzFeatures
+* \brief	Computes the stretch values of the Jacobian matrix values in
+* 		the source, the stretch values are placed in the destination
+* 		as a vector of three values.
+* 		Integral values (int, short or ubyte) are not allowed and are
+* 		considered an error.
+* \param	dPV			Destination point value.
+* \param	sGP			Deformation gradient values.
+* \param	dGType			Destination grey type.
+* \param	sGType			Source grey type.
+* \param	cgt			Working matrix for right Cauchy-Green
+* 					tensor.
+* \param	idP			Current point index.
+*/
+static void			WlzDGTensorSDFeatStrValPnt(
+				  WlzPointValues *dPV,
+				  WlzGreyP sGP,
+				  WlzGreyType dGType,
+				  WlzGreyType sGType,
+				  AlgMatrix cgt,
+				  int idP)
+{
+  double	v[3];
+  WlzGreyP	d;
+
+  WlzDGTensorToRCauchyGreen(cgt, sGP, sGType);
+  (void )AlgMatrixRSEigen(cgt, v, 1);
+  switch(dPV->vType)
+  {
+    case WLZ_GREY_FLOAT:
+      d.flp = dPV->values.flp + (3 * idP);
+      d.flp[0] = WLZ_CLAMP(v[0], -FLT_MAX, FLT_MAX);
+      d.flp[1] = WLZ_CLAMP(v[1], -FLT_MAX, FLT_MAX);
+      d.flp[2] = WLZ_CLAMP(v[2], -FLT_MAX, FLT_MAX);
+      break;
+    case WLZ_GREY_DOUBLE:
+      d.dbp = dPV->values.dbp + (3 * idP);
+      d.dbp[0] = v[0];
+      d.dbp[1] = v[1];
+      d.dbp[2] = v[2];
+      break;
+    default:
+      break;
+  }
 }
 
 /*!
