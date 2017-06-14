@@ -58,6 +58,7 @@ bin_PROGRAMS		= \
 			  WlzExtFFAffineTrFitBox \
 			  WlzExtFFConstruct3D \
 			  WlzExtFFContourObj \
+			  WlzExtFFDefGrdExportVTK \
 			  WlzExtFFImportITKSnapSeg \
 			  WlzExtFFConvert \
 			  WlzExtFFWlzToXYZ \
@@ -79,6 +80,10 @@ WlzExtFFContourObj_LDFLAGS	= $(AM_LFLAGS)
 WlzExtFFConvert_SOURCES		= WlzExtFFConvert.c
 WlzExtFFConvert_LDADD		= $(LDADD)
 WlzExtFFConvert_LDFLAGS		= $(AM_LFLAGS)
+
+WlzExtFFDefGrdExportVTK_SOURCES = WlzExtFFDefGrdExportVTK.c
+WlzExtFFDefGrdExportVTK_LDADD	= $(LDADD)
+WlzExtFFDefGrdExportVTK_LDFLAGS = $(AM_LFLAGS)
 
 WlzExtFFImportITKSnapSeg_SOURCES = WlzExtFFImportITKSnapSeg.c
 WlzExtFFImportITKSnapSeg_LDADD	= $(LDADD)
