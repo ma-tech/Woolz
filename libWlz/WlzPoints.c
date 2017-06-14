@@ -44,6 +44,10 @@ static char _WlzPoints_c[] = "University of Edinburgh $Id$";
 #include <float.h>
 #include <Wlz.h>
 
+#ifdef _OPENMP
+#define WLZ_POINT_OMP_CHUNKSZ 4096    /* To avoid parallelising small loops. */
+#endif
+
 /*!
 * \return	New domain object which coresponds to the union of
 * 		the given points.
@@ -433,14 +437,8 @@ WlzPoints			*WlzPointsFromDomObj(
              WlzBoundaryDomain(curObj, &errNum), NULL);
     if(errNum == WLZ_ERR_NONE)
     {
-      if(dim == 2)
-      {
-        errNum = WlzVerticesFromObj2I(shlObj, &nVtx, &(vtx.i2));
-      }
-      else
-      {
-        errNum = WlzVerticesFromObj3I(shlObj, &nVtx, &(vtx.i3));
-      }
+      errNum = (dim == 2)? WlzVerticesFromObj2I(shlObj, &nVtx, &(vtx.i2)):
+                           WlzVerticesFromObj3I(shlObj, &nVtx, &(vtx.i3));
     }
     (void )WlzFreeObj(shlObj);
     /* Update the shuffle buffer, used to make randomise the insertions into
@@ -462,7 +460,7 @@ WlzPoints			*WlzPointsFromDomObj(
         errNum = WLZ_ERR_MEM_ALLOC;
       }
     }
-    /* Add vertices to the KD-tree as long as their seperation distance
+    /* Add vertices to the KD-tree as long as their separation distance
      * is >= dMin and if using grey values the grey probability is above
      * threshold. */
     if(errNum == WLZ_ERR_NONE)
@@ -631,16 +629,37 @@ WlzPoints			*WlzPointsFromDomObj(
     pts->nPoints = vecIdx;
     if(dim == 2)
     {
-      for(i = 0; i < vecIdx; ++i)
+      if(useFloatingPoint)
       {
-        p.v = AlcVectorItemGet(vec, i);
-        pts->points.i2[i] = *(p.i2);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_POINT_OMP_CHUNKSZ)
+#endif
+	for(i = 0; i < vecIdx; ++i)
+	{
+	  p.v = AlcVectorItemGet(vec, i);
+	  pts->points.d2[i].vtX = p.i2->vtX;
+	  pts->points.d2[i].vtY = p.i2->vtY;
+	}
+      }
+      else
+      {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_POINT_OMP_CHUNKSZ)
+#endif
+	for(i = 0; i < vecIdx; ++i)
+	{
+	  p.v = AlcVectorItemGet(vec, i);
+	  pts->points.i2[i] = *(p.i2);
+	}
       }
     }
     else
     {
       if(voxelScaling)
       {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_POINT_OMP_CHUNKSZ)
+#endif
 	for(i = 0; i < vecIdx; ++i)
 	{
 	  p.v = AlcVectorItemGet(vec, i);
@@ -653,14 +672,22 @@ WlzPoints			*WlzPointsFromDomObj(
       {
 	if(useFloatingPoint)
 	{
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_POINT_OMP_CHUNKSZ)
+#endif
 	  for(i = 0; i < vecIdx; ++i)
 	  {
 	    p.v = AlcVectorItemGet(vec, i);
-	    pts->points.d3[i] = *(p.d3);
+	    pts->points.d3[i].vtX = p.i3->vtX;
+	    pts->points.d3[i].vtY = p.i3->vtY;
+	    pts->points.d3[i].vtZ = p.i3->vtZ;
 	  }
 	}
 	else
 	{
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static, WLZ_POINT_OMP_CHUNKSZ)
+#endif
 	  for(i = 0; i < vecIdx; ++i)
 	  {
 	    p.v = AlcVectorItemGet(vec, i);
@@ -972,11 +999,15 @@ WlzObject			*WlzPointsToMarkers(
 * \param	gPts			Given points.
 * \param	dSz			Dither size (z component is not
 * 					used if points are 2D).
+* \param	resObj			If non NULL then the dithered points
+* 					will always fall within the given
+* 					spatial domain object's domain.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzPoints			*WlzPointsDither(
 				  WlzPoints *gPts,
 				  WlzDVertex3 dSz,
+				  WlzObject *resObj,
 				  WlzErrorNum *dstErr)
 {
   WlzPoints	*dPts = NULL;
@@ -994,10 +1025,18 @@ WlzPoints			*WlzPointsDither(
       case WLZ_POINTS_2I:        
       case WLZ_POINTS_2D:        
         dPntType = WLZ_POINTS_2D;
+	if(resObj && (resObj->type != WLZ_2D_DOMAINOBJ))
+	{
+	  errNum = WLZ_ERR_OBJECT_TYPE;
+	}
 	break;
       case WLZ_POINTS_3I:        
       case WLZ_POINTS_3D:        
         dPntType = WLZ_POINTS_3D;
+	if(resObj && (resObj->type != WLZ_3D_DOMAINOBJ))
+	{
+	  errNum = WLZ_ERR_OBJECT_TYPE;
+	}
 	break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -1011,6 +1050,9 @@ WlzPoints			*WlzPointsDither(
     nullP.v = NULL;
     dPts = WlzMakePoints(dPntType, 0, nullP, gPts->nPoints, &errNum);
   }
+  if((errNum == WLZ_ERR_NONE) && resObj)
+  {
+  }
   if(errNum == WLZ_ERR_NONE)                
   {
     int		idx;
@@ -1022,30 +1064,61 @@ WlzPoints			*WlzPointsDither(
     for(idx = 0; idx < gPts->nPoints; ++idx)
     {
       WlzDVertex3 d;
+      WlzVertex   nPt;
 
       d.vtX = dSz.vtX * ((AlgRandUniform() * 2.0) - 1.0);
       d.vtY = dSz.vtY * ((AlgRandUniform() * 2.0) - 1.0);
       switch(gPts->type)
       {
 	case WLZ_POINTS_2I:        
-	  dPts->points.d2[idx].vtX = gPts->points.i2[idx].vtX + d.vtX;
-	  dPts->points.d2[idx].vtY = gPts->points.i2[idx].vtY + d.vtY;
+	  WLZ_VTX_2_ADD(nPt.d2, gPts->points.i2[idx], d);
+	  if((resObj == NULL) ||
+	     WlzInsideDomain(resObj, 0.0, nPt.d2.vtY, nPt.d2.vtX, NULL))
+	  {
+	    dPts->points.d2[idx] = nPt.d2;
+	  }
+	  else
+	  {
+	    WLZ_VTX_2_COPY(dPts->points.d2[idx], gPts->points.i2[idx]);
+	  }
 	  break;
 	case WLZ_POINTS_2D:        
-	  dPts->points.d2[idx].vtX = gPts->points.d2[idx].vtX + d.vtX;
-	  dPts->points.d2[idx].vtY = gPts->points.d2[idx].vtY + d.vtY;
+	  WLZ_VTX_2_ADD(nPt.d2, gPts->points.d2[idx], d);
+	  if((resObj == NULL) ||
+	     WlzInsideDomain(resObj, 0.0, nPt.d2.vtY, nPt.d2.vtX, NULL))
+	  {
+	    dPts->points.d2[idx] = nPt.d2;
+	  }
+	  else
+	  {
+	    dPts->points.d2[idx] = gPts->points.d2[idx];
+	  }
 	  break;
 	case WLZ_POINTS_3I:        
           d.vtZ = dSz.vtZ * ((AlgRandUniform() * 2.0) - 1.0);
-	  dPts->points.d3[idx].vtX = gPts->points.i3[idx].vtX + d.vtX;
-	  dPts->points.d3[idx].vtY = gPts->points.i3[idx].vtY + d.vtY;
-	  dPts->points.d3[idx].vtZ = gPts->points.i3[idx].vtZ + d.vtZ;
+	  WLZ_VTX_3_ADD(nPt.d3, gPts->points.i3[idx], d);
+	  if((resObj == NULL) ||
+	     WlzInsideDomain(resObj, nPt.d3.vtZ, nPt.d3.vtY, nPt.d3.vtX, NULL))
+	  {
+	    dPts->points.d3[idx] = nPt.d3;
+	  }
+	  else
+	  {
+	    WLZ_VTX_3_COPY(dPts->points.d3[idx], gPts->points.i3[idx]);
+	  }
 	  break;
 	case WLZ_POINTS_3D:        
           d.vtZ = dSz.vtZ * ((AlgRandUniform() * 2.0) - 1.0);
-	  dPts->points.d3[idx].vtX = gPts->points.d3[idx].vtX + d.vtX;
-	  dPts->points.d3[idx].vtY = gPts->points.d3[idx].vtY + d.vtY;
-	  dPts->points.d3[idx].vtZ = gPts->points.d3[idx].vtZ + d.vtZ;
+	  WLZ_VTX_3_ADD(nPt.d3, gPts->points.d3[idx], d);
+	  if((resObj == NULL) ||
+	     WlzInsideDomain(resObj, nPt.d3.vtZ, nPt.d3.vtY, nPt.d3.vtX, NULL))
+	  {
+	    dPts->points.d3[idx] = nPt.d3;
+	  }
+	  else
+	  {
+	    WLZ_VTX_3_COPY(dPts->points.d3[idx], gPts->points.d3[idx]);
+	  }
 	  break;
 	default:
 	  break;
