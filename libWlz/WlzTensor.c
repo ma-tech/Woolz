@@ -60,7 +60,7 @@ static WlzErrorNum		WlzTensorComponentValues3D(
 				  WlzObject *tObj,
 				  int cpt,
 				  int set);
-static void			WlzDGTensorSDFeatDirVecItv(
+static void			WlzDGTensorSDFeatEigenVecItv(
 				  WlzGreyValueWSpace *dGVWSp,
 				  WlzGreyValueWSpace *sGVWSp,
 				  AlgMatrix cgt,
@@ -76,7 +76,7 @@ static void			WlzDGTensorSDFeatDetJacItv(
 				  int lin,
 				  int lft,
 				  int rgt);
-static void			WlzDGTensorSDFeatStrValItv(
+static void			WlzDGTensorSDFeatEigenValItv(
 				  WlzGreyValueWSpace *dGVWSp,
 				  WlzGreyValueWSpace *sGVWSp,
 				  AlgMatrix cgt,
@@ -91,14 +91,14 @@ static void			WlzDGTensorSDFeatDetJacPnt(
 				  WlzGreyType sGType,
 				  AlgMatrix cgt,
 				  int idP);
-static void			WlzDGTensorSDFeatDirVecPnt(
+static void			WlzDGTensorSDFeatEigenVecPnt(
 				  WlzPointValues *dPV,
 				  WlzGreyP sGP,
 				  WlzGreyType dGType,
 				  WlzGreyType sGType,
 				  AlgMatrix cgt,
 				  int idP);
-static void			WlzDGTensorSDFeatStrValPnt(
+static void			WlzDGTensorSDFeatEigenValPnt(
 				  WlzPointValues *dPV,
 				  WlzGreyP sGP,
 				  WlzGreyType dGType,
@@ -348,8 +348,8 @@ WlzObject			*WlzDGTensorFeatures(
 * 		The returned object will have it's name property set to
 * 		an appropriate name for the required feature:
 *		WLZ_DGTENSOR_FEATURE_DETJAC ("jacobian"),
-*		WLZ_DGTENSOR_FEATURE_DIRVEC ("direction vectors") or
-*		WLZ_DGTENSOR_FEATURE_STRVAL ("stretch values").
+*		WLZ_DGTENSOR_FEATURE_EIGENVEC ("eigen vectors") or
+*		WLZ_DGTENSOR_FEATURE_EIGENVAL ("eigen values").
 * \param	mObj		Given deformation gradient field object. This
 * 				must be a 3D object in which the (tiled) voxel
 * 				values are each a nine element Jacobian
@@ -390,16 +390,16 @@ WlzObject			*WlzDGTensorSDFeature(
       vDim[0] = 0;
       pName = "jacobian";
       break;
-    case WLZ_DGTENSOR_FEATURE_DIRVEC:
+    case WLZ_DGTENSOR_FEATURE_EIGENVEC:
       vRank = 2;
       vDim[0] = 3;
       vDim[1] = 3;
-      pName = "direction vectors";
+      pName = "eigen vectors";
       break;
-    case WLZ_DGTENSOR_FEATURE_STRVAL:
+    case WLZ_DGTENSOR_FEATURE_EIGENVAL:
       vRank = 1;
       vDim[0] = 3;
-      pName = "stretch values";
+      pName = "eigen values";
       break;
     default:
       errNum = WLZ_ERR_PARAM_DATA;
@@ -504,12 +504,12 @@ WlzObject			*WlzDGTensorSDFeature(
 		        WlzDGTensorSDFeatDetJacItv(dGVWSp, sGVWSp, cgt,
 				idP, dIWSp.linpos, itv.ileft, itv.iright);
 		        break;
-		      case WLZ_DGTENSOR_FEATURE_DIRVEC:
-		        WlzDGTensorSDFeatDirVecItv(dGVWSp, sGVWSp, cgt,
+		      case WLZ_DGTENSOR_FEATURE_EIGENVEC:
+		        WlzDGTensorSDFeatEigenVecItv(dGVWSp, sGVWSp, cgt,
 				idP, dIWSp.linpos, itv.ileft, itv.iright);
 		        break;
-		      case WLZ_DGTENSOR_FEATURE_STRVAL:
-		        WlzDGTensorSDFeatStrValItv(dGVWSp, sGVWSp, cgt,
+		      case WLZ_DGTENSOR_FEATURE_EIGENVAL:
+		        WlzDGTensorSDFeatEigenValItv(dGVWSp, sGVWSp, cgt,
 				idP, dIWSp.linpos, itv.ileft, itv.iright);
 		        break;
 		      default:
@@ -655,16 +655,16 @@ WlzObject			*WlzDGTensorPDFeature(
       vDim[0] = 0;
       pName = "jacobian";
       break;
-    case WLZ_DGTENSOR_FEATURE_DIRVEC:
+    case WLZ_DGTENSOR_FEATURE_EIGENVEC:
       vRank = 2;
       vDim[0] = 3;
       vDim[1] = 3;
-      pName = "direction vectors";
+      pName = "eigen vectors";
       break;
-    case WLZ_DGTENSOR_FEATURE_STRVAL:
+    case WLZ_DGTENSOR_FEATURE_EIGENVAL:
       vRank = 1;
       vDim[0] = 3;
-      pName = "stretch values";
+      pName = "eigen values";
       break;
     default:
       errNum = WLZ_ERR_PARAM_DATA;
@@ -754,15 +754,15 @@ WlzObject			*WlzDGTensorPDFeature(
 					   dPV->vType, gVWSp->gType,
 					   cgt, idP);
 		break;
-	      case WLZ_DGTENSOR_FEATURE_DIRVEC:
-		WlzDGTensorSDFeatDirVecPnt(dPV, gVWSp->gPtr[0],
-					   dPV->vType, gVWSp->gType,
-					   cgt, idP);
+	      case WLZ_DGTENSOR_FEATURE_EIGENVEC:
+		WlzDGTensorSDFeatEigenVecPnt(dPV, gVWSp->gPtr[0],
+					     dPV->vType, gVWSp->gType,
+					     cgt, idP);
 		break;
-	      case WLZ_DGTENSOR_FEATURE_STRVAL:
-		WlzDGTensorSDFeatStrValPnt(dPV, gVWSp->gPtr[0], 
-					   dPV->vType, gVWSp->gType,
-					   cgt, idP);
+	      case WLZ_DGTENSOR_FEATURE_EIGENVAL:
+		WlzDGTensorSDFeatEigenValPnt(dPV, gVWSp->gPtr[0], 
+					     dPV->vType, gVWSp->gType,
+					     cgt, idP);
 		break;
 	      default:
 		/* Already checked for. */
@@ -1695,7 +1695,7 @@ static void			WlzDGTensorSDFeatDetJacPnt(
 
 /*!
 * \ingroup      WlzFeatures
-* \brief	Computes the principle direction vectors of the Jacobian
+* \brief	Computes the principle eigen vectors of the Jacobian
 * 		matrix values in the source, the vectors are placed in
 * 		the destination as a matrix of three column vectors each
 * 		with three values.
@@ -1708,7 +1708,7 @@ static void			WlzDGTensorSDFeatDetJacPnt(
 * \param        lft			Left start of interval.
 * \param	rgt			Right end of interval.
 */
-static void			WlzDGTensorSDFeatDirVecItv(
+static void			WlzDGTensorSDFeatEigenVecItv(
 				  WlzGreyValueWSpace *dGVWSp,
 				  WlzGreyValueWSpace *sGVWSp,
 				  AlgMatrix cgt,
@@ -1760,7 +1760,7 @@ static void			WlzDGTensorSDFeatDirVecItv(
 
 /*!
 * \ingroup      WlzFeatures
-* \brief	Computes the principle direction vectors of the Jacobian
+* \brief	Computes the principle eigen vectors of the Jacobian
 * 		matrix values in the source, the vectors are placed in
 * 		the destination as a matrix of three column vectors each
 * 		with three values.
@@ -1772,7 +1772,7 @@ static void			WlzDGTensorSDFeatDirVecItv(
 * 					tensor.
 * \param	idP			Current point index.
 */
-static void			WlzDGTensorSDFeatDirVecPnt(
+static void			WlzDGTensorSDFeatEigenVecPnt(
 				  WlzPointValues *dPV,
 				  WlzGreyP sGP,
 				  WlzGreyType dGType,
@@ -1817,8 +1817,8 @@ static void			WlzDGTensorSDFeatDirVecPnt(
 
 /*!
 * \ingroup      WlzFeatures
-* \brief	Computes the stretch values of the Jacobian matrix values in
-* 		the source, the stretch values are placed in the destination
+* \brief	Computes the eigen values of the Jacobian matrix values in
+* 		the source, the eigen values are placed in the destination
 * 		as a vector of three values.
 * 		Integral values (int, short or ubyte) are not allowed and are
 * 		considered an error.
@@ -1831,7 +1831,7 @@ static void			WlzDGTensorSDFeatDirVecPnt(
 * \param        lft			Left start of interval.
 * \param	rgt			Right end of interval.
 */
-static void			WlzDGTensorSDFeatStrValItv(
+static void			WlzDGTensorSDFeatEigenValItv(
 				  WlzGreyValueWSpace *dGVWSp,
 				  WlzGreyValueWSpace *sGVWSp,
 				  AlgMatrix cgt,
@@ -1872,8 +1872,8 @@ static void			WlzDGTensorSDFeatStrValItv(
 
 /*!
 * \ingroup      WlzFeatures
-* \brief	Computes the stretch values of the Jacobian matrix values in
-* 		the source, the stretch values are placed in the destination
+* \brief	Computes the eigen values of the Jacobian matrix values in
+* 		the source, the eigen values are placed in the destination
 * 		as a vector of three values.
 * 		Integral values (int, short or ubyte) are not allowed and are
 * 		considered an error.
@@ -1885,7 +1885,7 @@ static void			WlzDGTensorSDFeatStrValItv(
 * 					tensor.
 * \param	idP			Current point index.
 */
-static void			WlzDGTensorSDFeatStrValPnt(
+static void			WlzDGTensorSDFeatEigenValPnt(
 				  WlzPointValues *dPV,
 				  WlzGreyP sGP,
 				  WlzGreyType dGType,

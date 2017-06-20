@@ -1149,8 +1149,8 @@ typedef enum _WlzDGTensorFeatureType
 {
   WLZ_DGTENSOR_FEATURE_NONE	= 0,	/*!< No feature, null case. */
   WLZ_DGTENSOR_FEATURE_DETJAC	= 1,	/*!< Determinant of Jacobian tensor. */
-  WLZ_DGTENSOR_FEATURE_DIRVEC	= 2, 	/*!< Direction vectors. */
-  WLZ_DGTENSOR_FEATURE_STRVAL	= 3, 	/*!< Stretch values. */
+  WLZ_DGTENSOR_FEATURE_EIGENVEC	= 2, 	/*!< Eigen vectors. */
+  WLZ_DGTENSOR_FEATURE_EIGENVAL	= 3, 	/*!< Eigen values. */
   WLZ_DGTENSOR_FEATURE_LIMIT    = 4  	/*!< Not a feature but used to
                                              itterate through the features,
 					     keep it the largest value. */
