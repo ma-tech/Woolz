@@ -101,11 +101,11 @@ features are:
   <tr>
     <td>identifying character</td><td>property name</td><td>feature</td>
   </tr> <tr>
-    <td>d</td><td>direction vectors</td><td>principle direction vectors</td>
+    <td>d</td><td>eigen vectors</td><td>eigen (principle direction) vectors</td>
   </tr> <tr>
     <td>j</td><td>jacobian</td><td>determinant of Jacobian tensor</td>
   </tr> <tr>
-    <td>s</td><td>stretch values</td><td>principle stretch values</td>
+    <td>s</td><td>eigen values</td><td>eigen (principle stretch) values</td>
   </tr>
 Default feature selection is d,j,s.
 </table>
@@ -114,17 +114,17 @@ By default all files are read from the standard input and are written
 to the standard output.
 \par Examples
 \verbatim
-WlzDefGrdTensorFeatures -f d -p -s 4 -d 20,20,20
+WlzDefGrdTensorFeatures -f d -p -s 40 -d 20,20,20
                              -g 2,2,2 -o features.wlz dgf.wlz
 \endverbatim
 Creates a compound object with a single component points object in
 which the point domain locations are scattered over the given field's
-domain with a separation of 4 voxels but then dithered by an additional
+domain with a separation of 40 voxels but then dithered by an additional
 range of +/-20 voxels. The principle directions are computed and smoothed
 using a Gaussian with sigma values of 2,2,2 prior to sampling at the
 point locations.  The associated point values will be vector values with
 a vector for each principle direction.
-The points object will also have it's name property set to "direction vectors".
+The points object will also have it's name property set to "eigen vectors".
 The compound object will be written to the file features.wlz.
 \par File
 \ref WlzDefGrdTensorFeatures.c "WlzDefGrdTensorFeatures.c"
@@ -162,8 +162,8 @@ int		main(int argc, char *argv[])
   int		nFeat = 3;
   unsigned int	features = 
                     WLZ_DGTENSOR_FEATURE_MASK(WLZ_DGTENSOR_FEATURE_DETJAC) |
-  		    WLZ_DGTENSOR_FEATURE_MASK(WLZ_DGTENSOR_FEATURE_DIRVEC) |
-		    WLZ_DGTENSOR_FEATURE_MASK(WLZ_DGTENSOR_FEATURE_STRVAL);
+  		    WLZ_DGTENSOR_FEATURE_MASK(WLZ_DGTENSOR_FEATURE_EIGENVEC) |
+		    WLZ_DGTENSOR_FEATURE_MASK(WLZ_DGTENSOR_FEATURE_EIGENVAL);
   double	dMin = 0.0;
   FILE		*fP = NULL;
   char		*inFileStr = NULL,
@@ -215,7 +215,7 @@ int		main(int argc, char *argv[])
 	      {
 		case 'd':
 		  features |= WLZ_DGTENSOR_FEATURE_MASK(
-		  	      WLZ_DGTENSOR_FEATURE_DIRVEC);
+		  	      WLZ_DGTENSOR_FEATURE_EIGENVEC);
 		  break;
 		case 'j':
 		  features |= WLZ_DGTENSOR_FEATURE_MASK(
@@ -223,7 +223,7 @@ int		main(int argc, char *argv[])
 		  break;
 		case 's':
 		  features |= WLZ_DGTENSOR_FEATURE_MASK(
-		  	      WLZ_DGTENSOR_FEATURE_STRVAL);
+		  	      WLZ_DGTENSOR_FEATURE_EIGENVAL);
 		  break;
 		default:
 		  usage = 1;
@@ -362,9 +362,9 @@ int		main(int argc, char *argv[])
       "be defined by a comma separated list of single characters. Available\n"
       "features are:\n"
       "  *id char* *property name*     *feature*\n"
-      "   d         direction vectors   principle direction vectors\n"
+      "   d         eigen vectors       eigen (principle direction) vectors\n"
       "   j         jacobian            determinant of Jacobian tensor\n"
-      "   s         stretch values      principle principle stretch values\n"
+      "   s         eigen values        eigen (principle stretch) values\n"
       "Default feature selection is d,j,s.\n"
       "By default all files are read from the standard input and are written\n"
       "to the standard output.\n"
@@ -385,17 +385,17 @@ int		main(int argc, char *argv[])
       "  -u  If a single feature is requested do not use a compound object.\n"
       "  -x  Use voxel size scaling for points objects.\n"
       "Example:\n"
-      "%s -f d -p -s 4 -d 20,20,20\n"
+      "%s -f d -p -s 40 -d 20,20,20\n"
       "\t\t-g 2,2,2 -o features.wlz dgf.wlz\n"
       "Creates a compound object with a single component points object\n"
       "in which the point domain locations are scattered over the given\n"
-      "field's domain with a separation of 4 voxels but then dithered by\n"
+      "field's domain with a separation of 40 voxels but then dithered by\n"
       "an additional range of +/-20 voxels. The principle directions are\n"
       "computed and smoothed using a Gaussian with sigma values of 2,2,2\n"
       "prior to sampling at the point locations. The associated point\n"
       "values will be vector values with a vector for each principle\n"
       "direction. The points object will also have it's name property set\n"
-      "to 'direction vectors'. The compound object will be written to the\n"
+      "to 'eigen vectors'. The compound object will be written to the\n"
       "file features.wlz.\n",
       argv[0],
       WlzVersion(),
