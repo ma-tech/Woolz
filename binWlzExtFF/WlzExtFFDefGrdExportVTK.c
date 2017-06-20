@@ -47,34 +47,77 @@ static char _WlzExtFFDefGrdExportVTK_c[] = "University of Edinburgh $Id$";
 \ingroup BinWlzExtFF
 \defgroup wlzextffdefgrdexportvtk WlzExtFFDefGrdExportVTK
 \par Name
-WlzExtFFDefGrdExportVTK - exports tensor deformation features to a VTK format
-file.
+WlzExtFFDefGrdExportVTK - exports tensor deformation features to an
+                          extended VTK format file.
 \par Synopsis
 \verbatim
-WlzExtFFDefGrdExportVTK [-h] [-o<output file>] [input file]
+WlzExtFFDefGrdExportVTK [-h] [-m #] [-o<output file>] [input file]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr>
   <td><b>-h</b></td>
     <td>Prints usage information.</td>
-  </tr>
-  <tr>
+  </tr> <tr>
+    <td><b>-m</b></td>
+    <td>Value multiplication factor.</td>
+  </tr> <tr>
     <td><b>-o</b></td>
     <td>Output file.</td>
   </tr>
 </table>
 Reads a tensor deformation gradient features compound object file
 as produced by WlzDefGrdTensorFeatures(1) or WlzDGTensorFeatures(3) and
-exports the features to a legacy ASCII VTK format file.
+exports the features to an extended legacy ASCII VTK format file.
+If given all output values are multiplied by the given factor.
+The feature to export is identified by a single chaacter and must
+be one of the following:
+<table width="500" border="0">
+  <tr>
+  <td><u>ID Character</u></td><td><u>Feature</u></td>
+  <td><b>j</b></td>           <td>Determinant of the Jacobian matrix
+                                  (default)</td>
+  <td><b>e</b></td>           <td>eigen system</td>
+</table>
+Here jacobian refers to the determinant of the Jacobian matrix and
+eigen system to the three eigen values followed by the first two
+eigen vectors (where the eigen vectors are sorted by increasing
+eigen value).
+For the Jacobians the input object must contain Jacobians and the
+VTK POINT_DATA output is of the form:
+\verbatim
+  POINT_DATA <n>
+  SCALARS jacobian float
+  LOOKUP_TABLE default
+  <j0>
+  ...
+\endverbatim
+For the eigen system input object must contain both eigen values and
+eigen vectors; the POINT_DATA output is of the form:"
+\verbatim
+  POINT_DATA <n>
+  FIELD eigen_system float 1 6
+  <l00> <l01> <l02> <e001> ... <e012>
+  ...
+\endverbatim
+Here:
+<table width="500" border="0">
+  <tr><td><b>n</b></td>   <td>number of points</td><tr>
+  <tr><td><b>j0</b></td>  <td>Jacobian of at the first point</td><tr>
+  <tr><td><b>l0i</b></td> <td>i'th eigen value at the first point</td><tr>
+  <tr><td><b>e0ij</b></td><td>j'th component of the i'th eigen vector
+                              at the first point</td><tr>
+</table>
+Only the first two eigen vectors are output, the remaining eigen
+vector, is redundant since it is orthogonal to the first two.
 By default files are read from the standard input and written to the
 standard output.
 \par Examples
 \verbatim
 WlzExtFFDefGrdExportVTK -o features.vtk features.wlz
 \endverbatim
-Reads a tensor deformation gradient features from features.wlz and
-writes them to an ASCII VTK file features.vtk.
+Reads tensor deformation gradient features from features.wlz and
+writes the Jacobians to an ASCII VTK file features.vtk.
 \par File
 WlzExtFFDefGrdExportVTK.c "WlzExtFFDefGrdExportVTK.c"
 \par See Also
@@ -98,6 +141,14 @@ extern int      		getopt(
 				  char * const *argv,
 				  const char *optstring);
 
+static WlzErrorNum		WlzExtFFDefGrdJacScale(
+				  WlzObject *jObj,
+				  double mf);
+static WlzErrorNum		WlzExtFFDefGrdWriteEigen(
+				  FILE *fP,
+				  WlzObject *lObj,
+				  WlzObject *eObj,
+				  double mf);
 extern char     *optarg;
 extern int      optind,
                 opterr,
@@ -109,14 +160,16 @@ int             		main(
 {
   int           option,
                 ok = 1,
-                usage = 0;
+                usage = 0,
+      		feature = 'j';
+  double	mulFac = 1.0;
   WlzCompoundArray *inCpd = NULL;
   char		*inFileStr,
   		*outFileStr;
   FILE		*fP = NULL;
   WlzErrorNum   errNum = WLZ_ERR_NONE;
   const char    *errMsg;
-  static char   optList[] = "ho:",
+  static char   optList[] = "hf:m:o:",
                 fileStrDef[] = "-";
 
   opterr = 0;
@@ -126,8 +179,26 @@ int             		main(
   {
     switch(option)
     {
+      case 'f':
+        switch(*optarg)
+	{
+	  case 'e': /* FALLTHROUGH */
+	  case 'j':
+	    feature = *optarg;
+	    break;
+	  default:
+	    usage = 1;
+	    break;
+	}
+	break;
       case 'o':
 	outFileStr = optarg;
+	break;
+      case 'm':
+        if(sscanf(optarg, "%lg", &mulFac) != 1)
+	{
+	  usage = 1;
+	}
 	break;
       case 'h': /* FALLTHROUGH */
       default:
@@ -224,10 +295,11 @@ int             		main(
   {
     /* Find appropriate object and write out the values. */
     int		idN;
-    char	*names[3] = {
+    int		featIndex[3]  = {-1, -1, -1};
+    char	*featName[3] = {
     			      "jacobian",
-			      "direction vectors",
-			      "stretch values"
+			      "eigen vectors",
+			      "eigen values"
 			    };
 
     for(idN = 0; idN < 3; ++idN)
@@ -237,29 +309,55 @@ int             		main(
 
       for(idO = 0; idO < inCpd->n; ++idO)
       {
+	
 	if(((obj = inCpd->o[idO]) != NULL) &&
 	   (obj->type == WLZ_POINTS) &&
-	   WlzPropertyListContainsName(obj->plist, names[idN]))
+	   (WlzPropertyListContainsName(obj->plist, featName[idN])) != NULL)
 	{
+	  featIndex[idN] = idO;
 	  break;
 	}
-	obj = NULL;
       }
-      if(obj)
-      {
-	switch(idN)
+    }
+    errNum = WLZ_ERR_VALUES_DATA;
+    switch(feature)
+    {
+      case 'e':
+	if((featIndex[1] >= 0) && (featIndex[2] >= 0))
 	{
-	  case 0:
-	    errNum = WlzEffWritePointsVtkScalarValues(fP, obj);
-	    break;
-	  case 1: /* FALLTHROUGH */
-	  case 2:
-	    errNum = WlzEffWritePointsVtkFieldValues(fP, obj);
-	    break;
-	  default:
-	    break;
+	  errNum = WlzExtFFDefGrdWriteEigen(fP,
+	                               inCpd->o[featIndex[2]],
+				       inCpd->o[featIndex[1]],
+				       mulFac);
 	}
-      }
+        break;
+      case 'j':
+	if(featIndex[0] >= 0)
+	{
+	  const	double eps = 1.0e-06;
+
+	  errNum = WLZ_ERR_NONE;
+	  if(fabs(mulFac - 1.0) > eps)
+	  {
+	    errNum = WlzExtFFDefGrdJacScale(inCpd->o[featIndex[0]], mulFac);
+	  }
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    errNum = WlzEffWritePointsVtkScalarValues(fP,
+						      inCpd->o[featIndex[0]]);
+	  }
+	}
+        break;
+      default:
+        break;
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      ok = 0;
+      (void )WlzStringFromErrorNum(errNum, &errMsg);
+      (void )fprintf(stderr,
+                     "%s: Failed to write vlues to file %s (%s)\n",
+	             *argv, outFileStr, errMsg);
     }
   }
   if(fP && strcmp(outFileStr, "-"))
@@ -271,21 +369,56 @@ int             		main(
   {
     (void )fprintf(
         stderr,
-	"Usage: %s [-h] [-o<output file>] [input file]\n"
+	"Usage: %s [-h] [-f <feat>] [-m #] [-o<output file>]\n"
+	"\t\t[input file]\n"
 	"Version: %s\n"
 	"Options:\n"
+	"  -f  Feature to export.\n"
 	"  -o  Output file.\n"
+	"  -m  Value multiplication factor.\n"
 	"  -h  Help, prints usage message.\n"
-        "Exports tensor deformation features to a VTK format file.\n"
+        "Exports tensor deformation features to an extended VTK format file.\n"
 	"Reads a tensor deformation gradient features compound object file\n"
 	"as produced by WlzDefGrdTensorFeatures(1) or WlzDGTensorFeatures(3)\n"
-	"and exports the features to a legacy ASCII VTK format file.\n"
+	"and exports the features to an extended legacy ASCII VTK format\n"
+	"file.\n"
+	"If given all output values are multiplied by the given factor.\n"
+	"The feature to export is identified by a single chaacter and must\n"
+	"be one of the following:\n"
+	"  *id char* *feature*\n"
+        "   j         Determinant of the Jacobian matrix (default)\n"
+	"   e         Eigen system\n"
+	"Here jacobian refers to the determinant of the Jacobian matrix and\n"
+	"eigen system to the three eigen values followed by the first two\n"
+	"eigen vectors (where the eigen vectors are sorted by increasing\n"
+	"eigen value).\n"
+	"For the Jacobians the input object must contain Jacobians and the\n"
+	"VTK POINT_DATA output is of the form:\n"
+	"  POINT_DATA <n>\n"
+	"  SCALARS jacobian float\n"
+	"  LOOKUP_TABLE default\n"
+	"  <j0>\n"
+	"  ...\n"
+	"For the eigen system the eigen system input object must contain\n"
+	"both eigen values and eigen vectors; the POINT_DATA output is of\n"
+	"the form:\n"
+	"  POINT_DATA <n>\n"
+	"  FIELD eigen_system float 1 6\n"
+	"  <l00> <l01> <l02> <e001> ... <e012>\n"
+	"...\n"
+	"Here:\n"
+	"  n    number of points\n"
+	"  j0   Jacobian of at the first point\n"
+	"  l0i  i'th eigen value at the first point\n"
+	"  e0ij j'th component of the i'th eigen vector at the first point\n"
+	"Only the first two eigen vectors are output, the remaining eigen\n"
+	"vector, is redundant since it is orthogonal to the first two.\n"
         "By default files are read from the standard input and written to\n"
 	"the standard output.\n"
 	"Example:\n"
 	"  %s -o features.vtk features.wlz\n"
-	"Reads a tensor deformation gradient features from features.wlz and\n"
-	"writes them to an ASCII VTK file features.vtk.\n",
+	"Reads tensor deformation gradient features from features.wlz and\n"
+	"writes the Jacobians to an ASCII VTK file features.vtk.\n",
 	argv[0],
 	WlzVersion(),
 	argv[0]);
@@ -293,4 +426,186 @@ int             		main(
   return(!ok);
 }
 
+/*!
+* \return	Woolz error code.
+* \brief	Scales the given Jacobian values in place.
+* \param	jObj		Jacobian object.
+* \param	mf		Value multiplication factor.
+*/
+static WlzErrorNum		WlzExtFFDefGrdJacScale(
+				  WlzObject *jObj,
+				  double mf)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(jObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(jObj->type != WLZ_POINTS)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(jObj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(jObj->values.core == NULL)
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  {
+    size_t	idP,
+  		nPts;
+    WlzPointValues *jV;
+
+    jV = jObj->values.pts;
+    nPts = jObj->domain.pts->nPoints;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(idP = 0; idP < nPts; ++idP)
+    {
+      double	*j;
+
+      j = (double *)WlzPointValueGet(jV, idP);
+      j[0] = j[0] * mf;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \brief	Writes the "eigen system" values to the given file.
+* \param	fP		File pointer opened for write.
+* \param	lObj		Eigen value object.
+* \param	eObj		Eigen vector object.
+* \param	mf		Value multiplication factor.
+*/
+static WlzErrorNum		WlzExtFFDefGrdWriteEigen(
+				  FILE *fP,
+				  WlzObject *lObj,
+				  WlzObject *eObj,
+				  double mf)
+{
+  size_t	nPts;
+  WlzValues 	nVal;
+  WlzObject	*nObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  nVal.core = NULL;
+  if((lObj == NULL) || (eObj == NULL))
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((lObj->type != WLZ_POINTS) || (lObj->type != eObj->type))
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if((lObj->domain.core == NULL) || (eObj->domain.core == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((lObj->values.core == NULL) || (eObj->values.core == NULL))
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if((nPts = lObj->domain.pts->nPoints) != eObj->domain.pts->nPoints)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else if((lObj->values.pts->rank != 1) || (lObj->values.pts->dim[0] != 3) ||
+	  (eObj->values.pts->rank != 2) || (eObj->values.pts->dim[0] != 3) ||
+	  (eObj->values.pts->dim[1] != 3))
+  {
+    errNum = WLZ_ERR_VALUES_DATA;
+  }
+  else
+  {
+    int		dim[1] = {6};
+
+    nVal.pts = WlzMakePointValues(nPts, 1, dim, WLZ_GREY_DOUBLE, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    nObj = WlzMakeMain(WLZ_POINTS, lObj->domain, nVal, NULL, NULL, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzProperty	prop = {0};
+    WlzPropertyList *pList = NULL;
+
+    if((pList = WlzMakePropertyList(NULL)) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      prop.name = WlzMakeNameProperty("eigen system", &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      if(AlcDLPListEntryAppend(pList->list, NULL, (void *)(prop.core),
+                               WlzFreePropertyListEntry) != ALC_ER_NONE)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      nObj->plist = WlzAssignPropertyList(pList, &errNum);
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      if(pList->list == NULL)
+      {
+        WlzFreeProperty(prop);
+      }
+      else
+      {
+        (void )WlzFreeProperty(prop);
+	(void )WlzFreePropertyList(pList);
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    size_t	idP;
+    WlzPointValues *lV,
+                   *eV,
+		   *nV;
+
+    lV = lObj->values.pts;
+    eV = eObj->values.pts;
+    nV = nObj->values.pts;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
+    for(idP = 0; idP < nPts; ++idP)
+    {
+      double	*l,
+      		*e,
+		*n;
+
+      l = (double *)WlzPointValueGet(lV, idP);
+      e = (double *)WlzPointValueGet(eV, idP);
+      n = (double *)WlzPointValueGet(nV, idP);
+      n[0] = l[0] * mf; n[1] = l[1] * mf; n[2] = l[2] * mf; 
+      n[3] = e[0] * mf; n[4] = e[1] * mf; n[5] = e[2] * mf; 
+      n[6] = e[3] * mf; n[7] = e[4] * mf; n[8] = e[5] * mf; 
+    }
+    errNum = WlzEffWritePointsVtkFieldValues(fP, nObj);
+  }
+  if(nObj)
+  {
+    (void )WlzFreeObj(nObj);
+    nObj = NULL;
+  }
+  else if(nVal.core)
+  {
+    (void )WlzFreePointValues(nVal.pts);
+  }
+  return(errNum);
+}
 #endif /* DOXYGEN_SHOULD_SKIP_THIS */
