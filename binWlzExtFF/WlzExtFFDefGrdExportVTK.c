@@ -523,7 +523,7 @@ static WlzErrorNum		WlzExtFFDefGrdWriteEigen(
   }
   else
   {
-    int		dim[1] = {6};
+    int		dim[1] = {9};
 
     nVal.pts = WlzMakePointValues(nPts, 1, dim, WLZ_GREY_DOUBLE, &errNum);
   }
