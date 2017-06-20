@@ -911,7 +911,7 @@ WlzErrorNum			WlzEffWritePointsVtkScalarValues(
 *		Example for a rank two (3x3) tensor:
 *		\verbatim
 	POINT_DATA 2
-	FIELD my_tensor float 2 3,3
+	FIELD my_tensor float 2 3x3
 	1.019 -0.002 0.079  0.003 1.055  0.012 0.002   0.0085 1.019
 	1.012 -0.008 0.015 -0.023 1.013 -0.018 7.9e-05 0.0961 1.005
 		\endverbatim
@@ -1001,10 +1001,14 @@ WlzErrorNum			WlzEffWritePointsVtkFieldValues(
 	  for(i = 0; i < penult; ++i)
 	  {
 	    vpe *= pvl->dim[i];
-	    (void )fprintf(fP, "%d,", pvl->dim[i]);
+	    (void )fprintf(fP, "%dx", pvl->dim[i]);
 	  }
 	  vpe *= pvl->dim[i];
-	  if(fprintf(fP, "%d\n", pvl->dim[i]) <= 0)
+	  if(vpe < 1)
+	  {
+	    errNum = WLZ_ERR_VALUES_DATA;
+	  }
+	  else if(fprintf(fP, "%d\n", pvl->dim[i]) <= 0)
 	  {
 	    errNum = WLZ_ERR_WRITE_INCOMPLETE;
 	  }
@@ -1023,38 +1027,43 @@ WlzErrorNum			WlzEffWritePointsVtkFieldValues(
 	    {
 	      case WLZ_GREY_UBYTE:
 		p.ubp = pvl->values.ubp + cnt;
-		for(j = 0; j < vpe; ++j)
+		for(j = 0; j < (vpe - 1); ++j)
 		{
-		  (void )fprintf(fP, " %d", p.ubp[j]);
+		  (void )fprintf(fP, "%d ", p.ubp[j]);
 		}
+		(void )fprintf(fP, "%d", p.ubp[j]);
 		break;
 	      case WLZ_GREY_INT:
 		p.inp = pvl->values.inp + cnt;
-		for(j = 0; j < vpe; ++j)
+		for(j = 0; j < (vpe - 1); ++j)
 		{
-		  (void )fprintf(fP, " %d", p.inp[j]);
+		  (void )fprintf(fP, "%d ", p.inp[j]);
 		}
+		(void )fprintf(fP, "%d", p.inp[j]);
 		break;
 	      case WLZ_GREY_SHORT:
 		p.shp = pvl->values.shp + cnt;
-		for(j = 0; j < vpe; ++j)
+		for(j = 0; j < (vpe - 1); ++j)
 		{
-		  (void )fprintf(fP, " %d", p.shp[j]);
+		  (void )fprintf(fP, "%d ", p.shp[j]);
 		}
+		(void )fprintf(fP, "%d", p.shp[j]);
 		break;
 	      case WLZ_GREY_FLOAT:
 		p.flp = pvl->values.flp + cnt;
-		for(j = 0; j < vpe; ++j)
+		for(j = 0; j < (vpe - 1); ++j)
 		{
-		  (void )fprintf(fP, " %g", p.flp[j]);
+		  (void )fprintf(fP, "%g ", p.flp[j]);
 		}
+		(void )fprintf(fP, "%g", p.flp[j]);
 		break;
 	      case WLZ_GREY_DOUBLE:
 		p.dbp = pvl->values.dbp + cnt;
-		for(j = 0; j < vpe; ++j)
+		for(j = 0; j < (vpe - 1); ++j)
 		{
-		  (void )fprintf(fP, " %lg", p.dbp[j]);
+		  (void )fprintf(fP, "%lg ", p.dbp[j]);
 		}
+		(void )fprintf(fP, "%lg", p.dbp[j]);
 		break;
 	      default:
 		errNum = WLZ_ERR_GREY_TYPE;
