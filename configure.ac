@@ -63,6 +63,7 @@ NIFTI_DIR="no"
 HAVE_TIFF="no"
 TIFF_DIR="no"
 HAVE_BZLIB="no"
+HAVE_LZMALIB="no"
 HAVE_ZLIB="no"
 AC_SUBST(CP)
 AC_SUBST(RM)
@@ -321,6 +322,9 @@ fi
 AC_ARG_ENABLE(bzip2,
               AS_HELP_STRING([--disable-bzip2], [build without bzip2 support]))
 
+AC_ARG_ENABLE(lzma,
+              AS_HELP_STRING([--disable-lzma], [build without lzma support]))
+
 AC_ARG_ENABLE(zlib,
               AS_HELP_STRING([--disable-zlib], [build without zlib support]))
 
@@ -398,6 +402,21 @@ then
       CFLAGS="${CFLAGS} -DHAVE_BZLIB=0"
     else
       CFLAGS="${CFLAGS} -DHAVE_BZLIB=1"
+    fi
+    AS_IF([test x"$enable_lzma" != x"no"], [
+      AC_SEARCH_LIBS([lzma_version_string], [lzma], [HAVE_LZMALIB=yes])
+    ])
+    if test ${HAVE_BZLIB} = "no"
+    then
+      CFLAGS="${CFLAGS} -DHAVE_BZLIB=0"
+    else
+      CFLAGS="${CFLAGS} -DHAVE_BZLIB=1"
+    fi
+    if test ${HAVE_LZMALIB} = "no"
+    then
+      CFLAGS="${CFLAGS} -DHAVE_LZMALIB=0"
+    else
+      CFLAGS="${CFLAGS} -DHAVE_LZMALIB=1"
     fi
     if test ${HAVE_ZLIB} = "no"
     then
