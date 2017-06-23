@@ -38,7 +38,7 @@ static char _binWlzApp_dox[] = "University of Edinburgh $Id$";
 * \defgroup	BinWlzApp Extended Woolz Applications.
 * \brief	Defines module BinWlzApp.
 * \page 	binwlzapppage Extended Applications
-\section intro  Introduction
+\section BinWlzApp_intro  Introduction
 Extended applications are more complex binaries that can be
  executed from the command line but may
  include significant image-processing logic have been collected under
@@ -48,5 +48,5 @@ Extended applications are more complex binaries that can be
  applications can be found in Core/binWlzApp and are a good source
  of template code for any application with similar requirements.
 
-\section examples Example Usage
+\section BinWlzApp_examples Example Usage
 */

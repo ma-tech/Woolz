@@ -609,7 +609,7 @@ static WlzErrorNum WlzEffWriteCMesh2DVtk(FILE *fP, WlzCMesh2D *mesh)
 *		given stream using the Visualization Toolkit
 *		polydata format, but without polygons.
 * \param	fP			Output file stream.
-* \param	model			Given points object.
+* \param	obj			Given points object.
 * \param        onlyDom			Only write the points domain if
 * 					non-zero.
 */

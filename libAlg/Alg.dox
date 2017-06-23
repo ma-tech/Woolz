@@ -41,12 +41,12 @@ static char _Alg_dox[] = "University of Edinburgh $Id$";
 *		fundamental types library libAlc.
 *		See \ref libalgpage "libAlg" for more detail.
 * \page 	libalgpage Woolz Numeical Algorithms Library
-* \section 	intro Introduction
+* \section 	alg_intro Introduction
 *		The woolz image processing library uses a number of standard
 *		numerical algorithms which have been re-implmented as
 *		required to provide a stable source and freely distributable
 *		code for the Woolz core package.
-* \section 	structure Structures
-* \section 	usage Example Usage
-* \section 	standards Coding Conventions
+* \section 	alg_structure Structures
+* \section 	alg_usage Example Usage
+* \section 	alg_standards Coding Conventions
 */

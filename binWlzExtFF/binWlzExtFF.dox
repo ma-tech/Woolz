@@ -41,7 +41,7 @@ static char _binWlzExtFF_dox[] = "University of Edinburgh $Id$";
 
 /*!
 \page binwlzextffpage Data Format Conversion
-\section intro  Introduction
+\section BinWlzExtFF_intro  Introduction
 Command line binaries that involve reading or writing non-native woolz
  formats are collected together under the "External File Format"
  (ExtFF) heading. These binaries typically match procedures in the
@@ -50,26 +50,28 @@ Command line binaries that involve reading or writing non-native woolz
 
 <table border="1">
 <tr><td>Description                               </td><td>Extension</td></tr>
-<tr><td>Amira Lattice                                 </td><td>am</td></tr>
-<tr><td>Microsoft Bitmap                              </td><td>bmp</td></tr>
-<tr><td>Stanford Density                              </td><td>den</td></tr>
-<tr><td>Netgen neutral mesh format                    </td><td>emt</td></tr>
-<tr><td>Graphics Interchange Format                   </td><td>gif</td></tr>
-<tr><td>ANALYZE HDR                                   </td><td>hdr</td></tr>
-<tr><td>Image Cytometry Standard                      </td><td>ics</td></tr>
-<tr><td>IPLab                                         </td><td>ipl</td></tr>
-<tr><td>JPEG                                          </td><td>jpg</td></tr>
-<tr><td>Pascal Frey's medit tetrahedral mesh format   </td><td>mesh</td></tr>
+<tr><td>Amira Lattice                                     </td><td>am</td></tr>
+<tr><td>Microsoft Bitmap                                  </td><td>bmp</td></tr>
+<tr><td>Stanford Density                                  </td><td>den</td></tr>
+<tr><td>Netgen </td><td>neutral mesh format               </td><td>emt</td></tr>
+<tr><td>Graphics Interchange Format                       </td><td>gif</td></tr>
+<tr><td>ANALYZE HDR                                       </td><td>hdr</td></tr>
+<tr><td>Image Cytometry Standard                          </td><td>ics</td></tr>
+<tr><td>IPLab                                             </td><td>ipl</td></tr>
+<tr><td>JPEG                                              </td><td>jpg</td></tr>
+<tr><td>Pascal Frey's </td><td>medit tetrahedral mesh format </td><td>mesh</td></tr>
 <tr><td>Neuroimaging Informatics Technology Initiative</td><td>nii</td></tr>
-<tr><td>Jonathan Shewchuk's mesh format               </td><td>node</td></tr>
+<tr><td>Jonathan Shewchuk's </td><td>mesh format      </td><td>node</td></tr>
+<tr><td>Utah </td><td>nearly raw raster data (NRRD) format</td><td>nrrd</td></tr>
 <tr><td>Wavefront                                     </td><td>obj</td></tr>
 <tr><td>BioRad Confocal                               </td><td>pic</td></tr>
 <tr><td>Riken PLY2                                    </td><td>ply2</td></tr>
 <tr><td>PNM                                           </td><td>pnm</td></tr>
+<tr><td>Drishti </td><td>dot NC format                </td><td>pvl.nc</td></tr>
 <tr><td>Raw                                           </td><td>raw</td></tr>
 <tr><td>SLC                                           </td><td>slc</td></tr>
 <tr><td>GRUMMP SMESH                                  </td><td>smesh</td></tr>
-<tr><td>Stereolithography format                      </td><td>stl</td></tr>
+<tr><td>Stereolithography </td><td>format             </td><td>stl</td></tr>
 <tr><td>Tiff                                          </td><td>tif</td></tr>
 <tr><td>Text                                          </td><td>txt</td></tr>
 <tr><td>Sunvision VFF                                 </td><td>vff</td></tr>
@@ -78,6 +80,6 @@ Command line binaries that involve reading or writing non-native woolz
 </table> 
 
 Other programmes in this group convert a few special formats for
- contours and particualar applications. For conversio of raw data
+ contours and particualar applications. For conversion of raw data
  then use WlzRawToWlz in the extended applications module.
 */

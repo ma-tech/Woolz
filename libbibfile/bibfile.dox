@@ -42,12 +42,12 @@
 
 /*!
 * \page libbibfilepage Woolz Bibtex Style I/O
-* \section intro Introduction
+* \section bibfile_intro Introduction
 For many applications there is a requirement for structured text to capture
  state, configuration and as data records. This has been implmented using
  the Bibtex style of records and fields. Support for reading and writing
  this type of data is provided by the bibfile library.
-\section structure Bibfile Structures
-\section usage Example Usage
-\section standards Coding Conventions
+\section bibfile_structure Bibfile Structures
+\section bibfile_usage Example Usage
+\section bibfile_standards Coding Conventions
 */

@@ -6,7 +6,7 @@ the module list for individual manual pages.
 
 /*!
 \page binwlzpage Basic Image Processing
-\section intro  Introduction
+\section BinWlz_intro  Introduction
 Most of the woolz core image processing library procedure
  have a corresponding programme
  to allow command-line processing of woolz images and image structures
@@ -32,6 +32,7 @@ Usage:  WlzThreshold [-t#] [-v#] [-H] [-L] [-h] [<input file>]
         Options are:
           -H        Threshold high, keep pixels above threshold value (default).
           -L        Threshold low, keep pixels below threshold value.
+	  -E        Threshold equal, keep pixels equal to threshold value.
           -t#       Threshold pixel type:
                     # = 1: integer (default)
                         2: short
@@ -44,7 +45,7 @@ Usage:  WlzThreshold [-t#] [-v#] [-H] [-L] [-h] [<input file>]
 tcsh% 
 \endverbatim
 
-\section examples Example Usage
+\section BinWlz_examples Example Usage
 
 
 */

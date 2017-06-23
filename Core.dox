@@ -3,28 +3,35 @@
 
 \section overview Overview
 Woolz is the name (not an acronym) for a set of image processing software.
- The <b> Core</b> software is organised as a series of libraries for
- application development and a set of <b>Command-Line Binaries</b>
- which can be used for simple image processing or embedded in scripts
- for more complex operations. Large scale applications with graphical
- user-interfaces such as Reconstruct or MAPaint are documented elsewhere.
- The source code is maintained under CVS and is available as open-source
- under the general GNU licence. Bug and issue reporting is provided by
- <a href="http://www.mantisbt.org/">Mantis</a> at
- <a href="http://aberlour.hgu.mrc.ac.uk/mantis/login_page.php">
- http://aberlour.hgu.mrc.ac.uk/mantis/login_page.php</a>, this documentation is
- generated using <a href="http://doxygen.org/">Doxygen</a>.
+The <b> Core</b> software is organised as a series of libraries for
+application development and a set of <b>Command-Line Binaries</b>
+which can be used for simple image processing or embedded in scripts
+for more complex operations. Large scale applications with graphical
+user-interfaces such as Reconstruct or MAPaint are documented elsewhere.
+The source code is maintained under git and is available as open-source
+(under the general GNU GPL 2 licence)
+Either from the EMAP site or from
+<a href="https//github.com/ma-tech/Woolz"></a>github</a>.
+Bug and issue reporting should be done
+through thea github
+<a href="https://github.com/ma-tech/Woolz/issues">issues</a> page.
+This documentation is
+generated using <a href="http://doxygen.org/">Doxygen</a>
+and is available from both
+<a href="http://www.emouseatlas.org/emap/analysis_tools_resources/software/woolz/html_Core/index.html">EMAP</a>
+and
+<a href="https://ma-tech.github.io/Woolz/documentation/html_Core/index..html">github</a>.
 
 The best way to use this documentation is to open the "Modules" menu-folder
- in the index on the LHS browser window. If you simply want to use the
- command-line binaries then select "Basic woolz operations", "Data Format
- Conversion" or "Extended Applications". These each expand to a list of
- the binaries available for which there is a manpage-style page available.
- In each case there will be (not yet complete) example usage and a
- brief description. If you are interested in using the library functions
- then consult the library modules and browse for the required function.
- Example usage is most easily found in the set of binaries available
- with the source code.
+in the index on the LHS browser window. If you simply want to use the
+command-line binaries then select "Basic woolz operations", "Data Format
+Conversion" or "Extended Applications". These each expand to a list of
+the binaries available for which there is a manpage-style page available.
+In each case there will be (not yet complete) example usage and a
+brief description. If you are interested in using the library functions
+then consult the library modules and browse for the required function.
+Example usage is most easily found in the set of binaries available
+with the source code.
 
 This documentation provide manuals and code documentation for the
  core libraries and associated command-line binaries. Using these
@@ -36,33 +43,8 @@ This documentation provide manuals and code documentation for the
 More detail of the code can be found in the sub-sections
 \subpage binaries "Command-Line Programmes" and
 \subpage libraries "Software Libraries".
-Compiled versions and source code can be obtained from the EMAP web-site <a href="http://genex.hgu.mrc.ac.uk/">genex.hgu.mrc.ac.uk</a>.
-
-\section history Software Development History
-The software has been developed over many years by many
- people with its roots in chromosome spread image analysis and
- microscopy imaging.The primary code design and develoment is due to
- Denis Rutovitz (reference here) and the C-code libraries initially
- implemented by Jim Piper. The image processing library is optimised
- for 2D image processing and is especially efficient for binary
- and morphological operations. The software has been developed
- in C and is now ANSI standard. All source code is open-source under the
- general GNU licence.
-
-Originally the code was developed by the Pattern Recognition Section
- of the Medical Research Council (<a href="http://www.mrc.ac.uk/">MRC</a>)
- Clinical and Population
- Cytogenetics Unit, since 1995 it has been developed as part of the
- Edinburgh Mouse Atlas Project
- (<a href="http://genex.hgu.mrc.ac.uk/">EMAP</a>) at the
- MRC Human Genetics Unit
- (<a href="http://www.hgu.mrc.ac.uk/">HGU</a>). The code is a series of
- libraries supporting a range of image processing operations and
- is built into a number of larger applications such as MAPaint,
- Reconstruct and the Jave JAtlasViewer. It also underpins the
- Edinburgh Mouse Atlas of Gene Expression (EMAGE) database defining
- the spatial content and providing the mapping, comparison, analysis
- and warping capabilities.
+Compiled versions and source code can be obtained from the EMAP web-site
+<a href="http://www.emouseatlas.org/">www.emouseatlas.org</a>.
 
 \section sstructure Structure
 The woolz software is organised as a series of software libraries with
@@ -91,15 +73,11 @@ The woolz software is organised as a series of software libraries with
 \li \c libWlzBnd - library for special Java bindings as part of the Java Woolz
  automated mapping.
   
-\section install Installation
-
-\section pubs Publications
-
 */
 
 /*!
 \page binaries Command-Line Programmes
-\section intro Introduction
+\section binaries_intro Introduction
 The woolz library functions are complemented by a set of programmes or
  binaries for 
 command-line processing of woolz formatted data. Most binaries can read data
@@ -123,7 +101,7 @@ more complex applications can be found under \subpage binwlzapppage
 
 /*!
 * \page libraries Libraries
-* \section intro Introduction
+* \section libraries_intro Introduction
 The core woolz image processing library, \subpage libwlzpage "libWlz",
  was developed for
  the purpose of microscope slide scanning. libWlz holds the basic image processing
@@ -168,37 +146,54 @@ The libraries are organised to hierarchically and need to be linked
 \li libWlz - libAlg
 \li libWlzExtFF - libWlz, libbibfile, external libraries libtiff and libjpeg
 
-\section usage Usage
 \section install Installation
 The source code and/or compiled versions of the libraries can be
- downloaded from the Mouse Atlas Web site
- (http://genex.hgu.mrc.ac.uk/Resources). The installation instructions
- are provided as a "readme.txt" which requires the selection of a path
- (e.g. /opt/MouseAtlas) as the root of all Mouse Atlas software. The code
- is then installed in standard Unix fashion in src, share, lib, bin and
- so on. If the default path for the woolz root directory is used then the
- software should build and run without modification.
+downloaded from the Mouse Atlas Web site
+(http://www.emouseatlas.org/emap/analysis_tools_resources/software.html).
+The installation instructions
+are provided as part of a "README.txt" file
+which requires the selection of a path
+(e.g. /opt/MouseAtlas) as the root of all Mouse Atlas software. The code
+is then installed in standard Unix fashion in src, share, lib, bin and
+so on.
 
 \section history Software Development History
-The woolz software libraries have grown over many years for many image
- processing purposes since the 1970s. The initial development by 
-Dr Denis Rutovitz was in Fortran and defined a number of the key 
-woolz structures, primarily the interval coding of the spatial domains 
-and grey-level values. The current C-coding was initiated in the 1980s, 
-primarily by Dr Jim Piper. The coding has been transformed to its present 
-form in a number of stteps as part of early Alvey and Eu funded projects 
+The Woolz software has been developed over many years by many
+people with its roots in chromosome spread image analysis and
+microscopy imaging in the 1970s.
+The initial development by Dr Denis Rutovitz was in Fortran and defined a
+number of the key woolz structures, primarily the interval coding of
+the spatial domains and grey-level values.
+The current C-coding was initiated in the 1980s,
+primarily by Dr Jim Piper. The coding has been transformed to its present
+form in a number of steps as part of early Alvey and EU funded projects
 and more recently as part of the Mouse Atlas porject at the HGU. This 
 has include a large expansion in some of the grey-level image extgensions 
 to the library.
+The Woolz image processing library is optimised
+for efficient for binary and morphological operations.
+The software has been developed
+in ANSI standard C.
 
-The current software is primarily maintained by Richard Baldock and 
-Bill Hill at the MRC Human Genetics Unit. The sofware is now maintained
-and extended by a group of programmers at the MRC and is managed using
-the Concurrent Versioning System (CVS). A full development history of each
-module is available from the archive. The preceding development is either
-in the source comments or held in a History file generated during the 
-transition form the original C to ANSI standard with standardisation 
-of naming and error reporting.
+Originally the code was developed by the Pattern Recognition Section
+of the Medical Research Council (<a href="http://www.mrc.ac.uk/">MRC</a>)
+Clinical and Population
+Cytogenetics Unit, since 1995 it has been developed as part of the
+Edinburgh Mouse Atlas Project
+(<a href="http://www.emouseatlas.org/">EMAP</a>) at the
+MRC Human Genetics Unit
+(<a href="http://www.hgu.mrc.ac.uk/">HGU</a>).
+The Woolz software is a series of
+libraries supporting a range of image processing operations and
+is built into a number of larger applications such as MAPaint,
+Reconstruct and the Jave JAtlasViewer. It also underpins the
+Edinburgh Mouse Atlas of Gene Expression
+(EMAGE) database defining
+the spatial content and providing the mapping, comparison, analysis
+and warping capabilities.
+
+The current Woolz software is primarily maintained by Richard Baldock and 
+Bill Hill at the MRC Human Genetics Unit.
  
 \section pubs Publications
 

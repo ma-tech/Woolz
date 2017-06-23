@@ -36,7 +36,7 @@
 * 		See the \ref libwlzpage "libWlz" for more detail.
 * 		All procedures are detailed under different module headings.
 * \page 	libwlzpage Woolz Image Processing Library 
-* \section intro Introduction 
+* \section wlz_intro Introduction 
 The woolz image processing library was developed for the
 purpose of microscope slide scanning. It is unique in the way in which
 the image strutures and file format define the notion of "domain",
@@ -61,7 +61,7 @@ and surfaces).
 The domains are coded using an interval notation akin to run-length
 encoding. Each domain  has a bounding box
 
-* \section	structure Woolz Structures
-* \section	usage Example Usage
-* \section	standards Coding Conventions
+* \section	wlz_structure Woolz Structures
+* \section	wlz_usage Example Usage
+* \section	wlz_standards Coding Conventions
 */

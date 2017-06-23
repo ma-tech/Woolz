@@ -35,7 +35,7 @@ static char _WlzSobel_c[] = "University of Edinburgh $Id$";
 * License along with this program; if not, write to the Free
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
-* \brief	A 3\f$\times\f$3 Sobel edge detection filter.
+* \brief	A 3x3 Sobel edge detection filter.
 * \ingroup	BinWlz
 *
 * \par Binary
@@ -46,7 +46,7 @@ static char _WlzSobel_c[] = "University of Edinburgh $Id$";
 \ingroup      BinWlz
 \defgroup     wlzsobel WlzSobel
 \par Name
-WlzSobel - a 3\f$\times\f$3 Sobel edge detection filter.
+WlzSobel - a 3x3 Sobel edge detection filter.
 \par Synopsis
 \verbatim
 WlzSobel [-o<output object file>] [-x] [-y] [-h]

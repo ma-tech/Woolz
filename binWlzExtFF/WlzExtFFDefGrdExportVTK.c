@@ -4,7 +4,7 @@
 static char _WlzExtFFDefGrdExportVTK_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzExtFFDefGrdExportVTK.c
+* \file         binWlzExtFF/WlzExtFFDefGrdExportVTK.c
 * \author       Bill Hill
 * \date         July 2015
 * \version      $Id$
@@ -74,7 +74,7 @@ The feature to export is identified by a single chaacter and must
 be one of the following:
 <table width="500" border="0">
   <tr>
-  <td><u>ID Character</u></td><td><u>Feature</u></td>
+  <td><b>ID Character</b></td><td><b>Feature</b></td>
   <td><b>j</b></td>           <td>Determinant of the Jacobian matrix
                                   (default)</td>
   <td><b>e</b></td>           <td>eigen system</td>
@@ -102,11 +102,11 @@ eigen vectors; the POINT_DATA output is of the form:"
 \endverbatim
 Here:
 <table width="500" border="0">
-  <tr><td><b>n</b></td>   <td>number of points</td><tr>
-  <tr><td><b>j0</b></td>  <td>Jacobian of at the first point</td><tr>
-  <tr><td><b>l0i</b></td> <td>i'th eigen value at the first point</td><tr>
+  <tr><td><b>n</b></td>   <td>number of points</td></tr>
+  <tr><td><b>j0</b></td>  <td>Jacobian of at the first point</td></tr>
+  <tr><td><b>l0i</b></td> <td>i'th eigen value at the first point</td></tr>
   <tr><td><b>e0ij</b></td><td>j'th component of the i'th eigen vector
-                              at the first point</td><tr>
+                              at the first point</td></tr>
 </table>
 Only the first two eigen vectors are output, the remaining eigen
 vector, is redundant since it is orthogonal to the first two.
@@ -124,7 +124,6 @@ WlzExtFFDefGrdExportVTK.c "WlzExtFFDefGrdExportVTK.c"
 \ref BinWlzExtFF "WlzIntro(1)"
 \ref wlzextffconvert "WlzExtFFConvert(1)"
 \ref wlzdefgrdtensorfeatures "WlzDefGrdTensorFeatures(1)"
-\ref wlzdgtensorfeatures "WlzDGTensorFeatures(3)"
 */
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

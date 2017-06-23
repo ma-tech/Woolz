@@ -47,7 +47,7 @@ static char _WlzExtFF_dox[] = "University of Edinburgh $Id$";
 *		provides conversion functions to relevant alternative
 *		formats which and assocaited API so that they can be read
 *		and written directly from woolz code.
-\section	structure Woolz Structures
-\section	usage Example Usage
-\section	standards Coding Conventions
+\section	WlzExtFF_structure Woolz Structures
+\section	WlzExtFF_usage Example Usage
+\section	WlzExtFF_standards Coding Conventions
 */

@@ -43,8 +43,8 @@ static char _Alc_dox[] = "University of Edinburgh $Id$";
 *		All procedures are detailed under different module headings.
 * \defgroup	Alc libAlc
 * \page 	libalcpage Woolz Memory Management Library
-* \section	intro Introduction
-* \section	structure  Structures
-* \section	usage Example Usage
-* \section	standards Coding Conventions
+* \section	alc_intro Introduction
+* \section	alc_structure  Structures
+* \section	alc_usage Example Usage
+* \section	alc_standards Coding Conventions
 */

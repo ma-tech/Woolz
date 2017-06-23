@@ -60,7 +60,7 @@
 
 /*!
 * \page libdlplistpage Woolz Linked List API
-* \section intro Introduction
+* \section hguDlpList_intro Introduction
 Linked lists are endemic in many applications and procedures. This library
 provides a standard and generalized linked list API.
 \section structure List Structures
