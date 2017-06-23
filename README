@@ -607,6 +607,9 @@ values.
 7)  Documentation
 -----------------
 
-Woolz uses Doxygen (http://www.doxygen.org) for documentation, but the best
-documentation is, as always, the source code itself!
-
+Woolz uses Doxygen (http://www.doxygen.org) for documentation,
+although the best documentation is (as always) the source code itself,
+the Doxygen documentation is available from both
+http://www.emouseatlas.org/emap/analysis_tools_resources/software/woolz/html_Core/index.html
+and
+https://ma-tech.github.io/Woolz/documentation/html_Core/index..html .
