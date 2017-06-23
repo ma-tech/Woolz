@@ -15,14 +15,14 @@ autoreconf
 export MA=/opt/MouseAtlas
 
 # Build; with debug and external file formats.
-# This requires jpeg, nifti and tiff libraries.
+# This requires jpeg, nifti, tiff, bz2, lzma and z libraries.
 #./configure --prefix=$MA --enable-debug --enable-extff --with-tiff=$MA --with-nifti=$MA --with-jpeg=$MA
 
 # The default build; optimised, using openmp and external file formats.
-# This requires jpeg, nifti and tiff libraries.
+# This requires jpeg, nifti, tiff, bz2, lzma and z libraries.
 ./configure --prefix=$MA --enable-optimise --enable-openmp --enable-extff --with-nifti=$MA --with-jpeg=$MA --with-tiff=$MA --with-pic --enable-static --disable-shared
 
-# A more optimised build suitable for compilers and x86_64 processors 
+# A more optimised build suitable for recent compilers and x86_64 processors 
 # developed after 2013, again this requires jpeg, nifti and tiff libraries.
 #./configure --prefix=$MA --enable-optimise --enable-openmp --enable-avx2 --enable-lto --enable-extff --with-nifti=$MA --with-jpeg=$MA --with-tiff=$MA --with-pic --enable-static --disable-shared
 
