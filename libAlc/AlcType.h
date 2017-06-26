@@ -55,7 +55,7 @@ extern "C" {
 #else
 #define ALC_STRTOK_R(S,D,P)     strtok((S),(D))
 #endif
-#ifdef timersub
+#ifdef HAVE_TIMERSUB
 #define ALC_TIMERSUB(A,B,R)	timersub((A),(B),(R))
 #else
 #define ALC_TIMERSUB(A,B,R) \
