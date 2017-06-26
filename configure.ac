@@ -157,7 +157,8 @@ AC_CHECK_FUNCS([	floor \
 			strrchr \
                         strstr \
                         strtok \
-                        strtok_r])
+                        strtok_r \
+			timersub])
 
 
 # Check for doxygen
