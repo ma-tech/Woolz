@@ -4079,11 +4079,13 @@ extern WlzErrorNum 		WlzInitLineScan(
 				  WlzRasterDir raster,
 				  int scale,
 				  int firstline);
+#ifndef WLZ_EXT_BIND
 extern int			WlzIWSpIntersection(
 				  WlzInterval *dstItv,
 				  WlzIntervalWSpace *iWSp0,
 				  WlzIntervalWSpace *iWSp1,
 				  int *dstIsn);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzIntRescaleObj.c							*
@@ -6387,6 +6389,7 @@ extern WlzObject		*WlzDGTensorFeatures(
 				  WlzDVertex3 smooth,
 				  int voxScaling,
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern WlzObject		*WlzDGTensorPDFeature(
 				  WlzObject *mObj,
 				  WlzDomain fDom,
@@ -6429,6 +6432,7 @@ extern WlzObject		*WlzTensorGetComponent(
 				  WlzObject *tObj,
 				  int cpt,
 				  WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 
 /************************************************************************
 * WlzThinToPoints.c							*
