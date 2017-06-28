@@ -138,7 +138,7 @@ static double	WlzRRandUniform(unsigned int *seed)
 {
   double	r;
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && defined(HAVE_RAND_R)
   r = ((double )rand_r(seed)) / RAND_MAX;
 #else
   r = AlgRandUniform();
@@ -643,7 +643,11 @@ int             main(int argc, char **argv)
       seeds[0] = seed;
       for(idx = 0; idx < nThr; ++idx)
       {
+#if defined(_OPENMP) && defined(HAVE_RAND_R)
         seeds[idx] = rand_r(&(seeds[0]));
+#else
+        seeds[idx] = AlgRandUniform();
+#endif
       }
 #ifdef _OPENMP
 #pragma omp parallel for

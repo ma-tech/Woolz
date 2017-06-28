@@ -133,7 +133,11 @@ int		main(int argc, char *argv[])
         outObjStr = optarg;
 	break;
       case 'u':
-        if(strcasestr(optarg, "nan") == NULL)
+	for(char *o = optarg; *o; ++o)
+	{
+	  *o = tolower(*o);
+	}
+        if(strstr(optarg, "nan") == NULL)
 	{
 	  if(sscanf(optarg, "%lg,%lg", &(uvRange[0]), &(uvRange[1])) != 2)
 	  {

@@ -147,6 +147,7 @@ AC_CHECK_FUNCS([	floor \
 			mkdir \
 			modf \
 			pow \
+			rand_r \
 			realloc \
 			regcmp \
 			regcomp \
@@ -155,6 +156,7 @@ AC_CHECK_FUNCS([	floor \
 			strchr \
 			strerror \
 			strrchr \
+			strsep \
                         strstr \
                         strtok \
                         strtok_r \
@@ -184,8 +186,9 @@ AS_IF([test x"$enable_icc" = "xyes"], [
   AR="xiar"
 ], [
   CFLAGS="${CFLAGS} -pipe -Wall -Wno-deprecated"
-  CC="gcc"
-  CXX="g++"
+  AS_IF([test -z "$CC" ], [CC="gcc"], [CC="$CC"])
+  AS_IF([test -z "$CXX" ], [CXX="g++"], [CXX="$CXX"])
+  AS_IF([test -z "$LD" ], [LD="ld"], [LD="$LD"])
 ])
 
 CFLAGS="${CFLAGS} ${CDEF_ARCH}"

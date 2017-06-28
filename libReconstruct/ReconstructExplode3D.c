@@ -112,7 +112,12 @@ RecError	RecExplode3DObjToFile(char *dstDirStr, char *dstBodyStr,
     }
     else
     {
+#if defined(__MINGW32__) || defined(_WIN32) || defined(_WIN64)
+      if(mkdir(dstDirStr))
+#else
       if(mkdir(dstDirStr, S_IRWXU))
+#endif
+
       {
 	errStr = errDirCreateStr;
 	errFlag = REC_ERR_WRITE;

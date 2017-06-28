@@ -126,6 +126,10 @@ written to the file out.wlz
 #include <sys/time.h>
 #include <Wlz.h>
 
+#if !defined(HAVE_STRSEP)
+#define strsep(B,S) strtok((B),(S))
+#endif
+
 extern int      getopt(int argc, char * const *argv, const char *optstring);
  
 extern char     *optarg;
