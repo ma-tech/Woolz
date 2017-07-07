@@ -44,6 +44,7 @@ static char _WlzCMeshExtrapolate_c[] = "University of Edinburgh $Id$";
 
 #include <stdio.h>
 #include <float.h>
+#include <ctype.h>
 #include <math.h>
 #include <string.h>
 #include <Wlz.h>
@@ -108,7 +109,8 @@ int		main(int argc, char *argv[])
   double	uvRange[2] = {NAN};
   WlzInterpolationType interp = WLZ_INTERPOLATION_LINEAR;
   FILE		*fP = NULL;
-  char		*inObjStr,
+  char		*o,
+  		*inObjStr,
   		*outObjStr;
   const char	*errMsgStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -133,7 +135,7 @@ int		main(int argc, char *argv[])
         outObjStr = optarg;
 	break;
       case 'u':
-	for(char *o = optarg; *o; ++o)
+	for(*o = optarg; *o; ++o)
 	{
 	  *o = tolower(*o);
 	}
