@@ -3420,6 +3420,7 @@ WlzObject	*WlzAffineTransformObjCb(WlzObject *srcObj,
 	    case WLZ_POINTS:
 	      dstDom.pts = WlzAffineTransformPoints(srcObj->domain.pts, trans,
 	                                            1, &errNum);
+	      srcValues = srcObj->values;
 	      break;
 	    default:
 	      errNum = WLZ_ERR_OBJECT_TYPE;
