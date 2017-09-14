@@ -177,6 +177,52 @@ extern WlzObject		*WlzThresholdI(
 				  int thr,
 				  WlzThresholdType hilo,
 				  WlzErrorNum *dstErr);
+extern WlzObject               *WlzMakeRectI(
+				  int line1,
+				  int lastln,
+				  int kol1,
+				  int lastkl,
+				  WlzGreyType pixeltype,
+				  void *val,
+				  int bdg,
+				  WlzPropertyList *plist,
+				  WlzObject *assoc_obj,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzMakeRectD(
+                                  int line1,
+                                  int lastln,
+                                  int kol1,
+                                  int lastkl,
+                                  WlzGreyType pixeltype,
+				  void *val,
+                                  double bdg,
+                                  WlzPropertyList *plist,
+                                  WlzObject *assoc_obj,
+                                  WlzErrorNum *dstErr);
+extern WlzObject		*WlzMakeCuboidI(
+                                  int plane1,
+                                  int lastpl,
+                                  int line1,
+                                  int lastln,
+                                  int kol1,
+                                  int lastkl,
+                                  WlzGreyType pixType,
+                                  int bgd,
+                                  WlzPropertyList *plist,
+                                  WlzObject *assocObj,
+                                  WlzErrorNum *dstErr);
+extern WlzObject		*WlzMakeCuboidD(
+                                  int plane1,
+                                  int lastpl,
+                                  int line1,
+                                  int lastln,
+                                  int kol1,
+                                  int lastkl,
+                                  WlzGreyType pixType,
+                                  double bgd,
+                                  WlzPropertyList *plist,
+                                  WlzObject *assocObj,
+                                  WlzErrorNum *dstErr);
 
 #ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus

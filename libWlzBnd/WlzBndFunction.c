@@ -514,3 +514,181 @@ WlzObject		*WlzThresholdI(WlzObject *obj, int thr,
   tObj = WlzThreshold(obj, thrV, hilo, dstErr);
   return(tObj);
 }
+
+/*! 
+* \return	New 2D domain object with values or NULL on error.
+* \ingroup      LibWlzBnd
+* \brief        Wrapper avoiding pixel type for WlzMakeRect() which
+* 		creates a 2D domain object with values, for which the
+* 		domain is a rectangle and the values are of the given
+* 		type and initialized to have given integer background value.
+* 		See also WlzMakeRectD().
+* \param        line1                   First line.
+* \param        lastln                  Last line.
+* \param        kol1                    First column.
+* \param        lastkl                  Last column.
+* \param        pixType                 Pixel type for the grey values. If
+*                                       WLZ_GREY_ERROR is given then no values
+*                                       are created.
+* \param	val			Grey value pointer with allocated
+* 					grey values.
+* \param        bgd                     Integer background value.
+* \param        plist                   Property list to be attached.
+* \param        assocObj                Associated object.
+* \param        dstErr                  Destination error pointer, may be NULL.
+*/
+WlzObject 			*WlzMakeRectI(
+				  int line1,
+				  int lastln,
+				  int kol1,
+				  int lastkl,
+				  WlzGreyType pixeltype,
+				  void *val,
+				  int bgd,
+				  WlzPropertyList *plist,
+				  WlzObject *assoc_obj,
+				  WlzErrorNum *dstErr)
+{
+  WlzObject     *obj = NULL;
+  WlzPixelV     bgdV;
+
+  bgdV.type = WLZ_GREY_INT;
+  bgdV.v.inv = bgd;
+  obj = WlzMakeRect(line1, lastln, kol1, lastkl, pixeltype, val, bgdV,
+                    plist, assoc_obj, dstErr);
+  return(obj);
+}
+
+/*! 
+* \return	New 2D domain object with values or NULL on error.
+* \ingroup      LibWlzBnd
+* \brief        Wrapper avoiding pixel type for WlzMakeRect() which
+* 		creates a 2D domain object with values, for which the
+* 		domain is a rectangle and the values are of the given
+* 		type and initialized to have given double background value.
+* 		See also WlzMakeRectI().
+* \param        line1                   First line.
+* \param        lastln                  Last line.
+* \param        kol1                    First column.
+* \param        lastkl                  Last column.
+* \param        pixType                 Pixel type for the grey values. If
+*                                       WLZ_GREY_ERROR is given then no values
+*                                       are created.
+* \param	val			Grey value pointer with allocated
+* 					grey values.
+* \param        bgd                     Double background value.
+* \param        plist                   Property list to be attached.
+* \param        assocObj                Associated object.
+* \param        dstErr                  Destination error pointer, may be NULL.
+*/
+WlzObject 			*WlzMakeRectD(
+				  int line1,
+				  int lastln,
+				  int kol1,
+				  int lastkl,
+				  WlzGreyType pixeltype,
+				  void *val,
+				  double bgd,
+				  WlzPropertyList *plist,
+				  WlzObject *assoc_obj,
+				  WlzErrorNum *dstErr)
+{
+  WlzObject     *obj = NULL;
+  WlzPixelV     bgdV;
+
+  bgdV.type = WLZ_GREY_DOUBLE;
+  bgdV.v.dbv = bgd;
+  obj = WlzMakeRect(line1, lastln, kol1, lastkl, pixeltype, val, bgdV,
+                    plist, assoc_obj, dstErr);
+  return(obj);
+}
+
+/*!
+* \return       New 3D domain object with values or NULL on error.
+* \ingroup      LibWlzBnd
+* \brief        Wrapper avoiding pixel type for WlzMakeCuboid() which
+* 		creates a 3D domain object with values, for which the
+*               domain is a cuboid and the values are of the given
+*               type and initialized to have given integer background value.
+*               See also WlzMakeCuboidD().
+* \param        plane1                  First plane.
+* \param        lastpl                  Last plane.
+* \param        line1                   First line.
+* \param        lastln                  Last line.
+* \param        kol1                    First column.
+* \param        lastkl                  Last column.
+* \param        pixType                 Pixel type for the grey values. If
+*                                       WLZ_GREY_ERROR is given then no values
+*                                       are created.
+* \param        bgd                     Integer background value.
+* \param        plist                   Property list to be attached.
+* \param        assocObj                Associated object.
+* \param        dstErr                  Destination error pointer, may be NULL.
+*/
+WlzObject			*WlzMakeCuboidI(
+				  int plane1,
+				  int lastpl,
+				  int line1,
+				  int lastln,
+				  int kol1,
+				  int lastkl,
+				  WlzGreyType pixType,
+				  int bgd,
+				  WlzPropertyList *plist,
+				  WlzObject *assocObj,
+				  WlzErrorNum *dstErr)
+{
+  WlzObject	*obj = NULL;
+  WlzPixelV	bgdV;
+
+  bgdV.type = WLZ_GREY_INT;
+  bgdV.v.inv = bgd;
+  obj = WlzMakeCuboid(plane1, lastpl, line1, lastln, kol1, lastkl,
+                      pixType, bgdV, plist, assocObj, dstErr);
+  return(obj);
+}
+
+/*!
+* \return       New 3D domain object with values or NULL on error.
+* \ingroup      LibWlzBnd
+* \brief        Wrapper avoiding pixel type for WlzMakeCuboid() which
+* 		creates a 3D domain object with values, for which the
+*               domain is a cuboid and the values are of the given
+*               type and initialized to have given double background value.
+*               See also WlzMakeCuboidD().
+* \param        plane1                  First plane.
+* \param        lastpl                  Last plane.
+* \param        line1                   First line.
+* \param        lastln                  Last line.
+* \param        kol1                    First column.
+* \param        lastkl                  Last column.
+* \param        pixType                 Pixel type for the grey values. If
+*                                       WLZ_GREY_ERROR is given then no values
+*                                       are created.
+* \param        bgd                     Double background value.
+* \param        plist                   Property list to be attached.
+* \param        assocObj                Associated object.
+* \param        dstErr                  Destination error pointer, may be NULL.
+*/
+WlzObject			*WlzMakeCuboidD(
+				  int plane1,
+				  int lastpl,
+				  int line1,
+				  int lastln,
+				  int kol1,
+				  int lastkl,
+				  WlzGreyType pixType,
+				  double bgd,
+				  WlzPropertyList *plist,
+				  WlzObject *assocObj,
+				  WlzErrorNum *dstErr)
+{
+  WlzObject	*obj = NULL;
+  WlzPixelV	bgdV;
+
+  bgdV.type = WLZ_GREY_DOUBLE;
+  bgdV.v.dbv = bgd;
+  obj = WlzMakeCuboid(plane1, lastpl, line1, lastln, kol1, lastkl,
+                      pixType, bgdV, plist, assocObj, dstErr);
+  return(obj);
+}
