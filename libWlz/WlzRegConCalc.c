@@ -81,9 +81,9 @@ static WlzErrorNum		WlzRCCOffset(
 				  WlzObject **o,
 				  WlzObject **t,
 				  int maxDist,
-				  int *dQ0,
-				  int *dQ1,
-				  int *dQ2);
+				  double *dQ0,
+				  double *dQ1,
+				  double *dQ2);
 static WlzErrorNum	WlzRCCCompDistHist2D(
 			  int maxDist,
 			  int *dHist,
@@ -724,25 +724,19 @@ WlzRCCClass 			WlzRegConCalcRCC(
   if((errNum == WLZ_ERR_NONE) && (noOst == 0) &&
      ((cls & WLZ_RCC_EQ) == 0))
   {
-    int		ostQ[3];
+    double		ostQ[3];
 
     errNum = WlzRCCOffset(o, t,
                           maxOstDist, &(ostQ[0]), &(ostQ[1]), &(ostQ[2]));
     if(errNum == WLZ_ERR_NONE)
     {
-#ifdef WLZ_RCC_DEBUG_OST
-      (void )fprintf(stderr,
-		     "WLZ_RCC_DEBUG_OST %d %d %d\n",
-		     ostQ[0], ostQ[1], ostQ[2]);
-#endif
-      if((ostQ[1] > 0) && (ostQ[1] < maxOstDist) && (ostQ[2] >= ostQ[0]))
+      if((ostQ[1] > 0) && (ostQ[1] < maxOstDist) && (ostQ[2] > ostQ[0]))
       {
 	const double eps = 1.0e-06;
 
 	if(ostQ[2] > ostQ[0])
 	{
-	  stats[WLZ_RCCIDX_OST] = (double )ostQ[1] /
-		                  (double )(ostQ[2] + ostQ[1] - ostQ[0]);
+	  stats[WLZ_RCCIDX_OST] = ostQ[1] / (ostQ[2] + ostQ[1] - ostQ[0]);
 	}
 	else
 	{
@@ -927,6 +921,10 @@ static WlzErrorNum 		WlzRCCMakeT(
   {
     if(t[i] == NULL)
     {
+      WlzConnectType con;
+
+      con = (o[0]->type == WLZ_2D_DOMAINOBJ)?
+            WLZ_8_CONNECTED: WLZ_26_CONNECTED;
       switch(i)
       {
 	case WLZ_RCCTOIDX_O0O1U:			/* o_0 \cup \o_1 */
@@ -939,17 +937,11 @@ static WlzErrorNum 		WlzRCCMakeT(
 	  break;
 	case WLZ_RCCTOIDX_O0D:			/* o_0^+ */
 	  t[i] = WlzAssignObject(
-		 WlzDilation(o[0],
-			     (o[0]->type == WLZ_2D_DOMAINOBJ)?
-			     WLZ_8_CONNECTED: WLZ_26_CONNECTED,
-			     &errNum), NULL);
+		 WlzDilation(o[0], con, &errNum), NULL);
 	  break;
 	case WLZ_RCCTOIDX_O1D:			/* o_1^+ */
 	  t[i] = WlzAssignObject(
-		 WlzDilation(o[1],
-			     (o[1]->type == WLZ_2D_DOMAINOBJ)?
-			     WLZ_8_CONNECTED: WLZ_26_CONNECTED,
-			     &errNum), NULL);
+		 WlzDilation(o[1], con, &errNum), NULL);
 	  break;
 
 	case WLZ_RCCTOIDX_O0F:			/* o_0^{\bullet} */
@@ -1074,12 +1066,12 @@ static WlzErrorNum		WlzRCCOffset(
 				  WlzObject **o,
 				  WlzObject **t,
 				  int maxDist,
-				  int *dQ0,
-				  int *dQ1,
-				  int *dQ2)
+				  double *dQ0,
+				  double *dQ1,
+				  double *dQ2)
 {
   int		empty = 0;
-  int		q[3] = {0};
+  double	q[3] = {0.0};
   int		*dHist = NULL;
   WlzObject	*eObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -1115,7 +1107,7 @@ static WlzErrorNum		WlzRCCOffset(
     sObj = WlzAssignObject(
 	   WlzMakeSphereObject(o[0]->type, maxDist, 0, 0, 0,
 	                       &errNum), NULL);
-    /* Create domain or convex hull of the union of the two given object
+    /* Create domain for convex hull of the union of the two given object
      * domains. */
     if(errNum == WLZ_ERR_NONE)
     {
@@ -1140,7 +1132,7 @@ static WlzErrorNum		WlzRCCOffset(
       (void )WlzFreeObj(xObj);
       (void )WlzFreeObj(uObj);
     }
-    /* Dilate the two given objects and find the ntersection of the
+    /* Dilate the two given objects and find the intersection of the
      * dilated domains with each other and the convex hull computed
      * above. Within his domain compute the distances. */
     if(errNum == WLZ_ERR_NONE)
@@ -1213,7 +1205,8 @@ static WlzErrorNum		WlzRCCOffset(
       }
       if((errNum == WLZ_ERR_NONE) && !empty)
       {
-	WlzObject *mObj;
+	WlzObject *hObj = NULL,
+		  *mObj = NULL;
 	WlzPixelV tmpV;
 
 	tmpV.type = WLZ_GREY_INT;
@@ -1223,9 +1216,16 @@ static WlzErrorNum		WlzRCCOffset(
         if(errNum == WLZ_ERR_NONE)
 	{
 	  tmpV.v.inv = 1;
-	  eObj = WlzAssignObject(
-	  	WlzThreshold(mObj, tmpV, WLZ_THRESH_HIGH, &errNum), NULL);
+	  hObj = WlzAssignObject(
+	  	 WlzThreshold(mObj, tmpV, WLZ_THRESH_HIGH, &errNum), NULL);
 	}
+        if(errNum == WLZ_ERR_NONE)
+	{
+	  tmpV.v.inv = maxDist - 1;
+	  eObj = WlzAssignObject(
+	  	WlzThreshold(hObj, tmpV, WLZ_THRESH_LOW, &errNum), NULL);
+	}
+	(void )WlzFreeObj(hObj);
 	(void )WlzFreeObj(mObj);
       }
       (void )WlzFreeObj(tObj);
@@ -1265,50 +1265,41 @@ static WlzErrorNum		WlzRCCOffset(
     {
       errNum = WlzRCCCompDistHist3D(maxDist, dHist, eObj);
     }
-#ifdef WLZ_RCC_DEBUG_OST
-    {
-      FILE *fP;
-
-      fP = fopen("WLZ_RCC_DEBUG_OST.wlz", "w");
-      (void )WlzWriteObj(fP, eObj);
-      (void )fclose(fP);
-    }
-#endif
   }
   WlzFreeObj(eObj);
   if((errNum == WLZ_ERR_NONE) && !empty)
   {
     int		i,
-    		n,
-		s,
+    		j,
+		n,
+		s0,
+		s1,
 		nq;
+
     /* Compute the median, first and third quantile offset distances,
-     * the ratio of median to the median plus inner inter-quantile range. */
+     * the ratio of median to the median plus inner inter-quantile range
+     * using linear interpolation for the ranges. */
     n = 0;
     for(i = 0; i < maxDist; ++i)
     {
       n += dHist[i];
     }
     i = 0;
-    s = 0;
-    nq = n / 4;
-    while(s < nq)
+    s1 = 0;
+    for(j = 1; j <= 3; ++j)
     {
-      s += dHist[i++];
+      nq = (n * j) / 4;
+      while(s1 < nq)
+      {
+	s0 = s1;
+	s1 += dHist[i++];
+      }
+      q[j - 1] = i;
+      if(s1 > nq)
+      {
+	q[j - 1] -= (double )(s1 - nq) / (double )(s1 - s0);
+      }
     }
-    q[0] = i;
-    nq = n / 2;
-    while(s < nq)
-    {
-      s += dHist[i++];
-    }
-    q[1] = i;
-    nq = (3 * n) / 4;
-    while(s < nq)
-    {
-      s += dHist[i++];
-    }
-    q[2] = i;
   }
   AlcFree(dHist);
   *dQ0 = q[0];
