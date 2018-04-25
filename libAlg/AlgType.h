@@ -287,11 +287,13 @@ typedef enum _AlgDbgMask
   ALG_DBG_LVL_FN        = (1<<3)
 } AlgDbgMask;
 
+#ifndef CTYPESGEN
 typedef AlgError        (*AlgDbgFn)(char *, ...);
  
 extern AlgDbgFn		algDbgOutFn;
 #define ALG_DBG_FN      (*algDbgOutFn)
 #define ALG_DBG(F,M)    ((((F)&(algDbgMask))==(F))?ALG_DBG_FN M:ALG_ERR_NONE)
+#endif
  
 #ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus 

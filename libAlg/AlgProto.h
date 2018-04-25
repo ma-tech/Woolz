@@ -155,8 +155,10 @@ extern void            		AlgCrossCorrPeakY(
 				  int nY);
 
 /* From AlgDebug.c */
+#ifndef CTYPESGEN
 extern AlgError			AlgDbgWrite(
 				  char *fmt, ...);
+#endif
 
 /* From AlgFourier.c */
 extern void     		AlgFourHart1D(
@@ -871,12 +873,14 @@ extern int AlgDPSearch(int, int, double **, double **, int **,
 		       double (*)(int, int, int, int **));
 
 /* Debugging */
+#ifndef CTYPESGEN
 extern AlgDbgMask	 	algDbgMask;
 extern void			*algDbgData;
 extern AlgDbgFn			algDbgOutFn;
 extern AlgError			AlgDbgWrite(
 				  char *,
 				  ...);
+#endif
 
 #ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus

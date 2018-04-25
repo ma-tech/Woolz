@@ -50,6 +50,7 @@ extern "C" {
 /************************************************************************
 * Portability macros.                                                   *
 ************************************************************************/
+#ifndef CTYPESGEN
 #ifdef HAVE_STRTOK_R
 #define ALC_STRTOK_R(S,D,P)     strtok_r((S),(D),(P))
 #else
@@ -68,6 +69,7 @@ extern "C" {
     (R)->tv_usec += 1000000; \
   } \
 }
+#endif
 #endif
 
 

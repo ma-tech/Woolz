@@ -6198,6 +6198,7 @@ extern WlzErrorNum  		WlzStringToErrorNum(
 /************************************************************************
 * WlzStringUtils.c							*
 ************************************************************************/
+#ifndef CTYPESGEN
 #ifndef WLZ_EXT_BIND
 extern int 			WlzStringMatchValue(
 				  int *dstValue,
@@ -6226,6 +6227,7 @@ extern char			*WlzStringCopyReplace(
 				  int inPlace);
 
 #endif /* WLZ_EXT_BIND */
+#endif
 
 /************************************************************************
 * WlzStructDilation.c							*
