@@ -42,3 +42,6 @@ export MA=/opt/MouseAtlas
 # This requires only standard system libraries.
 #./configure --prefix=$MA --enable-optimise --enable-openmp --enable-test
 
+# Build the core Woolz code optimised for Windows (64 bit) from a Linux
+# environmnt using MinGW64
+#./configure --prefix=$MA --host=x86_64-w64-mingw32 --enable-optimise --enable-static --disable-shared --with-pic
