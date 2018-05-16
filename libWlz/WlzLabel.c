@@ -61,7 +61,7 @@ typedef struct {
 typedef struct _WlzLLink {
   struct _WlzLLink *l_link;
   union {
-    unsigned long line;
+    unsigned long long line;
     struct _WlzLLink *u_link;
     WlzInterval intv;
   } l_u;
