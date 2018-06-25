@@ -219,11 +219,11 @@ int             main(int argc, char **argv)
 	}
 	if(n == 3)
 	{
-	  qsort(tbl, np, sizeof(unsigned int) * 4, AlgTstSort3);
+	  AlgSort(tbl, np, sizeof(unsigned int) * 4, AlgTstSort3);
 	}
 	else
 	{
-	  qsort(tbl, np, sizeof(unsigned int) * 3, AlgTstSort2);
+	  AlgSort(tbl, np, sizeof(unsigned int) * 3, AlgTstSort2);
 	}
 	(void )printf("CELLS %d %d\n", np - 1, 4 * (np - 1));
 	t = tbl;

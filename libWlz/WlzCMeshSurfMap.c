@@ -752,7 +752,7 @@ WlzObject	*WlzCMeshCompSurfMapFT(WlzCMesh2D5 *mesh,
 	}
 	else
 	{
-	  qsort((void *)nIdx, nN, sizeof(int), WlzCMeshSurfMapIdxCmpFn);
+	  AlgSort((void *)nIdx, nN, sizeof(int), WlzCMeshSurfMapIdxCmpFn);
 	  for(i = 0; i < nP; ++i)
 	  {
 	    sIdx[i] = i;
@@ -1264,9 +1264,9 @@ WlzObject	*WlzCMeshCompSurfMapLevy(WlzCMesh2D5 *mesh,
 }
 
 /*!
-* \return	Comparison value for qsort().
+* \return	Comparison value for AlgSort().
 * \ingroup	WlzMesh
-* \brief	Called by qsort() to sort integers into acending order.
+* \brief	Called by AlgSort() to sort integers into acending order.
 * \param	p0			Pointer to first int.
 * \param	p1			Pointer to second int.
 */

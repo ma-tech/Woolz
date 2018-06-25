@@ -1880,8 +1880,8 @@ static WlzErrorNum WlzMatchICPFilterPtsRmDup2D(WlzDVertex2 *tVx,
     }
     /* Sort the buffer match points, first by vtY and then by vtX, into
      * increasing order. */
-    qsort(buf, (size_t )nVx, sizeof(WlzMatchICPTPPair2D), 
-    	  (int (*)(const void *, const void *))WlzMatchICPTPPairSortFnD);
+    AlgSort(buf, (size_t )nVx, sizeof(WlzMatchICPTPPair2D), 
+    	    (int (*)(const void *, const void *))WlzMatchICPTPPairSortFnD);
     /* Now put the buffer match points back skiping over those with
      * near identical target positions. */
     idN = 0;

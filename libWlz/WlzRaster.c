@@ -427,7 +427,7 @@ static WlzObject *WlzRasterGM3D(WlzGMModel *model,
 /*!
 * \return	+ve, -ve or zero.
 * \ingroup	WlzRaster
-* \brief	Compares two 3D integral verticies for qsort().
+* \brief	Compares two 3D integral verticies for AlgSort().
 * \param	ptr0			First pointer.
 * \param	ptr1			Second pointer.
 */
@@ -489,7 +489,7 @@ static WlzErrorNum WlzRasterAddSimplex3I(WlzUByte ***bMsk, WlzIVertex3 sz,
   }
   /* Sort the verticies of the simplex by plane then line, so that the first
    * vertex has the lowest plane/line coordinate. */
-  qsort((void *)simplex, 3, sizeof(WlzIVertex3), WlzRasterVtxCmp3I);
+  AlgSort((void *)simplex, 3, sizeof(WlzIVertex3), WlzRasterVtxCmp3I);
   /* Initialize variables for drawing a line from *(simplex + 0) to
    * *(simplex + 2) and from *(simplex + 0) to *(simplex + 1) and
    * then on to *(simplex + 2). At each step draw a line between

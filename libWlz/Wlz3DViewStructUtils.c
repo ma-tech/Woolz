@@ -592,13 +592,13 @@ WlzErrorNum Wlz3DViewStructTransformBB(
 	for(i=0; i < 8; i++){
 	  Wlz3DSectionTransformVtx( &(vtxs[i]), viewStr );
 	}
-	qsort(vtxs, (size_t) 8, sizeof(WlzDVertex3), vtxXSortFn);
+	AlgSort(vtxs, (size_t) 8, sizeof(WlzDVertex3), vtxXSortFn);
 	viewStr->minvals.vtX = vtxs[0].vtX;
 	viewStr->maxvals.vtX = vtxs[7].vtX;
-	qsort(vtxs, (size_t) 8, sizeof(WlzDVertex3), vtxYSortFn);
+	AlgSort(vtxs, (size_t) 8, sizeof(WlzDVertex3), vtxYSortFn);
 	viewStr->minvals.vtY = vtxs[0].vtY;
 	viewStr->maxvals.vtY = vtxs[7].vtY;
-	qsort(vtxs, (size_t) 8, sizeof(WlzDVertex3), vtxZSortFn);
+	AlgSort(vtxs, (size_t) 8, sizeof(WlzDVertex3), vtxZSortFn);
 	viewStr->minvals.vtZ = vtxs[0].vtZ;
 	viewStr->maxvals.vtZ = vtxs[7].vtZ;
 	viewStr->initialised |= WLZ_3DVIEWSTRUCT_INIT_BB;

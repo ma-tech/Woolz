@@ -4710,8 +4710,8 @@ static WlzCMeshScanWSp2D *WlzCMeshScanWSpInit2D(WlzObject *mObj,
   {
     /* Sort the conforming mesh scan intervals by line and then left
      * column */
-    qsort(mSWSp->itvs, mSWSp->nItvs, sizeof(WlzCMeshScanItv2D),
-          WlzCMeshItv2Cmp);
+    AlgSort(mSWSp->itvs, mSWSp->nItvs, sizeof(WlzCMeshScanItv2D),
+             WlzCMeshItv2Cmp);
 #ifdef WLZ_CMESHTRANSFORM_DEBUG
     for(iIdx = 0; iIdx < mSWSp->nItvs; ++iIdx)
     {
@@ -4902,8 +4902,8 @@ static WlzCMeshScanWSp3D *WlzCMeshScanWSpInit3D(WlzObject *mObj, int trans,
       *(mSWSp->itvs + idI) = *(WlzCMeshScanItv3D *)
                              AlcVectorItemGet(itvVec, idI);
     }
-    qsort(mSWSp->itvs, mSWSp->nItvs, sizeof(WlzCMeshScanItv3D),
-          WlzCMeshItv3Cmp);
+    AlgSort(mSWSp->itvs, mSWSp->nItvs, sizeof(WlzCMeshScanItv3D),
+            WlzCMeshItv3Cmp);
     for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
     {
       elm = (WlzCMeshElm3D *)AlcVectorItemGet(mesh->res.elm.vec, (size_t )idE);
@@ -5306,7 +5306,7 @@ static WlzErrorNum WlzCMeshTetElmItv3D(AlcVector *itvVec, int *idI,
 
   /* TODO Optimize when tested. */
   /* Reorder the vertices so that they are sortied by z then y then x. */
-  qsort(vtx, 4, sizeof(WlzDVertex3), WlzCMeshDVertex3Cmp);
+  AlgSort(vtx, 4, sizeof(WlzDVertex3), WlzCMeshDVertex3Cmp);
 #ifdef WLZ_CMESHTRANSFORM_DEBUG
   (void )fprintf(stderr,
                  "WlzCMeshTetElmItv3D %d "
@@ -5656,9 +5656,9 @@ static WlzErrorNum WlzCMeshAddItv3D(AlcVector *itvVec, int *idI,
 }
 
 /*!
-* \return	Sorting value for qsort.
+* \return	Sorting value for AlgSort.
 * \ingroup	WlzTransform
-* \brief	Callback function for qsort(3) to sort 3D double
+* \brief	Callback function for AlgSort to sort 3D double
 *		vertices by z then y then x.
 * \param	cmp0			Used to pass first mesh interval.
 * \param	cmp1			Used to pass second mesh interval.
@@ -5706,9 +5706,9 @@ static int	WlzCMeshDVertex3Cmp(const void *cmp0, const void *cmp1)
 }
 
 /*!
-* \return	Sorting value for qsort.
+* \return	Sorting value for AlgSort.
 * \ingroup	WlzTransform
-* \brief	Callback function for qsort(3) to sort 2D conforming mesh
+* \brief	Callback function for AlgSort to sort 2D conforming mesh
 *		element intervals by line and then left column.
 * \param	cmp0			Used to pass first mesh interval.
 * \param	cmp1			Used to pass second mesh interval.
@@ -5732,9 +5732,9 @@ static int	WlzCMeshItv2Cmp(const void *cmp0, const void *cmp1)
 }
 
 /*!
-* \return	Sorting value for qsort.
+* \return	Sorting value for AlgSort.
 * \ingroup	WlzTransform
-* \brief	Callback function for qsort(3) to sort 3D conforming mesh
+* \brief	Callback function for AlgSort to sort 3D conforming mesh
 *		element intervals by plane, line and then left column.
 * \param	cmp0			Used to pass first mesh interval.
 * \param	cmp1			Used to pass second mesh interval.

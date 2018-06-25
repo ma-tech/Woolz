@@ -1,14 +1,12 @@
-#ifndef ALG_H
-#define ALG_H
 #if defined(__GNUC__)
 #ident "University of Edinburgh $Id$"
 #else
-static char _Alg_h[] = "University of Edinburgh $Id$";
+static char _AlgSort_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         libAlg/Alg.h
+* \file         AlgSort.c
 * \author       Bill Hill
-* \date         March 1999
+* \date         June 2018
 * \version      $Id$
 * \par
 * Address:
@@ -18,7 +16,7 @@ static char _Alg_h[] = "University of Edinburgh $Id$";
 *               Western General Hospital,
 *               Edinburgh, EH4 2XU, UK.
 * \par
-* Copyright (C), [2012],
+* Copyright (C), [2018],
 * The University Court of the University of Edinburgh,
 * Old College, Edinburgh, UK.
 * 
@@ -37,42 +35,31 @@ static char _Alg_h[] = "University of Edinburgh $Id$";
 * License along with this program; if not, write to the Free
 * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 * Boston, MA  02110-1301, USA.
-* \brief        Main (top-level) header file for the Woolz numerical
-* 		algorithms library.
-* \ingroup     	Alg
+* \brief	Basic sorting functions.
+* \ingroup	AlgSort
 */
 
-#ifndef __EXTENSIONS__
-#define __EXTENSIONS__
-#endif
-
-#ifdef __cplusplus
-#ifndef WLZ_EXT_BIND
-using namespace std;
-#endif /* WLZ_EXT_BIND */
-#else
-#include <stdlib.h>
-#endif
-
-#ifndef WLZ_EXT_BIND
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-#endif /* WLZ_EXT_BIND */
-
-#include <stdio.h>
-#include <stdarg.h>
 #include <stddef.h>
-#include <math.h>
-#include <Alc.h>
-#include <AlgType.h>
-#include <AlgProto.h>
+#include <Alg.h>
 
-#ifndef WLZ_EXT_BIND
-#ifdef __cplusplus
-}
+/*!
+* \ingroup      AlgSort
+* \brief	A wrapper for qsort()/mergesort() which aims to be consistent
+*		across platforms. The default sort is qsort but on some
+*		platforms, eg Apple OSX this is unreliable and mergesort
+*		is used. The parameters are for qsort/mergesort.
+* \param        base			Start of array to be sorted.
+* \param        nElm			Number of elements in the array.
+* \param        elmSz			Size of an array element.
+* \param        compar			Comparison  function.
+*/
+void            AlgSort(void *base, size_t nElm, size_t elmSz,
+                        int (*compar)(const void *, const void *))
+{
+#if defined(__APPLE__) && defined(__MACH__)
+  mergesort(base, nElm, elmSz, compar);
+#else
+  qsort(base, nElm, elmSz, compar);
 #endif
-#endif /* WLZ_EXT_BIND */
+}
 
-#endif /* ! ALG_H */

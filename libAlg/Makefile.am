@@ -74,6 +74,7 @@ libAlg_la_SOURCES 	= \
 			  AlgRange.c \
 			  AlgRank.c \
 			  AlgShuffle.c \
+			  AlgSort.c \
 			  AlgVectorMath.c
 
 include_HEADERS 	= \

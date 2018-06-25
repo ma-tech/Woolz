@@ -282,7 +282,7 @@ int WlzInsidePolyEOD(
   }
 }
 
-/* static vertex comparison procedures for qsort */
+/* static vertex comparison procedures for AlgSort */
 static int vtx_compare(
   const void	*p1,
   const void	*p2)
@@ -516,7 +516,7 @@ WlzObject *WlzPolyToObj(
     width = lk - k1 + 1;
 
     /* order the vertices first wrt line number then wrt kol number */
-    qsort((void *) vtxs, num_vtxs, sizeof(WlzIVertex2), vtx_compare);
+    AlgSort((void *) vtxs, num_vtxs, sizeof(WlzIVertex2), vtx_compare);
 
     /* build an object with intervals given by non-polynomial points */
     if((domain.i = WlzMakeIntervalDomain(WLZ_INTERVALDOMAIN_INTVL,

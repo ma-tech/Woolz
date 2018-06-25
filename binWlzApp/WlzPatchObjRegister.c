@@ -280,8 +280,8 @@ WlzErrorNum	WlzGetPatchTreeToDepth(
       }
     }
     /* sort the children */
-    qsort(patchTree->children, patchTree->nchildren,
-	  sizeof(WlzPatchTree *), sortPatch);
+    AlgSort(patchTree->children, patchTree->nchildren,
+	    sizeof(WlzPatchTree *), sortPatch);
   }
   else {
     for(i=0; i < patchTree->nchildren; i++){

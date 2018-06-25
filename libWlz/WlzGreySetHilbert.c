@@ -594,19 +594,19 @@ static void	WlzGreyNewHilbertSortUI(unsigned int *iVal, WlzLong nVal)
   unsigned int	*iV;
 
   iV = iVal;
-  qsort(iVal, nVal, 2 * sizeof(unsigned int), WlzGreyHilbertRankFn0);
+  AlgSort(iVal, nVal, 2 * sizeof(unsigned int), WlzGreyHilbertRankFn0);
   for(i = 0; i < nVal; ++i)
   {
     *iV = i;
     iV += 2;
   }
-  qsort(iVal, nVal, 2 * sizeof(unsigned int), WlzGreyHilbertRankFn1);
+  AlgSort(iVal, nVal, 2 * sizeof(unsigned int), WlzGreyHilbertRankFn1);
 }
 
 /*!
-* \return	Signed int for qsort().
+* \return	Signed int for AlgSort().
 * \ingroup	WlzValuesUtils
-* \brief	Does a comparison for qsort(). Compares unsigned integers
+* \brief	Does a comparison for AlgSort(). Compares unsigned integers
 * 		with zero offset.
 * \param	v0			To cast to unsigned int.
 * \param	v1			To cast to unsigned int.
@@ -624,9 +624,9 @@ static int	WlzGreyHilbertRankFn0(const void *v0, const void *v1)
 }
 
 /*!
-* \return	Signed int for qsort().
+* \return	Signed int for AlgSort().
 * \ingroup	WlzValuesUtils
-* \brief	Does a comparison for qsort(). Compares unsigned integers
+* \brief	Does a comparison for AlgSort(). Compares unsigned integers
 * 		with an offset of one.
 * \param	v0			To cast to unsigned int.
 * \param	v1			To cast to unsigned int.

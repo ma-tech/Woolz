@@ -204,7 +204,8 @@ int             main(int argc, char **argv)
 		       *argv);
       } else {
 	/* sort the LUTEntries */
-	(void) qsort(LUTEntries, (size_t) LUTEntryCount, sizeof(LUTEntry), ComparLUTEntry);
+	(void )AlgSort(LUTEntries, (size_t) LUTEntryCount, sizeof(LUTEntry),
+		       ComparLUTEntry);
 
 	/* check highest index add endpoint if needed */
 	if( LUTEntries[LUTEntryCount-1].index < 255 ){
@@ -221,7 +222,8 @@ int             main(int argc, char **argv)
 	}
 
 	/* re-sort the LUTEntries */
-	(void) qsort(LUTEntries, (size_t) LUTEntryCount, sizeof(LUTEntry), ComparLUTEntry);
+	(void )AlgSort(LUTEntries, (size_t) LUTEntryCount, sizeof(LUTEntry),
+		       ComparLUTEntry);
 
       }
     }

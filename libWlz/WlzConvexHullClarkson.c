@@ -280,7 +280,7 @@ int		WlzConvHullClarkson2I(WlzIVertex2 *vtx, int n, int **dstIdx,
   }
   else
   {
-    if(n <= WLZ_CONVHULL_CLARKSON_SM_2D)
+    if(n < WLZ_CONVHULL_CLARKSON_SM_2D) /* < because need space for n + 1 */
     {
       v = vSmall; 
     }
@@ -312,7 +312,7 @@ int		WlzConvHullClarkson2I(WlzIVertex2 *vtx, int n, int **dstIdx,
       idx[i] = v[i] - &(vtx[0]);
     }
   }
-  if(n > WLZ_CONVHULL_CLARKSON_SM_2D)
+  if(v != vSmall)
   {
     AlcFree(v);
   }
@@ -363,7 +363,7 @@ int		WlzConvHullClarkson2D(WlzDVertex2 *vtx, int n, int **dstIdx,
   }
   else
   {
-    if(n <= WLZ_CONVHULL_CLARKSON_SM_2D)
+    if(n < WLZ_CONVHULL_CLARKSON_SM_2D) /* < because need space for n + 1 */
     {
       v = vSmall; 
     }
@@ -395,7 +395,7 @@ int		WlzConvHullClarkson2D(WlzDVertex2 *vtx, int n, int **dstIdx,
       idx[i] = v[i] - &(vtx[0]);
     }
   }
-  if(n > WLZ_CONVHULL_CLARKSON_SM_2D)
+  if(v != vSmall)
   {
     AlcFree(v);
   }
@@ -421,17 +421,51 @@ static int	WlzConvHullClarksonMakeChain2I(WlzIVertex2 **v, int n,
   		j,
 		s = 1;
   WlzIVertex2 	*t;
+#ifdef WLZ_DEBUG_CONVHULL
+  int		k;
+#endif // WLZ_DEBUG_CONVHULL
 
-  qsort(v, n, sizeof(WlzIVertex2 *), cmp);
+#ifdef WLZ_DEBUG_CONVHULL
+  (void )fprintf(stderr, "WlzConvHullClarksonMakeChain2I()\n");
+  for(k = 0; k < n; ++k)
+  {
+    (void )fprintf(stderr, "%d (%d, %d)\n", k, v[k]->vtX, v[k]->vtY);
+    
+  }
+#endif // WLZ_DEBUG_CONVHULL
+  AlgSort(v, n, sizeof(WlzIVertex2 *), cmp);
+#ifdef WLZ_DEBUG_CONVHULL
+  for(k = 0; k < n; ++k)
+  {
+    (void )fprintf(stderr, "%d (%d, %d)\n", k, v[k]->vtX, v[k]->vtY);
+    
+  }
+#endif // WLZ_DEBUG_CONVHULL
   for(i=2; i < n; ++i)
   {
     j = s;
+#ifdef WLZ_DEBUG_CONVHULL
+(void )fprintf(stderr, "  %d %d\n", i, j);
+#endif // WLZ_DEBUG_CONVHULL
     while((j >= 1) && WlzConvHullClarksonCCWI(v, i, j, j - 1))
     {
+#ifdef WLZ_DEBUG_CONVHULL
+      (void )fprintf(stderr, "    (%d, %d) %d (%d, %d) %d (%d, %d) %d\n",
+                     v[i]->vtX, v[i]->vtY, i,
+                     v[j]->vtX, v[j]->vtY, j,
+                     v[j - 1]->vtX, v[j - 1]->vtY, j - 	1);
+#endif // WLZ_DEBUG_CONVHULL
       --j;
     }
     s = j + 1;
     t = v[s]; v[s] = v[i]; v[i] = t;
+#ifdef WLZ_DEBUG_CONVHULL
+    for(k = 0; k < n; ++k)
+    {
+      (void )fprintf(stderr, "    %d (%d, %d)\n", k, v[k]->vtX, v[k]->vtY);
+      
+    }
+#endif // WLZ_DEBUG_CONVHULL
   }
   return(s);
 }
@@ -444,7 +478,7 @@ static int	WlzConvHullClarksonMakeChain2D(WlzDVertex2 **v, int n,
 		s = 1;
   WlzDVertex2 	*t;
 
-  qsort(v, n, sizeof(WlzDVertex2 *), cmp);
+  AlgSort(v, n, sizeof(WlzIVertex2 *), cmp);
   for(i=2; i < n; ++i)
   {
     j = s;
@@ -485,6 +519,10 @@ static int	WlzConvHullClarksonCCWI(WlzIVertex2 **v, int i, int j, int k)
   c = v[k]->vtX - v[j]->vtX,
   d = v[k]->vtY - v[j]->vtY;
   ccw = (a * d) <= (b * c);
+#ifdef WLZ_DEBUG_CONVHULL
+  (void )fprintf(stderr, "     %cCW %lld,%lld,%lld,%lld\n",
+                 (ccw)? 'C': ' ', a, b, c, d);
+#endif // WLZ_DEBUG_CONVHULL
   return(ccw);
 }
 
@@ -521,14 +559,15 @@ static int	WlzConvHullClarksonCCWD(WlzDVertex2 **v, int i, int j, int k)
 static int	WlzConvHullClarksonCmpIL(const void *a, const void *b)
 {
   int		cmp = 0; 
+  WlzIVertex2 	*u,
+  		*v;
 
-  if(((*(WlzIVertex2 **)a)->vtX - (*(WlzIVertex2 **)b)->vtX) > 0)
+  u = *(WlzIVertex2 **)a;
+  v = *(WlzIVertex2 **)b;
+  cmp = (u->vtX > v->vtX) - (u->vtX < v->vtX);
+  if(cmp == 0)
   {
-    cmp = 1;
-  }
-  else if(((*(WlzIVertex2 **)b)->vtY - (*(WlzIVertex2 **)a)->vtY) < 0)
-  {
-    cmp = -1;
+    cmp = (u->vtY > v->vtY) - (u->vtY < v->vtY);
   }
   return(cmp);
 }
@@ -536,14 +575,15 @@ static int	WlzConvHullClarksonCmpIL(const void *a, const void *b)
 static int	WlzConvHullClarksonCmpDL(const void *a, const void *b)
 {
   int		cmp = 0; 
+  WlzDVertex2 	*u,
+  		*v;
 
-  if(((*(WlzDVertex2 **)a)->vtX - (*(WlzDVertex2 **)b)->vtX) > 0.0)
+  u = *(WlzDVertex2 **)a;
+  v = *(WlzDVertex2 **)b;
+  cmp = (u->vtX > v->vtX) - (u->vtX < v->vtX);
+  if(cmp == 0)
   {
-    cmp = 1;
-  }
-  else if(((*(WlzDVertex2 **)b)->vtY - (*(WlzDVertex2 **)a)->vtY) < 0.0)
-  {
-    cmp = -1;
+    cmp = (u->vtY > v->vtY) - (u->vtY < v->vtY);
   }
   return(cmp);
 }

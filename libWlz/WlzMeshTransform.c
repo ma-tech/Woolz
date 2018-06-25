@@ -2985,8 +2985,8 @@ static WlzMeshScanWSp *WlzMeshScanWSpInit(WlzMeshTransform *mesh,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Sort the mesh scan intervals by line and then left column */
-    qsort(meshSnWSp->itvs, meshSnWSp->nItvs, sizeof(WlzMeshScanItv),
-          WlzMeshItvCmp);
+    AlgSort(meshSnWSp->itvs, meshSnWSp->nItvs, sizeof(WlzMeshScanItv),
+            WlzMeshItvCmp);
   }
   else
   {
@@ -3155,9 +3155,9 @@ static int	WlzMeshScanTriElm(WlzMeshScanWSp *mSnWSp, int eIdx, int iIdx)
 }
 
 /*!
-* \return	Sorting value for qsort.
+* \return	Sorting value for AlgSort.
 * \ingroup	WlzTransform
-* \brief	Callback function for qsort(3) to sort mesh element
+* \brief	Callback function for AlgSort to sort mesh element
 *		intervals by line and then left left column.
 * \param	cmp0			Used to pass first mesh interval.
 * \param	cmp1			Used to pass second mesh interval.

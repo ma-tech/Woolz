@@ -371,11 +371,11 @@ int main(int	argc,
   /* sort on size - area or volume */
   if( sortFlg == 1 ){
     /* smallest first */
-    qsort(objlist, n, sizeof(WlzObject *), cmpObjSizeA);
+    AlgSort(objlist, n, sizeof(WlzObject *), cmpObjSizeA);
   }
   else if ( sortFlg == 2 ){
     /* largest first */
-    qsort(objlist, n, sizeof(WlzObject *), cmpObjSizeB);
+    AlgSort(objlist, n, sizeof(WlzObject *), cmpObjSizeB);
   }
 
   /* check for class-map object */

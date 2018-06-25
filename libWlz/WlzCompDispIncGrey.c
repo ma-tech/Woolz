@@ -225,7 +225,7 @@ static WlzCompoundArray *WlzCompDispIncGrey3D(WlzObject *obj0, WlzObject *obj1,
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    qsort(ary, nAry, 4 * sizeof(int), WlzCompDispArySortFn3D);
+    AlgSort(ary, nAry, 4 * sizeof(int), WlzCompDispArySortFn3D);
   }
   /* Scan through the first object computing displacements. */
   if(errNum == WLZ_ERR_NONE)
@@ -441,9 +441,9 @@ static WlzErrorNum WlzCompDispSetAry(int **ary, WlzObject *obj, int pln,
 }
 
 /*!
-* \return	Comparison value for qsort().
+* \return	Comparison value for AlgSort().
 * \ingroup	WlzValueUtils
-* \brief	Compares two integer for qsort().
+* \brief	Compares two integer for AlgSort().
 * \param	p0			Pointer for first integer.
 * \param	p1			Pointer for second integer.
 */

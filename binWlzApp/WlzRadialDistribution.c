@@ -628,20 +628,20 @@ int             main(int argc, char *argv[])
     switch(distSort)
     {
       case WLZ_RADDISTVAL_AREA:
-        (void )qsort(distData, tNReg, sizeof(WlzRadDistRec),
-		     WlzRadDistRecSortArea);
+        (void )AlgSort(distData, tNReg, sizeof(WlzRadDistRec),
+		       WlzRadDistRecSortArea);
 	break;
       case WLZ_RADDISTVAL_ANGLE:
-        (void )qsort(distData, tNReg, sizeof(WlzRadDistRec), 
-		     WlzRadDistRecSortAngle);
+        (void )AlgSort(distData, tNReg, sizeof(WlzRadDistRec), 
+		       WlzRadDistRecSortAngle);
 	break;
       case WLZ_RADDISTVAL_RADIUS:
-        (void )qsort(distData, tNReg, sizeof(WlzRadDistRec),
-		     WlzRadDistRecSortRadius);
+        (void )AlgSort(distData, tNReg, sizeof(WlzRadDistRec),
+		       WlzRadDistRecSortRadius);
 	break;
       case WLZ_RADDISTVAL_DIST:
-        (void )qsort(distData, tNReg, sizeof(WlzRadDistRec),
-		     WlzRadDistRecSortDist);
+        (void )AlgSort(distData, tNReg, sizeof(WlzRadDistRec),
+		       WlzRadDistRecSortDist);
 	break;
     }
   }
@@ -744,7 +744,7 @@ int             main(int argc, char *argv[])
 
 /*!
 * \return	Difference between angle of records.
-* \brief	Comparison function for qsort() to sort radial distribution
+* \brief	Comparison function for AlgSort() to sort radial distribution
 * 		records.
 * \param	p0			Pointer to first record.
 * \param	p1			Pointer to second record.
@@ -765,7 +765,7 @@ static int      		WlzRadDistRecSortAngle(
 
 /*!
 * \return	Difference between angle of records.
-* \brief	Comparison function for qsort() to sort radial distribution
+* \brief	Comparison function for AlgSort() to sort radial distribution
 * 		records.
 * \param	p0			Pointer to first record.
 * \param	p1			Pointer to second record.
@@ -786,7 +786,7 @@ static int      		WlzRadDistRecSortArea(
 
 /*!
 * \return	Difference between angle of records.
-* \brief	Comparison function for qsort() to sort radial distribution
+* \brief	Comparison function for AlgSort() to sort radial distribution
 * 		records.
 * \param	p0			Pointer to first record.
 * \param	p1			Pointer to second record.
@@ -807,7 +807,7 @@ static int      		WlzRadDistRecSortRadius(
 
 /*!
 * \return	Difference between distance of records.
-* \brief	Comparison function for qsort() to sort radial distribution
+* \brief	Comparison function for AlgSort() to sort radial distribution
 * 		records.
 * \param	p0			Pointer to first record.
 * \param	p1			Pointer to second record.

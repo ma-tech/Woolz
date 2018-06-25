@@ -965,7 +965,7 @@ WlzVertexP 	WlzDVerticesFromCMesh(WlzCMeshP mesh,
 /*!
 * \return       Signed sort value.
 * \ingroup      WlzFeatures
-* \brief        Function for qsort() to sort WlzIVertex2 vertices
+* \brief        Function for AlgSort() to sort WlzIVertex2 vertices
 *               so that they have increasing Y then X.
 * \param        p0			First vertex pointer.
 * \param        p1			Second vertex pointer.
@@ -990,7 +990,7 @@ int                      	WlzVertexQSortFnI2(
 /*!
 * \return       Signed sort value.
 * \ingroup      WlzFeatures
-* \brief        Function for qsort() to sort WlzIVertex3 vertices
+* \brief        Function for AlgSort() to sort WlzIVertex3 vertices
 *               so that they have increasing z then Y then X.
 * \param        p0			First vertex pointer.
 * \param        p1			Second vertex pointer.

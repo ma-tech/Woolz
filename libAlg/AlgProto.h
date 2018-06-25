@@ -831,6 +831,16 @@ extern AlgError			AlgShuffleIdx(
 				  int *shuffle,
 				  int seed);
 
+/* From AlgSort.c */
+#ifndef WLZ_EXT_BIND
+extern void			AlgSort(
+				  void *base,
+				  size_t nElm,
+				  size_t elmSz,
+		                  int (*cmpFn)(const void *,
+					       const void *));
+#endif /* WLZ_EXT_BIND */
+
 /* From AlgVectorMath.c */
 extern double			AlgVectorNorm(
 				  double *aV,

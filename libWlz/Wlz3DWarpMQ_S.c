@@ -2015,8 +2015,8 @@ static WlzMeshScanWSp2D5 *WlzMeshScanWSpInit2D5( WlzMeshTransform2D5 *mesh,
   if(errNum == WLZ_ERR_NONE)
   {
     /* Sort the mesh scan intervals by line and then left column */
-    qsort(meshSnWSp->itvs, meshSnWSp->nItvs, sizeof(WlzMeshScanItv),
-          WlzMeshItvCmp);
+    AlgSort(meshSnWSp->itvs, meshSnWSp->nItvs, sizeof(WlzMeshScanItv),
+            WlzMeshItvCmp);
   }
   else
   {
@@ -2056,9 +2056,9 @@ static void	WlzMeshScanWSpFree(WlzMeshScanWSp2D5 *mSnWSp)
 
 
 /*!
-* \return   Sorting value for qsort
+* \return   Sorting value for AlgSort
 * \ingroup  WlzAccess
-* \brief    Callback function for qsort(3) to sort mesh element
+* \brief    Callback function for AlgSort to sort mesh element
 *           intervals by line and then left left column.
 
 * \param    cmp0	Used to pass first mesh.

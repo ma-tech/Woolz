@@ -45,9 +45,9 @@ static char _Wlz3DViewTransformObj_c[] = "University of Edinburgh $Id$";
 
 
 /*!
-* \return	Signed value for qsort.
+* \return	Signed value for AlgSort.
 * \ingroup	WlzTransform
-* \brief	Compares to vertex values to allow sorting with qsort().
+* \brief	Compares to vertex values to allow sorting with AlgSort().
 * \param	 constp1		Pointer to first vertex.
 * \param	 constp2		Pointer to second vertex.
 */
@@ -188,8 +188,8 @@ WlzObject *Wlz3DViewTransformObj(
 
   /* sort wrt planes, lines, kols */
   if( (errNum == WLZ_ERR_NONE) && (dstObj == NULL) ){
-    qsort((void *) vertices, (size_t) numVtxs, sizeof(WlzIVertex3),
-	  compareVtxVal);
+    AlgSort((void *) vertices, (size_t) numVtxs, sizeof(WlzIVertex3),
+	    compareVtxVal);
 
     /* create planedomain */
     plane1 = vertices[0].vtZ;
