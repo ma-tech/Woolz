@@ -177,6 +177,7 @@ extern WlzObject		*WlzThresholdI(
 				  int thr,
 				  WlzThresholdType hilo,
 				  WlzErrorNum *dstErr);
+#ifndef WLZ_EXT_BIND
 extern WlzObject               *WlzMakeRectI(
 				  int line1,
 				  int lastln,
@@ -199,6 +200,7 @@ extern WlzObject		*WlzMakeRectD(
                                   WlzPropertyList *plist,
                                   WlzObject *assoc_obj,
                                   WlzErrorNum *dstErr);
+#endif /* WLZ_EXT_BIND */
 extern WlzObject		*WlzMakeCuboidI(
                                   int plane1,
                                   int lastpl,
