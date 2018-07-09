@@ -48,7 +48,7 @@ WlzPointsFromDomain - computes points from a given spatial domain object.
 \par Synopsis
 \verbatim
 WlzPointsFromDomain [-d#] [-D #,#[#]] [-g[<min>][,<max>][,<gam>]] [-G] [-M]
-                [-o<output object>] [-h] [-T] [-x] [<input object>]
+                [-N] [-o<output object>] [-h] [-T] [-x] [<input object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -72,6 +72,10 @@ WlzPointsFromDomain [-d#] [-D #,#[#]] [-g[<min>][,<max>][,<gam>]] [-G] [-M]
   <tr> 
     <td><b>-M</b></td>
     <td>Transform the sampled grey values using gamma function.</td>
+  </tr>
+  <tr> 
+    <td><b>-N</b></td>
+    <td>Normalise sampled grey values to range [g_min - 255].</td>
   </tr>
   <tr> 
     <td><b>-o</b></td>
@@ -147,6 +151,7 @@ int		main(int argc, char *argv[])
 		samGrey = 0,
 		useGrey = 0,
 		useGreyGamma = 0,
+		useGreyNorm = 0,
 		voxelScaling = 0;
   char		*inFileStr,
 		*outFileStr;
@@ -161,7 +166,7 @@ int		main(int argc, char *argv[])
   struct timeval times[3];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*errMsgStr;
-  static char	optList[] = "hGMTxd:D:g:o:";
+  static char	optList[] = "hGMNTxd:D:g:o:";
   const char    fileStrDef[] = "-";
 
   /* Parse the argument list and check for input files. */
@@ -232,6 +237,9 @@ int		main(int argc, char *argv[])
 	break;
       case 'M':
         useGreyGamma = 1;
+	break;
+      case 'N':
+        useGreyNorm = 1;
 	break;
       case 'o':
 	outFileStr = optarg;
@@ -312,13 +320,15 @@ int		main(int argc, char *argv[])
       {
 	int	idx;
 	double 	g,
-		gr;
+		gr,
+		gx;
 	WlzPoints *pd;
 	WlzPointValues *pv;
 
         pd = outDom.pts;
 	pv = outVal.pts;
 	gr = gMax - gMin;
+	gx = (useGreyNorm)? 255.0 - gMin: gr;
 	switch(pv->vType)
 	{
 	  case WLZ_GREY_INT:
@@ -326,7 +336,7 @@ int		main(int argc, char *argv[])
 	    {
               g = pv->values.inp[idx];
               g = (g - gMin) / gr;
-              g = gMin  + (gr * pow(g, gGam));
+              g = gMin  + (gx * pow(g, gGam));
 	      pv->values.inp[idx] = (int )WLZ_CLAMP(g, INT_MIN, INT_MAX);
 	    }
 	    break;
@@ -335,7 +345,7 @@ int		main(int argc, char *argv[])
 	    {
               g = pv->values.shp[idx];
               g = (g - gMin) / gr;
-              g = gMin  + (gr * pow(g, gGam));
+              g = gMin  + (gx * pow(g, gGam));
 	      pv->values.shp[idx] = (short )WLZ_CLAMP(g, SHRT_MIN, SHRT_MAX);
 	    }
 	    break;
@@ -345,7 +355,7 @@ int		main(int argc, char *argv[])
 
               g = pv->values.ubp[idx];
               g = (g - gMin) / gr;
-              g = gMin  + (gr * pow(g, gGam));
+              g = gMin  + (gx * pow(g, gGam));
 	      pv->values.ubp[idx] = (WlzUByte )WLZ_CLAMP(g, 0, 255);
 	    }
 	    break;
@@ -355,7 +365,7 @@ int		main(int argc, char *argv[])
 
               g = pv->values.flp[idx];
               g = (g - gMin) / gr;
-              g = gMin  + (gr * pow(g, gGam));
+              g = gMin  + (gx * pow(g, gGam));
 	      pv->values.flp[idx] = (float )WLZ_CLAMP(g, -FLT_MAX, FLT_MAX);
 	    }
 	    break;
@@ -365,7 +375,7 @@ int		main(int argc, char *argv[])
 
               g = pv->values.dbp[idx];
               g = (g - gMin) / gr;
-              g = gMin  + (gr * pow(g, gGam));
+              g = gMin  + (gx * pow(g, gGam));
 	      pv->values.dbp[idx] = g;
 	    }
 	    break;
@@ -433,7 +443,8 @@ int		main(int argc, char *argv[])
   {
     (void )fprintf(stderr,
     "Usage: %s [-d#] [-D#,#[,#]] [-g[<min>][,<max>][,<gam>]] [-G]\n"
-    "\t\t[-M] [-o<output file>] [-T] [-x] [-h] [<Reference object file>]\n"
+    "\t\t[-M] [-N] [-o<output file>] [-T] [-x] [-h]\n"
+    "\t\t[<Reference object file>]\n"
     "Computes points from a given spatial domain object.\n"
     "If the given objects grey values are used, then the probability of\n"
     "a point being placed is proportional to:\n"
@@ -446,6 +457,7 @@ int		main(int argc, char *argv[])
     "  -g  Use given object grey values to determine point density.\n"
     "  -G  Include sampled grey values.\n"
     "  -M  Transform the sampled grey values using gamma function.\n"
+    "  -N  Normalise sampled grey values to range [g_min - 255].\n" 
     "  -o  Output object file.\n"
     "  -T  Report elapsed time.\n"
     "  -x  Use voxel size scaling.\n"
