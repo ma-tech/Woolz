@@ -1334,29 +1334,36 @@ WlzPointValues	*WlzMakePointValues(size_t nP,
   return(pv);
 }
 
-/*! 
-* \ingroup      WlzAllocation
-* \brief        Make a polygon domain, allocating space and copying as
-required:
+/*!
+* \return	Pointer to the initialised polygon domain.
+* \ingroup	WlzAllocation
+* \brief	Makes a polygon domain, allocating space and copying
+* 		vertices as required acording to the copy flag.
+*		The polygon domain must be freed when longer required
+*		using WlzFreePolyDmn().
+* \param	type		Required type of the polygon domain;
+* 				WLZ_POLYGON_INT, WLZ_POLYGON_FLOAT or
+* 				WLZ_POLYGON_DOUBLE.
+* \param	n		Number of vertices, required if vertices
+* 				pointer is not NULL.
+* \param	vertices	Vertices pointer, either an array of
+* 				vertices or NULL. Although this is of
+* 				type WlzIVertex2 *, the vertex type
+* 				must match the polygon type (eg WlzDVertex2 *
+* 				for WLZ_POLYGON_DOUBLE). Vertices
+* 				should be passed by casting the 
+* 				vertex pointer to WlzIVertex2 * if required.
+* \param	maxv		Size of the vertex array, ie the maximum number
+* 				of vertices that the polygon domain may
+* 				hold.
+* \param	copy		Copy flag:
 <ul>
-<li>vertices != NULL,  copy=0 - just plant the pointer </li>
-<li>vertices != NULL,  copy=1 - allocate space and copy </li>
-<li>vertices == NULL,  copy=0 - no vertex space allocated\n
-probably an error!!</li>
+<li>vertices == NULL,  copy=0 - no vertex space allocated</li>
+<li>vertices != NULL,  copy=0 - just plant the pointer</li>
 <li>vertices == NULL,  copy=1 - allocate space for maxv vertices</li>
+<li>vertices != NULL,  copy=1 - allocate space and copy</li>
 </ul>
-
-*
-* \return       Pointer to the initialised structure.
-* \param    type	one of WLZ_POLYGON_INT, WLZ_POLYGON_FLOAT,
- WLZ_POLYGON_DOUBLE
- * \param    n	number of vertices if vertices!=NULL.
- * \param    vertices	vertices to be set, see type for value options.
- * \param    maxv	size of array if vertices!=NULL else number of vertices for which space it to be allocated.
- * \param    copy	copy flag see description for values.
- * \param    dstErr	Error return, values: WLZ_ERR_NONE, WLZ_ERR_PARAM_DATA, WLZ_ERR_MEM_ALLOC.
-* \par      Source:
-*                WlzMakeStructs.c
+* \param	dstErr		Destination error pointer, may be NULL.
 */
 WlzPolygonDomain *
 WlzMakePolygonDomain(WlzObjectType	type,
