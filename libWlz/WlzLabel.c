@@ -61,7 +61,7 @@ typedef struct {
 typedef struct _WlzLLink {
   struct _WlzLLink *l_link;
   union {
-    unsigned long long line;
+    WlzULong line;
     struct _WlzLLink *u_link;
     WlzInterval intv;
   } l_u;
@@ -99,7 +99,7 @@ static WlzLLink 		*addlink1(
 				  WlzAllocChunk *ac,
 				  WlzLLink *chainbase,
 				  WlzLLink *chain,
-				  unsigned long entry);
+				  WlzULong entry);
 static WlzLLink 		*addlink2(
 				  WlzAllocChunk *ac,
 				  WlzLLink *chainbase,
@@ -116,7 +116,7 @@ static WlzLLink 		*getlink(
 static WlzLLink			*newchain1(
 				  WlzAllocChunk *ac,
 				  WlzLLink *chainbase,
-				  unsigned long entry);
+				  WlzULong entry);
 static WlzLLink 		*newchain2(
 				  WlzAllocChunk *ac,
 				  WlzLLink *chainbase,
@@ -379,13 +379,13 @@ WlzErrorNum 			WlzLabel(
 	   * interval list. */
 	  link1 = newchain2(&aChunk, freechain, lftcrn, jrtcrn);
 	  /* Line-of-intervals list. */
-	  link2 = newchain1(&aChunk, freechain, (unsigned long )link1);
+	  link2 = newchain1(&aChunk, freechain, (WlzULong )link1);
 	  /* "object" -- first line, last line, line-of-intervals pointer */
-	  crntal->a_link = newchain1(&aChunk, freechain,line);
+	  crntal->a_link = newchain1(&aChunk, freechain, (WlzULong )line);
 	  crntal->a_link = addlink1(&aChunk, freechain, crntal->a_link,
-	                            (unsigned long )line);
+	                            (WlzULong )line);
 	  crntal->a_link = addlink1(&aChunk, freechain, crntal->a_link,
-	                            (unsigned long )link2);
+	                            (WlzULong )link2);
 	}
 	/* Move on to next interval in current line. */
 	crntal++;
@@ -413,7 +413,7 @@ WlzErrorNum 			WlzLabel(
 	      link1 = newchain2(&aChunk, freechain,lftcrn,jrtcrn);
 	      alloc->l_u.u_link = addlink1(&aChunk,
 	                                   freechain, alloc->l_u.u_link,
-	                                   (unsigned long )link1);
+	                                   (WlzULong )link1);
 	    }
 	    else
 	    {
@@ -633,7 +633,7 @@ LOOPEND:
 static WlzLLink 		*newchain1(
 				  WlzAllocChunk *ac,
 				  WlzLLink *chainbase,
-			          unsigned long entry)
+			          WlzULong entry)
 {
   WlzLLink *newlink;
 
@@ -670,7 +670,7 @@ static WlzLLink 		*addlink1(
 				  WlzAllocChunk *ac,
 				  WlzLLink *chainbase,
 				  WlzLLink *chain,
-				  unsigned long entry)
+				  WlzULong entry)
 {
   WlzLLink *newlink;
 

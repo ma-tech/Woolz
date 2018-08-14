@@ -74,6 +74,17 @@ typedef long long  WlzLong;
 #endif /* WLZ_EXT_BIND */
 
 /*!
+* \typedef	WlzULong
+* \ingroup	WlzType
+* \brief        A 64 bit unsigned integer.
+*/
+#ifdef WLZ_EXT_BIND
+typedef unsigned long  WlzULong;
+#else /* WLZ_EXT_BIND */
+typedef unsigned long long  WlzULong;
+#endif /* WLZ_EXT_BIND */
+
+/*!
 * \enum		_WlzGreyType
 * \ingroup	WlzType
 * \brief	The valid grey value types.
