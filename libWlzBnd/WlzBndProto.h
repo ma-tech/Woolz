@@ -225,6 +225,17 @@ extern WlzObject		*WlzMakeCuboidD(
                                   WlzPropertyList *plist,
                                   WlzObject *assocObj,
                                   WlzErrorNum *dstErr);
+extern WlzObject 		*WlzGreyMaskI(
+				  WlzObject *obj,
+				  WlzObject *mask,
+				  int maskVal,
+				  WlzErrorNum *dstErr);
+extern WlzObject 		*WlzGreyMaskD(
+				  WlzObject *obj,
+				  WlzObject *mask,
+				  double maskVal,
+				  WlzErrorNum *dstErr);
+
 
 #ifndef WLZ_EXT_BIND
 #ifdef  __cplusplus

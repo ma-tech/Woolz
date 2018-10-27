@@ -692,3 +692,65 @@ WlzObject			*WlzMakeCuboidD(
                       pixType, bgdV, plist, assocObj, dstErr);
   return(obj);
 }
+
+/*! 
+* \return       New object with the same domain as the input object or
+* 		NULL on error.
+* \ingroup      LibWlzBnd
+* \brief        Wrapper avoiding pixel type for WlzGreyMask() which
+* 		sets the value maskVal within the domain given by the	
+*		mask object. The mask object can be a 2D, 3D, polygon	
+*		or boundary object. A 3D mask with a 2D object is an	
+*		error. A 2D mask with a 3D object will be applied to	
+*		each plane in turn.			
+*		See also WlzMakeCuboidD().
+* \param	obj			Input object
+* \param	mask			Mask object.
+* \param	maskVal			Integer mask value.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject 			*WlzGreyMaskI(
+				  WlzObject *obj,
+				  WlzObject *mask,
+				  int maskVal,
+				  WlzErrorNum *dstErr)
+{
+  WlzObject     *rObj = NULL;
+  WlzPixelV	maskV;
+
+  maskV.type = WLZ_GREY_INT;
+  maskV.v.inv = maskVal;
+  rObj = WlzGreyMask(obj, mask, maskV, dstErr);
+  return(rObj);
+}
+
+/*! 
+* \return       New object with the same domain as the input object or
+* 		NULL on error.
+* \ingroup      LibWlzBnd
+* \brief        Wrapper avoiding pixel type for WlzGreyMask() which
+* 		sets the value maskVal within the domain given by the	
+*		mask object. The mask object can be a 2D, 3D, polygon	
+*		or boundary object. A 3D mask with a 2D object is an	
+*		error. A 2D mask with a 3D object will be applied to	
+*		each plane in turn.			
+*		See also WlzMakeCuboidI().
+* \param	obj			Input object
+* \param	mask			Mask object.
+* \param	maskVal			Double mask value.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject 			*WlzGreyMaskD(
+				  WlzObject *obj,
+				  WlzObject *mask,
+				  double maskVal,
+				  WlzErrorNum *dstErr)
+{
+  WlzObject     *rObj = NULL;
+  WlzPixelV	maskV;
+
+  maskV.type = WLZ_GREY_DOUBLE;
+  maskV.v.dbv = maskVal;
+  rObj = WlzGreyMask(obj, mask, maskV, dstErr);
+  return(rObj);
+}
