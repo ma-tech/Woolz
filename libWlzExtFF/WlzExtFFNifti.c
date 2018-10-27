@@ -752,12 +752,12 @@ static WlzObject *WlzEffNiftiToObj2D(nifti_image *nim,
   bgdV.type = WLZ_GREY_INT;
   bgdV.v.inv = 0;
   objs[0] = objs[1] = NULL;
-  wBPP = WlzGreySize(wGType);
   errNum = WlzEffNiftiToWlzType(nim, &nVPP, &wGType);
   if(errNum == WLZ_ERR_NONE)
   {
     sz.vtX = nim->dim[1];
     sz.vtY = nim->dim[2];
+    wBPP = WlzGreySize(wGType);
     errNum = WlzValueConvertPixel(&bgdV, bgdV, wGType);
   }
   if(errNum == WLZ_ERR_NONE)
