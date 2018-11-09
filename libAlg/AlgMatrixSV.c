@@ -649,7 +649,7 @@ AlgError	AlgMatrixSVBackSub(AlgMatrix uMat, double *wVec, AlgMatrix vMat,
 
   ALG_DBG((ALG_DBG_LVL_FN|ALG_DBG_LVL_1), ("AlgMatrixSVBackSub FE\n"));
   if((uMat.core == NULL) || (uMat.core->type != ALG_MATRIX_RECT) ||
-     (vMat.core == NULL) || (vMat.core->type != vMat.core->type) ||
+     (vMat.core == NULL) || (vMat.core->type != ALG_MATRIX_RECT) ||
      (uMat.core->nR <= 0) || (uMat.core->nR < uMat.core->nC) ||
      (uMat.core->nR != vMat.core->nR) || (uMat.core->nC != vMat.core->nC) ||
      (wVec == NULL) || (bVec == NULL))
