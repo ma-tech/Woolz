@@ -135,7 +135,7 @@ int		main(int argc, char *argv[])
         outObjStr = optarg;
 	break;
       case 'u':
-	for(*o = optarg; *o; ++o)
+	for(o = optarg; *o; ++o)
 	{
 	  *o = tolower(*o);
 	}
