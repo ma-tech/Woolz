@@ -301,7 +301,7 @@ WlzErrorNum	WlzGreyScalarAddValue(
 	break;
 
       case WLZ_GREY_RGBA:
-	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++)
+	for (i = 0; i < iwsp.colrmn; i++, gptr.rgbp++) {
 	  red = WLZ_RGBA_RED_GET(*gptr.rgbp) + tmpVal.v.dbv;
 	  green = WLZ_RGBA_GREEN_GET(*gptr.rgbp) + tmpVal.v.dbv;
 	  blue = WLZ_RGBA_BLUE_GET(*gptr.rgbp) + tmpVal.v.dbv;
@@ -310,6 +310,7 @@ WlzErrorNum	WlzGreyScalarAddValue(
 	  green = WLZ_CLAMP(red, 0, 255);
 	  blue = WLZ_CLAMP(red, 0, 255);
 	  WLZ_RGBA_RGBA_SET(*gptr.rgbp, red, green, blue, alpha);
+	}
 	break;
 
       default:
@@ -437,7 +438,7 @@ WlzErrorNum	WlzGreyScalarMultValue(
 	break;
 
       case WLZ_GREY_RGBA:
-	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++)
+	for (i = 0; i < iwsp.colrmn; i++, gptr.rgbp++) {
 	  red = WLZ_RGBA_RED_GET(*gptr.rgbp) * tmpVal.v.dbv;
 	  green = WLZ_RGBA_GREEN_GET(*gptr.rgbp) * tmpVal.v.dbv;
 	  blue = WLZ_RGBA_BLUE_GET(*gptr.rgbp) * tmpVal.v.dbv;
@@ -446,6 +447,7 @@ WlzErrorNum	WlzGreyScalarMultValue(
 	  green = WLZ_CLAMP(red, 0, 255);
 	  blue = WLZ_CLAMP(red, 0, 255);
 	  WLZ_RGBA_RGBA_SET(*gptr.rgbp, red, green, blue, alpha);
+	}
 	break;
 
       default:
@@ -573,7 +575,7 @@ WlzErrorNum	WlzGreyScalarDivValue(
 	break;
 
       case WLZ_GREY_RGBA:
-	for (i=0; i<iwsp.colrmn; i++, gptr.rgbp++)
+	for (i = 0; i < iwsp.colrmn; i++, gptr.rgbp++) {
 	  red = WLZ_RGBA_RED_GET(*gptr.rgbp) / tmpVal.v.dbv;
 	  green = WLZ_RGBA_GREEN_GET(*gptr.rgbp) / tmpVal.v.dbv;
 	  blue = WLZ_RGBA_BLUE_GET(*gptr.rgbp) / tmpVal.v.dbv;
@@ -582,6 +584,7 @@ WlzErrorNum	WlzGreyScalarDivValue(
 	  green = WLZ_CLAMP(red, 0, 255);
 	  blue = WLZ_CLAMP(red, 0, 255);
 	  WLZ_RGBA_RGBA_SET(*gptr.rgbp, red, green, blue, alpha);
+	}
 	break;
 
       default:
