@@ -242,7 +242,7 @@ WlzErrorNum	WlzMeshVxVecAdd(WlzMeshTransform *mesh, WlzDVertex2 *vxVec,
 	  tD0 = WlzGeomTriangleSnArea2((mesh->nodes + elm->nodes[0])->position,
 				       (mesh->nodes + elm->nodes[1])->position,
 				       (mesh->nodes + elm->nodes[2])->position);
-	  if(tD0 >= minDistSq);
+	  if(tD0 >= minDistSq)
 	  {
 	    /* Find elements in conflict with the new node vertex. */
 	    eCnfQVec.count = 0;
@@ -394,7 +394,7 @@ WlzErrorNum	WlzMeshIDomAdd(WlzMeshTransform *mesh, WlzObject *obj,
 					  elm->nodes[1])->position,
 					 (mesh->nodes +
 					  elm->nodes[2])->position);
-	    if(tD0 >= minDistSq);
+	    if(tD0 >= minDistSq)
 	    {
 	      /* Find elements in conflict with the new node vertex. */
 	      eCnfQVec.count = 0;
