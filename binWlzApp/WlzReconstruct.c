@@ -725,7 +725,7 @@ static unsigned WlzRecParseCSD(int nVal, double *val, char *gStr)
   idx = 0;
   while(ok && (idx < (nVal - 1)))
   {
-    ok = ((cmpStr1 = strchr(cmpStr0, ',')) != NULL) && (cmpStr1 != '\0');
+    ok = ((cmpStr1 = strchr(cmpStr0, ',')) != NULL) && (*cmpStr1 != '\0');
     if(ok)
     {
       *cmpStr1 = '\0';
