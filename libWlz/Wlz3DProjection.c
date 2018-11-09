@@ -904,7 +904,7 @@ struct timeval	times[3];
 	}
       }
     }
-    switch(intMod != WLZ_PROJECT_INT_MODE_NONE)
+    if(intMod != WLZ_PROJECT_INT_MODE_NONE)
     {
       buf0.inp = ((int ***)(prjAry))[0][0];
       for(idC = 0; idC < bufSz; ++idC)
