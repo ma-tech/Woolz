@@ -5547,6 +5547,19 @@ extern WlzBoundList 		*WlzBoundSmooth(
 				  int iterations,
 				  WlzErrorNum *dstErr);
 /************************************************************************
+* WlzProfile.c
+************************************************************************/
+extern WlzObject		*WlzProfileLine(
+				  WlzObject *gObj,
+				  WlzIVertex3 sPos,
+				  WlzIVertex3 ePos,
+				  WlzErrorNum *dstErr);
+extern WlzIntervalDomain	*WlzProfileLineIDom(
+				  WlzObject *gObj,
+				  WlzIVertex3 sPos,
+				  WlzIVertex3 ePos,
+				  WlzErrorNum *dstErr);
+/************************************************************************
 * WlzPrinicipalAngle.c
 ************************************************************************/
 extern double 			WlzPrincipalAngle(
