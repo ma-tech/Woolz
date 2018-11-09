@@ -125,7 +125,8 @@ int             main(int argc, char *argv[])
   }
   if(ok)
   {
-    if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
+    if((inObjFileStr[0] == NULL) || (*inObjFileStr[0] == '\0') ||
+       (inObjFileStr[1] == NULL) || (*inObjFileStr[1] == '\0') ||
        (outObjFileStr == NULL) || (*outObjFileStr == '\0'))
     {
       ok = 0;
