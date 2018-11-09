@@ -42,6 +42,8 @@ static char _WlzTensor_c[] = "University of Edinburgh $Id$";
 #include <Wlz.h>
 
 #ifdef _OPENMP
+#include <omp.h>
+
 #define WLZ_TENSOR_OMP_CHUNKSZ 4096   /* To avoid parallelising small loops. */
 #endif
 
