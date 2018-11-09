@@ -1434,7 +1434,7 @@ static WlzErrorNum		WlzCMeshExpWSpAddNod(
   }
   /* Put the new entry into the queue so that the previous queue entry is
    * either NULL or has a propagation distance <= the new entry. */
-  if(errNum == WLZ_ERR_NONE);
+  if(errNum == WLZ_ERR_NONE)
   {
     if(wSp->head == NULL)
     {
