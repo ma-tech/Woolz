@@ -180,6 +180,7 @@ bin_PROGRAMS		= \
 			  WlzPolarSample \
 			  WlzPolygonToObj \
 			  WlzPrinicipalAngle \
+			  WlzProfileObj \
 			  WlzRandomAffineTransform \
 			  WlzRankObj \
 			  WlzRasterObj \
@@ -770,6 +771,10 @@ WlzPolygonToObj_LDFLAGS			= $(AM_LFLAGS)
 WlzPrinicipalAngle_SOURCES		= WlzPrinicipalAngle.c
 WlzPrinicipalAngle_LDADD		= $(LDADD)
 WlzPrinicipalAngle_LDFLAGS		= $(AM_LFLAGS)
+
+WlzProfileObj_SOURCES			= WlzProfileObj.c
+WlzProfileObj_LDADD			= $(LDADD)
+WlzProfileObj_LDFLAGS			= $(AM_LFLAGS)
 
 WlzRandomAffineTransform_SOURCES	= WlzRandomAffineTransform.c
 WlzRandomAffineTransform_LDADD		= $(LDADD)
