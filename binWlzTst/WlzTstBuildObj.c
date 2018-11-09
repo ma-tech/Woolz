@@ -214,7 +214,6 @@ int		main(int argc, char *argv[])
   (void )WlzFreeObj(obj);
   if(usage)
   {
-  static char   optList[] = "dhn:o:s:x:y:z:";
     (void )fprintf(stderr,
     "Usage: %s [-d] [-h] [-n#] [-o<file>] [-s#,#]\n"
     "\t\t[-x[#][,[#]]] [-y[#][,[#]]] [-z[#][,[#]]]\n"
