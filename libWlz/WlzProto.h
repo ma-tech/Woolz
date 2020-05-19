@@ -3641,6 +3641,19 @@ extern WlzObject 		*WlzGreyDitherObj(WlzObject *o,
 				   WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzGreyExtremum.c                                                     *
+************************************************************************/
+extern WlzIVertex3		WlzGreyExtremumPos(
+                                  WlzObject *gObj,
+                                  int max,
+                                  WlzPixelV *dstVal,
+                                  WlzErrorNum *dstErr);
+extern WlzObject                *WlzGreyExtremumObj(
+                                  WlzObject *gObj,
+                                  int max,
+                                  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzGreyGradient.c							*
 ************************************************************************/
 extern WlzObject 		*WlzGreyGradient(
@@ -4366,6 +4379,19 @@ extern WlzObject       		*WlzLaplacian(
 extern int			WlzLineArea(
 				  WlzObject *obj,
 		       		  WlzErrorNum *dstErr);
+
+/************************************************************************
+* WlzLineSkeleton.c                                                     *
+************************************************************************/
+extern WlzObject		*WlzLineSkeleton(
+				  WlzObject *obj,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzLineSkeletonSegment(
+				  WlzObject *gObj,
+				  WlzObjectType rObjType,
+				  WlzIVertex3 p0,
+				  WlzIVertex3 p1,
+				  WlzErrorNum *dstErr);
 
 #ifndef WLZ_EXT_BIND
 /************************************************************************

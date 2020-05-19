@@ -131,6 +131,7 @@ libWlz_la_SOURCES 	= \
 			  WlzGeoModelStats.c \
 			  WlzGreyCrossing.c \
 			  WlzGreyDitherObj.c \
+			  WlzGreyExtremum.c \
 			  WlzGreyGradient.c \
 			  WlzGreyInvertMinMax.c \
 			  WlzGreyMask.c \
@@ -170,6 +171,7 @@ libWlz_la_SOURCES 	= \
 			  WlzLaplacian.c \
 			  WlzLBTDomain.c \
 			  WlzLineArea.c \
+			  WlzLineSkeleton.c \
 			  WlzLUT.c \
 			  WlzMakeAffineTransform.c \
 			  WlzMakeCompound.c \

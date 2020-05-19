@@ -159,6 +159,8 @@ bin_PROGRAMS		= \
 			  WlzIsEmpty \
 			  WlzLabel \
 			  WlzLaplacian \
+			  WlzLineSkeleton \
+			  WlzLineSkeletonSegment \
 			  WlzLUTGreyTransformFromTxt \
 			  WlzLUTGreyTransformObj \
 			  WlzLUTGreyTransformMerge \
@@ -687,6 +689,14 @@ WlzLabel_LDFLAGS			= $(AM_LFLAGS)
 WlzLaplacian_SOURCES			= WlzLaplacian.c
 WlzLaplacian_LDADD			= $(LDADD)
 WlzLaplacian_LDFLAGS			= $(AM_LFLAGS)
+
+WlzLineSkeleton_SOURCES			= WlzLineSkeleton.c
+WlzLineSkeleton_LDADD			= $(LDADD)
+WlzLineSkeleton_LDFLAGS			= $(AM_LFLAGS)
+
+WlzLineSkeletonSegment_SOURCES		= WlzLineSkeletonSegment.c
+WlzLineSkeletonSegment_LDADD		= $(LDADD)
+WlzLineSkeletonSegment_LDFLAGS		= $(AM_LFLAGS)
 
 WlzLUTGreyTransformFromTxt_SOURCES	= WlzLUTGreyTransformFromTxt.c
 WlzLUTGreyTransformFromTxt_LDADD	= $(LDADD)
