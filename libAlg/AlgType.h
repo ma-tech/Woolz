@@ -52,6 +52,7 @@ extern "C" {
 /* Standard min, max, absolute value and nearest integer macros */
 #define	ALG_MAX(X,Y)	(((X)>(Y))?(X):(Y))
 #define	ALG_MIN(X,Y)	(((X)<(Y))?(X):(Y))
+#define ALG_CLAMP(V,N,X) (((V)<(N))?(N):((V)>(X))?(X):(V))
 #define	ALG_MAXIDX(X,Y)	(((X)>(Y))?(0):(1))
 #define	ALG_MINIDX(X,Y)	(((X)<(Y))?(0):(1))
 #define	ALG_ABS(X)	(((X)>0)?(X):(-(X)))
@@ -270,6 +271,8 @@ typedef enum _AlgError
   				     solution. */
   ALG_ERR_READ,			/*!< Read failure. */
   ALG_ERR_WRITE,		/*!< Write failure. */
+  ALG_ERR_UNIMPLEMENTED,	/*!< Unimplemented code. */
+  ALG_ERR_UNKNOWN,		/*!< Catch all, all other error causes. */
   ALG_ERR_MAX
 } AlgError;
 

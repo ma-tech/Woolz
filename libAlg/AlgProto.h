@@ -84,6 +84,75 @@ extern int			AlgBitNextPowerOfTwo(
 extern int			AlgBitIsPowerOfTwo(
 				  unsigned int gI);
 
+/* From AlgBSpline.c */
+extern void                     AlgBSplineBspl(
+                                  double *t,
+                                  int k,
+                                  double x,
+                                  int l,
+                                  double *h);
+extern AlgError			AlgBSplineNDFit(
+                                  int iopt,
+                                  int ipar,
+                                  int idim,
+                                  int m,
+                                  double *u,
+                                  int mx,
+                                  double *x,
+                                  double *w,
+                                  double ub,
+                                  double ue,
+                                  int k,
+                                  double s,
+                                  int nest,
+                                  int *n,
+                                  double *t,
+                                  int *nc,
+                                  double *c,
+                                  double *fp,
+                                  double *wrk,
+                                  int *iwrk);
+extern AlgError			AlgBSplinePerFit(
+				  int iopt,
+				  int m,
+				  double *x,
+				  double *y,
+				  double *w,
+				  int k,
+				  double s,
+				  int nest,
+				  int *n,
+				  double *t,
+				  double *c,
+				  double *fp,
+				  double *wrk,
+				  int *iwrk);
+extern AlgError			AlgBSplineFit(
+				  int iopt,
+				  int m,
+				  double *x,
+				  double *y,
+				  double *w,
+				  double xb,
+				  double xe,
+				  int k,
+				  double s,
+				  int nest,
+				  int *n,
+				  double *t,
+				  double *c,
+				  double *fp,
+				  double *wrk,
+				  int *iwrk);
+extern AlgError			AlgBSplineEval(
+                                  double *t,
+                                  int n,
+                                  double *c,
+                                  int k,
+                                  double * x,
+                                  double *y,
+                                  int m);
+
 /* From AlgComplexUtils.c */
 extern double			AlgCModSq(
 				  ComplexD z);

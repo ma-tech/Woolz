@@ -43,6 +43,7 @@ LDADD 			= -L$(top_srcdir)/libAlg/.libs -lAlg \
 			  -lm
 
 bin_PROGRAMS		= \
+			  AlgTstBSpline \
 			  AlgTstConvolve1 \
 			  AlgTstCrossCorr1 \
 			  AlgTstFourier \
@@ -64,6 +65,10 @@ bin_PROGRAMS		= \
 			  AlgTstRank1 \
 			  AlgTstShuffle1 \
 			  AlgTstShuffle2
+
+AlgTstBSpline_SOURCES			= AlgTstBSpline.c
+AlgTstBSpline_LDADD			= $(LDADD)
+AlgTstBSpline_LDFLAGS			= $(AM_LFLAGS)
 
 AlgTstConvolve1_SOURCES			= AlgTstConvolve1.c
 AlgTstConvolve1_LDADD			= $(LDADD)

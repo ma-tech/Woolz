@@ -45,6 +45,7 @@ libAlg_la_LDFLAGS 	= -release @PACKAGE_VERSION@
 libAlg_la_SOURCES 	= \
 			  AlgAutoCorr.c \
 			  AlgBits.c \
+			  AlgBSpline.c \
 			  AlgComplexUtils.c \
 			  AlgConvolve.c \
 			  AlgCrossCorr.c \
