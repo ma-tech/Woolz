@@ -3912,7 +3912,7 @@ L80:
 * \brief	Computes a smooth approximating b-spline in multi-dimensional
 *		space. See AlgBSplineNDFit().
 * 
-* This function has been derived from the netlib Dierckx function fpperi().
+* This function has been derived from the netlib Dierckx function fppara().
 * The original fortran coments are included in the code below.
 *
 * \param	iopt
