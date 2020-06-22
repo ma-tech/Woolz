@@ -6,7 +6,7 @@ static char _AlgTstBSpline_c[] = "University of Edinburgh $Id$";
 /*!
 * \file         binAlgTst/AlgTstBSpline.c
 * \author       Bill Hill
-* \date         September 2011
+* \date         June 2020
 * \version      $Id$
 * \par
 * Address:
