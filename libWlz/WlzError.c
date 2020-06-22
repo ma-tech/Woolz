@@ -91,6 +91,10 @@ WlzErrorNum	WlzErrorFromAlg(AlgError algErr)
     case ALG_ERR_WRITE:
       wlzErr = WLZ_ERR_WRITE_INCOMPLETE;
       break;
+    case ALG_ERR_UNIMPLEMENTED:
+      wlzErr = WLZ_ERR_UNIMPLEMENTED;
+      break;
+    case ALG_ERR_UNKNOWN: /* FALLTHROUGH */
     default:
       wlzErr = WLZ_ERR_ALG;
       break;
