@@ -43,6 +43,7 @@ static char _WlzVerticies_c[] = "University of Edinburgh $Id$";
 
 #include <limits.h>
 #include <float.h>
+#include <string.h>
 #include <Wlz.h>
 
 static WlzVertexP 		WlzVerticesFromPoly2(
@@ -68,6 +69,11 @@ static WlzVertexP 		WlzVerticesFromGM3(
 				  WlzGMModel *model,
 				  WlzVertexP *dstNr,
 				  int **dstVId,
+				  int *dstCnt,
+				  WlzVertexType *dstType,
+				  WlzErrorNum *dstErr);
+static WlzVertexP 		WlzVerticesFromPoints(
+				  WlzPoints *pts,
 				  int *dstCnt,
 				  WlzVertexType *dstType,
 				  WlzErrorNum *dstErr);
@@ -182,6 +188,10 @@ WlzVertexP	WlzVerticesFromObj(WlzObject *obj, WlzVertexP *dstNr,
       case WLZ_CONTOUR:
 	vData = WlzVerticesFromGM(obj->domain.ctr->model, dstNr, NULL,
 				    dstCnt, dstType, &errNum);
+	break;
+      case WLZ_POINTS:
+        vData = WlzVerticesFromPoints(obj->domain.pts, dstCnt, dstType,
+				      &errNum);
 	break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
@@ -519,6 +529,76 @@ WlzErrorNum	WlzVerticesFromObj3I(WlzObject *obj,
 }
 
 /*!
+* \return	Allocated vertices.
+* \ingroup	WlzFeatures
+* \brief	Allocates a buffer which it fills with the vertices from
+* 		a points domain.
+* \param	pts			Given points domain.
+* \param	dstCnt			Destination ptr for the number of
+*					vertices.
+* \param	dstType			Destination ptr for the type of
+* 					vertices.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzVertexP WlzVerticesFromPoints(WlzPoints *pts, int *dstCnt,
+                                        WlzVertexType *dstType,
+					WlzErrorNum *dstErr)
+{
+  size_t	sz;
+  WlzVertexType	type = WLZ_VERTEX_ERROR;
+  WlzVertexP	vData;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  vData.v = NULL;
+  if(pts && (pts->nPoints > 0))
+  {
+    switch(pts->type)
+    {
+      case WLZ_POINTS_2I:
+        type = WLZ_VERTEX_I2;
+	sz = sizeof(WlzIVertex2);
+	break;
+      case WLZ_POINTS_2D:
+        type = WLZ_VERTEX_D2;
+	sz = sizeof(WlzDVertex2);
+	break;
+      case WLZ_POINTS_3I:
+        type = WLZ_VERTEX_I3;
+	sz = sizeof(WlzIVertex3);
+	break;
+      case WLZ_POINTS_3D:
+        type = WLZ_VERTEX_D3;
+	sz = sizeof(WlzDVertex3);
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_DATA;
+	break;
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      size_t	nsz;
+
+      nsz = pts->nPoints * sz;
+      if((vData.v = AlcMalloc(nsz)) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else
+      {
+        (void )memcpy(vData.v, pts->points.v, nsz);
+	*dstType = type;
+	*dstCnt = pts->nPoints;
+      }
+    }
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vData);
+}
+
+/*!
 * \ingroup      WlzFeatures
 * \return				Allocated vertices.
 * \brief	Allocates a buffer which it fills with the vertices
@@ -772,6 +852,92 @@ WlzVertexP 	WlzDVerticesFromGM(WlzGMModel *model,
     *dstErr = errNum;
   }
   return(vData);
+}
+
+/*!
+* \return	Size of a vertex type or zero on error.
+* \ingroup	WlzFeatures
+* \brief	Returns the size of the given vertex type.
+* \param	type			Given vertex type.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+size_t		WlzVertexSize(WlzVertexType type, WlzErrorNum *dstErr)
+{
+  size_t	sz = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(type)
+  {
+    case WLZ_VERTEX_I2:
+      sz = sizeof(WlzIVertex2);
+      break;
+    case WLZ_VERTEX_F2:
+      sz = sizeof(WlzFVertex2);
+      break;
+    case WLZ_VERTEX_D2:
+      sz = sizeof(WlzDVertex2);
+      break;
+    case WLZ_VERTEX_L2:
+      sz = sizeof(WlzLVertex2);
+      break;
+    case WLZ_VERTEX_I3:
+      sz = sizeof(WlzIVertex3);
+      break;
+    case WLZ_VERTEX_F3:
+      sz = sizeof(WlzFVertex3);
+      break;
+    case WLZ_VERTEX_D3:
+      sz = sizeof(WlzDVertex3);
+      break;
+    case WLZ_VERTEX_L3:
+      sz = sizeof(WlzLVertex3);
+      break;
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(sz);
+}
+
+/*!
+* \return	Dimension of vertex type or zero on error.
+* \ingroup	WlzFeatures
+* \brief	Returns the dimension of the given vertex type.
+* \param	type			Given vertex type.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+int		WlzVertexDim(WlzVertexType type, WlzErrorNum *dstErr)
+{
+  int		dim = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(type)
+  {
+    case WLZ_VERTEX_I2:
+    case WLZ_VERTEX_F2:
+    case WLZ_VERTEX_D2:
+    case WLZ_VERTEX_L2:
+      dim = 2;
+      break;
+    case WLZ_VERTEX_I3:
+    case WLZ_VERTEX_F3:
+    case WLZ_VERTEX_D3:
+    case WLZ_VERTEX_L3:
+      dim = 3;
+      break;
+    default:
+      errNum = WLZ_ERR_OBJECT_TYPE;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(dim);
 }
 
 /*!
