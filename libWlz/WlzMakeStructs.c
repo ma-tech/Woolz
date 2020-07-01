@@ -440,6 +440,7 @@ WlzMakeMain(WlzObjectType 	type,
     case WLZ_PROPERTY_OBJ:
     case WLZ_RECTANGLE:
     case WLZ_TRANS_OBJ:
+    case WLZ_SPLINE:
       obj->type = type;
 #ifdef _OPENMP
 #pragma omp critical (WlzLinkcount)

@@ -95,6 +95,9 @@ static WlzPropertyList	 	*WlzReadPropertyList(
 static WlzPolygonDomain 	*WlzReadPolygon(
 				  FILE *fp,
 				  WlzErrorNum *);
+static WlzBSpline 		*WlzReadSpline(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
 static WlzBoundList 		*WlzReadBoundList(
 				  FILE *fp,
 				  WlzErrorNum *);
@@ -519,6 +522,12 @@ WlzObject 	*WlzReadObj(FILE *fp, WlzErrorNum *dstErr)
 
       case WLZ_CONTOUR:
 	if((domain.ctr = WlzReadContour(fp, &errNum)) != NULL){
+	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
+	}
+	break;
+
+      case WLZ_SPLINE:
+        if((domain.bs = WlzReadSpline(fp, &errNum)) != NULL){
 	  obj = WlzMakeMain(type, domain, values, NULL, NULL, &errNum);
 	}
 	break;
@@ -2796,6 +2805,93 @@ static WlzPropertyList *WlzReadPropertyList(FILE *fp, WlzErrorNum *dstErr)
     *dstErr = errNum;
   }
   return(pList);
+}
+
+/*!
+* \return	New spline domain.
+* \ingroup	WlzIO
+* \brief	Reads a Woolz B-spline domain from the input file.
+* \param	fP			Input file.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzBSpline *WlzReadSpline(FILE *fP, WlzErrorNum *dstErr)
+{
+  int		dim = 0,
+  		order = 0,
+  		nKnots = 0;
+  WlzObjectType	type;
+  WlzBSpline	*bs = NULL;
+  WlzErrorNum	errNum=WLZ_ERR_NONE;
+
+  if((type = (WlzObjectType )getc(fP)) == (WlzObjectType )EOF)
+  {
+    errNum = WLZ_ERR_READ_INCOMPLETE;
+  }
+  else if(type == WLZ_NULL)
+  {
+    errNum = WLZ_ERR_EOO;
+  }
+  else
+  {
+    order = getword(fP);
+    if(feof(fP) != 0)
+    {
+      errNum = WLZ_ERR_READ_INCOMPLETE;
+    }
+    else
+    {
+      nKnots = getword(fP);
+      if(feof(fP) != 0)
+      {
+        errNum = WLZ_ERR_READ_INCOMPLETE;
+      }
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(type)
+    {
+      case WLZ_BSPLINE_C2D:
+        dim = 2;
+	break;
+      case WLZ_BSPLINE_C3D:
+        dim = 3;
+	break;
+      default:
+	errNum = WLZ_ERR_DOMAIN_TYPE;
+        break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bs = WlzMakeBSpline(type, order, nKnots, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    bs->nKnots = nKnots;
+    errNum = WlzReadDouble(fP, bs->knots, bs->nKnots);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		nC;
+
+    nC = dim * bs->nKnots;
+    errNum = WlzReadDouble(fP, bs->coefficients, nC);
+
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    WlzDomain	dom;
+
+    dom.bs = bs;
+    (void )WlzFreeDomain(dom);
+    bs = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(bs);
 }
 
 /*!

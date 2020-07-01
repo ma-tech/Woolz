@@ -140,6 +140,13 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
       }
       break;
 
+    case WLZ_SPLINE:
+      WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
+      	      ("WlzFreeObj %p WLZ_SPLINE %p\n",
+	       obj, obj->domain.bs));
+      errNum = WlzFreeBSpline(obj->domain.bs);
+      break;
+
     case WLZ_2D_POLYGON:
       WLZ_DBG((WLZ_DBG_ALLOC|WLZ_DBG_LVL_1),
       	      ("WlzFreeObj %p WLZ_2D_POLYGON %p\n",

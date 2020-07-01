@@ -180,6 +180,9 @@ const char	*WlzStringFromObjTypeValue(WlzObjectType objType,
     case WLZ_POINTS:
       oTypeStr = "WLZ_POINTS";
       break;
+    case WLZ_SPLINE:
+      oTypeStr = "WLZ_SPLINE";
+      break;
     default:
       errNum = WLZ_ERR_OBJECT_TYPE;
       break;
@@ -237,6 +240,7 @@ WlzObjectType	WlzStringToObjType(const char *oTypeStr,
 		"WLZ_LUT", WLZ_LUT,
 		"WLZ_3D_VIEW_STRUCT", WLZ_3D_VIEW_STRUCT,
 		"WLZ_POINTS", WLZ_POINTS,
+		"WLZ_SPLINE", WLZ_SPLINE,
 		NULL))
   {
     oType = (WlzObjectType )tI0;
@@ -450,6 +454,20 @@ const char	*WlzStringFromObjDomainType(WlzObject *obj,
 	    break;
         }
 	break;
+      case WLZ_SPLINE:
+        switch(obj->domain.core->type)
+        {
+	  case WLZ_BSPLINE_C2D:
+	    oDomTypeStr = "WLZ_BSPLINE_C2D";
+            break;
+	  case WLZ_BSPLINE_C3D:
+	    oDomTypeStr = "WLZ_BSPLINE_C3D";
+            break;
+	  default:
+	    errNum = WLZ_ERR_DOMAIN_TYPE;
+	    break;
+	}
+	break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
         break;
@@ -506,6 +524,8 @@ WlzObjectType	WlzStringToObjDomainType(const char *oDomTypeStr,
 		"WLZ_POINTS_2D", WLZ_POINTS_2D,
 		"WLZ_POINTS_3I", WLZ_POINTS_3I,
 		"WLZ_POINTS_3D", WLZ_POINTS_3D,
+		"WLZ_BSPLINE_C2D", WLZ_BSPLINE_C2D,
+		"WLZ_BSPLINE_C3D", WLZ_BSPLINE_C3D,
 		NULL))
   {
     oDomType = (WlzObjectType )tI0;

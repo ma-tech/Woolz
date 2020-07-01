@@ -191,6 +191,9 @@ static WlzErrorNum      	WlzWritePointValues(
 static WlzErrorNum 		WlzWriteConvexHull(
 				  FILE *fP,
 				  WlzDomain dom);
+static WlzErrorNum 		WlzWriteSpline(
+				  FILE *fP,
+				  WlzBSpline *bs);
 
 #ifdef WLZ_UNUSED_FUNCTIONS
 static WlzErrorNum 		WlzWriteBox2I(
@@ -440,6 +443,9 @@ WlzErrorNum	WlzWriteObj(FILE *fP, WlzObject *obj)
 	break;
       case WLZ_CONTOUR:
         errNum = WlzWriteContour(fP, obj->domain.ctr);
+	break;
+      case WLZ_SPLINE:
+        errNum = WlzWriteSpline(fP, obj->domain.bs);
 	break;
       case WLZ_CMESH_2D:
         if(((errNum = WlzWriteCMesh2D(fP, NULL,
@@ -1810,6 +1816,67 @@ static WlzErrorNum WlzWritePolygon(FILE *fP, WlzPolygonDomain *poly)
   }
   return(errNum);
 }
+
+/*!
+* \return	Woolz error code.
+* \ingroup 	WlzIO
+* \brief	Writes a B-spline domain to the given file.
+* \param	fP			Given file.
+* \param	bs			Spline domain.
+*/
+static WlzErrorNum WlzWriteSpline(FILE *fP, WlzBSpline *bs)
+{
+  int		dim = 0;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(bs == NULL)
+  {
+    if(putc(0,fP) == EOF)
+    {
+      errNum = WLZ_ERR_WRITE_EOF;
+    }
+  }
+  else
+  {
+    switch(bs->type)
+    {
+      case WLZ_BSPLINE_C2D:
+        dim = 2;
+	break;
+      case WLZ_BSPLINE_C3D:
+        dim = 3;
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Write the B-spline type, order and number of knots. */
+    if((putc((unsigned int )bs->type, fP) == EOF) ||
+       !putword(bs->order, fP) ||
+       !putword(bs->nKnots, fP))
+    {
+      errNum = WLZ_ERR_WRITE_INCOMPLETE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    /* Write knots. */
+    errNum = WlzWriteDouble(fP, bs->knots, bs->nKnots);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		nC;
+
+    /* Write coefficients. */
+    nC = dim * bs->nKnots;
+    errNum = WlzWriteDouble(fP, bs->coefficients, nC);
+  }
+  return(errNum);
+}
+
 
 /*!
 * \return	Woolz error code.

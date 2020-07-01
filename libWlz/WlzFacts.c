@@ -158,6 +158,9 @@ static WlzErrorNum 		WlzObjFactsLUTDomain(
 static WlzErrorNum 		WlzObjFactsLUTValues(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj);
+static WlzErrorNum 		WlzObjFactsSplineDomain(
+				  WlzObjFactsData *fData,
+				  WlzObject *obj);
 static WlzErrorNum 		WlzObjFactsPointsDomain(
 				  WlzObjFactsData *fData,
 				  WlzObject *obj);
@@ -491,6 +494,13 @@ static WlzErrorNum WlzObjFactsObject(WlzObjFactsData *fData, WlzObject *obj)
 	  errNum = WlzObjFactsConvHullDomain(fData, obj);
 	  if(errNum == WLZ_ERR_NONE)
 	  {
+	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
+	  }
+	  break;
+	case WLZ_SPLINE:
+	  errNum = WlzObjFactsSplineDomain(fData, obj);
+          if(errNum == WLZ_ERR_NONE)
+          {
 	    errNum = WlzObjFactsPropList(fData, obj, obj->plist);
 	  }
 	  break;
@@ -2832,6 +2842,94 @@ static WlzErrorNum WlzObjFactsLUTValues(WlzObjFactsData *fData,
 	    break;
 	}
       }
+    }
+  }
+  --(fData->indent);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup      WlzDebug
+* \brief	Produces a text description of a spline domain.
+* \param	fData			Facts data structure.
+* \param	obj			Object with a spline domain.
+*/
+static WlzErrorNum WlzObjFactsSplineDomain(WlzObjFactsData *fData,
+				           WlzObject *obj)
+{
+  const char	*tStr;
+  WlzBSpline	*bs;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  ++(fData->indent);
+  tStr = WlzStringFromObjDomainType(obj, &errNum);
+  if((tStr == NULL) || (errNum != WLZ_ERR_NONE))
+  {
+    if(errNum == WLZ_ERR_DOMAIN_NULL)
+    {
+      (void )WlzObjFactsAppend(fData, "Domain NULL.\n");
+      errNum = WLZ_ERR_NONE;
+    }
+    else
+    {
+      (void )WlzObjFactsAppend(fData, "Domain type invalid.\n");
+    }
+  }
+  else
+  {
+    bs = obj->domain.bs;
+    errNum = WlzObjFactsAppend(fData, "Domain type: %s.\n", tStr);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "Linkcount: %d.\n", bs->linkcount);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "order: %d.\n", bs->order);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "nKnots: %d.\n", bs->nKnots);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "maxKnots: %d.\n", bs->maxKnots);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "knots: %p.\n", bs->knots);
+    }
+    if((errNum == WLZ_ERR_NONE) && fData->verbose)
+    {
+      int	i;
+
+      ++(fData->indent);
+      for(i = 0; (errNum == WLZ_ERR_NONE) && (i < bs->nKnots); ++i)
+      {
+	errNum = WlzObjFactsAppend(fData, " %g\n", bs->knots[i]);
+      }
+      --(fData->indent);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzObjFactsAppend(fData, "coefficients: %p.\n",
+          bs->coefficients);
+    }
+    if((errNum == WLZ_ERR_NONE) && fData->verbose)
+    {
+      int	i,
+      		nc,
+		dim;
+
+      ++(fData->indent);
+      dim = (obj->domain.bs->type == WLZ_BSPLINE_C2D)? 2: 3;
+      nc = bs->nKnots * dim;
+      for(i = 0; (errNum == WLZ_ERR_NONE) && (i < nc); ++i)
+      {
+	errNum = WlzObjFactsAppend(fData, " %g\n", bs->coefficients[i]);
+      }
+      --(fData->indent);
     }
   }
   --(fData->indent);
