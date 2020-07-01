@@ -1132,3 +1132,42 @@ WlzPoints			*WlzPointsDither(
   return(dPts);
 }
 
+/*!
+* \return	Points domain vertex type or WLZ_VERTEX_ERROR on error.
+* \ingroup 	WlzFeatures
+* \brief	Gets the points domain vertex type.
+* \param	pType			Given points domain type.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzVertexType			WlzPointsVertexType(
+				  WlzObjectType pType,
+				  WlzErrorNum *dstErr)
+{
+  WlzVertexType	vType = WLZ_VERTEX_ERROR;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  switch(pType)
+  {
+    case WLZ_POINTS_2I:
+      vType = WLZ_VERTEX_I2;
+      break;
+    case WLZ_POINTS_2D:
+      vType = WLZ_VERTEX_D2;
+      break;
+    case WLZ_POINTS_3I:
+      vType = WLZ_VERTEX_I3;
+      break;
+    case WLZ_POINTS_3D:
+      vType = WLZ_VERTEX_D3;
+      break;
+    default:
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+      break;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(vType);
+}
+
