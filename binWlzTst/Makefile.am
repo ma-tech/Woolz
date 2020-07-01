@@ -53,6 +53,7 @@ bin_PROGRAMS		= \
 			  WlzTstCMeshTransformObj \
 			  WlzTstCMeshVtxInMesh \
 			  WlzTstDistC \
+			  WlzTstFitBSpline \
 			  WlzTstGeomArcLength2D \
 			  WlzTstGeomLineTriangleIntersect \
 			  WlzTstGeomLSqOPlane \
@@ -96,6 +97,10 @@ WlzTstCMeshVtxInMesh_LDFLAGS		= $(AM_LFLAGS)
 WlzTstDistC_SOURCES			= WlzTstDistC.c
 WlzTstDistC_LDADD			= $(LDADD)
 WlzTstDistC_LDFLAGS			= $(AM_LFLAGS)
+
+WlzTstFitBSpline_SOURCES		= WlzTstFitBSpline.c
+WlzTstFitBSpline_LDADD			= $(LDADD)
+WlzTstFitBSpline_LDFLAGS		= $(AM_LFLAGS)
 
 WlzTstGeomArcLength2D_SOURCES		= WlzTstGeomArcLength2D.c
 WlzTstGeomArcLength2D_LDADD		= $(LDADD)
