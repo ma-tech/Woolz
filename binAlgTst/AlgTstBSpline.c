@@ -183,7 +183,7 @@ int				main(int argc, char *argv[])
 	r = 0.5 + cos(phi);
 	din[0][i] = r * cos(phi);
 	din[1][i] = r * sin(phi);
-	din[2][i] = phi;
+	din[2][i] = phi + 10.0;
       }
       out[0][i] = out[1][i] = out[2][i] = 0.0;
       (void )fprintf(stdout, "%1.6f %1.6f %1.6f\n",
@@ -199,7 +199,8 @@ int				main(int argc, char *argv[])
         fn = "AlgBSplinePerFit";
 	errNum = AlgBSplinePerFit(iopt, m, din[2], din[1], w, k, s, nest, &n,
 	    t, c, &fp, wrk, iwrk);
-	(void )fprintf(stdout, "AlgBSplinePerFit() errNum = %d\n", errNum);
+	(void )fprintf(stdout, "AlgBSplinePerFit() n = %d, errNum = %d\n",
+	    n, errNum);
       }
       else
       {
@@ -207,7 +208,8 @@ int				main(int argc, char *argv[])
 	errNum = AlgBSplineFit(iopt, m, din[2], din[1], w, 
 	    din[2][0], din[2][m - 1], k, s, nest, &n, t, c,
 	    &fp, wrk, iwrk);
-	(void )fprintf(stdout, "AlgBSplineFit() errNum = %d\n", errNum);
+	(void )fprintf(stdout, "AlgBSplineFit() n = %d, errNum = %d\n",
+	    n, errNum);
       }
     }
     else /* nd == 3 */
@@ -238,6 +240,8 @@ int				main(int argc, char *argv[])
 	fn = "AlgBSplineNDFit";
 	errNum = AlgBSplineNDFit(iopt, ipar, nd, m, u, mx, tmp, w,
 	    ub, ue, k, s, nest, &n, t, &nc, c, &fp, wrk, iwrk);
+        (void )fprintf(stdout,
+	    "AlgBSplineNDFit() n = %d, nc = %d, errNum = %d\n", n, nc, errNum);
       }
     }
   }
