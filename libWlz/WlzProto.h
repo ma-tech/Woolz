@@ -979,6 +979,29 @@ extern int 			WlzUnlink(
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
+* WlzBSpline.c							*
+************************************************************************/
+#ifndef WLZ_EXT_BIND
+extern WlzBSpline		*WlzMakeBSpline(
+				  WlzObjectType type,
+				  int order,
+				  int maxKnots,
+				  WlzErrorNum *dstErr);
+extern WlzBSpline		*WlzBSplineFromObj(
+				  WlzObject *gObj,
+				  int order,
+				  int closed,
+				  double sm,
+				  WlzErrorNum *dstErr);
+extern WlzErrorNum		WlzFreeBSpline(
+				  WlzBSpline *bs);
+extern WlzErrorNum		WlzBSplineEval(
+				  WlzBSpline *bs,
+				  int n,
+				  WlzVertexP eval);
+#endif /* WLZ_EXT_BIND */
+
+/************************************************************************
 * WlzBackground.c							*
 ************************************************************************/
 extern WlzPixelV 		WlzGetBackground(
@@ -5480,6 +5503,9 @@ extern WlzObject 		*WlzPointsToMarkers(
 				  WlzMarkerType mType,
 				  int mSz,
 				  WlzErrorNum *dstErr);
+extern WlzVertexType		WlzPointsVertexType(     
+				  WlzObjectType pType,
+				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
@@ -7171,6 +7197,12 @@ extern int			WlzVertexHeapSortIdxFnD3(
 				  int *idx,
 				  int id0,
 				  int id1);
+extern int             		WlzVertexDim(
+				  WlzVertexType type,
+				  WlzErrorNum *dstErr);
+extern size_t          		WlzVertexSize(
+				  WlzVertexType type,
+				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 
