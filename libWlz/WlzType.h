@@ -230,6 +230,7 @@ typedef enum _WlzObjectType
   					     elements in 3D. */
   WLZ_RECTANGLE			= 20,	/*!< Rectangle. */
   WLZ_POINTS			= 21,   /*!< Points. */
+  WLZ_SPLINE			= 30,	/*!< Splines. */
   WLZ_CONVOLVE_INT		= 50,	/*!< Integer convolution. */
   WLZ_CONVOLVE_FLOAT		= 51,	/*!< Floating point convolution. */
   WLZ_AFFINE_TRANS		= 63,	/*!< Affine transform, either 2D or
@@ -484,10 +485,15 @@ typedef enum _WlzObjectType
   **********************************************************************/
   WLZ_POINTS_2I			= 21,	/*!< Integer 2D points domain. */
   WLZ_POINTS_2D			= 22,	/*!< Integer 2D points domain. */
-  WLZ_POINTS_3I	                = 23,    /*!< Double precision floating point
+  WLZ_POINTS_3I	                = 23,   /*!< Double precision floating point
 					      3D points domain. */
-  WLZ_POINTS_3D	                = 24,    /*!< Double precision floating point
+  WLZ_POINTS_3D	                = 24,   /*!< Double precision floating point
 					      3D points domain. */
+  /**********************************************************************
+  * Spline domain types.
+  **********************************************************************/
+  WLZ_BSPLINE_C2D              = 30,  /*!< 2D B-spline line curve domains. */
+  WLZ_BSPLINE_C3D              = 31,  /*!< 3D B-spline line curve domains. */
   /**********************************************************************
   * WLZ_DUMMY_ENTRY is not an object type.			
   * Keep it the last enumerator!				
@@ -2542,6 +2548,7 @@ typedef union _WlzDomain
   struct _WlzConvHullDomain2 *cvh2;
   struct _WlzConvHullDomain3 *cvh3;
   struct _WlzThreeDViewStruct *vs3d;
+  struct _WlzBSpline          *bs;
 } WlzDomain;
 
 /*!
@@ -3368,6 +3375,44 @@ typedef struct _WlzPoints
 					     allocated. */
   WlzVertexP	points;			/*!< Array of point vertices. */
 } WlzPoints;
+
+
+/************************************************************************
+* Spline domains.
+************************************************************************/
+/*!
+* \def		WLZ_BSPLINE_ORDER_MIN
+* \ingroup	WlzType
+* \brief	The minimum order of the B-spline in a WlzBSpline domain.
+*/
+#define WLZ_BSPLINE_ORDER_MIN	(1)
+
+/*!
+* \def		WLZ_BSPLINE_ORDER_MAX
+* \ingroup	WlzType
+* \brief	The maximum order of the B-spline in a WlzBSpline domain.
+*/
+#define WLZ_BSPLINE_ORDER_MAX	(5)
+
+/*!
+* \struct	_WlzBSpline
+* \ingroup	WlzFeatures
+* \brief	Spline based line curves in either 2 or 3D.
+* 		Possible types are: WLZ_BSPLINE_C2D or WLZ_BSPLINE_C3D.
+* 		Typedef: ::WlzBSplineDomain
+*/
+typedef struct _WlzBSpline
+{
+  WlzObjectType type;			/*!< From WlzCoreDomain. */
+  int		linkcount;		/*!< From WlzCoreDomain. */
+  void		*freeptr;		/*!< From WlzCoreDomain. */
+  int		order;			/*!< Order of the B-spline. */
+  int		nKnots;			/*!< Number of knots (also number
+  					     of coefficients per dimension). */
+  int		maxKnots;		/*!< Knots space allocated. */
+  double	*knots;			/*!< Array of knots (parametric). */
+  double	*coefficients;		/*!< Array of B-spline coefficients. */
+} WlzBSpline;
 
 /************************************************************************
 * Polygon domains.						
