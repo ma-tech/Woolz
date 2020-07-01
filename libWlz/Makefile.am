@@ -62,6 +62,7 @@ libWlz_la_SOURCES 	= \
 			  WlzArray.c \
 			  WlzAssign.c \
 			  WlzAutoCor.c \
+			  WlzBSpline.c \
 			  WlzBackground.c \
 			  WlzBasisFn.c \
 			  WlzBasisFnTransform.c \
