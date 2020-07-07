@@ -145,7 +145,9 @@ static WlzErrorNum		WlzLSSplitDom(
 				  WlzObject *skel,
 				  int bDstMax);
 static WlzErrorNum 		WlzLSBuildPath(
+				  WlzObjectType sObjType,
 				  WlzGreyValueWSpace *sWSp,
+				  WlzPoints *pts,
 				  WlzObject *obj,
 				  WlzIVertex3 ps,
 				  WlzIVertex3 pd,
@@ -315,8 +317,8 @@ WlzObject			*WlzLineSkeleton(
     /* Compute new minimum cost path from destination to source. */
     if(errNum == WLZ_ERR_NONE)
     {
-      errNum = WlzLSBuildPath(sWSp, qEnt->obj, qEnt->dst, qEnt->src,
-      			      bDstWSp, pDstWSp);
+      errNum = WlzLSBuildPath(gObj->type, sWSp, NULL, qEnt->obj, qEnt->dst,
+          qEnt->src, bDstWSp, pDstWSp);
     }
     /* Remove object covered by new path, split current object and add
      * parts to the queue. */
@@ -353,7 +355,8 @@ WlzObject			*WlzLineSkeleton(
 * 		probably give a different path.
 * \param	gObj			Given object.
 * \param	rObjType		Return object type, must be
-* 					WLZ_2D_DOMAINOBJ or WLZ_3D_DOMAINOBJ:
+* 					WLZ_2D_DOMAINOBJ, WLZ_3D_DOMAINOBJ
+* 					or WLZ_POINTS.
 * \param	p0			First point in object domain.
 * \param	p1			Second point in object domain.
 * \param	dstErr			Destination error pointer, may be NULL.
@@ -367,6 +370,7 @@ WlzObject			*WlzLineSkeletonSegment(
 {
   WlzObject 	*bDst = NULL,
 		*pDst = NULL;
+  WlzPoints	*pts = NULL;
   WlzGreyValueWSpace *bDstWSp = NULL,
 		     *pDstWSp = NULL,
 		     *sWSp = NULL;
@@ -403,6 +407,8 @@ WlzObject			*WlzLineSkeletonSegment(
 	{
 	  errNum = WLZ_ERR_OBJECT_TYPE;
 	}
+        break;
+      case WLZ_POINTS:
         break;
       default:
         errNum = WLZ_ERR_OBJECT_TYPE;
@@ -457,23 +463,61 @@ WlzObject			*WlzLineSkeletonSegment(
   /* Create a new object for the skeleton line segment. */
   if(errNum == WLZ_ERR_NONE)
   {
-    WlzObjectType gTT;
-    WlzPixelV	  zV;
-
-    zV.type = WLZ_GREY_INT;
-    zV.v.inv = 0;
-    gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
-    rObj = WlzNewObjectValues(gObj, gTT, zV, 1, zV, &errNum);
-    if(errNum == WLZ_ERR_NONE)
+    switch(rObjType)
     {
-     sWSp = WlzGreyValueMakeWSp(rObj, &errNum);
+      case WLZ_2D_DOMAINOBJ:  /* FALLTHROUGH */
+      case WLZ_3D_DOMAINOBJ:
+	{
+	  WlzObjectType gTT;
+	  WlzPixelV	  zV;
+
+	  zV.type = WLZ_GREY_INT;
+	  zV.v.inv = 0;
+	  gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_RAGR, WLZ_GREY_INT, NULL);
+	  rObj = WlzNewObjectValues(gObj, gTT, zV, 1, zV, &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    sWSp = WlzGreyValueMakeWSp(rObj, &errNum);
+	  }
+	}
+	break;
+      case WLZ_POINTS:
+        {
+	  int		maxPts;
+	  WlzObjectType pdt;
+	  WlzVertexP	vxp = {0};
+
+	  pdt = (gObj->type == WLZ_2D_DOMAINOBJ)? WLZ_POINTS_2I: WLZ_POINTS_3I;
+	  /* Choose a maximum number of points equal to twice the max distance
+	   * from p0 to p1. */
+          WlzGreyValueGet(pDstWSp, p1.vtZ, p1.vtY, p1.vtX);
+	  maxPts = 2 * pDstWSp->gVal[0].inv;
+          pts = WlzMakePoints(pdt, 0, vxp, maxPts, &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    WlzDomain	pDom;
+	    WlzValues	nullVal = {0};
+
+	    pDom.pts = pts;
+	    rObj = WlzMakeMain(WLZ_POINTS, pDom, nullVal, NULL, NULL, &errNum);
+	    if(errNum != WLZ_ERR_NONE)
+            {
+	      (void )WlzFreeDomain(pDom);
+	      pDom.core = NULL;
+	    }
+	  }
+	}
+	break;
+      default:
+        break;
     }
   }
   /* Construct a central line skeleton segment within the domain between
    * the two points. */
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzLSBuildPath(sWSp, gObj, p1, p0, bDstWSp, pDstWSp);
+    errNum = WlzLSBuildPath(rObjType, sWSp, pts, gObj, p1, p0,
+        bDstWSp, pDstWSp);
   }
   WlzGreyValueFreeWSp(bDstWSp);
   WlzGreyValueFreeWSp(pDstWSp);
@@ -497,8 +541,15 @@ WlzObject			*WlzLineSkeletonSegment(
 * \ingroup	WlzFeatures
 * \brief	Compute the line skeleton segment between the source and
 * 		destination points within the given domain.
+* \param	sObjType	Skeleton object type: Must be WLZ_2D_DOMAINOBJ,
+* 				WLZ_3D_DOMAINOBJ or WLZ_POINTS.
 * \param	sWSp		Skeleton workspace to which line segment
-* 				should be added.
+* 				should be added, may be NULL if sObjType
+* 				is neither WLZ_2D_DOMAINOBJ or
+* 				WLZ_3D_DOMAINOBJ.
+* \param	pts		Points domain of the appropriate type and
+* 				with sufficient points allocated, may be NULL if
+* 				sObjType is not WLZ_POINTS.
 * \param	obj		Given object with domain.
 * \param	ps		Source point.
 * \param	pd		Destination point.
@@ -506,7 +557,9 @@ WlzObject			*WlzLineSkeletonSegment(
 * \param	dDstWSp		Workspace for distance from destination point.
 */
 static WlzErrorNum 		WlzLSBuildPath(
+				  WlzObjectType sObjType,
 				  WlzGreyValueWSpace *sWSp,
+				  WlzPoints *pts,
 				  WlzObject *obj,
 				  WlzIVertex3 ps,
 				  WlzIVertex3 pd,
@@ -623,23 +676,62 @@ static WlzErrorNum 		WlzLSBuildPath(
   if(complete)
   {
     WlzLSNod 	*nod;
-    /* Add line skeleton segment to the skeleton object using it's
-     * workspace. */
+
+    nod = complete;
+    switch(sObjType)
+    {
+      case WLZ_POINTS:
+	{
+	  int	idx = 0;
+	  if(obj->type == WLZ_2D_DOMAINOBJ) /* 2D */
+	  {
+	    WlzIVertex2 *vxp;
+
+	    vxp = pts->points.i2;
+	    while(nod && (idx < pts->maxPoints))
+	    {
+	      vxp[idx].vtX = nod->pos.vtX;
+	      vxp[idx].vtY = nod->pos.vtY;
+	      nod = nod->from;
+	      ++idx;
+	    }
+	  }
+	  else /* 3D */
+	  {
+	    WlzIVertex3 *vxp;
+
+	    vxp = pts->points.i3;
+	    while(nod && (idx < pts->maxPoints))
+	    {
+	      vxp[idx] = nod->pos;
+	      nod = nod->from;
+	      ++idx;
+	    }
+	  }
+	  pts->nPoints = idx;
+	}
+        break;
+      case WLZ_2D_DOMAINOBJ: /* FALLTHROUGH */
+      case WLZ_3D_DOMAINOBJ:
+	while(nod)
+	{
+	  WlzIVertex3 pos;
+
+	  pos = nod->pos;
+	  WlzGreyValueGet(sWSp, pos.vtZ, pos.vtY, pos.vtX);
+	  WlzGreyValueGet(bDstWSp, pos.vtZ, pos.vtY, pos.vtX);
+	  *(sWSp->gPtr[0].inp) = bDstWSp->gVal[0].inv;
+	  nod = nod->from;
+	}
+        break;
+      default:
+        break;
+    }
+    /* Add line skeleton segment to the skeleton object. */
 
 #ifdef WLZ_LS_DEBUG
     (void )fprintf(stderr, "WlzLSBuildPath() %d\n", debugCnt);
 #endif
-    nod = complete;
-    while(nod)
-    {
-      WlzIVertex3 pos;
-
-      pos = nod->pos;
-      WlzGreyValueGet(sWSp, pos.vtZ, pos.vtY, pos.vtX);
-      WlzGreyValueGet(bDstWSp, pos.vtZ, pos.vtY, pos.vtX);
-      *(sWSp->gPtr[0].inp) = bDstWSp->gVal[0].inv;
-      nod = nod->from;
-    }
   }
   WlzLSNodQFree(nodQ);
   return(errNum);
