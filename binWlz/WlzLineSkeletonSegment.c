@@ -55,32 +55,9 @@ static char _WlzLineSkeletonSegment_c[] = "University of Edinburgh $Id$";
 \defgroup wlzlineskeleton WlzLineSkeletonSegment
 \par Name
 WlzLineSkeletonSegment
-
-
-
-    "Usage: %s [-h] [-p #,#,#] [-q #,#,#] [-v] [<input object>]\n"
-    "Computes a line skeleton segment of the given object's domain.\n"
-    "It is an error if both given points are not in the objects \n"
-    "domain.\n"
-    "Version: %s\n"
-    "Options:\n"
-    "  -h  Help, prints this usage message.\n"
-    "  -v  Verbose output messages.\n"
-    "  -o  Output file.\n"
-    "  -p  First point of line segment.\n"
-    "  -q  Second point of line segment.\n"
-    "By default the input object is read from stdin and the output\n"
-    "object is written to stdout.\n"
-    "Example:\n"
-    "  %s -o path.wlz -p 249,325,37 -q 116,241,302 colon.wlz\n"
-    "Computes a path from the point 249,325,37 to the point 116,241,302\n"
-    "in the domain of the object read from the file colon.wlz. The output\n"
-    "path is written to the file path.wlz",
-
-
 \par Synopsis
 \verbatim
-WlzLineSkeletonSegment [-h] [-v] [-p #,#,#] [-q #,#,#] [-o<output object>]
+WlzLineSkeletonSegment [-h] [-v] [-p #,#,#] [-P] [-q #,#,#] [-o<output object>]
                        [<input object>]
 \endverbatim
 \par Options
@@ -96,6 +73,11 @@ WlzLineSkeletonSegment [-h] [-v] [-p #,#,#] [-q #,#,#] [-o<output object>]
   <tr>
     <td><b>-p</b></td>
     <td>First point of line segment.</td>
+  </tr>
+  <tr>
+    <td><b>-P</b></td>
+    <td>Output object is a points object rather than the same type as the
+        input object.</td>
   </tr>
   <tr>
     <td><b>-q</b></td>
@@ -145,12 +127,13 @@ int		main(int argc, char *argv[])
   		*outObjStr;
   WlzIVertex3	p0,
   		p1;
+  WlzObjectType	outObjType = WLZ_NULL;
   struct timeval times[3];
   const char	*errMsgStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzObject	*inObj = NULL,
   		*outObj = NULL;
-  static char   optList[] = "hvo:p:q:";
+  static char   optList[] = "Phvo:p:q:";
   const char    inObjStrDef[] = "-",
   	        outObjStrDef[] = "-";
 
@@ -165,6 +148,9 @@ int		main(int argc, char *argv[])
     {
       case 'o':
         outObjStr = optarg;
+	break;
+      case 'P':
+        outObjType = WLZ_POINTS;
 	break;
       case 'p':
         if(sscanf(optarg, "%d,%d,%d", &(p0.vtX), &(p0.vtY), &(p0.vtZ)) < 2)
@@ -230,11 +216,15 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
+    if(inObj && (outObjType == WLZ_NULL))
+    {
+      outObjType = inObj->type;
+    }
     if(verbose)
     {
       gettimeofday(times + 0, NULL);
     }
-    outObj = WlzLineSkeletonSegment(inObj, inObj->type, p0, p1, &errNum);
+    outObj = WlzLineSkeletonSegment(inObj, outObjType, p0, p1, &errNum);
     if(verbose)
     {
       gettimeofday(times + 1, NULL);
@@ -283,7 +273,7 @@ int		main(int argc, char *argv[])
   if(usage)
   {
     (void )fprintf(stderr,
-    "Usage: %s [-h] [-p #,#,#] [-q #,#,#] [-v] [<input object>]\n"
+    "Usage: %s [-h] [-p #,#,#] [-P] [-q #,#,#] [-v] [<input object>]\n"
     "Computes a line skeleton segment of the given object's domain.\n"
     "It is an error if both given points are not in the objects \n"
     "domain.\n"
@@ -292,6 +282,8 @@ int		main(int argc, char *argv[])
     "  -h  Help, prints this usage message.\n"
     "  -v  Verbose output messages.\n"
     "  -o  Output file.\n"
+    "  -P  Output object is a points object rather than of the same type\n"
+    "      as the input object.\n"
     "  -p  First point of line segment.\n"
     "  -q  Second point of line segment.\n"
     "By default the input object is read from stdin and the output\n"
