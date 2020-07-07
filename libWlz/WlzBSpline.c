@@ -199,6 +199,72 @@ WlzBSpline			*WlzBSplineFromObj(
 }
 
 /*!
+* \return	New points domain or NULL on error.
+* \ingroup	WlzFeatures
+* \brief	Creates a new Woolz points domain bt evaluating the given
+* 		B-spline at equal intervals along the parametrised curve.
+* \param	bs		Given B-spline domain.
+* \param	n		Number of points to be evaluated.
+* \param	dstErr		Destination error pointer, may be NULL.
+*/
+WlzPoints			*WlzBSplineEvalPoints(
+				  WlzBSpline *bs,
+				  int n,
+				  WlzErrorNum *dstErr)
+{
+  WlzObjectType pType = WLZ_NULL;
+  WlzPoints	*pts = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(bs == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    switch(bs->type)
+    {
+      case WLZ_BSPLINE_C2D:
+        pType = WLZ_POINTS_2D;
+	break;
+      case WLZ_BSPLINE_C3D:
+        pType = WLZ_POINTS_3D;
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzVertexP	nullVtx = {0};
+
+    pts = WlzMakePoints(pType, 0, nullVtx, n, &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzBSplineEval(bs, n, pts->points);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    pts->nPoints = n;
+  }
+  else if(pts)
+  {
+    WlzDomain	dom;
+
+    dom.pts = pts;
+    WlzFreeDomain(dom);
+    pts = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(pts);
+}
+
+/*!
 * \return	New Woolz B-spline domain or NULL on error.
 * \ingroup	WlzFeatures
 * \brief	Creates a new B-spline domain by fitting a B-spline to
