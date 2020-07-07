@@ -114,10 +114,12 @@ bin_PROGRAMS		= \
 			  WlzDomain \
 			  WlzDomainFill \
 			  WlzErosion \
+			  WlzEvalBSpline \
 			  WlzExplode \
 			  WlzFacts \
 			  WlzFile \
 			  WlzFilterNObjsValues \
+			  WlzFitBSpline \
 			  WlzFitPlane \
 			  WlzFourierTransform \
 			  WlzGauss \
@@ -510,6 +512,10 @@ WlzErosion_SOURCES			= WlzErosion.c
 WlzErosion_LDADD			= $(LDADD)
 WlzErosion_LDFLAGS			= $(AM_LFLAGS)
 
+WlzEvalBSpline_SOURCES			= WlzEvalBSpline.c
+WlzEvalBSpline_LDADD			= $(LDADD)
+WlzEvalBSpline_LDFLAGS			= $(AM_LFLAGS)
+
 WlzExplode_SOURCES			= WlzExplode.c
 WlzExplode_LDADD			= $(LDADD)
 WlzExplode_LDFLAGS			= $(AM_LFLAGS)
@@ -521,6 +527,10 @@ WlzFacts_LDFLAGS			= $(AM_LFLAGS)
 WlzFile_SOURCES				= WlzFile.c
 WlzFile_LDADD				= $(LDADD)
 WlzFile_LDFLAGS				= $(AM_LFLAGS)
+
+WlzFitBSpline_SOURCES			= WlzFitBSpline.c
+WlzFitBSpline_LDADD			= $(LDADD)
+WlzFitBSpline_LDFLAGS			= $(AM_LFLAGS)
 
 WlzFitPlane_SOURCES			= WlzFitPlane.c
 WlzFitPlane_LDADD			= $(LDADD)
