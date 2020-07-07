@@ -979,7 +979,7 @@ extern int 			WlzUnlink(
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
-* WlzBSpline.c							*
+* WlzBSpline.c								*
 ************************************************************************/
 #ifndef WLZ_EXT_BIND
 extern WlzBSpline		*WlzMakeBSpline(
@@ -999,6 +999,10 @@ extern WlzErrorNum		WlzBSplineEval(
 				  WlzBSpline *bs,
 				  int n,
 				  WlzVertexP eval);
+extern WlzPoints		*WlzBSplineEvalPoints(
+				  WlzBSpline *bs,
+				  int n,
+				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
 /************************************************************************
