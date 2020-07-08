@@ -535,6 +535,11 @@ extern WlzPoints		*WlzAffineTransformPoints(
 				  WlzAffineTransform *tr,
 				  int newPtsFlg,
 				  WlzErrorNum *dstErr);
+extern WlzBSpline		*WlzAffineTransformBSpline(
+				  WlzBSpline *srcBS,
+				  WlzAffineTransform *tr,
+				  int newBSFlg,
+				  WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
 extern WlzErrorNum	     	WlzAffineTransformPrimGet(
 				  WlzAffineTransform *tr,
@@ -987,6 +992,9 @@ extern WlzBSpline		*WlzMakeBSpline(
 				  int order,
 				  int maxKnots,
 				  WlzErrorNum *dstErr);
+extern WlzBSpline 		*WlzBSplineCopy(
+                                  WlzBSpline *srcBS,
+                                  WlzErrorNum *dstErr);
 extern WlzBSpline		*WlzBSplineFromObj(
 				  WlzObject *gObj,
 				  int order,
