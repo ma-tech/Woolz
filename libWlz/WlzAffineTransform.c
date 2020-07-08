@@ -908,6 +908,104 @@ WlzPoints	*WlzAffineTransformPoints(WlzPoints *srcPts,
 
 /*!
 * \ingroup	WlzTransform
+* \return				Transformed B-spline domain or
+*					NULL on error.
+* \brief	Transforms the given B-spline domain.
+* \param	srcBS		 	Given B-spline domain.
+* \param	tr			Given affine transform.
+* \param	newBSFlg		Make a new B-spline if non-zero,
+*					otherwise transform the given
+*					B-spline in place.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzBSpline	*WlzAffineTransformBSpline(WlzBSpline *srcBS,
+				           WlzAffineTransform *tr,
+					   int newBSFlg,
+	      				   WlzErrorNum *dstErr)
+{
+  WlzBSpline 	*dstBS = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(srcBS == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    dstBS = (newBSFlg)? WlzBSplineCopy(srcBS, &errNum): srcBS;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    switch(dstBS->type)
+    {
+      case WLZ_BSPLINE_C2D:
+	{
+	  int	      i;
+	  double      *x,
+	  	      *y;
+	  WlzDVertex2 v;
+
+	  x = dstBS->coefficients;
+	  y = dstBS->coefficients + dstBS->maxKnots;
+          for(i = 0; i < dstBS->nKnots; ++i)
+	  {
+	    v.vtX = x[i];
+	    v.vtY = y[i];
+	    v = WlzAffineTransformVertexD2(tr, v, &errNum);
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	    x[i] = v.vtX;
+	    y[i] = v.vtY;
+	  }
+	}
+        break;
+      case WLZ_BSPLINE_C3D:
+	{
+	  int	      i;
+	  double      *x,
+	  	      *y,
+		      *z;
+	  WlzDVertex3 v;
+
+	  x = dstBS->coefficients;
+	  y = dstBS->coefficients + dstBS->maxKnots;
+	  z = dstBS->coefficients + (2 * dstBS->maxKnots);
+          for(i = 0; i < dstBS->nKnots; ++i)
+	  {
+	    v.vtX = x[i];
+	    v.vtY = y[i];
+	    v.vtZ = z[i];
+	    v = WlzAffineTransformVertexD3(tr, v, &errNum);
+	    if(errNum != WLZ_ERR_NONE)
+	    {
+	      break;
+	    }
+	    x[i] = v.vtX;
+	    y[i] = v.vtY;
+	    z[i] = v.vtZ;
+	  }
+	}
+        break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum != WLZ_ERR_NONE)
+  {
+    if(dstBS != srcBS)
+    {
+      (void )WlzFreeBSpline(dstBS);
+    }
+    dstBS = NULL;
+  }
+  return(dstBS);
+}
+
+/*!
+* \ingroup	WlzTransform
 * \return				Transformed model or
 *					NULL on error.
 * \brief	Transforms the given geometric model.
@@ -3371,6 +3469,7 @@ WlzObject	*WlzAffineTransformObjCb(WlzObject *srcObj,
       case WLZ_CMESH_2D5:
       case WLZ_CMESH_3D:
       case WLZ_POINTS:
+      case WLZ_SPLINE:
       case WLZ_TRANS_OBJ:
       case WLZ_AFFINE_TRANS:
 	if(srcObj->domain.core == NULL)
@@ -3421,6 +3520,10 @@ WlzObject	*WlzAffineTransformObjCb(WlzObject *srcObj,
 	      dstDom.pts = WlzAffineTransformPoints(srcObj->domain.pts, trans,
 	                                            1, &errNum);
 	      srcValues = srcObj->values;
+	      break;
+	    case WLZ_SPLINE:
+	      dstDom.bs = WlzAffineTransformBSpline(srcObj->domain.bs, trans,
+	      					    1, &errNum);
 	      break;
 	    default:
 	      errNum = WLZ_ERR_OBJECT_TYPE;
