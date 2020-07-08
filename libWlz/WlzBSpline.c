@@ -89,7 +89,7 @@ WlzBSpline			*WlzMakeBSpline(
     dim = (type == WLZ_BSPLINE_C2D)? 2: 3;
     if((bs = (WlzBSpline *)
     	     AlcCalloc(sizeof(WlzBSpline) +
-	                (maxKnots * (dim + 1)) * sizeof(double), 1)) == NULL)
+	               (maxKnots * (dim + 1)) * sizeof(double), 1)) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -128,6 +128,45 @@ WlzErrorNum			WlzFreeBSpline(
     }
   }
   return(errNum);
+}
+
+/*!
+* \return	New B-spline domain or NULL on error.
+* \ingroup	WlzAllocation
+* \brief	Copies a B-spline domain.
+* \param	srcBS		Given source B-spline domain.
+* \param	dstErr		Destination error pointer, may be NULL.
+*/
+WlzBSpline			*WlzBSplineCopy(
+				  WlzBSpline *srcBS,
+				  WlzErrorNum *dstErr)
+{
+  int		dim = 0;
+  WlzBSpline	*cpyBS = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(srcBS == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    dim = (srcBS->type == WLZ_BSPLINE_C2D)? 2: 3;
+    cpyBS = WlzMakeBSpline(srcBS->type, srcBS->order, srcBS->maxKnots,
+    			   &errNum);
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    cpyBS->nKnots = srcBS->nKnots;
+    WlzValueCopyDoubleToDouble(cpyBS->knots, srcBS->knots, srcBS->nKnots);
+    WlzValueCopyDoubleToDouble(cpyBS->coefficients, srcBS->coefficients,
+    			       srcBS->maxKnots * dim);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(cpyBS);
 }
 
 /*!
@@ -212,6 +251,7 @@ WlzPoints			*WlzBSplineEvalPoints(
 				  int n,
 				  WlzErrorNum *dstErr)
 {
+  int		nn = 0;
   WlzObjectType pType = WLZ_NULL;
   WlzPoints	*pts = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
@@ -239,7 +279,10 @@ WlzPoints			*WlzBSplineEvalPoints(
   {
     WlzVertexP	nullVtx = {0};
 
-    pts = WlzMakePoints(pType, 0, nullVtx, n, &errNum);
+    /* Take care here passing n = 0 indicates use knots avoiding the initial
+     * and final padding. */
+    nn = (n == 0)? bs->nKnots - 2 * (bs->order): n;
+    pts = WlzMakePoints(pType, 0, nullVtx, nn, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -247,7 +290,7 @@ WlzPoints			*WlzBSplineEvalPoints(
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    pts->nPoints = n;
+    pts->nPoints = nn;
   }
   else if(pts)
   {
@@ -492,7 +535,8 @@ static WlzBSpline		*WlzBSplineFromVertices(
 * \brief	Evaluates a B-spline at a specified number of points.
 * \param	bs		Given B-spline domain.
 * \param	n		Number of points at which to evaluate the
-* 				B-spline.
+* 				B-spline. If zero evaluations are at the
+* 				knots.
 * \param	eval		An array of n WlzDVertex2 or WlzDVertex3
 * 				vertices for the evaluation.
 */
@@ -516,31 +560,49 @@ WlzErrorNum			WlzBSplineEval(
   {
     errNum = WLZ_ERR_PARAM_NULL;
   }
-  else if((x = (double *)AlcMalloc(2 * n * sizeof(double))) == NULL)
+  else
   {
-    errNum = WLZ_ERR_MEM_ALLOC;
+    
+    int		nn;
+
+    nn = (n == 0)? bs->nKnots: n;
+    if((x = (double *)AlcMalloc(2 * nn * sizeof(double))) == NULL)
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
   }
   if(errNum == WLZ_ERR_NONE)
   {
     int 	i,
     		dim;
-    double	n1;
     double	*y;
     
-    y = x + n;
-    n1 = n - 1.0;
-    dim = (bs->type == WLZ_BSPLINE_C2D)? 2: 3;
-    for(i = 0; i < n; ++i)
+    if(n == 0)
     {
-      x[i] = (double )i / n1;
+      y = bs->knots + bs->order;
+      n = bs->nKnots - (2 * bs->order);
+      WlzValueCopyDoubleToDouble(x, y, n);
     }
+    else
+    {
+      double	n1;
+
+      n1 = n - 1.0;
+      for(i = 0; i < n; ++i)
+      {
+	x[i] = (double )i / n1;
+      }
+    }
+    y = x + n;
+    dim = (bs->type == WLZ_BSPLINE_C2D)? 2: 3;
     for(i = 0; i < dim; ++i)
     {
       double	*coeff;
       AlgError	algErr;
 
       coeff = bs->coefficients + (i * bs->nKnots);
-      algErr = AlgBSplineEval(bs->knots, bs->nKnots, coeff, bs->order, x, y, n);
+      algErr = AlgBSplineEval(bs->knots, bs->nKnots, coeff, bs->order,
+          x, y, n);
       if((errNum = WlzErrorFromAlg(algErr)) != WLZ_ERR_NONE)
       {
         break;
