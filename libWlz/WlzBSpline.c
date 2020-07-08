@@ -286,7 +286,7 @@ WlzPoints			*WlzBSplineEvalPoints(
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzBSplineEval(bs, n, pts->points);
+    errNum = WlzBSplineEval(bs, n, NULL, pts->points);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -537,15 +537,22 @@ static WlzBSpline		*WlzBSplineFromVertices(
 * \param	n		Number of points at which to evaluate the
 * 				B-spline. If zero evaluations are at the
 * 				knots.
+* \param	x		If NULL then the evaluations will either
+* 				be at the knots (n == 0) or at n equaly
+* 				spaced points along the parametrised curve.
+* 				If not NULL then x must be a pointer to n
+* 				points along the parametrised curve (with
+* 				a single number per points).
 * \param	eval		An array of n WlzDVertex2 or WlzDVertex3
 * 				vertices for the evaluation.
 */
 WlzErrorNum			WlzBSplineEval(
 				  WlzBSpline *bs,
 				  int n,
+				  double *x,
 				  WlzVertexP eval)
 {
-  double	*x = NULL;
+  double	*buf = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(bs == NULL)
@@ -566,7 +573,7 @@ WlzErrorNum			WlzBSplineEval(
     int		nn;
 
     nn = (n == 0)? bs->nKnots: n;
-    if((x = (double *)AlcMalloc(2 * nn * sizeof(double))) == NULL)
+    if((buf = (double *)AlcMalloc(2 * nn * sizeof(double))) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -581,19 +588,27 @@ WlzErrorNum			WlzBSplineEval(
     {
       y = bs->knots + bs->order;
       n = bs->nKnots - (2 * bs->order);
-      WlzValueCopyDoubleToDouble(x, y, n);
+      WlzValueCopyDoubleToDouble(buf, y, n);
     }
     else
     {
-      double	n1;
-
-      n1 = n - 1.0;
-      for(i = 0; i < n; ++i)
+      if(x)
       {
-	x[i] = (double )i / n1;
+        WlzValueCopyDoubleToDouble(buf, x, n);
+      }
+      else
+      {
+	double	n1;
+
+	n1 = n - 1.0;
+	for(i = 0; i < n; ++i)
+	{
+	  buf[i] = (double )i / n1;
+	}
       }
     }
-    y = x + n;
+    x = buf;
+    y = buf + n;
     dim = (bs->type == WLZ_BSPLINE_C2D)? 2: 3;
     for(i = 0; i < dim; ++i)
     {
@@ -660,6 +675,6 @@ WlzErrorNum			WlzBSplineEval(
       }
     }
   }
-  AlcFree(x);
+  AlcFree(buf);
   return(errNum);
 }

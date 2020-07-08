@@ -1006,6 +1006,7 @@ extern WlzErrorNum		WlzFreeBSpline(
 extern WlzErrorNum		WlzBSplineEval(
 				  WlzBSpline *bs,
 				  int n,
+				  double *x,
 				  WlzVertexP eval);
 extern WlzPoints		*WlzBSplineEvalPoints(
 				  WlzBSpline *bs,
