@@ -113,6 +113,7 @@ WlzObject	*WlzCopyObject(WlzObject *inObj, WlzErrorNum *dstErr)
       case WLZ_BOUNDLIST:      /* FALLTHROUGH */
       case WLZ_CONTOUR:        /* FALLTHROUGH */
       case WLZ_CONV_HULL:      /* FALLTHROUGH */
+      case WLZ_SPLINE:         /* FALLTHROUGH */
       case WLZ_LUT:
 	dom = WlzCopyDomain(inObj->type, inObj->domain, &errNum);
 	if(inObj->values.core)
@@ -397,6 +398,9 @@ WlzDomain	 WlzCopyDomain(WlzObjectType inObjType, WlzDomain inDom,
 	    errNum = WLZ_ERR_DOMAIN_TYPE;
 	    break;
 	}
+        break;
+      case WLZ_SPLINE:
+	outDom.bs = WlzBSplineCopy(inDom.bs, &errNum);
         break;
       case WLZ_3D_WARP_TRANS:   /* FALLTHROUGH */
       case WLZ_3D_POLYGON:      /* FALLTHROUGH */
