@@ -66,7 +66,8 @@ WlzEvalBSpline [-h] [-n<evaluations>] [-o<out object>] [-P] [<in object>]
   <tr>
     <td><b>-n</b></td>
     <td>Number of equally spaced evaluations of the B-spline within the
-        parametrised curve domain [0-1].</td>
+        parametrised curve domain. If zero then evaluations are made at
+	the knots./td>
   </tr>
   <tr>
     <td><b>-o</b></td>
@@ -133,7 +134,7 @@ int		main(int argc, char *argv[])
         outObjType = WLZ_POINTS;
 	break;
       case 'n':
-         usage = (sscanf(optarg, "%d", &nEval) != 1) || (nEval < 1);
+         usage = (sscanf(optarg, "%d", &nEval) != 1) || (nEval < 0);
         break;
       case 'o':
         oFile = optarg;
@@ -300,7 +301,8 @@ int		main(int argc, char *argv[])
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
     "  -n  Number of equally spaced evaluations of the B-spline within the\n"
-    "      parametrised curve domain [0-1].\n"
+    "      parametrised curve domain. If zero then evaluations are made at\n"
+    "      the knots.\n"
     "  -o  Output object file name.\n"
     "  -P  Output a points object instead of a pixel / voxel spatial domain\n"
     "      object.\n"
