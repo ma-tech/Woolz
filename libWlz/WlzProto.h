@@ -1007,7 +1007,19 @@ extern WlzErrorNum		WlzBSplineEval(
 				  WlzBSpline *bs,
 				  int n,
 				  double *x,
+				  int deriv,
 				  WlzVertexP eval);
+extern WlzErrorNum		WlzBSplineEvalSP(
+				  WlzBSpline *bs,
+				  double x,
+				  int deriv,
+				  WlzVertexP eval);
+extern WlzErrorNum		WlzBSplineTangent(
+				  WlzBSpline *bs,
+				  int n,
+				  double *x,
+				  WlzVertexP dstPos,
+				  WlzVertexP dstTnt);
 extern WlzPoints		*WlzBSplineEvalPoints(
 				  WlzBSpline *bs,
 				  int n,

@@ -286,7 +286,7 @@ WlzPoints			*WlzBSplineEvalPoints(
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzBSplineEval(bs, n, NULL, pts->points);
+    errNum = WlzBSplineEval(bs, n, NULL, 0, pts->points);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -543,6 +543,8 @@ static WlzBSpline		*WlzBSplineFromVertices(
 * 				If not NULL then x must be a pointer to n
 * 				points along the parametrised curve (with
 * 				a single number per points).
+* \param	deriv		Order of derivative, range [0-
+* 				(WLZ_BSPLINE_ORDER_MAX - 1)].
 * \param	eval		An array of n WlzDVertex2 or WlzDVertex3
 * 				vertices for the evaluation.
 */
@@ -550,6 +552,7 @@ WlzErrorNum			WlzBSplineEval(
 				  WlzBSpline *bs,
 				  int n,
 				  double *x,
+				  int deriv,
 				  WlzVertexP eval)
 {
   double	*buf = NULL;
@@ -559,7 +562,7 @@ WlzErrorNum			WlzBSplineEval(
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if(n < 0)
+  else if((n < 0) || (deriv < 0) || (deriv >= WLZ_BSPLINE_ORDER_MAX))
   {
     errNum = WLZ_ERR_PARAM_DATA;
   }
@@ -570,10 +573,12 @@ WlzErrorNum			WlzBSplineEval(
   else
   {
     
-    int		nn;
+    int		nb,
+    		nn;
 
-    nn = (n == 0)? bs->nKnots: n;
-    if((buf = (double *)AlcMalloc(2 * nn * sizeof(double))) == NULL)
+    nb = (deriv == 0)? 0: bs->nKnots;
+    nn = 2 * ((n == 0)? bs->nKnots: n);
+    if((buf = (double *)AlcMalloc((nn + nb) * sizeof(double))) == NULL)
     {
       errNum = WLZ_ERR_MEM_ALLOC;
     }
@@ -582,7 +587,8 @@ WlzErrorNum			WlzBSplineEval(
   {
     int 	i,
     		dim;
-    double	*y;
+    double	*y,
+    		*w;
     
     if(n == 0)
     {
@@ -616,8 +622,17 @@ WlzErrorNum			WlzBSplineEval(
       AlgError	algErr;
 
       coeff = bs->coefficients + (i * bs->nKnots);
-      algErr = AlgBSplineEval(bs->knots, bs->nKnots, coeff, bs->order,
-          x, y, n);
+      if(deriv == 0)
+      {
+	algErr = AlgBSplineEval(bs->knots, bs->nKnots, coeff, bs->order,
+	    x, y, n);
+      }
+      else
+      {
+        w = y + n;
+        algErr = AlgBSplineDer(bs->knots, bs->nKnots, coeff, bs->order,
+	    deriv, x, y, n, w);
+      }
       if((errNum = WlzErrorFromAlg(algErr)) != WLZ_ERR_NONE)
       {
         break;
@@ -676,5 +691,115 @@ WlzErrorNum			WlzBSplineEval(
     }
   }
   AlcFree(buf);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzFeatures
+* \brief	Evaluates a B-spline at a single specified point.
+* \todo		Currently WlzBSplineEvalSP() is just a wrapper for
+* 		WlzBSplineEval() however this is quite inefficient and
+* 		may change.
+* \param	bs		Given B-spline domain.
+* \param	x		Parametric coordinate of the point.
+* \param	deriv		Order of derivative, range [0-
+* 				(WLZ_BSPLINE_ORDER_MAX - 1)].
+* \param	eval		Destination pointer for a single WlzDVertex2
+* 				or WlzDVertex3 vertex following evaluation.
+*/
+WlzErrorNum			WlzBSplineEvalSP(
+				  WlzBSpline *bs,
+				  double x,
+				  int deriv,
+				  WlzVertexP eval)
+{
+  WlzErrorNum	errNum;
+
+  errNum = WlzBSplineEval(bs, 1, &x, deriv, eval);
+  return(errNum);
+}
+
+/*!
+* \return	Woolz error code.
+* \ingroup	WlzFeatures
+* \brief	Compute the (optional) position and (optional) tangent to
+* 		the B-spline at points along the path of it's curve.
+* \param	bs		Given B-spline domain.
+* \param	n		Number of parametric coordinates given.
+* \param	x		Given parametric coordinates at points along
+* 				the B-spline curve.
+* \param	dstPos		Destination pointer for the n positions of
+* 				the points, may be NULL.
+* \param	dstTnt		Destination pointer for the n unit tangent
+* 				vector at the points, may be NULL.
+*/
+WlzErrorNum			WlzBSplineTangent(
+				  WlzBSpline *bs,
+				  int n,
+				  double *x,
+				  WlzVertexP dstPos,
+				  WlzVertexP dstTnt)
+{
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(bs == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else
+  {
+    if(dstPos.v)
+    {
+      errNum = WlzBSplineEval(bs, n, x, 0, dstPos);
+    }
+    if((errNum == WLZ_ERR_NONE) && dstTnt.v)
+    {
+      errNum = WlzBSplineEval(bs, n, x, 1, dstTnt);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	int	i,
+		dim;
+
+	dim = (bs->type == WLZ_BSPLINE_C2D)? 2: 3;
+	if(dim == 2)
+	{
+	  for(i = 0; i < n; ++i)
+	  {
+	    double s;
+	    WlzDVertex2 *p;
+
+	    p = dstTnt.d2 + i;
+	    s = WLZ_VTX_2_LENGTH(*p);
+	    if(s < DBL_EPSILON)
+	    {
+	      errNum = WLZ_ERR_DOUBLE_DATA;
+	      break;
+	    }
+	    s = 1.0 / s;
+	    WLZ_VTX_2_SCALE(*p, *p, s);
+	  }
+	}
+	else /* dim == 3 */
+	{
+	  for(i = 0; i < n; ++i)
+	  {
+	    double s;
+	    WlzDVertex3 *p;
+
+	    p = dstTnt.d3 + i;
+	    s = WLZ_VTX_3_LENGTH(*p);
+	    if(s < DBL_EPSILON)
+	    {
+	      errNum = WLZ_ERR_DOUBLE_DATA;
+	      break;
+	    }
+	    s = 1.0 / s;
+	    WLZ_VTX_3_SCALE(*p, *p, s);
+	  }
+	}
+      }
+    }
+  }
   return(errNum);
 }
