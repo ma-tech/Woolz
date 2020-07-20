@@ -46,12 +46,6 @@ static char _AlgBSpline_c[] = "University of Edinburgh $Id$";
 #include <Alg.h>
 #include <float.h>
 
-void				AlgBSplineBspl(
-				  double *t,
-				  int k,
-				  double x,
-				  int l, double *h);
-
 static void			AlgBSplineBack(
 				  double *a,
 				  double *z,
@@ -1553,6 +1547,209 @@ AlgError 			AlgBSplineEval(
 	sp += c[ll] * h[j];
       }
       y[i] = sp;
+    }
+  }
+  return(errNum);
+}
+
+/*!
+* \return	Alg error code.
+* \ingroup	AlgFit
+* \brief	Evaluates the derivatives of order nu of the B-spline of
+* 		degree k.
+* 
+* This function has been derived from the netlib Dierckx function splder().
+* The original fortran coments are:
+*
+*  \verbatim
+   Subroutine splder evaluates in a number of points x(i),i=1,2,...,m
+   the derivative of order nu of a spline s(x) of degree k,given in
+   its b-spline representation.
+ 
+   calling sequence:
+      call splder(t,n,c,k,nu,x,y,m,wrk,ier)
+ 
+   input parameters:
+     t    : array,length n, which contains the position of the knots.
+     n    : integer, giving the total number of knots of s(x).
+     c    : array,length n, which contains the b-spline coefficients.
+     k    : integer, giving the degree of s(x).
+     nu   : integer, specifying the order of the derivative. 0<=nu<=k
+     x    : array,length m, which contains the points where the deriv-
+            ative of s(x) must be evaluated.
+     m    : integer, giving the number of points where the derivative
+            of s(x) must be evaluated
+     wrk  : real array of dimension n. used as working space.
+ 
+   output parameters:
+     y    : array,length m, giving the value of the derivative of s(x)
+            at the different points.
+     ier  : error flag
+       ier = 0 : normal return
+       ier =10 : invalid input data (see restrictions)
+ 
+   restrictions:
+     0 <= nu <= k
+     m >= 1
+     t(k+1) <= x(i) <= x(i+1) <= t(n-k) , i=1,2,...,m-1.
+ 
+   other subroutines required: fpbspl
+ 
+   references :
+     de boor c : on calculating with b-splines, j. approximation theory
+                 6 (1972) 50-62.
+     cox m.g.  : the numerical evaluation of b-splines, j. inst. maths
+                 applics 10 (1972) 134-149.
+    dierckx p. : curve and surface fitting with splines, monographs on
+                 numerical analysis, oxford university press, 1993.
+ 
+   author :
+     p.dierckx
+     dept. computer science, k.u.leuven
+     celestijnenlaan 200a, b-3001 heverlee, belgium.
+     e-mail : Paul.Dierckx@cs.kuleuven.ac.be
+ 
+   latest update : march 1987
+   \endverbatim
+*
+* \param	t		Array of knot positions.
+* \param	n		Number of knots.
+* \param	c		B-spline coefficients.
+* \param	k		Degree of the B-Spline.
+* \param	nu		Order of the derivative [0-k].
+* \param	x		Positions at which the derivative of the
+* 				spline is to be evaluated.
+* \param	y		Destination for the evaluated derivatives.
+* \param	m		Number of data points.
+* \param	wrk		Workspace with minimum size n.
+*/
+AlgError			AlgBSplineDer(
+				  double *t,
+				  int n,
+				  double *c,
+				  int k,
+				  int nu,
+				  double *x,
+				  double *y,
+				  int m,
+				  double *wrk)
+{
+  int		i;
+  AlgError	errNum = ALG_ERR_NONE;
+
+  if((nu < 0) || (nu > k) || (m < 0))
+  {
+    errNum = ALG_ERR_FUNC;
+  }
+  else if(m == 1)
+  {
+    for(i = 1; i < m; ++i)
+    {
+      if(x[i] < x[i - 1])
+      {
+	errNum = ALG_ERR_FUNC;
+	break;
+      }
+    }
+  }
+  if(errNum == ALG_ERR_NONE)
+  {
+    int		j,
+  		k1, k2, kk,
+		l, l1, l2,
+		nk1;
+    double	tb,
+    		te,
+		arg;
+
+    /*  Fetch tb and te, the boundaries of the approximation interval. */
+    k1 = k + 1;
+    nk1 = n - k1;
+    tb = t[k1 - 1];
+    te = t[nk1];
+    /* The derivative of order nu of a spline of degree k is a spline of
+     * degree k-nu,the b-spline coefficients wrk(i) of which can be found
+     * using the recurrence scheme of de boor. */
+    l = 1;
+    kk = k;
+    for(i = 0; i < nk1; ++i)
+    {
+      wrk[i] = c[i];
+    }
+    if(nu != 0)
+    {
+      int	nk2;
+
+      nk2 = nk1;
+      for(j = 0; j < nu; ++j)
+      {
+	--nk2;
+	l1 = l - 1;
+	for(i = 0; i < nk2; ++i)
+	{
+	  double fac;
+
+	  ++l1;
+	  l2 = l1 + kk;
+	  fac = t[l2] - t[l1];
+	  if(fac > 0.0)
+	  {
+	    wrk[i] = kk * (wrk[i + 1] - wrk[i]) / fac;
+	  }
+	}
+	++l;
+	--kk;
+      }
+    }
+    if((nu == 0) || (kk != 0))
+    {
+      double	sp;
+      double 	h[6];
+
+      l = k1;
+      l1 = l + 1;
+      k2 = k1 - nu;
+      /* Main loop for the different points. */
+      for(i = 0; i < m; ++i)
+      {
+        int	ll;
+
+	/* Fetch a new x-value arg. */
+	arg = x[i];
+	arg = ALG_CLAMP(arg, tb, te);
+	/* Search for knot interval t(l) <= arg < t(l+1). */
+	while((arg >= t[l1 - 1]) && (l < nk1))
+	{
+	  l = l1;
+	  l1 = l + 1;
+	}
+	/* Evaluate the non-zero b-splines of degree k-nu at arg. */
+	AlgBSplineBspl(t, kk, arg, l, h);
+	/* Find the value of the derivative at x=arg. */
+	sp = 0.0;
+	ll = l - k1 - 1;
+	for(j = 0; j < k2; ++j)
+	{
+	  ++ll;
+	  sp += wrk[ll] * h[j];
+	}
+	y[i] = sp;
+      }
+    }
+    else
+    {
+      /* If nu=k the derivative is a piecewise constant function. */
+      j = 0;
+      for(i = 0; i < m; ++i)
+      {
+	arg = x[i];
+	while((arg >= t[l + 1 - 1]) && (l < nk1))
+	{
+	  ++l;
+	  ++j;
+	}
+	y[i] = wrk[j];
+      }
     }
   }
   return(errNum);
@@ -4693,4 +4890,5 @@ static void			AlgBSplineBacp(
     }
   }
 }
+
 

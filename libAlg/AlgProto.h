@@ -152,7 +152,16 @@ extern AlgError			AlgBSplineEval(
                                   double * x,
                                   double *y,
                                   int m);
-
+extern AlgError			AlgBSplineDer(
+				  double *t,
+                                  int n,
+                                  double *c,
+                                  int k,
+                                  int nu,
+                                  double *x,
+                                  double *y,
+                                  int m,
+                                  double *wrk);
 /* From AlgComplexUtils.c */
 extern double			AlgCModSq(
 				  ComplexD z);
