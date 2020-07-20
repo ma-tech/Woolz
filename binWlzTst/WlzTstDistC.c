@@ -1274,9 +1274,9 @@ static double WlzTstDistComputeInCDist(WlzDVertex2 p, WlzDVertex2 s,
     q1.vtY = c.vtY + (rSq * u0.vtY - u0.vtX * t) / uSqLn;
     /* Need to choose one of these points for Qp. This is a hack which only
      * works because I know where the seed point is! */
+    qP = (WlzGeomCmpAngle(u0, u1) > 0)? q0: q1;
     WLZ_VTX_2_SUB(u0, qS, c);
     WLZ_VTX_2_SUB(u1, qP, c);
-    qP = (WlzGeomCmpAngle(u0, u1) > 0)? q0: q1;
     /* Can now compute constrained distance dPS = dPQP + dQPQS + dSQS.*/
     /* dPQP */
     WLZ_VTX_2_SUB(u0, p, qP);
