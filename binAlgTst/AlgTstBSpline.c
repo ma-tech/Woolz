@@ -67,6 +67,7 @@ int				main(int argc, char *argv[])
 		n = 0,
 		dim = 2,
 		iopt = 0,
+		deriv = -1,
 		m = DATA_SZ,
 		usePData = 0,
 		option,
@@ -77,7 +78,7 @@ int				main(int argc, char *argv[])
   		s = 0.01;
   int		*iwrk = NULL;
   char		*fn = "unknown";
-  char  	optList[] = "23chpqv";
+  char  	optList[] = "23chpqvd:";
   double	*c = NULL,
   		*t = NULL,
 		*u = NULL,
@@ -123,6 +124,9 @@ int				main(int argc, char *argv[])
 	break;
       case 'c':
         usePData = 1;
+	break;
+      case 'd':
+        usage = (sscanf(optarg, "%d", &deriv) != 1) || (deriv < 0);
 	break;
       case 'p':
         periodic = 1;
@@ -268,18 +272,42 @@ int				main(int argc, char *argv[])
     }
     if(nd == 1)
     {
-      fn = "AlgBSplineEval";
-      errNum = AlgBSplineEval(t, n, c, k, (nd == 1)? din[2]: u, out[0], m);
+      if(deriv >= 0)
+      {
+        fn = "AlgBSplineDeriv";
+	errNum = AlgBSplineDer(t, n, c, k, deriv, din[2], out[0], m, wrk);
+      }
+      else
+      {
+	fn = "AlgBSplineEval";
+	errNum = AlgBSplineEval(t, n, c, k, (nd == 1)? din[2]: u, out[0], m);
+      }
     }
     else
     {
-      for(i = 0; i < 3; ++i)
+      if(deriv >= 0)
       {
-        fn = "AlgBSplineEval";
-	errNum = AlgBSplineEval(t, n, &(c[i * n]), k, u, out[i], m);
-	if(errNum != ALG_ERR_NONE)
+        fn = "AlgBSplineDeriv";
+	for(i = 0; i < 3; ++i)
 	{
-	  break;
+	  errNum = AlgBSplineDer(t, n, &(c[i * n]), k, deriv,
+	                         u, out[i], m, wrk);
+	  if(errNum != ALG_ERR_NONE)
+	  {
+	    break;
+	  }
+	}
+      }
+      else
+      {
+	fn = "AlgBSplineEval";
+	for(i = 0; i < 3; ++i)
+	{
+	  errNum = AlgBSplineEval(t, n, &(c[i * n]), k, u, out[i], m);
+	  if(errNum != ALG_ERR_NONE)
+	  {
+	    break;
+	  }
 	}
       }
     }
