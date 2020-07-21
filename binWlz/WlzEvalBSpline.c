@@ -1,10 +1,10 @@
 #if defined(__GNUC__)
 #ident "University of Edinburgh $Id$"
 #else
-static char _WlzFitBSpline_c[] = "University of Edinburgh $Id$";
+static char _WlzEvalBSpline_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         WlzFitBSpline.c
+* \file         WlzEvalBSpline.c
 * \author       Bill Hill
 * \date         July 2020
 * \version      $Id$
@@ -50,9 +50,9 @@ static char _WlzFitBSpline_c[] = "University of Edinburgh $Id$";
 
 /*!
 \ingroup BinWlz
-\defgroup wlzfitbspline WlzFitBSpline
+\defgroup wlzevalbspline WlzEvalBSpline
 \par Name
-WlzFitBSpline
+WlzEvalBSpline
 \par Synopsis
 \verbatim
 WlzEvalBSpline [-h] [-n<evaluations>] [-o<out object>] [-P] [<in object>]
