@@ -45,14 +45,22 @@ static char _WlzBSpline_c[] = "University of Edinburgh $Id$";
 #include <string.h>
 #include <Wlz.h>
 
-static WlzBSpline		*WlzBSplineFromVertices(
-				  WlzVertexType vType,
-				  int nV,
-				  WlzVertexP vtx,
-				  int k,
-				  int periodic,
-				  double sm,
-				  WlzErrorNum *dstErr);
+static WlzObject               	*WlzBSplineCutOtg(
+                                  WlzObject *iObj,
+                                  WlzBSpline *bs,
+                                  int noGrey,
+                                  int radius,
+                                  double tB,
+                                  double tE,
+                                  WlzErrorNum *dstErr);
+static WlzObject               	*WlzBSplineCutPar(
+                                  WlzObject *iObj,
+                                  WlzBSpline *bs,
+                                  int noGrey,
+                                  int radius,
+                                  double tB,
+                                  double tE,
+                                  WlzErrorNum *dstErr);
 /*!
 * \return	New Woolz B-spline domain or NULL on error.
 * \ingroup	WlzAllocation
@@ -321,7 +329,7 @@ WlzPoints			*WlzBSplineEvalPoints(
 * 				smoothing.
 * \param	dstErr		Destination error pointer, may be NULL.
 */
-static WlzBSpline		*WlzBSplineFromVertices(
+WlzBSpline			*WlzBSplineFromVertices(
 				  WlzVertexType vType,
 				  int nV,
 				  WlzVertexP vtx,
@@ -330,10 +338,10 @@ static WlzBSpline		*WlzBSplineFromVertices(
 				  double sm,
 				  WlzErrorNum *dstErr)
 {
-  int		dim,
-  		nest,
+  int		nest,
 		nC = 0,
-		nT = 0;
+		nT = 0,
+		dim = 0;
   WlzBSpline	*bs = NULL;
   int		*iWrk = NULL;
   double	*c = NULL,
@@ -345,13 +353,21 @@ static WlzBSpline		*WlzBSplineFromVertices(
 		
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
-  dim = WlzVertexDim(vType, &errNum);
-  nest = nV + 2 * (k + 1);
-  nC = dim * nest;
+  if((nV <= 0) || (vtx.v == NULL) ||
+     (k < WLZ_BSPLINE_ORDER_MIN) || (k > WLZ_BSPLINE_ORDER_MAX))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    dim = WlzVertexDim(vType, &errNum);
+  }
   if(errNum == WLZ_ERR_NONE)
   {
     int		lwrk;
 
+    nest = nV + 2 * (k + 1);
+    nC = dim * nest;
     lwrk = (nV * (k + 1)) + (nest * (7 + dim + (5 * k)));
     if(((c = (double *)AlcCalloc(nC, sizeof(double))) == NULL) ||
        ((t = (double *)AlcCalloc(nest, sizeof(double))) == NULL) ||
@@ -803,3 +819,354 @@ WlzErrorNum			WlzBSplineTangent(
   }
   return(errNum);
 }
+
+/*!
+* \return	Woolz object cut from the input object.
+* \ingroup	WlzFeatures
+* \brief	Cuts regions from a spatial domain using a B-spline to define
+* 		the region cut. The region may be the domain of the B-spline
+* 		or planes orthogonal to the B-spline.
+* \param	iObj			Object to be cut.
+* \param	bs			B-spline domain.
+* \param	cutOrthog		If non-zero cut orthogonal planes
+* 					rather than the B-spline dilated by
+* 					given radius.
+* \param	noGrey			If non-zero then don't fill the
+* 					returned objects grey values (if they
+* 					exist).
+* \param	radius			Radius of region cut, the orthogonal
+* 					distance from the B-spline. If
+* 					cutting the region of the dilated
+* 					B-spline then this is it's dilation,
+* 					otherwise if cutting orthogonal planes
+* 					this is the radius of the sections.
+* 					If zero then either just the
+* 					pixels/voxels intersecting the B-spline
+* 					or the entire (unclipped) orthogonal
+* 					planes will be cut.
+* \param	tB			B-spline parametric coordinate at which
+* 					to start the cut.
+* \param	tE			B-spline parametric coordinate at which
+* 					to end the cut.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject                	*WlzBSplineCut(
+                                  WlzObject *iObj,
+                                  WlzBSpline *bs,
+                                  int cutOrthog,
+                                  int noGrey,
+                                  int radius,
+                                  double tB,
+                                  double tE,
+                                  WlzErrorNum *dstErr)
+{
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(iObj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if((iObj->domain.core == NULL) || (bs == NULL))
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((iObj->values.core == NULL) && (noGrey == 0))
+  {
+    errNum = WLZ_ERR_VALUES_NULL;
+  }
+  else if((radius < 0) || (tB < 0.0) || (tE > 1.0) || (tB > tE))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    switch(iObj->type)
+    {
+      case WLZ_2D_DOMAINOBJ:
+	if(bs->type != WLZ_BSPLINE_C2D)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+        break;
+      case WLZ_3D_DOMAINOBJ:
+	if(bs->type != WLZ_BSPLINE_C3D)
+	{
+	  errNum = WLZ_ERR_DOMAIN_TYPE;
+	}
+        break;
+      default:
+	errNum = WLZ_ERR_OBJECT_TYPE;
+        break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rObj = (cutOrthog)?
+        WlzBSplineCutOtg(iObj, bs, noGrey, radius, tB, tE, &errNum):
+	WlzBSplineCutPar(iObj, bs, noGrey, radius, tB, tE, &errNum);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
+* \return	Length along the spline's parametric curve.
+* \ingroup	WlzFeatures
+* \brief	Computes the length of a path along a spline's curve between
+* 		a pair of parametric coordinates.
+* 		Given a parametric curve \f$c(t)\f$ then the length \f$l\f$
+* 		of a segment on that curve between \f$t_a\f$ and \f$t_b\f$
+* 		is given by
+* 		\f[
+* 		l = \int_{t_a}^{t_b}\sqrt{
+  		     {\acute{x}}^2 +{\acute{y}}^2 + \ldots}dt
+ 		\f]
+* 		where \f$\acute{x}\f$ is trhe first derivative of coordinate
+* 		\f$x\f$ with respect to \f$t\f$.
+* 		Because the integral is an elliptic integral, then Legendre-
+* 		Gauss quadrature for numerical integration with each spline
+* 		segment integrated using it's own points and weights.
+* \param	bs			Given B-spline domain.
+* \param	tB			Parametric coordinate of start.
+* \param	tE			Parametric coordinate of end.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+double				WlzBSplineLength(
+				  WlzBSpline *bs,
+				  double tB,
+				  double tE,
+				  WlzErrorNum *dstErr)
+{
+  int		n,
+		iB = -1,
+		iE = -1,
+  		dim = 0,
+		epk = 0; 		    /* Evaluations per knot interval. */
+  double	len = 0.0;
+  size_t	vsz = 0;
+  double	*x = NULL;
+  WlzVertexP	vtx = {0};
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if(bs == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((tB < 0.0) || (tE > 1.0) || (tE < tB))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    switch(bs->type)
+    {
+      case WLZ_BSPLINE_C2D:
+        dim = 2;
+	vsz = sizeof(WlzDVertex2);
+	break;
+      case WLZ_BSPLINE_C3D:
+        dim = 3;
+	vsz = sizeof(WlzDVertex3);
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  /* Find knot indices (iB and iE) for which the knots enclose the begining
+   * and end parametric coordinates (tB and tE). */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		i;
+
+    epk = bs->order + 1;
+    /* Find \f$ iB = i st t_i \leq tB < t_{i+1} \f$ */
+    for(i = 0; i < bs->nKnots; ++i)
+    {
+      if(bs->knots[i] >= tB)
+      {
+	iB = (i == 0)? 0: i - 1;
+        break;
+      }
+    }
+    /* Find \f$ iE = i st t_{i-1} < tE \leq t_i \f$ */
+    for(i = bs->nKnots - 1; i > iB; --i)
+    {
+      if(bs->knots[i] <= tE)
+      {
+	iE = (i < bs->nKnots - 1)? i + 1: bs->nKnots - 1;
+        break;
+      }
+    }
+    if(iB >= iE)
+    {
+      errNum = WLZ_ERR_PARAM_DATA;
+    }
+  }
+  /* Allocate room for the parametric coordinates and vertices used to
+   * compute 1st derivatives. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    n = (iE - iB + 1) * epk;
+    if(((vtx.v = AlcMalloc(n * vsz)) == NULL) ||
+       ((x = (double *)AlcMalloc(n * sizeof(double))) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Compute parametic coordinates which cover the knot intervals
+   * and then compute the partial derivatives at these coordinates. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		i,
+    		j = 0;
+
+    for(i = iB; i < iE; ++i)
+    {
+      int	k;
+      double	t0,
+		t1,
+		ta,
+		ts;
+
+      t0 = (i     == iB)? tB: bs->knots[i];
+      t1 = (i + 1 == iE)? tE: bs->knots[i + 1];
+      ta = t1 + t0;
+      ts = t1 - t0;
+      for(k = 0; k < epk; ++k)
+      {
+	double	p;
+
+	p = AlgGaussLegendrePoints(epk, k);
+        x[j] = (ts * p) + ta;
+	++j;
+      }
+    }
+    n = j;
+    errNum = WlzBSplineEval(bs, n, x, 1, vtx);
+  }
+  /* Compute the integral of the modulus of the partial derivatives using
+   * the Gauss-Legendre weights. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		i,
+    		j = 0;
+
+    for(i = iB; i < iE; ++i)
+    {
+      int	k;
+      double	l,
+      		t0,
+		t1,
+		ts;
+
+      l = 0;
+      t0 = (i     == iB)? tB: bs->knots[i];
+      t1 = (i + 1 == iE)? tE: bs->knots[i + 1];
+      ts = t1 - t0;
+      for(k = 0; k < epk; ++k)
+      {
+	double	w;
+
+	w = AlgGaussLegendreWeights(epk, k);
+	l += w * ((dim == 2)? WLZ_VTX_2_LENGTH(vtx.d2[j]):
+	                      WLZ_VTX_3_LENGTH(vtx.d3[j]));
+	++j;
+      }
+      len += ts * l;
+    }
+    len *= 0.5;
+  }
+  AlcFree(x);
+  AlcFree(vtx.v);
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(len);
+}
+
+/*!
+* \return	Woolz object cut from the input object.
+* \ingroup	WlzFeatures
+* \brief	Cuts orthogonal planes from a spatial domain using a B-spline
+* 		to define orthogonality of the cutting plane cut.
+* \param	iObj			Object to be cut.
+* \param	bs			B-spline domain.
+* \param	noGrey			If non-zero then don't fill the
+* 					returned objects grey values (if they
+* 					exist).
+* \param	radius			Radius of cut domain (centred on the
+* 					B-spline). If zero then entire
+* 					(unclipped) orthogonal planes will be
+* 					cut.
+* \param	tB			B-spline parametric coordinate at which
+* 					to start the cut.
+* \param	tE			B-spline parametric coordinate at which
+* 					to end the cut.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject               	*WlzBSplineCutOtg(
+                                  WlzObject *iObj,
+                                  WlzBSpline *bs,
+                                  int noGrey,
+                                  int radius,
+                                  double tB,
+                                  double tE,
+                                  WlzErrorNum *dstErr)
+{
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  errNum = WLZ_ERR_UNIMPLEMENTED; // HACK TODO
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
+/*!
+* \return	Woolz object cut from the input object.
+* \ingroup	WlzFeatures
+* \brief	Cuts x a spatial domain parallel a B-spline within the given
+* 		object.
+* \param	iObj			Object to be cut.
+* \param	bs			B-spline domain.
+* \param	noGrey			If non-zero then don't fill the
+* 					returned objects grey values (if they
+* 					exist).
+* \param	radius			Radius of cut domain (centred on the
+* 					B-spline). If zero then entire
+* 					(unclipped) orthogonal planes will be
+* 					cut.
+* \param	tB			B-spline parametric coordinate at which
+* 					to start the cut.
+* \param	tE			B-spline parametric coordinate at which
+* 					to end the cut.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+static WlzObject               	*WlzBSplineCutPar(
+                                  WlzObject *iObj,
+                                  WlzBSpline *bs,
+                                  int noGrey,
+                                  int radius,
+                                  double tB,
+                                  double tE,
+                                  WlzErrorNum *dstErr)
+{
+  WlzObject	*rObj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  errNum = WLZ_ERR_UNIMPLEMENTED; // HACK TODO
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(rObj);
+}
+
