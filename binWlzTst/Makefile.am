@@ -47,6 +47,7 @@ LDADD 			= -L$(top_srcdir)/libWlz/.libs -lWlz \
 
 bin_PROGRAMS		= \
 			  WlzTstBuildObj \
+			  WlzTstBSplineLen \
 			  WlzTstCMeshCellStats \
 			  WlzTstCMeshDist \
 			  WlzTstCMeshGen \
@@ -73,6 +74,10 @@ bin_PROGRAMS		= \
 WlzTstBuildObj_SOURCES			= WlzTstBuildObj.c
 WlzTstBuildObj_LDADD			= $(LDADD)
 WlzTstBuildObj_LDFLAGS			= $(AM_LFLAGS)
+
+WlzTstBSplineLen_SOURCES		= WlzTstBSplineLen.c
+WlzTstBSplineLen_LDADD			= $(LDADD)
+WlzTstBSplineLen_LDFLAGS		= $(AM_LFLAGS)
 
 WlzTstCMeshCellStats_SOURCES		= WlzTstCMeshCellStats.c
 WlzTstCMeshCellStats_LDADD		= $(LDADD)
