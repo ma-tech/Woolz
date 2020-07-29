@@ -3399,7 +3399,7 @@ typedef struct _WlzPoints
 * \ingroup	WlzFeatures
 * \brief	Spline based line curves in either 2 or 3D.
 * 		Possible types are: WLZ_BSPLINE_C2D or WLZ_BSPLINE_C3D.
-* 		Typedef: ::WlzBSplineDomain
+* 		Typedef: ::WlzBSpline
 */
 typedef struct _WlzBSpline
 {
