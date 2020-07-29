@@ -104,6 +104,7 @@ bin_PROGRAMS		= \
 			  WlzCopyToTiledObj \
 			  WlzCreateSpecialSE \
 			  WlzCrossCorValue \
+			  WlzCutBSpline \
 			  WlzCutObjToBox \
 			  WlzDefGrdTensorFeatures \
 			  WlzDiffDomain \
@@ -471,6 +472,10 @@ WlzCreateSpecialSE_LDFLAGS		= $(AM_LFLAGS)
 WlzCrossCorValue_SOURCES		= WlzCrossCorValue.c
 WlzCrossCorValue_LDADD			= $(LDADD)
 WlzCrossCorValue_LDFLAGS		= $(AM_LFLAGS)
+
+WlzCutBSpline_SOURCES			= WlzCutBSpline.c
+WlzCutBSpline_LDADD			= $(LDADD)
+WlzCutBSpline_LDFLAGS			= $(AM_LFLAGS)
 
 WlzCutObjToBox_SOURCES			= WlzCutObjToBox.c
 WlzCutObjToBox_LDADD			= $(LDADD)
