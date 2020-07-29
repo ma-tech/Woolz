@@ -53,6 +53,7 @@ libAlg_la_SOURCES 	= \
 			  AlgDPSearch.c \
 			  AlgFourier.c \
 			  AlgGamma.c \
+			  AlgGaussLegendrePoly.c \
 			  AlgGrayCode.c \
 			  AlgHeapSort.c \
 			  AlgHilbertIndex.c \

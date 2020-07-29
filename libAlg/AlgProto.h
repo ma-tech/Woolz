@@ -346,6 +346,14 @@ extern AlgError			AlgLinearFitIdx1D(
 				  double *dstSigB,
 				  double *dstQ);
 
+/* From AlgGaussLegendrePoly.c */
+extern double			AlgGaussLegendrePoints(
+				  int n,
+				  int i);
+extern double			AlgGaussLegendreWeights(
+				  int n,
+				  int i);
+
 /* From AlgGrayCode.c */
 extern unsigned int		AlgGrayCode(
 				  unsigned int g);

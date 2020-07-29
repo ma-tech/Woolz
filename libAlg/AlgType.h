@@ -92,6 +92,9 @@ extern "C" {
 /* A tollerance value for double precission arithmetic. */
 #define ALG_DBL_TOLLERANCE	(1.0E-9)
 
+/* Maximmum orderr of Gauss-Legendre polynomial supported. */
+#define ALG_GAUSSLEGENDRE_ORDER_MAX (6)
+
 /*!
 * \enum		_AlgDistribution
 * \brief	Statistical distributions.
