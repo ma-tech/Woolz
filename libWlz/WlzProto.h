@@ -1001,6 +1001,23 @@ extern WlzBSpline		*WlzBSplineFromObj(
 				  int closed,
 				  double sm,
 				  WlzErrorNum *dstErr);
+extern WlzBSpline		*WlzBSplineFromVertices(
+				  WlzVertexType vType,
+				  int nV,
+				  WlzVertexP vtx,
+				  int k,
+				  int periodic,
+				  double sm,
+				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzBSplineCut(
+				  WlzObject *iObj,
+				  WlzBSpline *bs,
+				  int cutOrthog,
+				  int noGrey,
+				  int radius,
+				  double tB,
+				  double tE,
+				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzFreeBSpline(
 				  WlzBSpline *bs);
 extern WlzErrorNum		WlzBSplineEval(
@@ -1023,6 +1040,11 @@ extern WlzErrorNum		WlzBSplineTangent(
 extern WlzPoints		*WlzBSplineEvalPoints(
 				  WlzBSpline *bs,
 				  int n,
+				  WlzErrorNum *dstErr);
+extern double			WlzBSplineLength(
+				  WlzBSpline *bs,
+				  double tB,
+				  double tE,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
