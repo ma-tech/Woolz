@@ -4,7 +4,7 @@
 static char _WlzWlzGreyExtremum_c[] = "University of Edinburgh $Id$";
 #endif
 /*!
-* \file         libWlz/WlzWlzGreyExtremum.c
+* \file         libWlz/WlzGreyExtremum.c
 * \author       Bill Hill
 * \date         March 1999
 * \version      $Id$
