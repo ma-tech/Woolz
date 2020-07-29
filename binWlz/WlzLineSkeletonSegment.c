@@ -39,7 +39,7 @@ static char _WlzLineSkeletonSegment_c[] = "University of Edinburgh $Id$";
 * \ingroup	BinWlz
 *
 * \par Binary
-* \ref wlzlineskeleton "WlzLineSkeletonSegment"
+* \ref wlzlineskeletonsegment "WlzLineSkeletonSegment"
 */
 
 #include <stdio.h>
@@ -52,7 +52,7 @@ static char _WlzLineSkeletonSegment_c[] = "University of Edinburgh $Id$";
 
 /*!
 \ingroup BinWlz
-\defgroup wlzlineskeleton WlzLineSkeletonSegment
+\defgroup wlzlineskeletonsegment WlzLineSkeletonSegment
 \par Name
 WlzLineSkeletonSegment
 \par Synopsis
