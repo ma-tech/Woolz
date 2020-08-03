@@ -711,6 +711,231 @@ WlzErrorNum			WlzBSplineEval(
 }
 
 /*!
+* \return	New spatial domain object or NULL on error.
+* \ingroup	WlzFeatures
+* \brief	Makes a new interval or plane domain object corresponding
+* 		to the evaluation of the given B-spline in the given
+* 		parametric coordinate range. The returned object may have
+* 		pixel/voxels which are disconnected unless dilated by 1.
+* \param	bs			Given B-spline domain.
+* \param	tB			Begining of the parametric range.
+* \param	TE			End of the parametric range.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzObject			*WlzBSplineToDomain(
+				  WlzBSpline *bs,
+				  double tB,
+				  double tE,
+				  WlzErrorNum *dstErr)
+{
+  int		dim = 0,
+  		len = 0;
+  size_t	vsz = 0;
+  double	*buf = NULL;
+  WlzVertexP	pos = {0};
+  WlzObject	*obj = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(bs == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(tB > tE)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    switch(bs->type)
+    {
+      case WLZ_BSPLINE_C2D:
+        dim = 2;
+	vsz = sizeof(WlzDVertex2);
+	break;
+      case WLZ_BSPLINE_C3D:
+        dim = 3;
+	vsz = sizeof(WlzDVertex3);
+	break;
+      default:
+        errNum = WLZ_ERR_DOMAIN_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    len = (int )ceil(WlzBSplineLength(bs, tB, tE, &errNum));
+  }
+  /* Allocate buffers for evaluating the spline. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(((buf = (double *)AlcMalloc(sizeof(double) * len)) == NULL) ||
+       ((pos.v = AlcMalloc(vsz * len)) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Compute point positions. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		i;
+    double	t = 0;
+
+    if(len > 1)
+    {
+      t = (tE - tB) / (len - 1);
+    }
+    for(i = 0; i < len; ++i)
+    {
+      buf[i] = tB + (i * t);
+    }
+    errNum = WlzBSplineEval(bs, len, buf, 0, pos);
+  }
+  AlcFree(buf);
+  /* Compute bounding box and create domain object. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		i;
+    WlzPixelV	bgd = {0};
+
+    bgd.type = WLZ_GREY_UBYTE;
+    if(dim == 2)
+    {
+      WlzDVertex2 *p;
+      WlzDBox2	b;
+
+      p = pos.d2;
+      b.xMin = b.xMax = p[0].vtX;
+      b.yMin = b.yMax = p[0].vtY;
+      for(i = 1; i < len; ++i)
+      {
+	if(p[i].vtX < b.xMin)
+	{
+	  b.xMin = p[i].vtX;
+	}
+        else if(p[i].vtX > b.xMax)
+	{
+	  b.xMax = p[i].vtX;
+	}
+	if(p[i].vtY < b.yMin)
+	{
+	  b.yMin = p[i].vtY;
+	}
+        else if(p[i].vtY > b.yMax)
+	{
+	  b.yMax = p[i].vtY;
+	}
+      }
+      obj = WlzAssignObject(
+      	    WlzMakeRect((int )floor(b.yMin), (int )ceil(b.yMax),
+			(int )floor(b.xMin), (int )ceil(b.xMax),
+			bgd.type, NULL, bgd, NULL, NULL, &errNum), NULL);
+    }
+    else /* dim == 3 */
+    {
+      WlzDVertex3 *p;
+      WlzDBox3	b;
+
+      p = pos.d3;
+      b.xMin = b.xMax = p[0].vtX;
+      b.yMin = b.yMax = p[0].vtY;
+      b.zMin = b.zMax = p[0].vtZ;
+      for(i = 1; i < len; ++i)
+      {
+	if(p[i].vtX < b.xMin)
+	{
+	  b.xMin = p[i].vtX;
+	}
+        else if(p[i].vtX > b.xMax)
+	{
+	  b.xMax = p[i].vtX;
+	}
+	if(p[i].vtY < b.yMin)
+	{
+	  b.yMin = p[i].vtY;
+	}
+        else if(p[i].vtY > b.yMax)
+	{
+	  b.yMax = p[i].vtY;
+	}
+	if(p[i].vtZ < b.zMin)
+	{
+	  b.zMin = p[i].vtZ;
+	}
+        else if(p[i].vtZ > b.zMax)
+	{
+	  b.zMax = p[i].vtZ;
+	}
+      }
+      obj = WlzAssignObject(
+            WlzMakeCuboid((int )floor(b.zMin), (int )ceil(b.zMax),
+			  (int )floor(b.yMin), (int )ceil(b.yMax),
+			  (int )floor(b.xMin), (int )ceil(b.xMax),
+			  bgd.type, bgd, NULL, NULL, &errNum), NULL);
+    }
+  }
+  /* Set pixels/voxels in the domain object. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzGreyValueWSpace *gVWSp;
+
+    gVWSp = WlzGreyValueMakeWSp(obj, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int	i;
+      WlzPixelV	thr;
+      WlzObject	*tObj = NULL;
+
+      thr.v.ubv = 1;
+      thr.type = WLZ_GREY_UBYTE;
+      if(dim == 2)
+      {
+        WlzDVertex2 *p;
+
+	p = pos.d2;
+        for(i = 0; i < len; ++i)
+	{
+	  WlzGreyValueGet(gVWSp, 0, p[i].vtY, p[i].vtX);
+	  *(gVWSp->gPtr[0].ubp) = 1;
+	}
+      }
+      else /* dim == 3 */
+      {
+        WlzDVertex3 *p;
+
+	p = pos.d3;
+        for(i = 0; i < len; ++i)
+	{
+	  WlzGreyValueGet(gVWSp, p[i].vtZ, p[i].vtY, p[i].vtX);
+	  *(gVWSp->gPtr[0].ubp) = 1;
+	}
+      }
+      WlzGreyValueFreeWSp(gVWSp);
+      tObj = WlzAssignObject(
+             WlzThreshold(obj, thr, WLZ_THRESH_HIGH, &errNum), NULL);
+      if(errNum == WLZ_ERR_NONE)
+      {
+	WlzValues val = {0};
+
+        (void )WlzFreeObj(obj);
+	obj = WlzMakeMain(tObj->type, tObj->domain, val, NULL, NULL, &errNum);
+      }
+      (void )WlzFreeObj(tObj);
+    }
+  }
+  AlcFree(pos.v);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    WlzFreeObj(obj);
+    obj = NULL;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(obj);
+}
+
+/*!
 * \return	Woolz error code.
 * \ingroup	WlzFeatures
 * \brief	Evaluates a B-spline at a single specified point.
@@ -1135,7 +1360,7 @@ static WlzObject               	*WlzBSplineCutOtg(
 /*!
 * \return	Woolz object cut from the input object.
 * \ingroup	WlzFeatures
-* \brief	Cuts x a spatial domain parallel a B-spline within the given
+* \brief	Cuts a spatial domain parallel to a B-spline within the given
 * 		object.
 * \param	iObj			Object to be cut.
 * \param	bs			B-spline domain.
@@ -1163,6 +1388,7 @@ static WlzObject               	*WlzBSplineCutPar(
 {
   WlzObject	*rObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+
 
   errNum = WLZ_ERR_UNIMPLEMENTED; // HACK TODO
   if(dstErr)

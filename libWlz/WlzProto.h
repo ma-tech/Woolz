@@ -1009,6 +1009,11 @@ extern WlzBSpline		*WlzBSplineFromVertices(
 				  int periodic,
 				  double sm,
 				  WlzErrorNum *dstErr);
+extern WlzObject		*WlzBSplineToDomain(
+				  WlzBSpline *bs,            
+				  double tB,
+				  double tE,
+				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzBSplineCut(
 				  WlzObject *iObj,
 				  WlzBSpline *bs,

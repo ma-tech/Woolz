@@ -58,6 +58,7 @@ bin_PROGRAMS		= \
 			  WlzBoundaryToObj \
 			  WlzBoundaryVertices \
 			  WlzBoundingBox \
+			  WlzBSplineToDomain \
 			  WlzBuildContour \
 			  WlzCannyDeriche \
 			  WlzCentralityObj \
@@ -288,6 +289,10 @@ WlzBoundaryVertices_LDFLAGS		= $(AM_LFLAGS)
 WlzBoundingBox_SOURCES			= WlzBoundingBox.c
 WlzBoundingBox_LDADD			= $(LDADD)
 WlzBoundingBox_LDFLAGS			= $(AM_LFLAGS)
+
+WlzBSplineToDomain_SOURCES		= WlzBSplineToDomain.c
+WlzBSplineToDomain_LDADD		= $(LDADD)
+WlzBSplineToDomain_LDFLAGS		= $(AM_LFLAGS)
 
 WlzBuildContour_SOURCES			= WlzBuildContour.c
 WlzBuildContour_LDADD			= $(LDADD)
