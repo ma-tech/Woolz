@@ -778,7 +778,7 @@ WlzObject			*WlzBSplineToDomain(
   if(errNum == WLZ_ERR_NONE)
   {
     int		i;
-    double	t = 0;
+    double	t = 0.0;
 
     if(len > 1)
     {
@@ -1055,7 +1055,9 @@ WlzErrorNum			WlzBSplineTangent(
 * \param	bs			B-spline domain.
 * \param	cutOrthog		If non-zero cut orthogonal planes
 * 					rather than the B-spline dilated by
-* 					given radius.
+* 					given radius. Cutting othogonal
+* 					planes is only allowed for objects
+* 					and B-splines in 3D.
 * \param	noGrey			If non-zero then don't fill the
 * 					returned objects grey values (if they
 * 					exist).
@@ -1096,20 +1098,27 @@ WlzObject                	*WlzBSplineCut(
   {
     errNum = WLZ_ERR_DOMAIN_NULL;
   }
-  else if((iObj->values.core == NULL) && (noGrey == 0))
-  {
-    errNum = WLZ_ERR_VALUES_NULL;
-  }
   else if((radius < 0) || (tB < 0.0) || (tE > 1.0) || (tB > tE))
   {
     errNum = WLZ_ERR_PARAM_DATA;
   }
   else
   {
+    if(iObj->values.core == NULL)
+    {
+      noGrey = 1;
+    }
+    else if(iObj->values.core->type != WLZ_VOXELVALUETABLE_GREY)
+    {
+      errNum = WLZ_ERR_VALUES_TYPE;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
     switch(iObj->type)
     {
       case WLZ_2D_DOMAINOBJ:
-	if(bs->type != WLZ_BSPLINE_C2D)
+	if((bs->type != WLZ_BSPLINE_C2D) || cutOrthog)
 	{
 	  errNum = WLZ_ERR_DOMAIN_TYPE;
 	}
@@ -1322,6 +1331,9 @@ double				WlzBSplineLength(
 * \ingroup	WlzFeatures
 * \brief	Cuts orthogonal planes from a spatial domain using a B-spline
 * 		to define orthogonality of the cutting plane cut.
+* 		This may only be called for objects and splines in 3D but
+* 		this is not tested for because this is a static function and
+* 		the calling function tests for this.
 * \param	iObj			Object to be cut.
 * \param	bs			B-spline domain.
 * \param	noGrey			If non-zero then don't fill the
@@ -1346,10 +1358,129 @@ static WlzObject               	*WlzBSplineCutOtg(
                                   double tE,
                                   WlzErrorNum *dstErr)
 {
-  WlzObject	*rObj = NULL;
+  int		len = 1;
+  double	*buf = NULL;
+  WlzVertexP	nrm,
+  		pos = {0};
+  WlzObject	*sObj = NULL,
+  		*rObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
+  const WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
+  const double	eps = 1.0e-06;
 
-  errNum = WLZ_ERR_UNIMPLEMENTED; // HACK TODO
+  /* Compute buffer sizes. */
+  if(tB + eps < tE)
+  {
+    len = (int )ceil(WlzBSplineLength(bs, tB, tE, &errNum)) + 1;
+  }
+  /* Create subdomain in 2D of given radius. */
+  if((errNum == WLZ_ERR_NONE) && (radius > 0))
+  {
+   sObj = WlzAssignObject(
+	  WlzMakeSphereObject(WLZ_2D_DOMAINOBJ, radius, 0.0, 0.0, 0.0,
+			      &errNum), NULL);
+  }
+  /* Allocate buffers for evaluating the spline and it's derivative. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    if(((buf = (double *)AlcMalloc(sizeof(double) * len)) == NULL) ||
+       ((pos.v = AlcMalloc(sizeof(WlzDVertex3) * 2 * len)) == NULL))
+    {
+      errNum = WLZ_ERR_MEM_ALLOC;
+    }
+  }
+  /* Evaluate the spline and it's derivative. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		i;
+    double	t = 0.0;
+
+    nrm.d3 = pos.d3 + len;
+    if(len > 1)
+    {
+      t = (tE - tB) / (len - 1);
+    }
+    for(i = 0; i < len; ++i)
+    {
+      buf[i] = tB + (i * t);
+    }
+    errNum = WlzBSplineEval(bs, len, buf, 0, pos);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzBSplineEval(bs, len, buf, 1, nrm);
+    }
+  }
+  AlcFree(buf);
+  /* Create 3D domain object with len planes. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzDomain	rDom = {0};
+    WlzValues	rVal = {0};
+
+    rDom.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN, 0, len - 1,
+                                0, 1, 0, 1, &errNum);
+    if((errNum == WLZ_ERR_NONE) && !noGrey)
+    {
+      rVal.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY, 0, len - 1,
+				     iObj->values.vox->bckgrnd, NULL, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      rObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, rDom, rVal, NULL, NULL, &errNum);
+    }
+    if(errNum != WLZ_ERR_NONE)
+    {
+      (void )WlzFreePlaneDomain(rDom.p);
+      (void )WlzFreeVoxelValueTb(rVal.vox);
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    int		p;
+    WlzDVertex3 z = {0};
+
+    for(p = 0; p < len; ++p)
+    {
+      WlzObject	*obj2 = NULL;
+      WlzThreeDViewStruct *vs;
+
+      vs = Wlz3DViewStructFromNormal(nrm.d3[p], pos.d3[p], z, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = WlzInit3DViewStruct(vs, iObj);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	obj2 = WlzGetSubSectionFromObject(iObj, sObj, vs, interp,
+		                          NULL, &errNum);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        rObj->domain.p->domains[p] = WlzAssignDomain(obj2->domain, NULL);
+	if(rObj->values.core)
+	{
+	  rObj->values.vox->values[p] = WlzAssignValues(obj2->values, NULL);
+	}
+      }
+      (void )WlzFree3DViewStruct(vs);
+      (void )WlzFreeObj(obj2);
+      if(errNum != WLZ_ERR_NONE)
+      {
+        break;
+      }
+    }
+  }
+  (void )WlzFreeObj(sObj);
+  if(errNum == WLZ_ERR_NONE)
+  {
+    errNum = WlzStandardPlaneDomain(rObj->domain.p, rObj->values.vox);
+  }
+  AlcFree(pos.v);
+  if(errNum != WLZ_ERR_NONE)
+  {
+    (void )WlzFreeObj(rObj);
+    rObj = NULL;
+  }
   if(dstErr)
   {
     *dstErr = errNum;
@@ -1386,11 +1517,72 @@ static WlzObject               	*WlzBSplineCutPar(
                                   double tE,
                                   WlzErrorNum *dstErr)
 {
-  WlzObject	*rObj = NULL;
+  int		dim;
+  WlzObject	*o1,
+  		*rObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
 
-  errNum = WLZ_ERR_UNIMPLEMENTED; // HACK TODO
+  dim = (iObj->type == WLZ_2D_DOMAINOBJ)? 2: 3;
+  /* Get domain corresponding to the B-spline and dilate if required. */
+  o1 = WlzAssignObject(
+       WlzBSplineToDomain(bs, tB, tE, &errNum), NULL);
+  if((errNum == WLZ_ERR_NONE) && (radius > 0))
+  {
+    WlzObject	*o2 = NULL;
+
+    if(radius > 1)
+    {
+      WlzObject	*os = NULL;
+
+      os = WlzAssignObject(
+	   WlzMakeSphereObject(iObj->type, radius, 0.0, 0.0, 0.0,
+			       &errNum), NULL);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        o2 = WlzAssignObject(
+	     WlzStructDilation(o1, os, &errNum), NULL);
+      }
+      (void )WlzFreeObj(os);
+    }
+    else
+    {
+      o2 = WlzAssignObject(
+           WlzDilation(o1,
+	               (dim == 2)? WLZ_8_CONNECTED: WLZ_26_CONNECTED,
+		       &errNum), NULL);
+    }
+    (void )WlzFreeObj(o1);
+    o1 = o2;
+  }
+  /* Take intersection of the domain with the given object. */
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzObject   *o2;
+    WlzObject	*objs[2];
+
+    objs[0] = iObj;
+    objs[1] = o1;
+    o2 = WlzAssignObject(                 
+         WlzIntersectN(2, objs, 0, &errNum), NULL);
+    (void )WlzFreeObj(o1);
+    o1 = o2;
+  }
+  /* Transfer grey values if required. */
+  if((errNum == WLZ_ERR_NONE) && !noGrey)
+  {
+    WlzObject   *o2 = NULL;      
+    
+    o2 = WlzAssignObject(
+         WlzGreyTransfer(o1, iObj, 0, &errNum), NULL);
+    (void )WlzFreeObj(o1);       
+    o1 = o2;
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    rObj = WlzMakeMain(o1->type, o1->domain, o1->values, NULL, NULL, &errNum);
+  }
+  (void )WlzFreeObj(o1);
   if(dstErr)
   {
     *dstErr = errNum;
