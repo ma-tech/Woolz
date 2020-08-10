@@ -144,7 +144,6 @@ int		main(int argc, char *argv[])
 		cutOrthog = 0,
 		usage = 0,
 		verbose = 0;
-  WlzPoints	*pts = NULL;
   WlzObject	*iObj = NULL,
   		*oObj = NULL,
 		*sObj = NULL;
