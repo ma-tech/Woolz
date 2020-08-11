@@ -1013,6 +1013,7 @@ extern WlzObject		*WlzBSplineToDomain(
 				  WlzBSpline *bs,            
 				  double tB,
 				  double tE,
+				  int paramVal,
 				  WlzErrorNum *dstErr);
 extern WlzObject		*WlzBSplineCut(
 				  WlzObject *iObj,

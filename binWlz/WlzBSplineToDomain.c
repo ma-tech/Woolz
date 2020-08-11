@@ -55,13 +55,18 @@ static char _WlzBSplineToDomain_c[] = "University of Edinburgh $Id$";
 WlzBSplineToDomain
 \par Synopsis
 \verbatim
-WlzBSplineToDomain [-h] [-o<out object>] [-t[<min>],[<max>]] [<in object>]
+WlzBSplineToDomain [-h] [-V] [-o<out object>] [-t[<min>],[<max>]] [<in object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr>
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr>
+    <td><b>-V</b></td>
+    <td>The output object will have values set to the B-spline parametric
+        value.</td>
   </tr>
   <tr>
     <td><b>-t</b></td>
@@ -107,6 +112,7 @@ int		main(int argc, char *argv[])
 {
   int		option,
 		ok,
+		paramVal = 0,
 		usage = 0;
   WlzObject	*iObj = NULL,
   		*oObj = NULL;
@@ -115,7 +121,7 @@ int		main(int argc, char *argv[])
   char		*iFile = NULL,
   		*oFile = NULL;
   double	param[2] = {0.0, 1.0};
-  static char	optList[] = "ho:t:",
+  static char	optList[] = "hVo:t:",
 		defFile[] = "-";
 
   iFile = oFile = defFile;
@@ -123,6 +129,9 @@ int		main(int argc, char *argv[])
   {
     switch(option)
     {
+      case 'V':
+        paramVal = 1;
+	break;
       case 't':
 	{
 	  int	i;
@@ -235,7 +244,7 @@ int		main(int argc, char *argv[])
     }
     else
     {
-      oObj = WlzBSplineToDomain(bs, param[0], param[1], &errNum);
+      oObj = WlzBSplineToDomain(bs, param[0], param[1], paramVal, &errNum);
     }
     if(errNum != WLZ_ERR_NONE)
     {
@@ -274,10 +283,12 @@ int		main(int argc, char *argv[])
   {
     errNum = WLZ_ERR_NONE;
     (void )fprintf(stderr,
-    "Usage: %s [-h] [-o<out object>] [-t[<min>],[<max>]] [<in object>]\n"
+    "Usage: %s [-h] [-V] [-o<out object>] [-t[<min>],[<max>]] [<in object>]\n"
     "Version: %s\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
+    "  -V  The output object will have values set to the B-spline parametric\n"
+    "      value.\n"
     "  -t  Parametric range along the B-spline curve (set to %g,%g).\n"
     "  -o  Output object file name.\n"
     "Creates an interval or plane domain object in which the pixels/voxels\n"

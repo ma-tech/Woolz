@@ -721,20 +721,24 @@ WlzErrorNum			WlzBSplineEval(
 * \param	bs			Given B-spline domain.
 * \param	tB			Begining of the parametric range.
 * \param	TE			End of the parametric range.
+* \param	paramVal		If non-zero the returned object will
+* 					have values set to the B-spline
+* 					parametric values.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject			*WlzBSplineToDomain(
 				  WlzBSpline *bs,
 				  double tB,
 				  double tE,
+				  int paramVal,
 				  WlzErrorNum *dstErr)
 {
   int		dim = 0,
   		len = 0;
   size_t	vsz = 0;
-  double	*buf = NULL;
+  double	*par = NULL;
   WlzVertexP	pos = {0};
-  WlzObject	*obj = NULL;
+  WlzObject	*rObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(bs == NULL)
@@ -769,7 +773,7 @@ WlzObject			*WlzBSplineToDomain(
   /* Allocate buffers for evaluating the spline. */
   if(errNum == WLZ_ERR_NONE)
   {
-    if(((buf = (double *)AlcMalloc(sizeof(double) * len)) == NULL) ||
+    if(((par = (double *)AlcMalloc(sizeof(double) * len)) == NULL) ||
        ((pos.v = AlcMalloc(vsz * len)) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
@@ -787,11 +791,10 @@ WlzObject			*WlzBSplineToDomain(
     }
     for(i = 0; i < len; ++i)
     {
-      buf[i] = tB + (i * t);
+      par[i] = tB + (i * t);
     }
-    errNum = WlzBSplineEval(bs, len, buf, 0, pos);
+    errNum = WlzBSplineEval(bs, len, par, 0, pos);
   }
-  AlcFree(buf);
   /* Compute bounding box and create domain object. */
   if(errNum == WLZ_ERR_NONE)
   {
@@ -826,10 +829,10 @@ WlzObject			*WlzBSplineToDomain(
 	  b.yMax = p[i].vtY;
 	}
       }
-      obj = WlzAssignObject(
-      	    WlzMakeRect((int )floor(b.yMin), (int )ceil(b.yMax),
-			(int )floor(b.xMin), (int )ceil(b.xMax),
-			bgd.type, NULL, bgd, NULL, NULL, &errNum), NULL);
+      rObj = WlzAssignObject(
+      	     WlzMakeRect((int )floor(b.yMin), (int )ceil(b.yMax),
+			 (int )floor(b.xMin), (int )ceil(b.xMax),
+			 bgd.type, NULL, bgd, NULL, NULL, &errNum), NULL);
     }
     else /* dim == 3 */
     {
@@ -867,19 +870,20 @@ WlzObject			*WlzBSplineToDomain(
 	  b.zMax = p[i].vtZ;
 	}
       }
-      obj = WlzAssignObject(
-            WlzMakeCuboid((int )floor(b.zMin), (int )ceil(b.zMax),
-			  (int )floor(b.yMin), (int )ceil(b.yMax),
-			  (int )floor(b.xMin), (int )ceil(b.xMax),
-			  bgd.type, bgd, NULL, NULL, &errNum), NULL);
+      rObj = WlzAssignObject(
+             WlzMakeCuboid((int )floor(b.zMin), (int )ceil(b.zMax),
+			   (int )floor(b.yMin), (int )ceil(b.yMax),
+			   (int )floor(b.xMin), (int )ceil(b.xMax),
+			   bgd.type, bgd, NULL, NULL, &errNum), NULL);
     }
   }
-  /* Set pixels/voxels in the domain object. */
+  /* Set pixels/voxels in the domain object and then threshold to recover the
+   * domain. */
   if(errNum == WLZ_ERR_NONE)
   {
     WlzGreyValueWSpace *gVWSp;
 
-    gVWSp = WlzGreyValueMakeWSp(obj, &errNum);
+    gVWSp = WlzGreyValueMakeWSp(rObj, &errNum);
     if(errNum == WLZ_ERR_NONE)
     {
       int	i;
@@ -912,28 +916,83 @@ WlzObject			*WlzBSplineToDomain(
       }
       WlzGreyValueFreeWSp(gVWSp);
       tObj = WlzAssignObject(
-             WlzThreshold(obj, thr, WLZ_THRESH_HIGH, &errNum), NULL);
+             WlzThreshold(rObj, thr, WLZ_THRESH_HIGH, &errNum), NULL);
       if(errNum == WLZ_ERR_NONE)
       {
 	WlzValues val = {0};
 
-        (void )WlzFreeObj(obj);
-	obj = WlzMakeMain(tObj->type, tObj->domain, val, NULL, NULL, &errNum);
+        (void )WlzFreeObj(rObj);
+	rObj = WlzMakeMain(tObj->type, tObj->domain, val, NULL, NULL, &errNum);
       }
       (void )WlzFreeObj(tObj);
     }
   }
+  /* If parametric values are required make a value table and then set the
+   * values. */
+  if((errNum == WLZ_ERR_NONE) && paramVal)
+  {
+    WlzValues	val;
+    WlzPixelV	bgd = {0};
+    WlzObjectType gTT;
+    WlzGreyValueWSpace *gVWSp = NULL;
+
+
+    bgd.type = WLZ_GREY_DOUBLE;
+    gTT = WlzGreyValueTableType(0, WLZ_GREY_TAB_INTL, WLZ_GREY_DOUBLE, NULL);
+    if(dim == 2)
+    {
+      val.i = WlzMakeIntervalValues(gTT, rObj, bgd, &errNum);
+    }
+    else /* dim == 3 */
+    {
+      val.vox = WlzNewValuesVox(rObj, gTT, bgd, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      rObj->values = WlzAssignValues(val, NULL);
+      gVWSp = WlzGreyValueMakeWSp(rObj, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int	i;
+
+      if(dim == 2)
+      {
+	WlzDVertex2 *p;
+
+	p = pos.d2;
+        for(i = 0; i < len; ++i)
+	{
+	  WlzGreyValueGet(gVWSp, 0, p[i].vtY, p[i].vtX);
+	  *(gVWSp->gPtr[0].dbp) = par[i];
+	}
+      }
+      else /* dim == 3 */
+      {
+	WlzDVertex3 *p;
+
+	p = pos.d3;
+        for(i = 0; i < len; ++i)
+	{
+	  WlzGreyValueGet(gVWSp, p[i].vtZ, p[i].vtY, p[i].vtX);
+	  *(gVWSp->gPtr[0].dbp) = par[i];
+	}
+      }
+    }
+    WlzGreyValueFreeWSp(gVWSp);
+  }
+  AlcFree(par);
   AlcFree(pos.v);
   if(errNum != WLZ_ERR_NONE)
   {
-    WlzFreeObj(obj);
-    obj = NULL;
+    WlzFreeObj(rObj);
+    rObj = NULL;
   }
   if(dstErr)
   {
     *dstErr = errNum;
   }
-  return(obj);
+  return(rObj);
 }
 
 /*!
@@ -1530,7 +1589,7 @@ static WlzObject               	*WlzBSplineCutPar(
   dim = (iObj->type == WLZ_2D_DOMAINOBJ)? 2: 3;
   /* Get domain corresponding to the B-spline and dilate if required. */
   o1 = WlzAssignObject(
-       WlzBSplineToDomain(bs, tB, tE, &errNum), NULL);
+       WlzBSplineToDomain(bs, tB, tE, 0, &errNum), NULL);
   if((errNum == WLZ_ERR_NONE) && (radius > 0))
   {
     WlzObject	*o2 = NULL;
