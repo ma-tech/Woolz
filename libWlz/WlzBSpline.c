@@ -52,6 +52,7 @@ static WlzObject               	*WlzBSplineCutOtg(
                                   int radius,
                                   double tB,
                                   double tE,
+				  WlzInterpolationType interp,
                                   WlzErrorNum *dstErr);
 static WlzObject               	*WlzBSplineCutPar(
                                   WlzObject *iObj,
@@ -1075,6 +1076,7 @@ WlzErrorNum			WlzBSplineTangent(
 * 					to start the cut.
 * \param	tE			B-spline parametric coordinate at which
 * 					to end the cut.
+* \param	interp			Interpolation for cutting sections.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 WlzObject                	*WlzBSplineCut(
@@ -1085,6 +1087,7 @@ WlzObject                	*WlzBSplineCut(
                                   int radius,
                                   double tB,
                                   double tE,
+				  WlzInterpolationType interp,
                                   WlzErrorNum *dstErr)
 {
   WlzObject	*rObj = NULL;
@@ -1137,7 +1140,7 @@ WlzObject                	*WlzBSplineCut(
   if(errNum == WLZ_ERR_NONE)
   {
     rObj = (cutOrthog)?
-        WlzBSplineCutOtg(iObj, bs, noGrey, radius, tB, tE, &errNum):
+        WlzBSplineCutOtg(iObj, bs, noGrey, radius, tB, tE, interp, &errNum):
 	WlzBSplineCutPar(iObj, bs, noGrey, radius, tB, tE, &errNum);
   }
   if(dstErr)
@@ -1347,6 +1350,7 @@ double				WlzBSplineLength(
 * 					to start the cut.
 * \param	tE			B-spline parametric coordinate at which
 * 					to end the cut.
+* \param	interp			Interpolation for cutting sections.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 static WlzObject               	*WlzBSplineCutOtg(
@@ -1356,6 +1360,7 @@ static WlzObject               	*WlzBSplineCutOtg(
                                   int radius,
                                   double tB,
                                   double tE,
+				  WlzInterpolationType interp,
                                   WlzErrorNum *dstErr)
 {
   int		len = 1;
@@ -1365,7 +1370,6 @@ static WlzObject               	*WlzBSplineCutOtg(
   WlzObject	*sObj = NULL,
   		*rObj = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  const WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   const double	eps = 1.0e-06;
 
   /* Compute buffer sizes. */

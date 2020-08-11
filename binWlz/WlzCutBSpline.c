@@ -55,7 +55,7 @@ static char _WlzCutBSpline_c[] = "University of Edinburgh $Id$";
 WlzCutBSpline
 \par Synopsis
 \verbatim
-WlzCutBSpline [-h] [-b<spline object>] [-B] [-N] [-P] [-o<out object>]
+WlzCutBSpline [-h] [-b<spline object>] [-B] [-L] [-N] [-P] [-o<out object>]
               [-r <rad>] [-t[<min>],[<max>]] [-v] [<in object>]
 \endverbatim
 \par Options
@@ -71,6 +71,13 @@ WlzCutBSpline [-h] [-b<spline object>] [-B] [-N] [-P] [-o<out object>]
   <tr>
     <td><b>-B</b></td>
     <td>Cut a region of the B-spline dilated by given radius (default).</td>
+  </tr>
+    "  -L  Use linear interpolation instead of nearest neighbour when\n"
+    "      cutting sections.\n"
+  <tr>
+    <td><b>-L</b></td>
+    <td>Use linear interpolation instead of nearest neighbour when
+        cutting sections.</td>
   </tr>
   <tr>
     <td><b>-N</b></td>
@@ -147,13 +154,14 @@ int		main(int argc, char *argv[])
   WlzObject	*iObj = NULL,
   		*oObj = NULL,
 		*sObj = NULL;
+  WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*ots;
   char		*iFile = NULL,
   		*oFile = NULL,
 		*sFile = NULL;
   double	param[2] = {0.0, 1.0};
-  static char	optList[] = "hBNPvb:o:r:t:",
+  static char	optList[] = "hBLNPvb:o:r:t:",
 		defFile[] = "-";
 
   sFile = iFile = oFile = defFile;
@@ -166,6 +174,9 @@ int		main(int argc, char *argv[])
 	break;
       case 'B':
         cutOrthog = 0;
+	break;
+      case 'L':
+        interp = WLZ_INTERPOLATION_LINEAR;
 	break;
       case 'N':
         noGrey = 1;
@@ -290,7 +301,7 @@ int		main(int argc, char *argv[])
     else
     {
       oObj = WlzBSplineCut(iObj, bs, cutOrthog, noGrey, radius,
-          param[0], param[1], &errNum);
+          param[0], param[1], interp, &errNum);
     }
     if(errNum != WLZ_ERR_NONE)
     {
@@ -330,7 +341,7 @@ int		main(int argc, char *argv[])
   {
     errNum = WLZ_ERR_NONE;
     (void )fprintf(stderr,
-    "Usage: %s [-h] [-b<spline object>] [-B] [-N] [-P]\n"
+    "Usage: %s [-h] [-b<spline object>] [-B] [-L] [-N] [-P]\n"
     "\t\t[-o<out object>] [-r <rad>] [-t[<min>],[<max>]] [-v]\n"
     "\t\t[<in object>]\n"
     "Version: %s\n"
@@ -338,6 +349,8 @@ int		main(int argc, char *argv[])
     "  -h  Help, prints this usage message.\n"
     "  -b  The given B-spline object.\n"
     "  -B  Cut region of the B-spline dilated by given radius (default).\n"
+    "  -L  Use linear interpolation instead of nearest neighbour when\n"
+    "      cutting sections.\n"
     "  -N  Don't fill grey values if they exist.\n"
     "  -P  Cut planes orthogonal to the B-spline. These may be limited\n"
     "      to within a given radius of the B-spline.\n"
