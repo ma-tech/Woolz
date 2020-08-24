@@ -1047,6 +1047,7 @@ extern WlzErrorNum		WlzBSplineTangent(
 extern WlzPoints		*WlzBSplineEvalPoints(
 				  WlzBSpline *bs,
 				  int n,
+				  int deriv,
 				  WlzErrorNum *dstErr);
 extern double			WlzBSplineLength(
 				  WlzBSpline *bs,

@@ -253,11 +253,14 @@ WlzBSpline			*WlzBSplineFromObj(
 * 		B-spline at equal intervals along the parametrised curve.
 * \param	bs		Given B-spline domain.
 * \param	n		Number of points to be evaluated.
+* \param	deriv		Order of derivative, range [0-
+* 				(WLZ_BSPLINE_ORDER_MAX - 1)].
 * \param	dstErr		Destination error pointer, may be NULL.
 */
 WlzPoints			*WlzBSplineEvalPoints(
 				  WlzBSpline *bs,
 				  int n,
+				  int deriv,
 				  WlzErrorNum *dstErr)
 {
   int		nn = 0;
@@ -295,7 +298,7 @@ WlzPoints			*WlzBSplineEvalPoints(
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    errNum = WlzBSplineEval(bs, n, NULL, 0, pts->points);
+    errNum = WlzBSplineEval(bs, n, NULL, deriv, pts->points);
   }
   if(errNum == WLZ_ERR_NONE)
   {
