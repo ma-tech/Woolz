@@ -55,13 +55,23 @@ static char _WlzEvalBSpline_c[] = "University of Edinburgh $Id$";
 WlzEvalBSpline
 \par Synopsis
 \verbatim
-WlzEvalBSpline [-h] [-n<evaluations>] [-o<out object>] [-P] [<in object>]
+WlzEvalBSpline [-h] [-P] [-d<deriv>] [-n<evaluations>] [-o<out object>]
+               [<in object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr>
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr>
+    <td><b>-P</b></td>
+    <td>Output a points object instead of a pixel / voxel spatial domain
+        object.</td>
+  </tr>
+  <tr>
+    <td><b>-d</b></td>
+    <td>Order of derivative, range [0-5]./td>
   </tr>
   <tr>
     <td><b>-n</b></td>
@@ -72,11 +82,6 @@ WlzEvalBSpline [-h] [-n<evaluations>] [-o<out object>] [-P] [<in object>]
   <tr>
     <td><b>-o</b></td>
     <td>Output object file.</td>
-  </tr>
-  <tr>
-    <td><b>-P</b></td>
-    <td>Output a points object instead of a pixel / voxel spatial domain
-        object.</td>
   </tr>
 </table>
 \par Description
@@ -112,6 +117,7 @@ int		main(int argc, char *argv[])
 {
   int		option,
 		ok,
+		deriv = 0,
 		nEval = 1000,
 		usage = 0;
   WlzPoints	*pts = NULL;
@@ -123,7 +129,7 @@ int		main(int argc, char *argv[])
   const char	*ots;
   char		*iFile = NULL,
   		*oFile = NULL;
-  static char	optList[] = "hPn:o:",
+  static char	optList[] = "hPd:n:o:",
 		defFile[] = "-";
   iFile = oFile = defFile;
   while((usage == 0) && ((option = getopt(argc, argv, optList)) != EOF))
@@ -133,6 +139,10 @@ int		main(int argc, char *argv[])
       case 'P':
         outObjType = WLZ_POINTS;
 	break;
+      case 'd':
+         usage = (sscanf(optarg, "%d", &deriv) != 1) ||
+	         (deriv < 0) || (deriv > WLZ_BSPLINE_ORDER_MAX);
+        break;
       case 'n':
          usage = (sscanf(optarg, "%d", &nEval) != 1) || (nEval < 0);
         break;
@@ -223,7 +233,7 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    pts = WlzBSplineEvalPoints(iObj->domain.bs, nEval, &errNum);
+    pts = WlzBSplineEvalPoints(iObj->domain.bs, nEval, deriv, &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -294,18 +304,20 @@ int		main(int argc, char *argv[])
     (void )fprintf(stderr,
     "Usage: %s%s%s%s%s%s",
     *argv,
-    " [-h] [-n<evaluations>] [-o<out object>] [-P] [<in object>]\n"
+    " [-h] [-P] [-d<deriv>] [-n<evaluations>] [-o<out object>]\n"
+    "\t\t[<in object>]\n"
     "Version: ",
     WlzVersion(),
     "\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
+    "  -P  Output a points object instead of a pixel / voxel spatial domain\n"
+    "      object.\n"
+    "  -d  Order of derivative, range [0-5].\n"
     "  -n  Number of equally spaced evaluations of the B-spline within the\n"
     "      parametrised curve domain. If zero then evaluations are made at\n"
     "      the knots.\n"
     "  -o  Output object file name.\n"
-    "  -P  Output a points object instead of a pixel / voxel spatial domain\n"
-    "      object.\n"
     "Evaluates a B-spline and then outputs either a pixel / voxel object or\n"
     "a points object.\n"
     "By default the input object is read from stdin and the output object is\n"
