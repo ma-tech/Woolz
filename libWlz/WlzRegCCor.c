@@ -996,7 +996,7 @@ static double	WlzRegCCorObjs2DRot(WlzObject *tObj, WlzObject *sObj,
 {
   int		oIdx,
   		angCnt;
-  double	angInc,
+  double	angInc = 0.0,
   		dstRot = 0.0;
   WlzIBox2	aBox;
   WlzIBox2	oBox[2];
@@ -1005,8 +1005,8 @@ static double	WlzRegCCorObjs2DRot(WlzObject *tObj, WlzObject *sObj,
   		aOrg,
 		winRad,
 		winOrg,
-		rotPad,
-		rotCentreI;
+		rotCentreI,
+		rotPad = {0}; 		/* Avoids invalid unassigned warning. */
   double	**oAr[2];
   WlzObject	*oObj[2],
   		*pObj[2],
