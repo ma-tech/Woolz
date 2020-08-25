@@ -293,13 +293,13 @@ static WlzErrorNum	WlzEffAmWrite3DDomObj(FILE *fP, WlzObject *obj)
 {
   size_t	dataCnt,
   		dataSz;
-  WlzDBox3	bbD;
+  WlzDBox3	bbD = {0}; 			   /* Avoids invalid warning. */
   WlzIBox3	bbI;
   WlzIVertex3	sz,
   		org;
   WlzDVertex3	vSz;
-  char		*dateS,
-  		*dataTypeS;
+  char		*dateS = NULL,
+  		*dataTypeS = NULL;
   time_t	tTime;
   WlzGreyType	gType;
   void		***data = NULL;
