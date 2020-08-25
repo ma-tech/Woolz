@@ -492,24 +492,24 @@ static WlzErrorNum WlzSkStrip4(WlzObject *skObj, WlzObject *potDelObj,
   		km1,
 		l,
   		lastrem,
-  		lintc,
 		pdl1,
 		skl1,
 		skll,
-  		smBits;
+  		smBits,
+		lintc = 0;
   unsigned int	w;
   WlzDomain	delDom,
   		skDom;
-  WlzInterval	*intp,
-  		*jntp;
+  WlzInterval	*jntp,
+  		*intp = NULL;
   WlzIntervalLine *intl,
   		 *lintl;
   WlzIntervalWSpace iWSp;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzSkIntvLn	dm1lint,
-  		llint,
-  		lm1lint,
-		lp1lint;
+  WlzSkIntvLn	dm1lint = {0},
+  		llint = {0},
+  		lm1lint = {0},
+		lp1lint = {0};
   const unsigned int wlzSkLut4[48] =
   {
 000075400340, 000074600362, 036475372364, 036074170360, 
@@ -929,23 +929,23 @@ static WlzErrorNum WlzSkStrip8(WlzObject *skObj, WlzDomain delDom,
     		k,
 		l,
 		lastrem,
-		lintc,
 		k1,
 		kl,
 		pdl1,
 		rtp,
 		smBits,
 		skl1,
-		skll;
+		skll,
+		lintc = 0;
   unsigned int	w;
   WlzDomain	skDom;
-  WlzInterval	*intp,
-  		*jntp;
+  WlzInterval	*intp = NULL,
+  		*jntp = NULL;
   WlzIntervalLine *intl,
   		 *lintl;
-  WlzSkIntvLn	dm1lint,
-  		lm1lint,
-		lp1lint;
+  WlzSkIntvLn	dm1lint = {0},
+  		lm1lint = {0},
+		lp1lint = {0};
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   WlzIntervalWSpace iWSp;
   const unsigned int wlzSkLut8[48] =
