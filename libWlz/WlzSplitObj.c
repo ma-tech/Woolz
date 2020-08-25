@@ -330,7 +330,7 @@ WlzErrorNum 	WlzSplitMontageObj(WlzObject *mObj, WlzPixelV gapV,
   WlzBox	box;
   WlzPixelV	gapLV,
   		gapHV;
-  WlzConnectType lCon;
+  WlzConnectType lCon = WLZ_0_CONNECTED; 	   /* Avoids invalid warning. */
   int		tI[8];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
