@@ -723,7 +723,7 @@ WlzErrorNum			WlzBSplineEval(
 * 		pixel/voxels which are disconnected unless dilated by 1.
 * \param	bs			Given B-spline domain.
 * \param	tB			Begining of the parametric range.
-* \param	TE			End of the parametric range.
+* \param	tE			End of the parametric range.
 * \param	paramVal		If non-zero the returned object will
 * 					have values set to the B-spline
 * 					parametric values.
