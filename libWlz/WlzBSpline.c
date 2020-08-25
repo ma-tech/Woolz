@@ -1427,7 +1427,7 @@ static WlzObject               	*WlzBSplineCutOtg(
 {
   int		len = 1;
   double	*buf = NULL;
-  WlzVertexP	nrm,
+  WlzVertexP	nrm = {0},
   		pos = {0};
   WlzObject	*sObj = NULL,
   		*rObj = NULL;
