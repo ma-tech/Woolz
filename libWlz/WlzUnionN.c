@@ -84,8 +84,10 @@ WlzObject *WlzUnionN(
   int 			i, j, k, l;
   int			inttot, numactive, change, lwas = 0, nints, noverlap;
   WlzPixelV		backg;
-  int			line1, lastln;
-  int			kol1,lastkl;
+  int			lastln,
+  			kol1 = 0,
+  			line1 = 0,
+			lastkl = 0;
   WlzGreyV		gv;
   WlzGreyP		greyptr;
   int			**locbuff = NULL;
