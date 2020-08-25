@@ -1678,7 +1678,7 @@ static WlzErrorNum WlzAffineTransformValues3(WlzObject *newObj,
 		dPos;
   WlzDVertex3	tDV0,
   		tDV1;
-  WlzIBox3	bBox;
+  WlzIBox3	bBox = {0}; /* Initalised only to silence incorrect warnings. */
   WlzPixelV	bkdV;
   WlzValues	tVal,
   		dstValues,
