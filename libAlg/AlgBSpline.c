@@ -1837,12 +1837,12 @@ static void			AlgBSplineKnot(
 		ni,
 		next,
 		ihalf,
-		maxpt,
   		jbegin,
-		maxbeg,
-		number,
 		jpoint,
-		nrx;
+		nrx,
+		number = 0,
+		maxpt = 0,
+		maxbeg = 0;
   double	am,
   		an,
 		fpmax;
@@ -2179,7 +2179,7 @@ static void			AlgBSplineGivens(
 				  double *s)
 {
   double 	r,
-  		dd,
+  		dd = 1.0,
 		store;
 
   store = fabs(piv);
@@ -2269,25 +2269,28 @@ static int			AlgBSplinePeri(
                 kk, kk1, nk1, nk2,
 		m1, mm,
   		n7, n8, n10, n11,
-		nplus, nrint,
+		nrint,
 		jper,
 		nmin,
 		iter,
-		nw, nmax,
+		nw,
 		npl1,
 		a1_dim1, a1_offset,
 		a2_dim1, a2_offset,
 		b_dim1, b_offset,
 		g1_dim1, g1_offset,
 		g2_dim1, g2_offset,
-		q_dim1, q_offset;
-  double 	fp0, fpms, term, pinv,
-		fpold, fpart,
+		q_dim1, q_offset,
+		nplus = 0.0,
+		nmax = 0.0;
+  double 	fpms, term, pinv, fpart,
 		c1, d1, f1, f2, f3, store,
-		piv,
-		p, p1, p2, p3,
+		piv, p, p1, p2, p3,
 		wi, xi, yi, rn, r1,
-		acc, cs, per, sn;
+		cs, per, sn,
+		acc = 0.0,
+		fp0 = 0.0,
+		fpold = 0.0;
   double	h[6], h1[7], h2[6];
 
   /* Parameter adjustments for indexing from 1. */
@@ -3369,23 +3372,31 @@ static int 			AlgBSplineCurf(
       		j,
       		k3,
       		l, l0,
-		nplus, nrint, n8,
-		mk1, nk1,
-		nmin, iter, nmax,
+		nrint, n8,
+		mk1,
+		iter,
 		npl1,
 		nw,
   		a_dim1, a_offset,
 		b_dim1, b_offset,
 		g_dim1, g_offset,
 		q_dim1, q_offset,
-		ier = 0;
-  double 	acc, cs, sn,
-  		fp0, fpms, term, pinv,
+		ier = 0,
+		nk1 = 0,
+		nmin = 0,
+		nmax = 0,
+		nplus = 0.0;
+  double 	cs, sn,
+  		term, pinv,
 		p, p1, p2, p3,
-		fpold, fpart,
+		fpart,
 		f1, f2, f3,
 		piv, rn, r1,
-		wi, xi, yi, store;
+		wi, xi, yi, store,
+		acc = 0.0,
+		fp0 = 0.0,
+		fpms = 0.0,
+		fpold = 0.0;
   double 	h[7];
 
   /* Parameter adjustments for indexing from 1. */
@@ -4176,22 +4187,30 @@ static int 			AlgBSplinePara(
 		ich1, ich3,
 		it, iter,
 		j1, j2, jj, k3, l0,
-		mk1, n8, nw, nk1,
-		nmax, nmin, npl1, nplus, nrint,
+		mk1, n8, nw,
+		npl1, nrint,
 		a_dim1, a_offset,
 		b_dim1, b_offset,
 		g_dim1, g_offset,
 		q_dim1, q_offset,
-		ier = 0;
+		nk1 = 0,
+		ier = 0,
+		nmin = 0,
+		nmax = 0,
+		nplus = 0;
   double	f1, f2, f3,
-  		fac, fp0, fpart, fpms, fpold,
+  		fac, fpart,
   		p, p1, p2, p3,
   		pinv, piv,
-  		acc, cs, rn, sn,
+  		cs, rn, sn,
   		r1, store, term,
-  		ui, wi;
-  double	h[7],
-  		xi[10];
+  		ui, wi,
+		fp0 = 0.0,
+		fpms = 0.0,
+		fpold = 0.0,
+		acc = 0.0;
+  double	h[7] = {0},
+  		xi[10] = {0};
 
   /* Parameter adjustments. */
   --c;
