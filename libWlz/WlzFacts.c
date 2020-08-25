@@ -799,8 +799,8 @@ static WlzErrorNum WlzObjFactsValueTab(WlzObjFactsData *fData,
 				       WlzObject *obj, WlzValues val)
 {
   const char	*tStr;
-  WlzObjectType	valType;
   WlzGreyType	gType;
+  WlzObjectType	valType = WLZ_NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   ++(fData->indent);
