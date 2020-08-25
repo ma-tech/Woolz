@@ -77,7 +77,8 @@ WlzObject *WlzErosion4(
   WlzIntervalDomain	*idmn1;
   WlzIntervalDomain	*idmn2;
   WlzIntervalLine	*itvl;
-  WlzInterval		*jp, *ptr;
+  WlzInterval		*jp = NULL,
+  			*ptr;
   WlzInterval		*jpw;
   WlzInterval		*buff = NULL;
   int			i, n, line;
