@@ -7966,7 +7966,7 @@ static WlzErrorNum WlzCMeshScanMakeOlpBufs(WlzObject *obj, WlzGreyType gType,
 					int bufWidth)
 {
   int		*olpCnt = NULL;
-  WlzGreyP	olpBuf;
+  WlzGreyP	olpBuf = {0};    /* To avoid uninitialized variable warning. */
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
   switch(gType)
@@ -10193,7 +10193,7 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
   WlzCMesh3D	*mesh;
   AlgMatrixRect	**matTbl = NULL;
   WlzIndexedValues *ixvD,
-  		   *ixvT,
+  		   *ixvT = NULL,
   		   *ixvE = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
@@ -10279,7 +10279,7 @@ static WlzObject *WlzCMeshExpansion3D(WlzObject *cObj,
       if(elm->idx >= 0)
       {
         double 	*fac,
-		*ten;
+		*ten = NULL; 	     /* Avoids invalid uninitialized warning. */
 
 	fac = (double *)WlzIndexedValueGet(ixvE, elm->idx);
 	if(useTensor)
