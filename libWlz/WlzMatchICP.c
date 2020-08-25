@@ -634,7 +634,7 @@ WlzErrorNum  	WlzMatchICPCtr(WlzContour *tCtr, WlzContour *sCtr,
 		sVBuf;
   WlzVertexType	vType,
   		tVType;
-  WlzTransformType trType;
+  WlzTransformType trType = WLZ_TRANSFORM_EMPTY;
   AlcKDTTree	*tTree = NULL;
   WlzAffineTransform *tTr,
   		*globTr = NULL;
