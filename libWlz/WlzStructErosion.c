@@ -488,7 +488,7 @@ static WlzObject *WlzStructErosion3d(
   WlzObject	**objList = NULL;
   WlzDomain	domain, *domains = NULL, *domains1 = NULL, *domains2 = NULL;
   WlzValues	values;
-  int		i, j, p, plane1, lastpl, nStructPlanes;
+  int		i, j, p, plane1 = 0, lastpl = 0, nStructPlanes = 0;
   WlzErrorNum	errNum=WLZ_ERR_NONE;
 
   /* the object is definitely 3D but the domain needs checking */
