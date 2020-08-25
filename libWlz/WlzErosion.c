@@ -84,14 +84,19 @@ WlzObject *WlzErosion(
   			values;
   WlzIntervalDomain 	*idmn;
   WlzIntervalLine 	*itvl;
-  WlzInterval 		*jp, *jwp;
+  WlzInterval 		*jp,
+  			*jwp = NULL;
   WlzInterval 		*buff = NULL,
   			*tmp = NULL;
   int			i = 0, j;
   int			maxItvLn;
   int 			inttot, *nitv;
-  int 			line1, lastln, line;
-  int 			k1, kol1,lastkl;
+  int 			line,
+			line1 = 0,
+  			lastln = 0;
+  int 			k1,
+  			lastkl,
+			kol1 = 0;
   int 			m, n, odd;
   int 			length, end;
   WlzErrorNum		errNum=WLZ_ERR_NONE;
