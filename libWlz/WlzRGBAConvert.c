@@ -1147,8 +1147,10 @@ static WlzObject *WlzIndexToRGBA3D(
   WlzErrorNum	*dstErr)
 {
   WlzObject		*obj1, *temp;
-  WlzPlaneDomain	*pdom, *npdom;
-  WlzVoxelValues	*voxtab, *nvoxtab;
+  WlzPlaneDomain	*pdom,
+  			*npdom = NULL;
+  WlzVoxelValues	*voxtab,
+  			*nvoxtab = NULL;
   WlzDomain		*domains, *ndomains, domain;
   WlzValues		*values, *nvalues, vals;
   int			i, nplanes;
