@@ -1272,9 +1272,9 @@ static WlzErrorNum		WlzRCCOffset(
     int		i,
     		j,
 		n,
-		s0,
-		s1,
-		nq;
+		nq,
+		s0 = 0,
+		s1 = 0;
 
     /* Compute the median, first and third quantile offset distances,
      * the ratio of median to the median plus inner inter-quantile range
@@ -1285,7 +1285,6 @@ static WlzErrorNum		WlzRCCOffset(
       n += dHist[i];
     }
     i = 0;
-    s1 = 0;
     for(j = 1; j <= 3; ++j)
     {
       nq = (n * j) / 4;
