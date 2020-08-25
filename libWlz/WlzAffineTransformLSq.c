@@ -743,8 +743,8 @@ WlzAffineTransform *WlzAffineTransformLSqGen3D(WlzDVertex3 *vT,
 {
   int		idx;
   double	wSq;
-  double	**aA,
-		**trA;
+  double	**aA = NULL,
+		**trA = NULL;
   double	bV[4],
   		sums[22];
   AlgMatrix	aM,
