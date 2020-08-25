@@ -674,8 +674,7 @@ AlgError	AlgMatrixLUBackSubRaw(double **aM, int aSz,
 {
   int 		idx0,
   		idx1,
-		ii = -1,
-		tI0;
+		ii = -1;
   double 	sum;
   double	*tDP0,
   		*tDP1;
@@ -690,9 +689,11 @@ AlgError	AlgMatrixLUBackSubRaw(double **aM, int aSz,
   {
     for(idx0 = 0; idx0 < aSz; ++idx0)		     /* Forward substitution */
     {
-      tI0 = iV[idx0];			    /* Uncramble permutation */
-      sum = bV[tI0];
-      bV[tI0] = bV[idx0];
+      int	ivi;
+
+      ivi = iV[idx0];			    /* Uncramble permutation */
+      sum = bV[ivi];
+      bV[ivi] = bV[idx0];
       if(ii != -1)
       {
 	tDP0 = *(aM + idx0) + ii;
@@ -709,8 +710,9 @@ AlgError	AlgMatrixLUBackSubRaw(double **aM, int aSz,
       bV[idx0] = sum;
     }
     idx0 = aSz;					      /* Now backsustitution */
-    while(idx0-- > 0)
+    while(idx0 > 0)
     {
+      --idx0;
       sum = bV[idx0];
       if(idx0 <= aSz)
       {
