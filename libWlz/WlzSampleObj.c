@@ -455,13 +455,13 @@ static WlzObject *WlzSampleObjIDom(WlzObject *srcObj, WlzIVertex2 samFac,
 {
   int		itvCount,
 		totItvCount,
-		delItvCount,
   		maxItvCount,
 		dstLinePos,
 		dstInvLeftPos,
 		dstInvRgtPos,
 		dstInvWidth,
-		srcInvWidth;
+		srcInvWidth,
+		delItvCount = 0;
   WlzObject	*dstObj = NULL;
   WlzIBox2	srcBox,
   		dstBox;
@@ -763,7 +763,6 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
 {
   int		tI0,
 		itvCount,
-		delItvCount,
 		totItvCount,
   		maxItvCount,
 		dstWidth,
@@ -772,7 +771,8 @@ WlzObject 	*WlzSampleObjPoint2D(WlzObject *srcObj, WlzIVertex2 samFac,
 		dstLinePos,
 		dstInvLeftPos,
 		dstInvRgtPos,
-		dstInvWidth;
+		dstInvWidth,
+		delItvCount = 0;
   WlzGreyType	greyType;
   WlzObject	*dstObj = NULL;
   WlzIBox2	srcBox,
@@ -1023,7 +1023,6 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 		bufBase,
 		bufIwspFlag,
 		itvCount,
-		delItvCount,
 		totItvCount,
   		srcWidth,
 		dstWidth,
@@ -1031,6 +1030,7 @@ static WlzObject *WlzSampleObjConvI(WlzObject *srcObj, int **kernel,
 		dstInvLeftPos,
 		dstInvRgtPos,
 		dstInvWidth,
+		delItvCount = 0,
   		maxItvCount = 0,
 		backgroundVal = 0;
   WlzGreyType	greyType = WLZ_GREY_ERROR;
@@ -1398,15 +1398,15 @@ static WlzObject *WlzSampleObjConvD(WlzObject *srcObj, double **kernel,
 		bufBase,
 		bufIwspFlag,
 		itvCount,
-		delItvCount,
 		totItvCount,
-  		maxItvCount,
   		srcWidth,
 		dstWidth,
 		dstOffset,
 		dstInvLeftPos,
 		dstInvRgtPos,
-		dstInvWidth;
+		dstInvWidth,
+		delItvCount = 0,     /* Avoids invalid uninitialized warning. */
+  		maxItvCount = 0;     /* Avoids invalid uninitialized warning. */
   WlzGreyType 	greyType = WLZ_GREY_ERROR;
   double	tD0,
 		backgroundVal = 0.0;
@@ -1756,7 +1756,6 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 		bufBase,
 		bufIwspFlag,
 		itvCount,
-		delItvCount,
 		totItvCount,
   		srcWidth,
 		dstWidth,
@@ -1764,10 +1763,11 @@ static WlzObject *WlzSampleObjRankI(WlzObject *srcObj, WlzIVertex2 samFac,
 		dstInvLeftPos,
 		dstInvRgtPos,
 		dstInvWidth,
+		delItvCount = 0,
   		maxItvCount = 0,
 		bufMedianSz = 0,
 		backgroundVal = 0;
-  WlzGreyType	greyType;
+  WlzGreyType	greyType = WLZ_GREY_ERROR;
   int		**bufData = NULL;
   int		*tIP0,
 		*tIP1,
@@ -2209,7 +2209,6 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 		idY,
 		bufBase,
 		itvCount,
-		delItvCount,
 		totItvCount,
   		srcWidth,
 		dstWidth,
@@ -2217,12 +2216,13 @@ static WlzObject *WlzSampleObjRankD(WlzObject *srcObj, WlzIVertex2 samFac,
 		dstInvLeftPos,
 		dstInvRgtPos,
 		dstInvWidth,
+		delItvCount = 0,
 		bufMedianSz = 0,
   		maxItvCount = 0,
 		bufIwspFlag = 0;
   double	tD0,
 		backgroundVal = 0.0;
-  WlzGreyType	greyType;
+  WlzGreyType	greyType = WLZ_GREY_ERROR; 	  /* Avoids invalid warning. */
   double	**bufData = NULL;
   double	*tDP0,
   		*tDP1,
