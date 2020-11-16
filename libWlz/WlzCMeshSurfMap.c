@@ -1001,12 +1001,12 @@ WlzObject	*WlzCMeshCompSurfMapLevy(WlzCMesh2D5 *mesh,
 				 WlzErrorNum *dstErr)
 {
   int		mE,
-  		nE,
 		nE2,
 		nP2,
 		mN,
-		nN,
-		nN2;
+		nN2,
+		nE = 0,	      /* Just to avoid invalid uninitialized warning. */
+		nN = 0;       /* Just to avoid invalid uninitialized warning. */
   int		*pIdxSortTb = NULL,
      		*pIdxIdxTb = NULL,
   		*eIdxTb = NULL,

@@ -273,7 +273,7 @@ static WlzObject *WlzShadeCorrect2D(WlzObject *srcObj, WlzObject *shdObj,
 				    WlzErrorNum *dstErr)
 {
   WlzGreyType	srcG,
-  		shdG;
+  		shdG = WLZ_GREY_ERROR; 		    /* Avoid invalid warning. */
   WlzObject	*rtnObj = NULL;
   WlzErrorNum 	errNum = WLZ_ERR_NONE;
 

@@ -1716,7 +1716,7 @@ static WlzContour *WlzContourGrdObj3D(WlzObject *srcObj,
   		bufOff,
 		bufOrg;
   WlzIBox2	bBox2D;
-  WlzIBox3	bBox3D;
+  WlzIBox3	bBox3D = {0};        /* Avoids invalid uninitialized warning. */
   int		bufIdx[3],
   		iBufClr[3];
   WlzUByte	**iBuf[3],
