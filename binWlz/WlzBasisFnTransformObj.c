@@ -53,6 +53,7 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
 		       [-m<min mesh dist>] [-M<max mesh dist>]
 		       [-b<basis fn transform>] [-Y<order of polynomial>]
 		       [-D<flags>] [-P<param>]
+		       [-e<displacement seed>] [-r<max displacement>]
 		       [-d] [-g] [-h] [-q] [-Q] [-s] [-t] [-y]
 		       [-B] [-C] [-E] [-G] [-L] [-N] [-R] [-S] [-T]
 		       [-U] [<in object>]
@@ -85,6 +86,10 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
     </td>
   </tr>
   <tr> 
+    <td><b>-e</b></td>
+    <td>Seed value for random displacements.</td>
+  </tr>
+  <tr> 
     <td><b>-E</b></td>
     <td>Output evaluation times to stderr.</td>
   </tr>
@@ -108,6 +113,11 @@ WlzBasisFnTransformObj [-o<out object>] [-p<tie points file>]
     <td><b>-N</b></td>
     <td>Don't transform the object (useful for testing).</td>
   </tr>
+  <tr> 
+    <td><b>-r</b></td>
+    <td>Use random displacements with the given maximum displacement
+        instead of displacement defined by a tie point file.
+	If given the maximum displacement must be >= 1.0.</td>
   <tr> 
     <td><b>-R</b></td>
     <td>Restrict the transformation to only a basis function transform
@@ -284,6 +294,7 @@ int             main(int argc, char **argv)
 		noTrObj = 0,
 		outBasisTrFlag = 0,
 		outMeshTrFlag = 0,
+		randDispSeed = 0,
 		restrictToBasisFn = 0,
 		snapToMesh = 0,
 		timer = 0,
@@ -291,7 +302,8 @@ int             main(int argc, char **argv)
 		usage = 0;
   double	basisFnParam = 0.001,
   		meshMinDist = 20.0,
-  		meshMaxDist = 40.0;
+  		meshMaxDist = 40.0,
+		maxRandDisp = 0.0;
   WlzVertexP	vxA0,
   		vxA1;
   WlzObject	*inObj = NULL,
@@ -314,7 +326,7 @@ int             main(int argc, char **argv)
   struct timeval times[6];
   const int	delOut = 1;
   const char    *errMsg;
-  static char	optList[] = "b:m:o:p:t:D:M:P:Y:cdghqsyBCEGLNQRSTU",
+  static char	optList[] = "b:e:m:o:p:r:t:D:M:P:Y:cdghqsyBCEGLNQRSTU",
   		inObjFileStrDef[] = "-",
 		outObjFileStrDef[] = "-";
 
@@ -344,6 +356,12 @@ int             main(int argc, char **argv)
 	break;
       case 'D':
 	if(1 != sscanf(optarg, "%d", &dbgFlg))
+	{
+	  usage = 1;
+	}
+	break;
+      case 'e':
+	if(1 != sscanf(optarg, "%d", &randDispSeed))
 	{
 	  usage = 1;
 	}
@@ -400,6 +418,16 @@ int             main(int argc, char **argv)
       case 'Q':
         basisFnType = WLZ_FN_BASIS_2DIMQ;
 	break;
+      case 'r':
+        if((sscanf(optarg, "%lg", &maxRandDisp) != 1) || (maxRandDisp < 1.0))
+	{
+	  usage = 1;
+	}
+	else
+	{
+	  restrictToBasisFn = 1;
+	}
+	break;
       case 'R':
         restrictToBasisFn = 1;
 	break;
@@ -450,7 +478,8 @@ int             main(int argc, char **argv)
   {
     if((inObjFileStr == NULL) || (*inObjFileStr == '\0') ||
        (((tiePtFileStr == NULL) || (*tiePtFileStr == '\0')) &&
-	((basisFnTrFileStr == NULL) || (*basisFnTrFileStr == '\0'))) ||
+	((basisFnTrFileStr == NULL) || (*basisFnTrFileStr == '\0')) &&
+	(maxRandDisp < 1.0)) ||
        (outObjFileStr == NULL) || (*outObjFileStr == '\0'))
     {
       usage = 1;
@@ -608,8 +637,8 @@ int             main(int argc, char **argv)
       }
     }
   }
-  /* Either read the basis function transform from a file or compute it
-   * from a set of tie points. */
+  /* Read the basis function transform from a file or compute it
+   * either from a set of tie points or as a random displacement transform. */
   if(ok)
   {
     if(basisFnTrFileStr)
@@ -621,7 +650,7 @@ int             main(int argc, char **argv)
 		     "implemented yet\n",
 		     *argv);
     }
-    else if(tiePtFileStr)
+    else if(tiePtFileStr && (maxRandDisp < 1.0))
     {
       if((fP = (strcmp(tiePtFileStr, "-")?
                 fopen(tiePtFileStr, "r"): stdin)) == NULL)
@@ -685,7 +714,26 @@ int             main(int argc, char **argv)
   if(ok)
   {
     gettimeofday(times + 0, NULL);
-    if(restrictToBasisFn)
+    if(maxRandDisp >= 1.0)
+    {
+      basisTr = WlzBasisFnTransformRandom(inObj, basisFnType, maxRandDisp,
+                                          randDispSeed, &errNum);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        meshTr.mesh = WlzMeshFromObj(inObj,
+                                     meshGenMth, meshMinDist, meshMaxDist,
+                                     &errNum);
+      }
+      if(errNum != WLZ_ERR_NONE)
+      {
+        ok = 0;
+        (void )WlzStringFromErrorNum(errNum, &errMsg);
+	(void )fprintf(stderr,
+	         "%s: Failed to compute random displacement transform (%s).\n",
+		 *argv, errMsg);
+      }
+    }
+    else if(restrictToBasisFn)
     {
       if(cMesh)
       {
@@ -940,6 +988,7 @@ int             main(int argc, char **argv)
     "                  [-m<min mesh dist>] [-M<max mesh dist>]\n"
     "                  [-b<basis fn transform>] [-Y<order of polynomial>]\n"
     "                  [-D<flags>] [-P<param>]\n"
+    "                  [-e<displacement seed>] [-r<max displacement>]\n"
     "                  [-d] [-g] [-h] [-q] [-s] [-t] [-y]\n"
     "                  [-B] [-C] [-E] [-G] [-L] [-N] [-Q] [-R] [-S] [-T]\n"
     "                  [-U] [<in object>]\n"
@@ -956,6 +1005,7 @@ int             main(int argc, char **argv)
     "           output.\n"
     "      These debug flags are only intended for use when debuging and\n"
     "      they may be combined by an or operation (eg 11 = 1 | 2 | 8).\n"
+    "  -e  Seed value for random displacements.\n"
     "  -E  Output evaluation times to stderr.\n"
     "  -G  Gradient mesh generation method (default).\n"
     "  -L  Use linear interpolation instead of nearest neighbour.\n"
@@ -977,6 +1027,9 @@ int             main(int argc, char **argv)
     "  -q  Use multi-quadric basis function if tie points are given.\n"
     "  -P  Basis function parameter (eg MQ delta value).\n"
     "  -Q  Use inverse-multi-quadric basis function if tie points are given.\n"
+    "  -r  Use random displacements with the given maximum displacement\n"
+    "      instead of displacement defined by a tie point file.\n"
+    "	   If given the maximum displacement must be >= 1.0.\n"
     "  -s  Use thin plate spline basis function (default) if tie points\n"
     "      are given.\n"
     "  -S  Snap tie point to mesh (only valid for conforming meshes).\n"
