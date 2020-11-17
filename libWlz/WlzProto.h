@@ -1330,6 +1330,12 @@ extern WlzBasisFnTransform 	*WlzBasisFnTrFromCPts3D(
 				  WlzDVertex3 *sPts,
 				  WlzCMesh3D *mesh,
 				  WlzErrorNum *dstErr);
+extern WlzBasisFnTransform	*WlzBasisFnTransformRandom(
+				  WlzObject *obj,
+  				  WlzFnType bFnType,
+				  double maxDfn,
+				  int seed,
+				  WlzErrorNum *dstErr);
 
 /************************************************************************
 * WlzBoundaryUtils.c							*

@@ -1525,6 +1525,164 @@ WlzObject	*WlzBasisFnTransformObj(WlzObject *srcObj,
 }
 
 /*!
+* \return	New basis function transform.
+* \ingroup	WlzTransform
+* \brief	Creates a new basis function transform whic when applied
+* 		will result in smooth random deformations, where the smoothing
+* 		is done by the basis function.
+* \param	obj			Input object, the domain of which will
+* 					be used to find tie-point positions.
+* \param	bFnType			Must be a valid function for a basis
+* 					function transform.
+* \param	maxDfn			Maximum deformation.
+* \param	seed			Seed for random values.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzBasisFnTransform	*WlzBasisFnTransformRandom(WlzObject *obj,
+						   WlzFnType bFnType,
+						   double maxDfn,
+						   int seed,
+					           WlzErrorNum *dstErr)
+{
+  WlzBasisFnTransform *bft = NULL;
+  WlzErrorNum	errNum = WLZ_ERR_NONE;
+
+  if(obj == NULL)
+  {
+    errNum = WLZ_ERR_OBJECT_NULL;
+  }
+  else if(obj->type != WLZ_2D_DOMAINOBJ)
+  {
+    errNum = WLZ_ERR_OBJECT_TYPE;
+  }
+  else if(obj->domain.core == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if(maxDfn < 1.0)
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    switch(bFnType)
+    {
+      case WLZ_FN_BASIS_2DGAUSS: /* FALLTHROUGH */
+      case WLZ_FN_BASIS_2DPOLY:  /* FALLTHROUGH */
+      case WLZ_FN_BASIS_2DMQ:    /* FALLTHROUGH */
+      case WLZ_FN_BASIS_2DTPS:
+        break;
+      default:
+        errNum = WLZ_ERR_TRANSFORM_TYPE;
+	break;
+    }
+  }
+  if(errNum == WLZ_ERR_NONE)
+  {
+    WlzObject	*dObj = NULL,
+    		*sObj = NULL;
+    WlzAffineTransform *sTr;
+
+    /* Sample the given object domain */
+    sTr = WlzAffineTransformFromScale(WLZ_TRANSFORM_2D_AFFINE,
+    				      0.5 / maxDfn, 0.5 / maxDfn, 0, &errNum);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzValues	nullVal = {0};
+
+      dObj = WlzMakeMain(obj->type, obj->domain, nullVal, NULL, NULL, &errNum);
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
+      sObj = WlzAffineTransformObj(dObj, sTr, WLZ_INTERPOLATION_NEAREST,
+      				   &errNum);
+    }
+    /* Erode sampled object to avoid boundary problems. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      WlzObject *tObj;
+
+      tObj = WlzErosion(sObj, WLZ_8_CONNECTED, &errNum);
+      (void )WlzFreeObj(sObj);
+      sObj = tObj;
+    }
+    /* Create source and destination vertices with random displacements. */
+    if(errNum == WLZ_ERR_NONE)
+    {
+      int 	 nvx = 0,
+      		 mvx = 0;
+      WlzVertexP vxp;
+      int	 *shf = NULL;
+      WlzDVertex2 *vx2 = NULL;
+      WlzVertexType vxt = WLZ_VERTEX_ERROR;
+
+      vxp = WlzVerticesFromObj(sObj, NULL, &nvx, &vxt, &errNum);
+      if(nvx < 1)
+      {
+        errNum = WLZ_ERR_DOMAIN_DATA;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        if((shf = (int *)AlcMalloc(sizeof(int) * nvx)) == NULL)
+	{
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+	else
+	{
+	  (void )AlgShuffleIdx(nvx, shf, 0);
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	/* Only use a fraction of the vertices via the shuffle buffer. */
+	mvx = 1 + ALG_NINT(sqrt(nvx));
+        if((vx2 = (WlzDVertex2 *)
+	          AlcMalloc(sizeof(WlzDVertex2) * mvx * 2)) == NULL)
+        {
+	  errNum = WLZ_ERR_MEM_ALLOC;
+	}
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	double	d2 = 2.0 * maxDfn;
+	WlzIVertex2 *vxpi;
+
+	vxpi = vxp.i2;
+	AlgRandSeed(seed);
+	for(int i = 0; i < mvx; ++i)
+	{
+	  WlzIVertex2 *p;
+	  WlzDVertex2 *v;
+	  WlzDVertex2 *d;
+
+	  v = vx2 + i;
+	  d = v + mvx;
+	  p = vxpi + shf[i];
+	  v->vtX = d2 * p->vtX;
+	  v->vtY = d2 * p->vtY;
+	  d->vtX = d2 * (AlgRandUniform() - 0.5) + v->vtX;
+	  d->vtY = d2 * (AlgRandUniform() - 0.5) + v->vtY;
+	}
+	/* Create basis function transform. */
+        bft = WlzBasisFnTrFromCPts2D(bFnType, 0, mvx, vx2 + mvx, mvx, vx2,
+				     NULL, &errNum);
+      }
+      (void )AlcFree(shf);
+      (void )AlcFree(vx2);
+      (void )AlcFree(vxp.v);
+    }
+    (void )WlzFreeObj(dObj);
+    (void )WlzFreeObj(sObj);
+    (void )WlzFreeAffineTransform(sTr);
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(bft);
+}
+
+/*!
 * \return	Transformed 2D polygon domain, NULL on error.
 * \ingroup	WlzTransform
 * \brief	Transforms a 2D polygon domain using a the given basis function
