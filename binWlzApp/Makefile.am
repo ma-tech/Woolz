@@ -91,6 +91,7 @@ bin_PROGRAMS		=  \
 			  WlzRadialDistribution \
 			  WlzRawToWlz \
 			  WlzReconstruct \
+			  WlzShellFilter3D \
 			  WlzSizeSelect \
 			  WlzSplitImage \
 			  WlzSplitMontage \
@@ -243,6 +244,10 @@ WlzRawToWlz_LDFLAGS		= $(AM_LFLAGS)
 WlzReconstruct_SOURCES		= WlzReconstruct.c
 WlzReconstruct_LDADD		= $(LDADD)
 WlzReconstruct_LDFLAGS		= $(AM_LFLAGS)
+
+WlzShellFilter3D_SOURCES	= WlzShellFilter3D.c
+WlzShellFilter3D_LDADD		= $(LDADD)
+WlzShellFilter3D_LDFLAGS	= $(AM_LFLAGS)
 
 WlzSizeSelect_SOURCES		= WlzSizeSelect.c
 WlzSizeSelect_LDADD		= $(LDADD)
