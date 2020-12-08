@@ -190,7 +190,7 @@ file t2.tif is read to form an x-y plane in the 3D output object.
 \ref WlzShellFilter3D.c "WlzShellFilter3D.c"
 \par See Also
 \ref BinWlzApp "WlzIntro(1)"
-\ref WlzGetSectionFromObject "WlzGetSectionFromObject(3)"
+\ref WlzGetSubSectionFromObject "WlzGetSubSectionFromObject(3)"
 \ref WlzEffReadObj "WlzEffReadObj(3)"
 \ref WlzEffWriteObj "WlzEffWriteObj(3)"
 */
@@ -230,14 +230,13 @@ int		main(int argc, char *argv[])
   WlzInterpolationType interp = WLZ_INTERPOLATION_NEAREST;
   WlzDVertex3	fixed = {0.0, 0.0, 0.0},
   		up = {0.0, 0.0, -1.0};
-  WlzThreeDViewStruct *viewStr=NULL;
-  WlzDomain	outDom = {0};
-  WlzValues	outVal = {0};
+  WlzThreeDViewStruct *iVwStr = NULL,
+  		      *oVwStr = NULL;
   struct timeval times[3];
   const char	*errMsgStr;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
-  WlzObject	*inObj = NULL,
-		*outObj = NULL;
+  WlzObject	*iObj = NULL,
+		*oObj = NULL;
   static char   optList[] = "ghLRva:d:e:f:F:m:o:p:r:t:u:";
   const char    *falseTrue[2] = {"false", "true"};
   const char    inStrDef[] = "-",
@@ -456,7 +455,7 @@ int		main(int argc, char *argv[])
        (*inStr == '\0') ||
        ((fP = (strcmp(inStr, "-")?
               fopen(inStr, "r"): stdin)) == NULL) ||
-       ((inObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
+       ((iObj = WlzAssignObject(WlzReadObj(fP, &errNum), NULL)) == NULL) ||
        (errNum != WLZ_ERR_NONE))
     {
       ok = 0;
@@ -471,41 +470,60 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    if(inObj->type != WLZ_3D_DOMAINOBJ)
+    if(iObj->type != WLZ_3D_DOMAINOBJ)
+    {
+      errNum = WLZ_ERR_OBJECT_TYPE;
+    }
+    else if(iObj->domain.core == NULL)
+    {
+      errNum = WLZ_ERR_DOMAIN_NULL;
+    }
+    else if(iObj->domain.core->type != WLZ_PLANEDOMAIN_DOMAIN)
+    {
+      errNum = WLZ_ERR_DOMAIN_TYPE;
+    }
+    else if(iObj->values.core == NULL)
+    {
+      errNum = WLZ_ERR_VALUES_NULL;
+    }
+    else if(iObj->values.core->type != WLZ_VOXELVALUETABLE_GREY)
+    {
+      errNum = WLZ_ERR_VALUES_TYPE;
+    }
+    if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
-      errNum = WLZ_ERR_OBJECT_TYPE;
       (void )WlzStringFromErrorNum(errNum, &errMsgStr);
       (void )fprintf(stderr,
-      		     "%s 3D domain object required, %s.\n",
+      		     "%s 3D domain object with values required, %s.\n",
       		     argv[0],
 		     errMsgStr);
-      
     }
   }
   if(ok)
   {
-    if((viewStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) != NULL)
+    if(((iVwStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) != NULL) &&
+       ((oVwStr = WlzMake3DViewStruct(WLZ_3D_VIEW_STRUCT, &errNum)) != NULL))
     {
       double  dtr;
 
       dtr = (useRadians)? 1.0: ALG_M_PI / 180.0;
-      viewStr->phi   = dtr * angles[0];
-      viewStr->theta = dtr * angles[1];
-      viewStr->zeta  = dtr * angles[2];
-      viewStr->dist  = 0.0;
-      viewStr->fixed = fixed;
-      viewStr->up    = up;
-      viewStr->view_mode = mode;
-      viewStr->scale = scale;
-      viewStr->voxelRescaleFlg = voxRescale;
-      errNum = WlzInit3DViewStruct(viewStr, inObj);
+      oVwStr->phi             = iVwStr->phi             = dtr * angles[0];
+      oVwStr->theta           = iVwStr->theta           = dtr * angles[1];
+      oVwStr->zeta            = iVwStr->zeta            = dtr * angles[2];
+      oVwStr->dist            = iVwStr->dist            = 0.0;
+      oVwStr->fixed           = iVwStr->fixed           = fixed;
+      oVwStr->up              = iVwStr->up              = up;
+      oVwStr->view_mode       = iVwStr->view_mode       = mode;
+      oVwStr->scale           = iVwStr->scale           = scale;
+      oVwStr->voxelRescaleFlg = iVwStr->voxelRescaleFlg = voxRescale;
+      errNum = WlzInit3DViewStruct(iVwStr, iObj);
       if(errNum == WLZ_ERR_NONE)
       {
 	distRange[0] = ALG_CLAMP(distRange[0],
-	                         viewStr->minvals.vtZ, viewStr->maxvals.vtZ);
+	                         iVwStr->minvals.vtZ, iVwStr->maxvals.vtZ);
 	distRange[1] = ALG_CLAMP(distRange[1],
-	                         distRange[0], viewStr->maxvals.vtZ);
+	                         distRange[0], iVwStr->maxvals.vtZ);
 	if(verbose)
         {
 	  (void )fprintf(stderr,
@@ -519,14 +537,14 @@ int		main(int argc, char *argv[])
 			 "  viewMode = %s\n"
 			 "  up = %lg,%lg,%lg\n",
 			 argv[0],
-			 viewStr->fixed.vtX, fixed.vtY, fixed.vtZ,
-			 viewStr->theta,
-			 viewStr->phi,
-			 viewStr->zeta,
-			 viewStr->dist,
-			 viewStr->scale,
-			 WlzStringFromThreeDViewMode(viewStr->view_mode, NULL),
-			 viewStr->up.vtX, viewStr->up.vtY, viewStr->up.vtZ);
+			 iVwStr->fixed.vtX, fixed.vtY, fixed.vtZ,
+			 iVwStr->theta,
+			 iVwStr->phi,
+			 iVwStr->zeta,
+			 iVwStr->dist,
+			 iVwStr->scale,
+			 WlzStringFromThreeDViewMode(iVwStr->view_mode, NULL),
+			 iVwStr->up.vtX, iVwStr->up.vtY, iVwStr->up.vtZ);
 	  (void )fprintf(stderr,
                          "%s: Distance range is %lg - %lg\n",
 			 argv[0],
@@ -546,37 +564,62 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    WlzIBox3	outBB;
+    WlzDomain	iDom;
+    WlzValues 	iVal,
+    		oVal;
+    WlzPixelV	bgd;
 
-    outBB.xMin = (int )floor(viewStr->minvals.vtX),
-    outBB.xMax = (int )floor(viewStr->maxvals.vtX),
-    outBB.yMin = (int )floor(viewStr->minvals.vtY),
-    outBB.yMax = (int )floor(viewStr->maxvals.vtY),
-    outBB.zMin = (int )floor(distRange[0]),
-    outBB.zMax = (int )floor(distRange[1]),
-    outDom.p = WlzMakePlaneDomain(WLZ_PLANEDOMAIN_DOMAIN,
-    			          outBB.zMin, outBB.zMax,
-				  outBB.yMin, outBB.yMax,
-			          outBB.xMin, outBB.xMax, &errNum);
-    if((errNum == WLZ_ERR_NONE) && (inObj->values.core != NULL) &&
-       (inObj->values.core->type == WLZ_VOXELVALUETABLE_GREY))
+    iDom = iObj->domain;
+    iVal = iObj->values;
+    bgd = iObj->values.vox->bckgrnd;
+    oVal.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
+				   iDom.p->plane1, iDom.p->lastpl, bgd,
+				   NULL, &errNum);
+    if(errNum == WLZ_ERR_NONE)
     {
-      outVal.vox = WlzMakeVoxelValueTb(WLZ_VOXELVALUETABLE_GREY,
-    			               outBB.zMin, outBB.zMax,
-				       inObj->values.vox->bckgrnd, NULL,
-				       &errNum);
+      oObj = WlzMakeMain(WLZ_3D_DOMAINOBJ, iDom, oVal, NULL, NULL, &errNum);
+      if(errNum != WLZ_ERR_NONE)
+      {
+        (void )WlzFreeVoxelValueTb(oVal.vox);
+      }
     }
     if(errNum == WLZ_ERR_NONE)
     {
-      outObj = WlzMakeMain(inObj->type, outDom, outVal, NULL, NULL, &errNum);
+      int	p,
+      		nP;
+
+      nP = iDom.p->lastpl - iDom.p->plane1 + 1;
+      for(p = 0; p < nP; ++p)
+      {
+	WlzDomain *oDom2;
+	WlzValues *iVal2,
+		  *oVal2;
+	WlzValues nVal = {0};
+
+	iVal2 = iVal.vox->values + p;
+	oDom2 = iDom.p->domains + p;    /* iDom OK because they share domain. */
+	oVal2 = oVal.vox->values + p;
+	if((*oDom2).core)
+	{
+	  WlzObject *tObj;
+
+          tObj = WlzMakeMain(WLZ_2D_DOMAINOBJ, *oDom2, nVal, NULL, NULL,
+	  		     &errNum);
+	  if(errNum == WLZ_ERR_NONE)
+	  {
+	    (*oVal2).v = WlzNewValueTb(tObj, (*iVal2).core->type, bgd, &errNum);
+	    (void )WlzAssignValues(*oVal2, NULL);
+	  }
+	  (void )WlzFreeObj(tObj);
+	}
+	if(errNum != WLZ_ERR_NONE)
+	{
+	  break;
+	}
+      }
     }
     if(errNum != WLZ_ERR_NONE)
     {
-      if(outObj == NULL)
-      {
-        (void )WlzFreePlaneDomain(outDom.p);
-	(void )WlzFreeVoxelValueTb(outVal.vox);
-      }
       ok = 0;
       (void )WlzStringFromErrorNum(errNum, &errMsgStr);
       (void )fprintf(stderr,
@@ -587,22 +630,31 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    int		i,
-    		nPlanes;
-
-    nPlanes = outDom.p->lastpl - outDom.p->plane1 + 1;
-    for(i = 0; i < nPlanes; ++i)
+    double	 dist,
+    		 dinc = 0.33053;       /* Set to oversample and avoid holes. */
+    const double epsilon = 1.0e-06;
+    
+    if(verbose)
+    {
+      gettimeofday(times + 0, NULL);
+    }
+    dist = distRange[0];
+    oVwStr->dist = iVwStr->dist = dist;
+    errNum = WlzInit3DViewStruct(iVwStr, iObj);
+    if(errNum == WLZ_ERR_NONE)
+    {
+      errNum = WlzInit3DViewStruct(oVwStr, oObj);
+    }
+    while((errNum == WLZ_ERR_NONE) && (dist < distRange[1] + epsilon))
     {
       WlzObject	*iObj2 = NULL,
       		*oObj2 = NULL;
       WlzIBox2   iBB2 = {0};
 
-      viewStr->dist = outDom.p->plane1 + i;
-      errNum = WlzInit3DViewStruct(viewStr, inObj);
       if(errNum == WLZ_ERR_NONE)
       {
 	iObj2 = WlzAssignObject(
-	        WlzGetSubSectionFromObject(inObj, NULL, viewStr, interp, NULL,
+	        WlzGetSubSectionFromObject(iObj, NULL, iVwStr, interp, NULL,
 					   &errNum), NULL);
       }
       if(errNum == WLZ_ERR_NONE)
@@ -672,31 +724,31 @@ int		main(int argc, char *argv[])
       }
       if(errNum == WLZ_ERR_NONE)
       {
-	outDom.p->domains[i] = WlzAssignDomain(oObj2->domain, NULL);
-	outVal.vox->values[i] = WlzAssignValues(oObj2->values, NULL);
+	WlzObject *tObj;
+
+        tObj = WlzAssignObject(
+               Wlz3DViewTransformObj(oObj2, oVwStr, &errNum), NULL);
+        (void )WlzFreeObj(oObj2);
+        oObj2 = tObj;
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+	(void )WlzGreyTransfer(oObj, oObj2, 1, &errNum);
       }
       (void )WlzFreeObj(oObj2);
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = Wlz3DSectionIncrementDistance(iVwStr, dinc);
+      }
+      if(errNum == WLZ_ERR_NONE)
+      {
+        errNum = Wlz3DSectionIncrementDistance(oVwStr, dinc);
+      }
+      dist += dinc;
     }
   }
   if(ok)
   {
-    errNum = WlzStandardPlaneDomain(outDom.p, outVal.vox);
-    if(errNum != WLZ_ERR_NONE)
-    {
-      ok = 0;
-      (void )WlzStringFromErrorNum(errNum, &errMsgStr);
-      (void )fprintf(stderr,
-		     "%s Failed to standardize output object domain, %s.\n",
-		     argv[0],
-		     errMsgStr);
-    }
-  }
-  if(ok)
-  {
-    if(verbose)
-    {
-      gettimeofday(times + 0, NULL);
-    }
     if(verbose)
     {
       gettimeofday(times + 1, NULL);
@@ -728,7 +780,7 @@ int		main(int argc, char *argv[])
     }
     else
     {
-      errNum = WlzWriteObj(fP, outObj);
+      errNum = WlzWriteObj(fP, oObj);
       if(errNum != WLZ_ERR_NONE)
       {
 	ok = 0;
@@ -744,9 +796,10 @@ int		main(int argc, char *argv[])
   }
   AlcFree(envBuf);
   AlcFree(envVar);
-  (void )WlzFreeObj(inObj);
-  (void )WlzFreeObj(outObj);
-  (void )WlzFree3DViewStruct(viewStr);
+  (void )WlzFreeObj(iObj);
+  (void )WlzFreeObj(oObj);
+  (void )WlzFree3DViewStruct(iVwStr);
+  (void )WlzFree3DViewStruct(oVwStr);
   if(usage)
   {
     (void )fprintf(stderr,
