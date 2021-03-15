@@ -420,7 +420,7 @@ WlzObject			*WlzLineSkeletonSegment(
     if(!WlzInsideDomain(gObj, p0.vtZ, p0.vtY, p0.vtX, NULL) ||
        !WlzInsideDomain(gObj, p1.vtZ, p1.vtY, p1.vtX, NULL))
     {
-      errNum = WLZ_ERR_DOUBLE_DATA;
+      errNum = WLZ_ERR_DOMAIN_DATA;
     }
   }
   /* Compute object in which values are distance from the object boundary. */
