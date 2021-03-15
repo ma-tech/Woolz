@@ -1023,6 +1023,7 @@ extern WlzObject		*WlzBSplineCut(
 				  int radius,
 				  double tB,
 				  double tE,
+				  WlzDVertex3 up,
 				  WlzInterpolationType interp,
 				  WlzErrorNum *dstErr);
 extern WlzErrorNum		WlzFreeBSpline(
