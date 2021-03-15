@@ -56,7 +56,7 @@ WlzCutBSpline
 \par Synopsis
 \verbatim
 WlzCutBSpline [-h] [-b<spline object>] [-B] [-L] [-N] [-P] [-o<out object>]
-              [-r <rad>] [-t[<min>],[<max>]] [-v] [<in object>]
+              [-r <rad>] [-t[<min>],[<max>]] [-u<x>,<y>,<z>] [-v] [<in object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
@@ -106,6 +106,10 @@ WlzCutBSpline [-h] [-b<spline object>] [-B] [-L] [-N] [-P] [-o<out object>]
     <td>Output object file.</td>
   </tr>
   <tr>
+    <td><b>-u</b></td>
+    <td>Up vector, which if supplied also implies up-is-up sectioning.</td>
+  </tr>
+  <tr>
     <td><b>-v</b></td>
     <td>Verbose output, possibly useful for tests and debugging.</td>
   </tr>
@@ -151,6 +155,7 @@ int		main(int argc, char *argv[])
 		cutOrthog = 0,
 		usage = 0,
 		verbose = 0;
+  WlzDVertex3	up = {0};
   WlzObject	*iObj = NULL,
   		*oObj = NULL,
 		*sObj = NULL;
@@ -161,7 +166,7 @@ int		main(int argc, char *argv[])
   		*oFile = NULL,
 		*sFile = NULL;
   double	param[2] = {0.0, 1.0};
-  static char	optList[] = "hBLNPvb:o:r:t:",
+  static char	optList[] = "hBLNPvb:o:r:t:u:",
 		defFile[] = "-";
 
   sFile = iFile = oFile = defFile;
@@ -221,6 +226,10 @@ int		main(int argc, char *argv[])
       case 'o':
         oFile = optarg;
 	break;
+      case 'u':
+        usage = sscanf(optarg, "%lg,%lg,%lg",
+	               &(up.vtX), &(up.vtY), &(up.vtZ)) != 3;
+        break;
       case 'v':
         verbose = 1;
 	break;
@@ -246,9 +255,10 @@ int		main(int argc, char *argv[])
     (void )fprintf(stderr,
         "%s: iFile = %s, oFile = %s, sFile = %s,\n"
 	"\t\tcutOrthog = %d, radius = %d, param = [%g, %g],\n"
-	"\t\tnoGrey = %d, verbose = %d, usage = %d\n",
+	"\t\tup = {%g, %g, %g}, noGrey = %d, verbose = %d,\n"
+	"\t\tusage = %d\n",
 	*argv, iFile, oFile, sFile, cutOrthog, radius, param[0], param[1],
-	noGrey, verbose, usage);
+	up.vtX, up.vtY, up.vtZ, noGrey, verbose, usage);
   }
   ok = !usage;
   if(ok)
@@ -301,7 +311,7 @@ int		main(int argc, char *argv[])
     else
     {
       oObj = WlzBSplineCut(iObj, bs, cutOrthog, noGrey, radius,
-          param[0], param[1], interp, &errNum);
+          param[0], param[1], up, interp, &errNum);
     }
     if(errNum != WLZ_ERR_NONE)
     {
@@ -342,8 +352,8 @@ int		main(int argc, char *argv[])
     errNum = WLZ_ERR_NONE;
     (void )fprintf(stderr,
     "Usage: %s [-h] [-b<spline object>] [-B] [-L] [-N] [-P]\n"
-    "\t\t[-o<out object>] [-r <rad>] [-t[<min>],[<max>]] [-v]\n"
-    "\t\t[<in object>]\n"
+    "\t\t[-o<out object>] [-r <rad>] [-t[<min>],[<max>]]\n"
+    "\t\t[-u<x>,<y>,<z>] [-v] [<in object>]\n"
     "Version: %s\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
@@ -362,6 +372,7 @@ int		main(int argc, char *argv[])
     "      planes will be cut (set to %d).\n"
     "  -t  Parametric range along the B-spline curve (set to %g,%g).\n"
     "  -o  Output object file name.\n"
+    "  -u  Up vector, which if supplied also implies up-is-up sectioning.\n"
     "  -v  Verbose output, possibly useful for tests and debugging.\n"
     "Cuts regions from a spatial domain using a B-spline define the region\n"
     "cut. The region may be the domain of the B-spline or planes orthogonal\n"
