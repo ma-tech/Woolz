@@ -52,6 +52,7 @@ static WlzObject               	*WlzBSplineCutOtg(
                                   int radius,
                                   double tB,
                                   double tE,
+				  WlzDVertex3 up,
 				  WlzInterpolationType interp,
                                   WlzErrorNum *dstErr);
 static WlzObject               	*WlzBSplineCutPar(
@@ -808,7 +809,9 @@ WlzObject			*WlzBSplineToDomain(
     if(dim == 2)
     {
       WlzDVertex2 *p;
+      WlzGreyP	vals = {0};
       WlzDBox2	b;
+      WlzIBox2  bi;
 
       p = pos.d2;
       b.xMin = b.xMax = p[0].vtX;
@@ -832,10 +835,26 @@ WlzObject			*WlzBSplineToDomain(
 	  b.yMax = p[i].vtY;
 	}
       }
-      rObj = WlzAssignObject(
-      	     WlzMakeRect((int )floor(b.yMin), (int )ceil(b.yMax),
-			 (int )floor(b.xMin), (int )ceil(b.xMax),
-			 bgd.type, NULL, bgd, NULL, NULL, &errNum), NULL);
+      bi.xMin = (int )floor(b.xMin);
+      bi.yMin = (int )floor(b.yMin);
+      bi.xMax = (int )ceil(b.xMax);
+      bi.yMax = (int )ceil(b.yMax);
+      if((vals.v = AlcCalloc((bi.xMax - bi.xMin + 1) * (bi.yMax - bi.yMin + 1),
+                             sizeof(WlzUByte))) == NULL)
+      {
+        errNum = WLZ_ERR_MEM_ALLOC;
+      }
+      else
+      {
+	rObj = WlzAssignObject(
+	       WlzMakeRect(bi.yMin, bi.yMax, bi.xMin, bi.xMax,
+			   bgd.type, vals.inp, bgd, NULL, NULL, &errNum),
+			   NULL);
+        if(errNum != WLZ_ERR_NONE)
+	{
+	  AlcFree(vals.v);
+	}
+      }
     }
     else /* dim == 3 */
     {
@@ -1138,6 +1157,8 @@ WlzErrorNum			WlzBSplineTangent(
 * 					to start the cut.
 * \param	tE			B-spline parametric coordinate at which
 * 					to end the cut.
+* \param	up			Up vector, only used for orthogonal
+* 					sectioning, see WlzBSplineCutOtg().
 * \param	interp			Interpolation for cutting sections.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
@@ -1149,6 +1170,7 @@ WlzObject                	*WlzBSplineCut(
                                   int radius,
                                   double tB,
                                   double tE,
+				  WlzDVertex3 up,
 				  WlzInterpolationType interp,
                                   WlzErrorNum *dstErr)
 {
@@ -1202,7 +1224,7 @@ WlzObject                	*WlzBSplineCut(
   if(errNum == WLZ_ERR_NONE)
   {
     rObj = (cutOrthog)?
-        WlzBSplineCutOtg(iObj, bs, noGrey, radius, tB, tE, interp, &errNum):
+        WlzBSplineCutOtg(iObj, bs, noGrey, radius, tB, tE, up, interp, &errNum):
 	WlzBSplineCutPar(iObj, bs, noGrey, radius, tB, tE, &errNum);
   }
   if(dstErr)
@@ -1412,6 +1434,9 @@ double				WlzBSplineLength(
 * 					to start the cut.
 * \param	tE			B-spline parametric coordinate at which
 * 					to end the cut.
+* \param	up			Up vector, only used for orthogonal
+* 					sectioning, see
+* 					Wlz3DViewStructFromNormal().
 * \param	interp			Interpolation for cutting sections.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
@@ -1422,6 +1447,7 @@ static WlzObject               	*WlzBSplineCutOtg(
                                   int radius,
                                   double tB,
                                   double tE,
+				  WlzDVertex3 up,
 				  WlzInterpolationType interp,
                                   WlzErrorNum *dstErr)
 {
@@ -1503,14 +1529,13 @@ static WlzObject               	*WlzBSplineCutOtg(
   if(errNum == WLZ_ERR_NONE)
   {
     int		p;
-    WlzDVertex3 z = {0};
 
     for(p = 0; p < len; ++p)
     {
       WlzObject	*obj2 = NULL;
       WlzThreeDViewStruct *vs;
 
-      vs = Wlz3DViewStructFromNormal(nrm.d3[p], pos.d3[p], z, &errNum);
+      vs = Wlz3DViewStructFromNormal(nrm.d3[p], pos.d3[p], up, &errNum);
       if(errNum == WLZ_ERR_NONE)
       {
         errNum = WlzInit3DViewStruct(vs, iObj);
