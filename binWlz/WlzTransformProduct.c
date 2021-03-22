@@ -99,7 +99,7 @@ int             main(int argc, char **argv)
   int		option,
 		ok = 1,
 		usage = 0;
-  WlzTransform  t[3];
+  WlzTransform  t[4];
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   FILE		*fP = NULL;
   char 		*outObjFileStr = NULL;
