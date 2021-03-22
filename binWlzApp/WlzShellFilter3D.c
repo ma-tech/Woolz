@@ -52,7 +52,6 @@ static char _WlzShellFilter3D_c[] = "University of Edinburgh $Id$";
 #include <Wlz.h>
 #include <WlzExtFF.h>
 
-/* HACK TODO copy in the doc below. */
 /*!
 \ingroup BinWlz
 \defgroup wlzshellfilter3d WlzShellFilter3D
@@ -61,8 +60,9 @@ WlzShellFilter3D
 \par Synopsis
 \verbatim
 WlzShellFilter3D [-g] [-h] [-L] [-R] [-v] [-a<pit><yaw>[,<roll>]]
-                 [-d<min[,max>]] [-e<shell cmd>] [-f<x,y,z>] [-F<fmt>]
-		 [-m<mode>] [-p<env par>[,<env par>...]] [-s<scale>]
+                 [-d<min[,max>]] [-e<shell cmd>] [-f<x,y,z>]
+		 [-F<fmt>] [-o<output object>] [-m<mode>]
+		 [-p<env par>[,<env par>...]] [-s<scale>]
 		 [-t<tmp file>,<rmp file>] [-u<x,y,z>] [<input object>]
 \endverbatim
 \par Options
@@ -805,8 +805,9 @@ int		main(int argc, char *argv[])
     (void )fprintf(stderr,
     "Usage: %s [-g] [-h] [-L] [-R] [-v] [-a<pit><yaw>[,<roll>]]\n"
     "\t\t[-d<min[,max>]] [-e<shell cmd>] [-f<x,y,z>] [-F<fmt>]\n"
-    "\t\t[-m<mode>] [-p<env par>[,<env par>...]] [-s<scale>]\n"
-    "\t\t[-t<tmp file>,<rmp file>] [-u<x,y,z>] [<input object>]\n"
+    "\t\t[-o<output object>] [-m<mode>] [-p<env par>[,<env par>...]]\n"
+    "\t\t[-s<scale>] [-t<tmp file>,<rmp file>] [-u<x,y,z>]\n"
+    "\t\t[<input object>]\n"
     "Applies the given shell command to each plane of the given object\n"
     "where the planes are cut parallel to each other, are consecutive\n"
     "and are defined by the cutting angles, mode and distance(s).\n"
