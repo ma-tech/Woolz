@@ -207,7 +207,7 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    FILE	*fP;
+    FILE	*fP = NULL;
 
     if((iFile == NULL) ||
        (*iFile == '\0') ||
