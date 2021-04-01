@@ -347,6 +347,14 @@ extern WlzErrorNum		WlzEffWriteObjTxt(
 				  WlzObject *obj,
 				  char	*params);
 
+/* From WlzExtFFJSON.c */
+extern WlzErrorNum		WlzEffWriteObjJsn(
+				  FILE *fP,
+				  WlzObject *obj);
+extern WlzObject		*WlzEffReadObjJsn(
+				  FILE *fP,
+				  WlzErrorNum *dstErr);
+
 /* From	WlzExtFFBibUtils.c */
 extern WlzErrorNum 		WlzEffBibWrite3DSectionViewParamsRecord(
 				  FILE *fp,

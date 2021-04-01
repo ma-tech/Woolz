@@ -67,6 +67,8 @@ WlzEffFormat	WlzEffStringExtToFormat(const char *extStr)
 			 "ipl",    WLZEFF_FORMAT_IPL,
 			 "jpeg",   WLZEFF_FORMAT_JPEG,
 			 "jpg",    WLZEFF_FORMAT_JPEG,
+			 "json",   WLZEFF_FORMAT_JSON,
+			 "jsn",    WLZEFF_FORMAT_JSON,
 			 "mesh",   WLZEFF_FORMAT_MESH,
 			 "nrrd",   WLZEFF_FORMAT_NRRD,
 			 "node",   WLZEFF_FORMAT_NODEELE,
@@ -115,6 +117,7 @@ WlzEffFormat	WlzEffStringToFormat(const char *fmtStr)
 	 "Image Cytometry Standard", WLZEFF_FORMAT_ICS,
 	 "IPLab", WLZEFF_FORMAT_IPL,
 	 "JPEG", WLZEFF_FORMAT_JPEG,
+	 "JSON", WLZEFF_FORMAT_JSON,
 	 "Microsoft Bitmap", WLZEFF_FORMAT_BMP,
 	 "Pascal Frey's medit tetrahedral mesh format", WLZEFF_FORMAT_MESH,
 	 "Neuroimaging Informatics Technology Initiative", WLZEFF_FORMAT_NIFTI,
@@ -172,6 +175,8 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
 		*fmtIPLStr  = "IPLab",
 		*extJpegStr = "jpg",
 		*fmtJpegStr = "JPEG",
+		*extJSONStr = "jsn",
+		*fmtJSONStr = "JSON encoded Woolz",
 		*extMeshStr = "mesh",
 		*fmtMeshStr = "Pascal Frey's medit tetrahedral mesh format",
 		*extNiftiStr = "nii",
@@ -288,6 +293,10 @@ const char	*WlzEffStringFromFormat(WlzEffFormat fileFmt,
     case WLZEFF_FORMAT_JPEG:
       fmtStr = fmtJpegStr;
       extStr = extJpegStr;
+      break;
+    case WLZEFF_FORMAT_JSON:
+      fmtStr = fmtJSONStr;
+      extStr = extJSONStr;
       break;
     case WLZEFF_FORMAT_ANL:
       fmtStr = fmtAnlStr;
@@ -513,6 +522,9 @@ WlzObject	*WlzEffReadObj(FILE *fP, const char *fName, WlzEffFormat fFmt,
       case WLZEFF_FORMAT_JPEG:
         obj = WlzEffReadObjJpeg(fP, &errNum);
 	break;
+      case WLZEFF_FORMAT_JSON:
+        obj = WlzEffReadObjJsn(fP, &errNum);
+        break;
       case WLZEFF_FORMAT_ANL:
         obj = WlzEffReadObjAnl(fName, &errNum);
 	break;
@@ -660,6 +672,9 @@ WlzErrorNum	WlzEffWriteObj(FILE *fP, const char *fName, WlzObject *obj,
 	break;
       case WLZEFF_FORMAT_JPEG:
         errNum = WlzEffWriteObjJpeg(fP, obj, "");
+	break;
+      case WLZEFF_FORMAT_JSON:
+        errNum = WlzEffWriteObjJsn(fP, obj);
 	break;
       case WLZEFF_FORMAT_TXT:
         errNum = WlzEffWriteObjTxt(fP, obj, "");
