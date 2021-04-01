@@ -60,6 +60,7 @@ libWlzExtFF_la_SOURCES 	= \
 			  WlzExtFFIcs.c \
 			  WlzExtFFIPL.c \
 			  WlzExtFFJpeg.c \
+			  WlzExtFFJSON.c \
 			  WlzExtFFMesh.c \
 			  WlzExtFFNifti.c \
 			  WlzExtFFNodeEle.c \
