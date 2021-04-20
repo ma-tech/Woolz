@@ -56,6 +56,8 @@ SIMD=''
 CDEF_ARCH=""
 USE_CTAGS=1
 USE_ETAGS=0
+HAVE_CJSON="no"
+CJSON_DIR="no"
 HAVE_JPEG="no"
 JPEG_DIR="no"
 HAVE_NIFTI="no"
@@ -391,6 +393,22 @@ then
     HAVE_NIFTI=yes
     INCL_EXTFF="${INCL_EXTFF} -I${NIFTI_DIR}/include -I${NIFTI_DIR}/include/nifti"
     LIBS_EXTFF=" -L${NIFTI_DIR}/lib -lniftiio -lznz ${LIBS_EXTFF}"
+  fi
+  AC_ARG_WITH(cjson, [  --with-cjson=DIR        Directory containing the cJSON
+                          lib and include directories.],
+	      CJSON_DIR=$withval, CJSON_DIR=no)
+  if test ${CJSON_DIR} = "no"
+  then
+    AC_CHECK_HEADER(cJSON.h,
+		    AC_CHECK_LIB(cjson, cJSON_Version,
+				 [
+				   HAVE_CJSON=yes
+				   LIBS_EXTFF=" -lcjson ${LIBS_EXTFF}"
+				 ]))
+  else
+    HAVE_CJSON=yes
+    INCL_EXTFF="${INCL_EXTFF} -I${CJSON_DIR}/include"
+    LIBS_EXTFF=" -L${CJSON_DIR}/lib -lcjson ${LIBS_EXTFF}"
   fi
 
   if test ${ENABLE_EXTFF} = "yes"
