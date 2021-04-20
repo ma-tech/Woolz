@@ -217,7 +217,7 @@ Usage: WlzExtFFConvert [-h] [-s] [-b<background>]
                        [-o<output file>] [<input file>)]
 Converts objects between one file format and another, neither of
 which need be the Woolz data file format.
-Version: 1.6.8
+Version: 1.8.1
 Options:
   -h    Help, prints this usage information.
   -s    Split labeled volumes into domains.This will also split
@@ -246,9 +246,11 @@ The known file formats are:
   Image Cytometry Standard                          ics
   IPLab                                             ipl
   JPEG                                              jpg
+  JSON encoded Woolz                                jsn
   Pascal Frey's medit tetrahedral mesh format       mesh
   Neuroimaging Informatics Technology Initiative    nii
   Jonathan Shewchuk's mesh format                   node
+  Utah nearly raw raster data (NRRD) format         nrrd
   Wavefront                                         obj
   BioRad Confocal                                   pic
   Riken PLY2                                        ply2
