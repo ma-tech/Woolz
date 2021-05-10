@@ -42,7 +42,7 @@ static char _WlzFreeSpace_c[] = "University of Edinburgh $Id$";
 #include <stdlib.h>
 #include <Wlz.h>
 
-/* function:     WlzFreeObj    */
+
 /*! 
 * \ingroup      WlzAllocation
 * \brief        Free space allocated to a woolz object.
@@ -358,6 +358,18 @@ WlzErrorNum WlzFreeObj(WlzObject *obj)
   }
 
   return( errNum );
+}
+
+/*! 
+* \ingroup      WlzAllocation
+* \brief        Free space allocated to a woolz compound array object.
+*
+* \return       Error number, values: WLZ_ERR_NONE, WLZ_ERR_MEM_FREE
+* \param    	obj			Compound array object to be freed.
+*/
+WlzErrorNum 	WlzFreeCompoundArray(WlzCompoundArray *obj)
+{
+  return(WlzFreeObj((WlzObject *)obj));
 }
 
 /* function:     WlzFreeIntervalDomain    */
