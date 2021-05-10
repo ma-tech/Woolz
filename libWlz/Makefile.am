@@ -103,6 +103,7 @@ libWlz_la_SOURCES 	= \
 			  WlzDiffDomain3d.c \
 			  WlzDiffDomain.c \
 			  WlzDilation.c \
+			  WlzDistAllNearest.c \
 			  WlzDistMetric.c \
 			  WlzDistTransform.c \
 			  WlzDomainFill.c \
