@@ -333,35 +333,38 @@ static WlzErrorNum WlzIterateDomObj2D(WlzIterateWSpace *itWSp)
   else
   {
     ++(itWSp->pos.vtX);
-    switch(itWSp->gType)
+    if(itWSp->grey)
     {
-      case WLZ_GREY_LONG:
-        ++(itWSp->gP.lnp);
-	break;
-      case WLZ_GREY_INT:
-        ++(itWSp->gP.inp);
-	break;
-      case WLZ_GREY_SHORT:
-        ++(itWSp->gP.shp);
-	break;
-      case WLZ_GREY_UBYTE:
-        ++(itWSp->gP.ubp);
-	break;
-      case WLZ_GREY_FLOAT:
-        ++(itWSp->gP.flp);
-	break;
-      case WLZ_GREY_DOUBLE:
-        ++(itWSp->gP.dbp);
-	break;
-      case WLZ_GREY_BIT:
-        ++(itWSp->gP.ubp);
-	break;
-      case WLZ_GREY_RGBA:
-        ++(itWSp->gP.rgbp);
-	break;
-      default:
-        errNum = WLZ_ERR_GREY_TYPE;
-	break;
+      switch(itWSp->gType)
+      {
+	case WLZ_GREY_LONG:
+	  ++(itWSp->gP.lnp);
+	  break;
+	case WLZ_GREY_INT:
+	  ++(itWSp->gP.inp);
+	  break;
+	case WLZ_GREY_SHORT:
+	  ++(itWSp->gP.shp);
+	  break;
+	case WLZ_GREY_UBYTE:
+	  ++(itWSp->gP.ubp);
+	  break;
+	case WLZ_GREY_FLOAT:
+	  ++(itWSp->gP.flp);
+	  break;
+	case WLZ_GREY_DOUBLE:
+	  ++(itWSp->gP.dbp);
+	  break;
+	case WLZ_GREY_BIT:
+	  ++(itWSp->gP.ubp);
+	  break;
+	case WLZ_GREY_RGBA:
+	  ++(itWSp->gP.rgbp);
+	  break;
+	default:
+	  errNum = WLZ_ERR_GREY_TYPE;
+	  break;
+      }
     }
   }
   return(errNum);
