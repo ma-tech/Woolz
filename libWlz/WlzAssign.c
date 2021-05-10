@@ -92,6 +92,23 @@ WlzObject	*WlzAssignObject(WlzObject *obj, WlzErrorNum *dstErr)
 }
 
 /*!
+* \return	Given compound array with incremented linkcount or NULL on
+* 		error.
+* \ingroup	WlzAllocation
+* \brief	Assign a compound array (increment it's linkcount) by first
+* 		checking for NULL, then the value of linkcount, before
+*		incrementing the linkcount. If used concientiously,
+*		assignment should avoid memory errors.
+* \param	obj			Given compound array.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+WlzCompoundArray *WlzAssignCompoundArray(WlzCompoundArray *obj,
+				  WlzErrorNum *dstErr)
+{
+  return((WlzCompoundArray *)WlzAssignObject((WlzObject *)obj, dstErr));
+}
+
+/*!
 * \return	Given domain with incremented linkcount or NULL on error.
 * \ingroup	WlzAllocation
 * \brief	Assign a domain by incrementing it's linkcount.
