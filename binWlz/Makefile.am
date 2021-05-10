@@ -111,6 +111,7 @@ bin_PROGRAMS		= \
 			  WlzDefGrdTensorFeatures \
 			  WlzDiffDomain \
 			  WlzDilation \
+			  WlzDistanceAllNearest \
 			  WlzDistanceMetric \
 			  WlzDistanceTransform \
 			  WlzDitherPoints \
@@ -502,6 +503,10 @@ WlzDiffDomain_LDFLAGS			= $(AM_LFLAGS)
 WlzDilation_SOURCES			= WlzDilation.c
 WlzDilation_LDADD			= $(LDADD)
 WlzDilation_LDFLAGS			= $(AM_LFLAGS)
+
+WlzDistanceAllNearest_SOURCES		= WlzDistanceAllNearest.c
+WlzDistanceAllNearest_LDADD		= $(LDADD)
+WlzDistanceAllNearest_LDFLAGS		= $(AM_LFLAGS)
 
 WlzDistanceMetric_SOURCES		= WlzDistanceMetric.c
 WlzDistanceMetric_LDADD			= $(LDADD)
