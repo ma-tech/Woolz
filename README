@@ -217,7 +217,7 @@ Usage: WlzExtFFConvert [-h] [-s] [-b<background>]
                        [-o<output file>] [<input file>)]
 Converts objects between one file format and another, neither of
 which need be the Woolz data file format.
-Version: 1.8.1
+Version: 1.8.2
 Options:
   -h    Help, prints this usage information.
   -s    Split labeled volumes into domains.This will also split
