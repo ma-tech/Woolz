@@ -947,6 +947,9 @@ extern int			WlzArrayStats1D(
 extern WlzObject		*WlzAssignObject(
 				  WlzObject *object,
 				  WlzErrorNum *dstErr);
+extern WlzCompoundArray 	*WlzAssignCompoundArray(
+				  WlzCompoundArray *obj,
+                                  WlzErrorNum *dstErr);
 #ifndef WLZ_EXT_BIND
 extern WlzDomain		WlzAssignDomain(
 				  WlzDomain domain,
@@ -2569,6 +2572,16 @@ extern WlzObject		*WlzDilation(
 				  WlzErrorNum *dstErr);
 
 /************************************************************************
+* WlzDistAllNearest.c							*
+************************************************************************/
+WlzCompoundArray                *WlzDistAllNearest(
+                                  WlzObject *gForObj,
+                                  WlzObject *gRefObj,
+                                  WlzDistanceType dFn,
+                                  WlzObject **dstDstObj,
+                                  WlzErrorNum *dstErr);
+
+/************************************************************************
 * WlzDistMetric.c							*
 ************************************************************************/
 extern WlzErrorNum     		WlzDistMetricGM(
@@ -2780,6 +2793,8 @@ extern void			*WlzPopFreePtr(
 #endif /* !WLZ_EXT_BIND */
 extern WlzErrorNum		WlzFreeObj(
 				  WlzObject *obj);
+extern WlzErrorNum     		WlzFreeCompoundArray(
+				  WlzCompoundArray *obj);
 #ifndef WLZ_EXT_BIND
 extern WlzErrorNum		WlzFreeDomain(
 				  WlzDomain domain);
