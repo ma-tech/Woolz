@@ -480,11 +480,23 @@ static WlzErrorNum		WlzEffWriteJsnValueTable(
 				  FILE *fP,
 				  WlzObject *obj)
 {
+  int		nLn = 0,
+  		line1 = 0;
+  int		*valueLnIndices = NULL;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
 
   if(fprintf(fP, "\"values\": {\n") < 0)
   {
     errNum = WLZ_ERR_WRITE_INCOMPLETE;
+  }
+  else if((nLn =  obj->domain.i->lastln - 
+                  (line1 = obj->domain.i->line1) + 1) < 1)
+  {
+    errNum = WLZ_ERR_DOMAIN_DATA;
+  }
+  else if((valueLnIndices = (int *)AlcCalloc(nLn, sizeof(int))) == NULL)
+  {
+    errNum = WLZ_ERR_MEM_ALLOC;
   }
   if((errNum == WLZ_ERR_NONE) && obj->values.core)
   {
@@ -523,6 +535,7 @@ static WlzErrorNum		WlzEffWriteJsnValueTable(
     }
     if(errNum == WLZ_ERR_NONE)
     {
+      int		    nV = 0;
       WlzIntervalWSpace     iWSp;
       WlzGreyWSpace         gWSp;
       const char 	    *trm[2] = {"", ","};
@@ -535,6 +548,11 @@ static WlzErrorNum		WlzEffWriteJsnValueTable(
         {
 	  int		moreVal;
 
+	  if(iWSp.nwlpos > 0)
+	  {
+	    valueLnIndices[iWSp.linpos - line1] = nV;
+	  }
+	  nV += iWSp.colrmn;
 	  moreVal = (iWSp.linrmn > 0) || (iWSp.intrmn > 0);
 	  errNum = WlzEffWriteJsnGreyValues(fP, gWSp.u_grintptr, gType,
 	  				    iWSp.colrmn, trm[moreVal]);
@@ -548,6 +566,14 @@ static WlzErrorNum		WlzEffWriteJsnValueTable(
     }
     if(errNum == WLZ_ERR_NONE)
     {
+      WlzGreyP ugp;
+
+      ugp.inp = valueLnIndices;
+      (void )fprintf(fP, "],\n\"value_line_indices\": [");
+      errNum = WlzEffWriteJsnGreyValues(fP, ugp, WLZ_GREY_INT, nLn, "");
+    }
+    if(errNum == WLZ_ERR_NONE)
+    {
       (void )fprintf(fP, "]");
     }
   }
@@ -558,6 +584,7 @@ static WlzErrorNum		WlzEffWriteJsnValueTable(
       errNum = WLZ_ERR_WRITE_INCOMPLETE;
     }
   }
+  AlcFree(valueLnIndices);
   return(errNum);
 }
 
