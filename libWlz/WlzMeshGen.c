@@ -3337,6 +3337,7 @@ WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
     }
   }
   /* Pass 3: Delete all very small elements. */
+#ifdef WLZ_CMESH_ELM_FUSE_2D_OK
   for(idE = 0; idE < mesh->res.elm.maxEnt; ++idE)
   {
     elm = (WlzCMeshElm2D *)AlcVectorItemGet(mesh->res.elm.vec, idE);
@@ -3359,6 +3360,7 @@ WlzErrorNum 	WlzCMeshBoundConform2D(WlzCMesh2D *mesh,
       }
     }
   }
+#endif
 #ifdef WLZ_CMESH_DEBUG_VERIFY_CONFORM
   if(errNum == WLZ_ERR_NONE)
   {
