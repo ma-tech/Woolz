@@ -1244,8 +1244,6 @@ WlzObject                	*WlzBSplineCut(
 * 		cordinate for the given distance from the start calling
 * 		WlzBSplineLength(). Coordinates outside of the spline
 * 		domain are clamped to the range of the spline domain [0.0-1.0].
-* \par See Also
-*		WlzBSplineLength "WlzBSplineLength(3)"
 * \param	bs			Given B-spline domain.
 * \param	tg			Parametric coordinate of start.
 * \param	dg			Given signed distance, where negative
@@ -1339,14 +1337,12 @@ double				WlzBSplineDistance(
 * 		where \f$\acute{x}, \acute{y}, \ldots\f$ are the first
 * 		derivatives of coordinates \f$x, y, \ldots\f$ with respect
 * 		to \f$t\f$.
-* 		Step sizes (\f$\s_x, s_y, \ldots\f$ allow lengths to be
+* 		Step sizes (\f$s_x, s_y, \ldots\f$) allow lengths to be
 * 		computed for an domain with non-unit pixel/voxel size.
 * 		Because the integral is an elliptic integral, then Legendre-
 * 		Gauss quadrature is used for numerical integration with
 * 		each spline segment integrated using it's own points and
 * 		weights.
-* \par See Also
-*		WlzBSplineDistance "WlzBSplineDistance(3)"
 * \param	bs			Given B-spline domain.
 * \param	tB			Parametric coordinate of start.
 * \param	tE			Parametric coordinate of end.
