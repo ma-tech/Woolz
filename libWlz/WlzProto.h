@@ -1057,6 +1057,18 @@ extern double			WlzBSplineLength(
 				  WlzBSpline *bs,
 				  double tB,
 				  double tE,
+				  double sz,
+				  double sy,
+				  double sx,
+				  WlzErrorNum *dstErr);
+extern double			WlzBSplineDistance(
+				  WlzBSpline *bs,
+				  double tg,
+				  double dg,
+				  double sz,
+				  double sy,
+				  double sx,
+				  double tol,
 				  WlzErrorNum *dstErr);
 #endif /* WLZ_EXT_BIND */
 
@@ -5811,6 +5823,7 @@ extern WlzAffineTransform	*WlzRegICPObjs(
 				  int *dstConv,
 				  int *dstItr,
 				  int maxItr,
+				  int noNrm,
 				  double delta,
 				  double minDistWgt,
 				  WlzErrorNum *dstErr);
@@ -5825,6 +5838,7 @@ extern WlzAffineTransform	*WlzRegICPObjsGrd(
 				  int *dstConv,
 				  int *dstItr,
 				  int maxItr,
+				  int noNrm,
 				  double delta,
 				  double minDistWgt,
 				  WlzErrorNum *dstErr);

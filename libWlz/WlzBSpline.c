@@ -772,7 +772,7 @@ WlzObject			*WlzBSplineToDomain(
   }
   if(errNum == WLZ_ERR_NONE)
   {
-    len = (int )ceil(WlzBSplineLength(bs, tB, tE, &errNum));
+    len = (int )ceil(WlzBSplineLength(bs, tB, tE, 1.0, 1.0, 1.0, &errNum));
   }
   /* Allocate buffers for evaluating the spline. */
   if(errNum == WLZ_ERR_NONE)
@@ -1235,6 +1235,96 @@ WlzObject                	*WlzBSplineCut(
 }
 
 /*!
+* \return	Parametric cordinate which is the specified distance from
+* 		the given start parametric coordinate.
+* \ingroup	WlzFeatures
+* \brief	Computes the parametric coordinate which is the given distance
+* 		from the given origin parametric coordinate.
+* 		This function uses a binary search to find the parametric
+* 		cordinate for the given distance from the start calling
+* 		WlzBSplineLength(). Coordinates outside of the spline
+* 		domain are clamped to the range of the spline domain [0.0-1.0].
+* \par See Also
+*		WlzBSplineLength "WlzBSplineLength(3)"
+* \param	bs			Given B-spline domain.
+* \param	tg			Parametric coordinate of start.
+* \param	dg			Given signed distance, where negative
+* 					distance vlues are from the given start
+* 					towards the begining of the domain and
+* 					positive values are towards the end.
+* \param	sz			Size of step in z.
+* \param	sy			Size of step in y.
+* \param	sx			Size of step in x.
+* \param	tol			Tolerance value.
+* \param	dstErr			Destination error pointer, may be NULL.
+*/
+double				WlzBSplineDistance(
+				  WlzBSpline *bs,
+				  double tg,
+				  double dg,
+				  double sz,
+				  double sy,
+				  double sx,
+				  double tol,
+				  WlzErrorNum *dstErr)
+{
+  double	tr = 0.0;
+  WlzErrorNum   errNum = WLZ_ERR_NONE;
+
+  if(bs == NULL)
+  {
+    errNum = WLZ_ERR_DOMAIN_NULL;
+  }
+  else if((tg < 0.0) || (tg > 1.0) || (tol < 0.0))
+  {
+    errNum = WLZ_ERR_PARAM_DATA;
+  }
+  else
+  {
+    double	d0,
+		d1,
+    		t0;
+    d0 = dg;
+    t0 = tg;
+    while(fabs(d0) > tol)
+    {
+      double	t1;
+
+      if(d0 > 0.0)
+      {
+	double	l;
+
+        l = WlzBSplineLength(bs, t0, 1.0, sz, sy, sx, &errNum);
+	t1 = t0 + (d0 / l);
+      }
+      else
+      {
+	double	l;
+
+        l = WlzBSplineLength(bs, 0.0, t0, sz, sy, sx, &errNum);
+	t1 = t0 * (1.0 + (d0 / l));
+      }
+      t0 = ALG_CLAMP(t1, 0.0, 1.0);
+      if(tg < t0)
+      {
+        d1 = WlzBSplineLength(bs, tg, t0, sz, sy, sx, &errNum);
+      }
+      else
+      {
+        d1 = -WlzBSplineLength(bs, t0, tg, sz, sy, sx, &errNum);
+      }
+      d0 = dg - d1;
+    }
+    tr = t0;
+  }
+  if(dstErr)
+  {
+    *dstErr = errNum;
+  }
+  return(tr);
+}
+				  
+/*!
 * \return	Length along the spline's parametric curve.
 * \ingroup	WlzFeatures
 * \brief	Computes the length of a path along a spline's curve between
@@ -1244,24 +1334,34 @@ WlzObject                	*WlzBSplineCut(
 * 		is given by
 * 		\f[
 * 		l = \int_{t_a}^{t_b}\sqrt{
-  		     {\acute{x}}^2 +{\acute{y}}^2 + \ldots}dt
+  		     {\acute{x} s_x}^2 + {\acute{y} s_y}^2 + \ldots}dt
  		\f]
 * 		where \f$\acute{x}, \acute{y}, \ldots\f$ are the first
 * 		derivatives of coordinates \f$x, y, \ldots\f$ with respect
 * 		to \f$t\f$.
+* 		Step sizes (\f$\s_x, s_y, \ldots\f$ allow lengths to be
+* 		computed for an domain with non-unit pixel/voxel size.
 * 		Because the integral is an elliptic integral, then Legendre-
 * 		Gauss quadrature is used for numerical integration with
 * 		each spline segment integrated using it's own points and
 * 		weights.
+* \par See Also
+*		WlzBSplineDistance "WlzBSplineDistance(3)"
 * \param	bs			Given B-spline domain.
 * \param	tB			Parametric coordinate of start.
 * \param	tE			Parametric coordinate of end.
+* \param	sz			Size of step in z.
+* \param	sy			Size of step in y.
+* \param	sx			Size of step in x.
 * \param	dstErr			Destination error pointer, may be NULL.
 */
 double				WlzBSplineLength(
 				  WlzBSpline *bs,
 				  double tB,
 				  double tE,
+				  double sz,
+				  double sy,
+				  double sx,
 				  WlzErrorNum *dstErr)
 {
   int		n,
@@ -1270,8 +1370,9 @@ double				WlzBSplineLength(
   		dim = 0,
 		epk = 0; 		    /* Evaluations per knot interval. */
   double	len = 0.0;
-  size_t	vsz = 0;
+  size_t	sov = 0;
   double	*x = NULL;
+  WlzVertex	vs;
   WlzVertexP	vtx = {0};
   WlzErrorNum   errNum = WLZ_ERR_NONE;
 
@@ -1289,11 +1390,13 @@ double				WlzBSplineLength(
     {
       case WLZ_BSPLINE_C2D:
         dim = 2;
-	vsz = sizeof(WlzDVertex2);
+	WLZ_VTX_2_SET(vs.d2, sx, sy);
+	sov = sizeof(WlzDVertex2);
 	break;
       case WLZ_BSPLINE_C3D:
         dim = 3;
-	vsz = sizeof(WlzDVertex3);
+	WLZ_VTX_3_SET(vs.d3, sx, sy, sz);
+	sov = sizeof(WlzDVertex3);
 	break;
       default:
         errNum = WLZ_ERR_DOMAIN_TYPE;
@@ -1335,7 +1438,7 @@ double				WlzBSplineLength(
   if(errNum == WLZ_ERR_NONE)
   {
     n = (iE - iB + 1) * epk;
-    if(((vtx.v = AlcMalloc(n * vsz)) == NULL) ||
+    if(((vtx.v = AlcMalloc(n * sov)) == NULL) ||
        ((x = (double *)AlcMalloc(n * sizeof(double))) == NULL))
     {
       errNum = WLZ_ERR_MEM_ALLOC;
@@ -1393,11 +1496,27 @@ double				WlzBSplineLength(
       ts = t1 - t0;
       for(k = 0; k < epk; ++k)
       {
-	double	w;
+	double	v,
+		w;
 
 	w = AlgGaussLegendreWeights(epk, k);
-	l += w * ((dim == 2)? WLZ_VTX_2_LENGTH(vtx.d2[j]):
-	                      WLZ_VTX_3_LENGTH(vtx.d3[j]));
+	if(dim == 2)
+	{
+	  WlzDVertex2 u;
+
+          u = vtx.d2[j];
+	  WLZ_VTX_2_HAD(u, u, vs.d2);
+	  v = WLZ_VTX_2_LENGTH(u);
+	}
+	else /* dim == 3 */
+	{
+	  WlzDVertex3 u;
+
+          u = vtx.d3[j];
+	  WLZ_VTX_3_HAD(u, u, vs.d3);
+	  v = WLZ_VTX_3_LENGTH(u);
+	}
+	l += w * v;
 	++j;
       }
       len += ts * l;
@@ -1463,7 +1582,7 @@ static WlzObject               	*WlzBSplineCutOtg(
   /* Compute buffer sizes. */
   if(tB + eps < tE)
   {
-    len = (int )ceil(WlzBSplineLength(bs, tB, tE, &errNum)) + 1;
+    len = (int )ceil(WlzBSplineLength(bs, tB, tE, 1.0, 1.0, 1.0, &errNum)) + 1;
   }
   /* Create subdomain in 2D of given radius. */
   if((errNum == WLZ_ERR_NONE) && (radius > 0))
