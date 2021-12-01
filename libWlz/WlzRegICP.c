@@ -170,6 +170,7 @@ static WlzAffineTransform 	*WlzRegICPTreeAndVerticesSimple(
 * \param	maxItr			Maximum number of iterations,
 *					if <= 0 then infinite iterations
 *					are allowed.
+* \param	noNrm			Don't weight using normals if non-zero.
 * \param	delta			Tolerance for mean value of
 *					registration metric.
 * \param	minDistWgt		Minimum distance weighting.
@@ -181,7 +182,7 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
 				     WlzTransformType trType,
 				     double ctrLo, double ctrHi, double ctrWth,
 				     int *dstConv, int *dstItr, int maxItr,
-				     double delta, double minDistWgt,
+				     int noNrm, double delta, double minDistWgt,
 				     WlzErrorNum *dstErr)
 {
   int		idN,
@@ -246,8 +247,8 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
      * don't use the gradient normals because they are eratic. */
     if(errNum == WLZ_ERR_NONE)
     {
-      vData[idN] = WlzVerticesFromObj(cObj, nData + idN, vCnt + idN, &vType,
-				       &errNum);
+      vData[idN] = WlzVerticesFromObj(cObj, noNrm? NULL: nData + idN,
+                                      vCnt + idN, &vType, &errNum);
     }
     (void )WlzFreeObj(cObj);
 #ifdef WLZ_REGICP_DEBUG
@@ -263,8 +264,10 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
 	    {
 	      (void )fprintf(fP, "%d %g %g %g %g\n",
 	               idM,
-		       (vData[idN].d2 + idM)->vtX, (vData[idN].d2 + idM)->vtY,
-		       (nData[idN].d2 + idM)->vtX, (nData[idN].d2 + idM)->vtY);
+		       (vData[idN].d2 + idM)->vtX,
+		       (vData[idN].d2 + idM)->vtY,
+		       noNrm? 0.0: (nData[idN].d2 + idM)->vtX,
+		       noNrm? 0.0: (nData[idN].d2 + idM)->vtY);
 	    }
 	    break;
 	  case WLZ_VERTEX_D3:
@@ -272,10 +275,12 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
 	    {
 	      (void )fprintf(fP, "%d %g %g %g %g  %g %g\n",
 	               idM,
-		       (vData[idN].d3 + idM)->vtX, (vData[idN].d3 + idM)->vtY,
+		       (vData[idN].d3 + idM)->vtX,
+		       (vData[idN].d3 + idM)->vtY,
 		       (vData[idN].d3 + idM)->vtZ,
-		       (nData[idN].d3 + idM)->vtX, (nData[idN].d3 + idM)->vtY,
-		       (nData[idN].d3 + idM)->vtZ);
+		       noNrm? 0.0: (nData[idN].d3 + idM)->vtX,
+		       noNrm? 0.0: (nData[idN].d3 + idM)->vtY,
+		       noNrm? 0.0: (nData[idN].d3 + idM)->vtZ);
 	    }
 	    break;
 	}
@@ -289,10 +294,10 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
   if(errNum == WLZ_ERR_NONE)
   {
     regTr = WlzRegICPVertices(vData[0], nData[0], vCnt[0],
-			       vData[1], nData[1], vCnt[1],
-			       vType, 1, initTr,
-			       trType, &conv, &itr, maxItr,
-			       delta, minDistWgt, &errNum);
+			      vData[1], nData[1], vCnt[1],
+			      vType, 1, initTr,
+			      trType, &conv, &itr, maxItr,
+			      delta, minDistWgt, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -336,6 +341,7 @@ WlzAffineTransform *WlzRegICPObjsGrd(WlzObject *tObj, WlzObject *sObj,
 * \param	maxItr			Maximum number of iterations,
 *					if <= 0 then infinite iterations
 *					are allowed.
+* \param	noNrm			Don't weight using normals if non-zero.
 * \param	delta			Tolerance for mean value of
 *					registration metric.
 * \param	minDistWgt		Minimum distance weighting.
@@ -346,7 +352,7 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
 				  WlzAffineTransform *initTr,
 				  WlzTransformType trType,
 				  int *dstConv, int *dstItr, int maxItr,
-				  double delta, double minDistWgt,
+				  int noNrm, double delta, double minDistWgt,
 				  WlzErrorNum *dstErr)
 {
   int		idx,
@@ -376,6 +382,9 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
     {
       switch(tObj->domain.ctr->model->type)
       {
+        case WLZ_GMMOD_2D:
+	case WLZ_GMMOD_3D:
+	  break;
         case WLZ_GMMOD_2N:
 	case WLZ_GMMOD_3N:
 	  sgnNrm = 1;
@@ -388,8 +397,9 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
     idx = 0;
     while((errNum == WLZ_ERR_NONE) && (idx < 2))
     {
-      vData[idx] = WlzVerticesFromObj(objs[idx], nData + idx, vCnt + idx,
-      				       vType + idx, &errNum);
+      vData[idx] = WlzVerticesFromObj(objs[idx],
+      				      noNrm? NULL: nData + idx, vCnt + idx,
+      				      vType + idx, &errNum);
       ++idx;
     }
   }
@@ -401,10 +411,10 @@ WlzAffineTransform *WlzRegICPObjs(WlzObject *tObj, WlzObject *sObj,
   if(errNum == WLZ_ERR_NONE)
   {
      regTr = WlzRegICPVertices(vData[0], nData[0], vCnt[0],
-     				vData[1], nData[1], vCnt[1],
-     				vType[0], sgnNrm, initTr,
-				trType, &conv, &itr, maxItr,
-				delta, minDistWgt, &errNum);
+     			       vData[1], nData[1], vCnt[1],
+     			       vType[0], sgnNrm, initTr,
+			       trType, &conv, &itr, maxItr,
+			       delta, minDistWgt, &errNum);
   }
   if(errNum == WLZ_ERR_NONE)
   {
@@ -1162,7 +1172,7 @@ static int	WlzRegICPItr(WlzRegICPWSp *wSp,
 #ifdef WLZ_REGICP_DEBUG
     (void )fprintf(stderr, "WlzRegICP conv = %s\n", (conv)? "TRUE": "FALSE");
 #endif /* WLZ_REGICP_DEBUG */
-    if(conv)
+    if(conv && (wSp->itr > 1))
     {
       (void )WlzFreeAffineTransform(wSp->curTr);
       wSp->curTr = wSp->prvTr;
@@ -1380,13 +1390,20 @@ static double	WlzRegICPWeight(WlzRegICPWSp *wSp, double minVxWgt)
         wNr = 0.0;
       }
     }
-    if(wSp->sgnNrm)
+    if(wSp->gSNr.v == NULL)
     {
-      tD0 = wVx * wNr;
+      tD0 = wVx;
     }
     else
     {
-      tD0 = wVx * wNr * wNr;
+      if(wSp->sgnNrm)
+      {
+	tD0 = wVx * wNr;
+      }
+      else
+      {
+	tD0 = wVx * wNr * wNr;
+      }
     }
     meanSumWgt += tD0 * *(wSp->dist + idx);
     *(wSp->wgt + idx) = tD0;
