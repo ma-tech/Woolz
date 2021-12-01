@@ -55,13 +55,17 @@ static char _WlzBSplineLength_c[] = "University of Edinburgh $Id$";
 WlzBSplineLength
 \par Synopsis
 \verbatim
-WlzBSplineLength [-h] [-t [<min>],[<max>]] [<in object>]
+WlzBSplineLength [-h]  [-s <x>,<y>[,<z>]] [-t [<min>],[<max>]] [<in object>]
 \endverbatim
 \par Options
 <table width="500" border="0">
   <tr>
     <td><b>-h</b></td>
     <td>Help, prints usage message.</td>
+  </tr>
+  <tr>
+    <td><b>-s</b></td>
+    <td>Step size (default 1.0,1.0,1.0).</td>
   </tr>
   <tr>
     <td><b>-t</b></td>
@@ -71,6 +75,8 @@ WlzBSplineLength [-h] [-t [<min>],[<max>]] [<in object>]
 \par Description
 Computes the length of a path along a spline's curve between
 a pair of parametric coordinates.
+The step size may be used to compute the spline length for non-unit
+pixel/poxel sizes.
 The length is written as a floating point number to the standard output.
 By default the input object is read from stdin.
 \par Example
@@ -105,16 +111,24 @@ int		main(int argc, char *argv[])
   WlzObject	*iObj = NULL;
   FILE		*fP = NULL;
   double        param[2] = {0.0, 1.0};
+  double	stepSz[3] = {1.0, 1.0, 1.0};
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char	*ots;
   char		*iFile = NULL;
-  static char	optList[] = "ht:",
+  static char	optList[] = "hs:t:",
 		defFile[] = "-";
   iFile = defFile;
   while((usage == 0) && ((option = getopt(argc, argv, optList)) != EOF))
   {
     switch(option)
     {
+      case 's':
+        if(sscanf(optarg, "%lg,%lg,%lg",
+	          stepSz + 0, stepSz + 1, stepSz + 2) < 2)
+        {
+	  usage = 1;
+	}
+	break;
       case 't':
         {
           int   i;
@@ -209,7 +223,8 @@ int		main(int argc, char *argv[])
   }
   if(ok)
   {
-    len = WlzBSplineLength(iObj->domain.bs, param[0], param[1], &errNum);
+    len = WlzBSplineLength(iObj->domain.bs, param[0], param[1],
+                           stepSz[2], stepSz[1], stepSz[0], &errNum);
     if(errNum != WLZ_ERR_NONE)
     {
       ok = 0;
@@ -230,15 +245,18 @@ int		main(int argc, char *argv[])
     (void )fprintf(stderr,
     "Usage: %s%s%s%s%s%s",
     *argv,
-    " [-h] [-t[<min>],[<max>]] [<in object>]\n"
+    " [-h] [-s<x>,<y>[,<z>]] [-t[<min>],[<max>]] [<in object>]\n"
     "Version: ",
     WlzVersion(),
     "\n"
     "Options:\n"
     "  -h  Help, prints this usage message.\n"
+    "  -s  Step size (default 1.0,1.0,1.0).\n"
     "  -t  Parametric range along the B-spline curve (default 0,1).\n"
     "Computes the length of a path along a spline's curve between a pair\n"
     "of parametric coordinates.\n"
+    "The step size may be used to compute the spline length for non-unit\n"
+    "pixel/poxel sizes.\n"
     "The length is written as a floating point number to the standard output.\n"
     "By default the input object is read from stdin.\n"
     "Example:\n"
