@@ -265,10 +265,12 @@ int		main(int argc, char *argv[])
     if(verbose)
     {
       (void )fprintf(stderr,
-          "%s: Calling WlzBSplineLength(bsDom.bs, 0.0, 1.0, &errNum)\n", *argv);
+          "%s: Calling \n"
+	  "\t\tWlzBSplineLength(bsDom.bs, 0.0, 1.0, 1.0, 1.0, 1.0, &errNum)\n",
+	  *argv);
 
     }
-    bLen = WlzBSplineLength(bsDom.bs, tB, tE, &errNum);
+    bLen = WlzBSplineLength(bsDom.bs, tB, tE, 1.0, 1.0, 1.0, &errNum);
     if(verbose)
     {
       ots = WlzStringFromErrorNum(errNum, NULL);
