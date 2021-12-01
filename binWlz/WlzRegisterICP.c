@@ -52,7 +52,7 @@ WlzRegisterICP - registers two objects using an iterative closest point
 \par Synopsis
 \verbatim
 WlzRegisterICP [-h] [-o<out obj>]
-               [-E #] [-I] [-M #] [-i <init tr>] [-t] [-r]
+               [-E #] [-I] [-M #] [-N] [-i <init tr>] [-t] [-r]
 	       [<in obj 0>] [<in obj 1>]
 \endverbatim
 \par Options
@@ -68,6 +68,10 @@ WlzRegisterICP [-h] [-o<out obj>]
   <tr> 
     <td><b>-I</b></td>
     <td>Maximum number of iterations.</td>
+  </tr>
+  <tr> 
+    <td><b>-N</b></td>
+    <td>Don't weight using normals.</td>
   </tr>
   <tr> 
     <td><b>-M</b></td>
@@ -142,6 +146,7 @@ int             main(int argc, char **argv)
   int		idx,
 		grdFlg = 0,
 		maxItr = INT_MAX,
+		noNorm = 0,
 		option,
 		ok = 1,
 		usage = 0;
@@ -159,7 +164,7 @@ int             main(int argc, char **argv)
   		*outObjFileStr;
   char  	*inObjFileStr[2];
   const char	*errMsg;
-  static char	optList[] = "i:o:E:M:gIhart",
+  static char	optList[] = "i:o:E:M:gINhart",
 		outObjFileStrDef[] = "-",
   		inObjFileStrDef[] = "-";
 
@@ -196,6 +201,9 @@ int             main(int argc, char **argv)
 	  usage = 1;
 	  ok = 0;
 	}
+	break;
+      case 'N':
+        noNorm = 1;
 	break;
       case 'i':
         inTrObjFileStr = optarg;
@@ -385,14 +393,14 @@ int             main(int argc, char **argv)
       outDom.t = WlzRegICPObjsGrd(inObj[0], inObj[1],
 				  inTrObj? inTrObj->domain.t: NULL,
 				  trType, 50.0, 50.0, 1.6,
-				  NULL, NULL, maxItr,
+				  NULL, NULL, maxItr, noNorm,
 				  delta, minDistWgt, &errNum);
     }
     else
     {
       outDom.t = WlzRegICPObjs(inObj[0], inObj[1],
 			       inTrObj? inTrObj->domain.t: NULL, trType,
-			       NULL, NULL, maxItr, 
+			       NULL, NULL, maxItr,  noNorm,
 			       delta, minDistWgt, &errNum);
     }
     if(errNum != WLZ_ERR_NONE)
@@ -457,8 +465,8 @@ int             main(int argc, char **argv)
     "Usage: %s%s%s%sExample: %s%s",
     *argv,
     " [-h] [-o<out obj>]\n"
-    "                      [-E #] [-I] [-M #] [-i <init tr>] [-t] [-r]\n"
-    "                      [<in obj 0>] [<in obj 1>]\n"
+    "\t\t[-E #] [-I] [-M #] [-N] [-i <init tr>] [-t] [-r]\n"
+    "\t\t[<in obj 0>] [<in obj 1>]\n"
     "Version: ",
     WlzVersion(),
     "\n"
@@ -466,6 +474,7 @@ int             main(int argc, char **argv)
     "  -I  Maximum number of iterations.\n"
     "  -M  Minimum distance weight, range [0.0-1.0]: Useful values are\n"
     "      0.25 (default) for global matching and 0.0 for local matching.\n"
+    "  -N  Don't weight using normals.\n"
     "  -E  Tolerance in the mean registration metric value.\n"
     "  -i  Initial affine transform object.\n"
     "  -o  Output file name for affine transform.\n"
