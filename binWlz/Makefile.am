@@ -58,6 +58,7 @@ bin_PROGRAMS		= \
 			  WlzBoundaryToObj \
 			  WlzBoundaryVertices \
 			  WlzBoundingBox \
+			  WlzBSplineDistance \
 			  WlzBSplineLength \
 			  WlzBSplineToDomain \
 			  WlzBuildContour \
@@ -291,6 +292,10 @@ WlzBoundaryVertices_LDFLAGS		= $(AM_LFLAGS)
 WlzBoundingBox_SOURCES			= WlzBoundingBox.c
 WlzBoundingBox_LDADD			= $(LDADD)
 WlzBoundingBox_LDFLAGS			= $(AM_LFLAGS)
+
+WlzBSplineDistance_SOURCES		= WlzBSplineDistance.c
+WlzBSplineDistance_LDADD		= $(LDADD)
+WlzBSplineDistance_LDFLAGS		= $(AM_LFLAGS)
 
 WlzBSplineLength_SOURCES		= WlzBSplineLength.c
 WlzBSplineLength_LDADD			= $(LDADD)
