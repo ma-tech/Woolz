@@ -80,31 +80,34 @@ but will also build on MacOS or using MingW on Windows systems.
 
 The code is partitioned into the following modules:
 
-libAlc:		Library providing generic data structures and memory allocation
-	        functions.
-libAlg:		Library providing basic numerical algorithms.
-libbibfile:     Library with bibfile style input/output functions.
-libhguDlpList:  Library with a generic doubly linked pointer list.
-libReconstruct: Library with code for 3D alignment of 2D section images to
-                form a 3D image.
-libWlz:         The Woolz image processing library.
-libWlzBnd:      Library with small functions that bind Woolz to other languages.
-libWlzExtFF:    Library for external data format input/output.
-binWlz:         Small command line based Woolz programs.
-binWlzApp:      More small command line based Woolz programs.
-binWlzExtFF:    Small command line based Woolz programs which use external file formats.
-binWlzTst:      Small command line based test programs for Woolz.
+| Module | Description |
+| --- | --- |
+| libAlc | Library providing generic data structures and memory allocation functions |
+| libAlg | Library providing basic numerical algorithms |
+| libbibfile  | Library with bibfile style input/output functions |
+| libhguDlpList|  Library with a generic doubly linked pointer list |
+| libReconstruct| Library with code for 3D alignment of 2D section images to form a 3D image |
+| libWlz|         The Woolz image processing library |
+| libWlzBnd|      Library with small functions that bind Woolz to other languages |
+| libWlzExtFF|    Library for external data format input/output |
+| binWlz|         Small command line based Woolz programs |
+| binWlzApp|      More small command line based Woolz programs |
+| binWlzExtFF|    Small command line based Woolz programs which use external file formats |
+| binWlzTst|      Small command line based test programs for Woolz |
 
 The authors include (in sort order):
-Bill Hill
-Christophe Dubreuil
-Elizabeth Guest
-Jianguo Rao
-Jim Piper
-Konstantinos Liakos
-Margaret Stark
-Nick Burton
-Richard Baldock
+
+| <!-- --> |
+| --- |
+| Bill Hill |
+| Christophe Dubreuil |
+| Elizabeth Guest |
+| Jianguo Rao |
+| Jim Piper |
+| Konstantinos Liakos |
+| Margaret Stark |
+| Nick Burton |
+| Richard Baldock |
 
 To contact the authors please raise a Github issue.
 
@@ -167,6 +170,7 @@ As an example, the following thresholds a 3D image, applies erosion and
 dilation to remove small isolated regions, labels (segments) the image
 into separate objects and the prints the volume of each isolated object:
 
+```
 prompt% WlzThreshold -v135 -L ts14.wlz | \
         WlzErosion  -c26 -r2 | \
         WlzDilation -c26 -r2 | \
@@ -187,6 +191,7 @@ Object 12: number of voxels = 45
 Object 13: number of voxels = 45
 Object 14: number of voxels = 137
 Object 15: number of voxels = 45
+```
 
 Woolz can also be used as a set of C libraries, or via a binding
 to another language. Currently these bindings exist for Java, Python
@@ -206,6 +211,7 @@ file formats. As with all the small Woolz programs, the -h option will
 show usage, but for WlzExtFFConvert it will also list the file formats
 which are understood:
 
+```
 prompt% WlzExtFFConvert -h
 Usage: WlzExtFFConvert [-h] [-s] [-b<background>]
                        [-d<min-dimension>] [-D<max-dimension>]
@@ -284,6 +290,7 @@ size of the bounding box is maintained but the position is set to
 result in a shifted image, i.e. registration is lost. Most 3D
 formats encode this data, of the 2D formats only woolz can retain
 all offsets, TIFF can only encode positive offsets.
+```
 
 The library functions WlzEffReadObj() and WlzEffWriteObj() (in libWlzExtFF)
 can also be used to read and write non-Woolz format files.
