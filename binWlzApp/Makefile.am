@@ -42,6 +42,7 @@ AM_CPPFLAGS		= \
 			  -I$(top_srcdir)/libWlz \
 			  -I$(top_srcdir)/libAlg \
 			  -I$(top_srcdir)/libAlc \
+			  -I$(includedir) \
 			  $(all_includes)
 
 LDADD 			= \
@@ -66,6 +67,7 @@ bin_PROGRAMS		=  \
 			  WlzCelCmpFeatures \
 			  WlzClassMap \
 			  WlzCreateRandomDomain \
+			  WlzCut2DTiles \
 			  WlzDisplacement \
 			  WlzDisplacementToVtk \
 			  WlzDomainAdjacencyMatrix \
@@ -140,6 +142,10 @@ WlzClassMap_LDFLAGS		= $(AM_LFLAGS)
 WlzCreateRandomDomain_SOURCES	= WlzCreateRandomDomain.c
 WlzCreateRandomDomain_LDADD	= $(LDADD)
 WlzCreateRandomDomain_LDFLAGS	= $(AM_LFLAGS)
+
+WlzCut2DTiles_SOURCES		= WlzCut2DTiles.c
+WlzCut2DTiles_LDADD		= $(LDADD)
+WlzCut2DTiles_LDFLAGS		= $(AM_LFLAGS)
 
 WlzDisplacement_SOURCES		= WlzDisplacement.c
 WlzDisplacement_LDADD		= $(LDADD)
