@@ -155,7 +155,8 @@ WlzCut2DTiles [-h] [-v] [-a(n|r)]
   </tr>
   <tr>
     <td><b>-Y</b></td>
-    <td>Include empty tiles in output.</td>
+    <td>Include empty tiles (entirely outside the input domain or
+    of background) in output, default false.</td>
   </tr>
 </table>
 \par Description
@@ -278,7 +279,6 @@ int		main(int argc, char *argv[])
   const WlzDVertex3 fixed = {0.0, 0.0, 0.0},
 		up = {0.0, 0.0, -1.0};
   WlzThreeDViewStruct *vWSp = NULL;
-  struct timeval times[3];
   const char	*errMsg;
   WlzErrorNum	errNum = WLZ_ERR_NONE;
   const char   optList[] = "hLRvYa:b:c:d:e:E:f:F:i:M:N:p:r:s:t:";
@@ -632,8 +632,7 @@ int		main(int argc, char *argv[])
 		emptyPl = 0;
     double	tlRotAngle = {0.0};
     double	plAngles[3] = {0.0, 0.0, 0.0};
-    WlzIBox2	plBBox,
-    		rotPlBBox,
+    WlzIBox2	rotPlBBox,
     		tlBox;
     WlzObject	*plObj = NULL,
 		*tlObj = NULL;
@@ -734,7 +733,7 @@ int		main(int argc, char *argv[])
 	      break;
 	  }
 	}
-	/* Initialise the view structure. */
+	/* Setup the view structure. */
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  if(inPlTlCnt == 0)
@@ -751,17 +750,6 @@ int		main(int argc, char *argv[])
 	    vWSp->scale = 1.0;
 	    vWSp->view_mode = WLZ_ZETA_MODE;
 	    vWSp->voxelRescaleFlg = voxRescale;
-	    if(verbose)
-	    {
-	      (void )fprintf(stderr, "%s: Initialising viewstruct with angles\n"
-	      "\t\t phi = %g, theta = %g, zeta = %g (Radians),\n"
-	      "\t\tfixed point %g,%g,%g, distance %g\n",
-	      argv[0],
-	      vWSp->phi, vWSp->theta, vWSp->zeta,
-	      vWSp->fixed.vtX, vWSp->fixed.vtY, vWSp->fixed.vtZ,
-	      vWSp->dist);
-	    }
-	    errNum = WlzInit3DViewStruct(vWSp, inObj);
 	  }
 	}
 	/* Get plane index if using cut record file. */
@@ -825,25 +813,68 @@ int		main(int argc, char *argv[])
 		break;
 	    }
 	  }
+	  if(verbose)
+	  {
+	    (void )fprintf(stderr, "%s: Section distance = %g\n",
+	    argv[0], vWSp->dist);
+	  }
 	}
 	/* Cut section plane. */
 	if(errNum == WLZ_ERR_NONE)
 	{
 	  if(verbose)
 	  {
-	    (void )fprintf(stderr, "%s: Cutting plane from input object\n",
-	    argv[0]);
+	    (void )fprintf(stderr, "%s: Initialising viewstruct with angles\n"
+	    "\t\t phi = %g, theta = %g, zeta = %g (Radians),\n"
+	    "\t\tfixed point %g,%g,%g, distance %g\n",
+	    argv[0],
+	    vWSp->phi, vWSp->theta, vWSp->zeta,
+	    vWSp->fixed.vtX, vWSp->fixed.vtY, vWSp->fixed.vtZ,
+	    vWSp->dist);
 	  }
-	  plObj = WlzAssignObject(
-		  WlzGetSubSectionFromObject(inObj, NULL, vWSp, interp, NULL,
-					     &errNum), NULL);
+	  errNum = WlzInit3DViewStruct(vWSp, inObj);
+	  if(errNum == WLZ_ERR_NONE)
+          {
+	    if(verbose)
+	    {
+	      (void )fprintf(stderr, "%s: Cutting plane from input object\n",
+	      argv[0]);
+	    }
+	    plObj = WlzAssignObject(
+		    WlzGetSubSectionFromObject(inObj, NULL, vWSp, interp, NULL,
+					       &errNum), NULL);
+	  }
           if(errNum == WLZ_ERR_NONE)
 	  {
 	    emptyPl = WlzIsEmpty(plObj, NULL);
-	  }
-	  else
-	  {
-	    plBBox = WlzBoundingBox2I(plObj, &errNum);
+	    if(!emptyPl)
+	    {
+	     if(!plObj || !(plObj->values.core))
+	      {
+		emptyPl = 1;
+	      }
+	      else
+	      {
+		WlzPixelV minVal,
+			  maxVal;
+
+		errNum = WlzGreyRange(plObj, &minVal, &maxVal);
+		if(errNum == WLZ_ERR_NONE)
+		{
+		  double del;
+
+		  (void )WlzValueConvertPixel(&minVal, minVal, WLZ_GREY_DOUBLE);
+		  (void )WlzValueConvertPixel(&maxVal, maxVal, WLZ_GREY_DOUBLE);
+		  maxVal.v.dbv -= bgdVal;
+		  minVal.v.dbv -= bgdVal;
+		  if((fabs(minVal.v.dbv) < 1.0 - ALG_DBL_TOLLERANCE) &&
+		     (fabs(maxVal.v.dbv) < 1.0 - ALG_DBL_TOLLERANCE))
+		  {
+		    emptyPl = 1;
+		  }
+		}
+	      }
+	    }
 	  }
 	}
 	/* End of getting new plane. */
@@ -882,19 +913,10 @@ int		main(int argc, char *argv[])
 	    {
 	      case WLZ_C2DKEY_NONE:
 		tlRotAngle = 0.0;
-		rotPlObj = WlzAssignObject(plObj, NULL);
 		break;
 	      case WLZ_C2DKEY_RANDOM:
 		/* Rotation through random angle about centre of plane */
 		tlRotAngle = 2.0 * ALG_M_PI * AlgRandUniform();
-		(void )WlzFreeAffineTransform(tlRotTr);
-		tlRotTr = WlzAffineTransformFromRotation(
-		    WLZ_TRANSFORM_2D_AFFINE, 0.0, 0.0, tlRotAngle, &errNum);
-		if(errNum == WLZ_ERR_NONE)
-		{
-		  rotPlObj = WlzAssignObject(WlzAffineTransformObj(plObj,
-		      tlRotTr, interp, &errNum), NULL);
-		}
 		break;
 	      default:
 		errNum = WLZ_ERR_PARAM_DATA;
@@ -981,8 +1003,22 @@ int		main(int argc, char *argv[])
 	      switch(plnTilType)
 	      {
 		case WLZ_C2DKEY_RASTER:
-		  // TODO tile overlap
-		  errNum = WLZ_ERR_UNIMPLEMENTED;
+		  if(inPlTlCnt == 0)
+		  {
+		    tlBox.xMin = rotPlBBox.xMin;
+		    tlBox.yMin = rotPlBBox.yMin;
+		  }
+		  else
+		  {
+		    tlBox.xMin += tileSz.vtX - tileOverlap.vtX;
+		    if(tlBox.xMin > rotPlBBox.xMax)
+		    {
+		      tlBox.xMin = rotPlBBox.xMin;
+		      tlBox.yMin  += tileSz.vtY  - tileOverlap.vtY;
+		    }
+		  }
+		  tlBox.xMax = tlBox.xMin + tileSz.vtX - 1;
+		  tlBox.yMax = tlBox.yMin + tileSz.vtY - 1;
 		  break;
 		case WLZ_C2DKEY_RANDOM:
 		  tlBox.xMin = rotPlBBox.xMin - (tileSz.vtX / 2) + 
@@ -1150,17 +1186,19 @@ int		main(int argc, char *argv[])
       {
 	if(jRecTiles)
 	{
-	  ++allTlCnt;
-	  if(((maxTiles > 0) && (allTlCnt >= maxTiles)) ||
-	     (allTlCnt >= maxRecTiles))
+	  if(((maxTiles > 0) && (allTlCnt > maxTiles)) ||
+	     (allTlCnt > maxRecTiles))
 	  {
 	    errNum = WLZ_ERR_EOO;
 	  }
 	}
 	else
 	{
+	  ++tlCnt;
 	  ++inPlTlCnt;
-	  if((maxTilesPP > 0) && (inPlTlCnt >= maxTilesPP))
+	  if(((maxTilesPP > 0) && (inPlTlCnt >= maxTilesPP)) ||
+	     ((plnTilType == WLZ_C2DKEY_RASTER) &&
+	      (tlBox.yMin + tileSz.vtY > rotPlBBox.yMax)))
 	  {
 	    inPlTlCnt = 0;
 	    switch(plnType)
@@ -1177,17 +1215,22 @@ int		main(int argc, char *argv[])
 		  case 0:
 		    if(vWSp->dist > vWSp->maxvals.vtZ)
 		    {
+		      plCnt = 0;
 		      ++ortCnt;
 		    }
 		    break;
 		  case 1:
 		    if(vWSp->dist > vWSp->maxvals.vtX)
 		    {
+		      plCnt = 0;
 		      ++ortCnt;
 		    }
 		    break;
 		  default:
-		    errNum = WLZ_ERR_EOO;
+		    if(vWSp->dist > vWSp->maxvals.vtY)
+		    {
+		      errNum = WLZ_ERR_EOO;
+		    }
 		    break;
 		}
 		break;
@@ -1195,7 +1238,7 @@ int		main(int argc, char *argv[])
 		break;
 	    }
 	  }
-	  if(inPlTlCnt != 0)
+	  if(inPlTlCnt == 0)
 	  {
 	    plCnt += distInc;
 	  }
@@ -1264,7 +1307,7 @@ int		main(int argc, char *argv[])
     "\t\t[-i]<in domain value>] [-M<max tile images>]\n"
     "\t\t[-N<max tile images per plane>] [-p(o|p|r)]\n"
     "\t\t[-r<pitch>,<yaw>,<roll>] [-R<rescale flags>\n"
-    "\t\t[-s<columns>,<lines>] [-t(s|r)] [-Y] [<input object>]\n"
+    "\t\t[-s<columns>,<lines>] [-t(ras|ran)] [-Y] [<input object>]\n"
     "Cuts 2D region of interest tiles from a 3D domain object.\n"
     "Version: %s\n"
     "Options:\n"
@@ -1298,7 +1341,8 @@ int		main(int argc, char *argv[])
     "      set to %d\n"
     "  -s  Size of tile images to cut, set to %d,%d\n"
     "  -t  Within plane section tiling - raster (s), random (r), set to %s\n" 
-    "  -Y  Include empty tiles in output, set to %s\n"
+    "  -Y  Include empty tiles (entirely outside the input domain or\n"
+    "      of background) in output, set to %s\n"
     "Examples:\n"
     "  %s -f tiles in.wlz\n"
     "Cuts 2D tiles from the input file in.wlz writing the tile cut record\n"
